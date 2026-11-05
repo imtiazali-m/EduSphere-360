@@ -1,0 +1,80 @@
+import { useEffect, useMemo, useState } from 'react'
+import { AlertCircle, Check, Edit3, Plus, RefreshCw, Search, Trash2, X } from 'lucide-react'
+import { useAuth } from '../context/AuthContext'
+import { createRecord, deleteRecord, listRecords, updateRecord } from '../lib/data'
+import type { FieldConfig, ModuleConfig, RecordRow } from '../lib/types'
+
+interface Props { module: ModuleConfig; onToast: (message: string, error?: boolean) => void }
+
+function RecordForm({ module, initial, onCancel, onSave, saving }: {
+  module: ModuleConfig; initial?: RecordRow | null; onCancel: () => void; onSave: (values: Record<string, unknown>) => void; saving: boolean
+}) {
+  const [values,setValues] = useState<Record<string,string>>(() => Object.fromEntries(module.fields.map(f=>[f.name, String(initial?.[f.name] ?? (f.type === 'select' ? f.options?.[0]?.value ?? '' : ''))])))
+  function update(field: FieldConfig, value: string) { setValues(old=>({...old,[field.name]:value})) }
+  return <div className="modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)onCancel()}}><section className="modal-card"><div className="modal-heading"><div><div className="eyebrow">{initial?'UPDATE RECORD':'NEW RECORD'}</div><h2>{initial?'Edit':'Add'} {module.title.toLowerCase()}</h2></div><button className="icon-button" onClick={onCancel} aria-label="Close"><X size={19}/></button></div><form className="modal-form" onSubmit={e=>{e.preventDefault();onSave(values)}}><div className="dynamic-form-grid">{module.fields.map(field=><label key={field.name} className={`field-label ${field.type==='textarea'?'full-field':''}`}>{field.label}{field.type==='select'?<select className="input-control" required={field.required} value={values[field.name]??''} onChange={e=>update(field,e.target.value)}>{field.options?.map(o=><option key={o.value} value={o.value}>{o.label}</option>)}</select>:field.type==='textarea'?<textarea className="input-control textarea-control" required={field.required} value={values[field.name]??''} onChange={e=>update(field,e.target.value)} placeholder={field.placeholder??''}/>:<input className="input-control" type={field.type??'text'} required={field.required} min={field.type==='number'?0:undefined} step={field.type==='number'?'0.01':undefined} value={values[field.name]??''} onChange={e=>update(field,e.target.value)} placeholder={field.placeholder??''}/> }</label>)}</div><div className="modal-actions"><button type="button" className="button button-quiet" onClick={onCancel}>Cancel</button><button className="button button-primary" disabled={saving}>{saving?'Saving…':initial?'Save changes':'Save record'} <Check size={16}/></button></div></form></section></div>
+}
+
+function niceDate(value: unknown) {
+  if (!value) return '—'
+  const date = new Date(String(value))
+  return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleDateString()
+}
+
+export function RecordModule({ module, onToast }: Props) {
+  const { mode, user } = useAuth()
+  const [rows,setRows] = useState<RecordRow[]>([])
+  const [loading,setLoading] = useState(true)
+  const [saving,setSaving] = useState(false)
+  const [search,setSearch] = useState('')
+  const [editing,setEditing] = useState<RecordRow|null>(null)
+  const [showForm,setShowForm] = useState(false)
+  const canEdit = ['owner','admin'].includes(user!.role)
+    || (user!.role==='teacher' && ['attendance','exams','exam_results','assignments','timetable','announcements'].includes(module.key))
+    || (user!.role==='accountant' && module.key==='fees')
+    || (user!.role==='exam_officer' && ['exams','exam_results'].includes(module.key))
+  const canDelete = ['owner','admin'].includes(user!.role)
+    || (user!.role==='exam_officer' && ['exams','exam_results'].includes(module.key))
+
+  async function load() {
+    setLoading(true)
+    try { setRows(await listRecords(mode,user!,module.table)) }
+    catch(error) { onToast(error instanceof Error?error.message:'Could not load records.',true) }
+    finally { setLoading(false) }
+  }
+  useEffect(()=>{void load()},[mode,user?.id,module.table])
+
+  const filtered = useMemo(()=>rows.filter(row=>module.columns.some(col=>String(row[col.key]??'').toLowerCase().includes(search.toLowerCase()))),[rows,search,module])
+
+  async function save(values: Record<string,unknown>) {
+    setSaving(true)
+    try {
+      const payload: Record<string,unknown> = {...values}
+      for (const field of module.fields) {
+        if (payload[field.name] === '') payload[field.name] = field.type === 'number' ? (field.name === 'paid_amount' ? 0 : null) : null
+        if (field.type === 'number' && payload[field.name] !== null && payload[field.name] !== undefined) payload[field.name] = Number(payload[field.name])
+      }
+      if (['attendance','fees','exam_results'].includes(module.key) && typeof payload.student_name === 'string') {
+        const learners = await listRecords(mode, user!, 'students')
+        const match = learners.find((student) => String(student.full_name ?? '').trim().toLowerCase() === String(payload.student_name).trim().toLowerCase())
+        if (!match) throw new Error('No matching student record was found. Add the student first, then use the same full name here.')
+        payload.student_id = match.id
+      }
+      if (module.key==='fees') {
+        const amount=Number(payload.amount??0), paid=Number(payload.paid_amount??0)
+        payload.status = paid<=0?'unpaid':paid>=amount?'paid':'partial'
+      }
+      if (editing) await updateRecord(mode,user!,module.table,editing.id,payload)
+      else await createRecord(mode,user!,module.table,payload)
+      onToast(editing?'Record updated successfully.':'Record created successfully.')
+      setShowForm(false);setEditing(null);await load()
+    } catch(error) { onToast(error instanceof Error?error.message:'Could not save record.',true) }
+    finally { setSaving(false) }
+  }
+  async function remove(row:RecordRow) {
+    if (!window.confirm('Delete this record? This cannot be undone.')) return
+    try { await deleteRecord(mode,user!,module.table,row.id);onToast('Record deleted.');await load() }
+    catch(error) { onToast(error instanceof Error?error.message:'Could not delete record.',true) }
+  }
+
+  return <div className="page-content"><div className="page-title-row"><div><div className="eyebrow">INSTITUTION WORKSPACE</div><h1>{module.title}</h1><p>{module.description}</p></div>{canEdit&&<button className="button button-primary" onClick={()=>{setEditing(null);setShowForm(true)}}><Plus size={17}/> Add {module.title.replace(/s$/,'').toLowerCase()}</button>}</div><div className="table-card"><div className="table-toolbar"><div className="table-count"><strong>{filtered.length}</strong> records <span>·</span> {mode==='local'?'Saved on this device':'Live institutional database'}</div><div className="toolbar-actions"><div className="search-box"><Search size={16}/><input placeholder="Search records…" value={search} onChange={e=>setSearch(e.target.value)}/></div><button className="icon-button" onClick={()=>void load()} aria-label="Refresh records"><RefreshCw size={16}/></button></div></div>{loading?<div className="table-empty"><RefreshCw className="spin" size={21}/> Loading records…</div>:filtered.length===0?<div className="table-empty"><div className="empty-icon"><AlertCircle size={22}/></div><strong>{search?'No matching records':'No records yet'}</strong><span>{search?'Try another search term.':canEdit?'Add the first record to start using this module.':'Records will appear here when your institution adds them.'}</span></div>:<div className="table-scroll"><table><thead><tr>{module.columns.map(col=><th key={col.key}>{col.label}</th>)}{canEdit&&<th className="action-column">Actions</th>}</tr></thead><tbody>{filtered.map(row=><tr key={row.id}>{module.columns.map(col=><td key={col.key}>{col.key==='created_at'?niceDate(row[col.key]):col.key==='status'?<span className={`status-pill status-${String(row[col.key]??'').toLowerCase()}`}>{String(row[col.key]??'—').replace('_',' ')}</span>:col.key==='amount'||col.key==='paid_amount'?Number(row[col.key]??0).toLocaleString():String(row[col.key]??'—')}</td>)}{canEdit&&<td className="row-actions"><button className="icon-button" onClick={()=>{setEditing(row);setShowForm(true)}} title="Edit"><Edit3 size={15}/></button>{canDelete&&<button className="icon-button danger-icon" onClick={()=>void remove(row)} title="Delete"><Trash2 size={15}/></button>}</td>}</tr>)}</tbody></table></div>}</div>{showForm&&<RecordForm module={module} initial={editing} saving={saving} onCancel={()=>{setShowForm(false);setEditing(null)}} onSave={values=>void save(values)}/>}</div>
+}

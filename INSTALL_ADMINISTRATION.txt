@@ -1,0 +1,29 @@
+EduSphere 360 — Administration Management Patch
+
+Adds five administrator-only management areas:
+- Departments
+- Classes & Sections
+- Academic Sessions
+- Subjects
+- Rooms & Facilities
+
+INSTALL (Windows PowerShell)
+1. Stop Vite with Ctrl+C.
+2. Extract this ZIP into:
+   C:\Users\DELL\Downloads\EduSphere360_Recovery_Fresh\EduSphere360_DevKit
+   Allow files to merge/overwrite. The patch only replaces src/lib/modules.ts and src/lib/data.ts and adds migration 005.
+3. From the project folder run:
+   npm.cmd run build
+4. Start the app:
+   npm.cmd run dev
+
+SUPABASE CLOUD
+If the project is in Cloud mode, open Supabase SQL Editor and run the complete file:
+   supabase/migrations/005_administration_management.sql
+Keep migrations 001–004. Do not rerun older migrations.
+
+OFFLINE MODE
+The existing Dexie local record store supports these additional table names automatically; no IndexedDB schema migration is required.
+
+NOTE
+The administration lists are restricted to owner/admin roles in the app. Cloud access is also protected by institution-scoped RLS policies. Existing admission records are not changed.

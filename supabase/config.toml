@@ -1,0 +1,7 @@
+project_id = "edusphere360"
+
+[functions.bootstrap-admin]
+verify_jwt = false
+
+[functions.create-user]
+verify_jwt = true

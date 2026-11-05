@@ -1,0 +1,51 @@
+EDUSPHERE 360 — WINDOWS QUICK START
+==================================
+
+WHAT YOU NEED
+- Windows 10 or 11
+- Node.js 22.12+ (or Node.js 20.19+)
+- VS Code
+- Internet for the first package installation
+
+RUN THE LOCAL/OFFLINE VERSION
+1. Download and extract EduSphere360_DevKit.zip.
+2. Open the extracted EduSphere360_DevKit folder in VS Code.
+3. In VS Code, choose Terminal > New Terminal.
+4. Run: node --version
+   If Node.js is missing or too old, install a current Node.js LTS release.
+5. Run: npm install
+6. Run: npm run dev
+7. Open http://localhost:5173 in Chrome or Edge.
+8. Select Offline mode > Create your institution.
+9. Create your first owner account.
+10. Use User accounts to create teacher, student and parent accounts.
+
+After npm install has completed, the local version can run without internet.
+Keep using the same browser profile and http://localhost:5173 so the
+IndexedDB offline records remain available.
+
+SET UP THE ONLINE VERSION
+1. Create a Supabase project in your own account.
+2. Run supabase/migrations/001_initial_schema.sql in Supabase SQL Editor.
+3. Copy .env.example to .env.local and enter your Supabase URL and
+   publishable key. Do not place a secret/service-role key in .env.local.
+4. Follow section 4 of README.md to install/link the Supabase CLI, set the
+   EDU_BOOTSTRAP_SECRET in Supabase, and deploy the two Edge Functions.
+5. Restart the Vite dev server and select Online mode.
+6. Complete the one-time institution setup using the same bootstrap secret.
+
+PUBLISH THE ONLINE WEBSITE
+Follow section 5 of README.md to push the project to your GitHub repository
+and connect it to Cloudflare Pages. Build command: npm run build
+Build output folder: dist
+
+IMPORTANT LIMITATIONS
+- Local/offline data and online/cloud data are separate. Automatic two-way
+  synchronization is not implemented in this starter.
+- Local IndexedDB is for development/demo use and is not encrypted at rest.
+- Do not use real sensitive student records until security, backups, and
+  role-by-role access testing are completed.
+- Payment gateway processing, SMS/email delivery, payroll, hostel/transport,
+  and full university semester/credit-hour workflows are future modules.
+
+Read README.md for full setup, deployment, design and security instructions.
