@@ -20,6 +20,12 @@
 - **Supabase connectivity and test-account checks:** no Supabase connection.
 - **Browser E2E / responsive inspection:** browser control not in plan.
 
+### Stage 6 additions (branch feature/stage6-reports-fines-profile)
+- Fine field on invoices (column already exists in the live schema; no database change).
+- Reports page with CSV export (owner, admin, accountant, exam officer) and My Profile (student, parent).
+- GitHub build, verifier and all test suites passed for this branch. Not tested in a browser or against live Supabase.
+- Proposed, unapplied SQL in `supabase/proposed/`: faculty attendance table and a `leave` attendance status.
+
 ### Not implemented (found in review)
 - Faculty attendance register; "Leave" status (the app has "Excused").
 - Fines field on invoices (discount only).

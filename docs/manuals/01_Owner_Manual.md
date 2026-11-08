@@ -17,7 +17,7 @@ Create, edit and delete records in each administration register. Records are sco
 "User Accounts" creates and lists staff, student and parent accounts (uses the create-user Edge Function). Assign roles carefully: owner and administrator are the only roles with institution-wide write access.
 
 ## 6. Reports
-The current release provides dashboard summaries and table views per module. Dedicated exportable report pages are not implemented.
+Open **Reports** in the sidebar. It shows fee collection (invoiced, received, outstanding), attendance by status, examination results (published vs draft, average of published) and student enrolment by class. Each section has an **Export CSV** button. Faculty and attendance-by-class reports are not included.
 
 ## 7. Security
 Data is isolated per institution. Files are stored in a private bucket. Never share the service-role key; the application only uses the publishable key.
