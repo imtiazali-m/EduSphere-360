@@ -126,7 +126,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user || !['owner', 'admin'].includes(user.role)) throw new Error('Only an institution owner or administrator can create accounts.')
     if (input.role === 'admin' && user.role !== 'owner') throw new Error('Only the institution owner can appoint another administrator.')
     if (['student', 'parent'].includes(input.role) && !input.linkedStudentId) throw new Error('Link a student record before creating a student or parent account.')
-    await cloudCreateAccount({ ...input, institutionId: user.institutionId, institutionName: user.institutionName })
+    await cloudCreateAccount({ ...input, institutionId: user.institutionId })
   }
 
   async function signOut() {

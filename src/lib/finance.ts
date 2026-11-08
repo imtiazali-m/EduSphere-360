@@ -4,6 +4,7 @@ export interface InvoiceBalanceFields {
   discount_amount?: number | string | null
   paid_amount?: number | string | null
   balance?: number | string | null
+  [key: string]: unknown
 }
 
 function numeric(value: unknown) {
