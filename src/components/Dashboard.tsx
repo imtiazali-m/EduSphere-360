@@ -411,11 +411,30 @@ export function Dashboard({ onToast }: Props) {
             })}</div>}
           </section>
         })}
+      <nav className="pro-navigation" aria-label="Institution workspace">
+        {visibleGroups.map(group => {
+          const GroupIcon = catalogIcons[group.icon] ?? LayoutDashboard
+          if (group.key === 'dashboard') return <section className="pro-nav-group" key={group.key}>
+            <button className={`pro-nav-group-head pro-nav-dashboard-link ${active === 'overview' ? 'active' : ''}`} onClick={() => navigate('overview')} aria-current={active === 'overview' ? 'page' : undefined}>
+              <span className="pro-nav-group-icon"><GroupIcon size={19}/></span><span className="pro-nav-group-name">Dashboard</span>
+            </button>
+          </section>
+          const isExpanded = expandedGroups.includes(group.key)
+          return <section className={`pro-nav-group ${isExpanded ? 'expanded' : ''}`} key={group.key}>
+            <button className="pro-nav-group-head" aria-expanded={isExpanded} onClick={() => toggleGroup(group.key)}><span className="pro-nav-group-icon"><GroupIcon size={19}/></span><span className="pro-nav-group-name">{group.label}</span><ChevronRight className="pro-nav-chevron" size={17}/></button>
+            {isExpanded && <div className="pro-nav-children">{group.items.map(item => {
+              const route = pageRoutes[item]
+              const isActive = activePage === item
+              const ItemIcon = pageIcon(item, GroupIcon)
+              return <button key={item} className={`pro-nav-item ${isActive ? 'active' : ''}`} aria-current={isActive ? 'page' : undefined} onClick={() => navigateCatalogPage(item)}><span className="pro-nav-icon"><ItemIcon size={16}/></span><span className="pro-nav-title">{item}</span>{route && <i className="pro-nav-connected" title="Connected workspace"/>}</button>
+            })}</div>}
+          </section>
+        })}
+        <section className="pro-quick-access" aria-label="Quick access">
+          <div className="pro-nav-section-label">QUICK ACCESS</div>
+          {quickAccessItems.map(item => <button key={item.key} className={`pro-nav-item ${active === item.key ? 'active' : ''}`} onClick={() => navigate(item.key)}><span className="pro-nav-icon"><item.icon size={15}/></span><span className="pro-nav-title">{item.title}</span></button>)}
+        </section>
       </nav>
-      <section className="pro-quick-access" aria-label="Quick access">
-        <div className="pro-nav-section-label">QUICK ACCESS</div>
-        {quickAccessItems.map(item => <button key={item.key} className={`pro-nav-item ${active === item.key ? 'active' : ''}`} onClick={() => navigate(item.key)}><span className="pro-nav-icon"><item.icon size={15}/></span><span className="pro-nav-title">{item.title}</span></button>)}
-      </section>
     </aside>
     {sidebarOpen && <button className="pro-sidebar-scrim" aria-label="Close navigation" onClick={() => setSidebarOpen(false)}/>}
 
