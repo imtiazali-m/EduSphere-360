@@ -38,7 +38,7 @@ const moduleIcons: Record<string, LucideIcon> = {
 const catalogIcons: Record<string, LucideIcon> = {
   LayoutDashboard, BrainCircuit, Building2, School, BookOpen, GraduationCap, Users, Calculator,
   Wallet, Banknote, CalendarCheck, CalendarDays, BookOpenCheck, HeartHandshake, MessageSquare,
-  FileQuestion, ClipboardCheck, ListChecks, BarChart3, Award, Library, Wrench,
+  FileQuestion, ClipboardCheck, ListChecks, BarChart3, Award, Library, Wrench, FileText, UserRound,
 }
 
 function pageIcon(title: string, fallback: LucideIcon): LucideIcon {
@@ -411,11 +411,11 @@ export function Dashboard({ onToast }: Props) {
             })}</div>}
           </section>
         })}
-        <section className="pro-quick-access" aria-label="Quick access">
-          <div className="pro-nav-section-label">QUICK ACCESS</div>
-          {quickAccessItems.map(item => <button key={item.key} className={`pro-nav-item ${active === item.key ? 'active' : ''}`} onClick={() => navigate(item.key)}><span className="pro-nav-icon"><item.icon size={15}/></span><span className="pro-nav-title">{item.title}</span></button>)}
-        </section>
       </nav>
+      <section className="pro-quick-access" aria-label="Quick access">
+        <div className="pro-nav-section-label">QUICK ACCESS</div>
+        {quickAccessItems.map(item => <button key={item.key} className={`pro-nav-item ${active === item.key ? 'active' : ''}`} onClick={() => navigate(item.key)}><span className="pro-nav-icon"><item.icon size={15}/></span><span className="pro-nav-title">{item.title}</span></button>)}
+      </section>
     </aside>
     {sidebarOpen && <button className="pro-sidebar-scrim" aria-label="Close navigation" onClick={() => setSidebarOpen(false)}/>}
 
