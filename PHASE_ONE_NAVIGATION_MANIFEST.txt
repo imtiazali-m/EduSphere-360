@@ -1,0 +1,148 @@
+EDUSPHERE 360 — NAVIGATION MANIFEST
+
+01. Dashboard [1 pages]
+    01. Institution Overview
+02. AI Intelligence [6 pages]
+    01. AI Assistant
+    02. Smart Insights
+    03. Attendance Risk Alerts
+    04. Fee Collection Forecast
+    05. Student Progress Analysis
+    06. AI Report Builder
+03. Administration [6 pages]
+    01. Institution Profile
+    02. Institution Setup
+    03. Academic Sessions
+    04. Departments
+    05. Programs
+    06. Policies & Rules
+04. Classes & Sections [6 pages]
+    01. All Classes
+    02. Create Class
+    03. Sections & Groups
+    04. Class Capacity
+    05. Class Teacher Allocation
+    06. Class Promotion
+05. Subjects & Curriculum [6 pages]
+    01. Subject Catalogue
+    02. Create Subject
+    03. Assign Subjects
+    04. Subject Teachers
+    05. Course Structure
+    06. Curriculum Map
+06. Students [6 pages]
+    01. Student Directory
+    02. New Admission
+    03. Admission Applications
+    04. Student Profiles
+    05. Student ID Cards
+    06. Promote Students
+07. Employees & Faculty [6 pages]
+    01. Employee Directory
+    02. Add Employee
+    03. Faculty Profiles
+    04. Departments & Designations
+    05. Employee Documents
+    06. Staff ID Cards
+08. Accounts [5 pages]
+    01. Chart of Accounts
+    02. Add Income
+    03. Add Expense
+    04. Account Statements
+    05. Financial Transactions
+09. Fees & Payments [7 pages]
+    01. Fee Structure
+    02. Generate Fee Invoice
+    03. Collect Fees
+    04. Payment History
+    05. Fee Defaulters
+    06. Fee Discounts
+    07. Fee Collection Reports
+10. Salary & Payroll [5 pages]
+    01. Salary Structure
+    02. Prepare Payroll
+    03. Pay Salary
+    04. Salary Payslips
+    05. Payroll Reports
+11. Attendance [6 pages]
+    01. Student Attendance
+    02. Employee Attendance
+    03. Attendance Register
+    04. Leave Management
+    05. Attendance Corrections
+    06. Attendance Reports
+12. Timetable & Scheduling [5 pages]
+    01. Create Timetable
+    02. Class Timetable
+    03. Teacher Timetable
+    04. Room Scheduling
+    05. Timetable Conflicts
+13. Teaching, Homework & Assignments [6 pages]
+    01. Lesson Plans
+    02. Homework Management
+    03. Create Assignment
+    04. Assignment Submissions
+    05. Assignment Review
+    06. Learning Outcomes
+14. Behaviour & Skills [4 pages]
+    01. Behaviour Records
+    02. Student Observations
+    03. Skills Assessment
+    04. Behaviour & Skills Reports
+15. Communication & WhatsApp [5 pages]
+    01. Announcements
+    02. Messages & Inbox
+    03. WhatsApp Communication
+    04. Events & Calendar
+    05. Notification Centre
+16. Question Paper Management [5 pages]
+    01. Question Bank
+    02. Question Categories
+    03. Chapters & Topics
+    04. Create Question Paper
+    05. Paper Templates
+17. Examinations & Results [7 pages]
+    01. Exam Calendar
+    02. Create Examination
+    03. Exam Schedule
+    04. Enter Exam Marks
+    05. Result Cards
+    06. Result Sheets
+    07. Award Lists
+18. Class Tests [4 pages]
+    01. Create Class Test
+    02. Mini Tests
+    03. Test Results
+    04. Test Performance
+19. Reports & Analytics [7 pages]
+    01. Institution Reports
+    02. Student Reports
+    03. Staff Reports
+    04. Attendance Analytics
+    05. Finance Reports
+    06. Academic Performance
+    07. Custom Report Builder
+20. Certificates & Documents [5 pages]
+    01. Generate Certificate
+    02. Certificate Templates
+    03. Leaving Certificates
+    04. Bonafide & Character Certificates
+    05. Document Register
+21. Curriculum & Learning Resources [6 pages]
+    01. Syllabus Management
+    02. Syllabus Coverage
+    03. Learning Resources
+    04. Digital Library Catalogue
+    05. Library Issues & Returns
+    06. Reading Lists
+22. Institution Operations [8 pages]
+    01. Rooms & Facilities
+    02. Transport Routes
+    03. Fleet & Drivers
+    04. Inventory & Assets
+    05. Visitors & Gate Passes
+    06. Audit & Activity Log
+    07. Data Import & Export
+    08. Backup & Restore
+
+TOTAL: 22 main groups / 122 submenu/page sections.

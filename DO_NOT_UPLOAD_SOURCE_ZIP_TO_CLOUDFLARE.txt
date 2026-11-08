@@ -1,0 +1,13 @@
+THIS IS A SOURCE-CODE PACKAGE, NOT A CLOUDFLARE PAGES DIRECT-UPLOAD PACKAGE.
+
+Do not upload this ZIP to Cloudflare Pages.
+
+Cloudflare Pages Direct Upload requires the freshly built contents of the Vite dist/ directory.
+The current environment cannot complete npm dependency installation (npm registry DNS failure),
+so npm run build stops before Vite and no fresh dist/ folder has been produced.
+
+After dependency installation succeeds in a network-enabled build environment, run:
+  npm.cmd ci
+  npm.cmd run build
+
+Only package the contents of dist/ after that build succeeds.

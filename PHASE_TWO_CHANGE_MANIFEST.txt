@@ -1,0 +1,39 @@
+EDUSPHERE 360 — PHASE TWO PERSISTENCE UPDATE
+
+Included code updates:
+- Shared CRUD layer now allows the existing assignment submissions, work tasks, departments, programs, academic sessions, classes, subjects, and rooms tables.
+- Cloud writes confirm the current Supabase Auth user and active institution membership before attempting the write.
+- Cloud create/update/delete operations verify that the database returned the affected record, avoiding false-success messages for RLS-filtered zero-row updates/deletes.
+- Administration now uses the shared CRUD layer in both cloud and local modes.
+- Student/parent submission visibility and staff work-task visibility are restricted in the data layer, in addition to database RLS.
+- Local fee balance calculation now subtracts discounts.
+- Fee payments now use an atomic cloud RPC and an IndexedDB transaction in local mode; invoice paid amounts are no longer edited directly.
+- Fee receipt history is available per invoice.
+- Student selection uses institution student records/IDs instead of ambiguous name matching.
+- Duplicate daily attendance and timetable class/teacher/room collisions are rejected before save.
+- Students and parents only receive published exam results.
+- Administration delete handler fixed; administration forms include department/program/session/section/capacity and resource metadata.
+- Assignment submission and work-task workflows from the saved 5 Nov module update are integrated.
+- Fee invoice validation now respects the discounted invoice total.
+- Student assignment forms hide staff-only grading/publication fields.
+- Fee collection rejects future-dated payments; overdue state is calculated against the current date, and receipt/invoice identifiers use longer random suffixes.
+- Migration 020 safely updates the payment RPC for installations that have already applied migration 014.
+- Database migration 019 adds cross-institution reference guards, attendance/result uniqueness and race-safe timetable collision checks.
+
+Included database migrations:
+- 008_assignment_management_upgrade.sql
+- 009_work_management.sql
+- 014_fee_payments_transactions.sql
+- 015_administration_setup.sql
+- 016_student_write_policy_refresh.sql
+- 017_public_institution_signup.sql
+- 018_assessment_metadata_and_result_visibility.sql
+- 019_phase_two_integrity_guards.sql
+- 020_fee_payment_date_validation.sql
+
+IMPORTANT:
+- RLS remains enabled. No service-role key is placed in browser code.
+- The SQL files must be applied to the same Supabase project referenced by .env.local.
+- This package does not prove that the remote Supabase project has had the migrations applied; that requires running the included SQL in the correct project.
+- The student insert policy is refreshed for active owner/admin memberships. If saving still fails after migration, the error will now be accompanied by clearer cloud-session and membership checks; the remote auth user and membership records must then be verified.
+- Fee payments are recorded by the database RPC in migration 014; the generic CRUD layer intentionally does not permit direct writes to fee_payments.

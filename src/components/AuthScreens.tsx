@@ -1,102 +1,469 @@
 import { useState, type FormEvent } from 'react'
-import { ArrowLeft, ArrowRight, BookOpen, Building2, GraduationCap, LockKeyhole, Mail, MonitorSmartphone, ShieldCheck, Users, Wifi, WifiOff } from 'lucide-react'
+import {
+  ArrowLeft, ArrowRight, ArrowUpRight, BarChart3, BookOpen, Building2,
+  CalendarCheck, Check, CheckCircle2, ClipboardCheck,
+  GraduationCap, Headphones, HeartHandshake, Layers3, LockKeyhole,
+  Eye, EyeOff, Mail, Menu, Monitor, Server, ShieldCheck, Sparkles,
+  Users, Wallet, X, Zap,
+} from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import { userFacingError } from '../lib/userErrors'
+import { resendInstitutionOwnerVerification } from '../lib/auth'
 import type { AppRole } from '../lib/types'
-import { roleLabels } from '../lib/modules'
-import { cloudConfigured } from '../lib/supabase'
+import '../styles/welcome-marketing.css'
+import '../styles/auth-experience.css'
 
 interface ScreenProps { navigate: (screen: 'welcome' | 'login' | 'setup', role?: AppRole) => void }
 
 const portals: { role: AppRole; title: string; description: string; icon: typeof GraduationCap }[] = [
+  { role: 'owner', title: 'Institution owner', description: 'Create and manage your institution workspace', icon: Building2 },
   { role: 'admin', title: 'Administrator', description: 'Institution-wide management and reports', icon: ShieldCheck },
   { role: 'teacher', title: 'Teacher', description: 'Classes, attendance and academic work', icon: BookOpen },
   { role: 'student', title: 'Student', description: 'Learning, exams and personal records', icon: GraduationCap },
   { role: 'parent', title: 'Parent / guardian', description: 'Attendance, progress and fee updates', icon: Users },
+  { role: 'accountant', title: 'Accountant', description: 'Invoices, payments and balances', icon: Wallet },
+  { role: 'exam_officer', title: 'Examination officer', description: 'Exam schedules, marks and results', icon: ClipboardCheck },
 ]
 
 function Brand() {
-  return <div className="brand-lockup"><div className="brand-mark"><GraduationCap size={23} /></div><div><strong>EduSphere <span>360</span></strong><small>EDUCATION MANAGEMENT</small></div></div>
+  return <div className="es-auth-brand" aria-label="EduSphere 360">
+    <span className="es-auth-brand-mark"><GraduationCap size={23} strokeWidth={2.1} /></span>
+    <span className="es-auth-brand-copy"><b>EduSphere <em>360</em></b><small>EDUCATION MANAGEMENT</small></span>
+  </div>
 }
 
 export function WelcomeScreen({ navigate }: ScreenProps) {
-  const { mode, setMode } = useAuth()
-  const [modeError, setModeError] = useState('')
-  async function switchMode(value: 'local' | 'cloud') {
-    setModeError('')
-    try { await setMode(value) } catch (error) { setModeError(error instanceof Error ? error.message : 'Could not change mode.') }
-  }
-  return <div className="welcome-shell">
-    <header className="public-nav"><Brand /><div className="nav-right"><span className={`connection-pill ${mode === 'local' ? 'local' : 'cloud'}`}>{mode === 'local' ? <WifiOff size={14}/> : <Wifi size={14}/>} {mode === 'local' ? 'Offline workspace' : 'Cloud workspace'}</span><button className="button button-outline button-small" onClick={() => navigate('login')}>Login <ArrowRight size={15}/></button></div></header>
-    <main>
-      <section className="hero-section">
-        <div className="hero-copy"><div className="eyebrow"><span className="eyebrow-dot"/> ONE CONNECTED EDUCATION PLATFORM</div><h1>Every part of education.<br/><span>One clear picture.</span></h1><p className="hero-lead">Manage students, faculty, parents, academics and administration from one connected workspace — built for schools, colleges and universities.</p><div className="hero-actions"><button className="button button-primary button-large" onClick={() => navigate('setup')}>Create your institution <ArrowRight size={17}/></button><button className="button button-quiet button-large" onClick={() => navigate('login')}>I already have an account</button></div><div className="hero-notes"><span><ShieldCheck size={15}/> Role-based access</span><span><MonitorSmartphone size={15}/> Mobile responsive</span><span><LockKeyhole size={15}/> Private records</span></div></div>
-        <div className="hero-visual"><div className="visual-glow"/><div className="visual-window"><div className="visual-top"><div className="window-dots"><i/><i/><i/></div><span>SAMPLE DASHBOARD</span><span className="live-chip">PREVIEW</span></div><div className="visual-title"><div><small>GOOD MORNING</small><strong>Your institution at a glance</strong></div><div className="visual-avatar">ES</div></div><div className="visual-stats"><div><span>STUDENTS</span><strong>1,248</strong><small>Across all programs</small></div><div><span>FACULTY</span><strong>86</strong><small>Teaching staff</small></div><div><span>ATTENDANCE</span><strong>94.2%</strong><small>Today's snapshot</small></div></div><div className="visual-lower"><div className="visual-chart"><div className="lower-label">Attendance overview <small>THIS WEEK</small></div><div className="bars">{[42,58,51,76,64,88,72].map((v,i)=><i key={i} style={{height:`${v}%`}}/>)}</div><div className="bar-days"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span></div></div><div className="visual-activity"><div className="lower-label">Example activity</div><p><i className="activity-dot blue"/> New admission <small>Just now</small></p><p><i className="activity-dot green"/> Attendance saved <small>12 min</small></p><p><i className="activity-dot amber"/> Fee received <small>28 min</small></p></div></div></div><div className="floating-note"><div className="floating-icon"><Users size={18}/></div><div><strong>Connected people</strong><small>Admin · Faculty · Students · Parents</small></div></div></div>
-      </section>
-      <section className="portal-section"><div className="section-heading"><div><div className="eyebrow">YOUR ROLE, YOUR WORKSPACE</div><h2>Choose your portal</h2></div><p>Sign in with the account created for you by your institution administrator.</p></div><div className="portal-grid">{portals.map(({role,title,description,icon:Icon})=><button className="portal-card" key={role} onClick={()=>navigate('login',role)}><div className="portal-icon"><Icon size={22}/></div><div className="portal-card-text"><strong>{title}</strong><small>{description}</small></div><ArrowRight size={17} className="portal-arrow"/></button>)}</div></section>
-    </main>
-    <footer className="public-footer"><Brand/><span>© {new Date().getFullYear()} EduSphere 360. A connected education workspace.</span><div className="mode-switch"><span>Workspace mode</span><button className={mode === 'local' ? 'selected' : ''} onClick={()=>void switchMode('local')}>Offline</button><button className={mode === 'cloud' ? 'selected' : ''} onClick={()=>void switchMode('cloud')} disabled={!cloudConfigured}>Online</button></div></footer>
-    {modeError && <div className="toast toast-error">{modeError}</div>}
-  </div>
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const closeMenu = () => setMobileOpen(false)
+  const go = (screen: 'login' | 'setup') => { closeMenu(); navigate(screen) }
+
+  return (
+    <div className="edm-home">
+      <header className="edm-header">
+        <a className="edm-brand" href="#top" aria-label="EduSphere 360 home" onClick={closeMenu}>
+          <span className="edm-brand-symbol"><GraduationCap size={24} strokeWidth={2.1}/><i>360</i></span>
+          <span className="edm-brand-copy"><b>EduSphere <em>360</em></b><small>EDUCATION MANAGEMENT</small></span>
+        </a>
+        <button className="edm-mobile-toggle" onClick={() => setMobileOpen(!mobileOpen)} aria-label={mobileOpen ? 'Close menu' : 'Open menu'} aria-expanded={mobileOpen}>
+          {mobileOpen ? <X size={21}/> : <Menu size={21}/>}
+        </button>
+        <nav className={`edm-nav ${mobileOpen ? 'is-open' : ''}`} aria-label="Main navigation">
+          <a className="edm-nav-link" href="#platform" onClick={closeMenu}>Platform</a>
+          <a className="edm-nav-link" href="#solutions" onClick={closeMenu}>Solutions</a>
+          <a className="edm-nav-link" href="#self-hosted" onClick={closeMenu}>USV 360 Pro</a>
+          <a className="edm-nav-link" href="#features" onClick={closeMenu}>Explore</a>
+          <a className="edm-nav-link" href="#workflow" onClick={closeMenu}>How it works</a>
+        </nav>
+        <div className="edm-header-actions"><button className="edm-login-link" onClick={() => go('login')}>Login</button><button className="edm-signup-button" onClick={() => go('setup')}>Sign up now <ArrowUpRight size={16}/></button></div>
+      </header>
+
+      <main id="top">
+        <section className="edm-hero">
+          <div className="edm-hero-grid" aria-hidden="true"/><div className="edm-hero-orb edm-orb-one"/><div className="edm-hero-orb edm-orb-two"/>
+          <div className="edm-hero-inner">
+            <div className="edm-hero-copy">
+              <div className="edm-eyebrow"><span className="edm-eyebrow-dot"/> A CONNECTED EDUCATION MANAGEMENT PLATFORM</div>
+              <h1>Your institution.<br/><em>One intelligent system.</em></h1>
+              <p className="edm-hero-lead">Bring admissions, student records, teaching, attendance, examinations, fees and communication together in one beautifully organised platform.</p>
+              <div className="edm-hero-actions"><button className="edm-button edm-button-lime" onClick={() => go('setup')}>Create your institution <ArrowUpRight size={18}/></button><a className="edm-button edm-button-outline" href="#platform" onClick={closeMenu}>Explore the platform <ArrowRight size={17}/></a></div>
+              <div className="edm-free-note"><span><Check size={14}/></span><b>Cloud-first core platform.</b> Explore the currently available workflows before onboarding.</div>
+              <div className="edm-hero-trust"><span><ShieldCheck size={16}/> Role-based access</span><span><Monitor size={16}/> Desktop & mobile</span><span><Server size={16}/> Planned self-hosted edition</span></div>
+            </div>
+            <div className="edm-hero-art" aria-label="Illustrative EduSphere 360 product interface">
+              <div className="edm-art-halo"/><div className="edm-art-orbit orbit-a"/><div className="edm-art-orbit orbit-b"/>
+              <div className="edm-product-card">
+                <div className="edm-product-top"><div className="edm-product-brand"><span><GraduationCap size={16}/></span><b>EduSphere <i>360</i></b></div><div className="edm-window-dots"><i/><i/><i/></div></div>
+                <div className="edm-product-layout">
+                  <aside className="edm-product-side"><div className="edm-side-active"><Layers3 size={15}/></div><div><Users size={15}/></div><div><BookOpen size={15}/></div><div><CalendarCheck size={15}/></div><div><Wallet size={15}/></div><div><BarChart3 size={15}/></div></aside>
+                  <div className="edm-product-main"><div className="edm-product-title"><div><small>INSTITUTION OVERVIEW</small><b>Everything, in one view.</b></div><span className="edm-product-chip">PRODUCT PREVIEW</span></div>
+                    <div className="edm-product-stats"><div><small>LEARNERS</small><b>Admissions</b><span>Profiles & enrolment</span></div><div><small>ACADEMICS</small><b>Teaching</b><span>Classes & assessments</span></div><div><small>FINANCE</small><b>Fee ledger</b><span>Invoices & payments</span></div></div>
+                    <div className="edm-product-board"><div className="edm-board-heading"><b>Institution operations</b><span>WORKFLOW</span></div><div className="edm-board-line"><i className="line-learners"><Users size={14}/></i><span><b>Student management</b><small>Admissions · Profiles · Class placement</small></span><CheckCircle2 size={16}/></div><div className="edm-board-line"><i className="line-academics"><BookOpen size={14}/></i><span><b>Academic management</b><small>Attendance · Exams · Assignments</small></span><CheckCircle2 size={16}/></div><div className="edm-board-line"><i className="line-finance"><Wallet size={14}/></i><span><b>Finance & administration</b><small>Fees · Departments · Reports</small></span><CheckCircle2 size={16}/></div></div>
+                  </div>
+                </div>
+              </div>
+              <div className="edm-float-card edm-float-role"><span><Users size={18}/></span><div><b>Every role connected</b><small>Owner · Teacher · Student · Parent</small></div></div>
+              <div className="edm-float-card edm-float-free"><span><Sparkles size={18}/></span><div><b>Core tools, connected</b><small>Built around institution workflows</small></div></div>
+              <div className="edm-art-caption">A clearer way to run your institution</div>
+            </div>
+          </div>
+          <div className="edm-hero-bottom"><span>MADE FOR THE WAY INSTITUTIONS WORK</span><div><b>Schools</b><i/><b>Colleges</b><i/><b>Universities</b><i/><b>Multi-campus groups</b></div></div>
+        </section>
+
+        <section className="edm-facts-band" aria-label="EduSphere 360 platform facts">
+          <div><strong>3</strong><span>Education settings<br/>School · College · University</span></div>
+          <div><strong>7</strong><span>Role types<br/>Access for every stakeholder</span></div>
+          <div><strong>7</strong><span>Role-specific workspaces<br/>Access shaped by responsibility</span></div>
+          <div><strong>1</strong><span>Unified platform<br/>One consistent experience</span></div>
+        </section>
+
+        <section className="edm-intro-section edm-section" id="platform">
+          <div className="edm-section-side"><span className="edm-section-index">01 / PLATFORM</span><span className="edm-side-rule"/><span className="edm-section-side-note">A single place for your whole institution</span></div>
+          <div className="edm-intro-content"><div className="edm-section-kicker">MEET EDUSPHERE 360</div><h2>Less administration.<br/><em>More meaningful progress.</em></h2><p>EduSphere 360 is an education management platform designed to make institutional work simpler. From the first admission to daily teaching, finance and reporting, teams can manage their responsibilities through one consistent system.</p><div className="edm-intro-points"><span><CheckCircle2 size={17}/> One connected information system</span><span><CheckCircle2 size={17}/> Clear access for every user role</span><span><CheckCircle2 size={17}/> Configurable for different institution types</span></div></div>
+          <div className="edm-intro-visual"><div className="edm-campus-illustration"><div className="edm-campus-sun"/><div className="edm-campus-building"><div className="edm-building-roof"/><div className="edm-building-top"><span/><span/><span/></div><div className="edm-building-columns"><i/><i/><i/><i/></div><div className="edm-building-door"/></div><div className="edm-campus-ground"/><div className="edm-campus-tree tree-left"/><div className="edm-campus-tree tree-right"/><div className="edm-campus-path"/></div><div className="edm-visual-label"><span>ONE</span><b>One institution.<br/>Every moving part.</b></div></div>
+        </section>
+
+        <section className="edm-offer-section edm-section" id="features">
+          <div className="edm-section-heading"><div><span className="edm-section-kicker">WHAT WE OFFER</span><h2>Everything your institution needs.<br/><em>Nothing scattered.</em></h2></div><p>Purpose-built tools for the people, processes and priorities that keep education moving.</p></div>
+          <div className="edm-feature-grid">
+            <article className="edm-feature-card feature-large"><div className="edm-feature-top"><span className="edm-feature-icon"><Users size={21}/></span><small>01 / PEOPLE</small></div><h3>Multi-access user management</h3><p>Give owners, administrators, teachers, students, parents and finance teams the right tools for their responsibilities.</p><div className="edm-feature-visual edm-people-visual"><div className="edm-person person-one"><Users size={17}/></div><div className="edm-person person-two"><GraduationCap size={17}/></div><div className="edm-person person-three"><BookOpen size={17}/></div><div className="edm-person person-four"><Building2 size={17}/></div><div className="edm-role-lines"><i/><i/><i/><i/></div></div></article>
+            <article className="edm-feature-card"><div className="edm-feature-top"><span className="edm-feature-icon"><BookOpen size={21}/></span><small>02 / ACADEMICS</small></div><h3>Comprehensive academic management</h3><p>Organise classes, subjects, timetables, assignments, examinations and results.</p><div className="edm-feature-visual edm-calendar-visual"><div className="edm-calendar-head"><b>Academic planner</b><span>•••</span></div><div className="edm-calendar-grid">{Array.from({length:15},(_,i)=><i key={i} className={i===3||i===8||i===11?'marked':''}/>)}</div><small>Classes · Assessments · Results</small></div></article>
+            <article className="edm-feature-card"><div className="edm-feature-top"><span className="edm-feature-icon"><Wallet size={21}/></span><small>03 / FINANCE</small></div><h3>Fees, payments & clear records</h3><p>Manage fee structures, invoices, receipts, balances and payment history.</p><div className="edm-feature-visual edm-finance-visual"><div className="edm-finance-bar"><span/><span/><span/><span/><span/><span/><span/></div><div className="edm-finance-caption"><b>Fee collection overview</b><small>Invoices · Payments · Balances</small></div></div></article>
+            <article className="edm-feature-card"><div className="edm-feature-top"><span className="edm-feature-icon"><CalendarCheck size={21}/></span><small>04 / OPERATIONS</small></div><h3>Attendance & daily operations</h3><p>Record student and faculty attendance and coordinate everyday institution activity.</p><div className="edm-feature-visual edm-attendance-visual"><div><i/><b>Present</b><small>Attendance register</small></div><div><i/><b>Late</b><small>Attendance register</small></div><div><i/><b>Absent</b><small>Attendance register</small></div></div></article>
+            <article className="edm-feature-card"><div className="edm-feature-top"><span className="edm-feature-icon"><Headphones/></span><small>05 / COMMUNICATION</small></div><h3>Keep every stakeholder informed</h3><p>Share announcements and keep parents, students and teams connected with institution updates.</p><div className="edm-feature-visual edm-message-visual"><div className="edm-message-bubble">New announcement published<span/></div><div className="edm-message-bubble message-alt">Update shared with your class<span/></div></div></article>
+            <article className="edm-feature-card"><div className="edm-feature-top"><span className="edm-feature-icon"><BarChart3 size={21}/></span><small>06 / INSIGHT</small></div><h3>Useful reports & decision support</h3><p>Bring institution records into clearer views that help teams understand what needs attention.</p><div className="edm-feature-visual edm-report-visual"><div className="edm-report-axis"><i/><i/><i/><i/></div><div className="edm-report-bars"><i/><i/><i/><i/><i/><i/><i/><i/></div></div></article>
+          </div>
+        </section>
+
+        <section className="edm-solutions-section edm-section" id="solutions">
+          <div className="edm-section-heading"><div><span className="edm-section-kicker">SOLUTIONS FOR EVERY CAMPUS</span><h2>One platform.<br/><em>Different institution needs.</em></h2></div><p>Start with the workflows that matter to your institution and build a connected operating model around them.</p></div>
+          <div className="edm-solution-grid"><article className="edm-solution-card solution-school"><span className="edm-solution-number">01</span><span className="edm-solution-icon"><Building2 size={24}/></span><h3>Schools</h3><p>Admissions, classes, attendance, parent communication, fee collection and student progress.</p><a href="#get-started">Start with EduSphere 360 <ArrowUpRight size={16}/></a><div className="edm-solution-art school-art"><div/><div/><div/><i/></div></article><article className="edm-solution-card solution-college"><span className="edm-solution-number">02</span><span className="edm-solution-icon"><BookOpen size={24}/></span><h3>Colleges</h3><p>Departments, programmes, faculty, timetables, assessments, examinations and academic records.</p><a href="#get-started">Start with EduSphere 360 <ArrowUpRight size={16}/></a><div className="edm-solution-art college-art"><div/><div/><div/><i/></div></article><article className="edm-solution-card solution-university"><span className="edm-solution-number">03</span><span className="edm-solution-icon"><GraduationCap size={24}/></span><h3>Universities</h3><p>Multi-department coordination, academic sessions, student services and campus administration.</p><a href="#get-started">Start with EduSphere 360 <ArrowUpRight size={16}/></a><div className="edm-solution-art university-art"><div/><div/><div/><i/></div></article></div>
+        </section>
+
+        <section className="edm-access-section edm-section" id="portals">
+          <div className="edm-section-heading"><div><span className="edm-section-kicker">MULTI-ACCESS BY DESIGN</span><h2>Every person has<br/><em>a place in the platform.</em></h2></div><p>Give each stakeholder a focused portal, with access shaped around their role and responsibilities.</p></div>
+          <div className="edm-access-grid">{portals.map(({ role, title, description, icon: Icon }) => <button key={role} className="edm-access-card" onClick={() => navigate('login', role)}><span className="edm-access-icon"><Icon size={20}/></span><span className="edm-access-copy"><b>{title}</b><small>{description}</small></span><ArrowUpRight size={17}/></button>)}</div>
+        </section>
+
+        <section className="edm-marquee" aria-label="Platform features"><div className="edm-marquee-track">{['Admissions & records','Faculty management','Attendance','Examinations','Fee management','Assignments','Timetables','Announcements','Reports','Planned self-hosted edition','Admissions & records','Faculty management','Attendance','Examinations','Fee management','Assignments','Timetables','Announcements','Reports','Planned self-hosted edition'].map((item,i)=><span key={`${item}-${i}`}><i/> {item}</span>)}</div></section>
+
+        <section className="edm-selfhost-section edm-section" id="self-hosted">
+          <div className="edm-selfhost-art"><div className="edm-server-orbit orbit-one"/><div className="edm-server-orbit orbit-two"/><div className="edm-server-stack"><div><Server size={22}/><span><b>USV 360 Pro</b><small>SELF-HOSTED PLATFORM</small></span><i/></div><div><LockKeyhole size={19}/><span><b>Your infrastructure</b><small>Deployment under your control</small></span></div><div><ShieldCheck size={19}/><span><b>Your data ownership</b><small>Choose where your records reside</small></span></div></div><span className="edm-host-caption">INSTITUTION-CONTROLLED DEPLOYMENT</span></div>
+          <div className="edm-selfhost-copy"><span className="edm-section-kicker">FOR INSTITUTIONS THAT WANT MORE CONTROL</span><h2>Meet <em>USV 360 Pro.</em><br/>Your platform. Your infrastructure.</h2><p>USV 360 Pro is the self-hosted edition planned for institutions that want to run EduSphere 360 on their own infrastructure. Deployment availability and requirements will be confirmed with the release.</p><ul><li><CheckCircle2 size={17}/> Self-hosted deployment option</li><li><CheckCircle2 size={17}/> Greater infrastructure and data control</li><li><CheckCircle2 size={17}/> A familiar platform for all user roles</li></ul><span className="edm-text-link edm-product-status">USV 360 Pro · Self-hosted edition</span></div>
+        </section>
+
+        <section className="edm-free-section edm-section" id="why-edusphere">
+          <div className="edm-free-copy"><span className="edm-section-kicker">ACCESS BUILT AROUND YOUR INSTITUTION</span><h2>A strong core.<br/><em>Room to grow.</em></h2><p>Start with the operational workflows currently available in EduSphere 360. Additional capabilities will be introduced as their data models, permissions and end-to-end workflows are completed.</p><div className="edm-free-benefits"><div><span><Check size={16}/></span><b>Connected learner records</b><small>Keep permitted student information in one workspace.</small></div><div><span><Check size={16}/></span><b>Role-specific access</b><small>Give each user a workspace for their responsibilities.</small></div><div><span><Check size={16}/></span><b>Connected core workflows</b><small>Bring supported operations into one experience.</small></div></div><button className="edm-button edm-button-dark" onClick={() => go('setup')}>Create your institution <ArrowUpRight size={17}/></button></div>
+          <div className="edm-free-visual"><div className="edm-free-stamp"><span>CORE PLATFORM</span><b>ACCESS</b><small>AVAILABLE WORKFLOWS</small></div><div className="edm-free-orbit free-orbit-a"/><div className="edm-free-orbit free-orbit-b"/><div className="edm-free-tile tile-main"><Sparkles size={22}/><b>Core workflows</b><small>Available institution management</small></div><div className="edm-free-tile tile-left"><Users size={20}/><b>Every role</b></div><div className="edm-free-tile tile-right"><Layers3 size={20}/><b>Connected workflows</b></div></div>
+        </section>
+
+        <section className="edm-why-section edm-section" id="why-choose-us">
+          <div className="edm-section-heading"><div><span className="edm-section-kicker">WHY EDUSPHERE 360 STANDS OUT</span><h2>Designed for real institution work.<br/><em>Ready to grow with you.</em></h2></div><p>A clear experience for administrators and a simpler everyday experience for everyone who depends on your institution.</p></div>
+          <div className="edm-why-grid"><article><span><Layers3 size={21}/></span><h3>Comprehensive by design</h3><p>Academic, administrative and financial workflows live in one connected platform.</p></article><article><span><Users size={21}/></span><h3>Multi-access, role-aware</h3><p>Owners, teams, students and parents each get a relevant view of their responsibilities.</p></article><article><span><Sparkles size={21}/></span><h3>Customisable experience</h3><p>Build an institution workflow around your organisation, not the other way around.</p></article><article><span><Zap size={21}/></span><h3>Ready to evolve</h3><p>A flexible foundation that can grow as new integrations and automation features are developed and released.</p></article><article><span><Server size={21}/></span><h3>Cloud-first today</h3><p>The current release operates online. A separate self-hosted edition is planned and is not part of this release.</p></article><article><span><HeartHandshake size={21}/></span><h3>One connected community</h3><p>Keep administration, educators, learners and families working from shared information.</p></article></div>
+        </section>
+
+        <section className="edm-workflow-section edm-section" id="workflow"><div className="edm-workflow-head"><span className="edm-section-kicker">A SINGLE-STEP VIEW OF THE BIG PICTURE</span><h2>From first enquiry<br/><em>to every achievement.</em></h2><p>Follow the connected journey across your institution with one clear system.</p></div><div className="edm-workflow-track"><article><span>01</span><i><Users size={21}/></i><b>Admit</b><small>Enquiries, admissions and student profiles</small></article><article><span>02</span><i><BookOpen size={21}/></i><b>Educate</b><small>Classes, subjects and assignments</small></article><article><span>03</span><i><CalendarCheck size={21}/></i><b>Coordinate</b><small>Attendance, schedules and communication</small></article><article><span>04</span><i><ClipboardCheck size={21}/></i><b>Evaluate</b><small>Examinations, results and progress</small></article><article><span>05</span><i><Wallet size={21}/></i><b>Manage</b><small>Fees, finance and administration</small></article></div></section>
+
+        
+
+        
+
+        
+
+        <section className="edm-final-cta" id="get-started"><div className="edm-cta-glow"/><div><span className="edm-section-kicker">YOUR NEXT CHAPTER STARTS HERE</span><h2>Ready to transform<br/><em>your institution?</em></h2><p>Bring your people, processes and progress together with EduSphere 360.</p></div><div className="edm-cta-actions"><button className="edm-button edm-button-lime" onClick={() => go('setup')}>Get started today <ArrowUpRight size={18}/></button><button className="edm-cta-login" onClick={() => go('login')}>Already have an account? Login <ArrowRight size={15}/></button></div></section>
+      </main>
+
+      <footer className="edm-footer">
+        <div className="edm-footer-main">
+          <div className="edm-footer-brand">
+            <a className="edm-brand edm-brand-footer" href="#top" aria-label="EduSphere 360 home">
+              <span className="edm-brand-symbol"><GraduationCap size={24}/><i>360</i></span>
+              <span className="edm-brand-copy"><b>EduSphere <em>360</em></b><small>EDUCATION MANAGEMENT</small></span>
+            </a>
+            <p>One intelligent system for the people, learning and operations of your institution.</p>
+            <div className="edm-footer-free"><Sparkles size={15}/> Online core platform</div>
+          </div>
+          <div className="edm-footer-col"><b>Platform</b><a href="#platform">About EduSphere</a><a href="#features">Features</a><a href="#solutions">Solutions</a><a href="#self-hosted">USV 360 Pro</a></div>
+          <div className="edm-footer-col"><b>Explore</b><a href="#portals">User portals</a><a href="#why-choose-us">Why EduSphere</a><a href="#workflow">How it works</a><a href="#why-edusphere">Core capabilities</a></div>
+          <div className="edm-footer-col"><b>Get started</b><a href="#get-started">Create an institution</a><button type="button" onClick={() => go('login')}>Login to your account</button><a href="#top">Back to top</a></div>
+        </div>
+        <div className="edm-footer-bottom"><span>© {new Date().getFullYear()} EduSphere 360. All rights reserved.</span><span>Built for schools · colleges · universities</span><a href="#top">Back to top ↑</a></div>
+      </footer>
+    </div>
+  )
+}
+
+function AuthVisualPanel({ variant }: { variant: 'login' | 'signup' | 'cloud' }) {
+  return (
+    <aside className={`es-auth-visual es-auth-visual-${variant}`}>
+      <div className="es-auth-visual-head"><Brand /><span className="es-auth-visual-label">ONE PLATFORM · EVERY POSSIBILITY</span></div>
+      <div className="es-auth-visual-copy">
+        <span className="es-auth-kicker"><i /> {variant === 'login' ? 'WELCOME BACK' : 'YOUR INSTITUTION STARTS HERE'}</span>
+        <h1>{variant === 'login' ? <>Welcome back to<br/><em>better learning.</em></> : <>Bring your campus<br/><em>together.</em></>}</h1>
+        <p>{variant === 'login'
+          ? 'Sign in to the people, tools and progress that keep your institution moving forward.'
+          : 'A thoughtful, connected way to manage admissions, academics, people and everyday operations.'}</p>
+      </div>
+      <div className="es-auth-illustration" aria-label="Illustration of a connected education campus">
+        <div className="es-auth-illustration-glow" />
+        <div className="es-auth-orbit es-auth-orbit-one" />
+        <div className="es-auth-orbit es-auth-orbit-two" />
+        <div className="es-campus-illustration">
+          <div className="es-campus-roof" />
+          <div className="es-campus-top"><span /><span /><span /></div>
+          <div className="es-campus-columns"><i /><i /><i /><i /><i /></div>
+          <div className="es-campus-base"><span>EDUSPHERE 360</span></div>
+          <div className="es-campus-ground" />
+        </div>
+        <div className="es-auth-float es-auth-float-admissions"><span><Users size={16}/></span><div><b>Admissions</b><small>Student records</small></div><CheckCircle2 size={15}/></div>
+        <div className="es-auth-float es-auth-float-learning"><span><BookOpen size={16}/></span><div><b>Learning</b><small>Classes & assessments</small></div></div>
+        <div className="es-auth-float es-auth-float-finance"><span><Wallet size={16}/></span><div><b>Operations</b><small>Fees & administration</small></div></div>
+      </div>
+      <div className="es-auth-visual-foot"><span className="es-auth-foot-symbol"><ShieldCheck size={16}/></span><span><b>Designed around your institution</b><small>One connected education experience</small></span><span className="es-auth-foot-dots"><i/><i/><i/></span></div>
+    </aside>
+  )
+}
+
+function AuthTopline({ navigate, mode }: { navigate: ScreenProps['navigate']; mode: 'login' | 'signup' }) {
+  return (
+    <div className="es-auth-topline">
+      <button type="button" className="es-auth-back" onClick={() => navigate('welcome')}><ArrowLeft size={15}/> <span>Back to website</span></button>
+      {mode === 'login'
+        ? <p>New to EduSphere 360? <button type="button" onClick={() => navigate('setup')}>Sign up</button></p>
+        : <p>Already have an account? <button type="button" onClick={() => navigate('login')}>Login</button></p>}
+    </div>
+  )
 }
 
 export function LoginScreen({ navigate, initialRole }: ScreenProps & { initialRole?: AppRole }) {
   const { mode, signIn } = useAuth()
-  const [role,setRole] = useState<AppRole>(initialRole ?? 'admin')
-  const [email,setEmail] = useState('')
-  const [password,setPassword] = useState('')
-  const [busy,setBusy] = useState(false)
-  const [error,setError] = useState('')
+  type LoginAccountType = 'owner_admin' | 'employee' | 'student' | 'parent'
+  const initialAccountType: LoginAccountType = initialRole === 'student' ? 'student' : initialRole === 'parent' ? 'parent' : initialRole === 'owner' || initialRole === 'admin' || !initialRole ? 'owner_admin' : 'employee'
+  const [accountType, setAccountType] = useState<LoginAccountType>(initialAccountType)
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [rememberMe, setRememberMe] = useState(true)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
+  const [resendBusy, setResendBusy] = useState(false)
+  const [resendNotice, setResendNotice] = useState('')
+
   async function submit(event: FormEvent) {
-    event.preventDefault(); setBusy(true); setError('')
-    try { await signIn(email,password,role) } catch (err) { setError(err instanceof Error ? err.message : 'Unable to sign in.') }
-    finally { setBusy(false) }
+    event.preventDefault()
+    setBusy(true); setError(''); setNotice('')
+    try {
+      await signIn(email.trim(), password, accountType, rememberMe)
+    } catch (err) {
+      setError(userFacingError(err, 'Unable to sign in. Check your details and try again.'))
+    } finally { setBusy(false) }
   }
-  return <div className="auth-shell"><header className="public-nav"><Brand/><button className="button button-quiet" onClick={()=>navigate('welcome')}><ArrowLeft size={16}/> Back to home</button></header><main className="auth-layout"><section className="auth-side-copy"><div className="eyebrow">WELCOME BACK</div><h1>Your institution,<br/><span>all in one place.</span></h1><p>Sign in to access your workspace. Your role determines which student, academic and administrative tools you can use.</p><div className="auth-feature-list"><span><ShieldCheck size={17}/> Protected role-based access</span><span><Users size={17}/> Connected institution records</span><span><MonitorSmartphone size={17}/> Works on desktop and mobile</span></div></section><section className="auth-card"><div className="auth-card-heading"><div className="portal-icon large"><LockKeyhole size={22}/></div><h2>Sign in to EduSphere</h2><p>Select your portal and enter your account details.</p></div><form onSubmit={submit} className="form-stack"><label className="field-label">Sign in as<select value={role} onChange={e=>setRole(e.target.value as AppRole)} className="input-control">{(['admin','teacher','student','parent','accountant','exam_officer'] as AppRole[]).map(r=><option value={r} key={r}>{roleLabels[r]}</option>)}</select></label><label className="field-label">Email address<div className="input-icon-wrap"><Mail size={17}/><input className="input-control with-icon" type="email" autoComplete="username" required value={email} onChange={e=>setEmail(e.target.value)} placeholder="name@institution.edu"/></div></label><label className="field-label">Password<div className="input-icon-wrap"><LockKeyhole size={17}/><input className="input-control with-icon" type="password" autoComplete="current-password" minLength={8} required value={password} onChange={e=>setPassword(e.target.value)} placeholder="Enter your password"/></div></label>{error && <div className="inline-error">{error}</div>}<button className="button button-primary button-full" disabled={busy}>{busy?'Signing in…':'Sign in securely'} <ArrowRight size={17}/></button></form><div className="auth-card-foot"><span>{mode === 'local' ? <><WifiOff size={14}/> Offline local workspace</> : <><Wifi size={14}/> Online cloud workspace</>}</span><button onClick={()=>navigate('setup')}>First-time setup</button></div></section></main></div>
+
+  async function resendLoginVerification() {
+    if (!email.trim()) {
+      setError('Enter the email address you used to register, then resend the verification email.')
+      return
+    }
+    setResendBusy(true)
+    setResendNotice('')
+    try {
+      await resendInstitutionOwnerVerification(email)
+      setResendNotice('A new verification email has been sent. Check your inbox and spam folder.')
+    } catch (err) {
+      setResendNotice(userFacingError(err, 'Could not resend the verification email. Please try again shortly.'))
+    } finally {
+      setResendBusy(false)
+    }
+  }
+
+  function showForgotPassword() {
+    setNotice('For your online account, contact your institution administrator to request a secure password reset.')
+  }
+
+  return (
+    <div className="es-auth-page">
+      <AuthVisualPanel variant="login" />
+      <main className="es-auth-main">
+        <AuthTopline navigate={navigate} mode="login" />
+        <div className="es-auth-form-wrap">
+          <section className="es-auth-card es-login-card">
+            <div className="es-auth-avatar"><span><GraduationCap size={23}/></span><i><Check size={11}/></i></div>
+            <div className="es-auth-form-heading">
+              <span className="es-auth-overline">YOUR LEARNING COMMUNITY</span>
+              <h2>Welcome back</h2>
+              <p>Enter your account details to continue to EduSphere 360.</p>
+            </div>
+            <div className="es-account-type" role="group" aria-label="Choose account type">
+              <button type="button" className={accountType === 'owner_admin' ? 'is-active' : ''} onClick={() => { setAccountType('owner_admin'); setError('') }} aria-pressed={accountType === 'owner_admin'}>
+                <span><Building2 size={17}/></span><b>Owner / Admin</b>
+              </button>
+              <button type="button" className={accountType === 'employee' ? 'is-active' : ''} onClick={() => { setAccountType('employee'); setError('') }} aria-pressed={accountType === 'employee'}>
+                <span><Users size={17}/></span><b>Employee</b>
+              </button>
+              <button type="button" className={accountType === 'student' ? 'is-active' : ''} onClick={() => { setAccountType('student'); setError('') }} aria-pressed={accountType === 'student'}>
+                <span><GraduationCap size={18}/></span><b>Student</b>
+              </button>
+              <button type="button" className={accountType === 'parent' ? 'is-active' : ''} onClick={() => { setAccountType('parent'); setError('') }} aria-pressed={accountType === 'parent'}>
+                <span><Users size={17}/></span><b>Parent</b>
+              </button>
+            </div>
+            <form className="es-auth-form" onSubmit={submit}>
+              <label className="es-auth-field"><span>Email address</span><div className="es-auth-input"><Mail size={17}/><input type="email" autoComplete="username" required value={email} onChange={e => setEmail(e.target.value)} placeholder="you@institution.edu" /></div></label>
+              <label className="es-auth-field"><span>Password</span><div className="es-auth-input"><LockKeyhole size={17}/><input type={showPassword ? 'text' : 'password'} autoComplete="current-password" required value={password} onChange={e => setPassword(e.target.value)} placeholder="Enter your password"/><button type="button" className="es-password-toggle" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Hide password' : 'Show password'}>{showPassword ? <EyeOff size={17}/> : <Eye size={17}/>}</button></div></label>
+              <div className="es-auth-form-options"><label className="es-auth-check"><input type="checkbox" checked={rememberMe} onChange={e => setRememberMe(e.target.checked)}/><span className="es-check-box"/><span>Remember me</span></label><button type="button" className="es-auth-text-button" onClick={showForgotPassword}>Forgot your password?</button></div>
+              {mode === 'cloud' && <small className="es-auth-session-hint">Cloud session duration follows your institution’s security settings.</small>}
+              {notice && <div className="es-auth-notice" role="status">{notice}</div>}
+              {error && <div className="es-auth-error" role="alert">{error}</div>}
+              {error.toLowerCase().includes('verify your email') && mode === 'cloud' && (
+                <button type="button" className="es-auth-text-button es-resend-login-link" onClick={resendLoginVerification} disabled={resendBusy}>
+                  {resendBusy ? 'Sending verification email…' : 'Resend verification email'}
+                </button>
+              )}
+              {resendNotice && <div className="es-auth-notice" role="status">{resendNotice}</div>}
+              <button className="es-auth-submit" type="submit" disabled={busy}>{busy ? 'Signing in…' : 'Login'} <ArrowRight size={17}/></button>
+            </form>
+            <div className="es-auth-mobile-signup">Don't have an account? <button type="button" onClick={() => navigate('setup')}>Sign up</button></div>
+            <div className="es-auth-secure-note"><ShieldCheck size={15}/> Your account is protected with role-based access.</div>
+          </section>
+        </div>
+        <footer className="es-auth-main-foot"><span>© {new Date().getFullYear()} EduSphere 360</span><span>Education management, thoughtfully connected.</span></footer>
+      </main>
+    </div>
+  )
+}
+
+function LegalNotice({ kind, onClose }: { kind: 'terms' | 'privacy'; onClose: () => void }) {
+  const isTerms = kind === 'terms'
+  return (
+    <div className="es-legal-backdrop" role="presentation" onMouseDown={onClose}>
+      <section className="es-legal-dialog" role="dialog" aria-modal="true" aria-labelledby="es-legal-title" onMouseDown={event => event.stopPropagation()}>
+        <button type="button" className="es-legal-close" onClick={onClose} aria-label="Close">×</button>
+        <span className="es-auth-overline">EDUSPHERE 360</span>
+        <h2 id="es-legal-title">{isTerms ? 'Terms and Conditions' : 'Privacy Notice'}</h2>
+        {isTerms ? (
+          <div className="es-legal-copy">
+            <p>By creating an account, you agree to use EduSphere 360 only for lawful education and institution-management purposes.</p>
+            <ul>
+              <li>Public sign-up creates a new institution workspace and makes the registering account its first owner.</li>
+              <li>Employees, students and parents of an existing institution receive access from that institution's authorised owner or administrator.</li>
+              <li>You are responsible for protecting your password and ensuring that information entered into the workspace is accurate and lawfully provided.</li>
+              <li>Do not upload information about students, families or employees unless you are authorised to do so.</li>
+              <li>Feature availability, access limits and infrastructure requirements are subject to the current product scope and approved service terms.</li>
+            </ul>
+          </div>
+        ) : (
+          <div className="es-legal-copy">
+            <p>EduSphere 360 uses your email address and authentication data to create and secure your account. Institution records are stored for the workspace you create and are available to its authorised users.</p>
+            <ul>
+              <li>Each public sign-up creates a separate institution workspace. Your account is not added to another institution.</li>
+              <li>Institution records are available according to the account's role and the institution's access permissions.</li>
+              <li>EduSphere 360 operates online. Institution data is processed by the configured hosting and database providers and is available only with an internet connection.</li>
+              <li>Do not enter sensitive or real student information into a demonstration workspace unless your institution has approved its use.</li>
+              <li>Contact your institution owner for requests about records managed inside that institution.</li>
+            </ul>
+          </div>
+        )}
+        <p className="es-legal-footnote">This is the current in-product notice. The institution operating EduSphere 360 should have its final legal terms and privacy notice reviewed and approved before public production use.</p>
+        <button type="button" className="es-auth-submit" onClick={onClose}>Close <ArrowRight size={16}/></button>
+      </section>
+    </div>
+  )
 }
 
 export function SetupScreen({ navigate }: ScreenProps) {
-  const { mode, registerAdmin } = useAuth()
-  const [institutionName,setInstitutionName] = useState('')
-  const [institutionType,setInstitutionType] = useState('school')
-  const [fullName,setFullName] = useState('')
-  const [email,setEmail] = useState('')
-  const [password,setPassword] = useState('')
-  const [busy,setBusy] = useState(false)
-  const [error,setError] = useState('')
+  const { registerAdmin } = useAuth()
+  const [fullName, setFullName] = useState('')
+  const [institutionName, setInstitutionName] = useState('')
+  const [institutionType, setInstitutionType] = useState<'school' | 'college' | 'university' | 'multi_institution'>('school')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
+  const [legalDocument, setLegalDocument] = useState<'terms' | 'privacy' | null>(null)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const [verificationEmail, setVerificationEmail] = useState('')
+  const [resendBusy, setResendBusy] = useState(false)
+  const [resendMessage, setResendMessage] = useState('')
+  const [resendError, setResendError] = useState('')
 
   async function submit(event: FormEvent) {
-    event.preventDefault(); setBusy(true); setError('')
-    try { await registerAdmin({institutionName,institutionType,fullName,email,password}) }
-    catch (err) { setError(err instanceof Error ? err.message : 'Could not create the institution.') }
-    finally { setBusy(false) }
+    event.preventDefault()
+    setError('')
+    if (!fullName.trim()) { setError('Enter your full name.'); return }
+    if (!institutionName.trim()) { setError('Enter your institution name.'); return }
+    if (password.length < 10) { setError('Use a password with at least 10 characters.'); return }
+    if (password !== confirmPassword) { setError('Your passwords do not match. Please check and try again.'); return }
+    if (!acceptedTerms) { setError('Please accept the Terms and Conditions and Privacy Notice to continue.'); return }
+    setBusy(true)
+    try {
+      const result = await registerAdmin({ fullName: fullName.trim(), institutionName: institutionName.trim(), institutionType, email: email.trim().toLowerCase(), password })
+      if (result.verificationRequired) {
+        setVerificationEmail(result.email)
+        setResendMessage('')
+        setResendError('')
+      }
+    } catch (err) {
+      setError(userFacingError(err, 'Could not create your EduSphere 360 account. Please review the details and try again.'))
+    } finally {
+      setBusy(false)
+    }
   }
 
-  // Online first-owner provisioning is intentionally performed in the Supabase
-  // dashboard + SQL Editor. This removes the browser-entered bootstrap secret
-  // without exposing an unauthenticated public endpoint that can claim ownership.
-  if (mode === 'cloud') {
-    return <div className="auth-shell">
-      <header className="public-nav"><Brand/><button className="button button-quiet" onClick={()=>navigate('welcome')}><ArrowLeft size={16}/> Back to home</button></header>
-      <main className="setup-layout">
-        <div className="setup-intro">
-          <div className="eyebrow">FIRST-TIME CLOUD SETUP</div>
-          <h1>Create your<br/><span>owner account.</span></h1>
-          <p>For the first online administrator, create the Auth user in your own Supabase dashboard and then attach the owner role to your institution. No setup secret is needed in the website.</p>
-          <div className="setup-security"><ShieldCheck size={20}/><div><strong>Owner-controlled setup</strong><small>Only someone with access to your Supabase project can create the first owner. Teacher, student and parent accounts are created later by an authorized administrator.</small></div></div>
+  async function resendVerification() {
+    if (!verificationEmail || resendBusy) return
+    setResendBusy(true)
+    setResendMessage('')
+    setResendError('')
+    try {
+      await resendInstitutionOwnerVerification(verificationEmail)
+      setResendMessage('A new verification email has been sent. Check your inbox and spam folder.')
+    } catch (err) {
+      setResendError(userFacingError(err, 'The verification email could not be resent. Please try again shortly.'))
+    } finally {
+      setResendBusy(false)
+    }
+  }
+
+  return (
+    <div className="es-auth-page es-auth-page-signup">
+      <AuthVisualPanel variant="signup" />
+      <main className="es-auth-main es-auth-main-signup">
+        <AuthTopline navigate={navigate} mode="signup" />
+        <div className="es-auth-form-wrap es-signup-wrap">
+          {verificationEmail ? (
+          <section className="es-auth-card es-signup-card es-verification-card" aria-live="polite">
+            <div className="es-auth-avatar es-verification-avatar"><span><Mail size={23}/></span><i><Check size={11}/></i></div>
+            <div className="es-auth-form-heading">
+              <span className="es-auth-overline">ONE LAST STEP</span>
+              <h2>Check your inbox</h2>
+              <p>We sent a verification link to the email address below. Confirm it to activate your EduSphere 360 Owner account.</p>
+            </div>
+            <div className="es-verification-email"><Mail size={17}/><strong>{verificationEmail}</strong></div>
+            <div className="es-verification-explainer">
+              <CheckCircle2 size={17}/>
+              <span>Your institution workspace is reserved. Its dashboard and institution records stay locked until your email is verified.</span>
+            </div>
+            {resendMessage && <div className="es-auth-notice" role="status">{resendMessage}</div>}
+            {resendError && <div className="es-auth-error" role="alert">{resendError}</div>}
+            <button className="es-auth-submit" type="button" onClick={resendVerification} disabled={resendBusy}>
+              {resendBusy ? 'Sending verification email…' : 'Resend verification email'} <ArrowRight size={17}/>
+            </button>
+            <div className="es-verification-actions">
+              <button type="button" onClick={() => { setVerificationEmail(''); setError(''); setResendMessage(''); setResendError('') }}>Use a different email</button>
+              <span>Already verified? <button type="button" onClick={() => navigate('login')}>Login</button></span>
+            </div>
+            <p className="es-verification-help">If you do not see the message, check your spam or junk folder. The link returns you to this website after confirmation.</p>
+          </section>
+          ) : (
+          <section className="es-auth-card es-signup-card">
+            <div className="es-auth-avatar"><span><Building2 size={22}/></span><i><Check size={11}/></i></div>
+            <div className="es-auth-form-heading">
+              <span className="es-auth-overline">START WITH EDUSPHERE 360</span>
+              <h2>Create your account</h2>
+              <p>Enter your details and institution information. Your account will become the first owner of this new institution after email verification.</p>
+            </div>
+            <form className="es-auth-form es-signup-form" onSubmit={submit}>
+              <label className="es-auth-field"><span>Your full name</span><div className="es-auth-input"><Users size={17}/><input type="text" autoComplete="name" maxLength={120} required value={fullName} onChange={event => setFullName(event.target.value)} placeholder="Enter your full name"/></div></label>
+              <label className="es-auth-field"><span>Institution name</span><div className="es-auth-input"><Building2 size={17}/><input type="text" maxLength={160} required value={institutionName} onChange={event => setInstitutionName(event.target.value)} placeholder="Enter your school, college or university name"/></div></label>
+              <label className="es-auth-field"><span>Institution type</span><select className="es-auth-select" required value={institutionType} onChange={event => setInstitutionType(event.target.value as typeof institutionType)}><option value="school">School</option><option value="college">College</option><option value="university">University</option><option value="multi_institution">Multi-institution group</option></select></label>
+              <label className="es-auth-field"><span>Email address</span><div className="es-auth-input"><Mail size={17}/><input type="email" autoComplete="email" required value={email} onChange={event => setEmail(event.target.value)} placeholder="you@institution.edu"/></div></label>
+              <label className="es-auth-field"><span>Choose password</span><div className="es-auth-input"><LockKeyhole size={17}/><input type={showPassword ? 'text' : 'password'} autoComplete="new-password" minLength={10} required value={password} onChange={event => setPassword(event.target.value)} placeholder="At least 10 characters"/><button type="button" className="es-password-toggle" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Hide password' : 'Show password'}>{showPassword ? <EyeOff size={17}/> : <Eye size={17}/>}</button></div></label>
+              <label className="es-auth-field"><span>Confirm password</span><div className="es-auth-input"><LockKeyhole size={17}/><input type={showPassword ? 'text' : 'password'} autoComplete="new-password" minLength={10} required value={confirmPassword} onChange={event => setConfirmPassword(event.target.value)} placeholder="Enter your password again"/></div></label>
+              <label className="es-auth-check es-terms-check"><input type="checkbox" checked={acceptedTerms} onChange={event => setAcceptedTerms(event.target.checked)}/><span className="es-check-box"/><span className="es-terms-copy">I agree to the <button type="button" onClick={() => setLegalDocument('terms')}>Terms and Conditions</button> and <button type="button" onClick={() => setLegalDocument('privacy')}>Privacy Notice</button>.</span></label>
+              {error && <div className="es-auth-error" role="alert">{error}</div>}
+              <button className="es-auth-submit" type="submit" disabled={busy}>{busy ? 'Creating your account…' : 'Sign up'} <ArrowRight size={17}/></button>
+            </form>
+            <p className="es-signup-account-note">This sign-up starts a <strong>new institution workspace</strong>. Existing institutions create employee and student accounts from their own administration area.</p>
+            <div className="es-auth-inline-switch">Already have an account? <button type="button" onClick={() => navigate('login')}>Login</button></div>
+            <div className="es-auth-secure-note"><ShieldCheck size={15}/> Your account becomes the owner of its new institution workspace after email verification.</div>
+          </section>
+          )}
         </div>
-        <section className="auth-card setup-card">
-          <div className="auth-card-heading"><div className="portal-icon large"><Building2 size={22}/></div><h2>Online owner setup</h2><p>Complete these steps in your Supabase project.</p></div>
-          <div className="form-stack">
-            <div className="setup-security"><span className="portal-icon">1</span><div><strong>Create the owner login</strong><small>Supabase Dashboard → Authentication → Users → Add user. Enter your email and a strong password, and confirm the email.</small></div></div>
-            <div className="setup-security"><span className="portal-icon">2</span><div><strong>Attach the owner role</strong><small>Open the included MANUAL_FIRST_ADMIN_SETUP.sql file, replace its four placeholders with your user ID, name, email and institution name, then run it in Supabase SQL Editor.</small></div></div>
-            <div className="setup-security"><span className="portal-icon">3</span><div><strong>Sign in here</strong><small>Return to this website and sign in using the email and password you created in Supabase.</small></div></div>
-            <button className="button button-primary button-full" onClick={()=>navigate('login','admin')}>Go to administrator login <ArrowRight size={17}/></button>
-          </div>
-          <div className="auth-card-foot"><span>Public cloud owner registration is disabled.</span><button onClick={()=>navigate('welcome')}>Back to welcome</button></div>
-        </section>
+        <footer className="es-auth-main-foot"><span>© {new Date().getFullYear()} EduSphere 360</span><span>Education management, thoughtfully connected.</span></footer>
       </main>
+      {legalDocument && <LegalNotice kind={legalDocument} onClose={() => setLegalDocument(null)}/>}
     </div>
-  }
-
-  return <div className="auth-shell"><header className="public-nav"><Brand/><button className="button button-quiet" onClick={()=>navigate('welcome')}><ArrowLeft size={16}/> Back to home</button></header><main className="setup-layout"><div className="setup-intro"><div className="eyebrow">OFFLINE INSTITUTION SETUP</div><h1>Start with your<br/><span>institution.</span></h1><p>Create the first owner account for this browser's offline workspace. Online owner accounts are provisioned through Supabase.</p><div className="setup-security"><ShieldCheck size={20}/><div><strong>Local-only account</strong><small>This account stays in this browser and is not synchronized to Supabase.</small></div></div></div><section className="auth-card setup-card"><div className="auth-card-heading"><div className="portal-icon large"><Building2 size={22}/></div><h2>Create your institution</h2><p>Register the institution and its first offline administrator.</p></div><form onSubmit={submit} className="form-stack"><label className="field-label">Institution name<input className="input-control" required value={institutionName} onChange={e=>setInstitutionName(e.target.value)} placeholder="e.g. Bright Future Academy"/></label><label className="field-label">Institution type<select className="input-control" value={institutionType} onChange={e=>setInstitutionType(e.target.value)}><option value="school">School</option><option value="college">College</option><option value="university">University</option><option value="multi_institution">School / college / university group</option></select></label><div className="form-two"><label className="field-label">Owner full name<input className="input-control" required value={fullName} onChange={e=>setFullName(e.target.value)} placeholder="Your name"/></label><label className="field-label">Owner email<input className="input-control" type="email" required value={email} onChange={e=>setEmail(e.target.value)} placeholder="admin@example.com"/></label></div><label className="field-label">Create password<input className="input-control" type="password" required minLength={10} value={password} onChange={e=>setPassword(e.target.value)} placeholder="At least 10 characters"/></label>{error && <div className="inline-error">{error}</div>}<button className="button button-primary button-full" disabled={busy}>{busy?'Creating institution…':'Create institution & owner account'} <ArrowRight size={17}/></button></form><div className="auth-card-foot"><span>Account is saved only in this browser.</span><button onClick={()=>navigate('login')}>Already registered?</button></div></section></main></div>
+  )
 }

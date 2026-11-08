@@ -1,0 +1,42 @@
+EDUSPHERE 360 — PHASE ONE + PHASE TWO INTEGRATED PROJECT
+Latest saved authentication/public-page update integrated: 7 November 2026
+
+BASE
+- Uses EduSphere360_PhaseTwo_Complete_Project.zip as the base.
+- Phase One code and Phase Two code updates are already present in that base.
+- Verified against PhaseTwo_Code_Update: AdministrationModule.tsx, RecordModule.tsx,
+  data.ts, and localDb.ts in the complete archive are byte-for-byte identical to the patch.
+
+INTEGRATED FROM THE LATEST VERIFIED SIGN-UP UPDATE
+- src/components/AuthScreens.tsx (marketing welcome, updated login, verified signup)
+- src/context/AuthContext.tsx (remember-me session behaviour, verified signup session handling)
+- src/lib/auth.ts (public institution-owner signup and resend-verification functions)
+- src/styles/auth-experience.css (the matching public/auth page styling)
+- supabase/migrations/017_public_institution_signup.sql (email-confirmed owner membership activation)
+
+ADDITIONAL ROUTING/DEPLOYMENT FIXES
+- Dashboard sign-out now returns to the public welcome route.
+- Existing public/_redirects is preserved.
+- netlify.toml sets Netlify build command `npm run build` and publish directory `dist`.
+- .env.example documents the required Supabase variables without containing credentials.
+
+PRESERVATION
+- The old AuthScreens.tsx, AuthContext.tsx, and auth.ts are preserved under
+  preserved-originals/pre-auth-integration-2026-11-07/.
+- Existing Phase One/Two source, styles, migrations, and deployment files are preserved.
+- No .env.local, service-role key, or Supabase secret is included or overwritten.
+- node_modules and dist are omitted from this archive; extracting over the current project
+  does not delete an existing node_modules or .env.local folder/file.
+
+IMPORTANT CLOUD REQUIREMENTS
+- Cloud sign-in requires VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY in .env.local
+  locally and as Netlify environment variables for the hosted build.
+- Public self-service owner signup requires running 017_public_institution_signup.sql
+  in the SAME Supabase project after the existing Phase One/Two migrations.
+- Supabase Auth email signups and email confirmation must be enabled, and the local/deployed
+  website origins must be allow-listed in Supabase Auth URL Configuration.
+- This package cannot perform those account-specific dashboard settings remotely.
+
+MODULES
+- Existing Phase One/Two modules and role-based module visibility are retained; this update
+  does not replace the internal dashboard or its CRUD modules.
