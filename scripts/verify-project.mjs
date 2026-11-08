@@ -60,7 +60,7 @@ check('Navigation only exposes real destinations with connected routes', () => {
   const adminKeys = new Set(['departments', 'programs', 'classes', 'academic_sessions', 'subjects', 'rooms'])
   for (const [page, route] of Object.entries(navigationRoutes)) {
     if (route.startsWith('admin:')) assert.ok(adminKeys.has(route.slice(6)), `${page} points to an unknown administration screen`)
-    else if (!['overview', 'accounts', 'files'].includes(route)) assert.ok(moduleKeys.has(route), `${page} points to a missing data module: ${route}`)
+    else if (!['overview', 'accounts', 'files', 'reports', 'profile'].includes(route)) assert.ok(moduleKeys.has(route), `${page} points to a missing data module: ${route}`)
   }
 })
 

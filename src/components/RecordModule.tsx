@@ -494,7 +494,10 @@ export function RecordModule({ module, onToast }: Props) {
         const discount = Number(payload.discount_amount ?? 0)
         if (!(amount > 0)) throw new Error('Invoice amount must be greater than zero.')
         if (discount < 0 || discount > amount) throw new Error('Discount must be between zero and the invoice amount.')
-        const existingFine = Number(targetEditing?.fine_amount ?? 0)
+        const rawFine = payload.fine_amount === null || payload.fine_amount === undefined || payload.fine_amount === '' ? Number(targetEditing?.fine_amount ?? 0) : Number(payload.fine_amount)
+        if (!Number.isFinite(rawFine) || rawFine < 0) throw new Error('Fine must be zero or a positive amount.')
+        const existingFine = rawFine
+        payload.fine_amount = existingFine
         if (paid < 0 || paid > amount + existingFine - discount) throw new Error('The invoice total cannot be reduced below the amount already received.')
         if (payload.discount_amount === null || payload.discount_amount === undefined) payload.discount_amount = 0
         if (!String(payload.invoice_no ?? '').trim()) {

@@ -20,4 +20,6 @@ export const navigationRoutes: Record<string, string> = {
   'User Accounts': 'accounts',
   'Files & Documents': 'files',
   'Work Management': 'work_tasks',
+  Reports: 'reports',
+  'My Profile': 'profile',
 }
