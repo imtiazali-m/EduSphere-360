@@ -52,7 +52,7 @@ Suggested desktop artboard: 1440 × 900. Suggested mobile artboard: 390 × 844.
 - Role selector
 - Email and password
 - Sign in action
-- Visible current mode: Offline local workspace or Online cloud workspace
+- Visible connection state: Online cloud workspace; show an internet-required state when disconnected
 
 ### Admin workspace
 - Fixed desktop sidebar, collapsible mobile sidebar

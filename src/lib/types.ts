@@ -1,5 +1,5 @@
 export type AppRole = 'owner' | 'admin' | 'teacher' | 'student' | 'parent' | 'accountant' | 'exam_officer'
-export type AppMode = 'local' | 'cloud'
+export type AppMode = 'cloud'
 
 export interface AppUser {
   id: string
@@ -8,6 +8,7 @@ export interface AppUser {
   role: AppRole
   institutionId: string
   institutionName: string
+  institutionType?: string
   linkedStudentId?: string | null
 }
 
@@ -24,6 +25,7 @@ export interface FieldConfig {
   label: string
   type?: 'text' | 'email' | 'date' | 'number' | 'select' | 'textarea' | 'time'
   required?: boolean
+  readOnly?: boolean
   options?: { label: string; value: string }[]
   placeholder?: string
 }

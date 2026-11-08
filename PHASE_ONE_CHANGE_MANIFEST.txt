@@ -1,0 +1,26 @@
+EduSphere 360 — Phase One navigation change manifest
+
+UPDATED
+- src/components/Dashboard.tsx
+  * role-specific Quick Access shortcuts
+  * per-role page counts
+  * Quick Access separated from scrollable menu
+  * compact navigation markup
+- src/styles/pro-dashboard.css
+  * reduced drawer width, menu row height, font size and spacing
+  * fixed bottom Quick Access block
+
+ADDED
+- src/lib/navigationAccess.ts
+  * explicit page/submenu allowlists for all seven roles
+- PHASE_ONE_NAVIGATION_COMPLETION.md
+
+PRESERVED
+- 22 owner menu groups / 122 owner submenu pages
+- existing module route logic and role-aware record modules
+- existing backend, auth, and database files
+
+VERIFICATION
+- syntax/transpilation checks: PASS
+- role menu inventory and catalogue integrity checks: PASS
+- full production build: NOT VERIFIED in this environment because npm registry access failed with EAI_AGAIN

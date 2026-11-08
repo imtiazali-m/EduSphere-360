@@ -4,16 +4,18 @@ import {
   Plus, RefreshCw, Search, Trash2, Users, X,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
-import { createRecord, deleteRecord, listRecords, updateRecord } from '../lib/data'
+import { createRecord, deleteRecord, listAccounts, listFeePayments, listRecords, recordFeePayment, updateRecord } from '../lib/data'
 import { supabase } from '../lib/supabase'
-import type { FieldConfig, ModuleConfig, RecordRow } from '../lib/types'
+import { userFacingError } from '../lib/userErrors'
+import { netInvoiceAmount, outstandingInvoiceBalance } from '../lib/finance'
+import type { AppMode, FieldConfig, ModuleConfig, RecordRow } from '../lib/types'
 import '../styles/student-module.css'
 import '../styles/faculty-module.css'
-import '../styles/attendance-module.css'
 
 interface Props { module: ModuleConfig; onToast: (message: string, error?: boolean) => void }
 type StudentStatus = 'all' | 'active' | 'pending' | 'graduated' | 'inactive'
 type EmployeeStatus = 'all' | 'active' | 'on_leave' | 'inactive'
+type FeeStatus = 'all' | 'unpaid' | 'partial' | 'overdue' | 'paid'
 
 function makeEmployeeNumber() {
   const suffix = crypto.randomUUID().replace(/-/g, '').slice(0, 8).toUpperCase()
@@ -29,10 +31,15 @@ function makeAdmissionNumber() {
 
 function RecordForm({ module, initial, onCancel, onSave, saving, mode }: {
   module: ModuleConfig; initial?: RecordRow | null; onCancel: () => void
-  onSave: (values: Record<string, unknown>) => void; saving: boolean; mode: 'local' | 'cloud'
+  onSave: (values: Record<string, unknown>) => void; saving: boolean; mode: AppMode
 }) {
+  const { user } = useAuth()
   const isStudent = module.key === 'students'
   const isTeacher = module.key === 'teachers'
+  const lockTaskAssignee = module.key === 'work_tasks' && !['owner', 'admin'].includes(user!.role)
+  const lockTaskDefinitionFields = ['title', 'task_type', 'description', 'priority', 'due_date']
+  const [dynamicOptions, setDynamicOptions] = useState<Record<string, { label: string; value: string }[]>>({})
+  const [dynamicOptionsError, setDynamicOptionsError] = useState('')
   const [values, setValues] = useState<Record<string, string>>(() => Object.fromEntries(
     module.fields.map(field => [
       field.name,
@@ -49,19 +56,51 @@ function RecordForm({ module, initial, onCancel, onSave, saving, mode }: {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
   const [photoError, setPhotoError] = useState('')
 
+  useEffect(() => {
+    let alive = true
+    async function loadDynamicOptions() {
+      const next: Record<string, { label: string; value: string }[]> = {}
+      if (module.fields.some((field) => field.name === 'student_id')) {
+        const learners = await listRecords(mode, user!, 'students')
+        next.student_id = learners.map((student) => ({
+          value: student.id,
+          label: `${String(student.full_name ?? 'Unnamed student')} · ${String(student.admission_no ?? student.class_name ?? '')}`,
+        }))
+      }
+      if (module.fields.some((field) => field.name === 'assignment_id')) {
+        const assignments = await listRecords(mode, user!, 'assignments')
+        next.assignment_id = assignments
+          .filter((assignment) => user!.role !== 'student' || assignment.status === 'open')
+          .map((assignment) => ({
+          value: assignment.id,
+          label: `${String(assignment.title ?? 'Untitled assignment')} · ${String(assignment.class_name ?? '')} · due ${String(assignment.due_date ?? '—')}`,
+          }))
+      }
+      if (module.fields.some((field) => field.name === 'exam_id')) {
+        const exams = await listRecords(mode, user!, 'exams')
+        next.exam_id = exams.map((exam) => ({
+          value: exam.id,
+          label: `${String(exam.title ?? 'Untitled exam')} · ${String(exam.class_name ?? '')} · ${String(exam.exam_date ?? '')}`,
+        }))
+      }
+      if (alive) { setDynamicOptions(next); setDynamicOptionsError('') }
+    }
+    void loadDynamicOptions().catch(error => {
+      if (alive) {
+        setDynamicOptions({})
+        setDynamicOptionsError(userFacingError(error, 'Related records could not be loaded. Close this form, refresh the workspace and try again.'))
+      }
+    })
+    return () => { alive = false }
+  }, [module.key, module.table, mode, user?.id])
+
   function update(field: FieldConfig, value: string) {
     setValues(old => ({ ...old, [field.name]: value }))
   }
 
   useEffect(() => {
     let cancelled = false
-    let objectUrl: string | null = null
     async function loadExistingPhoto() {
-      if (initial?.photo_blob instanceof Blob) {
-        objectUrl = URL.createObjectURL(initial.photo_blob)
-        if (!cancelled) setPhotoPreview(objectUrl)
-        return
-      }
       if (mode === 'cloud' && typeof initial?.photo_path === 'string' && initial.photo_path && supabase) {
         const { data } = await supabase.storage.from('institution-files').createSignedUrl(initial.photo_path, 60 * 60)
         if (!cancelled && data?.signedUrl) setPhotoPreview(data.signedUrl)
@@ -70,9 +109,8 @@ function RecordForm({ module, initial, onCancel, onSave, saving, mode }: {
     void loadExistingPhoto()
     return () => {
       cancelled = true
-      if (objectUrl) URL.revokeObjectURL(objectUrl)
     }
-  }, [initial?.id, mode])
+  }, [initial?.id, initial?.photo_path, mode])
 
   useEffect(() => {
     if (!photoFile) return
@@ -111,6 +149,7 @@ function RecordForm({ module, initial, onCancel, onSave, saving, mode }: {
         event.preventDefault()
         onSave({ ...values, __photoFile: photoFile })
       }}>
+        {dynamicOptionsError && <p className="record-form-data-error" role="alert">{dynamicOptionsError}</p>}
         {isStudent && <div className="student-form-section-label">STUDENT INFORMATION</div>}
         {isTeacher && <div className="faculty-form-section-label">FACULTY / STAFF INFORMATION</div>}
 
@@ -134,15 +173,19 @@ function RecordForm({ module, initial, onCancel, onSave, saving, mode }: {
           {module.fields.map(field => {
             const isAutoStudentId = isStudent && field.name === 'admission_no'
             const isAutoEmployeeId = isTeacher && field.name === 'employee_no'
+            const isStudentSubmission = module.key === 'assignment_submissions' && user!.role === 'student'
+            // Grading and publication are staff-only; students see only the work they submit.
+            if (isStudentSubmission && ['marks_obtained', 'feedback', 'status'].includes(field.name)) return null
             return <label key={field.name} className={`field-label ${field.type === 'textarea' ? 'full-field' : ''} ${isStudent ? 'student-field' : ''}`}>
-              <span>{isAutoStudentId ? 'Student ID / admission number' : isAutoEmployeeId ? 'Employee ID' : field.label}{field.required ? <span className="student-required"> *</span> : null}</span>
+              <span>{isAutoStudentId ? 'Student ID / admission number' : isAutoEmployeeId ? 'Employee ID' : field.label}{field.required && !(module.key === 'assignment_submissions' && user!.role === 'student' && field.name === 'student_id') ? <span className="student-required"> *</span> : null}</span>
               {isAutoStudentId || isAutoEmployeeId ? <div className={isAutoStudentId ? 'student-generated-id-wrap' : 'faculty-generated-id-wrap'}>
                 <input className={`input-control ${isAutoStudentId ? 'student-generated-id' : 'faculty-generated-id'}`} value={values[field.name] ?? ''} readOnly required aria-label={isAutoStudentId ? 'Automatically generated student ID' : 'Automatically generated employee ID'}/>
                 <button type="button" className={isAutoStudentId ? 'student-regenerate-button' : 'faculty-regenerate-button'} onClick={() => update(field, isAutoStudentId ? makeAdmissionNumber() : makeEmployeeNumber())} title={isAutoStudentId ? 'Generate another student ID' : 'Generate another employee ID'}>Regenerate</button>
-              </div> : field.type === 'select' ? <select className="input-control" required={field.required} value={values[field.name] ?? ''} onChange={event => update(field, event.target.value)}>
-                {field.options?.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
-              </select> : field.type === 'textarea' ? <textarea className="input-control textarea-control" required={field.required} value={values[field.name] ?? ''} onChange={event => update(field, event.target.value)} placeholder={field.placeholder ?? ''}/> :
-                <input className="input-control" type={field.type ?? 'text'} required={field.required} min={field.type === 'number' ? 0 : undefined} step={field.type === 'number' ? '0.01' : undefined} value={values[field.name] ?? ''} onChange={event => update(field, event.target.value)} placeholder={field.placeholder ?? ''}/>
+              </div> : module.key === 'assignment_submissions' && user!.role === 'student' && field.name === 'student_id' ? <div className="input-control" aria-label="Your linked student account">Your linked student record</div> : field.type === 'select' ? <select className="input-control" disabled={(lockTaskAssignee && lockTaskDefinitionFields.includes(field.name)) || (module.key === 'assignment_submissions' && user!.role === 'student' && field.name === 'assignment_id' && Boolean(initial))} required={field.required && !(module.key === 'assignment_submissions' && user!.role === 'student' && field.name === 'student_id')} value={values[field.name] ?? ''} onChange={event => update(field, event.target.value)}>
+                <option value="">{field.name === 'student_id' ? 'Select a student…' : field.name === 'exam_id' ? 'Select an examination…' : 'Select an option…'}</option>
+                {(dynamicOptions[field.name] ?? field.options ?? []).map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
+              </select> : field.type === 'textarea' ? <textarea className="input-control textarea-control" readOnly={(lockTaskAssignee && lockTaskDefinitionFields.includes(field.name)) || (module.key === 'assignment_submissions' && user!.role === 'student' && field.name === 'feedback')} required={field.required} value={values[field.name] ?? ''} onChange={event => update(field, event.target.value)} placeholder={field.placeholder ?? ''}/> :
+                <input className="input-control" type={field.type ?? 'text'} readOnly={field.readOnly || (lockTaskAssignee && (['assigned_to_name', 'assigned_to_email'].includes(field.name) || lockTaskDefinitionFields.includes(field.name))) || (module.key === 'assignment_submissions' && user!.role === 'student' && ((field.name === 'assignment_title' && Boolean(initial)) || ['student_name', 'marks_obtained'].includes(field.name)))} required={field.required && !(module.key === 'assignment_submissions' && user!.role === 'student' && field.name === 'student_name')} min={field.type === 'number' ? 0 : undefined} step={field.type === 'number' ? '0.01' : undefined} value={values[field.name] ?? ''} onChange={event => update(field, event.target.value)} placeholder={field.placeholder ?? ''}/>
               }
               {isAutoStudentId && <small className="student-field-help">Generated automatically; the database separately creates its internal UUID.</small>}
               {isAutoEmployeeId && <small className="faculty-field-help">Generated automatically as the staff reference number.</small>}
@@ -150,7 +193,7 @@ function RecordForm({ module, initial, onCancel, onSave, saving, mode }: {
           })}
         </div>
 
-        {isStudent && <div className="student-form-note"><GraduationCap size={17}/><span>The generated Student ID is saved as the admission number. The internal database record ID is created automatically. Photo files are stored in this browser in Offline mode, or in the institution's private file storage in Cloud mode.</span></div>}
+        {isStudent && <div className="student-form-note"><GraduationCap size={17}/><span>The generated Student ID is saved as the admission number. The internal database record ID is created automatically. Student photographs are stored in the institution's private cloud storage.</span></div>}
         {isTeacher && <div className="faculty-form-note"><Users size={17}/><span>The generated Employee ID is saved as the employee number. Complete the department, subject, contact and employment details before saving.</span></div>}
 
         <div className="modal-actions">
@@ -162,16 +205,12 @@ function RecordForm({ module, initial, onCancel, onSave, saving, mode }: {
   </div>
 }
 
-function StudentPhoto({ row, mode }: { row: RecordRow; mode: 'local' | 'cloud' }) {
+function StudentPhoto({ row }: { row: RecordRow }) {
   const [src, setSrc] = useState<string | null>(null)
   useEffect(() => {
     let cancelled = false
-    let objectUrl: string | null = null
     async function load() {
-      if (mode === 'local' && row.photo_blob instanceof Blob) {
-        objectUrl = URL.createObjectURL(row.photo_blob)
-        if (!cancelled) setSrc(objectUrl)
-      } else if (mode === 'cloud' && typeof row.photo_path === 'string' && row.photo_path && supabase) {
+      if (typeof row.photo_path === 'string' && row.photo_path && supabase) {
         const { data } = await supabase.storage.from('institution-files').createSignedUrl(row.photo_path, 60 * 60)
         if (!cancelled && data?.signedUrl) setSrc(data.signedUrl)
       } else {
@@ -181,9 +220,8 @@ function StudentPhoto({ row, mode }: { row: RecordRow; mode: 'local' | 'cloud' }
     void load()
     return () => {
       cancelled = true
-      if (objectUrl) URL.revokeObjectURL(objectUrl)
     }
-  }, [row.id, row.photo_path, row.photo_blob, mode])
+  }, [row.id, row.photo_path])
 
   const initial = String(row.full_name ?? '?').trim().slice(0, 1).toUpperCase()
   return <span className="student-avatar">{src ? <img src={src} alt={`${String(row.full_name ?? 'Student')} photo`}/> : initial}</span>
@@ -195,9 +233,98 @@ function niceDate(value: unknown) {
   return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleDateString()
 }
 
+function localDateValue(date = new Date()) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 function statusLabel(value: unknown) {
   const status = String(value ?? 'active').toLowerCase()
   return status.charAt(0).toUpperCase() + status.slice(1)
+}
+
+function FeePaymentDialog({ invoice, onClose, onSaved }: {
+  invoice: RecordRow
+  onClose: () => void
+  onSaved: (receiptNo: string) => void
+}) {
+  const { mode, user } = useAuth()
+  const balance = outstandingInvoiceBalance(invoice)
+  const [amount, setAmount] = useState(balance.toFixed(2))
+  const [method, setMethod] = useState('cash')
+  const [paymentDate, setPaymentDate] = useState(localDateValue())
+  const [reference, setReference] = useState('')
+  const [notes, setNotes] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+
+  async function submit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const entered = Number(amount)
+    if (!Number.isFinite(entered) || entered <= 0 || entered > balance) {
+      setError(`Enter an amount greater than zero and no more than ${balance.toFixed(2)}.`)
+      return
+    }
+    setBusy(true)
+    setError('')
+    try {
+      const result = await recordFeePayment(mode, user!, {
+        invoiceId: invoice.id,
+        amount: entered,
+        paymentMethod: method,
+        paymentReference: reference,
+        paymentDate,
+        notes,
+      })
+      onSaved(String(result.receipt_no ?? ''))
+    } catch (saveError) {
+      setError(userFacingError(saveError, 'Unable to record this payment.'))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return <div className="modal-backdrop" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) onClose() }}>
+    <section className="modal-card" role="dialog" aria-modal="true" aria-labelledby="fee-payment-title">
+      <div className="modal-heading"><div><div className="eyebrow">FEE COLLECTION</div><h2 id="fee-payment-title">Record a payment</h2><p>{String(invoice.invoice_no ?? 'Invoice')} · {String(invoice.student_name ?? 'Student')}</p></div><button type="button" className="icon-button" onClick={onClose} aria-label="Close"><X size={19}/></button></div>
+      <div className="student-stat-card" style={{ marginBottom: 16 }}><span className="student-stat-label">Outstanding balance</span><strong>PKR {balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></div>
+      <form className="modal-form" onSubmit={event => void submit(event)}>
+        <label className="field-label">Payment amount (PKR)<input className="input-control" type="number" min="0.01" max={balance} step="0.01" required value={amount} onChange={event => setAmount(event.target.value)}/></label>
+        <label className="field-label">Payment method<select className="input-control" value={method} onChange={event => setMethod(event.target.value)}><option value="cash">Cash</option><option value="bank_transfer">Bank transfer</option><option value="card">Card</option><option value="online">Online</option><option value="cheque">Cheque</option><option value="other">Other</option></select></label>
+        <label className="field-label">Payment date<input className="input-control" type="date" required max={localDateValue()} value={paymentDate} onChange={event => setPaymentDate(event.target.value)}/></label>
+        <label className="field-label">Reference / transaction ID<input className="input-control" value={reference} onChange={event => setReference(event.target.value)} maxLength={120}/></label>
+        <label className="field-label">Notes<textarea className="input-control textarea-control" value={notes} onChange={event => setNotes(event.target.value)} maxLength={1000}/></label>
+        {error && <p role="alert" style={{ color: 'var(--danger, #b42318)', fontSize: 13 }}>{error}</p>}
+        <div className="modal-actions"><button type="button" className="button button-outline" onClick={onClose} disabled={busy}>Cancel</button><button className="button button-primary" disabled={busy}>{busy ? 'Recording…' : 'Record payment'}</button></div>
+      </form>
+    </section>
+  </div>
+}
+
+function FeePaymentHistoryDialog({ invoice, onClose }: { invoice: RecordRow; onClose: () => void }) {
+  const { mode, user } = useAuth()
+  const [payments, setPayments] = useState<RecordRow[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  useEffect(() => {
+    let alive = true
+    void listFeePayments(mode, user!, invoice.id).then((rows) => {
+      if (alive) setPayments(rows)
+    }).catch((loadError) => {
+      if (alive) setError(userFacingError(loadError, 'Unable to load payment history.'))
+    }).finally(() => { if (alive) setLoading(false) })
+    return () => { alive = false }
+  }, [mode, user?.id, invoice.id])
+
+  return <div className="modal-backdrop" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) onClose() }}>
+    <section className="modal-card" role="dialog" aria-modal="true" aria-labelledby="fee-history-title">
+      <div className="modal-heading"><div><div className="eyebrow">PAYMENT LEDGER</div><h2 id="fee-history-title">Payment history</h2><p>{String(invoice.invoice_no ?? 'Invoice')} · {String(invoice.student_name ?? 'Student')}</p></div><button type="button" className="icon-button" onClick={onClose} aria-label="Close"><X size={19}/></button></div>
+      {loading ? <div className="table-empty">Loading payment history…</div> : error ? <p role="alert" style={{ color: 'var(--danger, #b42318)', fontSize: 13 }}>{error}</p> : payments.length === 0 ? <div className="table-empty">No payments have been recorded for this invoice.</div> : <div className="table-scroll"><table><thead><tr><th>Receipt</th><th>Date</th><th>Method</th><th>Amount (PKR)</th><th>Reference</th></tr></thead><tbody>{payments.map(payment => <tr key={payment.id}><td>{String(payment.receipt_no ?? '—')}</td><td>{niceDate(payment.payment_date)}</td><td>{String(payment.payment_method ?? '—').replace('_', ' ')}</td><td>{Number(payment.amount ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td><td>{String(payment.payment_reference ?? '—')}</td></tr>)}</tbody></table></div>}
+      <div className="modal-actions"><button type="button" className="button button-outline" onClick={onClose}>Close</button></div>
+    </section>
+  </div>
 }
 
 export function RecordModule({ module, onToast }: Props) {
@@ -208,27 +335,37 @@ export function RecordModule({ module, onToast }: Props) {
   const [search, setSearch] = useState('')
   const [editing, setEditing] = useState<RecordRow | null>(null)
   const [showForm, setShowForm] = useState(false)
+  const [paymentTarget, setPaymentTarget] = useState<RecordRow | null>(null)
+  const [historyTarget, setHistoryTarget] = useState<RecordRow | null>(null)
   const [studentStatus, setStudentStatus] = useState<StudentStatus>('all')
   const [employeeStatus, setEmployeeStatus] = useState<EmployeeStatus>('all')
-  const [attendanceStatus, setAttendanceStatus] = useState<'all' | 'present' | 'absent' | 'late' | 'excused'>('all')
-  const [attendanceDate, setAttendanceDate] = useState(new Date().toISOString().slice(0, 10))
-  const [attendanceClass, setAttendanceClass] = useState('all')
+  const [feeStatus, setFeeStatus] = useState<FeeStatus>('all')
   const canEdit = ['owner', 'admin'].includes(user!.role)
+    || (user!.role === 'teacher' && ['attendance', 'exams', 'exam_results', 'assignments', 'assignment_submissions', 'timetable', 'announcements', 'work_tasks'].includes(module.key))
+    || (user!.role === 'student' && module.key === 'assignment_submissions')
+    || (user!.role === 'accountant' && (module.key === 'fees' || module.key === 'work_tasks'))
+    || (user!.role === 'exam_officer' && (['exams', 'exam_results'].includes(module.key) || module.key === 'work_tasks'))
+  const canCreate = ['owner', 'admin'].includes(user!.role)
     || (user!.role === 'teacher' && ['attendance', 'exams', 'exam_results', 'assignments', 'timetable', 'announcements'].includes(module.key))
+    || (user!.role === 'student' && module.key === 'assignment_submissions')
     || (user!.role === 'accountant' && module.key === 'fees')
     || (user!.role === 'exam_officer' && ['exams', 'exam_results'].includes(module.key))
   const canDelete = ['owner', 'admin'].includes(user!.role)
     || (user!.role === 'exam_officer' && ['exams', 'exam_results'].includes(module.key))
+  const canCollectFeePayment = module.key === 'fees' && ['owner', 'admin', 'accountant'].includes(user!.role)
 
   async function load() {
     setLoading(true)
     try { setRows(await listRecords(mode, user!, module.table)) }
-    catch (error) { onToast(error instanceof Error ? error.message : 'Could not load records.', true) }
+    catch (error) { onToast(userFacingError(error, 'Could not load records. Refresh and try again.'), true) }
     finally { setLoading(false) }
   }
   useEffect(() => { void load() }, [mode, user?.id, module.table])
 
-  const filtered = useMemo(() => rows.filter(row => module.columns.some(column => String(row[column.key] ?? '').toLowerCase().includes(search.toLowerCase()))), [rows, search, module])
+  const filtered = useMemo(() => rows.filter(row =>
+    module.columns.some(column => String(row[column.key] ?? '').toLowerCase().includes(search.toLowerCase()))
+    && (module.key !== 'fees' || feeStatus === 'all' || String(row.status ?? 'unpaid').toLowerCase() === feeStatus)
+  ), [rows, search, module, feeStatus])
   const studentFiltered = useMemo(() => filtered.filter(row => studentStatus === 'all' || String(row.status ?? 'active').toLowerCase() === studentStatus), [filtered, studentStatus])
   const studentCounts = useMemo(() => ({
     total: rows.length,
@@ -242,10 +379,19 @@ export function RecordModule({ module, onToast }: Props) {
     onLeave: rows.filter(row => String(row.employment_status ?? '').toLowerCase() === 'on_leave').length,
     departments: new Set(rows.map(row => String(row.department ?? '').trim()).filter(Boolean)).size,
   }), [rows])
+  const feeCounts = useMemo(() => {
+    const billed = rows.reduce((sum, row) => sum + netInvoiceAmount(row), 0)
+    const received = rows.reduce((sum, row) => sum + Math.max(0, Number(row.paid_amount ?? 0)), 0)
+    const outstanding = rows.reduce((sum, row) => sum + outstandingInvoiceBalance(row), 0)
+    const overdue = rows.filter(row => String(row.status ?? '').toLowerCase() === 'overdue').length
+    return { invoices: rows.length, billed, received, outstanding, overdue }
+  }, [rows])
 
   async function save(values: Record<string, unknown>) {
     setSaving(true)
+    let targetEditing = editing
     let newlyUploadedPhotoPath: string | null = null
+    let linkedStudentClass = ''
     try {
       const payload: Record<string, unknown> = { ...values }
       const photoFile = payload.__photoFile instanceof File ? payload.__photoFile : null
@@ -257,56 +403,174 @@ export function RecordModule({ module, onToast }: Props) {
       }
 
       if (module.key === 'students' && photoFile) {
-        if (mode === 'local') {
-          // Dexie/IndexedDB stores Blob values locally with the student record.
-          payload.photo_blob = photoFile
+        if (!supabase) throw new Error('Supabase is not configured. Check the cloud connection before uploading a photo.')
+        const extension = photoFile.type === 'image/png' ? 'png' : photoFile.type === 'image/webp' ? 'webp' : 'jpg'
+        const path = `${user!.institutionId}/students/${crypto.randomUUID()}.${extension}`
+        const { error: uploadError } = await supabase.storage.from('institution-files').upload(path, photoFile, {
+          cacheControl: '3600', contentType: photoFile.type, upsert: false,
+        })
+        if (uploadError) throw new Error('The student photo could not be uploaded. Check the file type, size and permissions, then try again.')
+        newlyUploadedPhotoPath = path
+        payload.photo_path = path
+      }
+
+      if (['attendance', 'fees', 'exam_results'].includes(module.key)) {
+        const learners = await listRecords(mode, user!, 'students')
+        const match = learners.find(student => student.id === String(payload.student_id ?? ''))
+        if (!match) throw new Error('Select a valid student from this institution before saving.')
+        payload.student_name = match.full_name
+        linkedStudentClass = String(match.class_name ?? '')
+        if (module.key === 'attendance') payload.class_name = match.class_name
+      }
+      if (module.key === 'attendance') {
+        const attendanceRows = await listRecords(mode, user!, 'attendance')
+        const duplicate = attendanceRows.find(row => row.id !== targetEditing?.id
+          && row.student_id === payload.student_id
+          && String(row.attendance_date ?? '') === String(payload.attendance_date ?? ''))
+        if (duplicate) throw new Error('Attendance has already been recorded for this student on the selected date. Edit the existing entry instead.')
+      }
+      if (module.key === 'assignments') {
+        if (payload.points === null || payload.points === undefined) payload.points = 100
+        if (!payload.status) payload.status = 'open'
+      }
+      if (module.key === 'work_tasks' && (payload.progress_percent === null || payload.progress_percent === undefined)) payload.progress_percent = 0
+      if (module.key === 'assignment_submissions') {
+        const assignments = await listRecords(mode, user!, 'assignments')
+        const assignment = assignments.find(row => row.id === String(payload.assignment_id ?? ''))
+        if (!assignment) throw new Error('Choose an assignment that is available in your class.')
+        if (user!.role === 'student' && assignment.status !== 'open') throw new Error('This assignment is closed and is no longer accepting submissions.')
+        payload.assignment_id = assignment.id
+        payload.assignment_title = assignment.title
+        if (user!.role === 'student') {
+          if (!user!.linkedStudentId) throw new Error('Your student account is not linked to a student record. Contact the institution administrator.')
+          const learners = await listRecords(mode, user!, 'students')
+          const learner = learners.find(row => row.id === user!.linkedStudentId)
+          if (!learner) throw new Error('Your linked student profile could not be found.')
+          payload.student_id = learner.id
+          payload.student_name = learner.full_name
+          targetEditing = targetEditing ?? rows.find(row => row.assignment_id === assignment.id) ?? null
+          if (targetEditing && ['graded', 'returned'].includes(String(targetEditing.status))) throw new Error('This submission has already been reviewed and can no longer be edited.')
+          payload.status = 'submitted'
+          payload.submitted_at = new Date().toISOString()
+          if (assignment.due_date && localDateValue() > String(assignment.due_date)) payload.status = 'late'
+          payload.marks_obtained = null
+          payload.feedback = null
         } else {
-          if (!supabase) throw new Error('Supabase is not configured. Check the cloud connection before uploading a photo.')
-          const extension = photoFile.type === 'image/png' ? 'png' : photoFile.type === 'image/webp' ? 'webp' : 'jpg'
-          const path = `${user!.institutionId}/students/${crypto.randomUUID()}.${extension}`
-          const { error: uploadError } = await supabase.storage.from('institution-files').upload(path, photoFile, {
-            cacheControl: '3600', contentType: photoFile.type, upsert: false,
-          })
-          if (uploadError) throw new Error(`Student photo upload failed: ${uploadError.message}`)
-          newlyUploadedPhotoPath = path
-          payload.photo_path = path
+          const learners = await listRecords(mode, user!, 'students')
+          const learner = learners.find(row => row.id === String(payload.student_id ?? ''))
+          if (!learner) throw new Error('Select a valid student from this institution.')
+          if (String(learner.class_name ?? '') !== String(assignment.class_name ?? '')) throw new Error('The selected student does not belong to this assignment class.')
+          payload.student_id = learner.id
+          payload.student_name = learner.full_name
+          if (payload.marks_obtained !== null && payload.marks_obtained !== undefined) {
+            const marks = Number(payload.marks_obtained)
+            const maximum = Number(assignment.points ?? 0)
+            if (marks < 0 || (maximum > 0 && marks > maximum)) throw new Error('Marks must be within the assignment maximum.')
+            payload.status = 'graded'
+          }
         }
       }
-
-      if (module.key === 'faculty_attendance' && typeof payload.employee_no === 'string') {
-        const employeeNo = payload.employee_no.trim().toLowerCase()
-        const faculty = await listRecords(mode, user!, 'teachers')
-        const match = faculty.find(member => String(member.employee_no ?? '').trim().toLowerCase() === employeeNo)
-        if (!match) throw new Error('No matching faculty profile was found. Add the faculty member first and enter the exact Employee ID.')
-        payload.faculty_name = String(match.full_name ?? payload.faculty_name ?? '')
-        payload.department = String(match.department ?? payload.department ?? '')
-      }
-
-      if (['attendance', 'fees', 'exam_results'].includes(module.key) && typeof payload.student_name === 'string') {
-        const learners = await listRecords(mode, user!, 'students')
-        const match = learners.find(student => String(student.full_name ?? '').trim().toLowerCase() === String(payload.student_name).trim().toLowerCase())
-        if (!match) throw new Error('No matching student record was found. Add the student first, then use the same full name here.')
-        payload.student_id = match.id
+      if (module.key === 'work_tasks') {
+        if (['owner', 'admin'].includes(user!.role)) {
+          const accounts = await listAccounts(mode, user!) as { id: string; fullName: string; email: string; role: string }[]
+          const assignee = accounts.find(account => account.email.toLowerCase() === String(payload.assigned_to_email ?? '').trim().toLowerCase())
+          if (!assignee || !['owner', 'admin', 'teacher', 'accountant', 'exam_officer'].includes(assignee.role)) {
+            throw new Error('Use the email of an existing institution staff account. Create the staff account first if it does not exist.')
+          }
+          payload.assigned_to_email = assignee.email
+          payload.assigned_to_name = assignee.fullName
+        }
+        const progress = Number(payload.progress_percent ?? 0)
+        if (progress < 0 || progress > 100) throw new Error('Progress must be between 0 and 100.')
+        if (payload.status === 'completed') payload.progress_percent = 100
+        if (payload.status !== 'completed' && progress === 100) payload.status = 'completed'
+        if (!['owner', 'admin'].includes(user!.role) && String(payload.assigned_to_email ?? '').toLowerCase() !== user!.email.toLowerCase()) {
+          throw new Error('You can only update work assigned to your account.')
+        }
       }
       if (module.key === 'fees') {
-        const amount = Number(payload.amount ?? 0), paid = Number(payload.paid_amount ?? 0)
-        payload.status = paid <= 0 ? 'unpaid' : paid >= amount ? 'paid' : 'partial'
+        const amount = Number(payload.amount ?? 0)
+        const paid = Number(targetEditing?.paid_amount ?? 0)
+        const discount = Number(payload.discount_amount ?? 0)
+        if (!(amount > 0)) throw new Error('Invoice amount must be greater than zero.')
+        if (discount < 0 || discount > amount) throw new Error('Discount must be between zero and the invoice amount.')
+        const existingFine = Number(targetEditing?.fine_amount ?? 0)
+        if (paid < 0 || paid > amount + existingFine - discount) throw new Error('The invoice total cannot be reduced below the amount already received.')
+        if (payload.discount_amount === null || payload.discount_amount === undefined) payload.discount_amount = 0
+        if (!String(payload.invoice_no ?? '').trim()) {
+          payload.invoice_no = `INV-${new Date().getFullYear()}-${crypto.randomUUID().replace(/-/g, '').slice(0, 12).toUpperCase()}`
+        }
+        if (!targetEditing) payload.paid_amount = 0
+        const amountDue = amount + existingFine - discount
+        const fullyPaid = paid >= amountDue
+        const overdue = !fullyPaid && Boolean(payload.due_date) && String(payload.due_date) < localDateValue()
+        payload.status = fullyPaid ? 'paid' : overdue ? 'overdue' : paid > 0 ? 'partial' : 'unpaid'
+      }
+      if (module.key === 'exam_results') {
+        const exams = await listRecords(mode, user!, 'exams')
+        const exam = exams.find(row => row.id === String(payload.exam_id ?? ''))
+        if (!exam) throw new Error('Select an examination from the examination schedule.')
+        if (linkedStudentClass && String(exam.class_name ?? '') !== linkedStudentClass) {
+          throw new Error('The selected student does not belong to the class scheduled for this examination.')
+        }
+        const existingResults = await listRecords(mode, user!, 'exam_results')
+        const duplicateResult = existingResults.find(row => row.id !== targetEditing?.id
+          && row.exam_id === exam.id && row.student_id === payload.student_id)
+        if (duplicateResult) throw new Error('A result already exists for this student and examination. Edit the existing result instead.')
+        payload.exam_title = exam.title
+        payload.subject = exam.subject
+        payload.total_marks = Number(exam.total_marks ?? 0)
+        const marks = Number(payload.marks_obtained ?? 0)
+        const total = Number(payload.total_marks ?? 0)
+        if (!(total > 0)) throw new Error('Total marks must be greater than zero.')
+        if (marks < 0 || marks > total) throw new Error('Marks obtained must be between zero and total marks.')
+        const percentage = (marks / total) * 100
+        payload.grade = percentage >= 90 ? 'A+' : percentage >= 80 ? 'A' : percentage >= 70 ? 'B' : percentage >= 60 ? 'C' : percentage >= 50 ? 'D' : 'F'
+        if (!payload.result_status) payload.result_status = 'draft'
+      }
+      if (module.key === 'exams') {
+        const total = Number(payload.total_marks ?? 0)
+        if (!(total > 0)) throw new Error('Total marks must be greater than zero.')
+        const duration = payload.duration_minutes
+        if (duration !== null && duration !== undefined && Number(duration) <= 0) {
+          throw new Error('Exam duration must be greater than zero minutes.')
+        }
+        if (!payload.status) payload.status = 'planned'
+      }
+      if (module.key === 'timetable') {
+        if (String(payload.end_time ?? '') <= String(payload.start_time ?? '')) {
+          throw new Error('The timetable end time must be later than the start time.')
+        }
+        const entries = await listRecords(mode, user!, 'timetable_entries')
+        const start = String(payload.start_time)
+        const end = String(payload.end_time)
+        const overlaps = (a: string, b: string) => start < b && end > a
+        const collision = entries.find(row => {
+          if (row.id === targetEditing?.id || row.weekday !== payload.weekday) return false
+          const rowStart = String(row.start_time ?? '')
+          const rowEnd = String(row.end_time ?? '')
+          if (!rowStart || !rowEnd || !overlaps(rowStart, rowEnd)) return false
+          return row.class_name === payload.class_name
+            || (Boolean(payload.teacher_name) && row.teacher_name === payload.teacher_name)
+            || (Boolean(payload.room) && row.room === payload.room)
+        })
+        if (collision) throw new Error('This time overlaps an existing class, teacher or room booking. Choose another slot.')
       }
 
-      if (editing) await updateRecord(mode, user!, module.table, editing.id, payload)
+      if (targetEditing) await updateRecord(mode, user!, module.table, targetEditing.id, payload)
       else await createRecord(mode, user!, module.table, payload)
 
-      if (newlyUploadedPhotoPath && editing?.photo_path && typeof editing.photo_path === 'string' && supabase) {
+      if (newlyUploadedPhotoPath && targetEditing?.photo_path && typeof targetEditing.photo_path === 'string' && supabase) {
         // Best-effort cleanup after the new record path has been saved.
-        await supabase.storage.from('institution-files').remove([editing.photo_path])
+        await supabase.storage.from('institution-files').remove([targetEditing.photo_path])
       }
-      onToast(editing ? 'Record updated successfully.' : 'Record created successfully.')
+      onToast(targetEditing ? 'Record updated successfully.' : 'Record created successfully.')
       setShowForm(false); setEditing(null); await load()
     } catch (error) {
       if (newlyUploadedPhotoPath && supabase) {
         try { await supabase.storage.from('institution-files').remove([newlyUploadedPhotoPath]) } catch { /* best-effort cleanup */ }
       }
-      onToast(error instanceof Error ? error.message : 'Could not save record.', true)
+      onToast(userFacingError(error, 'Could not save this record. Review the form and try again.'), true)
     } finally { setSaving(false) }
   }
 
@@ -314,11 +578,11 @@ export function RecordModule({ module, onToast }: Props) {
     if (!window.confirm('Delete this record? This cannot be undone.')) return
     try {
       await deleteRecord(mode, user!, module.table, row.id)
-      if (module.key === 'students' && mode === 'cloud' && typeof row.photo_path === 'string' && row.photo_path && supabase) {
+      if (module.key === 'students' && typeof row.photo_path === 'string' && row.photo_path && supabase) {
         try { await supabase.storage.from('institution-files').remove([row.photo_path]) } catch { /* record is deleted; leave any orphaned photo for later cleanup */ }
       }
       onToast('Record deleted.'); await load()
-    } catch (error) { onToast(error instanceof Error ? error.message : 'Could not delete record.', true) }
+    } catch (error) { onToast(userFacingError(error, 'Could not delete this record. Refresh and try again.'), true) }
   }
 
   const formDialog = showForm ? <RecordForm module={module} initial={editing} saving={saving} mode={mode} onCancel={() => { setShowForm(false); setEditing(null) }} onSave={values => void save(values)}/> : null
@@ -340,7 +604,7 @@ export function RecordModule({ module, onToast }: Props) {
         <div className="student-stat-card"><span className="student-stat-icon violet"><GraduationCap size={19}/></span><span className="student-stat-label">Graduated</span><strong>{loading ? '—' : studentCounts.graduated.toLocaleString()}</strong><small>Completed programmes</small></div>
       </div>
       <section className="student-directory-card">
-        <div className="student-directory-heading"><div><h2>Student directory</h2><p>Search and manage students registered at your institution.</p></div><span className={`student-mode-tag ${mode === 'local' ? 'local' : 'cloud'}`}>{mode === 'local' ? 'Offline records' : 'Cloud records'}</span></div>
+        <div className="student-directory-heading"><div><h2>Student directory</h2><p>Search and manage students registered at your institution.</p></div><span className="student-mode-tag cloud">Cloud records</span></div>
         <div className="student-directory-toolbar">
           <label className="student-search"><Search size={17}/><input aria-label="Search students" placeholder="Search name, admission number or class…" value={search} onChange={event => setSearch(event.target.value)}/>{search && <button type="button" onClick={() => setSearch('')} aria-label="Clear search"><X size={15}/></button>}</label>
           <button className="student-refresh-button" onClick={() => void load()} disabled={loading}><RefreshCw size={15} className={loading ? 'spin' : ''}/> Refresh</button>
@@ -350,47 +614,12 @@ export function RecordModule({ module, onToast }: Props) {
         </div>
         {loading ? <div className="student-empty-state"><RefreshCw className="spin" size={22}/><strong>Loading students…</strong></div> : studentFiltered.length === 0 ? <div className="student-empty-state"><span className="student-empty-icon"><GraduationCap size={25}/></span><strong>{search ? 'No matching students' : studentStatus === 'all' ? 'No students registered yet' : `No ${studentStatus} students`}</strong><p>{search ? 'Try a different name, admission number or class.' : canEdit ? 'Add your first student to begin building the institution directory.' : 'Student records will appear here when they are added by an authorized administrator.'}</p>{canEdit && !search && studentStatus === 'all' && <button className="button button-primary" onClick={() => { setEditing(null); setShowForm(true) }}><Plus size={16}/> Add first student</button>}</div> : <div className="student-table-wrap"><table className="student-table"><thead><tr><th>Student ID</th><th>Student</th><th>Class / programme</th><th>Parent / guardian</th><th>Status</th>{canEdit && <th className="action-column">Actions</th>}</tr></thead><tbody>{studentFiltered.map(row => <tr key={row.id}>
           <td><span className="student-admission-number">{String(row.admission_no ?? '—')}</span></td>
-          <td><div className="student-person-cell"><StudentPhoto row={row} mode={mode}/><span><strong>{String(row.full_name ?? 'Unnamed student')}</strong><small>{String(row.email ?? 'No email provided')}</small></span></div></td>
+          <td><div className="student-person-cell"><StudentPhoto row={row}/><span><strong>{String(row.full_name ?? 'Unnamed student')}</strong><small>{String(row.email ?? 'No email provided')}</small></span></div></td>
           <td>{String(row.class_name ?? '—')}</td><td>{String(row.guardian_name ?? '—')}</td>
           <td><span className={`status-pill status-${String(row.status ?? 'active').toLowerCase()}`}>{statusLabel(row.status)}</span></td>
           {canEdit && <td className="row-actions"><button className="icon-button" onClick={() => { setEditing(row); setShowForm(true) }} title="Edit student"><Edit3 size={15}/></button>{canDelete && <button className="icon-button danger-icon" onClick={() => void remove(row)} title="Delete student"><Trash2 size={15}/></button>}</td>}
         </tr>)}</tbody></table></div>}
         <div className="student-directory-footer"><span>Showing <strong>{studentFiltered.length}</strong> of <strong>{studentCounts.total}</strong> students</span><span>Student records are restricted to authorized institution members.</span></div>
-      </section>
-      {formDialog}
-    </div>
-  }
-
-  if (module.key === 'attendance') {
-    const dateRows = rows.filter(row => String(row.attendance_date ?? '').slice(0, 10) === attendanceDate)
-    const classNames = Array.from(new Set(rows.map(row => String(row.class_name ?? '').trim()).filter(Boolean))).sort()
-    const classRows = dateRows.filter(row => attendanceClass === 'all' || String(row.class_name ?? '') === attendanceClass)
-    const visibleRows = classRows.filter(row =>
-      (attendanceStatus === 'all' || String(row.status ?? '').toLowerCase() === attendanceStatus) &&
-      module.columns.some(column => String(row[column.key] ?? '').toLowerCase().includes(search.toLowerCase()))
-    )
-    const count = (status: string) => classRows.filter(row => String(row.status ?? '').toLowerCase() === status).length
-    const marked = classRows.length
-    const rate = marked ? Math.round((count('present') / marked) * 100) : 0
-    return <div className="page-content attendance-page">
-      <div className="page-title-row attendance-heading"><div><div className="eyebrow">ACADEMICS / DAILY REGISTER</div><h1>Student Attendance</h1><p>Take class attendance, review daily records and monitor student presence.</p></div>{canEdit && <button className="button button-primary" onClick={() => { setEditing(null); setShowForm(true) }}><Plus size={17}/> Mark attendance</button>}</div>
-      <div className="attendance-stats-grid">
-        <div className="attendance-stat-card"><span className="attendance-stat-icon total">▦</span><span>Marked records</span><strong>{loading ? '—' : marked}</strong><small>Selected date and class</small></div>
-        <div className="attendance-stat-card"><span className="attendance-stat-icon present">✓</span><span>Present</span><strong>{loading ? '—' : count('present')}</strong><small>Students present</small></div>
-        <div className="attendance-stat-card"><span className="attendance-stat-icon absent">!</span><span>Absent</span><strong>{loading ? '—' : count('absent')}</strong><small>Students absent</small></div>
-        <div className="attendance-stat-card"><span className="attendance-stat-icon rate">%</span><span>Presence rate</span><strong>{loading ? '—' : `${rate}%`}</strong><small>Present / marked records</small></div>
-      </div>
-      <section className="attendance-register-card">
-        <div className="attendance-register-heading"><div><h2>Daily attendance register</h2><p>Choose a date and class to review the register.</p></div><span className={`attendance-mode-tag ${mode}`}>{mode === 'local' ? 'Offline records' : 'Cloud records'}</span></div>
-        <div className="attendance-toolbar">
-          <label className="attendance-filter-field"><span>Attendance date</span><input type="date" value={attendanceDate} onChange={event => setAttendanceDate(event.target.value)}/></label>
-          <label className="attendance-filter-field"><span>Class / programme</span><select value={attendanceClass} onChange={event => setAttendanceClass(event.target.value)}><option value="all">All classes</option>{classNames.map(name => <option key={name} value={name}>{name}</option>)}</select></label>
-          <label className="attendance-search"><Search size={16}/><input placeholder="Search student or class…" value={search} onChange={event => setSearch(event.target.value)}/>{search && <button type="button" onClick={() => setSearch('')} aria-label="Clear search"><X size={15}/></button>}</label>
-          <button className="faculty-refresh-button" onClick={() => void load()} disabled={loading}><RefreshCw size={15} className={loading ? 'spin' : ''}/> Refresh</button>
-        </div>
-        <div className="attendance-status-filters">{(['all','present','absent','late','excused'] as const).map(status => <button type="button" key={status} className={attendanceStatus === status ? 'active' : ''} onClick={() => setAttendanceStatus(status)}>{status === 'all' ? 'All statuses' : status[0].toUpperCase()+status.slice(1)}{status === 'all' ? <span>{classRows.length}</span> : <span>{count(status)}</span>}</button>)}</div>
-        {loading ? <div className="attendance-empty"><RefreshCw className="spin" size={22}/><strong>Loading attendance…</strong></div> : visibleRows.length === 0 ? <div className="attendance-empty"><span className="attendance-empty-mark">✓</span><strong>{search || attendanceStatus !== 'all' ? 'No matching attendance records' : 'No attendance marked for this date'}</strong><p>{search || attendanceStatus !== 'all' ? 'Change your search or status filter.' : canEdit ? 'Start the daily register by marking attendance for a student.' : 'Attendance records will appear here after they are entered.'}</p>{canEdit && !search && attendanceStatus === 'all' && <button className="button button-primary" onClick={() => { setEditing(null); setShowForm(true) }}><Plus size={16}/> Mark first attendance</button>}</div> : <div className="attendance-table-wrap"><table className="attendance-table"><thead><tr><th>Student</th><th>Class</th><th>Date</th><th>Status</th><th>Notes</th>{canEdit && <th>Actions</th>}</tr></thead><tbody>{visibleRows.map(row => <tr key={row.id}><td><strong>{String(row.student_name ?? 'Unnamed student')}</strong></td><td>{String(row.class_name ?? '—')}</td><td>{niceDate(row.attendance_date)}</td><td><span className={`attendance-status-pill ${String(row.status ?? '').toLowerCase()}`}>{statusLabel(row.status)}</span></td><td>{String(row.notes ?? '—')}</td>{canEdit && <td className="row-actions"><button className="icon-button" onClick={() => { setEditing(row); setShowForm(true) }} title="Edit attendance"><Edit3 size={15}/></button>{canDelete && <button className="icon-button danger-icon" onClick={() => void remove(row)} title="Delete attendance"><Trash2 size={15}/></button>}</td>}</tr>)}</tbody></table></div>}
-        <div className="attendance-register-footer"><span>Showing <strong>{visibleRows.length}</strong> of <strong>{classRows.length}</strong> records for {attendanceDate}</span><span>Attendance is stored separately for each institution.</span></div>
       </section>
       {formDialog}
     </div>
@@ -414,7 +643,7 @@ export function RecordModule({ module, onToast }: Props) {
         <div className="faculty-stat-card"><span className="faculty-stat-icon violet"><GraduationCap size={19}/></span><span className="faculty-stat-label">Departments</span><strong>{loading ? '—' : teacherCounts.departments.toLocaleString()}</strong><small>Departments represented</small></div>
       </div>
       <section className="faculty-directory-card">
-        <div className="faculty-directory-heading"><div><h2>Faculty directory</h2><p>Search and manage employees registered at your institution.</p></div><span className={`faculty-mode-tag ${mode === 'local' ? 'local' : 'cloud'}`}>{mode === 'local' ? 'Offline records' : 'Cloud records'}</span></div>
+        <div className="faculty-directory-heading"><div><h2>Faculty directory</h2><p>Search and manage employees registered at your institution.</p></div><span className="faculty-mode-tag cloud">Cloud records</span></div>
         <div className="faculty-directory-toolbar">
           <label className="faculty-search"><Search size={17}/><input aria-label="Search faculty" placeholder="Search employee, name, department or subject…" value={search} onChange={event => setSearch(event.target.value)}/>{search && <button type="button" onClick={() => setSearch('')} aria-label="Clear search"><X size={15}/></button>}</label>
           <button className="faculty-refresh-button" onClick={() => void load()} disabled={loading}><RefreshCw size={15} className={loading ? 'spin' : ''}/> Refresh</button>
@@ -435,10 +664,26 @@ export function RecordModule({ module, onToast }: Props) {
     </div>
   }
 
+  const feeFilters: { key: FeeStatus; label: string }[] = [
+    { key: 'all', label: 'All invoices' }, { key: 'unpaid', label: 'Unpaid' },
+    { key: 'partial', label: 'Partially paid' }, { key: 'overdue', label: 'Overdue' },
+    { key: 'paid', label: 'Paid' },
+  ]
+
   return <div className="page-content">
-    <div className="page-title-row"><div><div className="eyebrow">INSTITUTION WORKSPACE</div><h1>{module.title}</h1><p>{module.description}</p></div>{canEdit && <button className="button button-primary" onClick={() => { setEditing(null); setShowForm(true) }}><Plus size={17}/> Add {module.title.replace(/s$/, '').toLowerCase()}</button>}</div>
-    <div className="table-card"><div className="table-toolbar"><div className="table-count"><strong>{filtered.length}</strong> records <span>·</span> {mode === 'local' ? 'Saved on this device' : 'Live institutional database'}</div><div className="toolbar-actions"><div className="search-box"><Search size={16}/><input placeholder="Search records…" value={search} onChange={event => setSearch(event.target.value)}/></div><button className="icon-button" onClick={() => void load()} aria-label="Refresh records"><RefreshCw size={16}/></button></div></div>
-      {loading ? <div className="table-empty"><RefreshCw className="spin" size={21}/> Loading records…</div> : filtered.length === 0 ? <div className="table-empty"><div className="empty-icon"><AlertCircle size={22}/></div><strong>{search ? 'No matching records' : 'No records yet'}</strong><span>{search ? 'Try another search term.' : canEdit ? 'Add the first record to start using this module.' : 'Records will appear here when your institution adds them.'}</span></div> : <div className="table-scroll"><table><thead><tr>{module.columns.map(column => <th key={column.key}>{column.label}</th>)}{canEdit && <th className="action-column">Actions</th>}</tr></thead><tbody>{filtered.map(row => <tr key={row.id}>{module.columns.map(column => <td key={column.key}>{column.key === 'created_at' ? niceDate(row[column.key]) : column.key === 'status' ? <span className={`status-pill status-${String(row[column.key] ?? '').toLowerCase()}`}>{String(row[column.key] ?? '—').replace('_', ' ')}</span> : column.key === 'amount' || column.key === 'paid_amount' ? Number(row[column.key] ?? 0).toLocaleString() : String(row[column.key] ?? '—')}</td>)}{canEdit && <td className="row-actions"><button className="icon-button" onClick={() => { setEditing(row); setShowForm(true) }} title="Edit"><Edit3 size={15}/></button>{canDelete && <button className="icon-button danger-icon" onClick={() => void remove(row)} title="Delete"><Trash2 size={15}/></button>}</td>}</tr>)}</tbody></table></div>}
+    <div className="page-title-row"><div><div className="eyebrow">{module.key === 'fees' ? 'FINANCE / RECEIVABLES' : 'INSTITUTION WORKSPACE'}</div><h1>{module.title}</h1><p>{module.description}</p></div>{canCreate && <button className="button button-primary" onClick={() => { setEditing(null); setShowForm(true) }}><Plus size={17}/> Add {module.title.replace(/s$/, '').toLowerCase()}</button>}</div>
+    {module.key === 'fees' && <div className="student-stats-grid fee-overview-grid">
+      <div className="student-stat-card"><span className="student-stat-icon blue"><AlertCircle size={19}/></span><span className="student-stat-label">Total invoices</span><strong>{loading ? '—' : feeCounts.invoices.toLocaleString()}</strong><small>{feeCounts.overdue} overdue invoices</small></div>
+      <div className="student-stat-card"><span className="student-stat-icon violet"><BadgeCheck size={19}/></span><span className="student-stat-label">Net billed · PKR</span><strong>{loading ? '—' : feeCounts.billed.toLocaleString(undefined, { maximumFractionDigits: 0 })}</strong><small>After discounts and late fees</small></div>
+      <div className="student-stat-card"><span className="student-stat-icon green"><Check size={19}/></span><span className="student-stat-label">Collected · PKR</span><strong>{loading ? '—' : feeCounts.received.toLocaleString(undefined, { maximumFractionDigits: 0 })}</strong><small>Payments received</small></div>
+      <div className="student-stat-card"><span className="student-stat-icon amber"><Clock3 size={19}/></span><span className="student-stat-label">Outstanding · PKR</span><strong>{loading ? '—' : feeCounts.outstanding.toLocaleString(undefined, { maximumFractionDigits: 0 })}</strong><small>Remaining receivables</small></div>
+    </div>}
+    <div className="table-card">{module.key === 'fees' && <div className="student-filter-row fee-filter-row" role="group" aria-label="Filter invoices by payment status">
+      {feeFilters.map(filter => <button type="button" key={filter.key} className={feeStatus === filter.key ? 'active' : ''} onClick={() => setFeeStatus(filter.key)}>{filter.label}{filter.key === 'all' ? <span>{feeCounts.invoices}</span> : filter.key === 'overdue' ? <span>{feeCounts.overdue}</span> : null}</button>)}
+    </div>}<div className="table-toolbar"><div className="table-count"><strong>{filtered.length}</strong> records <span>·</span> Live institutional database</div><div className="toolbar-actions"><div className="search-box"><Search size={16}/><input placeholder="Search records…" value={search} onChange={event => setSearch(event.target.value)}/></div><button className="icon-button" onClick={() => void load()} aria-label="Refresh records"><RefreshCw size={16}/></button></div></div>
+      {loading ? <div className="table-empty"><RefreshCw className="spin" size={21}/> Loading records…</div> : filtered.length === 0 ? <div className="table-empty"><div className="empty-icon"><AlertCircle size={22}/></div><strong>{search ? 'No matching records' : 'No records yet'}</strong><span>{search ? 'Try another search term.' : canEdit ? 'Add the first record to start using this module.' : 'Records will appear here when your institution adds them.'}</span></div> : <div className="table-scroll"><table><thead><tr>{module.columns.map(column => <th key={column.key}>{column.label}</th>)}{(canEdit || module.key === 'fees') && <th className="action-column">Actions</th>}</tr></thead><tbody>{filtered.map(row => <tr key={row.id}>{module.columns.map(column => <td key={column.key}>{column.key === 'created_at' || column.key === 'due_date' || column.key === 'exam_date' ? niceDate(row[column.key]) : column.key === 'balance' && module.key === 'fees' ? outstandingInvoiceBalance(row).toLocaleString(undefined, { maximumFractionDigits: 2 }) : column.key === 'status' || column.key === 'result_status' ? <span className={`status-pill status-${String(row[column.key] ?? '').toLowerCase()}`}>{String(row[column.key] ?? '—').replace('_', ' ')}</span> : ['amount', 'paid_amount', 'balance', 'marks_obtained', 'total_marks'].includes(column.key) ? Number(row[column.key] ?? 0).toLocaleString(undefined, { maximumFractionDigits: 2 }) : String(row[column.key] ?? '—')}</td>)}{(canEdit || module.key === 'fees') && <td className="row-actions">{module.key === 'fees' && <><button type="button" className="button button-outline" onClick={() => setHistoryTarget(row)}>History</button>{canCollectFeePayment && outstandingInvoiceBalance(row) > 0 && <button type="button" className="button button-primary" onClick={() => setPaymentTarget(row)}>Collect</button>}</>}{canEdit && !(module.key === 'assignment_submissions' && user!.role === 'student' && ['graded', 'returned'].includes(String(row.status))) && <button className="icon-button" onClick={() => { setEditing(row); setShowForm(true) }} title="Edit"><Edit3 size={15}/></button>}{canDelete && !(module.key === 'fees' && Number(row.paid_amount ?? 0) > 0) && <button className="icon-button danger-icon" onClick={() => void remove(row)} title="Delete"><Trash2 size={15}/></button>}</td>}</tr>)}</tbody></table></div>}
     </div>{formDialog}
+    {paymentTarget && <FeePaymentDialog invoice={paymentTarget} onClose={() => setPaymentTarget(null)} onSaved={(receiptNo) => { setPaymentTarget(null); onToast(`Payment recorded successfully. Receipt ${receiptNo}.`); void load() }}/>}
+    {historyTarget && <FeePaymentHistoryDialog invoice={historyTarget} onClose={() => setHistoryTarget(null)}/>}
   </div>
 }

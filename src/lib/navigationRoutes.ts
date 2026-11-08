@@ -1,0 +1,23 @@
+/** Every visible navigation destination must resolve to a live screen. */
+export const navigationRoutes: Record<string, string> = {
+  Dashboard: 'overview',
+  Departments: 'admin:departments',
+  Programs: 'admin:programs',
+  'Classes & Sections': 'admin:classes',
+  'Academic Sessions': 'admin:academic_sessions',
+  Subjects: 'admin:subjects',
+  'Rooms & Facilities': 'admin:rooms',
+  'Student Records': 'students',
+  'Faculty & Staff': 'teachers',
+  'Attendance Register': 'attendance',
+  Examinations: 'exams',
+  'Exam Results': 'exam_results',
+  'Fee Invoices': 'fees',
+  Assignments: 'assignments',
+  'Assignment Submissions': 'assignment_submissions',
+  Timetable: 'timetable',
+  Announcements: 'announcements',
+  'User Accounts': 'accounts',
+  'Files & Documents': 'files',
+  'Work Management': 'work_tasks',
+}
