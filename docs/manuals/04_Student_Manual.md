@@ -6,4 +6,4 @@ Student menu: Dashboard, Attendance Register, Exam Results, Fee Invoices, Assign
 - **Homework:** view assignments; submit your response and optional attachment URL under Assignment Submissions; see marks and feedback.
 - **Results:** only Published results appear.
 - **Fees:** view your invoices, balances and status.
-A separate editable profile page is not part of the current navigation.
+**My Profile** (sidebar) shows your own student record read-only. To correct a detail, ask your institution.

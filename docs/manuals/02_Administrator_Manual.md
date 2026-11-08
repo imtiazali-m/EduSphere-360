@@ -6,4 +6,5 @@ Administrators see the same navigation as owners.
 - **Attendance:** choose student and date, set Present / Absent / Late / Excused. One record per student per day is enforced by the database.
 - **Fees:** create invoices (amount, discount, due date), record payments, view payment history.
 - **Academic operations:** timetable, assignments, examinations, announcements, work tasks.
-Limitations: no separate faculty attendance register; no fines field on the invoice form.
+Invoices now include a **Fine / late fee** field. The **Reports** page gives summaries with CSV export.
+Limitations: no separate faculty attendance register (a proposed migration exists under `supabase/proposed/`, not applied).

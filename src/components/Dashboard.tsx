@@ -20,6 +20,8 @@ import { RecordModule } from './RecordModule'
 import { AccountsModule } from './AccountsModule'
 import { FilesModule } from './FilesModule'
 import AdministrationModule from './AdministrationModule'
+import { ReportsModule } from './ReportsModule'
+import { ProfileModule } from './ProfileModule'
 
 interface Props { onToast: (message: string, error?: boolean) => void }
 type Dataset = Record<string, RecordRow[]>
@@ -349,10 +351,10 @@ export function Dashboard({ onToast }: Props) {
     } else if (key.startsWith('admin:')) {
       const subkey = key.slice(6)
       setActive(key); setActivePage(adminModuleLabels[subkey] ?? 'Administration')
-    } else if (key === 'accounts' || key === 'files' || available.some(module => module.key === key)) {
+    } else if (key === 'accounts' || key === 'files' || key === 'reports' || key === 'profile' || available.some(module => module.key === key)) {
       const module = available.find(item => item.key === key)
       setActive(key)
-      setActivePage(key === 'accounts' ? 'User Accounts' : key === 'files' ? 'Files & Documents' : module?.title ?? key)
+      setActivePage(key === 'accounts' ? 'User Accounts' : key === 'files' ? 'Files & Documents' : key === 'reports' ? 'Reports' : key === 'profile' ? 'My Profile' : module?.title ?? key)
     } else {
       onToast('This workspace is not enabled for your role.', true)
       return
@@ -428,7 +430,7 @@ export function Dashboard({ onToast }: Props) {
           <div className="pro-profile-wrap"><button className="pro-profile-trigger" onClick={() => setProfileOpen(open => !open)} aria-expanded={profileOpen}><span className="pro-profile-avatar">{user?.fullName.slice(0, 1).toUpperCase()}</span><span className="pro-profile-copy"><b>{user?.fullName}</b><small>{roleLabels[user!.role]}</small></span><ChevronDown size={14}/></button>{profileOpen && <div className="pro-profile-menu"><div className="pro-profile-details"><b>{user?.fullName}</b><small>{user?.email}</small><small>{user?.institutionName}</small>{user?.institutionType && <small>Institution type: {user.institutionType.replaceAll('_', ' ')}</small>}<small>Account role: {roleLabels[user!.role]}</small><span className={`pro-profile-mode ${mode}`}>Cloud workspace</span></div><button type="button" onClick={() => void logout()}><LogOut size={15}/> Sign out</button></div>}</div>
         </div>
       </header>
-      <div className="pro-module-stage">{active === 'overview' ? <Overview onNavigate={navigate}/> : adminKey ? <AdministrationModule key={adminKey} initialKey={adminKey as 'departments' | 'programs' | 'classes' | 'academic_sessions' | 'subjects' | 'rooms'}/> : active === 'accounts' ? <AccountsModule onToast={onToast}/> : active === 'files' ? <FilesModule onToast={onToast}/> : activeModule ? <RecordModule module={activeModule as ModuleConfig} onToast={onToast}/> : <Overview onNavigate={navigate}/>}</div>
+      <div className="pro-module-stage">{active === 'overview' ? <Overview onNavigate={navigate}/> : adminKey ? <AdministrationModule key={adminKey} initialKey={adminKey as 'departments' | 'programs' | 'classes' | 'academic_sessions' | 'subjects' | 'rooms'}/> : active === 'accounts' ? <AccountsModule onToast={onToast}/> : active === 'files' ? <FilesModule onToast={onToast}/> : active === 'reports' ? <ReportsModule onToast={onToast}/> : active === 'profile' ? <ProfileModule/> : activeModule ? <RecordModule module={activeModule as ModuleConfig} onToast={onToast}/> : <Overview onNavigate={navigate}/>}</div>
     </main>
   </div>
 }

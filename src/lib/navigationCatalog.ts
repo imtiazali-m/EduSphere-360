@@ -16,4 +16,6 @@ export const navigationCatalog: NavigationCatalogGroup[] = [
   { key: 'accounts', label: 'User Accounts', icon: 'Users', items: ['User Accounts'] },
   { key: 'files', label: 'Files & Documents', icon: 'FileText', items: ['Files & Documents'] },
   { key: 'work', label: 'Work Management', icon: 'ClipboardList', items: ['Work Management'] },
+  { key: 'reports', label: 'Reports', icon: 'BarChart3', items: ['Reports'] },
+  { key: 'profile', label: 'My Profile', icon: 'UserRound', items: ['My Profile'] },
 ]
