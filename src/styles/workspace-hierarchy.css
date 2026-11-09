@@ -1,0 +1,89 @@
+/* Readability and layered workspace hierarchy: preserve the existing EduSphere visual identity. */
+.workspace-hierarchy{display:grid;gap:18px;max-width:1680px;margin:0 auto;padding:24px 28px 42px;color:#203a30}
+.workspace-hierarchy-header{display:grid;gap:13px}
+.workspace-hierarchy-breadcrumb{display:flex;align-items:center;gap:8px;color:#7c8c82;font-size:12px;font-weight:700;letter-spacing:.01em}
+.workspace-hierarchy-breadcrumb svg{color:#a7b4aa}
+.workspace-hierarchy-breadcrumb b{color:#315346;font-weight:800}
+.workspace-hierarchy-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;padding:20px 22px;border:1px solid #e4ebe2;border-radius:16px;background:linear-gradient(112deg,#fff 0%,#f7faf4 100%);box-shadow:0 5px 18px rgba(26,65,48,.045)}
+.workspace-hierarchy-heading>div:first-child{min-width:0}
+.workspace-hierarchy-kicker{display:inline-flex;align-items:center;gap:7px;color:#6f8d7b;font-size:11px;font-weight:850;letter-spacing:1.1px;text-transform:uppercase}
+.workspace-hierarchy-heading h2{margin:6px 0 5px;color:#1c4335;font-size:clamp(23px,2vw,29px);line-height:1.18;letter-spacing:-.45px;font-weight:850}
+.workspace-hierarchy-heading p{max-width:780px;margin:0;color:#718478;font-size:14px;line-height:1.6}
+.workspace-hierarchy-current{display:grid;gap:4px;flex:none;min-width:175px;padding:11px 14px;border:1px solid #e0eadd;border-radius:11px;background:#f4f8f1}
+.workspace-hierarchy-current small{color:#879b8b;font-size:9px;font-weight:900;letter-spacing:1.2px}
+.workspace-hierarchy-current strong{color:#315c47;font-size:13px}
+.workspace-window-tabs{display:flex;gap:7px;overflow-x:auto;padding:5px 3px 8px;border-bottom:1px solid #e2eae0;scrollbar-width:thin}
+.workspace-window-tabs button{position:relative;display:flex;align-items:center;justify-content:center;flex:0 0 auto;min-height:43px;padding:0 15px;border:1px solid #e0e9df;border-radius:10px;background:#fff;color:#61776a;font:inherit;font-size:13px;font-weight:750;white-space:nowrap;cursor:pointer;transition:background .16s ease,border-color .16s ease,color .16s ease}
+.workspace-window-tabs button:hover{border-color:#b8cfbd;color:#315d48;background:#f8fbf6}
+.workspace-window-tabs button.active{border-color:#2e6651;background:#1e594b;color:#fff;box-shadow:0 5px 13px rgba(28,86,68,.13)}
+.workspace-subwindow-tabs{display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:10px 12px;border:1px solid #e4ebe2;border-radius:12px;background:#f6f9f4}
+.workspace-subwindow-caption{margin:0 4px 0 1px;color:#849788;font-size:9px;font-weight:900;letter-spacing:1.25px}
+.workspace-subwindow-tabs button{display:inline-flex;align-items:center;justify-content:center;min-height:35px;padding:0 12px;border:1px solid #e0e9df;border-radius:8px;background:#fff;color:#65796a;font:inherit;font-size:12px;font-weight:700;white-space:nowrap;cursor:pointer}
+.workspace-subwindow-tabs button:hover{border-color:#b7cdb9;color:#315b47}
+.workspace-subwindow-tabs button.active{border-color:#d4e7d0;background:#e9f4e5;color:#215b42;box-shadow:inset 0 0 0 1px rgba(50,112,78,.04)}
+.workspace-hierarchy-content{display:grid;gap:16px;min-width:0}
+.workspace-window-summary{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:16px 18px;border:1px solid #e5ece4;border-radius:13px;background:#fff}
+.workspace-window-summary>div:first-child{min-width:0}
+.workspace-window-summary>div:first-child>span{color:#8b9d8e;font-size:9px;font-weight:900;letter-spacing:1.2px}
+.workspace-window-summary h2{margin:3px 0;color:#274a39;font-size:17px;font-weight:850}
+.workspace-window-summary p{margin:0;color:#788a7e;font-size:12px;line-height:1.55}
+.workspace-window-summary small{display:block;margin-top:5px;color:#93a397;font-size:10px;text-transform:capitalize}
+.workspace-window-summary-right{display:grid;justify-items:end;gap:3px;flex:none}
+.workspace-window-summary-right strong{color:#27543f;font-size:24px;font-weight:850}
+.workspace-window-summary-right small{color:#87978a;font-size:10px}
+.workspace-task-card-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.workspace-task-card{display:grid;gap:6px;min-width:0;padding:16px;border:1px solid #e4ece2;border-radius:12px;background:#fff;text-align:left;color:#486451}
+.workspace-task-card strong{font-size:13px;color:#2e503d}
+.workspace-task-card span{font-size:11px;color:#829187;line-height:1.5}
+.workspace-hierarchy .page-title-row h1,.workspace-hierarchy .faculty-page-heading h1{font-size:clamp(23px,2vw,29px)}
+.workspace-hierarchy .page-title-row p,.workspace-hierarchy .faculty-page-heading p{font-size:14px;line-height:1.6}
+.workspace-hierarchy .table-card,.workspace-hierarchy .ed360-student-panel,.workspace-hierarchy .staff-panel{font-size:13px}
+.workspace-hierarchy .table-toolbar,.workspace-hierarchy .student-directory-toolbar,.workspace-hierarchy .faculty-directory-toolbar{min-height:50px}
+.workspace-hierarchy .table-scroll table,.workspace-hierarchy .student-table,.workspace-hierarchy .ed360-student-table,.workspace-hierarchy .staff-table{font-size:13px}
+.workspace-hierarchy .table-scroll th,.workspace-hierarchy .student-table th,.workspace-hierarchy .ed360-student-table th,.workspace-hierarchy .staff-table th{font-size:11px}
+.workspace-hierarchy .table-scroll td,.workspace-hierarchy .student-table td,.workspace-hierarchy .ed360-student-table td,.workspace-hierarchy .staff-table td{font-size:12px}
+.workspace-hierarchy input,.workspace-hierarchy select,.workspace-hierarchy textarea{font-size:13px}
+.workspace-hierarchy .button,.workspace-hierarchy button.button{font-size:12px}
+.workspace-hierarchy .field-label,.workspace-hierarchy .form-field,.workspace-hierarchy .staff-field{font-size:12px}
+.workspace-hierarchy .ed360-student-window-nav button,.workspace-hierarchy .staff-window-nav button{font-size:12px;min-height:40px}
+.workspace-hierarchy .ed360-student-status-cards small,.workspace-hierarchy .staff-metric-card small{font-size:11px}
+.workspace-hierarchy .ed360-student-status-cards strong,.workspace-hierarchy .staff-metric-card strong{font-size:23px}
+.workspace-hierarchy .ed360-student-profile-grid dt,.workspace-hierarchy .ed360-student-profile-grid dd,.workspace-hierarchy .staff-profile-grid dt,.workspace-hierarchy .staff-profile-grid dd{font-size:12px}
+.workspace-hierarchy .ed360-student-timeline-item strong,.workspace-hierarchy .ed360-student-timeline-item p{font-size:12px}
+.workspace-hierarchy .ed360-student-limitation-note,.workspace-hierarchy .staff-note{font-size:11px}
+.workspace-hierarchy .ed360-record-detail small,.workspace-hierarchy .ed360-record-detail b{font-size:12px}
+.workspace-hierarchy .admin-page{font-size:14px}
+.workspace-hierarchy .admin-heading h1{font-size:27px}
+.workspace-hierarchy .admin-tab{font-size:13px;min-height:40px}
+.workspace-hierarchy .admin-table{font-size:13px}
+.workspace-hierarchy .admin-table th{font-size:11px}
+.workspace-hierarchy .admin-table td{font-size:13px}
+.workspace-hierarchy .admin-field label{font-size:13px}
+.workspace-hierarchy .admin-field input,.workspace-hierarchy .admin-field textarea,.workspace-hierarchy .admin-field select{font-size:13px;min-height:42px}
+.workspace-hierarchy .report-section h2,.workspace-hierarchy .ed360-workspace-chart-card h3{font-size:17px}
+.workspace-hierarchy .report-section p,.workspace-hierarchy .ed360-workspace-chart-card p{font-size:13px}
+.workspace-hierarchy .report-stat small{font-size:11px}
+.workspace-hierarchy .report-stat b{font-size:17px}
+.workspace-hierarchy .file-meta strong{font-size:13px}
+.workspace-hierarchy .file-meta small{font-size:11px}
+.workspace-hierarchy .file-row{min-height:66px}
+.workspace-hierarchy .report-profile-grid dt,.workspace-hierarchy .report-profile-grid dd{font-size:13px}
+@media(max-width:900px){
+ .workspace-hierarchy{padding:18px 18px 30px;gap:14px}
+ .workspace-hierarchy-heading{align-items:flex-start;flex-direction:column}
+ .workspace-hierarchy-current{width:100%;box-sizing:border-box}
+ .workspace-task-card-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:600px){
+ .workspace-hierarchy{padding:14px 12px 25px}
+ .workspace-hierarchy-heading{padding:16px}
+ .workspace-hierarchy-heading h2{font-size:22px}
+ .workspace-hierarchy-heading p{font-size:13px}
+ .workspace-window-tabs{gap:6px}
+ .workspace-window-tabs button{min-height:40px;padding:0 12px;font-size:12px}
+ .workspace-subwindow-tabs{gap:6px;padding:9px}
+ .workspace-subwindow-tabs button{min-height:34px;padding:0 10px;font-size:11px}
+ .workspace-window-summary{align-items:flex-start;flex-direction:column}
+ .workspace-window-summary-right{justify-items:start}
+ .workspace-task-card-grid{grid-template-columns:1fr}
+}
