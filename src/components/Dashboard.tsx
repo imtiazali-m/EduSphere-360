@@ -325,7 +325,7 @@ function Overview({ onNavigate }: { onNavigate: (key: string) => void }) {
       <section className="ed360-panel ed360-module-panel">
         <div className="ed360-panel-heading"><div><span className="ed360-panel-icon"><PieChart size={18}/></span><div><h2>Module Overview</h2><p>Records across your permitted workspaces.</p></div></div></div>
         <div className="ed360-module-content">
-          <div className="ed360-donut" style={{ background: donutBackground }}><div className="ed360-donut-center"><strong>{visibleGroups.length}</strong><span>Sections</span></div></div>
+          <div className="ed360-donut" style={{ background: donutBackground }}><div className="ed360-donut-center"><strong>{visibleGroups.length}</strong><span>Modules</span></div></div>
           <div className="ed360-module-legend">
             {moduleBreakdown.map(item => <div key={item.label}><i style={{ background: item.color }}/><span>{item.label}</span><strong>{loading ? '—' : modulePercent(item.count) + '%'}</strong></div>)}
           </div>
