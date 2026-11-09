@@ -706,7 +706,7 @@ export function Dashboard({ onToast }: Props) {
                 tab.targetKey === 'overview' ? <Overview onNavigate={navigateChild}/> :
                 tab.targetKey === 'institutional' && linkedWorkspaceKeys.includes(tab.targetWindow) ? <LinkedOperationsWorkspace workspaceKey={tab.targetWindow} onToast={onToast} onNavigate={navigateChild}/> :
                 tab.targetKey === 'institutional' ? <InstitutionalWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
-                tab.targetKey === 'unavailable' ? <WorkspaceUnavailable groupKey={tab.targetWindow.split(':')[0]} itemKey={tab.targetWindow.split(':').slice(1).join(':')} onNavigate={navigateChild}/> :
+                tab.targetKey === 'unavailable' ? <WorkspaceUnavailable groupKey={tab.targetWindow.split(':')[0]} itemKey={tab.targetWindow.split(':').slice(1).join(':')} onNavigate={navigate}/> :
                 tab.targetKey === 'attendance' ? <AttendanceWorkspace initialWindow={tab.targetWindow || 'students'} onToast={onToast}/> :
                 tabAdminKey ? <AdministrationModule initialKey={tabAdminKey as 'departments' | 'programs' | 'classes' | 'academic_sessions' | 'subjects' | 'rooms'}/> :
                 tab.targetKey === 'accounts' ? <AccountsModule onToast={onToast}/> :
