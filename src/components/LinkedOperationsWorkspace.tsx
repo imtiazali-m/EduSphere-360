@@ -1,0 +1,262 @@
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
+import { ArrowLeftRight, BookOpen, Bus, CheckCircle2, MapPin, Package, Plus, RefreshCw, Trash2, X } from 'lucide-react'
+import { useAuth } from '../context/AuthContext'
+import { supabase } from '../lib/supabase'
+import { getWorkspaceGroup } from '../lib/institutionalCatalog'
+import type { RecordRow } from '../lib/types'
+
+type Props={workspaceKey:string;onToast:(message:string,error?:boolean)=>void;onNavigate:(key:string)=>void}
+type Campus={id:string;name:string;campus_code?:string|null;address?:string|null;phone?:string|null;email?:string|null;is_headquarters:boolean;is_active:boolean}
+type Book={id:string;title:string;reference_code?:string|null;payload?:Record<string,unknown>}
+type Student={id:string;full_name:string;admission_no?:string|null;class_name?:string|null}
+type Item={id:string;title:string;reference_code?:string|null;quantity?:number|null;payload?:Record<string,unknown>}
+type RouteRecord={id:string;title:string;reference_code?:string|null;payload?:Record<string,unknown>}
+type Loan={id:string;book_record_id:string;student_id:string|null;issued_at:string;due_at:string;returned_at:string|null;status:string;fine_amount:number;notes?:string|null}
+type Movement={id:string;item_record_id:string;movement_type:string;quantity:number;unit_cost?:number|null;movement_date:string;reference_code?:string|null;notes?:string|null}
+type Allocation={id:string;student_id:string;route_record_id:string;stop_record_id?:string|null;vehicle_record_id?:string|null;effective_from:string;effective_to?:string|null;transport_fee:number;status:string;notes?:string|null}
+
+const today=()=>new Date().toLocaleDateString('en-CA')
+const pkMoney=(value:number)=>new Intl.NumberFormat('en-PK',{style:'currency',currency:'PKR',maximumFractionDigits:0}).format(Number(value)||0)
+const dateLabel=(value:string|null|undefined)=>value?new Date(value+'T00:00:00').toLocaleDateString():'—'
+const statusText=(value:string)=>value.replaceAll('_',' ').replace(/\b\w/g,char=>char.toUpperCase())
+const palette:Record<string,{accent:string;soft:string;ink:string}>={
+ administration:{accent:'#667d98',soft:'#f0f3f7',ink:'#344a61'},
+ library:{accent:'#5368c9',soft:'#eef0ff',ink:'#35458f'},
+ inventory:{accent:'#c58b24',soft:'#fff7e8',ink:'#795515'},
+ transport:{accent:'#d87831',soft:'#fff1e8',ink:'#8d481d'}
+}
+
+export function LinkedOperationsWorkspace({workspaceKey,onToast,onNavigate}:Props){
+ const {user}=useAuth()
+ const [groupKey,itemKey]=workspaceKey.split(':')
+ const group=getWorkspaceGroup(groupKey)
+ const [loading,setLoading]=useState(true)
+ const [loadError,setLoadError]=useState('')
+ const [saving,setSaving]=useState(false)
+ const [campuses,setCampuses]=useState<Campus[]>([])
+ const [books,setBooks]=useState<Book[]>([])
+ const [students,setStudents]=useState<Student[]>([])
+ const [loans,setLoans]=useState<Loan[]>([])
+ const [items,setItems]=useState<Item[]>([])
+ const [movements,setMovements]=useState<Movement[]>([])
+ const [routes,setRoutes]=useState<RouteRecord[]>([])
+ const [stops,setStops]=useState<RouteRecord[]>([])
+ const [vehicles,setVehicles]=useState<RouteRecord[]>([])
+ const [allocations,setAllocations]=useState<Allocation[]>([])
+ const [editingCampus,setEditingCampus]=useState<Campus|null>(null)
+ const [campusName,setCampusName]=useState('')
+ const [campusCode,setCampusCode]=useState('')
+ const [campusAddress,setCampusAddress]=useState('')
+ const [campusPhone,setCampusPhone]=useState('')
+ const [campusEmail,setCampusEmail]=useState('')
+ const [campusHQ,setCampusHQ]=useState(false)
+ const [campusActive,setCampusActive]=useState(true)
+ const [showCampusForm,setShowCampusForm]=useState(false)
+ const [bookId,setBookId]=useState('')
+ const [studentId,setStudentId]=useState('')
+ const [loanDue,setLoanDue]=useState(()=>new Date(Date.now()+14*86400000).toLocaleDateString('en-CA'))
+ const [loanNotes,setLoanNotes]=useState('')
+ const [showLoanForm,setShowLoanForm]=useState(false)
+ const [itemId,setItemId]=useState('')
+ const [movementType,setMovementType]=useState(itemKey==='stock-in'?'stock_in':itemKey==='stock-out'?'stock_out':itemKey==='stock-allocation'?'allocation':'adjustment')
+ const [movementQty,setMovementQty]=useState('1')
+ const [movementCost,setMovementCost]=useState('')
+ const [movementDate,setMovementDate]=useState(today())
+ const [movementRef,setMovementRef]=useState('')
+ const [movementNotes,setMovementNotes]=useState('')
+ const [showMovementForm,setShowMovementForm]=useState(false)
+ const [allocationStudent,setAllocationStudent]=useState('')
+ const [allocationRoute,setAllocationRoute]=useState('')
+ const [allocationStop,setAllocationStop]=useState('')
+ const [allocationVehicle,setAllocationVehicle]=useState('')
+ const [allocationFrom,setAllocationFrom]=useState(today())
+ const [allocationTo,setAllocationTo]=useState('')
+ const [transportFee,setTransportFee]=useState('')
+ const [allocationNotes,setAllocationNotes]=useState('')
+ const [showAllocationForm,setShowAllocationForm]=useState(false)
+
+ const isCampus=groupKey==='administration'&&itemKey==='campus-and-branch-management'
+ const isLibrary=groupKey==='library'&&itemKey==='book-issue-and-returns'
+ const isInventory=groupKey==='inventory'&&['stock-in','stock-out','stock-allocation','stock-adjustments','inventory-history','stock-reports'].includes(itemKey)
+ const isTransport=groupKey==='transport'&&itemKey==='student-transport-allocation'
+ const canAdmin=Boolean(user&&['owner','admin'].includes(user.role))
+ const canLibrary=Boolean(user&&['owner','admin','teacher'].includes(user.role))
+ const theme=palette[groupKey]??palette.administration
+
+ const load=useCallback(async()=>{
+  if(!supabase||!user){setLoading(false);return}
+  setLoading(true);setLoadError('')
+  try{
+   if(isCampus){
+    const {data,error}=await supabase.from('campuses').select('*').eq('institution_id',user.institutionId).order('name')
+    if(error)throw error
+    setCampuses((data??[]) as Campus[])
+   }else if(isLibrary){
+    const [bookResult,studentResult,loanResult]=await Promise.all([
+     supabase.from('institutional_records').select('id,title,reference_code,payload').eq('institution_id',user.institutionId).eq('module_key','library').eq('record_type','book-registration').order('title'),
+     supabase.from('students').select('id,full_name,admission_no,class_name').eq('institution_id',user.institutionId).eq('status','active').order('full_name'),
+     supabase.from('library_loans').select('*').eq('institution_id',user.institutionId).order('issued_at',{ascending:false}).limit(500)
+    ])
+    if(bookResult.error)throw bookResult.error
+    if(studentResult.error)throw studentResult.error
+    if(loanResult.error)throw loanResult.error
+    setBooks((bookResult.data??[]) as Book[]);setStudents((studentResult.data??[]) as Student[]);setLoans((loanResult.data??[]) as Loan[])
+   }else if(isInventory){
+    const [itemResult,movementResult]=await Promise.all([
+     supabase.from('institutional_records').select('id,title,reference_code,quantity,payload').eq('institution_id',user.institutionId).eq('module_key','inventory').in('record_type',['items-management','item-catalogue']).order('title'),
+     supabase.from('inventory_movements').select('*').eq('institution_id',user.institutionId).order('movement_date',{ascending:false}).limit(1000)
+    ])
+    if(itemResult.error)throw itemResult.error
+    if(movementResult.error)throw movementResult.error
+    setItems((itemResult.data??[]) as Item[]);setMovements((movementResult.data??[]) as Movement[])
+   }else if(isTransport){
+    const [studentResult,routeResult,stopResult,vehicleResult,allocationResult]=await Promise.all([
+     supabase.from('students').select('id,full_name,admission_no,class_name').eq('institution_id',user.institutionId).eq('status','active').order('full_name'),
+     supabase.from('institutional_records').select('id,title,reference_code,payload').eq('institution_id',user.institutionId).eq('module_key','transport').eq('record_type','transport-routes').order('title'),
+     supabase.from('institutional_records').select('id,title,reference_code,payload').eq('institution_id',user.institutionId).eq('module_key','transport').eq('record_type','route-stops').order('title'),
+     supabase.from('institutional_records').select('id,title,reference_code,payload').eq('institution_id',user.institutionId).eq('module_key','transport').eq('record_type','vehicle-management').order('title'),
+     supabase.from('student_transport_allocations').select('*').eq('institution_id',user.institutionId).order('created_at',{ascending:false}).limit(500)
+    ])
+    for(const result of [studentResult,routeResult,stopResult,vehicleResult,allocationResult])if(result.error)throw result.error
+    setStudents((studentResult.data??[]) as Student[]);setRoutes((routeResult.data??[]) as RouteRecord[])
+    setStops((stopResult.data??[]) as RouteRecord[]);setVehicles((vehicleResult.data??[]) as RouteRecord[])
+    setAllocations((allocationResult.data??[]) as Allocation[])
+   }
+  }catch(error){setLoadError(error instanceof Error?error.message:'The operation records could not be loaded.');}
+  finally{setLoading(false)}
+ },[user?.id,user?.institutionId,isCampus,isLibrary,isInventory,isTransport])
+
+ useEffect(()=>{void load()},[load])
+ const loanCounts=useMemo(()=>({
+  issued:loans.filter(x=>x.status==='issued'&&x.due_at>=today()).length,
+  overdue:loans.filter(x=>x.status==='issued'&&x.due_at<today()).length,
+  returned:loans.filter(x=>x.status==='returned').length
+ }),[loans])
+ const stockRows=useMemo(()=>items.map(item=>{
+  const entries=movements.filter(m=>m.item_record_id===item.id)
+  const delta=entries.reduce((sum,m)=>sum+(['stock_in','return','adjustment'].includes(m.movement_type)?Number(m.quantity):-Number(m.quantity)),0)
+  return {...item,available:Number(item.quantity??0)+delta,movements:entries.length}
+ }),[items,movements])
+ const allocationMap=useMemo(()=>new Map(students.map(student=>[student.id,student])),[students])
+ const bookMap=useMemo(()=>new Map(books.map(book=>[book.id,book])),[books])
+ const itemMap=useMemo(()=>new Map(items.map(item=>[item.id,item])),[items])
+
+ function resetCampus(row?:Campus){
+  setEditingCampus(row??null);setCampusName(row?.name??'');setCampusCode(row?.campus_code??'');setCampusAddress(row?.address??'')
+  setCampusPhone(row?.phone??'');setCampusEmail(row?.email??'');setCampusHQ(row?.is_headquarters??false);setCampusActive(row?.is_active??true);setShowCampusForm(true)
+ }
+ async function saveCampus(event:FormEvent){
+  event.preventDefault();if(!supabase||!user||!canAdmin)return
+  if(!campusName.trim()){onToast('Campus name is required.',true);return}
+  setSaving(true)
+  const values={institution_id:user.institutionId,name:campusName.trim(),campus_code:campusCode.trim()||null,address:campusAddress.trim()||null,phone:campusPhone.trim()||null,email:campusEmail.trim()||null,is_headquarters:campusHQ,is_active:campusActive}
+  const result=editingCampus
+   ?await supabase.from('campuses').update(values).eq('institution_id',user.institutionId).eq('id',editingCampus.id)
+   :await supabase.from('campuses').insert({...values,created_by:user.id})
+  if(result.error){onToast(result.error.message,true);setSaving(false);return}
+  setShowCampusForm(false);setEditingCampus(null);onToast(editingCampus?'Campus updated.':'Campus created.');setSaving(false);await load()
+ }
+ async function deleteCampus(row:Campus){
+  if(!supabase||!user||!canAdmin)return
+  if(!window.confirm('Delete campus '+row.name+'? Records linked to this campus prevent deletion.'))return
+  const {error}=await supabase.from('campuses').delete().eq('institution_id',user.institutionId).eq('id',row.id)
+  if(error){onToast(error.message,true);return}
+  onToast('Campus deleted.');await load()
+ }
+ async function issueBook(event:FormEvent){
+  event.preventDefault();if(!supabase||!user||!canLibrary)return
+  if(!bookId||!studentId||!loanDue){onToast('Select a book, student and due date.',true);return}
+  setSaving(true)
+  const {error}=await supabase.from('library_loans').insert({
+   institution_id:user.institutionId,book_record_id:bookId,student_id:studentId,
+   due_at:loanDue,status:'issued',notes:loanNotes.trim()||null,issued_by:user.id
+  })
+  if(error){onToast(error.message,true);setSaving(false);return}
+  setShowLoanForm(false);setBookId('');setStudentId('');setLoanNotes('');onToast('Book issued and circulation record saved.');setSaving(false);await load()
+ }
+ async function returnBook(loan:Loan){
+  if(!supabase||!user||!canLibrary)return
+  const {error}=await supabase.from('library_loans').update({status:'returned',returned_at:today(),received_by:user.id}).eq('institution_id',user.institutionId).eq('id',loan.id)
+  if(error){onToast(error.message,true);return}
+  onToast('Book return recorded.');await load()
+ }
+ async function saveMovement(event:FormEvent){
+  event.preventDefault();if(!supabase||!user||!canAdmin)return
+  const qty=Number(movementQty);const cost=movementCost.trim()?Number(movementCost):null
+  if(!itemId||!Number.isFinite(qty)||qty<=0||cost!==null&&(!Number.isFinite(cost)||cost<0)){onToast('Select an item and enter a valid positive quantity and non-negative unit cost.',true);return}
+  setSaving(true)
+  const {data,error}=await supabase.rpc('record_inventory_movement',{
+   p_institution_id:user.institutionId,p_item_record_id:itemId,p_movement_type:movementType,
+   p_quantity:qty,p_unit_cost:cost,p_movement_date:movementDate,p_reference_code:movementRef.trim()||null,p_notes:movementNotes.trim()||null
+  })
+  if(error){onToast(error.message,true);setSaving(false);return}
+  const result=data as {current_stock?:number}
+  setShowMovementForm(false);setMovementQty('1');setMovementCost('');setMovementRef('');setMovementNotes('')
+  onToast('Stock movement saved. New available balance: '+String(result.current_stock??'updated')+'.');setSaving(false);await load()
+ }
+ async function createAllocation(event:FormEvent){
+  event.preventDefault();if(!supabase||!user||!canAdmin)return
+  if(!allocationStudent||!allocationRoute||!allocationFrom){onToast('Select a student, route and allocation start date.',true);return}
+  const fee=transportFee.trim()?Number(transportFee):0
+  if(!Number.isFinite(fee)||fee<0){onToast('Transport fee must be a valid non-negative amount.',true);return}
+  setSaving(true)
+  const {error}=await supabase.from('student_transport_allocations').insert({
+   institution_id:user.institutionId,student_id:allocationStudent,route_record_id:allocationRoute,
+   stop_record_id:allocationStop||null,vehicle_record_id:allocationVehicle||null,effective_from:allocationFrom,
+   effective_to:allocationTo||null,transport_fee:fee,status:'active',notes:allocationNotes.trim()||null,created_by:user.id
+  })
+  if(error){onToast(error.message,true);setSaving(false);return}
+  setShowAllocationForm(false);setAllocationStudent('');setAllocationRoute('');setAllocationStop('');setAllocationVehicle('');setTransportFee('');setAllocationNotes('')
+  onToast('Student transport allocation created.');setSaving(false);await load()
+ }
+ async function cancelAllocation(row:Allocation){
+  if(!supabase||!user||!canAdmin)return
+  const {error}=await supabase.from('student_transport_allocations').update({status:'cancelled',effective_to:today()}).eq('institution_id',user.institutionId).eq('id',row.id)
+  if(error){onToast(error.message,true);return}
+  onToast('Transport allocation ended.');await load()
+ }
+
+ if(!user||!group)return null
+ const specialTitle=isCampus?'Campus and Branch Management':isLibrary?'Book Issue and Returns':isInventory?'Inventory Stock Movements':'Student Transport Allocation'
+ const nav=<nav className="ed360-operations-window-nav ed360-workspace-tabs" aria-label={group.label+' submenus'}>{group.items.map(menu=><button key={menu.key} className={menu.key===itemKey?'active':''} type="button" onClick={()=>onNavigate('institutional:'+group.key+':'+menu.key)}>{menu.label}</button>)}</nav>
+ const header=<header className="ed360-workspace-hero" style={{'--workspace-accent':theme.accent,'--workspace-soft':theme.soft,'--workspace-ink':theme.ink} as React.CSSProperties}><div className="ed360-workspace-hero-icon">{isCampus?<MapPin size={21}/>:isLibrary?<BookOpen size={21}/>:isInventory?<Package size={21}/>:<Bus size={21}/>}</div><div className="ed360-workspace-hero-copy"><span>{group.label.toUpperCase()} / LIVE RELATIONAL WORKFLOW</span><h1>{specialTitle}</h1><p>{isCampus?'Manage real institution branches. Campus assignments are referenced by existing institutional tables.':isLibrary?'Issue and return books against student records, with due dates and traceable circulation history.':isInventory?'Record stock movement through an atomic transaction that prevents inventory going below zero.':'Allocate students to registered routes, stops and vehicles with effective dates and transport fees.'}</p></div><div className="ed360-workspace-hero-tools"><span className="ed360-data-state"><i/> Live Supabase records</span>{isCampus&&canAdmin&&<button className="button button-primary" onClick={()=>resetCampus()}><Plus size={16}/> Add campus</button>}{isLibrary&&canLibrary&&<button className="button button-primary" onClick={()=>setShowLoanForm(true)}><Plus size={16}/> Issue book</button>}{isInventory&&canAdmin&&<button className="button button-primary" onClick={()=>setShowMovementForm(true)}><Plus size={16}/> Record movement</button>}{isTransport&&canAdmin&&<button className="button button-primary" onClick={()=>setShowAllocationForm(true)}><Plus size={16}/> Allocate student</button>}</div></header>
+
+ return <main className="page-content ed360-module-page ed360-institutional-workspace ed360-linked-operations" style={{'--workspace-accent':theme.accent,'--workspace-soft':theme.soft,'--workspace-ink':theme.ink} as React.CSSProperties}>
+  {header}{nav}
+  {loadError&&<div className="ed360-workspace-error" role="alert">{loadError}</div>}
+  {loading?<div className="ed360-workspace-empty">Loading secure institution records…</div>:null}
+
+  {isCampus&&<>
+   <section className="ed360-workspace-kpis"><article><span>Registered campuses</span><strong>{campuses.length}</strong><small>Institution branches and sites</small></article><article><span>Active campuses</span><strong>{campuses.filter(x=>x.is_active).length}</strong><small>Available for assignment</small></article><article><span>Headquarters</span><strong>{campuses.filter(x=>x.is_headquarters).length}</strong><small>Primary campus designation</small></article><article><span>Inactive</span><strong>{campuses.filter(x=>!x.is_active).length}</strong><small>Retained in records</small></article></section>
+   <section className="table-card ed360-workspace-record-card"><div className="table-toolbar"><div className="table-count"><strong>{campuses.length}</strong> campuses · Institution scope</div><span className="ed360-table-refresh"><button type="button" onClick={()=>void load()}>Refresh <RefreshCw size={13}/></button></span></div>
+    {campuses.length===0?<div className="ed360-workspace-empty"><strong>No campuses are registered</strong><span>Add a campus or branch before assigning institutional records to a site.</span>{canAdmin&&<button className="button button-primary" onClick={()=>resetCampus()}>Add first campus</button>}</div>:<div className="table-scroll"><table><thead><tr><th>Campus code</th><th>Campus</th><th>Address</th><th>Contact</th><th>Type</th><th>Status</th><th>Actions</th></tr></thead><tbody>{campuses.map(row=><tr key={row.id}><td>{row.campus_code||'—'}</td><td><b>{row.name}</b></td><td>{row.address||'—'}</td><td>{row.phone||row.email||'—'}</td><td>{row.is_headquarters?'Headquarters':'Branch'}</td><td><span className={'ed360-state-pill '+(row.is_active?'state-approved':'state-cancelled')}>{row.is_active?'Active':'Inactive'}</span></td><td><div className="ed360-row-actions">{canAdmin&&<button onClick={()=>resetCampus(row)}>Edit</button>}{canAdmin&&<button onClick={()=>void deleteCampus(row)}>Delete</button>}</div></td></tr>)}</tbody></table></div>}
+   </section>
+   {showCampusForm&&<div className="modal-backdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setShowCampusForm(false)}}><section className="modal-card ed360-context-form" role="dialog" aria-modal="true"><div className="modal-heading"><div><div className="eyebrow">INSTITUTION ADMINISTRATION / CAMPUS</div><h2>{editingCampus?'Edit campus':'Register campus / branch'}</h2></div><button className="icon-button" onClick={()=>setShowCampusForm(false)}><X size={18}/></button></div><form className="ed360-context-form-grid" onSubmit={saveCampus}><label>Campus name *<input required value={campusName} onChange={e=>setCampusName(e.target.value)}/></label><label>Campus code<input value={campusCode} onChange={e=>setCampusCode(e.target.value)}/></label><label>Address<textarea rows={2} value={campusAddress} onChange={e=>setCampusAddress(e.target.value)}/></label><div className="ed360-form-row"><label>Phone<input value={campusPhone} onChange={e=>setCampusPhone(e.target.value)}/></label><label>Email<input type="email" value={campusEmail} onChange={e=>setCampusEmail(e.target.value)}/></label></div><label className="ed360-check-label"><input type="checkbox" checked={campusHQ} onChange={e=>setCampusHQ(e.target.checked)}/> Headquarters</label><label className="ed360-check-label"><input type="checkbox" checked={campusActive} onChange={e=>setCampusActive(e.target.checked)}/> Active campus</label><div className="modal-actions"><button type="button" className="button button-outline" onClick={()=>setShowCampusForm(false)}>Cancel</button><button type="submit" className="button button-primary" disabled={saving}>{saving?'Saving…':'Save campus'}</button></div></form></section></div>}
+  </>}
+
+  {isLibrary&&<>
+   <section className="ed360-workspace-kpis"><article><span>Books registered</span><strong>{books.length}</strong><small>Book catalogue records</small></article><article><span>Currently issued</span><strong>{loanCounts.issued}</strong><small>Not yet due</small></article><article><span>Overdue</span><strong>{loanCounts.overdue}</strong><small>Past due date</small></article><article><span>Returned</span><strong>{loanCounts.returned}</strong><small>Completed circulation</small></article></section>
+   <section className="table-card ed360-workspace-record-card"><div className="table-toolbar"><div className="table-count"><strong>{loans.length}</strong> circulation records</div><span className="ed360-table-refresh"><button type="button" onClick={()=>void load()}>Refresh <RefreshCw size={13}/></button></span></div>
+    {loans.length===0?<div className="ed360-workspace-empty"><strong>No circulation records</strong><span>Register books under Book Registration before issuing them to students.</span></div>:<div className="table-scroll"><table><thead><tr><th>Book</th><th>Student</th><th>Admission ID</th><th>Issue date</th><th>Due date</th><th>Fine</th><th>Status</th><th>Action</th></tr></thead><tbody>{loans.map(loan=>{const book=bookMap.get(loan.book_record_id);const student=students.find(x=>x.id===loan.student_id);const overdue=loan.status==='issued'&&loan.due_at<today();return <tr key={loan.id}><td><b>{book?.title??'Book record unavailable'}</b><small className="ed360-record-subtitle">{book?.reference_code??''}</small></td><td>{student?.full_name??'Linked learner'}</td><td>{student?.admission_no??'—'}</td><td>{dateLabel(loan.issued_at)}</td><td>{dateLabel(loan.due_at)}</td><td>{pkMoney(Number(loan.fine_amount??0))}</td><td><span className={'ed360-state-pill '+(overdue?'state-pending':loan.status==='returned'?'state-approved':'')}>{overdue?'Overdue':statusText(loan.status)}</span></td><td>{canLibrary&&loan.status==='issued'&&<button type="button" className="button button-outline" onClick={()=>void returnBook(loan)}>Record return</button>}</td></tr>})}</tbody></table></div>}
+   </section>
+   {showLoanForm&&<div className="modal-backdrop"><section className="modal-card ed360-context-form" role="dialog" aria-modal="true"><div className="modal-heading"><div><div className="eyebrow">DIGITAL LIBRARY / CIRCULATION</div><h2>Issue a book</h2><p>Issue an existing catalogue record to a linked student.</p></div><button className="icon-button" onClick={()=>setShowLoanForm(false)}><X size={18}/></button></div><form className="ed360-context-form-grid" onSubmit={issueBook}><label>Book *<select required value={bookId} onChange={e=>setBookId(e.target.value)}><option value="">Select book</option>{books.map(book=><option key={book.id} value={book.id}>{book.title}{book.reference_code?' · '+book.reference_code:''}</option>)}</select></label><label>Student *<select required value={studentId} onChange={e=>setStudentId(e.target.value)}><option value="">Select student</option>{students.map(student=><option key={student.id} value={student.id}>{student.full_name}{student.admission_no?' · '+student.admission_no:''}</option>)}</select></label><label>Due date *<input type="date" required min={today()} value={loanDue} onChange={e=>setLoanDue(e.target.value)}/></label><label>Issue note<textarea rows={2} value={loanNotes} onChange={e=>setLoanNotes(e.target.value)}/></label><div className="modal-actions"><button type="button" className="button button-outline" onClick={()=>setShowLoanForm(false)}>Cancel</button><button type="submit" className="button button-primary" disabled={saving||!books.length}>Issue book</button></div></form></section></div>}
+  </>}
+
+  {isInventory&&<>
+   <section className="ed360-workspace-kpis"><article><span>Inventory items</span><strong>{items.length}</strong><small>Registered item catalogue</small></article><article><span>Available units</span><strong>{stockRows.reduce((sum,x)=>sum+x.available,0).toLocaleString()}</strong><small>Opening quantity plus ledger</small></article><article><span>Movement entries</span><strong>{movements.length}</strong><small>Stock transaction ledger</small></article><article><span>Low / zero stock</span><strong>{stockRows.filter(x=>x.available<=Number(x.payload?.reorder_level??0)).length}</strong><small>At or below reorder level</small></article></section>
+   <section className="table-card ed360-workspace-record-card"><div className="table-toolbar"><div className="table-count"><strong>{items.length}</strong> catalogue items · {movements.length} movements</div><span className="ed360-table-refresh"><button type="button" onClick={()=>void load()}>Refresh <RefreshCw size={13}/></button></span></div>
+    <div className="table-scroll"><table><thead><tr><th>SKU</th><th>Item</th><th>Category</th><th>Available</th><th>Reorder level</th><th>Unit cost</th><th>Movements</th></tr></thead><tbody>{stockRows.map(item=><tr key={item.id}><td>{item.payload?.sku?String(item.payload.sku):item.reference_code??'—'}</td><td><b>{item.title}</b></td><td>{String(item.payload?.item_category??'—')}</td><td><strong>{item.available}</strong></td><td>{String(item.payload?.reorder_level??'—')}</td><td>{pkMoney(Number(item.payload?.unit_cost??0))}</td><td>{item.movements}</td></tr>)}</tbody></table></div>
+   </section>
+   <section className="table-card ed360-workspace-record-card"><div className="table-toolbar"><div className="table-count"><strong>{movements.length}</strong> stock movements</div></div><div className="table-scroll"><table><thead><tr><th>Movement date</th><th>Item</th><th>Type</th><th>Quantity</th><th>Unit cost</th><th>Reference</th><th>Notes</th></tr></thead><tbody>{movements.map(m=><tr key={m.id}><td>{dateLabel(m.movement_date)}</td><td>{itemMap.get(m.item_record_id)?.title??'Item record'}</td><td>{statusText(m.movement_type)}</td><td>{m.quantity}</td><td>{m.unit_cost===null?'—':pkMoney(Number(m.unit_cost))}</td><td>{m.reference_code??'—'}</td><td>{m.notes??'—'}</td></tr>)}</tbody></table></div></section>
+   {showMovementForm&&<div className="modal-backdrop"><section className="modal-card ed360-context-form" role="dialog" aria-modal="true"><div className="modal-heading"><div><div className="eyebrow">INVENTORY / STOCK CONTROL</div><h2>Record stock movement</h2><p>Stock issue, allocation and write-off are rejected if available quantity would become negative.</p></div><button className="icon-button" onClick={()=>setShowMovementForm(false)}><X size={18}/></button></div><form className="ed360-context-form-grid" onSubmit={saveMovement}><label>Inventory item *<select required value={itemId} onChange={e=>setItemId(e.target.value)}><option value="">Select item</option>{stockRows.map(item=><option key={item.id} value={item.id}>{item.title} · available {item.available}</option>)}</select></label><label>Movement type<select value={movementType} onChange={e=>setMovementType(e.target.value)}><option value="stock_in">Stock in</option><option value="stock_out">Stock out</option><option value="allocation">Allocate stock</option><option value="return">Return to stock</option><option value="adjustment">Positive adjustment</option><option value="write_off">Write off / reduce stock</option></select></label><div className="ed360-form-row"><label>Quantity *<input type="number" min="0.001" step="0.001" required value={movementQty} onChange={e=>setMovementQty(e.target.value)}/></label><label>Unit cost (PKR)<input type="number" min="0" step="0.01" value={movementCost} onChange={e=>setMovementCost(e.target.value)}/></label></div><label>Movement date<input type="date" max={today()} value={movementDate} onChange={e=>setMovementDate(e.target.value)}/></label><label>Purchase / allocation reference<input value={movementRef} onChange={e=>setMovementRef(e.target.value)}/></label><label>Notes<textarea rows={2} value={movementNotes} onChange={e=>setMovementNotes(e.target.value)}/></label><div className="modal-actions"><button type="button" className="button button-outline" onClick={()=>setShowMovementForm(false)}>Cancel</button><button type="submit" className="button button-primary" disabled={saving||!items.length}>Save movement</button></div></form></section></div>}
+  </>}
+
+  {isTransport&&<>
+   <section className="ed360-workspace-kpis"><article><span>Students allocated</span><strong>{allocations.filter(x=>x.status==='active').length}</strong><small>Active transport assignments</small></article><article><span>Routes</span><strong>{routes.length}</strong><small>Registered routes</small></article><article><span>Stops</span><strong>{stops.length}</strong><small>Registered route stops</small></article><article><span>Monthly fee total</span><strong>{pkMoney(allocations.filter(x=>x.status==='active').reduce((sum,x)=>sum+Number(x.transport_fee??0),0))}</strong><small>Recorded active allocations</small></article></section>
+   <section className="table-card ed360-workspace-record-card"><div className="table-toolbar"><div className="table-count"><strong>{allocations.length}</strong> student transport allocations</div><span className="ed360-table-refresh"><button onClick={()=>void load()}>Refresh <RefreshCw size={13}/></button></span></div>
+    {allocations.length===0?<div className="ed360-workspace-empty"><strong>No transport allocations</strong><span>Register routes, route stops and vehicles before allocating students.</span></div>:<div className="table-scroll"><table><thead><tr><th>Student</th><th>Admission ID</th><th>Route</th><th>Stop</th><th>Vehicle</th><th>Effective from</th><th>Fee</th><th>Status</th><th>Action</th></tr></thead><tbody>{allocations.map(row=>{const student=allocationMap.get(row.student_id);return <tr key={row.id}><td><b>{student?.full_name??'Linked student'}</b></td><td>{student?.admission_no??'—'}</td><td>{routes.find(x=>x.id===row.route_record_id)?.title??'Route'}</td><td>{stops.find(x=>x.id===row.stop_record_id)?.title??'—'}</td><td>{vehicles.find(x=>x.id===row.vehicle_record_id)?.title??'—'}</td><td>{dateLabel(row.effective_from)}</td><td>{pkMoney(Number(row.transport_fee??0))}</td><td><span className={'ed360-state-pill '+(row.status==='active'?'state-approved':'')}>{statusText(row.status)}</span></td><td>{canAdmin&&row.status==='active'&&<button className="button button-outline" onClick={()=>void cancelAllocation(row)}>End allocation</button>}</td></tr>})}</tbody></table></div>}
+   </section>
+   {showAllocationForm&&<div className="modal-backdrop"><section className="modal-card ed360-context-form" role="dialog" aria-modal="true"><div className="modal-heading"><div><div className="eyebrow">TRANSPORT / STUDENT ALLOCATION</div><h2>Allocate a student</h2><p>Allocation links an existing student, route, stop and vehicle.</p></div><button className="icon-button" onClick={()=>setShowAllocationForm(false)}><X size={18}/></button></div><form className="ed360-context-form-grid" onSubmit={createAllocation}><label>Student *<select required value={allocationStudent} onChange={e=>setAllocationStudent(e.target.value)}><option value="">Select student</option>{students.map(student=><option key={student.id} value={student.id}>{student.full_name}{student.admission_no?' · '+student.admission_no:''}</option>)}</select></label><label>Transport route *<select required value={allocationRoute} onChange={e=>setAllocationRoute(e.target.value)}><option value="">Select route</option>{routes.map(route=><option key={route.id} value={route.id}>{route.title}</option>)}</select></label><label>Route stop<select value={allocationStop} onChange={e=>setAllocationStop(e.target.value)}><option value="">Not assigned</option>{stops.map(stop=><option key={stop.id} value={stop.id}>{stop.title}</option>)}</select></label><label>Vehicle<select value={allocationVehicle} onChange={e=>setAllocationVehicle(e.target.value)}><option value="">Not assigned</option>{vehicles.map(vehicle=><option key={vehicle.id} value={vehicle.id}>{vehicle.title}</option>)}</select></label><div className="ed360-form-row"><label>Start date *<input type="date" required value={allocationFrom} onChange={e=>setAllocationFrom(e.target.value)}/></label><label>End date<input type="date" min={allocationFrom} value={allocationTo} onChange={e=>setAllocationTo(e.target.value)}/></label></div><label>Transport fee (PKR)<input type="number" min="0" step="0.01" value={transportFee} onChange={e=>setTransportFee(e.target.value)}/></label><label>Allocation notes<textarea rows={2} value={allocationNotes} onChange={e=>setAllocationNotes(e.target.value)}/></label><div className="modal-actions"><button type="button" className="button button-outline" onClick={()=>setShowAllocationForm(false)}>Cancel</button><button type="submit" className="button button-primary" disabled={saving||!students.length||!routes.length}>Save allocation</button></div></form></section></div>}
+  </>}
+ </main>
+}
