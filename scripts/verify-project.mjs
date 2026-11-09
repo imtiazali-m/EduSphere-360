@@ -236,12 +236,15 @@ check('Module definitions and generic CRUD table allowlist remain valid', () => 
 
 check('Student Record is a complete permission-aware multi-window workspace', () => {
   const recordModule = read('src/components/RecordModule.tsx')
+  const dataSource = read('src/lib/data.ts')
   for (const label of ['Overview', 'Admissions', 'Student Directory', 'Student Profile', 'Class Placement', 'Guardians', 'Student Attendance', 'Student Exam Results', 'Student Assignments', 'Student Timetable', 'Student Documentation', 'Student History']) {
     assert.ok(recordModule.includes("label: '" + label + "'"), 'Student workspace window is missing: ' + label)
   }
-  const studentWorkspace = recordModule.slice(recordModule.indexOf("if (module.key === 'students')"), recordModule.indexOf("if (module.key === 'teachers')"))
+  const studentWorkspaceStart = recordModule.indexOf("if (module.key === 'students') {", recordModule.indexOf('export function RecordModule'))
+  const studentWorkspaceEnd = recordModule.indexOf("if (module.key === 'teachers') {", studentWorkspaceStart)
+  const studentWorkspace = recordModule.slice(studentWorkspaceStart, studentWorkspaceEnd)
   for (const table of ['attendance', 'exams', 'exam_results', 'assignments', 'assignment_submissions', 'timetable_entries', 'classes', 'academic_sessions', 'programs', 'guardian_students', 'parent_guardians', 'student_placements', 'student_documents', 'student_history']) {
-    assert.ok(studentWorkspace.includes("'" + table + "'"), 'Student workspace is missing related data source: ' + table)
+    assert.ok(recordModule.includes("'" + table + "'"), 'Student workspace is missing related data source: ' + table)
   }
   assert.ok(!studentWorkspace.includes("'fee_invoices'") && !studentWorkspace.includes("label: 'Fees & Payments'"), 'Fee management must remain exclusively in Finance, not Student Management')
   assert.ok(recordModule.includes('studentRelatedTables.map'), 'Student related workspaces must load their linked records')
@@ -261,7 +264,6 @@ check('Student Record is a complete permission-aware multi-window workspace', ()
   assert.ok(recordModule.includes("studentHistoryRows.map(event") && recordModule.includes("'student_history'"), 'Student History must render database audit events')
   assert.ok(dataSource.includes("const READ_ONLY_TABLES = new Set(['student_history'])"), 'Student audit history must be read-only to the client')
   assert.ok(recordModule.includes("isStudent && field.name === 'status'") && recordModule.includes("? 'pending'"), 'New student admissions must start in Pending status')
-  const dataSource = read('src/lib/data.ts')
   assert.ok(dataSource.includes("if (table === 'students')"), 'Student insertion must use its specific authorization-safe path')
   assert.ok(dataSource.includes("rpc('has_institution_role'") || dataSource.includes("rpc('has_institution_role',"), 'Student admission must verify existing owner/admin authorization')
   assert.ok(recordModule.includes('The database accepted this admission'), 'Student admission must distinguish database insert from read-back confirmation')
