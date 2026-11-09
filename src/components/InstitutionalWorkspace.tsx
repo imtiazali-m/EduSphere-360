@@ -130,13 +130,12 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
    institution_id:user.institutionId,module_key:group.dataModule,record_type:item.key,title:title.trim(),
    reference_code:reference.trim()||null,description:description.trim()||null,status,approval_status:approval,
    record_date:recordDate||null,due_date:dueDate||null,amount:amount.trim()?Number(amount):null,
-   quantity:quantity.trim()?Number(quantity):null,payload,campus_id:campus||null,
-   ...(editing?{updated_by:user.id}:{created_by:user.id})
+   quantity:quantity.trim()?Number(quantity):null,payload,campus_id:campus||null
   }
   try{
    const query=editing
-    ?supabase.from('institutional_records').update(values).eq('id',editing.id).eq('institution_id',user.institutionId).select().single()
-    :supabase.from('institutional_records').insert(values).select().single()
+    ?supabase.from('institutional_records').update({...values,updated_by:user.id}).eq('id',editing.id).eq('institution_id',user.institutionId).select().single()
+    :supabase.from('institutional_records').insert({...values,created_by:user.id,updated_by:user.id}).select().single()
    const {data,error}=await query
    if(error)throw error
    const saved=data as OperationalRow
