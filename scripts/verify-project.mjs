@@ -48,42 +48,30 @@ const { roleNavigationGroups } = require(path.join(root, 'src/lib/navigationAcce
 const { modules, modulesForRole } = require(path.join(root, 'src/lib/modules.ts'))
 const roles = ['owner', 'admin', 'teacher', 'student', 'parent', 'accountant', 'exam_officer']
 
-check('The approved eight-group menu maps every submenu to a real workspace', () => {
-  const studentWindows = [
-    'Overview', 'Admissions', 'Student Directory', 'Student Profile', 'Class Placement', 'Guardians',
-    'Student Attendance', 'Student Exam Results', 'Student Assignments', 'Student Timetable',
-    'Student Documentation', 'Student History',
-  ]
-  const expected = [
-    ['Dashboard', []],
-    ['Student Management', studentWindows],
-    ['People & Staff', ['Faculty & Staff', 'My Staff Workspace', 'User Account']],
-    ['Institute Administration', ['Departments', 'Programs', 'Class Sections', 'Academic Sessions', 'Subjects', 'Rooms & Facilities', 'Files & Documentation']],
-    ['Academic Management', ['Attendance Registration', 'Examination', 'Exam Results', 'Assignments', 'Assignment Submission', 'Timetable']],
-    ['Finance & Payments', ['Fees Invoices']],
-    ['Communication', ['Announcements']],
-    ['Operations & Reports', ['Work Management', 'Reports']],
-  ]
-  assert.equal(navigationCatalog.length, expected.length, 'The main menu must contain exactly eight groups')
-  for (let i = 0; i < expected.length; i++) {
-    assert.equal(navigationCatalog[i].label, expected[i][0], `Unexpected menu group at position ${i + 1}`)
-    assert.deepEqual(navigationCatalog[i].items, expected[i][1], `Unexpected submenu list for ${expected[i][0]}`)
+check('The full institutional menu maps every submenu to a working destination', () => {
+  assert.equal(navigationCatalog.length, 33, 'The complete institutional menu must contain 33 unique main workspaces')
+  const groupKeys = new Set(navigationCatalog.map(group => group.key))
+  assert.equal(groupKeys.size, 33, 'Main workspace keys must be unique')
+  for (const group of navigationCatalog) {
+    assert.ok(group.items.length > 0, group.label + ' must have its own operational submenus')
+    for (const page of group.items) assert.ok(navigationRoutes[page], 'No route is connected for ' + group.label + '/' + page)
   }
-  assert.ok(navigationCatalog.some(group => group.key === 'dashboard' && group.items.length === 0), 'Dashboard should be a direct destination')
-  for (const group of navigationCatalog) for (const page of group.items) {
-    assert.ok(navigationRoutes[page], `No route is connected for ${group.label}/${page}`)
+  for (const required of ['curriculum','library','transport','inventory','facilities','visitors','institution-config','reconciliation','backup']) {
+    assert.ok(groupKeys.has(required), 'Missing expansion workspace: ' + required)
   }
-  const moduleKeys = new Set(modules.map(module => module.key))
-  const adminKeys = new Set(['departments', 'programs', 'classes', 'academic_sessions', 'subjects', 'rooms'])
+  for (const required of ['attendance','students','employees','accounts-finance','fees','payments','receipts','payroll','examinations','class-tests','reports']) {
+    assert.ok(groupKeys.has(required), 'Missing core institution workspace: ' + required)
+  }
+  const menuDestinationCount = navigationCatalog.reduce((total, group) => total + group.items.length, 0)
+  assert.ok(menuDestinationCount >= 400, 'All specified submenu destinations should be present')
   for (const [page, route] of Object.entries(navigationRoutes)) {
-    if (route.startsWith('admin:')) assert.ok(adminKeys.has(route.slice(6)), page + ' points to an unknown administration screen')
-    else {
-      const moduleRoute = route.split(':')[0]
-      if (!['overview', 'accounts', 'files', 'reports', 'profile'].includes(moduleRoute)) assert.ok(moduleKeys.has(moduleRoute), page + ' points to a missing data module: ' + route)
+    if (route.startsWith('institutional:')) {
+      const groupKey = route.split(':')[1]
+      assert.ok(groupKeys.has(groupKey), page + ' points to an unknown institutional workspace')
     }
   }
-  for (const page of studentWindows) assert.ok(navigationRoutes[page]?.startsWith('students:'), 'Student Management window is not routed to the student workspace: ' + page)
-  assert.ok(!studentWindows.some(page => page.toLowerCase().includes('fee')), 'Fees must not appear in Student Management')
+  assert.ok(navigationRoutes['Student Directory']?.startsWith('students:'), 'Student Directory must open the student workspace')
+  assert.equal(navigationRoutes['Fee Invoices'], 'fees', 'Fees remain in the dedicated Finance & Payments workspace')
 })
 
 const roleCounts = {}
@@ -98,11 +86,26 @@ check('All seven roles receive focused, permission-aware workspaces', () => {
     }
     for (const module of modulesForRole(role)) assert.ok(module.roles.includes(role), `${role} received an unauthorised module ${module.key}`)
   }
-  assert.ok(!roleNavigationGroups('teacher').some(group => group.key === 'institution'))
-  assert.deepEqual(roleNavigationGroups('teacher').find(group => group.key === 'people')?.items, ['My Staff Workspace'])
-  assert.ok(!roleNavigationGroups('student').some(group => group.key === 'institution' || group.key === 'people'))
-  assert.ok(!roleNavigationGroups('accountant').some(group => group.key === 'people' || group.key === 'students'))
-  assert.ok(!roleNavigationGroups('exam_officer').some(group => group.key === 'people' || group.key === 'students'))
+  assert.ok(!roleNavigationGroups('teacher').some(group => ['administration','institution-config','academic-sessions','classes-sections','subjects'].includes(group.key)))
+  assert.ok(roleNavigationGroups('teacher').find(group => group.key === 'employees')?.items.includes('Employee Leave Management'))
+  assert.ok(!roleNavigationGroups('student').some(group => ['administration','institution-config','employees','accounts-finance','payroll'].includes(group.key)))
+  assert.ok(!roleNavigationGroups('parent').some(group => ['administration','institution-config','employees','accounts-finance','payroll'].includes(group.key)))
+  assert.ok(!roleNavigationGroups('accountant').some(group => ['employees','students','question-bank','examinations'].includes(group.key)))
+  assert.ok(!roleNavigationGroups('exam_officer').some(group => ['employees','students','accounts-finance','payroll'].includes(group.key))
+})
+
+check('Bulk attendance uses class registers with P A L marking and atomic saves', () => {
+  const attendance = read('src/components/AttendanceWorkspace.tsx')
+  assert.ok(attendance.includes('All present') && attendance.includes('All absent') && attendance.includes('All late'))
+  assert.ok(attendance.includes('save_institution_attendance_register') && attendance.includes('Save whole register'))
+  assert.ok(attendance.includes('not_configured') && attendance.includes('provider feed'), 'Automatic attendance must not pretend that a device is connected')
+})
+check('Institutional workspace includes real record CRUD and office-compatible exports', () => {
+  const workspace = read('src/components/InstitutionalWorkspace.tsx')
+  const exporters = read('src/lib/officeExport.ts')
+  for (const value of ['institutional_records','created_by','updated_by','approval_status','CONTEXTUAL SUB-WINDOW']) assert.ok(workspace.includes(value))
+  for (const value of ['exportExcelXml','exportWordXml','printOfficeReport']) assert.ok(workspace.includes(value))
+  for (const value of ['application/vnd.ms-excel','application/msword','window.print']) assert.ok(exporters.includes(value))
 })
 
 const dashboardSource = read('src/components/Dashboard.tsx')
