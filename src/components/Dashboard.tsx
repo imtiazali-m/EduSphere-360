@@ -271,7 +271,9 @@ function Overview({ onNavigate }: { onNavigate: (key: string) => void }) {
       { label: 'Assignments', value: assignments.length, hint: 'Coursework records', icon: BookOpen, route: 'assignments', tone: 'green' },
       { label: 'Exam Results', value: results.length, hint: 'Available results', icon: ClipboardCheck, route: 'exam_results', tone: 'violet' },
       { label: 'Announcements', value: announcements.length, hint: 'Shared notices', icon: Megaphone, route: 'announcements', tone: 'amber' },
-    ]
+      { label: 'Fees Invoices', value: invoices.length, hint: 'Available invoices', icon: Wallet, route: 'fees', tone: 'amber' },
+      { label: 'Work Management', value: tasks.length, hint: 'Assigned tasks', icon: ClipboardList, route: 'work_tasks', tone: 'blue' },
+    ].filter(item => available.some(module => module.key === item.route)).slice(0, 4)
 
   return <div className="ed360-dashboard">
     <header className="ed360-dashboard-heading">
@@ -461,7 +463,6 @@ export function Dashboard({ onToast }: Props) {
   }
 
   const adminKey = active.startsWith('admin:') ? active.slice(6) : undefined
-  const pageTitle = activePage
 
   return <div className={`pro-app-shell ${sidebarOpen ? 'navigation-open' : ''}`}>
     <aside className={`pro-sidebar ${sidebarOpen ? 'is-open' : ''}`} aria-hidden={!sidebarOpen}>
