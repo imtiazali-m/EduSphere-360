@@ -15,6 +15,12 @@ function localDateString(date = new Date()) {
 const ALLOWED_TABLES = new Set([
   'students',
   'teachers',
+  'designations',
+  'teacher_assignments',
+  'employee_attendance',
+  'employee_leave_requests',
+  'staff_documents',
+  'employee_history',
   'attendance',
   'exams',
   'exam_results',
