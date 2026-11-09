@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { ArrowUpRight, Building2, CheckCircle2, ClipboardCheck, History, Plus, RefreshCw, Save, Settings, ShieldCheck, Users, X } from 'lucide-react'
+import { ArrowUpRight, BookOpen, Building2, CalendarDays, CheckCircle2, Plus, RefreshCw, Save, ShieldCheck, Users, X } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { userFacingError } from '../lib/userErrors'
@@ -108,7 +108,7 @@ export function GovernanceWorkspace({initialWindow,onToast,onNavigate}:Props){
     const {error:requestError}=await supabase.from('workflow_approvals').insert({
       institution_id:user!.institutionId,workflow_key:'institution_setting_change',target_type:'institution_settings',
       target_id:targetId,requested_by:user!.id,status:'pending',
-      payload:{category:approvalCategory.trim(),setting_key:approvalKey.trim(),setting_value:parsed,is_public:approvalPublic},
+      payload:{category:approvalCategory.trim(),setting_key:approvalKey.trim(),setting_value:parsed,is_public:approvalPublic,request_notes:approvalNotes.trim()||null},
     })
     if(requestError)onToast(userFacingError(requestError,'Setting change request could not be submitted.'),true)
     else{setApprovalForm(false);setApprovalKey('');setApprovalValue('{}');setApprovalNotes('');onToast('Setting change request submitted for owner/administrator review.');await load(true)}
