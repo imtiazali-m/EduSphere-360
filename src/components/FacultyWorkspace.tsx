@@ -144,7 +144,7 @@ export function FacultyWorkspace({onToast,onNavigate}:Props) {
   const monthAttendance=attendance.filter(r=>String(r.attendance_date??'').slice(0,7)===new Date().toISOString().slice(0,7))
 
   function open(kind:Kind,row:RecordRow|null=null){setDialog({kind,row,values:getDefaults(kind,row,selected?.id??'',admin)})}
-  function setField(k:string,v:string){setDialog(d=>d?{...d,values:{...d.values,[k]:v}:d)}
+  function setField(k:string,v:string){setDialog(d=>d?{...d,values:{...d.values,[k]:v}}:d)}
   async function saveDialog(e:FormEvent) {
     e.preventDefault(); if(!dialog)return
     setBusy(true)
