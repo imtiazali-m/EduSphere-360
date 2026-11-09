@@ -83,9 +83,11 @@ function columnName(index:number){
 }
 
 export function exportXlsx(filename:string,title:string,rows:Record<string,unknown>[],columns:OfficeColumn[]){
- const header='<row r="1">'+columns.map((column,index)=>'<c r="'+columnName(index)+'1" s="1" t="inlineStr"><is><t xml:space="preserve">'+xmlEscape(column.label)+'</t></is></c>').join('')+'</row>'
+ const titleRow='<row r="1"><c r="A1" t="inlineStr"><is><t xml:space="preserve">'+xmlEscape(title)+'</t></is></c></row>'
+ const generatedRow='<row r="2"><c r="A2" t="inlineStr"><is><t xml:space="preserve">Generated '+xmlEscape(new Date().toLocaleString())+' · '+rows.length+' records</t></is></c></row>'
+ const header='<row r="3">'+columns.map((column,index)=>'<c r="'+columnName(index)+'3" s="1" t="inlineStr"><is><t xml:space="preserve">'+xmlEscape(column.label)+'</t></is></c>').join('')+'</row>'
  const body=rows.map((row,rowIndex)=>{
-  const rowNumber=rowIndex+2
+  const rowNumber=rowIndex+4
   const cells=columns.map((column,columnIndex)=>{
    const value=row[column.key]
    const ref=columnName(columnIndex)+rowNumber
@@ -95,10 +97,10 @@ export function exportXlsx(filename:string,title:string,rows:Record<string,unkno
   }).join('')
   return '<row r="'+rowNumber+'">'+cells+'</row>'
  }).join('')
- const lastRow=rows.length+1
+ const lastRow=rows.length+3
  const lastCol=columnName(Math.max(0,columns.length-1))
  const worksheet='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
- '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><dimension ref="A1:'+lastCol+lastRow+'"/><sheetViews><sheetView workbookViewId="0"/></sheetViews><sheetFormatPr defaultRowHeight="18"/><sheetData>'+header+body+'</sheetData><autoFilter ref="A1:'+lastCol+lastRow+'"/></worksheet>'
+ '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><dimension ref="A1:'+lastCol+lastRow+'"/><sheetViews><sheetView workbookViewId="0"/></sheetViews><sheetFormatPr defaultRowHeight="18"/><sheetData>'+titleRow+generatedRow+header+body+'</sheetData><autoFilter ref="A3:'+lastCol+lastRow+'"/></worksheet>'
  const workbook='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
  '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Records" sheetId="1" r:id="rId1"/></sheets><definedNames><definedName name="_xlnm.Print_Titles">Records!$1:$1</definedName></definedNames></workbook>'
  const styles='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
