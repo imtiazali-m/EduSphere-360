@@ -21,11 +21,11 @@ check('Vite development and production scripts exist', () => {
 const requiredFiles = [
   'index.html', 'src/main.tsx', 'src/App.tsx', 'src/components/Dashboard.tsx',
   'src/components/AuthScreens.tsx', 'src/components/AdministrationModule.tsx',
-  'src/components/RecordModule.tsx', 'src/components/ReportsModule.tsx', 'src/components/ProfileModule.tsx', 'src/context/AuthContext.tsx', 'src/lib/auth.ts',
+  'src/components/RecordModule.tsx', 'src/components/FacultyWorkspace.tsx', 'src/styles/faculty-workspace.css', 'src/components/ReportsModule.tsx', 'src/components/ProfileModule.tsx', 'src/context/AuthContext.tsx', 'src/lib/auth.ts',
   'src/lib/data.ts', 'src/lib/navigationAccess.ts', 'src/lib/userErrors.ts', 'scripts/test-user-errors.mjs',
   'src/lib/finance.ts', 'scripts/test-finance.mjs', 'src/lib/fileAccess.ts', 'scripts/test-file-access.mjs',
   'src/lib/navigationCatalog.ts', 'src/lib/navigationRoutes.ts', 'public/_redirects',
-  '.env.example', 'package-lock.json', 'src/lib/types.ts', 'supabase/migrations/20261108053651_owner_signup_institution_details.sql',
+  '.env.example', 'package-lock.json', 'src/lib/types.ts', 'supabase/migrations/20261108053651_owner_signup_institution_details.sql', 'supabase/migrations/20261109083133_faculty_employee_management.sql',
   '.github/workflows/cloudflare-pages-release.yml', 'docs/FINAL_REBUILD_STAGE.md', 'docs/NAVIGATION_RECONCILIATION.md',
 ]
 check('Integrated frontend, authentication, modules and deployment files exist', () => {
@@ -57,7 +57,7 @@ check('The approved eight-group menu maps every submenu to a real workspace', ()
   const expected = [
     ['Dashboard', []],
     ['Student Management', studentWindows],
-    ['People & Staff', ['Faculty & Staff', 'User Account']],
+    ['People & Staff', ['Faculty & Staff', 'My Staff Workspace', 'User Account']],
     ['Institute Administration', ['Departments', 'Programs', 'Class Sections', 'Academic Sessions', 'Subjects', 'Rooms & Facilities', 'Files & Documentation']],
     ['Academic Management', ['Attendance Registration', 'Examination', 'Exam Results', 'Assignments', 'Assignment Submission', 'Timetable']],
     ['Finance & Payments', ['Fees Invoices']],
@@ -98,7 +98,8 @@ check('All seven roles receive focused, permission-aware workspaces', () => {
     }
     for (const module of modulesForRole(role)) assert.ok(module.roles.includes(role), `${role} received an unauthorised module ${module.key}`)
   }
-  assert.ok(!roleNavigationGroups('teacher').some(group => group.key === 'institution' || group.key === 'people'))
+  assert.ok(!roleNavigationGroups('teacher').some(group => group.key === 'institution'))
+  assert.deepEqual(roleNavigationGroups('teacher').find(group => group.key === 'people')?.items, ['My Staff Workspace'])
   assert.ok(!roleNavigationGroups('student').some(group => group.key === 'institution' || group.key === 'people'))
   assert.ok(!roleNavigationGroups('accountant').some(group => group.key === 'people' || group.key === 'students'))
   assert.ok(!roleNavigationGroups('exam_officer').some(group => group.key === 'people' || group.key === 'students'))
@@ -264,6 +265,26 @@ check('Student Record is a complete permission-aware multi-window workspace', ()
   assert.ok(quickStart > navEnd, 'Quick Access must remain outside the scrollable menu')
   const workspaceCss = read('src/styles/module-workspaces.css')
   assert.ok(workspaceCss.includes('.ed360-student-window-nav') && workspaceCss.includes('.ed360-student-profile-grid'), 'Student workspace styling is missing')
+})
+
+check('Faculty & Employee Management uses dedicated institution-scoped HR workspaces', () => {
+  const faculty = read('src/components/FacultyWorkspace.tsx')
+  for (const label of ['Overview', 'Employee Registration', 'Employee Directory', 'Employee Profile', 'Departments', 'Designations', 'Teaching Assignments', 'Faculty Attendance', 'Leave Management', 'Workload & Timetable', 'Documents', 'Employment History', 'Staff Reports']) {
+    assert.ok(faculty.includes("label:'" + label + "'") || faculty.includes("label: '" + label + "'"), 'Faculty workspace window is missing: ' + label)
+  }
+  for (const table of ['designations', 'teacher_assignments', 'employee_attendance', 'employee_leave_requests', 'staff_documents', 'employee_history']) {
+    assert.ok(faculty.includes("'" + table + "'"), 'Faculty workspace is missing its dedicated data source: ' + table)
+    assert.ok(read('src/lib/data.ts').includes("'" + table + "'"), 'Generic cloud data allowlist is missing: ' + table)
+  }
+  assert.ok(faculty.includes("from('staff-files')"), 'Confidential documents must use the dedicated private staff-files bucket')
+  assert.ok(faculty.includes('createSignedUrl'), 'Staff documents must be retrieved with signed URLs')
+  const dashboard = read('src/components/Dashboard.tsx')
+  assert.ok(dashboard.includes("<FacultyWorkspace onToast={onToast} onNavigate={navigate}/>"), 'Existing dashboard must route Faculty & Staff into the dedicated workspace')
+  const migration = read('supabase/migrations/20261109083133_faculty_employee_management.sql')
+  for (const required of ['enable row level security', 'teacher_assignments', 'employee_attendance', 'employee_leave_requests', 'staff_documents', 'employee_history', 'staff-files', 'teachers_owner_admin_or_self_read', 'audit_teacher_history']) {
+    assert.ok(migration.includes(required), 'Faculty management migration is missing: ' + required)
+  }
+  assert.ok(!migration.includes('drop table') && !migration.includes('truncate '), 'Faculty management migration must remain additive and non-destructive')
 })
 
 check('GitHub-hosted release pipeline builds assets and keeps production deploy manual', () => {
