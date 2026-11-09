@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import {
-  Activity, BadgeCheck, BookOpen, CalendarCheck, CalendarDays, ClipboardCheck,
-  ClipboardList, Clock3, Megaphone, TrendingUp, Users, Wallet,
+  Activity, BadgeCheck, BookOpen, Building2, CalendarCheck, CalendarDays, ClipboardCheck,
+  ClipboardList, Clock3, GraduationCap, Megaphone, School, TrendingUp, Users, Wallet,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import type { ModuleConfig, RecordRow } from '../lib/types'
@@ -51,6 +51,72 @@ function makeSummary(module: ModuleConfig, rows: RecordRow[]): WorkspaceSummary 
   const statusKey = module.key === 'exam_results' ? 'result_status' : 'status'
 
   switch (module.key) {
+    case 'students': {
+      const active = count('status', 'active')
+      const pending = count('status', 'pending')
+      const graduated = count('status', 'graduated')
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+      const newAdmissions = rows.filter(row => {
+        const created = dateValue(row, ['created_at'])
+        return created && created >= monthStart
+      }).length
+      const classes = [...new Set(rows.map(row => textValue(row, ['class_name'], 'Not assigned')))]
+        .map(label => bar(label, rows.filter(row => textValue(row, ['class_name'], 'Not assigned') === label).length, palette.blue))
+        .sort((a, b) => b.value - a.value).slice(0, 5)
+      return {
+        metrics: [
+          metric('Total Students', String(rows.length), 'All admission records', 'blue', GraduationCap),
+          metric('Active Students', String(active), 'Currently enrolled', 'green', BadgeCheck),
+          metric('New Admissions', String(newAdmissions), 'Added this month', 'violet', Users),
+          metric('Pending Applications', String(pending), 'Awaiting confirmation', 'amber', Clock3),
+        ],
+        chartTitle: 'Student status', chartNote: 'Current admission and enrolment status',
+        breakdown: [bar('Active', active, palette.green), bar('Pending', pending, palette.amber), bar('Graduated', graduated, palette.violet), bar('Inactive', count('status', 'inactive'), palette.slate)],
+        secondaryTitle: 'Students by class', secondaryNote: 'Largest class groups in this institution',
+        secondary: classes.map(item => item.label + ' · ' + item.value + ' students'),
+      }
+    }
+    case 'teachers': {
+      const active = rows.filter(row => String(row.employment_status ?? 'active').toLowerCase() === 'active').length
+      const onLeave = count('employment_status', 'on_leave')
+      const inactive = count('employment_status', 'inactive')
+      const departments = [...new Set(rows.map(row => textValue(row, ['department'], 'Not assigned')))]
+        .map(label => bar(label, rows.filter(row => textValue(row, ['department'], 'Not assigned') === label).length, palette.green))
+        .sort((a, b) => b.value - a.value).slice(0, 5)
+      return {
+        metrics: [
+          metric('Faculty & Staff', String(rows.length), 'Employee profiles', 'blue', Users),
+          metric('Active Staff', String(active), 'Currently employed', 'green', BadgeCheck),
+          metric('On Leave', String(onLeave), 'Temporary leave records', 'amber', Clock3),
+          metric('Departments', String(departments.length), 'Departments represented', 'violet', Building2),
+        ],
+        chartTitle: 'Staff by department', chartNote: 'Department distribution across staff records',
+        breakdown: departments,
+        secondaryTitle: 'Employment status', secondaryNote: 'Current staff status breakdown',
+        secondary: [active + ' active', onLeave + ' on leave', inactive + ' inactive'],
+      }
+    }
+    case 'fees': {
+      const billed = rows.reduce((sum, row) => sum + Math.max(0, Number(row.amount ?? 0) + Number(row.fine_amount ?? 0) - Number(row.discount_amount ?? 0)), 0)
+      const collected = rows.reduce((sum, row) => sum + Math.max(0, Number(row.paid_amount ?? 0)), 0)
+      const outstanding = rows.reduce((sum, row) => sum + Math.max(0, Number(row.amount ?? 0) + Number(row.fine_amount ?? 0) - Number(row.discount_amount ?? 0) - Number(row.paid_amount ?? 0)), 0)
+      const overdue = count('status', 'overdue')
+      const paid = count('status', 'paid')
+      const partial = count('status', 'partial')
+      const unpaid = count('status', 'unpaid')
+      return {
+        metrics: [
+          metric('Fees Invoices', String(rows.length), 'Issued invoices', 'blue', Wallet),
+          metric('Fees Collected', money(collected), 'Payments recorded', 'green', TrendingUp),
+          metric('Outstanding', money(outstanding), 'Remaining balances', 'amber', Clock3),
+          metric('Overdue', String(overdue), 'Past-due invoices', 'violet', CalendarDays),
+        ],
+        chartTitle: 'Invoice status', chartNote: 'Payments and receivables at a glance',
+        breakdown: [bar('Paid', paid, palette.green), bar('Partial', partial, palette.violet), bar('Unpaid', unpaid, palette.amber), bar('Overdue', overdue, palette.rose)],
+        secondaryTitle: 'Collection progress', secondaryNote: 'Collected against net billed amount',
+        secondary: [money(collected) + ' collected', money(billed) + ' total billed', money(outstanding) + ' remaining'],
+      }
+    }
     case 'attendance': {
       const present = count('status', 'present')
       const absent = count('status', 'absent')
