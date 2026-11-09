@@ -23,6 +23,10 @@ import AdministrationModule from './AdministrationModule'
 import { ReportsModule } from './ReportsModule'
 import { ProfileModule } from './ProfileModule'
 import { FacultyWorkspace } from './FacultyWorkspace'
+import { institutionalMenu } from '../lib/institutionalCatalog'
+import { InstitutionalWorkspace } from './InstitutionalWorkspace'
+import { AttendanceWorkspace } from './AttendanceWorkspace'
+import { LinkedOperationsWorkspace } from './LinkedOperationsWorkspace'
 
 interface Props { onToast: (message: string, error?: boolean) => void }
 type Dataset = Record<string, RecordRow[]>
@@ -39,7 +43,7 @@ const moduleIcons: Record<string, LucideIcon> = {
 const catalogIcons: Record<string, LucideIcon> = {
   LayoutDashboard, BrainCircuit, Building2, School, BookOpen, GraduationCap, Users, Calculator,
   Wallet, Banknote, CalendarCheck, CalendarDays, BookOpenCheck, HeartHandshake, MessageSquare,
-  FileQuestion, ClipboardCheck, ClipboardList, ListChecks, BarChart3, Award, Library, Wrench, FileText, UserRound, Megaphone,
+  FileQuestion, ClipboardCheck, ClipboardList, ListChecks, BarChart3, Award, Library, Wrench, FileText, UserRound, Megaphone, Database, DoorOpen, Settings, ShieldCheck,
 }
 
 function pageIcon(title: string, fallback: LucideIcon): LucideIcon {
@@ -64,11 +68,13 @@ function pageIcon(title: string, fallback: LucideIcon): LucideIcon {
 const pageRoutes = navigationRoutes
 
 const tableLabels: Record<string, string> = {
+  institutional_records: 'Institutional operation',
   students: 'Student', teachers: 'Faculty member', attendance: 'Attendance entry', exams: 'Examination',
   exam_results: 'Exam result', fee_invoices: 'Fee invoice', assignments: 'Assignment',
   timetable_entries: 'Timetable entry', announcements: 'Announcement', departments: 'Department', programs: 'Program', classes: 'Class section', academic_sessions: 'Academic session', subjects: 'Subject', rooms: 'Room / facility',
 }
 const tableToModule: Record<string, string> = {
+  institutional_records: 'reports',
   fee_invoices: 'fees', timetable_entries: 'timetable', departments: 'admin:departments', programs: 'admin:programs', classes: 'admin:classes', academic_sessions: 'admin:academic_sessions', subjects: 'admin:subjects', rooms: 'admin:rooms',
 }
 
@@ -157,6 +163,10 @@ function Overview({ onNavigate }: { onNavigate: (key: string) => void }) {
   const [data, setData] = useState<Dataset>({})
   const [loading, setLoading] = useState(true)
   const [loadNote, setLoadNote] = useState('')
+  const [dateScope, setDateScope] = useState('365')
+  const [campusScope, setCampusScope] = useState('')
+  const [sessionScope, setSessionScope] = useState('')
+  const [classScope, setClassScope] = useState('')
   const available = useMemo(() => modulesForRole(user!.role), [user?.role])
   const visibleGroups = useMemo(() => roleNavigationGroups(user!.role), [user?.role])
 
@@ -165,10 +175,10 @@ function Overview({ onNavigate }: { onNavigate: (key: string) => void }) {
     async function load() {
       setLoading(true)
       setLoadNote('')
-      const adminTables = ['departments', 'programs', 'classes', 'academic_sessions', 'subjects', 'rooms']
+      const adminTables = ['departments', 'programs', 'classes', 'academic_sessions', 'subjects', 'rooms', 'campuses']
       const dashboardTables = user!.role === 'owner' || user!.role === 'admin'
-        ? [...available.map(module => module.table), ...adminTables]
-        : available.map(module => module.table)
+        ? [...available.map(module => module.table), ...adminTables, 'institutional_records']
+        : [...available.map(module => module.table), 'institutional_records']
       const uniqueTables = [...new Set(dashboardTables)]
       const entries = await Promise.all(uniqueTables.map(async table => {
         try { return [table, await listRecords(mode, user!, table)] as const }
@@ -187,23 +197,52 @@ function Overview({ onNavigate }: { onNavigate: (key: string) => void }) {
     return () => { live = false }
   }, [mode, user?.id, user?.institutionId, user?.role, available])
 
-  const stats = useMemo(() => buildStats(user!.role, data), [user?.role, data])
-  const students = getRows(data, 'students')
-  const teachers = getRows(data, 'teachers')
-  const attendance = getRows(data, 'attendance')
-  const exams = getRows(data, 'exams')
-  const results = getRows(data, 'exam_results')
-  const assignments = getRows(data, 'assignments')
-  const submissions = getRows(data, 'assignment_submissions')
-  const invoices = getRows(data, 'fee_invoices')
-  const announcements = getRows(data, 'announcements')
-  const tasks = getRows(data, 'work_tasks')
-  const departments = getRows(data, 'departments')
-  const programs = getRows(data, 'programs')
-  const classes = getRows(data, 'classes')
-  const subjects = getRows(data, 'subjects')
-  const rooms = getRows(data, 'rooms')
-  const timetable = getRows(data, 'timetable_entries')
+  const sessionOptions = getRows(data,'academic_sessions').map(row=>({id:row.id,label:firstText(row,['session_name','name','code'],row.id)}))
+  const classOptions = [...new Set([
+    ...getRows(data,'students').map(row=>String(row.class_name??'')),
+    ...getRows(data,'classes').map(row=>String(row.name??'')),
+    ...getRows(data,'classes').map(row=>String(row.class_name??''))
+  ].filter(Boolean))].sort()
+  const scopedData = useMemo(() => {
+    const cutoff = dateScope === 'all' ? null : Date.now() - Number(dateScope) * 86400000
+    return Object.fromEntries(Object.entries(data).map(([table,rows]) => [table,rows.filter(row => {
+      if (campusScope && String(row.campus_id??'') !== campusScope) return false
+      if (sessionScope) {
+        const label = sessionOptions.find(item=>item.id===sessionScope)?.label
+        const value = String(row.academic_session_id??row.academic_session??row.session_id??row.session_name??'')
+        if (value !== sessionScope && value !== label) return false
+      }
+      if (classScope && String(row.class_name??row.grade_level??'') !== classScope) return false
+      if (cutoff !== null) {
+        const dateKeys:Record<string,string[]> = {
+          attendance:['attendance_date'], employee_attendance:['attendance_date'], exams:['exam_date'],
+          exam_results:['created_at'], fee_invoices:['invoice_date','created_at'], fee_payments:['payment_date','created_at'],
+          assignments:['due_date','created_at'], assignment_submissions:['submitted_at','created_at'],
+          institutional_records:['record_date','created_at'], students:['created_at'], teachers:['created_at']
+        }
+        const date = rowDate(row,dateKeys[table]??['record_date','created_at'])
+        if (!date || date.getTime() < cutoff) return false
+      }
+      return true
+    })]))
+  },[data,dateScope,campusScope,sessionScope,classScope,sessionOptions])
+  const stats = useMemo(() => buildStats(user!.role, scopedData), [user?.role, scopedData])
+  const students = getRows(scopedData, 'students')
+  const teachers = getRows(scopedData, 'teachers')
+  const attendance = getRows(scopedData, 'attendance')
+  const exams = getRows(scopedData, 'exams')
+  const results = getRows(scopedData, 'exam_results')
+  const assignments = getRows(scopedData, 'assignments')
+  const submissions = getRows(scopedData, 'assignment_submissions')
+  const invoices = getRows(scopedData, 'fee_invoices')
+  const announcements = getRows(scopedData, 'announcements')
+  const tasks = getRows(scopedData, 'work_tasks')
+  const departments = getRows(scopedData, 'departments')
+  const programs = getRows(scopedData, 'programs')
+  const classes = getRows(scopedData, 'classes')
+  const subjects = getRows(scopedData, 'subjects')
+  const rooms = getRows(scopedData, 'rooms')
+  const timetable = getRows(scopedData, 'timetable_entries')
 
   const now = new Date()
   const today = now.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
@@ -225,7 +264,9 @@ function Overview({ onNavigate }: { onNavigate: (key: string) => void }) {
   const chartY = (value: number) => 188 - (value / chartMaximum) * 148
   const chartPoints = (values: number[]) => values.map((value, index) => chartX(index) + ',' + chartY(value)).join(' ')
 
+  const institutionalOperations = getRows(scopedData, 'institutional_records')
   const moduleBreakdown = [
+    { label: 'Institutional Workflows', count: institutionalOperations.length, color: '#687bd6' },
     { label: 'Admission & Students', count: students.length, color: '#2877ee' },
     { label: 'People & Staff', count: teachers.length, color: '#13a36b' },
     { label: 'Institute Administration', count: departments.length + programs.length + classes.length + subjects.length + rooms.length, color: '#11a8b6' },
@@ -245,8 +286,8 @@ function Overview({ onNavigate }: { onNavigate: (key: string) => void }) {
   const donutBackground = moduleTotal ? 'conic-gradient(' + donutStops.join(',') + ')' : 'conic-gradient(#dce5f1 0 100%)'
   const modulePercent = (count: number) => moduleTotal ? Math.round((count / moduleTotal) * 100) : 0
 
-  const recent = useMemo(() => Object.entries(data).flatMap(([table, rows]) => rows.map(row => ({ table, row })))
-    .sort((a, b) => String(b.row.created_at ?? '').localeCompare(String(a.row.created_at ?? ''))).slice(0, 4), [data])
+  const recent = useMemo(() => Object.entries(scopedData).flatMap(([table, rows]) => rows.map(row => ({ table, row })))
+    .sort((a, b) => String(b.row.created_at ?? '').localeCompare(String(a.row.created_at ?? ''))).slice(0, 4), [scopedData])
 
   const upcomingEvents = [
     ...exams.map(row => ({ id: 'exam-' + row.id, title: firstText(row, ['title', 'exam_title'], 'Examination'), detail: firstText(row, ['class_name', 'subject'], 'Academic examination'), date: rowDate(row, ['exam_date']), label: 'Examination', route: 'exams' })),
@@ -285,6 +326,12 @@ function Overview({ onNavigate }: { onNavigate: (key: string) => void }) {
       </div>
       <div className="ed360-heading-date"><CalendarDays size={16}/><span>{today}</span></div>
     </header>
+    <section className="ed360-dashboard-scope" aria-label="Dashboard data filters">
+      <label>Date range<select value={dateScope} onChange={event=>setDateScope(event.target.value)}><option value="30">Last 30 days</option><option value="90">Last 90 days</option><option value="365">Last 12 months</option><option value="all">All recorded dates</option></select></label>
+      <label>Campus<select value={campusScope} onChange={event=>setCampusScope(event.target.value)}><option value="">All campuses</option>{getRows(data,'campuses').map(row=><option value={row.id} key={row.id}>{String(row.name??'Campus')}</option>)}</select></label>
+      <label>Academic session<select value={sessionScope} onChange={event=>setSessionScope(event.target.value)}><option value="">All sessions</option>{sessionOptions.map(item=><option value={item.id} key={item.id}>{item.label}</option>)}</select></label>
+      <label>Class / section<select value={classScope} onChange={event=>setClassScope(event.target.value)}><option value="">All classes</option>{classOptions.map(item=><option value={item} key={item}>{item}</option>)}</select></label>
+    </section>
 
     <section className="ed360-metric-grid" aria-label="Institution statistics">
       {stats.map((stat, index) => <button type="button" className={'ed360-metric-card ed360-metric-' + (index + 1)} key={stat.label} onClick={() => onNavigate(stat.route)}>
@@ -298,7 +345,7 @@ function Overview({ onNavigate }: { onNavigate: (key: string) => void }) {
       <section className="ed360-panel ed360-academic-panel">
         <div className="ed360-panel-heading">
           <div><span className="ed360-panel-icon"><BarChart3 size={18}/></span><div><h2>Academic Overview</h2><p>Monthly activity across your available institutional records.</p></div></div>
-          <span className="ed360-chart-period">{monthLabels[0]} – {monthLabels[5]}</span>
+          <span className="ed360-chart-period">{dateScope === "all" ? "All recorded dates" : "Last " + dateScope + " days"} · {monthLabels[0]}–{monthLabels[5]}</span>
         </div>
         <div className="ed360-chart-legend">{trendSeries.map(series => <span key={series.label}><i style={{ background: series.color }}/>{series.label}</span>)}</div>
         <div className="ed360-line-chart">
@@ -340,7 +387,8 @@ function Overview({ onNavigate }: { onNavigate: (key: string) => void }) {
         {loading ? <div className="ed360-empty">Loading recent records…</div> : recent.length ? <div className="ed360-recent-list">{recent.map(({ table, row }, index) => {
           const title = firstText(row, ['full_name', 'title', 'fee_title', 'student_name', 'exam_title', 'admission_no', 'name'], tableLabels[table] ?? 'Record')
           const detail = firstText(row, ['class_name', 'subject', 'department', 'admission_no', 'audience'], tableLabels[table] ?? 'Institution record')
-          const route = tableToModule[table] ?? table
+          const operationGroup = table === 'institutional_records' ? institutionalMenu.find(group => group.dataModule === String(row.module_key ?? '')) : undefined
+          const route = operationGroup ? 'institutional:' + operationGroup.key + ':' + String(row.record_type ?? '') : tableToModule[table] ?? table
           const Icon = moduleIcons[route] ?? FileText
           return <button type="button" className="ed360-recent-row" key={table + '-' + row.id} onClick={() => onNavigate(route)}><span className={'ed360-recent-icon ed360-recent-icon-' + (index + 1)}><Icon size={16}/></span><span className="ed360-recent-copy"><strong>{title}</strong><small>{tableLabels[table] ?? 'Record'} · {detail}</small></span><time>{shortDate(row.created_at)}</time></button>
         })}</div> : <div className="ed360-empty">Your recent activity will appear here as records are added.</div>}
@@ -408,7 +456,7 @@ export function Dashboard({ onToast }: Props) {
   const [activePage, setActivePage] = useState('Dashboard')
   const [activeWorkspaceWindow, setActiveWorkspaceWindow] = useState('overview')
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [expandedGroups, setExpandedGroups] = useState<string[]>(['students', 'people', 'institution', 'academics', 'finance', 'communication', 'operations'])
+  const [expandedGroups, setExpandedGroups] = useState<string[]>(['dashboard'])
   const [profileOpen, setProfileOpen] = useState(false)
   const [searchText, setSearchText] = useState('')
   const [searchOpen, setSearchOpen] = useState(false)
@@ -427,10 +475,16 @@ export function Dashboard({ onToast }: Props) {
 
   function navigate(key: string) {
     const studentWindowRoute = key.startsWith('students:')
-    const targetKey = studentWindowRoute ? 'students' : key
-    const targetWindow = studentWindowRoute ? key.slice('students:'.length) : 'overview'
+    const attendanceWindowRoute = key.startsWith('attendance:')
+    const institutionalWindowRoute = key.startsWith('institutional:')
+    const targetKey = studentWindowRoute ? 'students' : attendanceWindowRoute ? 'attendance' : institutionalWindowRoute ? 'institutional' : key
+    const targetWindow = studentWindowRoute ? key.slice('students:'.length) : attendanceWindowRoute ? key.slice('attendance:'.length) : institutionalWindowRoute ? key.slice('institutional:'.length) : 'overview'
     if (targetKey === 'overview') {
       setActive('overview'); setActivePage('Dashboard'); setActiveWorkspaceWindow('overview')
+    } else if (targetKey === 'institutional') {
+      setActive('institutional'); setActivePage('Institutional Workspace'); setActiveWorkspaceWindow(targetWindow)
+    } else if (targetKey === 'attendance') {
+      setActive('attendance'); setActivePage('Attendance Management'); setActiveWorkspaceWindow(targetWindow || 'students')
     } else if (targetKey.startsWith('admin:')) {
       const subkey = targetKey.slice(6)
       setActive(targetKey); setActivePage(adminModuleLabels[subkey] ?? 'Administration'); setActiveWorkspaceWindow('overview')
@@ -478,14 +532,9 @@ export function Dashboard({ onToast }: Props) {
       <nav className="pro-navigation" aria-label="Institution workspace">
         {visibleGroups.map(group => {
           const GroupIcon = catalogIcons[group.icon] ?? LayoutDashboard
-          if (group.key === 'dashboard') return <section className="pro-nav-group" key={group.key}>
-            <button className={`pro-nav-group-head pro-nav-dashboard-link ${active === 'overview' ? 'active' : ''}`} onClick={() => navigate('overview')} aria-current={active === 'overview' ? 'page' : undefined}>
-              <span className="pro-nav-group-icon"><GroupIcon size={19}/></span><span className="pro-nav-group-name">Dashboard</span>
-            </button>
-          </section>
           const isExpanded = expandedGroups.includes(group.key)
           return <section className={`pro-nav-group ${isExpanded ? 'expanded' : ''}`} key={group.key}>
-            <button className="pro-nav-group-head" aria-expanded={isExpanded} onClick={() => toggleGroup(group.key)}><span className="pro-nav-group-icon"><GroupIcon size={19}/></span><span className="pro-nav-group-name">{group.label}</span><ChevronRight className="pro-nav-chevron" size={17}/></button>
+            <button className={`pro-nav-group-head ${group.key === "dashboard" ? "pro-nav-dashboard-link" : ""}`} aria-expanded={isExpanded} onClick={() => toggleGroup(group.key)}><span className="pro-nav-group-icon"><GroupIcon size={19}/></span><span className="pro-nav-group-name">{group.label}</span><ChevronRight className="pro-nav-chevron" size={17}/></button>
             {isExpanded && <div className="pro-nav-children">{group.items.map(item => {
               const route = pageRoutes[item]
               const isActive = activePage === item
@@ -517,7 +566,7 @@ export function Dashboard({ onToast }: Props) {
           <div className="pro-profile-wrap"><button className="pro-profile-trigger" onClick={() => setProfileOpen(open => !open)} aria-expanded={profileOpen}><span className="pro-profile-avatar">{user?.fullName.slice(0, 1).toUpperCase()}</span><span className="pro-profile-copy"><b>{user?.fullName}</b><small>{roleLabels[user!.role]}</small></span><ChevronDown size={14}/></button>{profileOpen && <div className="pro-profile-menu"><div className="pro-profile-details"><b>{user?.fullName}</b><small>{user?.email}</small><small>{user?.institutionName}</small>{user?.institutionType && <small>Institution type: {user.institutionType.replaceAll('_', ' ')}</small>}<small>Account role: {roleLabels[user!.role]}</small><span className={'pro-profile-mode ' + mode}>Cloud workspace</span></div>{['student', 'parent'].includes(user!.role) && <button type="button" onClick={() => navigate('profile')}><UserRound size={15}/> My Profile</button>}<button type="button" onClick={() => void logout()}><LogOut size={15}/> Sign out</button></div>}</div>
         </div>
       </header>
-      <div className="pro-module-stage">{active === 'overview' ? <Overview onNavigate={navigate}/> : adminKey ? <AdministrationModule key={adminKey} initialKey={adminKey as 'departments' | 'programs' | 'classes' | 'academic_sessions' | 'subjects' | 'rooms'}/> : active === 'accounts' ? <AccountsModule onToast={onToast}/> : active === 'files' ? <FilesModule onToast={onToast}/> : active === 'reports' ? <ReportsModule onToast={onToast}/> : active === 'profile' ? <ProfileModule/> : active === 'teachers' ? <FacultyWorkspace onToast={onToast} onNavigate={navigate}/> : activeModule ? <RecordModule key={active + ':' + activeWorkspaceWindow} module={activeModule as ModuleConfig} onToast={onToast} initialWindow={active === 'students' ? activeWorkspaceWindow : undefined} showWindowNavigation={active !== 'students'}/> : <Overview onNavigate={navigate}/>}</div>
+      <div className="pro-module-stage">{active === 'overview' ? <Overview onNavigate={navigate}/> : active === 'institutional' && ['administration:campus-and-branch-management','library:book-issue-and-returns','inventory:stock-in','inventory:stock-out','inventory:stock-allocation','inventory:stock-adjustments','inventory:inventory-history','inventory:stock-reports','transport:student-transport-allocation'].includes(activeWorkspaceWindow) ? <LinkedOperationsWorkspace key={activeWorkspaceWindow} workspaceKey={activeWorkspaceWindow} onToast={onToast} onNavigate={navigate}/> : active === 'institutional' ? <InstitutionalWorkspace key={activeWorkspaceWindow} workspaceKey={activeWorkspaceWindow} onToast={onToast}/> : active === 'attendance' ? <AttendanceWorkspace key={activeWorkspaceWindow} initialWindow={activeWorkspaceWindow} onToast={onToast}/> : adminKey ? <AdministrationModule key={adminKey} initialKey={adminKey as 'departments' | 'programs' | 'classes' | 'academic_sessions' | 'subjects' | 'rooms'}/> : active === 'accounts' ? <AccountsModule onToast={onToast}/> : active === 'files' ? <FilesModule onToast={onToast}/> : active === 'reports' ? <ReportsModule onToast={onToast}/> : active === 'profile' ? <ProfileModule/> : active === 'teachers' ? <FacultyWorkspace onToast={onToast} onNavigate={navigate}/> : activeModule ? <RecordModule key={active + ':' + activeWorkspaceWindow} module={activeModule as ModuleConfig} onToast={onToast} initialWindow={active === 'students' ? activeWorkspaceWindow : undefined} showWindowNavigation={active !== 'students'}/> : <Overview onNavigate={navigate}/>}</div>
     </main>
   </div>
 }

@@ -1,0 +1,162 @@
+/* Full institutional workspace visual system */
+:root{--ed360-reading-scale:1.07}
+.ed360-institutional-workspace,.ed360-attendance-workspace{font-size:13px;color:#233c56}
+.ed360-workspace-hero{display:flex;align-items:center;gap:16px;margin:0 0 17px;padding:21px 23px;border:1px solid #dce6f1;border-radius:17px;background:linear-gradient(115deg,#fff 0%,#f6f9fd 100%);box-shadow:0 8px 24px rgba(21,54,88,.055)}
+.ed360-workspace-hero-icon,.ed360-attendance-icon{display:grid;place-items:center;flex:0 0 48px;width:48px;height:48px;border-radius:14px;background:var(--workspace-soft,#edf4ff);color:var(--workspace-accent,#3477dc)}
+.ed360-workspace-hero-copy{min-width:0;flex:1}
+.ed360-workspace-hero-copy>span,.ed360-attendance-hero>div:nth-child(2)>span{color:var(--workspace-accent,#4c78a9);font-size:10px;font-weight:850;letter-spacing:1.05px}
+.ed360-workspace-hero-copy h1,.ed360-attendance-hero h1{margin:5px 0;color:#1d3957;font-size:27px;line-height:1.2;font-weight:850;letter-spacing:-.55px}
+.ed360-workspace-hero-copy p,.ed360-attendance-hero p{margin:0;color:#657c94;font-size:13px;line-height:1.55}
+.ed360-workspace-hero-tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ed360-data-state{display:inline-flex;align-items:center;gap:7px;padding:8px 11px;border:1px solid #dceae3;border-radius:22px;background:#f4fbf7;color:#34775c;font-size:11px;font-weight:750;white-space:nowrap}
+.ed360-data-state i{width:7px;height:7px;border-radius:50%;background:#1aa46c;box-shadow:0 0 0 3px #e2f5eb}
+.ed360-workspace-tabs{margin-bottom:12px}
+.ed360-workspace-tabs button{max-width:240px;overflow:hidden;text-overflow:ellipsis}
+.ed360-workspace-subwindow{border-left:4px solid var(--workspace-accent,#3477dc);background:var(--workspace-soft,#f6f9ff)}
+.ed360-workspace-window-number strong{color:var(--workspace-ink,#1c477b)!important}
+.ed360-workspace-toolbar{display:flex;align-items:center;gap:11px;flex-wrap:wrap;margin:0 0 14px}
+.ed360-workspace-filter,.ed360-workspace-search{display:flex;align-items:center;gap:8px;min-height:39px;padding:0 10px;border:1px solid #dbe4ee;border-radius:9px;background:#fff;color:#7388a0}
+.ed360-workspace-filter select{max-width:180px;border:0;outline:0;background:transparent;color:#39536f;font-size:12px;font-weight:650}
+.ed360-workspace-search{flex:1;min-width:190px;max-width:330px}
+.ed360-workspace-search input{width:100%;border:0;outline:0;background:transparent;color:#24425f;font-size:12px}
+.ed360-export-actions{display:flex;gap:5px;flex-wrap:wrap;margin-left:auto}
+.ed360-export-actions button,.ed360-table-refresh button{display:inline-flex;align-items:center;gap:5px;padding:8px 10px;border:1px solid #dce5ef;border-radius:8px;background:#fff;color:#4e6884;font-size:11px;font-weight:750}
+.ed360-export-actions button:hover,.ed360-table-refresh button:hover{border-color:var(--workspace-accent,#3477dc);color:var(--workspace-accent,#3477dc)}
+.ed360-workspace-error{padding:12px 14px;margin:0 0 12px;border:1px solid #f1d0cc;border-radius:9px;background:#fff7f6;color:#983d34;font-size:12px}
+.ed360-workspace-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0 0 14px}
+.ed360-workspace-kpis article{display:grid;gap:4px;padding:15px 16px;border:1px solid #e0e8f1;border-radius:12px;background:#fff}
+.ed360-workspace-kpis article span{color:#6e849b;font-size:11px;font-weight:700}
+.ed360-workspace-kpis article strong{color:var(--workspace-ink,#244a77);font-size:25px;font-weight:850;letter-spacing:-.4px}
+.ed360-workspace-kpis article small{color:#8496aa;font-size:10px}
+.ed360-workspace-chart{margin:0 0 14px;padding:17px 18px;border:1px solid #e0e8f1;border-radius:12px;background:#fff}
+.ed360-workspace-section-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:13px}
+.ed360-workspace-section-title span{color:#7b91a8;font-size:9px;font-weight:850;letter-spacing:1px}
+.ed360-workspace-section-title h3{margin:4px 0 0;color:#24425f;font-size:16px;font-weight:850}
+.ed360-workspace-bar{display:grid;grid-template-columns:110px minmax(80px,1fr) 34px;gap:10px;align-items:center;margin:10px 0}
+.ed360-workspace-bar label{color:#566f88;font-size:11px;text-transform:capitalize}
+.ed360-workspace-bar>div{height:9px;overflow:hidden;border-radius:10px;background:#edf1f6}
+.ed360-workspace-bar i{display:block;height:100%;border-radius:10px;background:var(--workspace-accent,#3477dc)}
+.ed360-workspace-bar b{color:#34536f;font-size:11px;text-align:right}
+.ed360-workspace-empty-inline{margin:0;color:#788da4;font-size:12px}
+.ed360-workspace-record-card .table-count{font-size:12px}
+.ed360-workspace-record-card table{min-width:850px;width:100%;border-collapse:separate;border-spacing:0}
+.ed360-workspace-record-card th{padding:12px 13px;background:#f6f9fc;color:#6f849a;font-size:10px;font-weight:850;letter-spacing:.5px;text-transform:uppercase}
+.ed360-workspace-record-card td{padding:12px 13px;border-top:1px solid #edf1f5;color:#49637d;font-size:11px;vertical-align:middle}
+.ed360-record-open{padding:0;border:0;background:none;color:#234f80;font-size:12px;font-weight:800;text-align:left;cursor:pointer}
+.ed360-record-open:hover{color:var(--workspace-accent,#3477dc);text-decoration:underline}
+.ed360-record-subtitle{display:block;max-width:280px;margin-top:4px;overflow:hidden;color:#8294a7;font-size:10px;text-overflow:ellipsis;white-space:nowrap}
+.ed360-state-pill{display:inline-flex;padding:4px 8px;border-radius:15px;background:#f1f4f8;color:#5a7188;font-size:10px;font-weight:750;text-transform:capitalize}
+.ed360-state-pill.state-approved,.ed360-state-pill.state-published,.ed360-state-pill.state-completed{background:#e9f8f0;color:#23724e}
+.ed360-state-pill.state-pending,.ed360-state-pill.state-in_progress{background:#fff6e7;color:#916319}
+.ed360-state-pill.state-rejected,.ed360-state-pill.state-cancelled{background:#fff0ef;color:#a3433c}
+.ed360-row-actions{display:flex;gap:5px}
+.ed360-row-actions button{padding:5px 8px;border:1px solid #e0e7ef;border-radius:6px;background:#fff;color:#526b85;font-size:10px;font-weight:700}
+.ed360-workspace-empty{display:grid;justify-items:center;gap:8px;padding:45px 18px;color:#8295a9;text-align:center;font-size:12px}
+.ed360-workspace-empty strong{color:#35516d;font-size:15px}
+.ed360-workspace-empty span{max-width:440px;line-height:1.55}
+.ed360-context-form{width:min(760px,calc(100vw - 28px));max-height:min(88vh,900px);overflow:auto}
+.ed360-context-form-grid{display:grid;gap:12px;padding:8px 22px 18px}
+.ed360-context-form-grid label{display:grid;gap:6px;color:#435e79;font-size:11px;font-weight:750}
+.ed360-context-form-grid input,.ed360-context-form-grid select,.ed360-context-form-grid textarea{width:100%;box-sizing:border-box;padding:10px 11px;border:1px solid #d8e2ed;border-radius:8px;background:#fff;color:#28435f;font:inherit;font-size:12px}
+.ed360-context-form-grid textarea{resize:vertical;min-height:72px}
+.ed360-context-form-grid small{color:#8194a7;font-size:10px;font-weight:450}
+.ed360-form-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.ed360-context-detail{width:min(850px,calc(100vw - 26px));max-height:88vh;overflow:auto}
+.ed360-context-detail-callout{display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:13px;margin:16px 22px;padding:14px;border:1px solid #dce7f4;border-radius:11px;background:#f5f8fd}
+.ed360-context-detail-callout span{display:block;color:#728aa4;font-size:9px;font-weight:850;letter-spacing:1px}
+.ed360-context-detail-callout strong{display:block;margin:5px 0;color:#254c76;font-size:17px;text-transform:capitalize}
+.ed360-context-detail-callout p{margin:0;color:#637d97;font-size:11px;line-height:1.55}
+.ed360-context-detail-callout aside{padding:10px;border:1px solid #e2e9f2;border-radius:8px;background:#fff}
+.ed360-context-detail-callout aside b{display:block;margin-bottom:3px;color:#43617e;font-size:10px}
+.ed360-context-detail-callout aside p{margin-bottom:8px;font-size:10px}
+.ed360-context-detail .ed360-record-details-grid{padding:0 22px}
+.ed360-payload-section{margin:16px 22px;padding:12px;border:1px solid #e2e9f2;border-radius:9px;background:#f9fbfd}
+.ed360-payload-section h3{margin:0 0 8px;color:#365573;font-size:12px}
+.ed360-payload-section pre{max-height:180px;overflow:auto;margin:0;color:#536f89;font:11px/1.55 ui-monospace,monospace;white-space:pre-wrap}
+.ed360-attendance-hero{display:flex;align-items:center;gap:15px;margin:0 0 16px;padding:20px 22px;border:1px solid #dce7f3;border-radius:16px;background:linear-gradient(115deg,#fff,#f4f8ff);box-shadow:0 7px 22px rgba(16,45,77,.045)}
+.ed360-attendance-hero>div:nth-child(2){flex:1}
+.ed360-attendance-stats{display:grid;gap:6px;justify-items:end;color:#66809a;font-size:11px}
+.ed360-attendance-stats b{color:#254a70;font-size:17px}
+.ed360-attendance-main-tabs{display:flex;gap:6px;margin-bottom:12px;padding:5px;border:1px solid #dce6ef;border-radius:10px;background:#fff}
+.ed360-attendance-main-tabs button{padding:10px 13px;border:1px solid transparent;border-radius:7px;background:#f7f9fc;color:#5c7691;font-size:12px;font-weight:750}
+.ed360-attendance-main-tabs button.active{border-color:#337cdd;background:#337cdd;color:#fff}
+.ed360-attendance-filter-card,.ed360-attendance-board{margin-bottom:14px;border:1px solid #dfe7f0;border-radius:13px;background:#fff;box-shadow:0 5px 16px rgba(23,53,82,.035)}
+.ed360-attendance-filter{display:flex;align-items:end;gap:11px;flex-wrap:wrap;padding:16px}
+.ed360-attendance-filter label{display:grid;gap:6px;min-width:145px;color:#657d96;font-size:10px;font-weight:800}
+.ed360-attendance-filter input,.ed360-attendance-filter select{height:37px;padding:0 9px;border:1px solid #d8e2ed;border-radius:7px;background:#fff;color:#294966;font-size:12px}
+.ed360-attendance-filter .ed360-attendance-search{display:flex;align-items:center;min-width:190px;margin-left:auto;padding:0 9px;border:1px solid #d8e2ed;border-radius:7px}
+.ed360-attendance-search input{width:100%;border:0;outline:0}
+.ed360-attendance-roster-meta{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 16px;border-top:1px solid #edf1f5;background:#f9fbfd}
+.ed360-attendance-roster-meta>div:first-child{display:grid;gap:3px}
+.ed360-attendance-roster-meta strong{color:#264766;font-size:13px}
+.ed360-attendance-roster-meta span{color:#8395a7;font-size:10px}
+.ed360-attendance-bulk{display:flex;gap:6px;flex-wrap:wrap}
+.ed360-attendance-bulk button{display:flex;align-items:center;gap:6px;padding:6px 9px;border:1px solid #e0e7ef;border-radius:7px;background:#fff;color:#4d6680;font-size:10px;font-weight:750}
+.ed360-attendance-bulk i,.attendance-legend i{display:inline-grid;place-items:center;width:19px;height:19px;border-radius:5px;font-size:10px;font-style:normal;font-weight:900}
+.mark-p{background:#e6f7ee;color:#178252}.mark-a{background:#fff0ee;color:#bd5047}.mark-l{background:#fff6e3;color:#a9771e}
+.ed360-attendance-board{overflow:hidden}
+.ed360-attendance-board-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:17px 18px;border-bottom:1px solid #edf1f5}
+.ed360-attendance-board-head>div>span{color:#8194aa;font-size:9px;font-weight:850;letter-spacing:1px}
+.ed360-attendance-board-head h2{margin:4px 0;color:#24425f;font-size:18px;font-weight:850}
+.ed360-attendance-board-head p{margin:0;color:#71879d;font-size:11px;line-height:1.5}
+.ed360-attendance-board-head>button{display:flex;align-items:center;gap:6px;padding:7px 10px;border:1px solid #dce5ef;border-radius:7px;background:#fff;color:#4d6884;font-size:10px;font-weight:750}
+.ed360-attendance-counts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:13px 16px;background:#f9fbfd}
+.ed360-attendance-counts>div{display:flex;align-items:center;gap:9px;padding:8px 10px;border:1px solid #e5ebf2;border-radius:8px;background:#fff}
+.ed360-attendance-counts b{color:#284967;font-size:19px;font-weight:850}
+.ed360-attendance-counts span{color:#7a8fa4;font-size:10px}
+.ed360-attendance-counts .count-p b{color:#208358}.ed360-attendance-counts .count-a b{color:#c3584f}.ed360-attendance-counts .count-l b{color:#ab7b28}
+.ed360-attendance-grid-table{overflow-x:auto}
+.attendance-grid-head,.attendance-grid-row{display:grid;grid-template-columns:110px minmax(170px,1.1fr) minmax(100px,.65fr) minmax(126px,.85fr) minmax(160px,1fr);align-items:center;gap:10px;min-width:760px;padding:10px 15px}
+.attendance-grid-head{background:#f6f9fc;color:#7388a0;font-size:9px;font-weight:850;letter-spacing:.5px;text-transform:uppercase}
+.attendance-grid-row{min-height:57px;border-top:1px solid #edf1f5;color:#48627d;font-size:11px}
+.attendance-grid-id{color:#8194a8;font-size:10px;font-weight:750}
+.attendance-grid-row strong{color:#294864;font-size:12px;font-weight:800}
+.attendance-mark-options{display:flex;gap:5px}
+.attendance-mark-button{display:grid;place-items:center;width:31px;height:30px;border:1px solid #dce5ed;border-radius:7px;background:#fff;color:#74879a;font-size:11px;font-weight:900}
+.attendance-mark-button.mark-p[aria-pressed=true]{border-color:#8bd1ac;background:#e5f7ec;color:#168351}
+.attendance-mark-button.mark-a[aria-pressed=true]{border-color:#e4a6a0;background:#fff0ee;color:#b64e46}
+.attendance-mark-button.mark-l[aria-pressed=true]{border-color:#e8cb8f;background:#fff6e4;color:#a77a21}
+.attendance-mark-button:disabled{opacity:.6}
+.attendance-note-input{width:100%;min-width:0;height:31px;padding:0 8px;border:1px solid #e1e8f0;border-radius:6px;color:#516b84;font-size:10px}
+.ed360-attendance-board-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:13px 16px;border-top:1px solid #e8eef4;background:#fbfcfe}
+.ed360-attendance-board-footer>div{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.attendance-legend{display:flex;align-items:center;gap:5px;color:#6f849a;font-size:10px}
+.ed360-last-saved{display:inline-flex;align-items:center;gap:4px;color:#258356;font-size:10px}
+.ed360-attendance-empty{padding:31px 16px;color:#7c90a5;font-size:12px;text-align:center}
+.ed360-attendance-empty.error{color:#aa4941}
+.ed360-attendance-method-note{margin:10px 2px;color:#71869b;font-size:11px;line-height:1.6}
+.ed360-attendance-method-note b{color:#375a7c}
+.ed360-attendance-method-note a{color:#2d70c5}
+.ed360-attendance-history-list{padding:10px 16px}
+.ed360-attendance-history-list>div{display:grid;grid-template-columns:minmax(100px,1fr) 80px 2fr;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid #eef2f6;color:#607890;font-size:11px}
+.ed360-attendance-history-list b{color:#34536f;font-size:10px}
+.ed360-device-notice{display:flex;align-items:flex-start;gap:12px;margin:16px;padding:14px;border:1px solid #f0dfb9;border-radius:10px;background:#fff9ed;color:#9a7025}
+.ed360-device-notice strong{display:block;color:#775b24;font-size:12px}
+.ed360-device-notice p{margin:4px 0 0;color:#8b754c;font-size:11px;line-height:1.55}
+.ed360-device-list{padding:0 16px 16px}
+.ed360-device-list>div{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid #edf1f5}
+.ed360-device-list>div>span{display:grid;place-items:center;width:36px;height:36px;border-radius:9px;background:#f0f4f9;color:#56718d}
+.ed360-device-list>div>div{display:grid;gap:3px;flex:1}
+.ed360-device-list b{color:#35516e;font-size:12px}
+.ed360-device-list small{color:#8194a8;font-size:10px}
+.ed360-device-list em{padding:5px 8px;border-radius:12px;background:#fff5e5;color:#987127;font-size:10px;font-style:normal;font-weight:750;text-transform:capitalize}
+@media(max-width:1000px){.ed360-workspace-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.ed360-export-actions{margin-left:0}}
+@media(max-width:720px){.ed360-workspace-hero,.ed360-attendance-hero{align-items:flex-start;flex-wrap:wrap;padding:16px}.ed360-workspace-hero-copy{flex-basis:calc(100% - 70px)}.ed360-workspace-hero-tools{width:100%;margin-left:62px}.ed360-workspace-hero-copy h1,.ed360-attendance-hero h1{font-size:23px}.ed360-workspace-toolbar{align-items:stretch;flex-direction:column}.ed360-workspace-filter,.ed360-workspace-search{max-width:none;width:100%;box-sizing:border-box}.ed360-export-actions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}.ed360-export-actions button{justify-content:center;padding:8px 5px;font-size:10px}.ed360-workspace-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.ed360-context-detail-callout{grid-template-columns:1fr}.ed360-form-row{grid-template-columns:1fr}.ed360-attendance-stats{width:100%;justify-items:start}.ed360-attendance-counts{grid-template-columns:repeat(2,minmax(0,1fr))}.ed360-attendance-filter{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.ed360-attendance-filter label{min-width:0}.ed360-attendance-filter .ed360-attendance-search{grid-column:1/-1;margin-left:0}.ed360-attendance-board-footer{align-items:stretch;flex-direction:column}.ed360-attendance-board-footer>div:last-child{justify-content:flex-end}}
+@media(max-width:430px){.ed360-workspace-kpis{grid-template-columns:1fr 1fr}.ed360-workspace-kpis article{padding:12px}.ed360-workspace-kpis article strong{font-size:20px}.ed360-attendance-filter{grid-template-columns:1fr}.ed360-attendance-filter .ed360-attendance-search{grid-column:auto}.ed360-attendance-board-head{flex-direction:column}.ed360-attendance-main-tabs{overflow:auto}.ed360-attendance-main-tabs button{flex:0 0 auto}}
+
+.ed360-dashboard-scope{display:flex;align-items:end;gap:10px;flex-wrap:wrap;margin:0 0 16px;padding:12px 14px;border:1px solid #dde7f1;border-radius:11px;background:#fff;box-shadow:0 4px 14px rgba(23,53,82,.03)}
+.ed360-dashboard-scope label{display:grid;gap:5px;min-width:145px;color:#7388a0;font-size:10px;font-weight:800}
+.ed360-dashboard-scope select{height:35px;padding:0 10px;border:1px solid #dbe4ed;border-radius:7px;background:#fbfcfe;color:#34516d;font-size:11px;font-weight:650}
+@media(max-width:650px){.ed360-dashboard-scope{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.ed360-dashboard-scope label{min-width:0}.ed360-dashboard-scope select{width:100%;min-width:0}}
+
+.ed360-module-specific-form{display:grid;gap:11px;padding:13px;border:1px solid #dce7f2;border-radius:10px;background:#f8fafd}
+.ed360-module-specific-heading span{color:#7890a8;font-size:9px;font-weight:850;letter-spacing:1px}
+.ed360-module-specific-heading p{margin:4px 0 0;color:#627a94;font-size:11px}
+.ed360-context-form-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.ed360-context-form-fields label{display:grid;gap:5px;color:#47627e;font-size:10px;font-weight:750}
+.ed360-context-form-fields input,.ed360-context-form-fields select,.ed360-context-form-fields textarea{width:100%;min-width:0;box-sizing:border-box;padding:9px 10px;border:1px solid #d8e2ed;border-radius:7px;background:#fff;color:#294560;font:inherit;font-size:11px}
+.ed360-context-form-fields textarea{resize:vertical}
+.ed360-workspace-integration-note{display:flex;align-items:flex-start;gap:9px;margin:0 0 13px;padding:11px 13px;border:1px solid #eedeb9;border-radius:9px;background:#fff9ed;color:#8a6c34}
+.ed360-workspace-integration-note b{flex:0 0 auto;color:#745821;font-size:11px}
+.ed360-workspace-integration-note span{color:#8b7855;font-size:10px;line-height:1.5}
+@media(max-width:620px){.ed360-context-form-fields{grid-template-columns:1fr}.ed360-workspace-integration-note{flex-direction:column;gap:4px}}
