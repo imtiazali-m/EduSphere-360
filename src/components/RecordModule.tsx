@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
-  AlertCircle, BadgeCheck, Check, Clock3, Edit3, GraduationCap, ImagePlus,
-  Plus, RefreshCw, Search, Trash2, Users, X,
+  AlertCircle, BadgeCheck, Check, Clock3, Edit3, Eye, GraduationCap, ImagePlus,
+  Plus, RefreshCw, Search, Trash2, Users, X, ChevronLeft, ChevronRight,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { createRecord, deleteRecord, listAccounts, listFeePayments, listRecords, recordFeePayment, updateRecord } from '../lib/data'
@@ -11,6 +11,8 @@ import { netInvoiceAmount, outstandingInvoiceBalance } from '../lib/finance'
 import type { AppMode, FieldConfig, ModuleConfig, RecordRow } from '../lib/types'
 import '../styles/student-module.css'
 import '../styles/faculty-module.css'
+import '../styles/module-workspaces.css'
+import { ModuleInsights } from './ModuleInsights'
 
 interface Props { module: ModuleConfig; onToast: (message: string, error?: boolean) => void }
 type StudentStatus = 'all' | 'active' | 'pending' | 'graduated' | 'inactive'
@@ -337,6 +339,9 @@ export function RecordModule({ module, onToast }: Props) {
   const [showForm, setShowForm] = useState(false)
   const [paymentTarget, setPaymentTarget] = useState<RecordRow | null>(null)
   const [historyTarget, setHistoryTarget] = useState<RecordRow | null>(null)
+  const [viewing, setViewing] = useState<RecordRow | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const pageSize = 10
   const [studentStatus, setStudentStatus] = useState<StudentStatus>('all')
   const [employeeStatus, setEmployeeStatus] = useState<EmployeeStatus>('all')
   const [feeStatus, setFeeStatus] = useState<FeeStatus>('all')
@@ -354,13 +359,18 @@ export function RecordModule({ module, onToast }: Props) {
     || (user!.role === 'exam_officer' && ['exams', 'exam_results'].includes(module.key))
   const canCollectFeePayment = module.key === 'fees' && ['owner', 'admin', 'accountant'].includes(user!.role)
 
-  async function load() {
+  async function load(options: { silent?: boolean } = {}): Promise<RecordRow[] | null> {
     setLoading(true)
-    try { setRows(await listRecords(mode, user!, module.table)) }
-    catch (error) { onToast(userFacingError(error, 'Could not load records. Refresh and try again.'), true) }
-    finally { setLoading(false) }
+    try {
+      const nextRows = await listRecords(mode, user!, module.table)
+      setRows(nextRows)
+      return nextRows
+    } catch (error) {
+      if (!options.silent) onToast(userFacingError(error, 'Could not load records. Refresh and try again.'), true)
+      return null
+    } finally { setLoading(false) }
   }
-  useEffect(() => { void load() }, [mode, user?.id, module.table])
+  useEffect(() => { setCurrentPage(1); void load() }, [mode, user?.id, user?.institutionId, module.table])
 
   const filtered = useMemo(() => rows.filter(row =>
     module.columns.some(column => String(row[column.key] ?? '').toLowerCase().includes(search.toLowerCase()))
@@ -386,6 +396,14 @@ export function RecordModule({ module, onToast }: Props) {
     const overdue = rows.filter(row => String(row.status ?? '').toLowerCase() === 'overdue').length
     return { invoices: rows.length, billed, received, outstanding, overdue }
   }, [rows])
+
+  const teacherFiltered = useMemo(() => filtered.filter(row => employeeStatus === 'all' || String(row.employment_status ?? 'active').toLowerCase() === employeeStatus), [filtered, employeeStatus])
+  const studentPageCount = Math.max(1, Math.ceil(studentFiltered.length / pageSize))
+  const teacherPageCount = Math.max(1, Math.ceil(teacherFiltered.length / pageSize))
+  const filteredPageCount = Math.max(1, Math.ceil(filtered.length / pageSize))
+  const studentPageRows = studentFiltered.slice((currentPage - 1) * pageSize, currentPage * pageSize)
+  const teacherPageRows = teacherFiltered.slice((currentPage - 1) * pageSize, currentPage * pageSize)
+  const filteredPageRows = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize)
 
   async function save(values: Record<string, unknown>) {
     setSaving(true)
@@ -560,15 +578,31 @@ export function RecordModule({ module, onToast }: Props) {
         if (collision) throw new Error('This time overlaps an existing class, teacher or room booking. Choose another slot.')
       }
 
-      if (targetEditing) await updateRecord(mode, user!, module.table, targetEditing.id, payload)
-      else await createRecord(mode, user!, module.table, payload)
+      if (targetEditing) {
+        await updateRecord(mode, user!, module.table, targetEditing.id, payload)
+      } else {
+        await createRecord(mode, user!, module.table, payload)
+      }
 
       if (newlyUploadedPhotoPath && targetEditing?.photo_path && typeof targetEditing.photo_path === 'string' && supabase) {
         // Best-effort cleanup after the new record path has been saved.
         await supabase.storage.from('institution-files').remove([targetEditing.photo_path])
       }
-      onToast(targetEditing ? 'Record updated successfully.' : 'Record created successfully.')
-      setShowForm(false); setEditing(null); await load()
+
+      setShowForm(false)
+      setEditing(null)
+      const refreshedRows = await load({ silent: module.key === 'students' })
+      if (module.key === 'students' && !targetEditing) {
+        const admissionNo = String(payload.admission_no ?? '')
+        const visible = Boolean(refreshedRows?.some(row => String(row.admission_no ?? '') === admissionNo))
+        if (!visible) {
+          onToast('The admission request was sent, but the new student could not be confirmed in the directory. No success has been reported. Refresh your sign-in or ask the institution owner to review this account’s access.', true)
+          return
+        }
+        onToast('Student admission saved successfully.')
+      } else {
+        onToast(targetEditing ? 'Record updated successfully.' : 'Record created successfully.')
+      }
     } catch (error) {
       if (newlyUploadedPhotoPath && supabase) {
         try { await supabase.storage.from('institution-files').remove([newlyUploadedPhotoPath]) } catch { /* best-effort cleanup */ }
