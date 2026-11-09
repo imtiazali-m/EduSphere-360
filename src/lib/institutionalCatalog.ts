@@ -136,7 +136,7 @@ export const existingRouteOverrides:Record<string,string>={
  'dashboard:statistics-and-kpi-cards':'overview',
  'dashboard:charts-and-comparative-analytics':'reports',
  'dashboard:calendar-and-events':'institutional:communication:delivery-history',
- 'dashboard:notification-centre':'announcements',
+ 'dashboard:notification-centre':'notifications',
  'dashboard:tasks-and-reminders':'work_tasks',
  'dashboard:pending-approvals':'institutional:administration:approval-and-workflows',
  'dashboard:recent-activities':'institutional:administration:administrative-audit',
