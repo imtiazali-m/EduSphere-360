@@ -4,6 +4,9 @@
 
 begin;
 
+create schema if not exists private;
+revoke all on schema private from public, anon, authenticated;
+
 -- Composite unique keys allow child rows to prove that every linked record
 -- belongs to the same institution, rather than relying on client filtering.
 create unique index if not exists teachers_id_institution_uq
@@ -194,7 +197,7 @@ create index if not exists employee_leave_teacher_status_idx
 create or replace function private.check_employee_leave_overlap()
 returns trigger
 language plpgsql
-security invoker
+security definer
 set search_path = pg_catalog, public
 as $$
 begin
@@ -219,6 +222,7 @@ create trigger employee_leave_overlap_guard
 before insert or update of teacher_id, institution_id, start_date, end_date, status
 on public.employee_leave_requests
 for each row execute function private.check_employee_leave_overlap();
+revoke all on function private.check_employee_leave_overlap() from public, anon, authenticated;
 
 -- Sensitive HR documents live in their own private bucket. The existing
 -- institution-files bucket is intentionally not reused because its current
@@ -272,9 +276,6 @@ create table if not exists public.employee_history (
 
 create index if not exists employee_history_teacher_idx
   on public.employee_history (institution_id, teacher_id, created_at desc);
-
-create schema if not exists private;
-revoke all on schema private from public, anon, authenticated;
 
 create or replace function private.audit_teacher_history()
 returns trigger
@@ -611,7 +612,13 @@ using (
   bucket_id = 'staff-files'
   and array_length(storage.foldername(name), 1) = 2
   and (
-    public.has_institution_role((storage.foldername(name))[1]::uuid, array['owner', 'admin'])
+    exists (
+      select 1 from public.memberships m
+      where m.institution_id::text = (storage.foldername(name))[1]
+        and m.user_id = (select auth.uid())
+        and m.status = 'active'
+        and m.role in ('owner', 'admin')
+    )
     or exists (
       select 1 from public.teachers t
       where t.id::text = (storage.foldername(name))[2]
@@ -628,7 +635,13 @@ with check (
   bucket_id = 'staff-files'
   and array_length(storage.foldername(name), 1) = 2
   and (
-    public.has_institution_role((storage.foldername(name))[1]::uuid, array['owner', 'admin'])
+    exists (
+      select 1 from public.memberships m
+      where m.institution_id::text = (storage.foldername(name))[1]
+        and m.user_id = (select auth.uid())
+        and m.status = 'active'
+        and m.role in ('owner', 'admin')
+    )
     or exists (
       select 1 from public.teachers t
       where t.id::text = (storage.foldername(name))[2]
