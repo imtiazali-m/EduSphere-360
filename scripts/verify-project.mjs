@@ -223,6 +223,34 @@ check('Module definitions and generic CRUD table allowlist remain valid', () => 
   for (const operation of ['createRecord', 'updateRecord', 'deleteRecord', 'recordFeePayment']) assert.ok(dataSource.includes(`export async function ${operation}`), `${operation} is missing`)
 })
 
+check('Student Record is a complete permission-aware multi-window workspace', () => {
+  const recordModule = read('src/components/RecordModule.tsx')
+  for (const label of ['Overview', 'Admissions', 'Student Directory', 'Student Profile', 'Class Placement', 'Guardians', 'Attendance', 'Exams & Results', 'Assignments', 'Fees & Payments', 'Timetable', 'Documents', 'History']) {
+    assert.ok(recordModule.includes("label: '" + label + "'"), 'Student workspace window is missing: ' + label)
+  }
+  for (const table of ['attendance', 'exams', 'exam_results', 'assignments', 'assignment_submissions', 'fee_invoices', 'timetable_entries']) {
+    assert.ok(recordModule.includes("'" + table + "'"), 'Student workspace is missing related data source: ' + table)
+  }
+  assert.ok(recordModule.includes('studentRelatedTables.map'), 'Student related workspaces must load their linked records')
+  assert.ok(recordModule.includes('setStudentWorkspaceTab'), 'Student workspace windows must navigate independently inside Student Record')
+  assert.ok(recordModule.includes('Student admission saved successfully.'), 'Student admission confirmation is missing')
+  assert.ok(recordModule.includes('Do not submit this admission again'), 'Unconfirmed admissions must not encourage duplicate submission')
+  assert.ok(recordModule.includes('This admission number is already registered'), 'Duplicate admission numbers must be checked before insert')
+  assert.ok(recordModule.includes("isStudent && field.name === 'status'") && recordModule.includes("? 'pending'"), 'New student admissions must start in Pending status')
+  assert.ok(recordModule.includes('student.guardian_email') === false, 'Student workspace must not invent unsupported database columns')
+  const dataSource = read('src/lib/data.ts')
+  assert.ok(dataSource.includes("if (table === 'students')"), 'Student insertion must use its specific authorization-safe path')
+  assert.ok(dataSource.includes("rpc('has_institution_role'") || dataSource.includes("rpc('has_institution_role',"), 'Student admission must verify existing owner/admin authorization')
+  assert.ok(dataSource.includes('The database accepted this admission'), 'Student admission must distinguish database insert from read-back confirmation')
+  const dashboard = read('src/components/Dashboard.tsx')
+  const navStart = dashboard.indexOf('<nav className="pro-navigation"')
+  const navEnd = dashboard.indexOf('</nav>', navStart)
+  const quickStart = dashboard.indexOf('className="pro-quick-access"')
+  assert.ok(quickStart > navEnd, 'Quick Access must remain outside the scrollable menu')
+  const workspaceCss = read('src/styles/module-workspaces.css')
+  assert.ok(workspaceCss.includes('.ed360-student-window-nav') && workspaceCss.includes('.ed360-student-profile-grid'), 'Student workspace styling is missing')
+})
+
 check('GitHub-hosted release pipeline builds assets and keeps production deploy manual', () => {
   const workflow = read('.github/workflows/cloudflare-pages-release.yml')
   for (const phrase of ['workflow_dispatch', 'npm ci --no-audit --no-fund', 'npm run verify:project', 'npm run test:user-errors', 'npm run test:finance', 'npm run test:file-access', 'npm run build', 'edusphere360-cloudflare-direct-upload.zip', 'cloudflare/wrangler-action@v4']) {
