@@ -4,7 +4,7 @@ import {
   Check, ChevronLeft, ChevronRight, ClipboardCheck, Edit3, Eye,
   FileText, FolderOpen, GraduationCap, HeartHandshake, History, ImagePlus,
   LayoutDashboard, Plus, RefreshCw, Search, ShieldCheck, Trash2,
-  UserRound, Users, Wallet, X,
+  UserRound, Users, X,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { createRecord, deleteRecord, listAccounts, listFeePayments, listRecords, recordFeePayment, updateRecord } from '../lib/data'
@@ -21,8 +21,8 @@ interface Props { module: ModuleConfig; onToast: (message: string, error?: boole
 type StudentStatus = 'all' | 'active' | 'pending' | 'graduated' | 'inactive'
 type EmployeeStatus = 'all' | 'active' | 'on_leave' | 'inactive'
 type FeeStatus = 'all' | 'unpaid' | 'partial' | 'overdue' | 'paid'
-type StudentWorkspaceTab = 'overview' | 'admissions' | 'directory' | 'profile' | 'classes' | 'guardians' | 'attendance' | 'results' | 'assignments' | 'fees' | 'timetable' | 'documents' | 'history'
-const studentRelatedTables = ['attendance', 'exams', 'exam_results', 'assignments', 'assignment_submissions', 'fee_invoices', 'timetable_entries'] as const
+type StudentWorkspaceTab = 'overview' | 'admissions' | 'directory' | 'profile' | 'classes' | 'guardians' | 'attendance' | 'results' | 'assignments' | 'timetable' | 'documents' | 'history'
+const studentRelatedTables = ['attendance', 'exams', 'exam_results', 'assignments', 'assignment_submissions', 'timetable_entries'] as const
 
 function makeEmployeeNumber() {
   const suffix = crypto.randomUUID().replace(/-/g, '').slice(0, 8).toUpperCase()
@@ -491,7 +491,6 @@ export function RecordModule({ module, onToast }: Props) {
   const studentAttendanceRows = (studentRelatedRows.attendance ?? []).filter(row => matchesStudent(row, selectedStudent))
   const studentResultRows = (studentRelatedRows.exam_results ?? []).filter(row => matchesStudent(row, selectedStudent))
   const studentSubmissionRows = (studentRelatedRows.assignment_submissions ?? []).filter(row => matchesStudent(row, selectedStudent))
-  const studentFeeRows = (studentRelatedRows.fee_invoices ?? []).filter(row => matchesStudent(row, selectedStudent))
   const studentClass = String(selectedStudent?.class_name ?? '')
   const studentAssignmentRows = (studentRelatedRows.assignments ?? []).filter(row => !studentClass || String(row.class_name ?? '').toLowerCase() === studentClass.toLowerCase())
   const studentExamRows = (studentRelatedRows.exams ?? []).filter(row => !studentClass || String(row.class_name ?? '').toLowerCase() === studentClass.toLowerCase())
@@ -779,27 +778,23 @@ export function RecordModule({ module, onToast }: Props) {
       { key: 'classes' as const, label: 'Class Placement', icon: BookOpen },
       { key: 'guardians' as const, label: 'Guardians', icon: HeartHandshake },
       { key: 'attendance' as const, label: 'Attendance', icon: CalendarCheck },
-      { key: 'results' as const, label: 'Exams & Results', icon: ClipboardCheck },
+      { key: 'results' as const, label: 'Exam Results', icon: ClipboardCheck },
       { key: 'assignments' as const, label: 'Assignments', icon: FileText },
-      { key: 'fees' as const, label: 'Fees & Payments', icon: Wallet },
-      { key: 'timetable' as const, label: 'Timetable', icon: CalendarDays },
-      { key: 'documents' as const, label: 'Documents', icon: FolderOpen },
-      { key: 'history' as const, label: 'History', icon: History },
+      { key: 'timetable' as const, label: 'Student Timetable', icon: CalendarDays },
+      { key: 'documents' as const, label: 'Student Documentation', icon: FolderOpen },
+      { key: 'history' as const, label: 'Student History', icon: History },
     ]
     const ownerOrAdmin = ['owner', 'admin'].includes(user!.role)
     const visibleTabItems = tabItems.filter(item => {
       if (ownerOrAdmin) return true
       if (user!.role === 'teacher') return ['overview', 'directory', 'profile', 'classes', 'attendance', 'results', 'assignments', 'timetable', 'history'].includes(item.key)
-      return ['overview', 'profile', 'classes', 'guardians', 'attendance', 'results', 'assignments', 'fees', 'timetable', 'documents', 'history'].includes(item.key)
+      return ['overview', 'profile', 'classes', 'guardians', 'attendance', 'results', 'assignments', 'timetable', 'documents', 'history'].includes(item.key)
     })
     const pendingRows = rows.filter(row => String(row.status ?? 'active').toLowerCase() === 'pending')
     const presentCount = studentAttendanceRows.filter(row => ['present', 'late'].includes(String(row.status ?? '').toLowerCase())).length
     const absentCount = studentAttendanceRows.filter(row => String(row.status ?? '').toLowerCase() === 'absent').length
     const attendanceRate = studentAttendanceRows.length ? Math.round(presentCount / studentAttendanceRows.length * 100) : 0
     const publishedResults = studentResultRows.filter(row => String(row.result_status ?? '').toLowerCase() === 'published')
-    const totalBilled = studentFeeRows.reduce((sum, row) => sum + netInvoiceAmount(row), 0)
-    const totalPaid = studentFeeRows.reduce((sum, row) => sum + Math.max(0, Number(row.paid_amount ?? 0)), 0)
-    const totalOutstanding = studentFeeRows.reduce((sum, row) => sum + outstandingInvoiceBalance(row), 0)
     const studentTimeline = [
       ...(selectedStudent ? [{
         id: 'student-' + selectedStudent.id,
@@ -811,7 +806,6 @@ export function RecordModule({ module, onToast }: Props) {
       ...studentAttendanceRows.map(row => ({ id: 'attendance-' + row.id, date: String(row.attendance_date ?? row.created_at ?? ''), label: 'Attendance', detail: String(row.status ?? 'Attendance') + ' · ' + String(row.class_name ?? studentClass), status: String(row.status ?? '') })),
       ...studentResultRows.map(row => ({ id: 'result-' + row.id, date: String(row.created_at ?? ''), label: 'Examination result', detail: String(row.exam_title ?? 'Examination') + ' · ' + String(row.grade ?? row.marks_obtained ?? 'Marks recorded'), status: String(row.result_status ?? 'draft') })),
       ...studentSubmissionRows.map(row => ({ id: 'submission-' + row.id, date: String(row.submitted_at ?? row.created_at ?? ''), label: 'Assignment submission', detail: String(row.assignment_title ?? 'Assignment') + ' · ' + String(row.status ?? 'submitted'), status: String(row.status ?? '') })),
-      ...studentFeeRows.map(row => ({ id: 'fee-' + row.id, date: String(row.invoice_date ?? row.created_at ?? ''), label: 'Fee invoice', detail: String(row.invoice_no ?? row.invoice_number ?? 'Invoice') + ' · ' + String(row.fee_title ?? 'Fees'), status: String(row.status ?? '') })),
     ].filter(item => item.date).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 30)
     const renderTable = (dataRows: RecordRow[], columns: { key: string; label: string }[], emptyMessage: string) => dataRows.length === 0
       ? <div className="ed360-student-empty"><span><FolderOpen size={21}/></span><strong>No records to display</strong><p>{emptyMessage}</p></div>
@@ -924,7 +918,7 @@ export function RecordModule({ module, onToast }: Props) {
             <section className="ed360-student-panel"><header><div><span className="ed360-student-panel-icon"><UserRound size={16}/></span><div><h3>Personal information</h3><p>Details stored in the student record.</p></div></div></header><dl><div><dt>Full name</dt><dd>{String(selectedStudent.full_name ?? '—')}</dd></div><div><dt>Admission ID</dt><dd>{String(selectedStudent.admission_no ?? '—')}</dd></div><div><dt>Email address</dt><dd>{String(selectedStudent.email ?? '—')}</dd></div><div><dt>Date of birth</dt><dd>{niceDate(selectedStudent.date_of_birth)}</dd></div><div><dt>Registered on</dt><dd>{niceDate(selectedStudent.created_at)}</dd></div></dl></section>
             <section className="ed360-student-panel"><header><div><span className="ed360-student-panel-icon green"><BookOpen size={16}/></span><div><h3>Academic placement</h3><p>Current class/programme information.</p></div></div></header><dl><div><dt>Class / programme</dt><dd>{String(selectedStudent.class_name ?? 'Not assigned')}</dd></div><div><dt>Student status</dt><dd>{statusLabel(selectedStudent.status)}</dd></div><div><dt>Academic session</dt><dd>Not linked in the current student record</dd></div><div><dt>Section</dt><dd>Not stored in the current student record</dd></div></dl></section>
             <section className="ed360-student-panel"><header><div><span className="ed360-student-panel-icon violet"><HeartHandshake size={16}/></span><div><h3>Parent / guardian</h3><p>Guardian contact details stored with the student.</p></div></div></header><dl><div><dt>Guardian name</dt><dd>{String(selectedStudent.guardian_name ?? 'Not provided')}</dd></div><div><dt>Guardian email</dt><dd>{String(selectedStudent.guardian_email ?? 'Not provided')}</dd></div></dl></section>
-            <section className="ed360-student-panel"><header><div><span className="ed360-student-panel-icon amber"><Activity size={16}/></span><div><h3>Student activity</h3><p>Related records visible to your role.</p></div></div></header><dl><div><dt>Attendance entries</dt><dd>{studentAttendanceRows.length}</dd></div><div><dt>Published results</dt><dd>{publishedResults.length}</dd></div><div><dt>Assignment submissions</dt><dd>{studentSubmissionRows.length}</dd></div><div><dt>Fee invoices</dt><dd>{studentFeeRows.length}</dd></div></dl></section>
+            <section className="ed360-student-panel"><header><div><span className="ed360-student-panel-icon amber"><Activity size={16}/></span><div><h3>Student activity</h3><p>Related records visible to your role.</p></div></div></header><dl><div><dt>Attendance entries</dt><dd>{studentAttendanceRows.length}</dd></div><div><dt>Published results</dt><dd>{publishedResults.length}</dd></div><div><dt>Assignment submissions</dt><dd>{studentSubmissionRows.length}</dd></div></dl></section>
           </div>
         </> : <div className="ed360-student-empty"><strong>No student selected</strong><p>Register or select a student from the directory to open a profile.</p></div>}
       </section>}
@@ -967,11 +961,6 @@ export function RecordModule({ module, onToast }: Props) {
         </section>
       </div>}
 
-      {studentWorkspaceTab === 'fees' && <section className="ed360-student-panel ed360-student-full-panel"><header><div><span className="ed360-student-panel-icon amber"><Wallet size={17}/></span><div><h2>Fees & payment account</h2><p>Invoice and payment information linked to the selected student.</p></div></div><span className="ed360-student-record-count">{studentFeeRows.length} invoices</span></header>
-        <div className="ed360-student-status-cards"><div><small>Total invoiced</small><strong>PKR {totalBilled.toLocaleString(undefined,{maximumFractionDigits:0})}</strong><span>Net amount billed</span></div><div><small>Paid</small><strong>PKR {totalPaid.toLocaleString(undefined,{maximumFractionDigits:0})}</strong><span>Payments received</span></div><div><small>Outstanding</small><strong>PKR {totalOutstanding.toLocaleString(undefined,{maximumFractionDigits:0})}</strong><span>Remaining balance</span></div><div><small>Unpaid / overdue</small><strong>{studentFeeRows.filter(row=>['unpaid','overdue','partial'].includes(String(row.status??'').toLowerCase())).length}</strong><span>Invoices needing attention</span></div></div>
-        {renderTable(studentFeeRows,[{key:'invoice_no',label:'Invoice'},{key:'fee_title',label:'Description'},{key:'amount',label:'Amount (PKR)'},{key:'paid_amount',label:'Paid (PKR)'},{key:'due_date',label:'Due date'},{key:'status',label:'Status'}],'No fee invoices are currently linked to this student.')}
-      </section>}
-
       {studentWorkspaceTab === 'timetable' && <section className="ed360-student-panel ed360-student-full-panel"><header><div><span className="ed360-student-panel-icon"><CalendarDays size={17}/></span><div><h2>Class timetable</h2><p>Weekly periods for {studentClass || 'the selected class'}.</p></div></div><span className="ed360-student-record-count">{studentTimetableRows.length} periods</span></header>
         {renderTable(studentTimetableRows,[{key:'weekday',label:'Day'},{key:'start_time',label:'Start'},{key:'end_time',label:'End'},{key:'subject',label:'Subject'},{key:'teacher_name',label:'Teacher'},{key:'room',label:'Room'}],'No timetable entries are available for this class.')}
       </section>}
@@ -981,7 +970,7 @@ export function RecordModule({ module, onToast }: Props) {
         <p className="ed360-student-limitation-note">The current student data structure stores a photograph path but does not have a separate student-document register. General institution files remain available under Files & Documentation.</p>
       </section>}
 
-      {studentWorkspaceTab === 'history' && <section className="ed360-student-panel ed360-student-full-panel"><header><div><span className="ed360-student-panel-icon violet"><History size={17}/></span><div><h2>Student activity history</h2><p>Registration, attendance, examination, submission and invoice events visible to your role.</p></div></div><span className="ed360-student-record-count">{studentTimeline.length} events</span></header>
+      {studentWorkspaceTab === 'history' && <section className="ed360-student-panel ed360-student-full-panel"><header><div><span className="ed360-student-panel-icon violet"><History size={17}/></span><div><h2>Student activity history</h2><p>Registration, attendance, examination and assignment activity visible to your role.</p></div></div><span className="ed360-student-record-count">{studentTimeline.length} events</span></header>
         {studentTimeline.length ? <div className="ed360-student-timeline">{studentTimeline.map(item=><div className="ed360-student-timeline-item" key={item.id}><i/><div><strong>{item.label}</strong><p>{item.detail}</p></div><time>{niceDate(item.date)}</time><span className={'status-pill status-' + item.status.toLowerCase()}>{item.status.replaceAll('_',' ')}</span></div>)}</div> : <div className="ed360-student-empty"><strong>No student activity history yet</strong><p>Linked activity will appear as attendance, results, submissions and fee records are created.</p></div>}
       </section>}
 
