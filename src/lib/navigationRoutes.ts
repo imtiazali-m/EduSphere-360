@@ -18,7 +18,7 @@ export const navigationRoutes: Record<string, string> = {
   'Assignment Submission': 'assignment_submissions',
   Timetable: 'timetable',
   'Fees Invoices': 'fees',
-  Announcement: 'announcements',
+  Announcements: 'announcements',
   'Work Management': 'work_tasks',
   Reports: 'reports',
 }
