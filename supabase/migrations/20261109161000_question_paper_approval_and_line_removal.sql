@@ -1,20 +1,6 @@
 -- Paper approval is a guarded transaction that validates published questions and marks totals.
 begin;
 
-create policy assessment_paper_items_delete on public.assessment_paper_items
-for delete to authenticated
-using (
- exists(
-  select 1 from public.assessment_papers p
-  where p.id=paper_id and p.institution_id=assessment_paper_items.institution_id
-    and p.status='draft'
-    and (
-      public.has_institution_role(p.institution_id,array['owner','admin','exam_officer']::text[])
-      or (public.has_institution_role(p.institution_id,array['teacher']::text[]) and p.created_by=(select auth.uid()))
-    )
- )
-);
-
 create or replace function public.approve_assessment_paper(p_institution_id uuid,p_paper_id uuid)
 returns public.assessment_papers
 language plpgsql
