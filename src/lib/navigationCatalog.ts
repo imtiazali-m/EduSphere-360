@@ -6,9 +6,9 @@ export const navigationCatalog: NavigationCatalogGroup[] = [
   { key: 'dashboard', label: 'Dashboard', icon: 'LayoutDashboard', items: [] },
   { key: 'students', label: 'Admission & Students', icon: 'GraduationCap', items: ['Student Record'] },
   { key: 'people', label: 'People & Staff', icon: 'Users', items: ['Faculty & Staff', 'User Account'] },
-  { key: 'institution', label: 'Institute Administration', icon: 'Building2', items: ['Departments', 'Programs', 'Class Sections', 'Academic Session', 'Subjects', 'Rooms & Facilities', 'Files & Documentation'] },
+  { key: 'institution', label: 'Institute Administration', icon: 'Building2', items: ['Departments', 'Programs', 'Class Sections', 'Academic Sessions', 'Subjects', 'Rooms & Facilities', 'Files & Documentation'] },
   { key: 'academics', label: 'Academic Management', icon: 'BookOpen', items: ['Attendance Registration', 'Examination', 'Exam Results', 'Assignments', 'Assignment Submission', 'Timetable'] },
-  { key: 'finance', label: 'Finance & Payments', icon: 'Wallet', items: ['Fees Invoice'] },
-  { key: 'communication', label: 'Communication', icon: 'Megaphone', items: ['Announcement'] },
+  { key: 'finance', label: 'Finance & Payments', icon: 'Wallet', items: ['Fees Invoices'] },
+  { key: 'communication', label: 'Communication', icon: 'Megaphone', items: ['Announcements'] },
   { key: 'operations', label: 'Operations & Reports', icon: 'ClipboardList', items: ['Work Management', 'Reports'] },
 ]

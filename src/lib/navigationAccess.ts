@@ -4,38 +4,38 @@ import { navigationCatalog } from './navigationCatalog'
 const rolePageAccess: Record<AppRole, Record<string, string[]>> = {
   owner: {
     dashboard: [], students: ['Student Record'], people: ['Faculty & Staff', 'User Account'],
-    institution: ['Departments', 'Programs', 'Class Sections', 'Academic Session', 'Subjects', 'Rooms & Facilities', 'Files & Documentation'],
+    institution: ['Departments', 'Programs', 'Class Sections', 'Academic Sessions', 'Subjects', 'Rooms & Facilities', 'Files & Documentation'],
     academics: ['Attendance Registration', 'Examination', 'Exam Results', 'Assignments', 'Assignment Submission', 'Timetable'],
-    finance: ['Fees Invoice'], communication: ['Announcement'], operations: ['Work Management', 'Reports'],
+    finance: ['Fees Invoices'], communication: ['Announcements'], operations: ['Work Management', 'Reports'],
   },
   admin: {
     dashboard: [], students: ['Student Record'], people: ['Faculty & Staff', 'User Account'],
-    institution: ['Departments', 'Programs', 'Class Sections', 'Academic Session', 'Subjects', 'Rooms & Facilities', 'Files & Documentation'],
+    institution: ['Departments', 'Programs', 'Class Sections', 'Academic Sessions', 'Subjects', 'Rooms & Facilities', 'Files & Documentation'],
     academics: ['Attendance Registration', 'Examination', 'Exam Results', 'Assignments', 'Assignment Submission', 'Timetable'],
-    finance: ['Fees Invoice'], communication: ['Announcement'], operations: ['Work Management', 'Reports'],
+    finance: ['Fees Invoices'], communication: ['Announcements'], operations: ['Work Management', 'Reports'],
   },
   teacher: {
     dashboard: [], students: ['Student Record'],
     academics: ['Attendance Registration', 'Examination', 'Exam Results', 'Assignments', 'Assignment Submission', 'Timetable'],
-    communication: ['Announcement'], operations: ['Work Management'],
+    communication: ['Announcements'], operations: ['Work Management'],
   },
   student: {
     dashboard: [], students: ['Student Record'],
     academics: ['Attendance Registration', 'Exam Results', 'Assignments', 'Assignment Submission', 'Timetable'],
-    finance: ['Fees Invoice'], communication: ['Announcement'],
+    finance: ['Fees Invoices'], communication: ['Announcements'],
   },
   parent: {
     dashboard: [],
     academics: ['Attendance Registration', 'Exam Results', 'Assignments', 'Timetable'],
-    finance: ['Fees Invoice'], communication: ['Announcement'],
+    finance: ['Fees Invoices'], communication: ['Announcements'],
   },
   accountant: {
-    dashboard: [], finance: ['Fees Invoice'], operations: ['Work Management', 'Reports'],
+    dashboard: [], finance: ['Fees Invoices'], operations: ['Work Management', 'Reports'],
   },
   exam_officer: {
     dashboard: [],
     academics: ['Examination', 'Exam Results'],
-    communication: ['Announcement'], operations: ['Work Management', 'Reports'],
+    communication: ['Announcements'], operations: ['Work Management', 'Reports'],
   },
 }
 

@@ -182,7 +182,6 @@ function Overview({ onNavigate }: { onNavigate: (key: string) => void }) {
   const [loading, setLoading] = useState(true)
   const [loadNote, setLoadNote] = useState('')
   const available = useMemo(() => modulesForRole(user!.role), [user?.role])
-  const menuGroups = useMemo(() => roleNavigationGroups(user!.role), [user?.role])
 
   useEffect(() => {
     let live = true
@@ -272,22 +271,6 @@ function Overview({ onNavigate }: { onNavigate: (key: string) => void }) {
         <div className="pro-attendance-content"><div className="pro-attendance-ring" style={{ background: `conic-gradient(#b4d96e 0 ${presentPercent}%, #e8b16e ${presentPercent}% ${attendance.length ? Math.min(100, presentPercent + Math.round(lateCount / attendance.length * 100)) : 0}%, #e6e9e1 0)` }}><div><b>{attendance.length ? `${presentPercent}%` : '—'}</b><small>Present</small></div></div><div className="pro-attendance-legend"><div><i className="present"/><span>Present</span><b>{loading ? '—' : presentCount}</b></div><div><i className="late"/><span>Late</span><b>{loading ? '—' : lateCount}</b></div><div><i className="absent"/><span>Absent</span><b>{loading ? '—' : absentCount}</b></div><div className="pro-attendance-total"><span>Total records</span><b>{loading ? '—' : attendance.length}</b></div></div></div>
       </section>}
 
-      <section className="pro-dashboard-panel pro-menu-overview">
-        <div className="pro-panel-heading"><div><span className="pro-section-kicker">YOUR ROLE-BASED WORKSPACE</span><h2>Menu overview</h2><p>Open any destination below. Each shortcut opens its matching workspace and respects your account permissions.</p></div><span className="pro-panel-count">{menuGroups.reduce((count, group) => count + (group.key === 'dashboard' ? 1 : group.items.length), 0)} destinations</span></div>
-        <div className="pro-menu-overview-grid">{menuGroups.map(group => {
-          const GroupIcon = catalogIcons[group.icon] ?? LayoutDashboard
-          const items = group.key === 'dashboard' ? ['Dashboard'] : group.items
-          return <article className="pro-menu-group-card" key={group.key}>
-            <div className="pro-menu-group-title"><span><GroupIcon size={16}/></span><b>{group.label}</b><small>{items.length}</small></div>
-            <div className="pro-menu-group-links">{items.map(item => {
-              const route = pageRoutes[item]
-              const ItemIcon = pageIcon(item, GroupIcon)
-              return <button type="button" key={item} onClick={() => route && onNavigate(route)} disabled={!route}><ItemIcon size={13}/><span>{item}</span><ArrowRight size={12}/></button>
-            })}</div>
-          </article>
-        })}</div>
-      </section>
-
       <div className="pro-dashboard-note"><ShieldCheck size={17}/><span><b>Your workspace is permission-aware.</b> All figures and records shown here reflect information available to your signed-in role.</span></div>
     </section>
   </div>
@@ -331,7 +314,7 @@ const quickAccessByRole: Record<AppRole, Array<{ title: string; key: string; ico
 
 const adminModuleLabels: Record<string, string> = {
   departments: 'Departments', programs: 'Programs', classes: 'Class Sections',
-  academic_sessions: 'Academic Session', subjects: 'Subjects', rooms: 'Rooms & Facilities',
+  academic_sessions: 'Academic Sessions', subjects: 'Subjects', rooms: 'Rooms & Facilities',
 }
 
 export function Dashboard({ onToast }: Props) {

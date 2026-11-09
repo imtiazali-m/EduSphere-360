@@ -69,7 +69,7 @@ const MODULES: ModuleConfig[] = [
   },
   {
     key: 'academic_sessions',
-    label: 'Academic Session',
+    label: 'Academic Sessions',
     singular: 'Academic Session',
     description: 'Manage academic years and sessions.',
   },
