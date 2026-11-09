@@ -41,7 +41,7 @@ const moduleIcons: Record<string, LucideIcon> = {
 const catalogIcons: Record<string, LucideIcon> = {
   LayoutDashboard, BrainCircuit, Building2, School, BookOpen, GraduationCap, Users, Calculator,
   Wallet, Banknote, CalendarCheck, CalendarDays, BookOpenCheck, HeartHandshake, MessageSquare,
-  FileQuestion, ClipboardCheck, ClipboardList, ListChecks, BarChart3, Award, Library, Wrench, FileText, UserRound, Megaphone,
+  FileQuestion, ClipboardCheck, ClipboardList, ListChecks, BarChart3, Award, Library, Wrench, FileText, UserRound, Megaphone, Database, DoorOpen, Settings, ShieldCheck,
 }
 
 function pageIcon(title: string, fallback: LucideIcon): LucideIcon {
