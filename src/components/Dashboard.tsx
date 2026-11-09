@@ -23,6 +23,7 @@ import AdministrationModule from './AdministrationModule'
 import { ReportsModule } from './ReportsModule'
 import { ProfileModule } from './ProfileModule'
 import { FacultyWorkspace } from './FacultyWorkspace'
+import { institutionalMenu } from '../lib/institutionalCatalog'
 import { InstitutionalWorkspace } from './InstitutionalWorkspace'
 import { AttendanceWorkspace } from './AttendanceWorkspace'
 
@@ -66,11 +67,13 @@ function pageIcon(title: string, fallback: LucideIcon): LucideIcon {
 const pageRoutes = navigationRoutes
 
 const tableLabels: Record<string, string> = {
+  institutional_records: 'Institutional operation',
   students: 'Student', teachers: 'Faculty member', attendance: 'Attendance entry', exams: 'Examination',
   exam_results: 'Exam result', fee_invoices: 'Fee invoice', assignments: 'Assignment',
   timetable_entries: 'Timetable entry', announcements: 'Announcement', departments: 'Department', programs: 'Program', classes: 'Class section', academic_sessions: 'Academic session', subjects: 'Subject', rooms: 'Room / facility',
 }
 const tableToModule: Record<string, string> = {
+  institutional_records: 'reports',
   fee_invoices: 'fees', timetable_entries: 'timetable', departments: 'admin:departments', programs: 'admin:programs', classes: 'admin:classes', academic_sessions: 'admin:academic_sessions', subjects: 'admin:subjects', rooms: 'admin:rooms',
 }
 
@@ -169,8 +172,8 @@ function Overview({ onNavigate }: { onNavigate: (key: string) => void }) {
       setLoadNote('')
       const adminTables = ['departments', 'programs', 'classes', 'academic_sessions', 'subjects', 'rooms']
       const dashboardTables = user!.role === 'owner' || user!.role === 'admin'
-        ? [...available.map(module => module.table), ...adminTables]
-        : available.map(module => module.table)
+        ? [...available.map(module => module.table), ...adminTables, 'institutional_records']
+        : [...available.map(module => module.table), 'institutional_records']
       const uniqueTables = [...new Set(dashboardTables)]
       const entries = await Promise.all(uniqueTables.map(async table => {
         try { return [table, await listRecords(mode, user!, table)] as const }
@@ -227,7 +230,9 @@ function Overview({ onNavigate }: { onNavigate: (key: string) => void }) {
   const chartY = (value: number) => 188 - (value / chartMaximum) * 148
   const chartPoints = (values: number[]) => values.map((value, index) => chartX(index) + ',' + chartY(value)).join(' ')
 
+  const institutionalOperations = getRows(data, 'institutional_records')
   const moduleBreakdown = [
+    { label: 'Institutional Workflows', count: institutionalOperations.length, color: '#687bd6' },
     { label: 'Admission & Students', count: students.length, color: '#2877ee' },
     { label: 'People & Staff', count: teachers.length, color: '#13a36b' },
     { label: 'Institute Administration', count: departments.length + programs.length + classes.length + subjects.length + rooms.length, color: '#11a8b6' },
@@ -342,7 +347,8 @@ function Overview({ onNavigate }: { onNavigate: (key: string) => void }) {
         {loading ? <div className="ed360-empty">Loading recent records…</div> : recent.length ? <div className="ed360-recent-list">{recent.map(({ table, row }, index) => {
           const title = firstText(row, ['full_name', 'title', 'fee_title', 'student_name', 'exam_title', 'admission_no', 'name'], tableLabels[table] ?? 'Record')
           const detail = firstText(row, ['class_name', 'subject', 'department', 'admission_no', 'audience'], tableLabels[table] ?? 'Institution record')
-          const route = tableToModule[table] ?? table
+          const operationGroup = table === 'institutional_records' ? institutionalMenu.find(group => group.dataModule === String(row.module_key ?? '')) : undefined
+          const route = operationGroup ? 'institutional:' + operationGroup.key + ':' + String(row.record_type ?? '') : tableToModule[table] ?? table
           const Icon = moduleIcons[route] ?? FileText
           return <button type="button" className="ed360-recent-row" key={table + '-' + row.id} onClick={() => onNavigate(route)}><span className={'ed360-recent-icon ed360-recent-icon-' + (index + 1)}><Icon size={16}/></span><span className="ed360-recent-copy"><strong>{title}</strong><small>{tableLabels[table] ?? 'Record'} · {detail}</small></span><time>{shortDate(row.created_at)}</time></button>
         })}</div> : <div className="ed360-empty">Your recent activity will appear here as records are added.</div>}
