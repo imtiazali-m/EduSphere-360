@@ -32,7 +32,6 @@ const dateValue = (row: RecordRow, keys: string[]) => {
 const countStatus = (rows: RecordRow[], key: string, value: string) =>
   rows.filter(row => String(row[key] ?? '').toLowerCase().replaceAll(' ', '_') === value).length
 const money = (value: number) => 'PKR ' + value.toLocaleString('en-PK', { maximumFractionDigits: 0 })
-const formatDate = (value: Date) => value.toLocaleDateString(undefined, { day: 'numeric', month: 'short' })
 
 function makeSummary(module: ModuleConfig, rows: RecordRow[]): WorkspaceSummary {
   const now = new Date()
@@ -141,7 +140,6 @@ function makeSummary(module: ModuleConfig, rows: RecordRow[]): WorkspaceSummary 
       const completed = count('status', 'completed')
       const published = count('status', 'published')
       const upcoming = rows.filter(row => future(row, ['exam_date'])).length
-      const types = ['midterm', 'final', 'quiz', 'monthly', 'practical', 'other']
       return {
         metrics: [
           metric('Examinations', String(rows.length), 'Scheduled exam records', 'blue', ClipboardCheck),
