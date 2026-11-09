@@ -435,7 +435,7 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
   const [documentVisibility, setDocumentVisibility] = useState('staff_only')
   const [documentNotes, setDocumentNotes] = useState('')
   const [employeeStatus, setEmployeeStatus] = useState<EmployeeStatus>('all')
-  const [operationalView, setOperationalView] = useState('')
+  const [operationalView, setOperationalView] = useState(initialWindow ?? '')
   const operationalWorkspace = operationalWorkspaceConfigs[module.key]
   const activeOperationalView = operationalWorkspace?.views.find(item => item.key === operationalView) ?? operationalWorkspace?.views[0]
   const canEdit = ['owner', 'admin'].includes(user!.role)
