@@ -14,6 +14,11 @@ function localDateString(date = new Date()) {
 // Fee payments are excluded: they must be created through the atomic SQL RPC.
 const ALLOWED_TABLES = new Set([
   'students',
+  'parent_guardians',
+  'guardian_students',
+  'student_placements',
+  'student_documents',
+  'student_history',
   'teachers',
   'designations',
   'teacher_assignments',
@@ -37,6 +42,9 @@ const ALLOWED_TABLES = new Set([
   'subjects',
   'rooms',
 ])
+
+const READ_ONLY_TABLES = new Set(['student_history'])
+const TABLES_WITHOUT_CREATED_BY = new Set(['parent_guardians', 'guardian_students', 'student_documents'])
 
 function checkTable(table: string) {
   if (!ALLOWED_TABLES.has(table)) throw new Error(`Unsupported data module: ${table}`)
@@ -100,6 +108,12 @@ async function filterRowsForRole(
 
   if (!user.linkedStudentId) return []
   if (table === 'students') return rows.filter((row) => row.id === user.linkedStudentId)
+  if (table === 'guardian_students') return rows.filter((row) => row.student_id === user.linkedStudentId)
+  if (table === 'parent_guardians') {
+    const links = await listRecords(mode, user, 'guardian_students')
+    const linkedIds = new Set(links.map(row => String(row.guardian_id ?? '')))
+    return rows.filter(row => linkedIds.has(row.id))
+  }
 
   if (table === 'exam_results') {
     return rows.filter((row) => row.student_id === user.linkedStudentId && row.result_status === 'published')
@@ -143,7 +157,10 @@ export async function createRecord(
   checkTable(table)
   requireInstitution(user)
   const actorId = await verifyCloudActor(user)
-  const insertPayload = { ...payload, institution_id: user.institutionId, created_by: actorId }
+  if (READ_ONLY_TABLES.has(table)) throw new Error(`The ${table} table is read-only.`)
+  const insertPayload: Record<string, unknown> = { ...payload, institution_id: user.institutionId }
+  if (!TABLES_WITHOUT_CREATED_BY.has(table)) insertPayload.created_by = actorId
+  if (table === 'student_documents') insertPayload.uploaded_by = actorId
 
   if (table === 'students') {
     if (!['owner', 'admin'].includes(user.role)) {
@@ -192,6 +209,7 @@ export async function updateRecord(
   checkTable(table)
   requireInstitution(user)
   await verifyCloudActor(user)
+  if (READ_ONLY_TABLES.has(table)) throw new Error(`The ${table} table is read-only.`)
   if (table === 'students') {
     // Keep the update request independent from the SELECT policy. The
     // workspace verifies the change by reloading the permitted student list.
@@ -221,6 +239,7 @@ export async function deleteRecord(mode: AppMode, user: AppUser, table: string, 
   checkTable(table)
   requireInstitution(user)
   await verifyCloudActor(user)
+  if (READ_ONLY_TABLES.has(table)) throw new Error(`The ${table} table is read-only.`)
   const { data, error } = await supabase!
     .from(table)
     .delete()

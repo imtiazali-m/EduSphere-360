@@ -2,8 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import {
   Activity, AlertCircle, BookOpen, CalendarCheck, CalendarDays,
   Check, ChevronLeft, ChevronRight, ClipboardCheck, Edit3, Eye,
-  FileText, FolderOpen, GraduationCap, HeartHandshake, History, ImagePlus,
-  LayoutDashboard, Plus, RefreshCw, Search, ShieldCheck, Trash2,
+  FileCheck2, FileText, FolderOpen, GraduationCap, HeartHandshake, History, ImagePlus,
+  LayoutDashboard, Plus, RefreshCw, Search, ShieldCheck, Trash2, Upload,
   UserRound, Users, X,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
@@ -22,7 +22,7 @@ type StudentStatus = 'all' | 'active' | 'pending' | 'graduated' | 'inactive'
 type EmployeeStatus = 'all' | 'active' | 'on_leave' | 'inactive'
 type FeeStatus = 'all' | 'unpaid' | 'partial' | 'overdue' | 'paid'
 type StudentWorkspaceTab = 'overview' | 'admissions' | 'directory' | 'profile' | 'classes' | 'guardians' | 'attendance' | 'results' | 'assignments' | 'timetable' | 'documents' | 'history'
-const studentRelatedTables = ['attendance', 'exams', 'exam_results', 'assignments', 'assignment_submissions', 'timetable_entries'] as const
+const studentRelatedTables = ['attendance', 'exams', 'exam_results', 'assignments', 'assignment_submissions', 'timetable_entries', 'classes', 'academic_sessions', 'programs', 'guardian_students', 'parent_guardians', 'student_placements', 'student_documents', 'student_history'] as const
 
 function makeEmployeeNumber() {
   const suffix = crypto.randomUUID().replace(/-/g, '').slice(0, 8).toUpperCase()
@@ -409,6 +409,18 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
   const [studentRelatedRows, setStudentRelatedRows] = useState<Record<string, RecordRow[]>>({})
   const [studentRelatedLoading, setStudentRelatedLoading] = useState(false)
   const [studentRelatedErrors, setStudentRelatedErrors] = useState<string[]>([])
+  const [guardianForm, setGuardianForm] = useState({ full_name: '', relationship: 'guardian', phone: '', email: '', address: '', occupation: '' })
+  const [guardianFormOpen, setGuardianFormOpen] = useState(false)
+  const [guardianEditing, setGuardianEditing] = useState<RecordRow | null>(null)
+  const [guardianToLink, setGuardianToLink] = useState('')
+  const [placementClassId, setPlacementClassId] = useState('')
+  const [placementEffectiveFrom, setPlacementEffectiveFrom] = useState(localDateValue())
+  const [placementReason, setPlacementReason] = useState('')
+  const [documentFile, setDocumentFile] = useState<File | null>(null)
+  const [documentTitle, setDocumentTitle] = useState('')
+  const [documentType, setDocumentType] = useState('other')
+  const [documentVisibility, setDocumentVisibility] = useState('staff_only')
+  const [documentNotes, setDocumentNotes] = useState('')
   const [employeeStatus, setEmployeeStatus] = useState<EmployeeStatus>('all')
   const [feeStatus, setFeeStatus] = useState<FeeStatus>('all')
   const canEdit = ['owner', 'admin'].includes(user!.role)
@@ -480,14 +492,7 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
     if (rows.length && !rows.some(row => row.id === selectedStudentId)) setSelectedStudentId(rows[0].id)
     if (!rows.length && selectedStudentId) setSelectedStudentId('')
   }, [rows, selectedStudentId])
-  const matchesStudent = (row: RecordRow, student: RecordRow | null) => {
-    if (!student) return false
-    const sameId = Boolean(row.student_id && row.student_id === student.id)
-    const rowName = String(row.student_name ?? '').trim().toLowerCase()
-    const sameName = Boolean(rowName && rowName === String(student.full_name ?? '').trim().toLowerCase())
-    const sameAdmission = Boolean(row.admission_no && row.admission_no === student.admission_no)
-    return sameId || sameAdmission || sameName
-  }
+  const matchesStudent = (row: RecordRow, student: RecordRow | null) => Boolean(student && row.student_id === student.id)
   const studentAttendanceRows = (studentRelatedRows.attendance ?? []).filter(row => matchesStudent(row, selectedStudent))
   const studentResultRows = (studentRelatedRows.exam_results ?? []).filter(row => matchesStudent(row, selectedStudent))
   const studentSubmissionRows = (studentRelatedRows.assignment_submissions ?? []).filter(row => matchesStudent(row, selectedStudent))
@@ -495,6 +500,17 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
   const studentAssignmentRows = (studentRelatedRows.assignments ?? []).filter(row => !studentClass || String(row.class_name ?? '').toLowerCase() === studentClass.toLowerCase())
   const studentExamRows = (studentRelatedRows.exams ?? []).filter(row => !studentClass || String(row.class_name ?? '').toLowerCase() === studentClass.toLowerCase())
   const studentTimetableRows = (studentRelatedRows.timetable_entries ?? []).filter(row => !studentClass || String(row.class_name ?? '').toLowerCase() === studentClass.toLowerCase())
+  const studentGuardianLinks = (studentRelatedRows.guardian_students ?? []).filter(row => row.student_id === selectedStudent?.id)
+  const linkedGuardianIds = new Set(studentGuardianLinks.map(row => String(row.guardian_id ?? '')))
+  const studentGuardianRows = (studentRelatedRows.parent_guardians ?? []).filter(row => linkedGuardianIds.has(row.id))
+  const availableGuardianRows = (studentRelatedRows.parent_guardians ?? []).filter(row => !linkedGuardianIds.has(row.id))
+  const studentPlacementRows = (studentRelatedRows.student_placements ?? []).filter(row => row.student_id === selectedStudent?.id).sort((a,b) => String(b.effective_from ?? '').localeCompare(String(a.effective_from ?? '')))
+  const activeStudentPlacement = studentPlacementRows.find(row => row.status === 'active' && !row.effective_to) ?? null
+  const studentClassRows = studentRelatedRows.classes ?? []
+  const activeStudentClass = studentClassRows.find(row => row.id === activeStudentPlacement?.class_id) ?? null
+  const activeStudentSession = (studentRelatedRows.academic_sessions ?? []).find(row => row.id === activeStudentClass?.academic_session_id) ?? null
+  const studentDocumentRows = (studentRelatedRows.student_documents ?? []).filter(row => row.student_id === selectedStudent?.id)
+  const studentHistoryRows = (studentRelatedRows.student_history ?? []).filter(row => row.student_id === selectedStudent?.id).sort((a,b) => String(b.created_at ?? '').localeCompare(String(a.created_at ?? '')))
   const studentClassCounts = useMemo(() => {
     const counts = new Map<string, number>()
     rows.forEach(row => {
@@ -777,9 +793,9 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
       { key: 'profile' as const, label: 'Student Profile', icon: UserRound },
       { key: 'classes' as const, label: 'Class Placement', icon: BookOpen },
       { key: 'guardians' as const, label: 'Guardians', icon: HeartHandshake },
-      { key: 'attendance' as const, label: 'Attendance', icon: CalendarCheck },
-      { key: 'results' as const, label: 'Exam Results', icon: ClipboardCheck },
-      { key: 'assignments' as const, label: 'Assignments', icon: FileText },
+      { key: 'attendance' as const, label: 'Student Attendance', icon: CalendarCheck },
+      { key: 'results' as const, label: 'Student Exam Results', icon: ClipboardCheck },
+      { key: 'assignments' as const, label: 'Student Assignments', icon: FileText },
       { key: 'timetable' as const, label: 'Student Timetable', icon: CalendarDays },
       { key: 'documents' as const, label: 'Student Documentation', icon: FolderOpen },
       { key: 'history' as const, label: 'Student History', icon: History },
@@ -790,33 +806,271 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
       if (user!.role === 'teacher') return ['overview', 'directory', 'profile', 'classes', 'attendance', 'results', 'assignments', 'timetable', 'history'].includes(item.key)
       return ['overview', 'profile', 'classes', 'guardians', 'attendance', 'results', 'assignments', 'timetable', 'documents', 'history'].includes(item.key)
     })
-    const pendingRows = rows.filter(row => String(row.status ?? 'active').toLowerCase() === 'pending')
+    const pendingRows = rows.filter(row => ['draft','submitted','under_review','documents_required','approved'].includes(String(row.application_status ?? 'submitted').toLowerCase()))
     const presentCount = studentAttendanceRows.filter(row => ['present', 'late'].includes(String(row.status ?? '').toLowerCase())).length
     const absentCount = studentAttendanceRows.filter(row => String(row.status ?? '').toLowerCase() === 'absent').length
     const attendanceRate = studentAttendanceRows.length ? Math.round(presentCount / studentAttendanceRows.length * 100) : 0
     const publishedResults = studentResultRows.filter(row => String(row.result_status ?? '').toLowerCase() === 'published')
-    const studentTimeline = [
-      ...(selectedStudent ? [{
-        id: 'student-' + selectedStudent.id,
-        date: selectedStudent.created_at ?? '',
-        label: 'Student registration',
-        detail: String(selectedStudent.full_name ?? 'Student') + ' was registered',
-        status: String(selectedStudent.status ?? 'active'),
-      }] : []),
-      ...studentAttendanceRows.map(row => ({ id: 'attendance-' + row.id, date: String(row.attendance_date ?? row.created_at ?? ''), label: 'Attendance', detail: String(row.status ?? 'Attendance') + ' · ' + String(row.class_name ?? studentClass), status: String(row.status ?? '') })),
-      ...studentResultRows.map(row => ({ id: 'result-' + row.id, date: String(row.created_at ?? ''), label: 'Examination result', detail: String(row.exam_title ?? 'Examination') + ' · ' + String(row.grade ?? row.marks_obtained ?? 'Marks recorded'), status: String(row.result_status ?? 'draft') })),
-      ...studentSubmissionRows.map(row => ({ id: 'submission-' + row.id, date: String(row.submitted_at ?? row.created_at ?? ''), label: 'Assignment submission', detail: String(row.assignment_title ?? 'Assignment') + ' · ' + String(row.status ?? 'submitted'), status: String(row.status ?? '') })),
-    ].filter(item => item.date).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 30)
     const renderTable = (dataRows: RecordRow[], columns: { key: string; label: string }[], emptyMessage: string) => dataRows.length === 0
       ? <div className="ed360-student-empty"><span><FolderOpen size={21}/></span><strong>No records to display</strong><p>{emptyMessage}</p></div>
       : <div className="ed360-student-table-wrap"><table className="ed360-student-table"><thead><tr>{columns.map(column => <th key={column.key}>{column.label}</th>)}</tr></thead><tbody>{dataRows.map(row => <tr key={row.id}>{columns.map(column => {
         const raw = row[column.key]
         const value = raw === null || raw === undefined || raw === '' ? '—'
-          : ['attendance_date', 'due_date', 'exam_date', 'submitted_at', 'created_at', 'invoice_date'].includes(column.key) ? niceDate(raw)
+          : ['attendance_date', 'due_date', 'exam_date', 'submitted_at', 'created_at', 'invoice_date', 'effective_from', 'effective_to', 'issue_date', 'expiry_date', 'application_submitted_at', 'application_reviewed_at'].includes(column.key) ? niceDate(raw)
           : ['amount', 'paid_amount', 'marks_obtained', 'total_marks', 'balance'].includes(column.key) ? Number(raw).toLocaleString(undefined, { maximumFractionDigits: 2 })
           : String(raw).replaceAll('_', ' ')
-        return <td key={column.key}>{['status', 'result_status'].includes(column.key) ? <span className={'status-pill status-' + String(raw ?? '').toLowerCase()}>{value}</span> : value}</td>
+        return <td key={column.key}>{['status', 'result_status', 'application_status', 'verification_status'].includes(column.key) ? <span className={'status-pill status-' + String(raw ?? '').toLowerCase()}>{value}</span> : value}</td>
       })}</tr>)}</tbody></table></div>
+
+
+    async function refreshStudentTables(...tables: string[]) {
+      const entries = await Promise.all(tables.map(async table => [table, await listRecords(mode, user!, table)] as const))
+      setStudentRelatedRows(old => ({ ...old, ...Object.fromEntries(entries) }))
+    }
+
+    async function updateAdmissionStatus(row: RecordRow, nextStatus: string) {
+      if (!ownerOrAdmin) return
+      const current = String(row.application_status ?? 'submitted')
+      const transitions: Record<string, string[]> = {
+        draft: ['submitted', 'withdrawn'],
+        submitted: ['under_review', 'documents_required', 'rejected', 'withdrawn'],
+        under_review: ['documents_required', 'approved', 'rejected', 'withdrawn'],
+        documents_required: ['under_review', 'rejected', 'withdrawn'],
+        approved: ['enrolled', 'withdrawn'],
+        enrolled: ['withdrawn'],
+        rejected: ['under_review', 'withdrawn'],
+        withdrawn: ['submitted'],
+      }
+      if (!transitions[current]?.includes(nextStatus)) {
+        onToast('This admission transition is not allowed from the current status.', true)
+        return
+      }
+      const note = window.prompt('Add a review note for this admission (optional):', String(row.application_review_notes ?? ''))
+      if (note === null) return
+      const now = new Date().toISOString()
+      const payload: Record<string, unknown> = {
+        application_status: nextStatus,
+        application_reviewed_by: user!.id,
+        application_reviewed_at: now,
+        application_review_notes: note.trim() || null,
+      }
+      if (nextStatus === 'submitted') payload.application_submitted_at = now
+      if (nextStatus === 'enrolled') {
+        payload.status = 'active'
+        payload.admission_date = now.slice(0, 10)
+      }
+      if (nextStatus === 'rejected' || nextStatus === 'withdrawn') payload.status = 'inactive'
+      try {
+        await updateRecord(mode, user!, 'students', row.id, payload)
+        await load({ silent: true })
+        await refreshStudentTables('student_history')
+        onToast('Admission moved to ' + nextStatus.replaceAll('_', ' ') + '.')
+      } catch (error) {
+        onToast(userFacingError(error, 'The admission status could not be updated.'), true)
+      }
+    }
+
+    async function saveGuardianContact() {
+      if (!ownerOrAdmin || !selectedStudent) return
+      const fullName = guardianForm.full_name.trim()
+      if (!fullName) {
+        onToast('Enter the guardian full name.', true)
+        return
+      }
+      try {
+        if (guardianEditing) {
+          await updateRecord(mode, user!, 'parent_guardians', guardianEditing.id, {
+            full_name: fullName,
+            relationship: guardianForm.relationship,
+            phone: guardianForm.phone.trim() || null,
+            email: guardianForm.email.trim() || null,
+            address: guardianForm.address.trim() || null,
+            occupation: guardianForm.occupation.trim() || null,
+          })
+          const linkedContact = studentGuardianLinks.find(link => link.guardian_id === guardianEditing.id)
+          if (linkedContact) await updateRecord(mode, user!, 'guardian_students', linkedContact.id, { relationship: guardianForm.relationship })
+          await refreshStudentTables('parent_guardians', 'guardian_students', 'student_history')
+          onToast('Guardian contact updated.')
+        } else {
+          const created = await createRecord(mode, user!, 'parent_guardians', {
+            full_name: fullName,
+            relationship: guardianForm.relationship,
+            phone: guardianForm.phone.trim() || null,
+            email: guardianForm.email.trim() || null,
+            address: guardianForm.address.trim() || null,
+            occupation: guardianForm.occupation.trim() || null,
+          })
+          if (!created) throw new Error('The guardian contact was not confirmed by the database.')
+          await createRecord(mode, user!, 'guardian_students', {
+            student_id: selectedStudent.id,
+            guardian_id: created.id,
+            relationship: guardianForm.relationship,
+          })
+          await refreshStudentTables('parent_guardians', 'guardian_students', 'student_history')
+          onToast('Guardian contact saved and linked to the selected student.')
+        }
+        setGuardianForm({ full_name: '', relationship: 'guardian', phone: '', email: '', address: '', occupation: '' })
+        setGuardianEditing(null)
+      } catch (error) {
+        onToast(userFacingError(error, 'The guardian contact could not be saved.'), true)
+      }
+    }
+
+    async function linkExistingGuardian() {
+      if (!ownerOrAdmin || !selectedStudent || !guardianToLink) return
+      try {
+        const guardian = availableGuardianRows.find(row => row.id === guardianToLink)
+        await createRecord(mode, user!, 'guardian_students', {
+          student_id: selectedStudent.id,
+          guardian_id: guardianToLink,
+          relationship: String(guardian?.relationship ?? 'guardian'),
+        })
+        await refreshStudentTables('guardian_students', 'student_history')
+        setGuardianToLink('')
+        onToast('Existing guardian linked to the selected student.')
+      } catch (error) {
+        onToast(userFacingError(error, 'The guardian could not be linked. Check whether this relationship already exists.'), true)
+      }
+    }
+
+    async function unlinkGuardian(link: RecordRow) {
+      if (!ownerOrAdmin) return
+      const confirmed = window.confirm('Remove this guardian relationship? The guardian contact itself will remain in the institution directory.')
+      if (!confirmed) return
+      try {
+        await deleteRecord(mode, user!, 'guardian_students', link.id)
+        await refreshStudentTables('guardian_students', 'student_history')
+        onToast('Guardian relationship removed.')
+      } catch (error) {
+        onToast(userFacingError(error, 'The guardian relationship could not be removed.'), true)
+      }
+    }
+
+    async function saveStudentPlacement() {
+      if (!ownerOrAdmin || !selectedStudent) return
+      const selectedClass = studentClassRows.find(row => row.id === placementClassId)
+      if (!selectedClass) {
+        onToast('Select a configured class or programme before saving placement.', true)
+        return
+      }
+      if (!placementEffectiveFrom) {
+        onToast('Choose the placement effective date.', true)
+        return
+      }
+      try {
+        await createRecord(mode, user!, 'student_placements', {
+          student_id: selectedStudent.id,
+          class_id: selectedClass.id,
+          effective_from: placementEffectiveFrom,
+          status: 'active',
+          placement_reason: placementReason.trim() || null,
+        })
+        await load({ silent: true })
+        await refreshStudentTables('student_placements', 'student_history')
+        setPlacementClassId('')
+        setPlacementReason('')
+        onToast('Student placement saved. The previous active placement was closed automatically.')
+      } catch (error) {
+        onToast(userFacingError(error, 'The student placement could not be saved.'), true)
+      }
+    }
+
+    async function uploadStudentDocument() {
+      if (!ownerOrAdmin || !selectedStudent || !documentFile) return
+      if (documentFile.size <= 0 || documentFile.size > 10 * 1024 * 1024) {
+        onToast('Choose a document smaller than 10 MB.', true)
+        return
+      }
+      const allowedTypes = [
+        'application/pdf', 'image/png', 'image/jpeg', 'image/webp', 'text/plain',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      ]
+      if (!allowedTypes.includes(documentFile.type)) {
+        onToast('This document type is not supported. Use PDF, PNG, JPG, WEBP, DOC, DOCX or TXT.', true)
+        return
+      }
+      if (!supabase) {
+        onToast('Secure cloud document storage is not configured.', true)
+        return
+      }
+      const safeName = documentFile.name.replace(/[^a-zA-Z0-9._-]/g, '_')
+      const storagePath = user!.institutionId + '/' + selectedStudent.id + '/' + crypto.randomUUID() + '-' + safeName
+      try {
+        const { error: uploadError } = await supabase.storage.from('student-files').upload(storagePath, documentFile, {
+          cacheControl: '3600', contentType: documentFile.type, upsert: false,
+        })
+        if (uploadError) throw uploadError
+        try {
+          await createRecord(mode, user!, 'student_documents', {
+            student_id: selectedStudent.id,
+            document_type: documentType,
+            title: documentTitle.trim() || documentFile.name,
+            file_name: documentFile.name,
+            storage_path: storagePath,
+            mime_type: documentFile.type,
+            file_size: documentFile.size,
+            verification_status: 'pending',
+            visibility: documentVisibility,
+            notes: documentNotes.trim() || null,
+          })
+        } catch (metadataError) {
+          await supabase.storage.from('student-files').remove([storagePath])
+          throw metadataError
+        }
+        await refreshStudentTables('student_documents', 'student_history')
+        setDocumentFile(null)
+        setDocumentTitle('')
+        setDocumentNotes('')
+        onToast('Student document uploaded and added to the document register.')
+      } catch (error) {
+        onToast(userFacingError(error, 'The student document could not be uploaded.'), true)
+      }
+    }
+
+    async function openStudentDocument(row: RecordRow) {
+      if (!supabase) return
+      try {
+        const { data, error } = await supabase.storage.from('student-files').createSignedUrl(String(row.storage_path ?? ''), 5 * 60)
+        if (error) throw error
+        if (!data?.signedUrl) throw new Error('A secure document link could not be created.')
+        window.open(data.signedUrl, '_blank', 'noopener,noreferrer')
+      } catch (error) {
+        onToast(userFacingError(error, 'This document is not available to your account.'), true)
+      }
+    }
+
+    async function updateStudentDocumentStatus(row: RecordRow, status: string) {
+      if (!ownerOrAdmin) return
+      try {
+        await updateRecord(mode, user!, 'student_documents', row.id, {
+          verification_status: status,
+          verified_by: user!.id,
+          verified_at: new Date().toISOString(),
+        })
+        await refreshStudentTables('student_documents', 'student_history')
+        onToast('Document verification status updated.')
+      } catch (error) {
+        onToast(userFacingError(error, 'Document verification could not be updated.'), true)
+      }
+    }
+
+    async function removeStudentDocument(row: RecordRow) {
+      if (!ownerOrAdmin || !supabase) return
+      if (!window.confirm('Remove this student document from the register and secure storage?')) return
+      try {
+        await deleteRecord(mode, user!, 'student_documents', row.id)
+        const { error } = await supabase.storage.from('student-files').remove([String(row.storage_path ?? '')])
+        await refreshStudentTables('student_documents', 'student_history')
+        if (error) {
+          onToast('Document record removed, but its private storage object could not be deleted. An administrator should review storage cleanup.', true)
+        } else {
+          onToast('Student document removed.')
+        }
+      } catch (error) {
+        onToast(userFacingError(error, 'The student document could not be removed.'), true)
+      }
+    }
 
     return <div className="page-content ed360-module-page students-page ed360-student-workspace">
       <header className="ed360-student-workspace-heading">
@@ -878,16 +1132,36 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
       </>}
 
       {studentWorkspaceTab === 'admissions' && <section className="ed360-student-panel ed360-student-full-panel">
-        <header><div><span className="ed360-student-panel-icon"><GraduationCap size={17}/></span><div><h2>Admission applications</h2><p>Review new and pending student registrations. New admissions are created as Pending.</p></div></div>{canCreate && <button type="button" className="button button-primary" onClick={() => { setEditing(null); setShowForm(true) }}><Plus size={15}/> Register student</button>}</header>
+        <header><div><span className="ed360-student-panel-icon"><GraduationCap size={17}/></span><div><h2>Admission applications</h2><p>Review applications, request missing documents, approve candidates and complete enrolment.</p></div></div>{canCreate && <button type="button" className="button button-primary" onClick={() => { setEditing(null); setShowForm(true) }}><Plus size={15}/> Register applicant</button>}</header>
         <div className="ed360-student-status-cards">
-          <div><small>Pending review</small><strong>{studentCounts.pending}</strong><span>Awaiting admission decision</span></div>
-          <div><small>Active registrations</small><strong>{studentCounts.active}</strong><span>Currently enrolled</span></div>
-          <div><small>All applications</small><strong>{studentCounts.total}</strong><span>Student records in this institution</span></div>
+          <div><small>Submitted</small><strong>{rows.filter(row => row.application_status === 'submitted').length}</strong><span>Awaiting initial review</span></div>
+          <div><small>Under review</small><strong>{rows.filter(row => row.application_status === 'under_review').length}</strong><span>Being assessed</span></div>
+          <div><small>Documents required</small><strong>{rows.filter(row => row.application_status === 'documents_required').length}</strong><span>Follow-up required</span></div>
+          <div><small>Approved / enrolled</small><strong>{rows.filter(row => ['approved','enrolled'].includes(String(row.application_status))).length}</strong><span>Approved or registered</span></div>
         </div>
-        <div className="ed360-student-table-heading"><strong>Pending admission queue</strong><span>{pendingRows.length} awaiting review</span></div>
-        {loading ? <div className="ed360-student-empty">Loading admissions…</div> : pendingRows.length ? <div className="ed360-student-table-wrap"><table className="ed360-student-table"><thead><tr><th>Admission ID</th><th>Applicant</th><th>Class / programme</th><th>Guardian</th><th>Registered</th><th>Actions</th></tr></thead><tbody>{pendingRows.map(row => <tr key={row.id}><td>{String(row.admission_no ?? '—')}</td><td><strong>{String(row.full_name ?? 'Student')}</strong><small>{String(row.email ?? '')}</small></td><td>{String(row.class_name ?? '—')}</td><td>{String(row.guardian_name ?? '—')}</td><td>{niceDate(row.created_at)}</td><td><div className="ed360-student-row-actions"><button type="button" onClick={() => { setSelectedStudentId(row.id); setStudentWorkspaceTab('profile') }}>View</button>{canEdit && <button type="button" onClick={() => { setEditing(row); setShowForm(true) }}>Review / Edit</button>}</div></td></tr>)}</tbody></table></div> : <div className="ed360-student-empty"><span><Check size={20}/></span><strong>No pending applications</strong><p>There are currently no student applications awaiting review.</p></div>}
+        <div className="ed360-student-table-heading"><strong>Application processing queue</strong><span>{pendingRows.length} active applications</span></div>
+        {loading ? <div className="ed360-student-empty">Loading admission applications…</div> : pendingRows.length ? <div className="ed360-student-table-wrap"><table className="ed360-student-table"><thead><tr><th>Application / admission ID</th><th>Applicant</th><th>Class requested</th><th>Application stage</th><th>Submitted</th><th>Actions</th></tr></thead><tbody>{pendingRows.map(row => {
+          const stage = String(row.application_status ?? 'submitted')
+          return <tr key={row.id}>
+            <td><strong>{String(row.admission_no ?? '—')}</strong><small>{String(row.application_review_notes ?? '')}</small></td>
+            <td><strong>{String(row.full_name ?? 'Applicant')}</strong><small>{String(row.email ?? 'No email supplied')}</small></td>
+            <td>{String(row.class_name ?? '—')}</td>
+            <td><span className={'status-pill status-' + stage}>{stage.replaceAll('_',' ')}</span></td>
+            <td>{niceDate(row.application_submitted_at ?? row.created_at)}</td>
+            <td><div className="ed360-student-row-actions">
+              <button type="button" onClick={() => { setSelectedStudentId(row.id); setStudentWorkspaceTab('profile') }}>Profile</button>
+              <button type="button" onClick={() => { setSelectedStudentId(row.id); setStudentWorkspaceTab('documents') }}>Documents</button>
+              {canEdit && stage === 'submitted' && <button type="button" onClick={() => void updateAdmissionStatus(row,'under_review')}>Start review</button>}
+              {canEdit && ['submitted','under_review'].includes(stage) && <button type="button" onClick={() => void updateAdmissionStatus(row,'documents_required')}>Request documents</button>}
+              {canEdit && stage === 'documents_required' && <button type="button" onClick={() => void updateAdmissionStatus(row,'under_review')}>Resume review</button>}
+              {canEdit && stage === 'under_review' && <button type="button" onClick={() => void updateAdmissionStatus(row,'approved')}>Approve</button>}
+              {canEdit && stage === 'approved' && <button type="button" onClick={() => void updateAdmissionStatus(row,'enrolled')}>Complete enrolment</button>}
+              {canEdit && ['submitted','under_review','documents_required'].includes(stage) && <button type="button" className="danger-icon" onClick={() => void updateAdmissionStatus(row,'rejected')}>Reject</button>}
+            </div></td>
+          </tr>
+        })}</tbody></table></div> : <div className="ed360-student-empty"><span><Check size={20}/></span><strong>No applications awaiting action</strong><p>New applicants will appear here with a submitted status. Approved applicants remain in the queue until enrolment is completed.</p></div>}
+        <div className="ed360-student-limitation-note">Every status change is recorded in Student History with the reviewing account and timestamp. Approval and enrolment are separate steps; an application is not an active student until enrolment is completed.</div>
       </section>}
-
       {studentWorkspaceTab === 'directory' && <section className="student-directory-card ed360-student-directory-window">
         <div className="student-directory-heading"><div><h2>Student directory</h2><p>Institution-wide student register with search, status filters and profile actions.</p></div><span className="student-mode-tag cloud">Live records</span></div>
         <div className="student-directory-toolbar">
@@ -912,34 +1186,103 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
         {selectedStudent ? <>
           <div className="ed360-student-profile-banner">
             <StudentPhoto row={selectedStudent}/>
-            <div><span>STUDENT PROFILE</span><h2>{String(selectedStudent.full_name ?? 'Student')}</h2><p>{String(selectedStudent.admission_no ?? 'No admission number')} · {String(selectedStudent.class_name ?? 'Class not assigned')}</p></div>
+            <div><span>STUDENT PROFILE</span><h2>{String(selectedStudent.full_name ?? 'Student')}</h2><p>{String(selectedStudent.admission_no ?? 'No admission number')} · {String(activeStudentClass?.name ?? selectedStudent.class_name ?? 'Class not assigned')}</p><small>Admission: {String(selectedStudent.application_status ?? 'submitted').replaceAll('_',' ')}</small></div>
             <span className={'status-pill status-' + String(selectedStudent.status ?? 'active')}>{statusLabel(selectedStudent.status)}</span>
             {canEdit && <button type="button" className="button button-outline" onClick={() => { setEditing(selectedStudent); setShowForm(true) }}><Edit3 size={14}/> Edit profile</button>}
           </div>
           <div className="ed360-student-profile-grid">
             <section className="ed360-student-panel"><header><div><span className="ed360-student-panel-icon"><UserRound size={16}/></span><div><h3>Personal information</h3><p>Details stored in the student record.</p></div></div></header><dl><div><dt>Full name</dt><dd>{String(selectedStudent.full_name ?? '—')}</dd></div><div><dt>Admission ID</dt><dd>{String(selectedStudent.admission_no ?? '—')}</dd></div><div><dt>Email address</dt><dd>{String(selectedStudent.email ?? '—')}</dd></div><div><dt>Date of birth</dt><dd>{niceDate(selectedStudent.date_of_birth)}</dd></div><div><dt>Registered on</dt><dd>{niceDate(selectedStudent.created_at)}</dd></div></dl></section>
-            <section className="ed360-student-panel"><header><div><span className="ed360-student-panel-icon green"><BookOpen size={16}/></span><div><h3>Academic placement</h3><p>Current class/programme information.</p></div></div></header><dl><div><dt>Class / programme</dt><dd>{String(selectedStudent.class_name ?? 'Not assigned')}</dd></div><div><dt>Student status</dt><dd>{statusLabel(selectedStudent.status)}</dd></div><div><dt>Academic session</dt><dd>Not linked in the current student record</dd></div><div><dt>Section</dt><dd>Not stored in the current student record</dd></div></dl></section>
-            <section className="ed360-student-panel"><header><div><span className="ed360-student-panel-icon violet"><HeartHandshake size={16}/></span><div><h3>Parent / guardian</h3><p>Guardian contact details stored with the student.</p></div></div></header><dl><div><dt>Guardian name</dt><dd>{String(selectedStudent.guardian_name ?? 'Not provided')}</dd></div><div><dt>Guardian email</dt><dd>{String(selectedStudent.guardian_email ?? 'Not provided')}</dd></div></dl></section>
-            <section className="ed360-student-panel"><header><div><span className="ed360-student-panel-icon amber"><Activity size={16}/></span><div><h3>Student activity</h3><p>Related records visible to your role.</p></div></div></header><dl><div><dt>Attendance entries</dt><dd>{studentAttendanceRows.length}</dd></div><div><dt>Published results</dt><dd>{publishedResults.length}</dd></div><div><dt>Assignment submissions</dt><dd>{studentSubmissionRows.length}</dd></div></dl></section>
+            <section className="ed360-student-panel"><header><div><span className="ed360-student-panel-icon green"><BookOpen size={16}/></span><div><h3>Academic placement</h3><p>Current registered class and session relationship.</p></div></div></header><dl><div><dt>Class / programme</dt><dd>{String(activeStudentClass?.name ?? selectedStudent.class_name ?? 'Not assigned')}</dd></div><div><dt>Section</dt><dd>{String(activeStudentClass?.section ?? 'Not assigned')}</dd></div><div><dt>Academic session</dt><dd>{String(activeStudentSession?.name ?? 'Not assigned')}</dd></div><div><dt>Placement effective</dt><dd>{activeStudentPlacement ? niceDate(activeStudentPlacement.effective_from) : 'No placement record'}</dd></div><div><dt>Student status</dt><dd>{statusLabel(selectedStudent.status)}</dd></div></dl></section>
+            <section className="ed360-student-panel"><header><div><span className="ed360-student-panel-icon violet"><HeartHandshake size={16}/></span><div><h3>Parent / guardian</h3><p>Contacts linked through the guardian register.</p></div></div></header>
+              {studentGuardianRows.length ? <dl>{studentGuardianRows.map(guardian => <div key={guardian.id}><dt>{String(guardian.relationship ?? 'Guardian')}</dt><dd>{String(guardian.full_name ?? 'Guardian')} · {String(guardian.phone ?? guardian.email ?? 'No contact details')}</dd></div>)}</dl> : <p className="ed360-student-limitation-note">No guardian contact is linked to this student.</p>}
+            </section>
+            <section className="ed360-student-panel"><header><div><span className="ed360-student-panel-icon amber"><Activity size={16}/></span><div><h3>Student activity</h3><p>Linked operational records.</p></div></div></header><dl><div><dt>Attendance entries</dt><dd>{studentAttendanceRows.length}</dd></div><div><dt>Published results</dt><dd>{publishedResults.length}</dd></div><div><dt>Assignment submissions</dt><dd>{studentSubmissionRows.length}</dd></div><div><dt>Documents</dt><dd>{studentDocumentRows.length}</dd></div><div><dt>Audit events</dt><dd>{studentHistoryRows.length}</dd></div></dl></section>
           </div>
         </> : <div className="ed360-student-empty"><strong>No student selected</strong><p>Register or select a student from the directory to open a profile.</p></div>}
       </section>}
 
       {studentWorkspaceTab === 'classes' && <div className="ed360-student-overview-grid">
-        <section className="ed360-student-panel"><header><div><span className="ed360-student-panel-icon"><BookOpen size={17}/></span><div><h2>Class / programme distribution</h2><p>Counts based on students.class_name.</p></div></div></header>
-          {studentClassCounts.length ? <div className="ed360-student-class-bars">{studentClassCounts.map(item => <button type="button" key={item.name} className={studentClass.toLowerCase() === item.name.toLowerCase() ? 'active' : ''} onClick={() => { const match = rows.find(row => String(row.class_name ?? 'Not assigned').trim() === item.name); if (match) setSelectedStudentId(match.id) }}><div><span>{item.name}</span><b>{item.count}</b></div><i><span style={{ width: (item.count / Math.max(1, studentCounts.total) * 100) + '%' }}/></i></button>)}</div> : <div className="ed360-student-empty"><strong>No class placements yet</strong><p>Class statistics appear after student records have been registered.</p></div>}
+        <section className="ed360-student-panel">
+          <header><div><span className="ed360-student-panel-icon"><BookOpen size={17}/></span><div><h2>Current class placement</h2><p>Placement is linked to a configured class and academic session.</p></div></div></header>
+          {selectedStudent ? <>
+            <dl>
+              <div><dt>Student</dt><dd>{String(selectedStudent.full_name ?? '—')}</dd></div>
+              <div><dt>Class / programme</dt><dd>{String(activeStudentClass?.name ?? selectedStudent.class_name ?? 'Not assigned')}</dd></div>
+              <div><dt>Section</dt><dd>{String(activeStudentClass?.section ?? 'Not assigned')}</dd></div>
+              <div><dt>Academic session</dt><dd>{String(activeStudentSession?.name ?? 'Not linked')}</dd></div>
+              <div><dt>Placement start</dt><dd>{activeStudentPlacement ? niceDate(activeStudentPlacement.effective_from) : 'No active placement record'}</dd></div>
+            </dl>
+          </> : <div className="ed360-student-empty"><strong>No student selected</strong><p>Select a student to review class placement.</p></div>}
+          {ownerOrAdmin && selectedStudent && <div className="ed360-student-placement-editor">
+            <div className="ed360-student-table-heading"><strong>Assign or transfer class</strong><span>Creates a dated placement record</span></div>
+            <label className="field-label student-field"><span>Configured class / programme</span>
+              <select className="input-control" value={placementClassId} onChange={event => setPlacementClassId(event.target.value)} disabled={!studentClassRows.length}>
+                <option value="">Select a class</option>
+                {studentClassRows.map(classRow => {
+                  const session = (studentRelatedRows.academic_sessions ?? []).find(row => row.id === classRow.academic_session_id)
+                  return <option key={classRow.id} value={classRow.id}>{String(classRow.name ?? classRow.code ?? 'Class')} {classRow.section ? '· ' + String(classRow.section) : ''}{session?.name ? ' · ' + String(session.name) : ''}</option>
+                })}
+              </select>
+            </label>
+            <label className="field-label student-field"><span>Effective from</span><input className="input-control" type="date" value={placementEffectiveFrom} onChange={event => setPlacementEffectiveFrom(event.target.value)}/></label>
+            <label className="field-label student-field"><span>Reason / transfer note</span><textarea className="input-control textarea-control" value={placementReason} onChange={event => setPlacementReason(event.target.value)} rows={2} placeholder="New admission, promotion, transfer or correction…"/></label>
+            <button type="button" className="button button-primary" onClick={() => void saveStudentPlacement()} disabled={!placementClassId || !studentClassRows.length}><Check size={15}/> Save placement</button>
+            {!studentClassRows.length && <p className="ed360-student-limitation-note">No classes are configured yet. Create the class, programme and academic session first in Institute Administration; this window will then use those real records.</p>}
+          </div>}
         </section>
-        <section className="ed360-student-panel"><header><div><span className="ed360-student-panel-icon green"><ShieldCheck size={17}/></span><div><h2>Placement details</h2><p>Current student's recorded placement.</p></div></div></header>
-          <dl><div><dt>Selected student</dt><dd>{String(selectedStudent?.full_name ?? '—')}</dd></div><div><dt>Class / programme</dt><dd>{studentClass || 'Not assigned'}</dd></div><div><dt>Active students in class</dt><dd>{rows.filter(row => String(row.class_name ?? '').toLowerCase() === studentClass.toLowerCase() && String(row.status ?? 'active') === 'active').length}</dd></div></dl>
-          <p className="ed360-student-limitation-note">The current students table contains a class/programme field but no separate section or academic-session link. This workspace does not invent those relationships.</p>
+        <section className="ed360-student-panel">
+          <header><div><span className="ed360-student-panel-icon green"><Users size={17}/></span><div><h2>Enrolment distribution</h2><p>Counts grouped by the class recorded on student profiles.</p></div></div></header>
+          {studentClassCounts.length ? <div className="ed360-student-class-bars">{studentClassCounts.map(item => <button type="button" key={item.name} className={studentClass.toLowerCase() === item.name.toLowerCase() ? 'active' : ''} onClick={() => { const match = rows.find(row => String(row.class_name ?? 'Not assigned').trim() === item.name); if (match) setSelectedStudentId(match.id) }}><div><span>{item.name}</span><b>{item.count}</b></div><i><span style={{ width: (item.count / Math.max(1, studentCounts.total) * 100) + '%' }}/></i></button>)}</div> : <div className="ed360-student-empty"><strong>No enrolments yet</strong><p>Class distribution appears when students are assigned to configured classes.</p></div>}
+        </section>
+        <section className="ed360-student-panel ed360-student-panel-wide">
+          <header><div><span className="ed360-student-panel-icon violet"><History size={17}/></span><div><h2>Placement and transfer history</h2><p>Each placement is retained with its class, session, effective dates and reason.</p></div></div><span className="ed360-student-record-count">{studentPlacementRows.length} placements</span></header>
+          {studentPlacementRows.length ? <div className="ed360-student-table-wrap"><table className="ed360-student-table"><thead><tr><th>Class / programme</th><th>Section</th><th>Academic session</th><th>Effective from</th><th>Effective to</th><th>Status</th><th>Reason</th></tr></thead><tbody>{studentPlacementRows.map(placement => {
+            const classRow = studentClassRows.find(row => row.id === placement.class_id)
+            const session = (studentRelatedRows.academic_sessions ?? []).find(row => row.id === classRow?.academic_session_id)
+            const program = (studentRelatedRows.programs ?? []).find(row => row.id === classRow?.program_id)
+            return <tr key={placement.id}><td><strong>{String(classRow?.name ?? 'Class record')}</strong><small>{String(program?.name ?? classRow?.code ?? '')}</small></td><td>{String(classRow?.section ?? '—')}</td><td>{String(session?.name ?? '—')}</td><td>{niceDate(placement.effective_from)}</td><td>{niceDate(placement.effective_to)}</td><td><span className={'status-pill status-' + String(placement.status ?? '')}>{String(placement.status ?? '—').replaceAll('_',' ')}</span></td><td>{String(placement.placement_reason ?? '—')}</td></tr>
+          })}</tbody></table></div> : <div className="ed360-student-empty"><strong>No placement history recorded</strong><p>Assign a configured class above to start the student's placement history.</p></div>}
         </section>
       </div>}
-
-      {studentWorkspaceTab === 'guardians' && <section className="ed360-student-panel ed360-student-full-panel"><header><div><span className="ed360-student-panel-icon violet"><HeartHandshake size={17}/></span><div><h2>Parent & guardian contacts</h2><p>Guardian name and email from each student record.</p></div></div><span className="ed360-student-record-count">{rows.filter(row => row.guardian_name || row.guardian_email).length} contact records</span></header>
-        {renderTable(rows.filter(row => row.guardian_name || row.guardian_email),[{key:'admission_no',label:'Admission ID'},{key:'full_name',label:'Student'},{key:'class_name',label:'Class / programme'},{key:'guardian_name',label:'Guardian name'},{key:'guardian_email',label:'Guardian email'}],'Guardian contact details have not been entered for these students.')}
-        <p className="ed360-student-limitation-note">The current student register stores one guardian contact pair per student. Multiple guardian accounts and relationships require a separate approved data-model update.</p>
+      {studentWorkspaceTab === 'guardians' && <section className="ed360-student-panel ed360-student-full-panel">
+        <header><div><span className="ed360-student-panel-icon violet"><HeartHandshake size={17}/></span><div><h2>Guardian relationships</h2><p>Manage family contacts and their links to the selected student. Parent login accounts remain a separate access relationship.</p></div></div><span className="ed360-student-record-count">{studentGuardianRows.length} linked contacts</span></header>
+        {selectedStudent ? <>
+          <div className="ed360-student-window-context">
+            <div><span className="ed360-context-label">SELECTED STUDENT</span><strong>{String(selectedStudent.full_name ?? 'Student')} · {String(selectedStudent.admission_no ?? 'No admission ID')}</strong></div>
+            <span className="ed360-student-record-count">{studentGuardianLinks.length} guardian links</span>
+          </div>
+          {ownerOrAdmin && <div className="ed360-student-guardian-actions">
+            <button type="button" className="button button-primary" onClick={() => { setGuardianEditing(null); setGuardianForm({ full_name: '', relationship: 'guardian', phone: '', email: '', address: '', occupation: '' }); setGuardianFormOpen(true) }}><Plus size={15}/> Add guardian contact</button>
+            <div className="ed360-student-guardian-link">
+              <select className="input-control" value={guardianToLink} onChange={event => setGuardianToLink(event.target.value)} disabled={!availableGuardianRows.length}>
+                <option value="">Link an existing guardian…</option>
+                {availableGuardianRows.map(guardian => <option key={guardian.id} value={guardian.id}>{String(guardian.full_name ?? 'Guardian')} · {String(guardian.email ?? guardian.phone ?? 'No contact detail')}</option>)}
+              </select>
+              <button type="button" className="button button-outline" onClick={() => void linkExistingGuardian()} disabled={!guardianToLink}><HeartHandshake size={14}/> Link contact</button>
+            </div>
+          </div>}
+          {guardianFormOpen && ownerOrAdmin && <form className="modal-form ed360-student-inline-form" onSubmit={event => { event.preventDefault(); void saveGuardianContact() }}>
+            <div className="student-form-section-label">{guardianEditing ? 'UPDATE GUARDIAN CONTACT' : 'NEW GUARDIAN CONTACT'}</div>
+            <div className="student-form-grid">
+              <label className="field-label student-field"><span>Full name *</span><input className="input-control" required value={guardianForm.full_name} onChange={event => setGuardianForm(old => ({ ...old, full_name: event.target.value }))}/></label>
+              <label className="field-label student-field"><span>Relationship</span><select className="input-control" value={guardianForm.relationship} onChange={event => setGuardianForm(old => ({ ...old, relationship: event.target.value }))}>{['guardian','mother','father','grandparent','sibling','spouse','other'].map(value => <option key={value} value={value}>{value.replaceAll('_',' ')}</option>)}</select></label>
+              <label className="field-label student-field"><span>Phone</span><input className="input-control" value={guardianForm.phone} onChange={event => setGuardianForm(old => ({ ...old, phone: event.target.value }))}/></label>
+              <label className="field-label student-field"><span>Email</span><input className="input-control" type="email" value={guardianForm.email} onChange={event => setGuardianForm(old => ({ ...old, email: event.target.value }))}/></label>
+              <label className="field-label student-field"><span>Occupation</span><input className="input-control" value={guardianForm.occupation} onChange={event => setGuardianForm(old => ({ ...old, occupation: event.target.value }))}/></label>
+              <label className="field-label student-field"><span>Address</span><input className="input-control" value={guardianForm.address} onChange={event => setGuardianForm(old => ({ ...old, address: event.target.value }))}/></label>
+            </div>
+            <div className="modal-actions">
+              <button type="button" className="button button-quiet" onClick={() => { setGuardianFormOpen(false); setGuardianEditing(null) }}>Cancel</button>
+              <button type="submit" className="button button-primary">{guardianEditing ? 'Save contact changes' : 'Save and link guardian'}</button>
+            </div>
+          </form>}
+          {studentGuardianRows.length ? <div className="ed360-student-table-wrap"><table className="ed360-student-table"><thead><tr><th>Guardian</th><th>Relationship</th><th>Phone</th><th>Email</th><th>Address</th><th>Actions</th></tr></thead><tbody>{studentGuardianRows.map(guardian => {
+            const link = studentGuardianLinks.find(item => item.guardian_id === guardian.id)
+            return <tr key={guardian.id}><td><strong>{String(guardian.full_name ?? 'Guardian')}</strong><small>{String(guardian.occupation ?? '')}</small></td><td>{String(link?.relationship ?? guardian.relationship ?? 'guardian').replaceAll('_',' ')}</td><td>{String(guardian.phone ?? '—')}</td><td>{String(guardian.email ?? '—')}</td><td>{String(guardian.address ?? '—')}</td><td><div className="ed360-student-row-actions">{ownerOrAdmin && <><button type="button" onClick={() => { setGuardianEditing(guardian); setGuardianForm({ full_name: String(guardian.full_name ?? ''), relationship: String(link?.relationship ?? guardian.relationship ?? 'guardian'), phone: String(guardian.phone ?? ''), email: String(guardian.email ?? ''), address: String(guardian.address ?? ''), occupation: String(guardian.occupation ?? '') }); setGuardianFormOpen(true) }}>Edit</button>{link && <button type="button" className="danger-icon" onClick={() => void unlinkGuardian(link)}>Unlink</button>}</>}</div></td></tr>
+          })}</tbody></table></div> : <div className="ed360-student-empty"><span><HeartHandshake size={21}/></span><strong>No guardian contacts linked</strong><p>Create a guardian contact or link an existing institution contact to this student.</p></div>}
+          <p className="ed360-student-limitation-note">Guardian contact records and student relationships are stored separately in parent_guardians and guardian_students. A parent portal account is linked separately through the student-guardian access relationship; a contact email alone does not grant login access.</p>
+        </> : <div className="ed360-student-empty"><strong>No student selected</strong><p>Select a student to manage linked guardian contacts.</p></div>}
       </section>}
-
       {studentWorkspaceTab === 'attendance' && <section className="ed360-student-panel ed360-student-full-panel"><header><div><span className="ed360-student-panel-icon green"><CalendarCheck size={17}/></span><div><h2>Attendance history</h2><p>{selectedStudent ? 'Attendance records for ' + String(selectedStudent.full_name ?? 'the selected student') : 'Student attendance history'}</p></div></div><span className="ed360-student-record-count">{studentAttendanceRows.length} entries</span></header>
         <div className="ed360-student-status-cards"><div><small>Attendance records</small><strong>{studentAttendanceRows.length}</strong><span>Recorded sessions</span></div><div><small>Present / late</small><strong>{presentCount}</strong><span>Attended sessions</span></div><div><small>Absent</small><strong>{absentCount}</strong><span>Absence records</span></div><div><small>Attendance rate</small><strong>{studentAttendanceRows.length ? attendanceRate + '%' : '—'}</strong><span>Present plus late</span></div></div>
         {renderTable(studentAttendanceRows,[{key:'attendance_date',label:'Date'},{key:'student_name',label:'Student'},{key:'class_name',label:'Class'},{key:'status',label:'Status'},{key:'notes',label:'Notes'}],'No attendance entries are currently available for this student.')}
@@ -967,13 +1310,45 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
         {renderTable(studentTimetableRows,[{key:'weekday',label:'Day'},{key:'start_time',label:'Start'},{key:'end_time',label:'End'},{key:'subject',label:'Subject'},{key:'teacher_name',label:'Teacher'},{key:'room',label:'Room'}],'No timetable entries are available for this class.')}
       </section>}
 
-      {studentWorkspaceTab === 'documents' && <section className="ed360-student-panel ed360-student-full-panel"><header><div><span className="ed360-student-panel-icon violet"><FolderOpen size={17}/></span><div><h2>Student documents</h2><p>Photo and document references currently stored on the student record.</p></div></div></header>
-        {selectedStudent ? <div className="ed360-student-document-card"><StudentPhoto row={selectedStudent}/><div><strong>{String(selectedStudent.full_name ?? 'Student')}</strong><small>{String(selectedStudent.admission_no ?? 'No admission number')}</small><p>{typeof selectedStudent.photo_path === 'string' && selectedStudent.photo_path ? 'A student photograph is linked to the private institution storage.' : 'No student photograph has been uploaded.'}</p></div><span className={selectedStudent.photo_path ? 'ed360-document-ready' : 'ed360-document-missing'}>{selectedStudent.photo_path ? 'Photo uploaded' : 'Photo missing'}</span></div> : <div className="ed360-student-empty">Select a student to review their document information.</div>}
-        <p className="ed360-student-limitation-note">The current student data structure stores a photograph path but does not have a separate student-document register. General institution files remain available under Files & Documentation.</p>
+      {studentWorkspaceTab === 'documents' && <section className="ed360-student-panel ed360-student-full-panel">
+        <header><div><span className="ed360-student-panel-icon violet"><FolderOpen size={17}/></span><div><h2>Student documentation register</h2><p>Private student documents, review status and role-controlled visibility.</p></div></div><span className="ed360-student-record-count">{studentDocumentRows.length} documents</span></header>
+        {selectedStudent ? <>
+          <div className="ed360-student-document-card"><StudentPhoto row={selectedStudent}/><div><strong>{String(selectedStudent.full_name ?? 'Student')}</strong><small>{String(selectedStudent.admission_no ?? 'No admission number')}</small><p>{typeof selectedStudent.photo_path === 'string' && selectedStudent.photo_path ? 'Student photograph is stored in the institution photo area.' : 'No student photograph has been uploaded.'}</p></div><span className={selectedStudent.photo_path ? 'ed360-document-ready' : 'ed360-document-missing'}>{selectedStudent.photo_path ? 'Photo uploaded' : 'Photo missing'}</span></div>
+          {ownerOrAdmin && <div className="ed360-student-document-upload">
+            <div className="ed360-student-table-heading"><strong>Upload a student document</strong><span>Private storage · maximum 10 MB</span></div>
+            <form className="modal-form" onSubmit={event => { event.preventDefault(); void uploadStudentDocument() }}>
+              <div className="student-form-grid">
+                <label className="field-label student-field"><span>Document title</span><input className="input-control" value={documentTitle} onChange={event => setDocumentTitle(event.target.value)} placeholder={documentFile?.name ?? 'e.g. Birth certificate'}/></label>
+                <label className="field-label student-field"><span>Document type</span><select className="input-control" value={documentType} onChange={event => setDocumentType(event.target.value)}>{['birth_certificate','identity','previous_school','medical','residence','photo','consent','transfer','other'].map(value => <option key={value} value={value}>{value.replaceAll('_',' ')}</option>)}</select></label>
+                <label className="field-label student-field"><span>Visibility</span><select className="input-control" value={documentVisibility} onChange={event => setDocumentVisibility(event.target.value)}><option value="staff_only">Staff only</option><option value="student_guardian">Student / linked guardian can view</option></select></label>
+                <label className="field-label student-field"><span>Document file</span><input className="input-control" type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.doc,.docx" onChange={event => setDocumentFile(event.target.files?.[0] ?? null)} required/></label>
+                <label className="field-label student-field full-field"><span>Notes</span><textarea className="input-control textarea-control" rows={2} value={documentNotes} onChange={event => setDocumentNotes(event.target.value)} placeholder="Optional document notes or verification instructions"/></label>
+              </div>
+              <div className="modal-actions"><span className="student-field-help">{documentFile ? documentFile.name + ' · ' + (documentFile.size / 1024).toFixed(0) + ' KB' : 'Accepted: PDF, PNG, JPG, WEBP, TXT, DOC and DOCX'}</span><button type="submit" className="button button-primary" disabled={!documentFile}><Upload size={15}/> Upload document</button></div>
+            </form>
+          </div>}
+          <div className="ed360-student-table-heading"><strong>Stored documents</strong><span>{studentDocumentRows.filter(row => row.verification_status === 'pending').length} awaiting verification</span></div>
+          {studentDocumentRows.length ? <div className="ed360-student-table-wrap"><table className="ed360-student-table"><thead><tr><th>Document</th><th>Type</th><th>File / size</th><th>Visibility</th><th>Verification</th><th>Uploaded</th><th>Actions</th></tr></thead><tbody>{studentDocumentRows.map(doc => <tr key={doc.id}>
+            <td><strong>{String(doc.title ?? 'Student document')}</strong><small>{String(doc.notes ?? '')}</small></td>
+            <td>{String(doc.document_type ?? 'other').replaceAll('_',' ')}</td>
+            <td>{String(doc.file_name ?? 'File')}<small>{(Number(doc.file_size ?? 0) / 1024).toFixed(0)} KB</small></td>
+            <td>{String(doc.visibility ?? 'staff_only').replaceAll('_',' ')}</td>
+            <td><span className={'status-pill status-' + String(doc.verification_status ?? 'pending')}>{String(doc.verification_status ?? 'pending').replaceAll('_',' ')}</span></td>
+            <td>{niceDate(doc.created_at)}</td>
+            <td><div className="ed360-student-row-actions"><button type="button" onClick={() => void openStudentDocument(doc)}><Eye size={13}/> Open</button>{ownerOrAdmin && doc.verification_status !== 'verified' && <button type="button" onClick={() => void updateStudentDocumentStatus(doc,'verified')}>Verify</button>}{ownerOrAdmin && doc.verification_status !== 'rejected' && <button type="button" onClick={() => void updateStudentDocumentStatus(doc,'rejected')}>Reject</button>}{ownerOrAdmin && <button type="button" className="danger-icon" onClick={() => void removeStudentDocument(doc)}>Remove</button>}</div></td>
+          </tr>)}</tbody></table></div> : <div className="ed360-student-empty"><span><FileCheck2 size={21}/></span><strong>No student documents registered</strong><p>Upload verified admission and identity documents here. Files are stored in a private bucket and are not placed in the general institution file area.</p></div>}
+        </> : <div className="ed360-student-empty"><strong>No student selected</strong><p>Select a student to manage their document register.</p></div>}
       </section>}
-
-      {studentWorkspaceTab === 'history' && <section className="ed360-student-panel ed360-student-full-panel"><header><div><span className="ed360-student-panel-icon violet"><History size={17}/></span><div><h2>Student activity history</h2><p>Registration, attendance, examination and assignment activity visible to your role.</p></div></div><span className="ed360-student-record-count">{studentTimeline.length} events</span></header>
-        {studentTimeline.length ? <div className="ed360-student-timeline">{studentTimeline.map(item=><div className="ed360-student-timeline-item" key={item.id}><i/><div><strong>{item.label}</strong><p>{item.detail}</p></div><time>{niceDate(item.date)}</time><span className={'status-pill status-' + item.status.toLowerCase()}>{item.status.replaceAll('_',' ')}</span></div>)}</div> : <div className="ed360-student-empty"><strong>No student activity history yet</strong><p>Linked activity will appear as attendance, results, submissions and fee records are created.</p></div>}
+      {studentWorkspaceTab === 'history' && <section className="ed360-student-panel ed360-student-full-panel">
+        <header><div><span className="ed360-student-panel-icon violet"><History size={17}/></span><div><h2>Student audit history</h2><p>Database-recorded registration, admission decisions, profile changes, guardian links, placements and document events.</p></div></div><span className="ed360-student-record-count">{studentHistoryRows.length} recorded events</span></header>
+        {studentHistoryRows.length ? <div className="ed360-student-timeline">{studentHistoryRows.map(event => <div className="ed360-student-timeline-item" key={event.id}>
+          <i/>
+          <div><strong>{String(event.summary ?? 'Student record event')}</strong><p>{String(event.event_type ?? 'event').replaceAll('_',' ')}</p>
+            {Boolean(event.old_values || event.new_values) && <details className="ed360-student-history-details"><summary>View recorded changes</summary><div className="ed360-student-history-values">{Boolean(event.old_values) && <div><b>Before</b><pre>{JSON.stringify(event.old_values,null,2)}</pre></div>}{Boolean(event.new_values) && <div><b>After</b><pre>{JSON.stringify(event.new_values,null,2)}</pre></div>}</div></details>}
+          </div>
+          <time>{niceDate(event.created_at)}</time>
+          <span className="status-pill">{String(event.event_type ?? 'event').replaceAll('_',' ')}</span>
+        </div>)}</div> : <div className="ed360-student-empty"><strong>No student audit events available</strong><p>New registration, admission decisions, profile edits, guardian changes, placements and document verification will be recorded automatically from this point onward. Earlier edits cannot be reconstructed unless they were previously audited.</p></div>}
       </section>}
 
       {formDialog}{detailDialog}
