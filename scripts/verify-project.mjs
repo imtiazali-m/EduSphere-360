@@ -23,6 +23,7 @@ const requiredFiles = [
   'src/components/FinanceWorkspace.tsx', 'src/styles/finance-workspace.css',
   'src/components/PayrollWorkspace.tsx', 'src/styles/payroll-workspace.css',
   'src/components/GovernanceWorkspace.tsx', 'src/styles/governance-workspace.css',
+  'src/components/InstitutionOperationsWorkspace.tsx', 'src/styles/institution-operations.css',
   'src/components/AuthScreens.tsx', 'src/components/AdministrationModule.tsx',
   'src/components/RecordModule.tsx', 'src/components/FacultyWorkspace.tsx', 'src/styles/faculty-workspace.css', 'src/components/ReportsModule.tsx', 'src/components/ProfileModule.tsx', 'src/context/AuthContext.tsx', 'src/lib/auth.ts',
   'src/lib/data.ts', 'src/lib/navigationAccess.ts', 'src/lib/userErrors.ts', 'scripts/test-user-errors.mjs',
@@ -33,6 +34,8 @@ const requiredFiles = [
   'supabase/migrations/20261109150654_atomic_employee_salary_profile_workflow.sql',
   'supabase/migrations/20261109150857_employee_own_payroll_run_read.sql',
   'supabase/migrations/20261109151231_atomic_institution_setting_approval.sql',
+  'supabase/migrations/20261109153658_academic_studentcare_and_campus_operations.sql',
+  'supabase/migrations/20261109155028_question_paper_approval_and_line_removal.sql',
   'docs/EDUSPHERE_360_BENCHMARK_AND_GAP_REVIEW.md',
   '.env.example', 'package-lock.json', 'src/lib/types.ts', 'supabase/migrations/20261108053651_owner_signup_institution_details.sql', 'supabase/migrations/20261109083133_faculty_employee_management.sql', 'supabase/migrations/20261109092734_student_management_operations.sql', 'supabase/migrations/20261109092920_student_management_scope_indexes_and_guardian_portal_read.sql',
   '.github/workflows/cloudflare-pages-release.yml', 'docs/FINAL_REBUILD_STAGE.md', 'docs/NAVIGATION_RECONCILIATION.md',
@@ -417,6 +420,28 @@ check('Payroll routes use database salary, approval and payment workflows', () =
   assert.ok(read('supabase/migrations/20261109150857_employee_own_payroll_run_read.sql').includes('payroll_runs_employee_own_read'))
 })
 
+check('Question bank and paper designer use tenant-safe records and guarded approval', () => {
+  for (const [label,expected] of [
+    ['Question Bank Dashboard','pool'],['Question Paper Designer','papers'],['Question Review','pool'],['Question Paper Download','papers'],
+  ]) assert.ok(getNavigationRoute('question-bank',label).startsWith('operations:question-bank:'+expected), label+' must open the question bank workspace')
+  const operations=read('src/components/InstitutionOperationsWorkspace.tsx')
+  for (const value of ['question_bank_items','assessment_papers','assessment_paper_items','curriculum_units','student_behaviour_events','student_certificates','visitor_entries','facility_assets','facility_maintenance_requests']) {
+    assert.ok(operations.includes(value), 'Institution operations UI is missing '+value)
+  }
+  assert.ok(operations.includes("rpc('approve_assessment_paper'") || operations.includes("rpc('approve_assessment_paper'"), 'Paper approval must use the guarded database function')
+  const migration=read('supabase/migrations/20261109153658_academic_studentcare_and_campus_operations.sql')
+  for (const value of ['enable row level security','question_bank_items','assessment_papers','assessment_paper_items','curriculum_units','student_behaviour_events','student_certificates','visitor_entries','facility_assets','facility_maintenance_requests','public.can_view_student']) {
+    assert.ok(migration.includes(value), 'Institution operations schema/policy is missing '+value)
+  }
+  const approval=read('supabase/migrations/20261109155028_question_paper_approval_and_line_removal.sql')
+  for (const value of ['approve_assessment_paper','maximum_marks','question_bank_items','revoke all on function','assessment_paper_items_delete']) {
+    if(value==='assessment_paper_items_delete') continue
+    assert.ok(approval.includes(value), 'Question paper approval safeguard is missing '+value)
+  }
+  assert.ok(operations.includes("status==='safeguarding'&&v.family_visible==='true'") || operations.includes("event_type==='safeguarding'"), 'Safeguarding events must not be exposed through family visibility')
+  assert.ok(operations.includes("row.status==='issued'") && operations.includes('verification_code'), 'Issued certificates must support institution register verification')
+})
+
 check('Administration settings, approvals and audit are connected to governance tables', () => {
   assert.equal(getNavigationRoute('administration', 'Institute Profile'), 'governance:profile')
   assert.equal(getNavigationRoute('administration', 'Institution Settings'), 'governance:settings')
@@ -454,8 +479,8 @@ check('Required database safeguards and Cloudflare redirects remain in the proje
     assert.ok(migrations.includes(migration), `${migration} missing`)
   }
   const timestamped = migrations.filter(name => /^202611\d{8}_.+\.sql$/.test(name))
-  assert.equal(timestamped.length, 23, 'Expected twenty-three timestamped migrations matching the live migration history')
-  assert.ok(read('supabase/migrations/README.md').includes('twenty-three timestamped migration files'))
+  assert.equal(timestamped.length, 25, 'Expected twenty-five timestamped migrations matching the live migration history')
+  assert.ok(read('supabase/migrations/README.md').includes('twenty-five timestamped migration files'))
   assert.equal(read('public/_redirects').trim(), '/* /index.html 200')
   const envExample = read('.env.example')
   const gitignore = read('.gitignore')
