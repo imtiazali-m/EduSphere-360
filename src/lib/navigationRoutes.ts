@@ -1,7 +1,18 @@
-/** Every visible menu destination resolves to its matching functional workspace. */
+/** Every visible menu destination resolves to an existing functional workspace. */
 export const navigationRoutes: Record<string, string> = {
   Dashboard: 'overview',
-  'Student Record': 'students',
+  Overview: 'students:overview',
+  Admissions: 'students:admissions',
+  'Student Directory': 'students:directory',
+  'Student Profile': 'students:profile',
+  'Class Placement': 'students:classes',
+  Guardians: 'students:guardians',
+  'Student Attendance': 'students:attendance',
+  'Student Exam Results': 'students:results',
+  'Student Assignments': 'students:assignments',
+  'Student Timetable': 'students:timetable',
+  'Student Documentation': 'students:documents',
+  'Student History': 'students:history',
   'Faculty & Staff': 'teachers',
   'User Account': 'accounts',
   Departments: 'admin:departments',
