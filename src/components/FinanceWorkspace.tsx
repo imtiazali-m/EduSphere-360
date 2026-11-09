@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { Download, FileText, Plus, RefreshCw, Search, Wallet, X, CheckCircle2, CircleDollarSign, BookOpen, Receipt, AlertTriangle } from 'lucide-react'
+import { Download, Plus, RefreshCw, X, CheckCircle2, Receipt, AlertTriangle } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { listRecords, createRecord, recordFeePayment } from '../lib/data'
@@ -45,7 +45,7 @@ export function FinanceWorkspace({workspaceKey,initialWindow,onToast}:Props){
   const {user,mode}=useAuth()
   const [groupKey]=workspaceKey.split(':')
   const initialItem=initialWindow??''
-  const [section,setSection]=useState<Section>(()=>sectionFor(groupKey,initialItem))
+  const [section,setSection]=useState<Section>(() => (['overview','invoices','payments','structures','discounts','refunds','receivables','receipts','accounts','journals','reconciliation'].includes(initialItem) ? initialItem as Section : sectionFor(groupKey,initialItem)))
   const [loading,setLoading]=useState(true)
   const [saving,setSaving]=useState(false)
   const [error,setError]=useState('')
