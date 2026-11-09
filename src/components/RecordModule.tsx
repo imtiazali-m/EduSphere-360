@@ -760,38 +760,220 @@ export function RecordModule({ module, onToast }: Props) {
 
   if (module.key === 'students') {
     const filters: { key: StudentStatus; label: string }[] = [
-      { key: 'all', label: 'All students' }, { key: 'active', label: 'Active' },
+      { key: 'all', label: 'All' }, { key: 'active', label: 'Active' },
       { key: 'pending', label: 'Pending' }, { key: 'graduated', label: 'Graduated' }, { key: 'inactive', label: 'Inactive' },
     ]
-    return <div className="page-content ed360-module-page students-page">
-      <div className="students-page-heading">
-        <div><div className="eyebrow">PEOPLE / STUDENT DIRECTORY</div><h1>Students</h1><p>Manage admissions, student profiles, class placement and learner records.</p></div>
-        {canEdit && <button className="button button-primary students-add-button" onClick={() => { setEditing(null); setShowForm(true) }}><Plus size={17}/> Add student</button>}
+    const tabItems = [
+      { key: 'overview' as const, label: 'Overview', icon: LayoutDashboard },
+      { key: 'admissions' as const, label: 'Admissions', icon: GraduationCap, count: studentCounts.pending },
+      { key: 'directory' as const, label: 'Student Directory', icon: Users, count: studentCounts.total },
+      { key: 'profile' as const, label: 'Student Profile', icon: UserRound },
+      { key: 'classes' as const, label: 'Class Placement', icon: BookOpen },
+      { key: 'guardians' as const, label: 'Guardians', icon: HeartHandshake },
+      { key: 'attendance' as const, label: 'Attendance', icon: CalendarCheck },
+      { key: 'results' as const, label: 'Exams & Results', icon: ClipboardCheck },
+      { key: 'assignments' as const, label: 'Assignments', icon: FileText },
+      { key: 'fees' as const, label: 'Fees & Payments', icon: Wallet },
+      { key: 'timetable' as const, label: 'Timetable', icon: CalendarDays },
+      { key: 'documents' as const, label: 'Documents', icon: FolderOpen },
+      { key: 'history' as const, label: 'History', icon: History },
+    ]
+    const pendingRows = rows.filter(row => String(row.status ?? 'active').toLowerCase() === 'pending')
+    const presentCount = studentAttendanceRows.filter(row => ['present', 'late'].includes(String(row.status ?? '').toLowerCase())).length
+    const absentCount = studentAttendanceRows.filter(row => String(row.status ?? '').toLowerCase() === 'absent').length
+    const attendanceRate = studentAttendanceRows.length ? Math.round(presentCount / studentAttendanceRows.length * 100) : 0
+    const publishedResults = studentResultRows.filter(row => String(row.result_status ?? '').toLowerCase() === 'published')
+    const totalBilled = studentFeeRows.reduce((sum, row) => sum + netInvoiceAmount(row), 0)
+    const totalPaid = studentFeeRows.reduce((sum, row) => sum + Math.max(0, Number(row.paid_amount ?? 0)), 0)
+    const totalOutstanding = studentFeeRows.reduce((sum, row) => sum + outstandingInvoiceBalance(row), 0)
+    const studentTimeline = [
+      ...(selectedStudent ? [{
+        id: 'student-' + selectedStudent.id,
+        date: selectedStudent.created_at ?? '',
+        label: 'Student registration',
+        detail: String(selectedStudent.full_name ?? 'Student') + ' was registered',
+        status: String(selectedStudent.status ?? 'active'),
+      }] : []),
+      ...studentAttendanceRows.map(row => ({ id: 'attendance-' + row.id, date: String(row.attendance_date ?? row.created_at ?? ''), label: 'Attendance', detail: String(row.status ?? 'Attendance') + ' · ' + String(row.class_name ?? studentClass), status: String(row.status ?? '') })),
+      ...studentResultRows.map(row => ({ id: 'result-' + row.id, date: String(row.created_at ?? ''), label: 'Examination result', detail: String(row.exam_title ?? 'Examination') + ' · ' + String(row.grade ?? row.marks_obtained ?? 'Marks recorded'), status: String(row.result_status ?? 'draft') })),
+      ...studentSubmissionRows.map(row => ({ id: 'submission-' + row.id, date: String(row.submitted_at ?? row.created_at ?? ''), label: 'Assignment submission', detail: String(row.assignment_title ?? 'Assignment') + ' · ' + String(row.status ?? 'submitted'), status: String(row.status ?? '') })),
+      ...studentFeeRows.map(row => ({ id: 'fee-' + row.id, date: String(row.invoice_date ?? row.created_at ?? ''), label: 'Fee invoice', detail: String(row.invoice_no ?? row.invoice_number ?? 'Invoice') + ' · ' + String(row.fee_title ?? 'Fees'), status: String(row.status ?? '') })),
+    ].filter(item => item.date).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 30)
+    const renderTable = (dataRows: RecordRow[], columns: { key: string; label: string }[], emptyMessage: string) => dataRows.length === 0
+      ? <div className="ed360-student-empty"><span><FolderOpen size={21}/></span><strong>No records to display</strong><p>{emptyMessage}</p></div>
+      : <div className="ed360-student-table-wrap"><table className="ed360-student-table"><thead><tr>{columns.map(column => <th key={column.key}>{column.label}</th>)}</tr></thead><tbody>{dataRows.map(row => <tr key={row.id}>{columns.map(column => {
+        const raw = row[column.key]
+        const value = raw === null || raw === undefined || raw === '' ? '—'
+          : ['attendance_date', 'due_date', 'exam_date', 'submitted_at', 'created_at', 'invoice_date'].includes(column.key) ? niceDate(raw)
+          : ['amount', 'paid_amount', 'marks_obtained', 'total_marks', 'balance'].includes(column.key) ? Number(raw).toLocaleString(undefined, { maximumFractionDigits: 2 })
+          : String(raw).replaceAll('_', ' ')
+        return <td key={column.key}>{['status', 'result_status'].includes(column.key) ? <span className={'status-pill status-' + String(raw ?? '').toLowerCase()}>{value}</span> : value}</td>
+      })}</tr>)}</tbody></table></div>
+
+    return <div className="page-content ed360-module-page students-page ed360-student-workspace">
+      <header className="ed360-student-workspace-heading">
+        <div className="ed360-student-heading-copy">
+          <span className="ed360-workspace-kicker">ADMISSION & STUDENT MANAGEMENT</span>
+          <h1>Student Management</h1>
+          <p>Admissions, student profiles and the complete learner lifecycle in one workspace.</p>
+        </div>
+        <div className="ed360-student-heading-actions">
+          <button type="button" className="button button-outline" onClick={() => void load()} disabled={loading}><RefreshCw size={15} className={loading ? 'spin' : ''}/> Refresh</button>
+          {canCreate && <button type="button" className="button button-primary" onClick={() => { setEditing(null); setShowForm(true) }}><Plus size={16}/> New admission</button>}
+        </div>
+      </header>
+
+      <nav className="ed360-student-window-nav" aria-label="Student management windows">
+        {tabItems.map(item => {
+          const Icon = item.icon
+          return <button type="button" key={item.key} className={studentWorkspaceTab === item.key ? 'active' : ''} aria-current={studentWorkspaceTab === item.key ? 'page' : undefined} onClick={() => { setStudentWorkspaceTab(item.key); setCurrentPage(1) }}>
+            <Icon size={15}/><span>{item.label}</span>{typeof item.count === 'number' && <b>{item.count.toLocaleString()}</b>}
+          </button>
+        })}
+      </nav>
+
+      <div className="ed360-student-window-context">
+        <div><span className="ed360-context-label">CURRENT WINDOW</span><strong>{tabItems.find(item => item.key === studentWorkspaceTab)?.label ?? 'Overview'}</strong></div>
+        <label>Selected student
+          <select value={selectedStudent?.id ?? ''} onChange={event => setSelectedStudentId(event.target.value)} disabled={!rows.length}>
+            {rows.length === 0 && <option value="">No student records</option>}
+            {rows.map(row => <option key={row.id} value={row.id}>{String(row.full_name ?? 'Student')} · {String(row.admission_no ?? 'No ID')}</option>)}
+          </select>
+        </label>
+        {studentRelatedLoading && <span className="ed360-related-loading"><RefreshCw className="spin" size={13}/> Updating linked records</span>}
       </div>
-      <ModuleInsights module={module} rows={rows} loading={loading}/>
-      <section className="student-directory-card">
-        <div className="student-directory-heading"><div><h2>Student directory</h2><p>Search and manage students registered at your institution.</p></div><span className="student-mode-tag cloud">Cloud records</span></div>
+      {studentRelatedErrors.length > 0 && <div className="ed360-student-data-note" role="status"><ShieldCheck size={15}/><span>Some related information is not available to this role. Your student records and permitted sections remain available.</span></div>}
+
+      {studentWorkspaceTab === 'overview' && <>
+        <ModuleInsights module={module} rows={rows} loading={loading}/>
+        <div className="ed360-student-overview-grid">
+          <section className="ed360-student-panel">
+            <header><div><span className="ed360-student-panel-icon"><BookOpen size={17}/></span><div><h2>Students by class / programme</h2><p>Enrolment distribution using the class field on student records.</p></div></div><button type="button" onClick={() => setStudentWorkspaceTab('classes')}>Open class placement <ChevronRight size={14}/></button></header>
+            {studentClassCounts.length ? <div className="ed360-student-class-bars">{studentClassCounts.slice(0, 7).map(item => <div key={item.name}><div><span>{item.name}</span><b>{item.count}</b></div><i><span style={{ width: (item.count / Math.max(1, studentCounts.total) * 100) + '%' }}/></i></div>)}</div> : <div className="ed360-student-empty"><strong>No class information yet</strong><p>Class distribution will appear when student admissions are registered.</p></div>}
+          </section>
+          <section className="ed360-student-panel">
+            <header><div><span className="ed360-student-panel-icon green"><Activity size={17}/></span><div><h2>Admission pipeline</h2><p>Current student registration status.</p></div></div><button type="button" onClick={() => setStudentWorkspaceTab('admissions')}>Review admissions <ChevronRight size={14}/></button></header>
+            <div className="ed360-student-pipeline">
+              <div><span>Active</span><b>{studentCounts.active}</b><i><span style={{ width: (studentCounts.total ? studentCounts.active / studentCounts.total * 100 : 0) + '%', background: '#16a36b' }}/></i></div>
+              <div><span>Pending</span><b>{studentCounts.pending}</b><i><span style={{ width: (studentCounts.total ? studentCounts.pending / studentCounts.total * 100 : 0) + '%', background: '#e6a23c' }}/></i></div>
+              <div><span>Inactive</span><b>{studentCounts.inactive}</b><i><span style={{ width: (studentCounts.total ? studentCounts.inactive / studentCounts.total * 100 : 0) + '%', background: '#8b62e8' }}/></i></div>
+              <div><span>Graduated</span><b>{studentCounts.graduated}</b><i><span style={{ width: (studentCounts.total ? studentCounts.graduated / studentCounts.total * 100 : 0) + '%', background: '#2877ee' }}/></i></div>
+            </div>
+          </section>
+          <section className="ed360-student-panel ed360-student-panel-wide">
+            <header><div><span className="ed360-student-panel-icon violet"><History size={17}/></span><div><h2>Recent admissions</h2><p>Latest registered student profiles.</p></div></div><button type="button" onClick={() => setStudentWorkspaceTab('directory')}>Open directory <ChevronRight size={14}/></button></header>
+            {rows.length ? <div className="ed360-student-recent-list">{[...rows].slice(0, 5).map(row => <button type="button" key={row.id} onClick={() => { setSelectedStudentId(row.id); setStudentWorkspaceTab('profile') }}><StudentPhoto row={row}/><span><strong>{String(row.full_name ?? 'Student')}</strong><small>{String(row.admission_no ?? 'No admission ID')} · {String(row.class_name ?? 'Class not assigned')}</small></span><em className={'status-pill status-' + String(row.status ?? 'active')}>{statusLabel(row.status)}</em></button>)}</div> : <div className="ed360-student-empty"><span><GraduationCap size={22}/></span><strong>No student admissions yet</strong><p>Use New admission to register the first student. New applications start in Pending status.</p>{canCreate && <button type="button" className="button button-primary" onClick={() => { setEditing(null); setShowForm(true) }}>Create first admission</button>}</div>}
+          </section>
+        </div>
+      </>}
+
+      {studentWorkspaceTab === 'admissions' && <section className="ed360-student-panel ed360-student-full-panel">
+        <header><div><span className="ed360-student-panel-icon"><GraduationCap size={17}/></span><div><h2>Admission applications</h2><p>Review new and pending student registrations. New admissions are created as Pending.</p></div></div>{canCreate && <button type="button" className="button button-primary" onClick={() => { setEditing(null); setShowForm(true) }}><Plus size={15}/> Register student</button>}</header>
+        <div className="ed360-student-status-cards">
+          <div><small>Pending review</small><strong>{studentCounts.pending}</strong><span>Awaiting admission decision</span></div>
+          <div><small>Active registrations</small><strong>{studentCounts.active}</strong><span>Currently enrolled</span></div>
+          <div><small>All applications</small><strong>{studentCounts.total}</strong><span>Student records in this institution</span></div>
+        </div>
+        <div className="ed360-student-table-heading"><strong>Pending admission queue</strong><span>{pendingRows.length} awaiting review</span></div>
+        {loading ? <div className="ed360-student-empty">Loading admissions…</div> : pendingRows.length ? <div className="ed360-student-table-wrap"><table className="ed360-student-table"><thead><tr><th>Admission ID</th><th>Applicant</th><th>Class / programme</th><th>Guardian</th><th>Registered</th><th>Actions</th></tr></thead><tbody>{pendingRows.map(row => <tr key={row.id}><td>{String(row.admission_no ?? '—')}</td><td><strong>{String(row.full_name ?? 'Student')}</strong><small>{String(row.email ?? '')}</small></td><td>{String(row.class_name ?? '—')}</td><td>{String(row.guardian_name ?? '—')}</td><td>{niceDate(row.created_at)}</td><td><div className="ed360-student-row-actions"><button type="button" onClick={() => { setSelectedStudentId(row.id); setStudentWorkspaceTab('profile') }}>View</button>{canEdit && <button type="button" onClick={() => { setEditing(row); setShowForm(true) }}>Review / Edit</button>}</div></td></tr>)}</tbody></table></div> : <div className="ed360-student-empty"><span><Check size={20}/></span><strong>No pending applications</strong><p>There are currently no student applications awaiting review.</p></div>}
+      </section>}
+
+      {studentWorkspaceTab === 'directory' && <section className="student-directory-card ed360-student-directory-window">
+        <div className="student-directory-heading"><div><h2>Student directory</h2><p>Institution-wide student register with search, status filters and profile actions.</p></div><span className="student-mode-tag cloud">Live records</span></div>
         <div className="student-directory-toolbar">
           <label className="student-search"><Search size={17}/><input aria-label="Search students" placeholder="Search name, admission number or class…" value={search} onChange={event => { setSearch(event.target.value); setCurrentPage(1) }}/>{search && <button type="button" onClick={() => { setSearch(''); setCurrentPage(1) }} aria-label="Clear search"><X size={15}/></button>}</label>
-          <button className="student-refresh-button" onClick={() => void load()} disabled={loading}><RefreshCw size={15} className={loading ? 'spin' : ''}/> Refresh</button>
+          <button className="student-refresh-button" type="button" onClick={() => void load()} disabled={loading}><RefreshCw size={15} className={loading ? 'spin' : ''}/> Refresh</button>
         </div>
         <div className="student-filter-row" role="group" aria-label="Filter students by status">
           {filters.map(filter => <button type="button" key={filter.key} className={studentStatus === filter.key ? 'active' : ''} onClick={() => { setStudentStatus(filter.key); setCurrentPage(1) }}>{filter.label}{filter.key === 'all' ? <span>{studentCounts.total}</span> : null}</button>)}
         </div>
-        {loading ? <div className="student-empty-state"><RefreshCw className="spin" size={22}/><strong>Loading students…</strong></div> : studentFiltered.length === 0 ? <div className="student-empty-state"><span className="student-empty-icon"><GraduationCap size={25}/></span><strong>{search ? 'No matching students' : studentStatus === 'all' ? 'No students registered yet' : `No ${studentStatus} students`}</strong><p>{search ? 'Try a different name, admission number or class.' : canEdit ? 'Add your first student to begin building the institution directory.' : 'Student records will appear here when they are added by an authorized administrator.'}</p>{canEdit && !search && studentStatus === 'all' && <button className="button button-primary" onClick={() => { setEditing(null); setShowForm(true) }}><Plus size={16}/> Add first student</button>}</div> : <div className="student-table-wrap"><table className="student-table"><thead><tr><th>Student ID</th><th>Student</th><th>Class / programme</th><th>Parent / guardian</th><th>Status</th><th className="action-column">Actions</th></tr></thead><tbody>{studentPageRows.map(row => <tr key={row.id}>
+        {loading ? <div className="student-empty-state"><RefreshCw className="spin" size={22}/><strong>Loading students…</strong></div> : studentFiltered.length === 0 ? <div className="student-empty-state"><span className="student-empty-icon"><GraduationCap size={25}/></span><strong>{search ? 'No matching students' : studentStatus === 'all' ? 'No students registered yet' : 'No ' + studentStatus + ' students'}</strong><p>{search ? 'Try a different name, admission number or class.' : canEdit ? 'Add your first student to begin building the institution directory.' : 'Student records will appear here when an authorized administrator adds them.'}</p>{canCreate && !search && studentStatus === 'all' && <button className="button button-primary" onClick={() => { setEditing(null); setShowForm(true) }}><Plus size={16}/> Add first student</button>}</div> : <div className="student-table-wrap"><table className="student-table"><thead><tr><th>Admission ID</th><th>Student</th><th>Class / programme</th><th>Parent / guardian</th><th>Status</th><th className="action-column">Actions</th></tr></thead><tbody>{studentPageRows.map(row => <tr key={row.id}>
           <td><span className="student-admission-number">{String(row.admission_no ?? '—')}</span></td>
           <td><div className="student-person-cell"><StudentPhoto row={row}/><span><strong>{String(row.full_name ?? 'Unnamed student')}</strong><small>{String(row.email ?? 'No email provided')}</small></span></div></td>
           <td>{String(row.class_name ?? '—')}</td><td>{String(row.guardian_name ?? '—')}</td>
-          <td><span className={`status-pill status-${String(row.status ?? 'active').toLowerCase()}`}>{statusLabel(row.status)}</span></td>
-          <td className="row-actions ed360-student-actions"><button className="icon-button" onClick={() => setViewing(row)} title="View student"><Eye size={15}/></button>{canEdit && <button className="icon-button" onClick={() => { setEditing(row); setShowForm(true) }} title="Edit student"><Edit3 size={15}/></button>}{canDelete && <button className="icon-button danger-icon" onClick={() => void remove(row)} title="Delete student"><Trash2 size={15}/></button>}</td>
+          <td><span className={'status-pill status-' + String(row.status ?? 'active').toLowerCase()}>{statusLabel(row.status)}</span></td>
+          <td className="row-actions ed360-student-actions"><button className="icon-button" onClick={() => { setSelectedStudentId(row.id); setStudentWorkspaceTab('profile') }} title="Open student profile"><Eye size={15}/></button>{canEdit && <button className="icon-button" onClick={() => { setEditing(row); setShowForm(true) }} title="Edit student"><Edit3 size={15}/></button>}{canDelete && <button className="icon-button danger-icon" onClick={() => void remove(row)} title="Delete student"><Trash2 size={15}/></button>}</td>
         </tr>)}</tbody></table></div>}
-        <div className="student-directory-footer"><span>Found <strong>{studentFiltered.length}</strong> of <strong>{studentCounts.total}</strong> students</span><span>Student records are restricted to authorized institution members.</span></div>
+        <div className="student-directory-footer"><span>Found <strong>{studentFiltered.length}</strong> of <strong>{studentCounts.total}</strong> students</span><span>Actions follow your institution role permissions.</span></div>
         <WorkspacePagination page={currentPage} pageCount={studentPageCount} pageSize={pageSize} total={studentFiltered.length} onChange={setCurrentPage}/>
-      </section>
+      </section>}
+
+      {studentWorkspaceTab === 'profile' && <section className="ed360-student-profile-window">
+        {selectedStudent ? <>
+          <div className="ed360-student-profile-banner">
+            <StudentPhoto row={selectedStudent}/>
+            <div><span>STUDENT PROFILE</span><h2>{String(selectedStudent.full_name ?? 'Student')}</h2><p>{String(selectedStudent.admission_no ?? 'No admission number')} · {String(selectedStudent.class_name ?? 'Class not assigned')}</p></div>
+            <span className={'status-pill status-' + String(selectedStudent.status ?? 'active')}>{statusLabel(selectedStudent.status)}</span>
+            {canEdit && <button type="button" className="button button-outline" onClick={() => { setEditing(selectedStudent); setShowForm(true) }}><Edit3 size={14}/> Edit profile</button>}
+          </div>
+          <div className="ed360-student-profile-grid">
+            <section className="ed360-student-panel"><header><div><span className="ed360-student-panel-icon"><UserRound size={16}/></span><div><h3>Personal information</h3><p>Details stored in the student record.</p></div></div></header><dl><div><dt>Full name</dt><dd>{String(selectedStudent.full_name ?? '—')}</dd></div><div><dt>Admission ID</dt><dd>{String(selectedStudent.admission_no ?? '—')}</dd></div><div><dt>Email address</dt><dd>{String(selectedStudent.email ?? '—')}</dd></div><div><dt>Date of birth</dt><dd>{niceDate(selectedStudent.date_of_birth)}</dd></div><div><dt>Registered on</dt><dd>{niceDate(selectedStudent.created_at)}</dd></div></dl></section>
+            <section className="ed360-student-panel"><header><div><span className="ed360-student-panel-icon green"><BookOpen size={16}/></span><div><h3>Academic placement</h3><p>Current class/programme information.</p></div></div></header><dl><div><dt>Class / programme</dt><dd>{String(selectedStudent.class_name ?? 'Not assigned')}</dd></div><div><dt>Student status</dt><dd>{statusLabel(selectedStudent.status)}</dd></div><div><dt>Academic session</dt><dd>Not linked in the current student record</dd></div><div><dt>Section</dt><dd>Not stored in the current student record</dd></div></dl></section>
+            <section className="ed360-student-panel"><header><div><span className="ed360-student-panel-icon violet"><HeartHandshake size={16}/></span><div><h3>Parent / guardian</h3><p>Guardian contact details stored with the student.</p></div></div></header><dl><div><dt>Guardian name</dt><dd>{String(selectedStudent.guardian_name ?? 'Not provided')}</dd></div><div><dt>Guardian email</dt><dd>{String(selectedStudent.guardian_email ?? 'Not provided')}</dd></div></dl></section>
+            <section className="ed360-student-panel"><header><div><span className="ed360-student-panel-icon amber"><Activity size={16}/></span><div><h3>Student activity</h3><p>Related records visible to your role.</p></div></div></header><dl><div><dt>Attendance entries</dt><dd>{studentAttendanceRows.length}</dd></div><div><dt>Published results</dt><dd>{publishedResults.length}</dd></div><div><dt>Assignment submissions</dt><dd>{studentSubmissionRows.length}</dd></div><div><dt>Fee invoices</dt><dd>{studentFeeRows.length}</dd></div></dl></section>
+          </div>
+        </> : <div className="ed360-student-empty"><strong>No student selected</strong><p>Register or select a student from the directory to open a profile.</p></div>}
+      </section>}
+
+      {studentWorkspaceTab === 'classes' && <div className="ed360-student-overview-grid">
+        <section className="ed360-student-panel"><header><div><span className="ed360-student-panel-icon"><BookOpen size={17}/></span><div><h2>Class / programme distribution</h2><p>Counts based on students.class_name.</p></div></div></header>
+          {studentClassCounts.length ? <div className="ed360-student-class-bars">{studentClassCounts.map(item => <button type="button" key={item.name} className={studentClass.toLowerCase() === item.name.toLowerCase() ? 'active' : ''} onClick={() => { const match = rows.find(row => String(row.class_name ?? 'Not assigned').trim() === item.name); if (match) setSelectedStudentId(match.id) }}><div><span>{item.name}</span><b>{item.count}</b></div><i><span style={{ width: (item.count / Math.max(1, studentCounts.total) * 100) + '%' }}/></i></button>)}</div> : <div className="ed360-student-empty"><strong>No class placements yet</strong><p>Class statistics appear after student records have been registered.</p></div>}
+        </section>
+        <section className="ed360-student-panel"><header><div><span className="ed360-student-panel-icon green"><ShieldCheck size={17}/></span><div><h2>Placement details</h2><p>Current student's recorded placement.</p></div></div></header>
+          <dl><div><dt>Selected student</dt><dd>{String(selectedStudent?.full_name ?? '—')}</dd></div><div><dt>Class / programme</dt><dd>{studentClass || 'Not assigned'}</dd></div><div><dt>Active students in class</dt><dd>{rows.filter(row => String(row.class_name ?? '').toLowerCase() === studentClass.toLowerCase() && String(row.status ?? 'active') === 'active').length}</dd></div></dl>
+          <p className="ed360-student-limitation-note">The current students table contains a class/programme field but no separate section or academic-session link. This workspace does not invent those relationships.</p>
+        </section>
+      </div>}
+
+      {studentWorkspaceTab === 'guardians' && <section className="ed360-student-panel ed360-student-full-panel"><header><div><span className="ed360-student-panel-icon violet"><HeartHandshake size={17}/></span><div><h2>Parent & guardian contacts</h2><p>Guardian name and email from each student record.</p></div></div><span className="ed360-student-record-count">{rows.filter(row => row.guardian_name || row.guardian_email).length} contact records</span></header>
+        {renderTable(rows.filter(row => row.guardian_name || row.guardian_email),[{key:'admission_no',label:'Admission ID'},{key:'full_name',label:'Student'},{key:'class_name',label:'Class / programme'},{key:'guardian_name',label:'Guardian name'},{key:'guardian_email',label:'Guardian email'}],'Guardian contact details have not been entered for these students.')}
+        <p className="ed360-student-limitation-note">The current student register stores one guardian contact pair per student. Multiple guardian accounts and relationships require a separate approved data-model update.</p>
+      </section>}
+
+      {studentWorkspaceTab === 'attendance' && <section className="ed360-student-panel ed360-student-full-panel"><header><div><span className="ed360-student-panel-icon green"><CalendarCheck size={17}/></span><div><h2>Attendance history</h2><p>{selectedStudent ? 'Attendance records for ' + String(selectedStudent.full_name ?? 'the selected student') : 'Student attendance history'}</p></div></div><span className="ed360-student-record-count">{studentAttendanceRows.length} entries</span></header>
+        <div className="ed360-student-status-cards"><div><small>Attendance records</small><strong>{studentAttendanceRows.length}</strong><span>Recorded sessions</span></div><div><small>Present / late</small><strong>{presentCount}</strong><span>Attended sessions</span></div><div><small>Absent</small><strong>{absentCount}</strong><span>Absence records</span></div><div><small>Attendance rate</small><strong>{studentAttendanceRows.length ? attendanceRate + '%' : '—'}</strong><span>Present plus late</span></div></div>
+        {renderTable(studentAttendanceRows,[{key:'attendance_date',label:'Date'},{key:'student_name',label:'Student'},{key:'class_name',label:'Class'},{key:'status',label:'Status'},{key:'notes',label:'Notes'}],'No attendance entries are currently available for this student.')}
+      </section>}
+
+      {studentWorkspaceTab === 'results' && <div className="ed360-student-overview-grid">
+        <section className="ed360-student-panel ed360-student-panel-wide"><header><div><span className="ed360-student-panel-icon violet"><ClipboardCheck size={17}/></span><div><h2>Published examination results</h2><p>Results currently visible for the selected student.</p></div></div><span className="ed360-student-record-count">{publishedResults.length} published</span></header>
+          {renderTable(publishedResults,[{key:'exam_title',label:'Examination'},{key:'subject',label:'Subject'},{key:'marks_obtained',label:'Marks'},{key:'total_marks',label:'Out of'},{key:'grade',label:'Grade'},{key:'result_status',label:'Publication'}],'No published examination results are available for this student.')}
+        </section>
+        <section className="ed360-student-panel ed360-student-panel-wide"><header><div><span className="ed360-student-panel-icon"><CalendarDays size={17}/></span><div><h2>Class examinations</h2><p>Examination schedule for the selected student's class.</p></div></div><span className="ed360-student-record-count">{studentExamRows.length} exams</span></header>
+          {renderTable(studentExamRows,[{key:'title',label:'Examination'},{key:'exam_type',label:'Type'},{key:'subject',label:'Subject'},{key:'exam_date',label:'Date'},{key:'total_marks',label:'Maximum marks'},{key:'status',label:'Status'}],'No examinations are currently scheduled for this class.')}
+        </section>
+      </div>}
+
+      {studentWorkspaceTab === 'assignments' && <div className="ed360-student-overview-grid">
+        <section className="ed360-student-panel ed360-student-panel-wide"><header><div><span className="ed360-student-panel-icon"><BookOpen size={17}/></span><div><h2>Class assignments</h2><p>Assignments available for the selected student's class.</p></div></div><span className="ed360-student-record-count">{studentAssignmentRows.length} assignments</span></header>
+          {renderTable(studentAssignmentRows,[{key:'title',label:'Assignment'},{key:'subject',label:'Subject'},{key:'due_date',label:'Due date'},{key:'points',label:'Maximum marks'},{key:'status',label:'Status'}],'No class assignments are currently available.')}
+        </section>
+        <section className="ed360-student-panel ed360-student-panel-wide"><header><div><span className="ed360-student-panel-icon green"><FileText size={17}/></span><div><h2>Student submissions</h2><p>Submission status, marks and teacher feedback.</p></div></div><span className="ed360-student-record-count">{studentSubmissionRows.length} submissions</span></header>
+          {renderTable(studentSubmissionRows,[{key:'assignment_title',label:'Assignment'},{key:'submitted_at',label:'Submitted'},{key:'marks_obtained',label:'Marks'},{key:'status',label:'Status'},{key:'feedback',label:'Teacher feedback'}],'No assignment submissions are available for this student.')}
+        </section>
+      </div>}
+
+      {studentWorkspaceTab === 'fees' && <section className="ed360-student-panel ed360-student-full-panel"><header><div><span className="ed360-student-panel-icon amber"><Wallet size={17}/></span><div><h2>Fees & payment account</h2><p>Invoice and payment information linked to the selected student.</p></div></div><span className="ed360-student-record-count">{studentFeeRows.length} invoices</span></header>
+        <div className="ed360-student-status-cards"><div><small>Total invoiced</small><strong>PKR {totalBilled.toLocaleString(undefined,{maximumFractionDigits:0})}</strong><span>Net amount billed</span></div><div><small>Paid</small><strong>PKR {totalPaid.toLocaleString(undefined,{maximumFractionDigits:0})}</strong><span>Payments received</span></div><div><small>Outstanding</small><strong>PKR {totalOutstanding.toLocaleString(undefined,{maximumFractionDigits:0})}</strong><span>Remaining balance</span></div><div><small>Unpaid / overdue</small><strong>{studentFeeRows.filter(row=>['unpaid','overdue','partial'].includes(String(row.status??'').toLowerCase())).length}</strong><span>Invoices needing attention</span></div></div>
+        {renderTable(studentFeeRows,[{key:'invoice_no',label:'Invoice'},{key:'fee_title',label:'Description'},{key:'amount',label:'Amount (PKR)'},{key:'paid_amount',label:'Paid (PKR)'},{key:'due_date',label:'Due date'},{key:'status',label:'Status'}],'No fee invoices are currently linked to this student.')}
+      </section>}
+
+      {studentWorkspaceTab === 'timetable' && <section className="ed360-student-panel ed360-student-full-panel"><header><div><span className="ed360-student-panel-icon"><CalendarDays size={17}/></span><div><h2>Class timetable</h2><p>Weekly periods for {studentClass || 'the selected class'}.</p></div></div><span className="ed360-student-record-count">{studentTimetableRows.length} periods</span></header>
+        {renderTable(studentTimetableRows,[{key:'weekday',label:'Day'},{key:'start_time',label:'Start'},{key:'end_time',label:'End'},{key:'subject',label:'Subject'},{key:'teacher_name',label:'Teacher'},{key:'room',label:'Room'}],'No timetable entries are available for this class.')}
+      </section>}
+
+      {studentWorkspaceTab === 'documents' && <section className="ed360-student-panel ed360-student-full-panel"><header><div><span className="ed360-student-panel-icon violet"><FolderOpen size={17}/></span><div><h2>Student documents</h2><p>Photo and document references currently stored on the student record.</p></div></div></header>
+        {selectedStudent ? <div className="ed360-student-document-card"><StudentPhoto row={selectedStudent}/><div><strong>{String(selectedStudent.full_name ?? 'Student')}</strong><small>{String(selectedStudent.admission_no ?? 'No admission number')}</small><p>{typeof selectedStudent.photo_path === 'string' && selectedStudent.photo_path ? 'A student photograph is linked to the private institution storage.' : 'No student photograph has been uploaded.'}</p></div><span className={selectedStudent.photo_path ? 'ed360-document-ready' : 'ed360-document-missing'}>{selectedStudent.photo_path ? 'Photo uploaded' : 'Photo missing'}</span></div> : <div className="ed360-student-empty">Select a student to review their document information.</div>}
+        <p className="ed360-student-limitation-note">The current student data structure stores a photograph path but does not have a separate student-document register. General institution files remain available under Files & Documentation.</p>
+      </section>}
+
+      {studentWorkspaceTab === 'history' && <section className="ed360-student-panel ed360-student-full-panel"><header><div><span className="ed360-student-panel-icon violet"><History size={17}/></span><div><h2>Student activity history</h2><p>Registration, attendance, examination, submission and invoice events visible to your role.</p></div></div><span className="ed360-student-record-count">{studentTimeline.length} events</span></header>
+        {studentTimeline.length ? <div className="ed360-student-timeline">{studentTimeline.map(item=><div className="ed360-student-timeline-item" key={item.id}><i/><div><strong>{item.label}</strong><p>{item.detail}</p></div><time>{niceDate(item.date)}</time><span className={'status-pill status-' + item.status.toLowerCase()}>{item.status.replaceAll('_',' ')}</span></div>)}</div> : <div className="ed360-student-empty"><strong>No student activity history yet</strong><p>Linked activity will appear as attendance, results, submissions and fee records are created.</p></div>}
+      </section>}
+
       {formDialog}{detailDialog}
     </div>
   }
-
   if (module.key === 'teachers') {
     const filters: { key: EmployeeStatus; label: string }[] = [
       { key: 'all', label: 'All faculty' }, { key: 'active', label: 'Active' },
