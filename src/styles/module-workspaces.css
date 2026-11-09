@@ -235,3 +235,30 @@
   .ed360-student-profile-banner>.button{margin-left:68px}
   .ed360-student-profile-grid dl>div{grid-template-columns:100px minmax(0,1fr)}
 }
+
+
+/* Student Management operational sub-windows */
+.ed360-student-placement-editor,
+.ed360-student-document-upload{display:grid;gap:12px;margin-top:15px;padding:14px;border:1px solid #e1e9f3;border-radius:10px;background:#fbfdff}
+.ed360-student-placement-editor .field-label,
+.ed360-student-document-upload .field-label,
+.ed360-student-inline-form .field-label{min-width:0}
+.ed360-student-placement-editor .button{justify-self:start}
+.ed360-student-guardian-actions{display:grid;gap:10px;margin:12px 0}
+.ed360-student-guardian-link{display:flex;align-items:center;gap:8px;max-width:720px}
+.ed360-student-guardian-link select{min-width:220px;flex:1}
+.ed360-student-inline-form{margin:12px 0;padding:14px;border:1px solid #e0e8f2;border-radius:10px;background:#fbfdff}
+.ed360-student-history-details{margin-top:6px;color:#627993;font-size:8px}
+.ed360-student-history-details summary{cursor:pointer;color:#2877ee;font-weight:750}
+.ed360-student-history-values{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:8px}
+.ed360-student-history-values>div{min-width:0;padding:8px;border:1px solid #e5ecf4;border-radius:8px;background:#f9fbfe}
+.ed360-student-history-values b{display:block;margin-bottom:5px;color:#55708d;font-size:8px}
+.ed360-student-history-values pre{max-width:100%;overflow:auto;margin:0;color:#637b96;font-size:7px;white-space:pre-wrap;overflow-wrap:anywhere}
+.ed360-student-document-upload .modal-actions{align-items:center;flex-wrap:wrap}
+.ed360-student-document-upload .student-field-help{flex:1}
+.ed360-student-row-actions .danger-icon{border-color:#f4d8d8;color:#d14b4b}
+@media(max-width:760px){
+  .ed360-student-guardian-link{align-items:stretch;flex-direction:column}
+  .ed360-student-guardian-link select{min-width:0;width:100%}
+  .ed360-student-history-values{grid-template-columns:1fr}
+}
