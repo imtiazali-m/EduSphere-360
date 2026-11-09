@@ -263,7 +263,7 @@ check('All TypeScript and TSX sources parse without syntax diagnostics', () => {
     const source = fs.readFileSync(file, 'utf8')
     const kind = file.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS
     const parsed = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, kind)
-    for (const diagnostic of parsed.parseDiagnostics ?? []) diagnostics.push(`${path.relative(root, file)}: ${ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n')}`)
+    for (const diagnostic of parsed.parseDiagnostics ?? []) { const position = parsed.getLineAndCharacterOfPosition(diagnostic.start ?? 0); diagnostics.push(`${path.relative(root, file)}:${position.line + 1}:${position.character + 1}: ${ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n')}`) }
   }
   assert.deepEqual(diagnostics, [], diagnostics.join('\n'))
   console.log(`      Parsed ${sourceFiles.length} TypeScript/TSX files.`)
