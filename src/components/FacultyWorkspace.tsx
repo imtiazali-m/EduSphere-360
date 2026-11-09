@@ -11,6 +11,7 @@ import { supabase } from '../lib/supabase'
 import { userFacingError } from '../lib/userErrors'
 import { downloadCsv } from '../lib/csv'
 import type { RecordRow } from '../lib/types'
+import '../styles/faculty-workspace.css'
 
 interface Props { onToast: (message: string, error?: boolean) => void; onNavigate: (key: string) => void }
 type Tab = 'overview'|'registration'|'directory'|'profile'|'departments'|'designations'|'assignments'|'attendance'|'leave'|'workload'|'documents'|'history'|'reports'
