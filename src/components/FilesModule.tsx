@@ -110,7 +110,7 @@ export function FilesModule({ onToast }: Props) {
 
   return <div className="page-content">
     <div className="page-title-row">
-      <div><div className="eyebrow">DOCUMENT CENTRE</div><h1>Institution files</h1><p>Private cloud documents for your institution. Access is controlled by Supabase Storage policies.</p></div>
+      <div><div className="eyebrow">DOCUMENT CENTRE</div><h1>Files &amp; Documentation</h1><p>Private cloud documents for your institution. Access is controlled by Supabase Storage policies.</p></div>
       {canUpload && <label className={`button button-primary upload-button ${busy ? 'disabled' : ''}`}>
         <FileUp size={17}/>{busy ? 'Uploading…' : 'Upload file'}
         <input hidden type="file" disabled={busy} onChange={event => { void upload(event.target.files?.[0]); event.currentTarget.value = '' }}/>
