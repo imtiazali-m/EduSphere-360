@@ -20,12 +20,20 @@ check('Vite development and production scripts exist', () => {
 
 const requiredFiles = [
   'index.html', 'src/main.tsx', 'src/App.tsx', 'src/components/Dashboard.tsx', 'src/components/WorkspaceUnavailable.tsx',
+  'src/components/FinanceWorkspace.tsx', 'src/styles/finance-workspace.css',
+  'src/components/PayrollWorkspace.tsx', 'src/styles/payroll-workspace.css',
+  'src/components/GovernanceWorkspace.tsx', 'src/styles/governance-workspace.css',
   'src/components/AuthScreens.tsx', 'src/components/AdministrationModule.tsx',
   'src/components/RecordModule.tsx', 'src/components/FacultyWorkspace.tsx', 'src/styles/faculty-workspace.css', 'src/components/ReportsModule.tsx', 'src/components/ProfileModule.tsx', 'src/context/AuthContext.tsx', 'src/lib/auth.ts',
   'src/lib/data.ts', 'src/lib/navigationAccess.ts', 'src/lib/userErrors.ts', 'scripts/test-user-errors.mjs',
   'src/lib/finance.ts', 'scripts/test-finance.mjs', 'src/lib/fileAccess.ts', 'scripts/test-file-access.mjs',
   'src/lib/navigationCatalog.ts', 'src/lib/navigationRoutes.ts', 'src/components/NotificationCenter.tsx', 'src/styles/notification-center.css', 'public/_redirects',
-  'supabase/migrations/20261109125937_announcement_read_receipts.sql', 'docs/EDUSPHERE_360_BENCHMARK_AND_GAP_REVIEW.md',
+  'supabase/migrations/20261109125937_announcement_read_receipts.sql',
+  'supabase/migrations/20261109150000_finance_accounting_and_payroll_workflows.sql',
+  'supabase/migrations/20261109151000_atomic_employee_salary_profile_workflow.sql',
+  'supabase/migrations/20261109152000_employee_own_payroll_run_read.sql',
+  'supabase/migrations/20261109153000_atomic_institution_setting_approval.sql',
+  'docs/EDUSPHERE_360_BENCHMARK_AND_GAP_REVIEW.md',
   '.env.example', 'package-lock.json', 'src/lib/types.ts', 'supabase/migrations/20261108053651_owner_signup_institution_details.sql', 'supabase/migrations/20261109083133_faculty_employee_management.sql', 'supabase/migrations/20261109092734_student_management_operations.sql', 'supabase/migrations/20261109092920_student_management_scope_indexes_and_guardian_portal_read.sql',
   '.github/workflows/cloudflare-pages-release.yml', 'docs/FINAL_REBUILD_STAGE.md', 'docs/NAVIGATION_RECONCILIATION.md',
 ]
@@ -375,6 +383,52 @@ check('Faculty & Employee Management uses dedicated institution-scoped HR worksp
   assert.ok(!migration.includes('drop table') && !migration.includes('truncate '), 'Faculty management migration must remain additive and non-destructive')
 })
 
+check('Finance menu destinations open the dedicated fee and ledger workspace', () => {
+  assert.equal(getNavigationRoute('fees', 'Fee Structure'), 'finance:fees:structures')
+  assert.equal(getNavigationRoute('fees', 'Fee Invoices'), 'finance:fees:invoices')
+  assert.equal(getNavigationRoute('fees', 'Payment Collection'), 'finance:fees:payments')
+  assert.equal(getNavigationRoute('receivables', 'Ageing Analysis'), 'finance:receivables:receivables')
+  assert.equal(getNavigationRoute('payments', 'Refund Processing'), 'finance:payments:refunds')
+  assert.equal(getNavigationRoute('receipts', 'Fee Receipts'), 'finance:receipts:receipts')
+  assert.equal(getNavigationRoute('accounts-finance', 'Chart of Accounts'), 'finance:accounts-finance:accounts')
+  assert.equal(getNavigationRoute('accounts-finance', 'General Ledger'), 'finance:accounts-finance:journals')
+  const finance = read('src/components/FinanceWorkspace.tsx')
+  for (const value of ['recordFeePayment', 'record_fee_payment', 'fee_structures', 'fee_structure_items', 'fee_discounts', 'fee_refunds', 'finance_accounts', 'finance_journals', 'post_finance_journal']) {
+    assert.ok(finance.includes(value), 'Finance workflow is missing ' + value)
+  }
+  assert.ok(finance.includes('Refund request recorded for manual processing'), 'Refund workflow must not claim an external payment-provider transfer')
+})
+
+check('Payroll routes use database salary, approval and payment workflows', () => {
+  assert.equal(getNavigationRoute('payroll', 'Payroll Dashboard'), 'payroll:overview')
+  assert.equal(getNavigationRoute('payroll', 'Salary Structure'), 'payroll:salary')
+  assert.equal(getNavigationRoute('payroll', 'Monthly Payroll'), 'payroll:runs')
+  assert.equal(getNavigationRoute('payroll', 'Payslips'), 'payroll:payslips')
+  const payroll = read('src/components/PayrollWorkspace.tsx')
+  for (const value of ['employee_salary_profiles', 'generate_payroll_run', 'approve_payroll_run', 'mark_payroll_run_paid', 'save_employee_salary_profile']) {
+    assert.ok(payroll.includes(value), 'Payroll workflow is missing ' + value)
+  }
+  const migration = read('supabase/migrations/20261109150000_finance_accounting_and_payroll_workflows.sql')
+  for (const value of ['enable row level security', 'finance_journal_lines_one_side', 'post_finance_journal', 'generate_payroll_run', 'approve_payroll_run', 'mark_payroll_run_paid', 'revoke all on function']) {
+    assert.ok(migration.includes(value), 'Finance/payroll database safeguard is missing: ' + value)
+  }
+  assert.ok(read('supabase/migrations/20261109151000_atomic_employee_salary_profile_workflow.sql').includes('save_employee_salary_profile'))
+  assert.ok(read('supabase/migrations/20261109152000_employee_own_payroll_run_read.sql').includes('payroll_runs_employee_own_read'))
+})
+
+check('Administration settings, approvals and audit are connected to governance tables', () => {
+  assert.equal(getNavigationRoute('administration', 'Institute Profile'), 'governance:profile')
+  assert.equal(getNavigationRoute('administration', 'Institution Settings'), 'governance:settings')
+  assert.equal(getNavigationRoute('administration', 'Approval and Workflows'), 'governance:approvals')
+  assert.equal(getNavigationRoute('administration', 'Administrative Audit'), 'governance:audit')
+  const governance = read('src/components/GovernanceWorkspace.tsx')
+  for (const value of ['institution_settings', 'workflow_approvals', 'institutional_audit_events', 'decide_institution_setting_approval']) {
+    assert.ok(governance.includes(value), 'Governance workspace is missing ' + value)
+  }
+  assert.ok(governance.includes('Read only') && governance.includes('does not grant direct client updates'), 'Institution profile must not offer an unsupported edit action')
+  assert.ok(read('supabase/migrations/20261109153000_atomic_institution_setting_approval.sql').includes('decide_institution_setting_approval'))
+})
+
 check('Teacher reporting routes expose only the teacher-permitted report datasets', () => {
   const reports = read('src/components/ReportsModule.tsx')
   assert.ok(reports.includes("const wantsPeople = ['owner', 'admin', 'teacher'].includes(role)"))
@@ -395,12 +449,12 @@ check('GitHub-hosted release pipeline builds assets and keeps production deploy 
 
 check('Required database safeguards and Cloudflare redirects remain in the project', () => {
   const migrations = fs.readdirSync(path.join(root, 'supabase/migrations')).filter(name => name.endsWith('.sql')).sort()
-  for (const migration of ['001_initial_schema.sql', '017_public_institution_signup.sql', '018_assessment_metadata_and_result_visibility.sql', '019_phase_two_integrity_guards.sql', '020_fee_payment_date_validation.sql', '20261108053651_owner_signup_institution_details.sql', '20261109083133_faculty_employee_management.sql', '20261109092734_student_management_operations.sql', '20261109092920_student_management_scope_indexes_and_guardian_portal_read.sql', '20261109094108_student_activity_history_events.sql', '20261109094402_student_guardian_policy_consolidation_and_activity_indexes.sql', '20261109105804_institutional_platform_expansion.sql', '20261109110541_institution_attendance_bulk_register.sql', '20261109111818_institutional_policy_and_foreign_key_refinement.sql', '20261109113516_campus_scope_and_inventory_transaction_workflows.sql', '20261109113606_inventory_movement_row_count_safety_fix.sql', '20261109125937_announcement_read_receipts.sql', '20261109130705_announcement_reads_index_and_fee_policy_cleanup.sql']) {
+  for (const migration of ['001_initial_schema.sql', '017_public_institution_signup.sql', '018_assessment_metadata_and_result_visibility.sql', '019_phase_two_integrity_guards.sql', '020_fee_payment_date_validation.sql', '20261108053651_owner_signup_institution_details.sql', '20261109083133_faculty_employee_management.sql', '20261109092734_student_management_operations.sql', '20261109092920_student_management_scope_indexes_and_guardian_portal_read.sql', '20261109094108_student_activity_history_events.sql', '20261109094402_student_guardian_policy_consolidation_and_activity_indexes.sql', '20261109105804_institutional_platform_expansion.sql', '20261109110541_institution_attendance_bulk_register.sql', '20261109111818_institutional_policy_and_foreign_key_refinement.sql', '20261109113516_campus_scope_and_inventory_transaction_workflows.sql', '20261109113606_inventory_movement_row_count_safety_fix.sql', '20261109125937_announcement_read_receipts.sql', '20261109130705_announcement_reads_index_and_fee_policy_cleanup.sql', '20261109150000_finance_accounting_and_payroll_workflows.sql', '20261109151000_atomic_employee_salary_profile_workflow.sql', '20261109152000_employee_own_payroll_run_read.sql', '20261109153000_atomic_institution_setting_approval.sql']) {
     assert.ok(migrations.includes(migration), `${migration} missing`)
   }
   const timestamped = migrations.filter(name => /^202611\d{8}_.+\.sql$/.test(name))
-  assert.equal(timestamped.length, 18, 'Expected eighteen timestamped migrations matching the live migration history')
-  assert.ok(read('supabase/migrations/README.md').includes('eighteen timestamped migration files'))
+  assert.equal(timestamped.length, 22, 'Expected twenty-two timestamped migrations matching the live migration history')
+  assert.ok(read('supabase/migrations/README.md').includes('twenty-two timestamped migration files'))
   assert.equal(read('public/_redirects').trim(), '/* /index.html 200')
   const envExample = read('.env.example')
   const gitignore = read('.gitignore')
