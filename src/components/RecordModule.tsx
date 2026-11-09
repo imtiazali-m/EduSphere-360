@@ -661,42 +661,39 @@ export function RecordModule({ module, onToast }: Props) {
   }
 
   const formDialog = showForm ? <RecordForm module={module} initial={editing} saving={saving} mode={mode} onCancel={() => { setShowForm(false); setEditing(null) }} onSave={values => void save(values)}/> : null
+  const detailDialog = viewing ? <RecordDetailsDialog module={module} row={viewing} onClose={() => setViewing(null)}/> : null
 
   if (module.key === 'students') {
     const filters: { key: StudentStatus; label: string }[] = [
       { key: 'all', label: 'All students' }, { key: 'active', label: 'Active' },
       { key: 'pending', label: 'Pending' }, { key: 'graduated', label: 'Graduated' }, { key: 'inactive', label: 'Inactive' },
     ]
-    return <div className="page-content students-page">
+    return <div className="page-content ed360-module-page students-page">
       <div className="students-page-heading">
         <div><div className="eyebrow">PEOPLE / STUDENT DIRECTORY</div><h1>Students</h1><p>Manage admissions, student profiles, class placement and learner records.</p></div>
         {canEdit && <button className="button button-primary students-add-button" onClick={() => { setEditing(null); setShowForm(true) }}><Plus size={17}/> Add student</button>}
       </div>
-      <div className="student-stats-grid">
-        <div className="student-stat-card"><span className="student-stat-icon blue"><Users size={19}/></span><span className="student-stat-label">Total students</span><strong>{loading ? '—' : studentCounts.total.toLocaleString()}</strong><small>All admission records</small></div>
-        <div className="student-stat-card"><span className="student-stat-icon green"><BadgeCheck size={19}/></span><span className="student-stat-label">Active students</span><strong>{loading ? '—' : studentCounts.active.toLocaleString()}</strong><small>Currently enrolled</small></div>
-        <div className="student-stat-card"><span className="student-stat-icon amber"><Clock3 size={19}/></span><span className="student-stat-label">Pending admissions</span><strong>{loading ? '—' : studentCounts.pending.toLocaleString()}</strong><small>Awaiting confirmation</small></div>
-        <div className="student-stat-card"><span className="student-stat-icon violet"><GraduationCap size={19}/></span><span className="student-stat-label">Graduated</span><strong>{loading ? '—' : studentCounts.graduated.toLocaleString()}</strong><small>Completed programmes</small></div>
-      </div>
+      <ModuleInsights module={module} rows={rows} loading={loading}/>
       <section className="student-directory-card">
         <div className="student-directory-heading"><div><h2>Student directory</h2><p>Search and manage students registered at your institution.</p></div><span className="student-mode-tag cloud">Cloud records</span></div>
         <div className="student-directory-toolbar">
-          <label className="student-search"><Search size={17}/><input aria-label="Search students" placeholder="Search name, admission number or class…" value={search} onChange={event => setSearch(event.target.value)}/>{search && <button type="button" onClick={() => setSearch('')} aria-label="Clear search"><X size={15}/></button>}</label>
+          <label className="student-search"><Search size={17}/><input aria-label="Search students" placeholder="Search name, admission number or class…" value={search} onChange={event => { setSearch(event.target.value); setCurrentPage(1) }}/>{search && <button type="button" onClick={() => { setSearch(''); setCurrentPage(1) }} aria-label="Clear search"><X size={15}/></button>}</label>
           <button className="student-refresh-button" onClick={() => void load()} disabled={loading}><RefreshCw size={15} className={loading ? 'spin' : ''}/> Refresh</button>
         </div>
         <div className="student-filter-row" role="group" aria-label="Filter students by status">
-          {filters.map(filter => <button type="button" key={filter.key} className={studentStatus === filter.key ? 'active' : ''} onClick={() => setStudentStatus(filter.key)}>{filter.label}{filter.key === 'all' ? <span>{studentCounts.total}</span> : null}</button>)}
+          {filters.map(filter => <button type="button" key={filter.key} className={studentStatus === filter.key ? 'active' : ''} onClick={() => { setStudentStatus(filter.key); setCurrentPage(1) }}>{filter.label}{filter.key === 'all' ? <span>{studentCounts.total}</span> : null}</button>)}
         </div>
-        {loading ? <div className="student-empty-state"><RefreshCw className="spin" size={22}/><strong>Loading students…</strong></div> : studentFiltered.length === 0 ? <div className="student-empty-state"><span className="student-empty-icon"><GraduationCap size={25}/></span><strong>{search ? 'No matching students' : studentStatus === 'all' ? 'No students registered yet' : `No ${studentStatus} students`}</strong><p>{search ? 'Try a different name, admission number or class.' : canEdit ? 'Add your first student to begin building the institution directory.' : 'Student records will appear here when they are added by an authorized administrator.'}</p>{canEdit && !search && studentStatus === 'all' && <button className="button button-primary" onClick={() => { setEditing(null); setShowForm(true) }}><Plus size={16}/> Add first student</button>}</div> : <div className="student-table-wrap"><table className="student-table"><thead><tr><th>Student ID</th><th>Student</th><th>Class / programme</th><th>Parent / guardian</th><th>Status</th>{canEdit && <th className="action-column">Actions</th>}</tr></thead><tbody>{studentFiltered.map(row => <tr key={row.id}>
+        {loading ? <div className="student-empty-state"><RefreshCw className="spin" size={22}/><strong>Loading students…</strong></div> : studentFiltered.length === 0 ? <div className="student-empty-state"><span className="student-empty-icon"><GraduationCap size={25}/></span><strong>{search ? 'No matching students' : studentStatus === 'all' ? 'No students registered yet' : `No ${studentStatus} students`}</strong><p>{search ? 'Try a different name, admission number or class.' : canEdit ? 'Add your first student to begin building the institution directory.' : 'Student records will appear here when they are added by an authorized administrator.'}</p>{canEdit && !search && studentStatus === 'all' && <button className="button button-primary" onClick={() => { setEditing(null); setShowForm(true) }}><Plus size={16}/> Add first student</button>}</div> : <div className="student-table-wrap"><table className="student-table"><thead><tr><th>Student ID</th><th>Student</th><th>Class / programme</th><th>Parent / guardian</th><th>Status</th><th className="action-column">Actions</th></tr></thead><tbody>{studentPageRows.map(row => <tr key={row.id}>
           <td><span className="student-admission-number">{String(row.admission_no ?? '—')}</span></td>
           <td><div className="student-person-cell"><StudentPhoto row={row}/><span><strong>{String(row.full_name ?? 'Unnamed student')}</strong><small>{String(row.email ?? 'No email provided')}</small></span></div></td>
           <td>{String(row.class_name ?? '—')}</td><td>{String(row.guardian_name ?? '—')}</td>
           <td><span className={`status-pill status-${String(row.status ?? 'active').toLowerCase()}`}>{statusLabel(row.status)}</span></td>
-          {canEdit && <td className="row-actions"><button className="icon-button" onClick={() => { setEditing(row); setShowForm(true) }} title="Edit student"><Edit3 size={15}/></button>{canDelete && <button className="icon-button danger-icon" onClick={() => void remove(row)} title="Delete student"><Trash2 size={15}/></button>}</td>}
+          <td className="row-actions ed360-student-actions"><button className="icon-button" onClick={() => setViewing(row)} title="View student"><Eye size={15}/></button>{canEdit && <button className="icon-button" onClick={() => { setEditing(row); setShowForm(true) }} title="Edit student"><Edit3 size={15}/></button>}{canDelete && <button className="icon-button danger-icon" onClick={() => void remove(row)} title="Delete student"><Trash2 size={15}/></button>}</td>}
         </tr>)}</tbody></table></div>}
-        <div className="student-directory-footer"><span>Showing <strong>{studentFiltered.length}</strong> of <strong>{studentCounts.total}</strong> students</span><span>Student records are restricted to authorized institution members.</span></div>
+        <div className="student-directory-footer"><span>Found <strong>{studentFiltered.length}</strong> of <strong>{studentCounts.total}</strong> students</span><span>Student records are restricted to authorized institution members.</span></div>
+        <WorkspacePagination page={currentPage} pageCount={studentPageCount} pageSize={pageSize} total={studentFiltered.length} onChange={setCurrentPage}/>
       </section>
-      {formDialog}
+      {formDialog}{detailDialog}
     </div>
   }
 
