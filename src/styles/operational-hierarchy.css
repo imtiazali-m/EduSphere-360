@@ -1,4 +1,5 @@
 /* Operational workspace hierarchy and readability scale */
+[hidden]{display:none!important}
 :root {
   --ed360-text-scale: 1.08;
 }
