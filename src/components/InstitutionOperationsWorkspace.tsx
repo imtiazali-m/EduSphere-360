@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
-import { BookOpen, CalendarDays, Check, CheckCircle2, ClipboardCheck, Download, FileBadge, FileQuestion, History, Plus, Printer, RefreshCw, Search, ShieldCheck, Users, Wrench, X } from 'lucide-react'
+import { BookOpen, CheckCircle2, Download, FileBadge, FileQuestion, Plus, Printer, RefreshCw, ShieldCheck, Wrench, X } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { userFacingError } from '../lib/userErrors'
