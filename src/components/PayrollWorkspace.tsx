@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { CalendarDays, CheckCircle2, Download, FileText, Plus, RefreshCw, ShieldCheck, Wallet, X } from 'lucide-react'
+import { Download, Plus, RefreshCw, ShieldCheck, X } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { listRecords } from '../lib/data'
@@ -67,9 +67,7 @@ export function PayrollWorkspace({initialWindow,onToast}:Props){
       const employeeRows=await listRecords('cloud',user,'teachers') as Employee[]
       const [profileResult,runResult,itemResult]=await Promise.all([
         supabase.from('employee_salary_profiles').select('*').eq('institution_id',user.institutionId).order('effective_from',{ascending:false}).limit(1000),
-        financeRole
-          ? supabase.from('payroll_runs').select('*').eq('institution_id',user.institutionId).order('period_start',{ascending:false}).limit(250)
-          : Promise.resolve({data:[],error:null}),
+        supabase.from('payroll_runs').select('*').eq('institution_id',user.institutionId).order('period_start',{ascending:false}).limit(250),
         supabase.from('payroll_items').select('*').eq('institution_id',user.institutionId).order('created_at',{ascending:false}).limit(2000),
       ])
       for(const result of [profileResult,runResult,itemResult])if(result.error)throw result.error
@@ -88,17 +86,7 @@ export function PayrollWorkspace({initialWindow,onToast}:Props){
 
   useEffect(()=>{void load()},[user?.id,user?.institutionId,user?.role])
 
-  const filteredEmployees=useMemo(()=>employees.filter(employee=>{
-    const profile=profiles.find(item=>item.teacher_id===employee.id&&item.status==='active')
-    return [employee.full_name,employee.employee_no,employee.email,profile?.status].some(value=>String(value??'').toLowerCase().includes(search.trim().toLowerCase()))
-  }),[employees,profiles,search])
 
-  const filteredItems=useMemo(()=>items.filter(item=>{
-    const employee=employees.find(row=>row.id===item.teacher_id)
-    const run=runs.find(row=>row.id===item.payroll_run_id)
-    const text=[employee?.full_name,employee?.employee_no,item.payslip_reference,run?.period_start,run?.period_end,item.payment_status].map(value=>String(value??'')).join(' ').toLowerCase()
-    return text.includes(search.trim().toLowerCase())
-  }),[items,employees,runs,search])
 
   function openSalary(employee?:Employee){
     const chosen=employee??employees.find(row=>row.id===employeeId)??employees[0]
@@ -186,7 +174,6 @@ export function PayrollWorkspace({initialWindow,onToast}:Props){
   const tabs:Tab[]=financeRole?['overview','salary','runs','payslips']:['overview','payslips']
   const activeSalaryTotal=activeProfiles.reduce((sum,p)=>sum+moneyValue(p.base_salary)+moneyValue(p.monthly_allowances)-moneyValue(p.monthly_deductions),0)
   const pendingApproval=runs.filter(run=>['draft','review'].includes(run.status)).length
-  const currentRunTotal=items.filter(item=>runs.find(run=>run.id===item.payroll_run_id)?.status!=='paid').reduce((sum,item)=>sum+moneyValue(item.net_pay),0)
 
   function renderContent(){
     if(tab==='overview')return <div className="payroll-metric-grid">
