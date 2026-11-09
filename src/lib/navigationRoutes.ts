@@ -197,6 +197,43 @@ const governanceRoutes: Record<string,string> = {
   'invitations-and-access': 'accounts',
 }
 
+const institutionalOperationsItems: Record<string, Record<string,string>> = {
+  'question-bank': {
+    'question-bank-dashboard':'pool','multiple-choice-questions':'pool','short-questions':'pool',
+    'long-questions':'pool','subject-wise-questions':'pool','chapter-wise-questions':'pool',
+    'difficulty-levels':'pool','question-categories':'pool','question-builder':'pool',
+    'question-paper-designer':'papers','marks-distribution':'papers','random-question-selection':'papers',
+    'question-review':'pool','question-bank-import-and-export':'pool','question-paper-download':'papers',
+  },
+  curriculum: {
+    'curriculum-dashboard':'units','curriculum-map':'units','syllabus-management':'units',
+    'learning-outcomes':'units','lesson-plans':'units','subject-wise-curriculum':'coverage',
+    'curriculum-coverage':'coverage',
+  },
+  behaviour: {
+    'behaviour-dashboard':'register','behaviour-records':'register','positive-behaviour':'positive',
+    'disciplinary-incidents':'register','rewards-and-recognition':'positive','warnings':'register',
+  },
+  certificates: {
+    'certificate-dashboard':'verify','character-certificate':'issue','leaving-certificate':'issue',
+    'enrollment-certificate':'issue','bonafide-certificate':'issue','achievement-certificate':'issue',
+    'certificate-verification':'verify','certificate-history':'verify',
+  },
+  visitors: {
+    'visitor-dashboard':'log','visitor-registration':'log','visitor-information':'log',
+    'visitor-passes':'log','entry-and-exit-records':'checked-in','visit-history':'history',
+  },
+  facilities: {
+    'facilities-dashboard':'assets','classroom-management':'assets','laboratories':'assets',
+    'library-rooms':'assets','facility-maintenance':'maintenance','facility-history':'maintenance',
+  },
+}
+
+function institutionOperationsRoute(groupKey:string,itemKey:string):string|undefined {
+  const section=institutionalOperationsItems[groupKey]?.[itemKey]
+  return section ? `operations:${groupKey}:${section}` : undefined
+}
+
 function dedicatedRoute(groupKey: string, itemKey: string): string | undefined {
   if (groupKey === 'students') {
     const view = studentViews[itemKey]
@@ -274,6 +311,8 @@ export function getNavigationRoute(groupKey: string, itemLabel: string): string 
 
   const financeDestination = financeRoute(groupKey,itemKey)
   if (financeDestination) return financeDestination
+  const operationsDestination=institutionOperationsRoute(groupKey,itemKey)
+  if (operationsDestination) return operationsDestination
   if (groupKey === 'payroll') return payrollRoute(itemKey)
   if (groupKey === 'administration' && governanceRoutes[itemKey] && !['campus-and-branch-management','departments','designations','academic-structure-and-sections'].includes(itemKey)) {
     return `governance:${governanceRoutes[itemKey]}`
