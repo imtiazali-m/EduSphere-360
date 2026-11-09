@@ -35,7 +35,8 @@ create table public.question_bank_items (
   constraint question_bank_subject_fk foreign key(subject_id,institution_id) references public.subjects(id,institution_id) on delete restrict,
   constraint question_bank_class_fk foreign key(class_id,institution_id) references public.classes(id,institution_id) on delete restrict,
   constraint question_bank_session_fk foreign key(academic_session_id,institution_id) references public.academic_sessions(id,institution_id) on delete restrict,
-  constraint question_bank_institution_code_uq unique(institution_id,question_code)
+  constraint question_bank_institution_code_uq unique(institution_id,question_code),
+  constraint question_bank_items_id_institution_uq unique(id,institution_id)
 );
 create index question_bank_filter_idx on public.question_bank_items(institution_id,status,subject_id,class_id,difficulty);
 create index question_bank_created_idx on public.question_bank_items(institution_id,created_by,created_at desc);
@@ -206,7 +207,8 @@ create table public.facility_assets (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint facility_assets_room_fk foreign key(room_id,institution_id) references public.institution_rooms(id,institution_id) on delete set null (room_id),
-  constraint facility_assets_code_uq unique(institution_id,asset_code)
+  constraint facility_assets_code_uq unique(institution_id,asset_code),
+  constraint facility_assets_id_institution_uq unique(id,institution_id)
 );
 create index facility_assets_category_idx on public.facility_assets(institution_id,category,status);
 
