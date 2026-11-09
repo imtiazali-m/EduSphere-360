@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
-  Activity, AlertCircle, Banknote, BookOpen, CalendarCheck, CalendarDays,
-  Check, ChevronLeft, ChevronRight, ClipboardCheck, Clock3, Edit3, Eye,
+  Activity, AlertCircle, BookOpen, CalendarCheck, CalendarDays,
+  Check, ChevronLeft, ChevronRight, ClipboardCheck, Edit3, Eye,
   FileText, FolderOpen, GraduationCap, HeartHandshake, History, ImagePlus,
-  LayoutDashboard, Library, Plus, RefreshCw, Search, ShieldCheck, Trash2,
+  LayoutDashboard, Plus, RefreshCw, Search, ShieldCheck, Trash2,
   UserRound, Users, Wallet, X,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
@@ -541,14 +541,14 @@ export function RecordModule({ module, onToast }: Props) {
         if (field.type === 'number' && payload[field.name] !== null && payload[field.name] !== undefined) payload[field.name] = Number(payload[field.name])
       }
 
-      if (module.key === 'students' && !targetEditing) {
+      if (module.key === 'students') {
         const admissionNo = String(payload.admission_no ?? '').trim().toLowerCase()
         const fullName = String(payload.full_name ?? '').trim()
         if (!admissionNo || !fullName || !String(payload.class_name ?? '').trim()) {
           throw new Error('Enter the admission number, student name and class/programme before saving.')
         }
         const existingStudents = await listRecords(mode, user!, 'students')
-        if (existingStudents.some(student => String(student.admission_no ?? '').trim().toLowerCase() === admissionNo)) {
+        if (existingStudents.some(student => student.id !== targetEditing?.id && String(student.admission_no ?? '').trim().toLowerCase() === admissionNo)) {
           throw new Error('This admission number is already registered. Generate a new student ID before saving.')
         }
       }
@@ -725,14 +725,22 @@ export function RecordModule({ module, onToast }: Props) {
       setShowForm(false)
       setEditing(null)
       const refreshedRows = await load({ silent: module.key === 'students' })
-      if (module.key === 'students' && !targetEditing) {
-        const admissionNo = String(payload.admission_no ?? '')
-        const visible = Boolean(refreshedRows?.some(row => String(row.admission_no ?? '') === admissionNo))
-        if (!visible) {
-          onToast('The admission request was sent, but the new student could not be confirmed in the directory. No success has been reported. Refresh your sign-in or ask the institution owner to review this account’s access.', true)
+      if (module.key === 'students') {
+        const savedStudent = refreshedRows?.find(row => row.id === targetEditing?.id)
+          ?? refreshedRows?.find(row => String(row.admission_no ?? '').trim().toLowerCase() === String(payload.admission_no ?? '').trim().toLowerCase())
+        const confirmed = Boolean(savedStudent
+          && String(savedStudent.full_name ?? '') === String(payload.full_name ?? '')
+          && String(savedStudent.class_name ?? '') === String(payload.class_name ?? '')
+          && String(savedStudent.status ?? '') === String(payload.status ?? 'pending'))
+        if (!confirmed) {
+          onToast(targetEditing
+            ? 'The student update was accepted, but the refreshed directory could not confirm the latest values. Do not repeat the update; refresh the directory or ask an owner to review access.'
+            : 'The database accepted this admission, but the student directory could not confirm the new record. Do not submit this admission again; refresh the directory or ask an owner to review read access.', true)
           return
         }
-        onToast('Student admission saved successfully.')
+        setSelectedStudentId(savedStudent!.id)
+        setStudentWorkspaceTab('profile')
+        onToast(targetEditing ? 'Student record updated successfully.' : 'Student admission saved successfully.')
       } else {
         onToast(targetEditing ? 'Record updated successfully.' : 'Record created successfully.')
       }
