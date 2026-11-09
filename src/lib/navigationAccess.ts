@@ -29,7 +29,7 @@ const rolePageAccess: Record<AppRole, Record<string, string[]>> = {
     finance: ['Fees Invoices'], communication: ['Announcements'], operations: ['Work Management', 'Reports'],
   },
   teacher: {
-    dashboard: [], students: studentStaffWindows,
+    dashboard: [], students: studentStaffWindows, people: ['My Staff Workspace'],
     academics: ['Attendance Registration', 'Examination', 'Exam Results', 'Assignments', 'Assignment Submission', 'Timetable'],
     communication: ['Announcements'], operations: ['Work Management'],
   },
