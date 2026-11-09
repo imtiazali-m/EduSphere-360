@@ -811,16 +811,6 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
     const absentCount = studentAttendanceRows.filter(row => String(row.status ?? '').toLowerCase() === 'absent').length
     const attendanceRate = studentAttendanceRows.length ? Math.round(presentCount / studentAttendanceRows.length * 100) : 0
     const publishedResults = studentResultRows.filter(row => String(row.result_status ?? '').toLowerCase() === 'published')
-    const studentTimeline = studentHistoryRows
-      .map(row => ({
-        id: row.id,
-        date: String(row.created_at ?? ''),
-        label: String(row.event_type ?? 'student_event').replaceAll('_', ' '),
-        detail: String(row.summary ?? 'Student record event'),
-        status: String(row.event_type ?? 'recorded'),
-      }))
-      .filter(item => item.date)
-      .slice(0, 100)
     const renderTable = (dataRows: RecordRow[], columns: { key: string; label: string }[], emptyMessage: string) => dataRows.length === 0
       ? <div className="ed360-student-empty"><span><FolderOpen size={21}/></span><strong>No records to display</strong><p>{emptyMessage}</p></div>
       : <div className="ed360-student-table-wrap"><table className="ed360-student-table"><thead><tr>{columns.map(column => <th key={column.key}>{column.label}</th>)}</tr></thead><tbody>{dataRows.map(row => <tr key={row.id}>{columns.map(column => {
@@ -1225,8 +1215,8 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
           </> : <div className="ed360-student-empty"><strong>No student selected</strong><p>Select a student to review class placement.</p></div>}
           {ownerOrAdmin && selectedStudent && <div className="ed360-student-placement-editor">
             <div className="ed360-student-table-heading"><strong>Assign or transfer class</strong><span>Creates a dated placement record</span></div>
-            <label className="form-field"><span>Configured class / programme</span>
-              <select value={placementClassId} onChange={event => setPlacementClassId(event.target.value)} disabled={!studentClassRows.length}>
+            <label className="field-label student-field"><span>Configured class / programme</span>
+              <select className="input-control" value={placementClassId} onChange={event => setPlacementClassId(event.target.value)} disabled={!studentClassRows.length}>
                 <option value="">Select a class</option>
                 {studentClassRows.map(classRow => {
                   const session = (studentRelatedRows.academic_sessions ?? []).find(row => row.id === classRow.academic_session_id)
@@ -1234,8 +1224,8 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
                 })}
               </select>
             </label>
-            <label className="form-field"><span>Effective from</span><input type="date" value={placementEffectiveFrom} onChange={event => setPlacementEffectiveFrom(event.target.value)}/></label>
-            <label className="form-field"><span>Reason / transfer note</span><textarea value={placementReason} onChange={event => setPlacementReason(event.target.value)} rows={2} placeholder="New admission, promotion, transfer or correction…"/></label>
+            <label className="field-label student-field"><span>Effective from</span><input className="input-control" type="date" value={placementEffectiveFrom} onChange={event => setPlacementEffectiveFrom(event.target.value)}/></label>
+            <label className="field-label student-field"><span>Reason / transfer note</span><textarea className="input-control textarea-control" value={placementReason} onChange={event => setPlacementReason(event.target.value)} rows={2} placeholder="New admission, promotion, transfer or correction…"/></label>
             <button type="button" className="button button-primary" onClick={() => void saveStudentPlacement()} disabled={!placementClassId || !studentClassRows.length}><Check size={15}/> Save placement</button>
             {!studentClassRows.length && <p className="ed360-student-limitation-note">No classes are configured yet. Create the class, programme and academic session first in Institute Administration; this window will then use those real records.</p>}
           </div>}
