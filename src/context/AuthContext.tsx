@@ -5,6 +5,7 @@ import {
   cloudRegisterInstitutionOwner,
   cloudSignIn,
   getCloudUserContext,
+  requestCloudPasswordReset,
 } from '../lib/auth'
 import { cloudConfigured, supabase } from '../lib/supabase'
 
@@ -21,6 +22,10 @@ interface AuthContextValue {
   registerAdmin: (input: { fullName: string; email: string; password: string; institutionName: string; institutionType: 'school' | 'college' | 'university' | 'multi_institution' }) => Promise<RegistrationResult>
   createAccount: (input: { fullName: string; email: string; password: string; role: AppRole; linkedStudentId?: string }) => Promise<void>
   signOut: () => Promise<void>
+  recoveryMode: boolean
+  requestPasswordReset: (email: string) => Promise<void>
+  completePasswordReset: (password: string) => Promise<void>
+  clearRecoveryMode: () => void
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -38,6 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const mode = ONLINE_MODE
   const [user, setUser] = useState<AppUser | null>(null)
   const [loading, setLoading] = useState(true)
+  const [recoveryMode, setRecoveryMode] = useState(() => typeof window !== 'undefined' && (window.location.hash.includes('type=recovery') || new URLSearchParams(window.location.search).get('type') === 'recovery'))
 
   useEffect(() => {
     let alive = true
@@ -71,7 +77,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!supabase || !cloudConfigured) return
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY') setRecoveryMode(true)
       if (!session?.user) {
         setUser(null)
         return
@@ -129,14 +136,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await cloudCreateAccount({ ...input, institutionId: user.institutionId })
   }
 
+  async function requestPasswordReset(email: string) {
+    requireOnlineConfiguration()
+    await requestCloudPasswordReset(email)
+  }
+
+  async function completePasswordReset(password: string) {
+    requireOnlineConfiguration()
+    if (password.length < 10) throw new Error('Use a password with at least 10 characters.')
+    const { error } = await supabase!.auth.updateUser({ password })
+    if (error) throw error
+  }
+
+  function clearRecoveryMode() { setRecoveryMode(false) }
+
   async function signOut() {
     if (supabase) await supabase.auth.signOut()
     setUser(null)
   }
 
   const value = useMemo<AuthContextValue>(
-    () => ({ mode, setMode, user, loading, signIn, registerAdmin, createAccount, signOut }),
-    [user, loading],
+    () => ({ mode, setMode, user, loading, signIn, registerAdmin, createAccount, signOut, recoveryMode, requestPasswordReset, completePasswordReset, clearRecoveryMode }),
+    [user, loading, recoveryMode],
   )
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
