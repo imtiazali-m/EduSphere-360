@@ -49,9 +49,14 @@ const { modules, modulesForRole } = require(path.join(root, 'src/lib/modules.ts'
 const roles = ['owner', 'admin', 'teacher', 'student', 'parent', 'accountant', 'exam_officer']
 
 check('The approved eight-group menu maps every submenu to a real workspace', () => {
+  const studentWindows = [
+    'Overview', 'Admissions', 'Student Directory', 'Student Profile', 'Class Placement', 'Guardians',
+    'Student Attendance', 'Student Exam Results', 'Student Assignments', 'Student Timetable',
+    'Student Documentation', 'Student History',
+  ]
   const expected = [
     ['Dashboard', []],
-    ['Admission & Students', ['Student Record']],
+    ['Student Management', studentWindows],
     ['People & Staff', ['Faculty & Staff', 'User Account']],
     ['Institute Administration', ['Departments', 'Programs', 'Class Sections', 'Academic Sessions', 'Subjects', 'Rooms & Facilities', 'Files & Documentation']],
     ['Academic Management', ['Attendance Registration', 'Examination', 'Exam Results', 'Assignments', 'Assignment Submission', 'Timetable']],
@@ -71,9 +76,14 @@ check('The approved eight-group menu maps every submenu to a real workspace', ()
   const moduleKeys = new Set(modules.map(module => module.key))
   const adminKeys = new Set(['departments', 'programs', 'classes', 'academic_sessions', 'subjects', 'rooms'])
   for (const [page, route] of Object.entries(navigationRoutes)) {
-    if (route.startsWith('admin:')) assert.ok(adminKeys.has(route.slice(6)), `${page} points to an unknown administration screen`)
-    else if (!['overview', 'accounts', 'files', 'reports', 'profile'].includes(route)) assert.ok(moduleKeys.has(route), `${page} points to a missing data module: ${route}`)
+    if (route.startsWith('admin:')) assert.ok(adminKeys.has(route.slice(6)), page + ' points to an unknown administration screen')
+    else {
+      const moduleRoute = route.split(':')[0]
+      if (!['overview', 'accounts', 'files', 'reports', 'profile'].includes(moduleRoute)) assert.ok(moduleKeys.has(moduleRoute), page + ' points to a missing data module: ' + route)
+    }
   }
+  for (const page of studentWindows) assert.ok(navigationRoutes[page]?.startsWith('students:'), 'Student Management window is not routed to the student workspace: ' + page)
+  assert.ok(!studentWindows.some(page => page.toLowerCase().includes('fee')), 'Fees must not appear in Student Management')
 })
 
 const roleCounts = {}
@@ -234,6 +244,10 @@ check('Student Record is a complete permission-aware multi-window workspace', ()
   }
   assert.ok(!studentWorkspace.includes("'fee_invoices'") && !studentWorkspace.includes("label: 'Fees & Payments'"), 'Fee management must remain exclusively in Finance, not Student Management')
   assert.ok(recordModule.includes('studentRelatedTables.map'), 'Student related workspaces must load their linked records')
+  const dashboardSource = read('src/components/Dashboard.tsx')
+  assert.ok(dashboardSource.includes("key={active + ':' + activeWorkspaceWindow}"), 'Student sidebar destinations must open the selected internal workspace')
+  assert.ok(dashboardSource.includes("initialWindow={active === 'students' ? activeWorkspaceWindow : undefined}"), 'Student sidebar destinations must pass their selected window into the workspace')
+  assert.ok(recordModule.includes('showWindowNavigation = true') && recordModule.includes('showWindowNavigation && ('), 'Student sidebar windows must not be duplicated by a second copy of the same window navigation')
   assert.ok(recordModule.includes('setStudentWorkspaceTab'), 'Student workspace windows must navigate independently inside Student Record')
   assert.ok(recordModule.includes('Student admission saved successfully.'), 'Student admission confirmation is missing')
   assert.ok(recordModule.includes('Do not submit this admission again'), 'Unconfirmed admissions must not encourage duplicate submission')
