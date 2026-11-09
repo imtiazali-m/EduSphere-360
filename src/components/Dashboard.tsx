@@ -602,12 +602,6 @@ export function Dashboard({ onToast }: Props) {
     setExpandedGroups(current => current.includes(key) ? current.filter(item => item !== key) : [...current, key])
   }
 
-  function selectSearchResult(result: { title: string; group: string; route?: string }) {
-    if (!result.route) return
-    navigate(result.route)
-    setWorkspaceTabs(current => current.map(tab => tab.id === result.route ? { ...tab, title: result.title } : tab))
-  }
-
   function closeWorkspaceTab(id: string) {
     if (id === 'overview') return
     const closing = new Set([id])
