@@ -13,7 +13,7 @@ import { downloadCsv } from '../lib/csv'
 import type { RecordRow } from '../lib/types'
 import '../styles/faculty-workspace.css'
 
-interface Props { onToast: (message: string, error?: boolean) => void; onNavigate: (key: string) => void }
+interface Props { onToast: (message: string, error?: boolean) => void; onNavigate: (key: string) => void; initialWindow?: string }
 type Tab = 'overview'|'registration'|'directory'|'profile'|'departments'|'designations'|'assignments'|'attendance'|'leave'|'workload'|'documents'|'history'|'reports'
 type Kind = 'employee'|'designation'|'assignment'|'attendance'|'leave'|'leaveReview'
 type Dialog = { kind: Kind; row: RecordRow|null; values: Record<string,string> }
@@ -75,10 +75,10 @@ function Status({value:raw}:{value:unknown}) {
   return <span className={'staff-status staff-status-'+s}>{label(raw)}</span>
 }
 
-export function FacultyWorkspace({onToast,onNavigate}:Props) {
+export function FacultyWorkspace({onToast,onNavigate,initialWindow}:Props) {
   const {user,mode}=useAuth()
   const admin=user!.role==='owner'||user!.role==='admin'
-  const [tab,setTab]=useState<Tab>('overview')
+  const [tab,setTab]=useState<Tab>(() => (adminTabs.some(item => item.key === initialWindow) || staffTabs.some(item => item.key === initialWindow) ? initialWindow as Tab : 'overview'))
   const [data,setData]=useState<Record<string,RecordRow[]>>({})
   const [accounts,setAccounts]=useState<Account[]>([])
   const [loading,setLoading]=useState(true)
