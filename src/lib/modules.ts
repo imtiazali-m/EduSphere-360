@@ -2,7 +2,6 @@
 import type { AppRole, ModuleConfig } from './types'
 
 const allStaff: AppRole[] = ['owner', 'admin', 'teacher', 'accountant', 'exam_officer']
-const admins: AppRole[] = ['owner', 'admin']
 const everyone: AppRole[] = ['owner', 'admin', 'teacher', 'student', 'parent', 'accountant', 'exam_officer']
 
 export const modules: ModuleConfig[] = [
