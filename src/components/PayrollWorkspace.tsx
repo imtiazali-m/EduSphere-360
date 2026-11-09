@@ -85,6 +85,14 @@ export function PayrollWorkspace({initialWindow,onToast}:Props){
   }
 
   useEffect(()=>{void load()},[user?.id,user?.institutionId,user?.role])
+ 
+  const filteredItems=useMemo(()=>items.filter(item=>{
+    const employee=employees.find(row=>row.id===item.teacher_id)
+    const run=runs.find(row=>row.id===item.payroll_run_id)
+    const text=[employee?.full_name,employee?.employee_no,item.payslip_reference,run?.period_start,run?.period_end,item.payment_status].map(value=>String(value??'')).join(' ').toLowerCase()
+    return text.includes(search.trim().toLowerCase())
+  }),[items,employees,runs,search])
+
 
 
 
