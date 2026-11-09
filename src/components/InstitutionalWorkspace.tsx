@@ -13,7 +13,7 @@ type OperationalRow = RecordRow & {
  quantity?:number|null;payload:Record<string,unknown>;visibility:string
 }
 type Props={workspaceKey:string;onToast:(message:string,error?:boolean)=>void}
-type WorkspaceField={key:string;label:string;type?:'text'|'email'|'date'|'number'|'time'|'url'|'textarea'|'select';options?:string[];placeholder?:string}
+type WorkspaceField={key:string;label:string;type?:'text'|'email'|'date'|'number'|'time'|'datetime-local'|'url'|'textarea'|'select';options?:string[];placeholder?:string}
 const fld=(key:string,label:string,type:WorkspaceField['type']='text',options?:string[]):WorkspaceField=>({key,label,type,options})
 const workspaceFields:Record<string,WorkspaceField[]>={
  ai:[fld('insight_type','Insight type','select',['Student analysis','Academic performance','Fee collection','Examination','Timetable','Attendance','Behaviour','Institutional']),fld('source_dataset','Source data / report','text'),fld('confidence_percent','Confidence (%)','number'),fld('assumptions','Assumptions and limitations','textarea'),fld('human_review','Human review','select',['Required','Reviewed','Not reviewed'])],
@@ -231,6 +231,9 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
    </div>
   </div>
   {loadError&&<div className="ed360-workspace-error" role="alert">{loadError}</div>}
+  {group.key==='ai'&&<div className="ed360-workspace-integration-note"><b>AI provider not configured</b><span>This workspace stores manually authored, reviewable insight records. Predictions and generated answers are not produced until an AI provider is connected and tested.</span></div>}
+  {group.key==='communication'&&<div className="ed360-workspace-integration-note"><b>Messaging provider status</b><span>Not connected. This workspace records communication plans and delivery metadata; WhatsApp, SMS and email delivery require an approved provider integration.</span></div>}
+  {group.key==='backup'&&<div className="ed360-workspace-integration-note"><b>Platform backup / restore connection required</b><span>Requests can be tracked here, but a backup or restore is only complete when Supabase or the configured storage provider confirms the operation.</span></div>}
   {dashboard&&<section className="ed360-workspace-kpis">
    <article><span>Total records</span><strong>{loading?'—':rows.length.toLocaleString()}</strong><small>From this institution’s records</small></article>
    <article><span>Pending review</span><strong>{loading?'—':pending.toLocaleString()}</strong><small>Draft and pending approvals</small></article>
