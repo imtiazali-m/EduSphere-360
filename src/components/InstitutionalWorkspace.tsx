@@ -93,6 +93,7 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
  const [description,setDescription]=useState('')
  const [status,setStatus]=useState('draft')
  const [approval,setApproval]=useState('not_required')
+ const [visibility,setVisibility]=useState('staff_only')
  const [recordDate,setRecordDate]=useState(new Date().toISOString().slice(0,10))
  const [dueDate,setDueDate]=useState('')
  const [amount,setAmount]=useState('')
@@ -151,7 +152,7 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
 
  function resetForm(row?:OperationalRow){
   setEditing(row??null);setTitle(row?.title??'');setReference(row?.reference_code??'');setDescription(row?.description??'')
-  setStatus(row?.status??'draft');setApproval(row?.approval_status??'not_required')
+  setStatus(row?.status??'draft');setApproval(row?.approval_status??'not_required');setVisibility(row?.visibility??(['library','curriculum','certificates','teaching','transport'].includes(group.key)?'student_portal':'staff_only'))
   setRecordDate(row?.record_date??new Date().toISOString().slice(0,10));setDueDate(row?.due_date??'')
   setAmount(row?.amount===null||row?.amount===undefined?'':String(row.amount));setQuantity(row?.quantity===null||row?.quantity===undefined?'':String(row.quantity))
   setPayloadData(row?.payload??{});setShowForm(true)
@@ -166,7 +167,7 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
   setSaving(true)
   const values={
    institution_id:user.institutionId,module_key:group.dataModule,record_type:item.key,title:title.trim(),
-   reference_code:reference.trim()||null,description:description.trim()||null,status,approval_status:approval,
+   reference_code:reference.trim()||null,description:description.trim()||null,status,approval_status:approval,visibility,
    record_date:recordDate||null,due_date:dueDate||null,amount:amount.trim()?Number(amount):null,
    quantity:quantity.trim()?Number(quantity):null,payload,campus_id:campus||null
   }
@@ -259,6 +260,7 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
     <label>Description / notes<textarea value={description} onChange={e=>setDescription(e.target.value)} rows={3} maxLength={3000}/></label>
     <div className="ed360-form-row"><label>Status<select value={status} onChange={e=>setStatus(e.target.value)}>{statusOptions.map(s=><option value={s} key={s}>{s.replaceAll('_',' ')}</option>)}</select></label><label>Approval<select value={approval} onChange={e=>setApproval(e.target.value)}><option value="not_required">Not required</option><option value="draft">Draft</option><option value="pending">Needs approval</option></select></label></div>
     <div className="ed360-form-row"><label>Record date<input type="date" value={recordDate} onChange={e=>setRecordDate(e.target.value)}/></label><label>Due date<input type="date" value={dueDate} onChange={e=>setDueDate(e.target.value)}/></label></div>
+    <label>Portal visibility<select value={visibility} onChange={e=>setVisibility(e.target.value)}><option value="staff_only">Staff only</option><option value="student_portal">Student portal</option><option value="parent_portal">Parent portal</option><option value="institution_portal">Institution portal (shared)</option></select><small>Choose portal access deliberately. Sensitive records should remain staff-only.</small></label>
     <div className="ed360-form-row"><label>Amount (PKR)<input type="number" min="0" step="0.01" value={amount} onChange={e=>setAmount(e.target.value)}/></label><label>Quantity<input type="number" min="0" step="0.001" value={quantity} onChange={e=>setQuantity(e.target.value)}/></label></div>
     {structuredFields.length>0&&<section className="ed360-module-specific-form"><div className="ed360-module-specific-heading"><span>MODULE-SPECIFIC INFORMATION</span><p>Fields for {item.label.toLowerCase()}.</p></div><div className="ed360-context-form-fields">{structuredFields.map(field=><label key={field.key}>{field.label}{field.type==='select'?<select value={String(payloadData[field.key]??'')} onChange={e=>setPayloadData(old=>({...old,[field.key]:e.target.value}))}><option value="">Select / not set</option>{(field.options??[]).map(option=><option value={option} key={option}>{option}</option>)}</select>:field.type==='textarea'?<textarea rows={3} value={String(payloadData[field.key]??'')} onChange={e=>setPayloadData(old=>({...old,[field.key]:e.target.value}))} placeholder={field.placeholder??''}/>:<input type={field.type??'text'} step={field.type==='number'?'0.01':undefined} value={String(payloadData[field.key]??'')} onChange={e=>setPayloadData(old=>({...old,[field.key]:e.target.value}))} placeholder={field.placeholder??''}/>}</label>)}</div></section>}
     <div className="modal-actions"><button type="button" className="button button-outline" onClick={()=>setShowForm(false)}>Cancel</button><button type="submit" className="button button-primary" disabled={saving}>{saving?'Saving…':editing?'Save changes':'Create record'}</button></div>
