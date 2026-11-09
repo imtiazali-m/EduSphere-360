@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { BarChart3, Eye, KeyRound, Plus, Search, UserPlus, Users, X } from 'lucide-react'
+import { BarChart3, Eye, KeyRound, Plus, Search, ShieldCheck, UserPlus, Users, X } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import type { AppRole, RecordRow } from '../lib/types'
 import { listAccounts, listRecords } from '../lib/data'
