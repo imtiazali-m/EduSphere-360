@@ -1,36 +1,10 @@
-/** Every visible menu destination resolves to an existing functional workspace. */
-export const navigationRoutes: Record<string, string> = {
-  Dashboard: 'overview',
-  Overview: 'students:overview',
-  Admissions: 'students:admissions',
-  'Student Directory': 'students:directory',
-  'Student Profile': 'students:profile',
-  'Class Placement': 'students:classes',
-  Guardians: 'students:guardians',
-  'Student Attendance': 'students:attendance',
-  'Student Exam Results': 'students:results',
-  'Student Assignments': 'students:assignments',
-  'Student Timetable': 'students:timetable',
-  'Student Documentation': 'students:documents',
-  'Student History': 'students:history',
-  'Faculty & Staff': 'teachers',
-  'My Staff Workspace': 'teachers',
-  'User Account': 'accounts',
-  Departments: 'admin:departments',
-  Programs: 'admin:programs',
-  'Class Sections': 'admin:classes',
-  'Academic Sessions': 'admin:academic_sessions',
-  Subjects: 'admin:subjects',
-  'Rooms & Facilities': 'admin:rooms',
-  'Files & Documentation': 'files',
-  'Attendance Registration': 'attendance',
-  Examination: 'exams',
-  'Exam Results': 'exam_results',
-  Assignments: 'assignments',
-  'Assignment Submission': 'assignment_submissions',
-  Timetable: 'timetable',
-  'Fees Invoices': 'fees',
-  Announcements: 'announcements',
-  'Work Management': 'work_tasks',
-  Reports: 'reports',
-}
+import { institutionalMenu, institutionalRoute, existingRouteOverrides } from './institutionalCatalog'
+
+/** Every menu destination resolves to an existing workspace or a typed institutional workspace. */
+export const navigationRoutes:Record<string,string>=Object.fromEntries(
+  institutionalMenu.flatMap(group=>group.items.map(item=>[
+    item.label,
+    existingRouteOverrides[group.key+':'+item.key]??institutionalRoute(group.key,item.key)
+  ]))
+)
+navigationRoutes.Dashboard='overview'
