@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import {
   Activity, BadgeCheck, BookOpen, Building2, CalendarCheck, CalendarDays, ClipboardCheck,
-  ClipboardList, Clock3, GraduationCap, Megaphone, School, TrendingUp, Users, Wallet,
+  ClipboardList, Clock3, GraduationCap, Megaphone, TrendingUp, Users, Wallet,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import type { ModuleConfig, RecordRow } from '../lib/types'
@@ -48,7 +48,6 @@ function makeSummary(module: ModuleConfig, rows: RecordRow[]): WorkspaceSummary 
   const bar = (label: string, value: number, color: string): Breakdown => ({ label, value, color })
   const metric = (label: string, value: string, note: string, tone: string, icon: LucideIcon): Metric => ({ label, value, note, tone, icon })
   const count = (key: string, value: string) => countStatus(rows, key, value)
-  const statusKey = module.key === 'exam_results' ? 'result_status' : 'status'
 
   switch (module.key) {
     case 'students': {
