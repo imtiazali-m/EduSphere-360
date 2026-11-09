@@ -186,6 +186,18 @@ export async function updateRecord(
   checkTable(table)
   requireInstitution(user)
   await verifyCloudActor(user)
+  if (table === 'students') {
+    // Keep the update request independent from the SELECT policy. The
+    // workspace verifies the change by reloading the permitted student list.
+    const { error } = await supabase!
+      .from(table)
+      .update(payload)
+      .eq('id', id)
+      .eq('institution_id', user.institutionId)
+    if (error) throw error
+    return null
+  }
+
   const { data, error } = await supabase!
     .from(table)
     .update(payload)
