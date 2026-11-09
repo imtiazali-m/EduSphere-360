@@ -23,6 +23,8 @@ import AdministrationModule from './AdministrationModule'
 import { ReportsModule } from './ReportsModule'
 import { ProfileModule } from './ProfileModule'
 import { FacultyWorkspace } from './FacultyWorkspace'
+import { InstitutionalWorkspace } from './InstitutionalWorkspace'
+import { AttendanceWorkspace } from './AttendanceWorkspace'
 
 interface Props { onToast: (message: string, error?: boolean) => void }
 type Dataset = Record<string, RecordRow[]>
@@ -408,7 +410,7 @@ export function Dashboard({ onToast }: Props) {
   const [activePage, setActivePage] = useState('Dashboard')
   const [activeWorkspaceWindow, setActiveWorkspaceWindow] = useState('overview')
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [expandedGroups, setExpandedGroups] = useState<string[]>(['students', 'people', 'institution', 'academics', 'finance', 'communication', 'operations'])
+  const [expandedGroups, setExpandedGroups] = useState<string[]>(['dashboard'])
   const [profileOpen, setProfileOpen] = useState(false)
   const [searchText, setSearchText] = useState('')
   const [searchOpen, setSearchOpen] = useState(false)
@@ -427,10 +429,16 @@ export function Dashboard({ onToast }: Props) {
 
   function navigate(key: string) {
     const studentWindowRoute = key.startsWith('students:')
-    const targetKey = studentWindowRoute ? 'students' : key
-    const targetWindow = studentWindowRoute ? key.slice('students:'.length) : 'overview'
+    const attendanceWindowRoute = key.startsWith('attendance:')
+    const institutionalWindowRoute = key.startsWith('institutional:')
+    const targetKey = studentWindowRoute ? 'students' : attendanceWindowRoute ? 'attendance' : institutionalWindowRoute ? 'institutional' : key
+    const targetWindow = studentWindowRoute ? key.slice('students:'.length) : attendanceWindowRoute ? key.slice('attendance:'.length) : institutionalWindowRoute ? key.slice('institutional:'.length) : 'overview'
     if (targetKey === 'overview') {
       setActive('overview'); setActivePage('Dashboard'); setActiveWorkspaceWindow('overview')
+    } else if (targetKey === 'institutional') {
+      setActive('institutional'); setActivePage('Institutional Workspace'); setActiveWorkspaceWindow(targetWindow)
+    } else if (targetKey === 'attendance') {
+      setActive('attendance'); setActivePage('Attendance Management'); setActiveWorkspaceWindow(targetWindow || 'students')
     } else if (targetKey.startsWith('admin:')) {
       const subkey = targetKey.slice(6)
       setActive(targetKey); setActivePage(adminModuleLabels[subkey] ?? 'Administration'); setActiveWorkspaceWindow('overview')
@@ -478,14 +486,9 @@ export function Dashboard({ onToast }: Props) {
       <nav className="pro-navigation" aria-label="Institution workspace">
         {visibleGroups.map(group => {
           const GroupIcon = catalogIcons[group.icon] ?? LayoutDashboard
-          if (group.key === 'dashboard') return <section className="pro-nav-group" key={group.key}>
-            <button className={`pro-nav-group-head pro-nav-dashboard-link ${active === 'overview' ? 'active' : ''}`} onClick={() => navigate('overview')} aria-current={active === 'overview' ? 'page' : undefined}>
-              <span className="pro-nav-group-icon"><GroupIcon size={19}/></span><span className="pro-nav-group-name">Dashboard</span>
-            </button>
-          </section>
           const isExpanded = expandedGroups.includes(group.key)
           return <section className={`pro-nav-group ${isExpanded ? 'expanded' : ''}`} key={group.key}>
-            <button className="pro-nav-group-head" aria-expanded={isExpanded} onClick={() => toggleGroup(group.key)}><span className="pro-nav-group-icon"><GroupIcon size={19}/></span><span className="pro-nav-group-name">{group.label}</span><ChevronRight className="pro-nav-chevron" size={17}/></button>
+            <button className={`pro-nav-group-head ${group.key === "dashboard" ? "pro-nav-dashboard-link" : ""}`} aria-expanded={isExpanded} onClick={() => toggleGroup(group.key)}><span className="pro-nav-group-icon"><GroupIcon size={19}/></span><span className="pro-nav-group-name">{group.label}</span><ChevronRight className="pro-nav-chevron" size={17}/></button>
             {isExpanded && <div className="pro-nav-children">{group.items.map(item => {
               const route = pageRoutes[item]
               const isActive = activePage === item
@@ -517,7 +520,7 @@ export function Dashboard({ onToast }: Props) {
           <div className="pro-profile-wrap"><button className="pro-profile-trigger" onClick={() => setProfileOpen(open => !open)} aria-expanded={profileOpen}><span className="pro-profile-avatar">{user?.fullName.slice(0, 1).toUpperCase()}</span><span className="pro-profile-copy"><b>{user?.fullName}</b><small>{roleLabels[user!.role]}</small></span><ChevronDown size={14}/></button>{profileOpen && <div className="pro-profile-menu"><div className="pro-profile-details"><b>{user?.fullName}</b><small>{user?.email}</small><small>{user?.institutionName}</small>{user?.institutionType && <small>Institution type: {user.institutionType.replaceAll('_', ' ')}</small>}<small>Account role: {roleLabels[user!.role]}</small><span className={'pro-profile-mode ' + mode}>Cloud workspace</span></div>{['student', 'parent'].includes(user!.role) && <button type="button" onClick={() => navigate('profile')}><UserRound size={15}/> My Profile</button>}<button type="button" onClick={() => void logout()}><LogOut size={15}/> Sign out</button></div>}</div>
         </div>
       </header>
-      <div className="pro-module-stage">{active === 'overview' ? <Overview onNavigate={navigate}/> : adminKey ? <AdministrationModule key={adminKey} initialKey={adminKey as 'departments' | 'programs' | 'classes' | 'academic_sessions' | 'subjects' | 'rooms'}/> : active === 'accounts' ? <AccountsModule onToast={onToast}/> : active === 'files' ? <FilesModule onToast={onToast}/> : active === 'reports' ? <ReportsModule onToast={onToast}/> : active === 'profile' ? <ProfileModule/> : active === 'teachers' ? <FacultyWorkspace onToast={onToast} onNavigate={navigate}/> : activeModule ? <RecordModule key={active + ':' + activeWorkspaceWindow} module={activeModule as ModuleConfig} onToast={onToast} initialWindow={active === 'students' ? activeWorkspaceWindow : undefined} showWindowNavigation={active !== 'students'}/> : <Overview onNavigate={navigate}/>}</div>
+      <div className="pro-module-stage">{active === 'overview' ? <Overview onNavigate={navigate}/> : active === 'institutional' ? <InstitutionalWorkspace key={activeWorkspaceWindow} workspaceKey={activeWorkspaceWindow} onToast={onToast}/> : active === 'attendance' ? <AttendanceWorkspace key={activeWorkspaceWindow} initialWindow={activeWorkspaceWindow} onToast={onToast}/> : adminKey ? <AdministrationModule key={adminKey} initialKey={adminKey as 'departments' | 'programs' | 'classes' | 'academic_sessions' | 'subjects' | 'rooms'}/> : active === 'accounts' ? <AccountsModule onToast={onToast}/> : active === 'files' ? <FilesModule onToast={onToast}/> : active === 'reports' ? <ReportsModule onToast={onToast}/> : active === 'profile' ? <ProfileModule/> : active === 'teachers' ? <FacultyWorkspace onToast={onToast} onNavigate={navigate}/> : activeModule ? <RecordModule key={active + ':' + activeWorkspaceWindow} module={activeModule as ModuleConfig} onToast={onToast} initialWindow={active === 'students' ? activeWorkspaceWindow : undefined} showWindowNavigation={active !== 'students'}/> : <Overview onNavigate={navigate}/>}</div>
     </main>
   </div>
 }
