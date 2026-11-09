@@ -155,6 +155,14 @@ export function getNavigationRoute(groupKey: string, itemLabel: string): string 
   const compositeKey = `${groupKey}:${itemKey}`
   const override = existingRouteOverrides[compositeKey]
 
+  // A few older shortcuts pointed at a module root, losing the requested
+  // report/employee/coursework sub-view. Prefer the typed sub-view in those groups.
+  if (['reports', 'teaching'].includes(groupKey)) {
+    const contextualRoute = dedicatedRoute(groupKey, itemKey)
+    if (contextualRoute) return contextualRoute
+  }
+  if (groupKey === 'attendance' && itemKey === 'attendance-reports') return 'reports:attendance'
+
   if (override && (!override.startsWith('institutional:') || linkedRoutes.has(compositeKey))) {
     return override
   }
