@@ -38,10 +38,10 @@ function SimpleTable({ columns, rows }: { columns: CsvColumn[]; rows: Record<str
   return <div className="table-scroll"><table><thead><tr>{columns.map(column => <th key={column.key}>{column.label}</th>)}</tr></thead><tbody>{rows.slice(0, 200).map((row, index) => <tr key={String(row.id ?? index)}>{columns.map(column => <td key={column.key}>{String(row[column.key] ?? '')}</td>)}</tr>)}</tbody></table></div>
 }
 
-export function ReportsModule({ onToast }: { onToast: (message: string, error?: boolean) => void }) {
+export function ReportsModule({ onToast, initialWindow }: { onToast: (message: string, error?: boolean) => void; initialWindow?: string }) {
   const { user, mode } = useAuth()
   const role = user!.role
-  const [reportTab,setReportTab] = useState<'overview'|'finance'|'attendance'|'academics'|'students'>('overview')
+  const [reportTab,setReportTab] = useState<'overview'|'finance'|'attendance'|'academics'|'students'>(() => (['overview','finance','attendance','academics','students'].includes(initialWindow ?? '') ? initialWindow as 'overview'|'finance'|'attendance'|'academics'|'students' : 'overview'))
   const wantsFees = ['owner', 'admin', 'accountant'].includes(role)
   const wantsPeople = ['owner', 'admin'].includes(role)
   const wantsResults = ['owner', 'admin', 'exam_officer'].includes(role)
