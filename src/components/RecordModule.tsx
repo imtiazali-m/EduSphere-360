@@ -1136,16 +1136,36 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
       </>}
 
       {studentWorkspaceTab === 'admissions' && <section className="ed360-student-panel ed360-student-full-panel">
-        <header><div><span className="ed360-student-panel-icon"><GraduationCap size={17}/></span><div><h2>Admission applications</h2><p>Review new and pending student registrations. New admissions are created as Pending.</p></div></div>{canCreate && <button type="button" className="button button-primary" onClick={() => { setEditing(null); setShowForm(true) }}><Plus size={15}/> Register student</button>}</header>
+        <header><div><span className="ed360-student-panel-icon"><GraduationCap size={17}/></span><div><h2>Admission applications</h2><p>Review applications, request missing documents, approve candidates and complete enrolment.</p></div></div>{canCreate && <button type="button" className="button button-primary" onClick={() => { setEditing(null); setShowForm(true) }}><Plus size={15}/> Register applicant</button>}</header>
         <div className="ed360-student-status-cards">
-          <div><small>Pending review</small><strong>{studentCounts.pending}</strong><span>Awaiting admission decision</span></div>
-          <div><small>Active registrations</small><strong>{studentCounts.active}</strong><span>Currently enrolled</span></div>
-          <div><small>All applications</small><strong>{studentCounts.total}</strong><span>Student records in this institution</span></div>
+          <div><small>Submitted</small><strong>{rows.filter(row => row.application_status === 'submitted').length}</strong><span>Awaiting initial review</span></div>
+          <div><small>Under review</small><strong>{rows.filter(row => row.application_status === 'under_review').length}</strong><span>Being assessed</span></div>
+          <div><small>Documents required</small><strong>{rows.filter(row => row.application_status === 'documents_required').length}</strong><span>Follow-up required</span></div>
+          <div><small>Approved / enrolled</small><strong>{rows.filter(row => ['approved','enrolled'].includes(String(row.application_status))).length}</strong><span>Approved or registered</span></div>
         </div>
-        <div className="ed360-student-table-heading"><strong>Pending admission queue</strong><span>{pendingRows.length} awaiting review</span></div>
-        {loading ? <div className="ed360-student-empty">Loading admissions…</div> : pendingRows.length ? <div className="ed360-student-table-wrap"><table className="ed360-student-table"><thead><tr><th>Admission ID</th><th>Applicant</th><th>Class / programme</th><th>Guardian</th><th>Registered</th><th>Actions</th></tr></thead><tbody>{pendingRows.map(row => <tr key={row.id}><td>{String(row.admission_no ?? '—')}</td><td><strong>{String(row.full_name ?? 'Student')}</strong><small>{String(row.email ?? '')}</small></td><td>{String(row.class_name ?? '—')}</td><td>{String(row.guardian_name ?? '—')}</td><td>{niceDate(row.created_at)}</td><td><div className="ed360-student-row-actions"><button type="button" onClick={() => { setSelectedStudentId(row.id); setStudentWorkspaceTab('profile') }}>View</button>{canEdit && <button type="button" onClick={() => { setEditing(row); setShowForm(true) }}>Review / Edit</button>}</div></td></tr>)}</tbody></table></div> : <div className="ed360-student-empty"><span><Check size={20}/></span><strong>No pending applications</strong><p>There are currently no student applications awaiting review.</p></div>}
+        <div className="ed360-student-table-heading"><strong>Application processing queue</strong><span>{pendingRows.length} active applications</span></div>
+        {loading ? <div className="ed360-student-empty">Loading admission applications…</div> : pendingRows.length ? <div className="ed360-student-table-wrap"><table className="ed360-student-table"><thead><tr><th>Application / admission ID</th><th>Applicant</th><th>Class requested</th><th>Application stage</th><th>Submitted</th><th>Actions</th></tr></thead><tbody>{pendingRows.map(row => {
+          const stage = String(row.application_status ?? 'submitted')
+          return <tr key={row.id}>
+            <td><strong>{String(row.admission_no ?? '—')}</strong><small>{String(row.application_review_notes ?? '')}</small></td>
+            <td><strong>{String(row.full_name ?? 'Applicant')}</strong><small>{String(row.email ?? 'No email supplied')}</small></td>
+            <td>{String(row.class_name ?? '—')}</td>
+            <td><span className={'status-pill status-' + stage}>{stage.replaceAll('_',' ')}</span></td>
+            <td>{niceDate(row.application_submitted_at ?? row.created_at)}</td>
+            <td><div className="ed360-student-row-actions">
+              <button type="button" onClick={() => { setSelectedStudentId(row.id); setStudentWorkspaceTab('profile') }}>Profile</button>
+              <button type="button" onClick={() => { setSelectedStudentId(row.id); setStudentWorkspaceTab('documents') }}>Documents</button>
+              {canEdit && stage === 'submitted' && <button type="button" onClick={() => void updateAdmissionStatus(row,'under_review')}>Start review</button>}
+              {canEdit && ['submitted','under_review'].includes(stage) && <button type="button" onClick={() => void updateAdmissionStatus(row,'documents_required')}>Request documents</button>}
+              {canEdit && stage === 'documents_required' && <button type="button" onClick={() => void updateAdmissionStatus(row,'under_review')}>Resume review</button>}
+              {canEdit && stage === 'under_review' && <button type="button" onClick={() => void updateAdmissionStatus(row,'approved')}>Approve</button>}
+              {canEdit && stage === 'approved' && <button type="button" onClick={() => void updateAdmissionStatus(row,'enrolled')}>Complete enrolment</button>}
+              {canEdit && ['submitted','under_review','documents_required'].includes(stage) && <button type="button" className="danger-icon" onClick={() => void updateAdmissionStatus(row,'rejected')}>Reject</button>}
+            </div></td>
+          </tr>
+        })}</tbody></table></div> : <div className="ed360-student-empty"><span><Check size={20}/></span><strong>No applications awaiting action</strong><p>New applicants will appear here with a submitted status. Approved applicants remain in the queue until enrolment is completed.</p></div>}
+        <div className="ed360-student-limitation-note">Every status change is recorded in Student History with the reviewing account and timestamp. Approval and enrolment are separate steps; an application is not an active student until enrolment is completed.</div>
       </section>}
-
       {studentWorkspaceTab === 'directory' && <section className="student-directory-card ed360-student-directory-window">
         <div className="student-directory-heading"><div><h2>Student directory</h2><p>Institution-wide student register with search, status filters and profile actions.</p></div><span className="student-mode-tag cloud">Live records</span></div>
         <div className="student-directory-toolbar">
