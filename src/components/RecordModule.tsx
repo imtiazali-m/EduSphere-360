@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
-  AlertCircle, BadgeCheck, Check, Clock3, Edit3, Eye, GraduationCap, ImagePlus,
+  AlertCircle, Check, Edit3, Eye, GraduationCap, ImagePlus,
   Plus, RefreshCw, Search, Trash2, Users, X, ChevronLeft, ChevronRight,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
