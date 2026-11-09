@@ -33,6 +33,7 @@ const ALLOWED_TABLES = new Set([
   'assignments',
   'assignment_submissions',
   'work_tasks',
+  'institutional_records',
   'announcements',
   'timetable_entries',
   'departments',
