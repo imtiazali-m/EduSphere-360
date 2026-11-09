@@ -15,7 +15,7 @@ const roleItemAllow:Record<string,Partial<Record<string,string[]>>>={
     teacher:['Student Directory','Student Profiles','Class and Section Assignments','Student Documentation','Student History','Student Performance Charts','Student Reports'],
   },
   employees:{
-    teacher:['Employee Profiles','Employee Attendance','Employee Leave Management','Employee Reports'],
+    teacher:['Employee Profiles','Employee Attendance','Employee Leave Management'],
   },
   fees:{
     student:['Fees Dashboard','Fee Invoices','Fee Receipts'],
