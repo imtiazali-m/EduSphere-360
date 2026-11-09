@@ -36,7 +36,7 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
  const [showDeviceForm,setShowDeviceForm]=useState(false)
  const canManageStudents=Boolean(user&&['owner','admin','teacher'].includes(user.role))
  const canManageStaff=Boolean(user&&['owner','admin'].includes(user.role))
- const people=population==='students'?students:staff
+ const people=population==='students'?students.filter(person=>!className||person.class_name===className):staff
  const classes=useMemo(()=>[...new Set(students.map(s=>s.class_name).filter((x):x is string=>Boolean(x)))].sort(),[students])
  const visiblePeople=useMemo(()=>people.filter(p=>{
   const q=search.trim().toLowerCase()
