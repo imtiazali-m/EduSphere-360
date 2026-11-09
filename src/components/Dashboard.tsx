@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
-  Activity, ArrowRight, BookOpen, Building2, CalendarCheck, CalendarClock, CalendarDays,
+  Activity, ArrowRight, Bell, BookOpen, Building2, CalendarCheck, CalendarClock, CalendarDays,
   ChevronDown, ChevronRight, ClipboardCheck, ClipboardList, DoorOpen, FileText,
-  GraduationCap, LayoutDashboard, LogOut, Menu, Megaphone, Plus, Search, School, Settings,
-  ShieldCheck, Users, Wallet, X, TrendingUp, UserRound, BrainCircuit, Calculator, Banknote,
+  GraduationCap, LayoutDashboard, LogOut, Menu, Megaphone, Search, School, Settings,
+  Users, Wallet, X, TrendingUp, UserRound, BrainCircuit, Calculator, Banknote,
   BookOpenCheck, HeartHandshake, MessageSquare, FileQuestion, ListChecks, BarChart3,
   Award, Library, Wrench, Database,
 } from 'lucide-react'
@@ -140,39 +140,149 @@ function buildStats(role: AppRole, data: Dataset) {
   ]
 }
 
-function actionsForRole(role: AppRole) {
+type DashboardRange = 'month' | 'term' | 'year'
+
+type ChartBucket = { start: Date; end: Date; label: string }
+type TrendSeries = { label: string; color: string; values: number[] }
+
+function parseRecordDate(value: unknown) {
+  if (typeof value !== 'string' || !value.trim()) return null
+  const parsed = new Date(value.length === 10 ? value + 'T00:00:00' : value)
+  return Number.isNaN(parsed.getTime()) ? null : parsed
+}
+
+function buildChartBuckets(range: DashboardRange, now: Date): ChartBucket[] {
+  if (range === 'month') {
+    const year = now.getFullYear()
+    const month = now.getMonth()
+    const lastDay = new Date(year, month + 1, 0).getDate()
+    return [0, 1, 2, 3].map(index => {
+      const firstDay = index * 7 + 1
+      const finalDay = Math.min(firstDay + 6, lastDay)
+      return {
+        start: new Date(year, month, firstDay),
+        end: new Date(year, month, finalDay, 23, 59, 59, 999),
+        label: firstDay + '–' + finalDay,
+      }
+    })
+  }
+  const monthCount = range === 'term' ? 3 : 12
+  return Array.from({ length: monthCount }, (_, index) => {
+    const monthDate = new Date(now.getFullYear(), now.getMonth() - monthCount + index, 1)
+    const end = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0, 23, 59, 59, 999)
+    return { start: monthDate, end, label: monthDate.toLocaleDateString(undefined, { month: 'short' }) }
+  })
+}
+
+function countRowsInBuckets(rows: RecordRow[], field: string, buckets: ChartBucket[]) {
+  const counts = buckets.map(() => 0)
+  for (const row of rows) {
+    const date = parseRecordDate(row[field] ?? row.created_at)
+    if (!date) continue
+    const bucketIndex = buckets.findIndex(bucket => date >= bucket.start && date <= bucket.end)
+    if (bucketIndex >= 0) counts[bucketIndex] += 1
+  }
+  return counts
+}
+
+function buildAcademicTrend(data: Dataset, range: DashboardRange, now: Date) {
+  const buckets = buildChartBuckets(range, now)
+  const series: TrendSeries[] = [
+    { label: 'Students', color: '#216fe8', values: countRowsInBuckets(getRows(data, 'students'), 'created_at', buckets) },
+    { label: 'Attendance', color: '#19a65f', values: countRowsInBuckets(getRows(data, 'attendance'), 'attendance_date', buckets) },
+    { label: 'Fees', color: '#f28b25', values: countRowsInBuckets(getRows(data, 'fee_invoices'), 'created_at', buckets) },
+  ]
+  return { buckets, series }
+}
+
+const groupTables: Record<string, string[]> = {
+  students: ['students'],
+  people: ['teachers'],
+  institution: ['departments', 'programs', 'classes', 'academic_sessions', 'subjects', 'rooms'],
+  academics: ['attendance', 'exams', 'exam_results', 'assignments', 'assignment_submissions', 'timetable_entries'],
+  finance: ['fee_invoices'],
+  communication: ['announcements'],
+  operations: ['work_tasks'],
+}
+
+const groupColors: Record<string, string> = {
+  students: '#2478ee',
+  people: '#f18b24',
+  institution: '#16a56a',
+  academics: '#287e9c',
+  finance: '#8b62e8',
+  communication: '#16b8ae',
+  operations: '#405bdc',
+}
+
+function buildModuleBreakdown(role: AppRole, data: Dataset) {
+  return roleNavigationGroups(role)
+    .filter(group => group.key !== 'dashboard')
+    .map(group => ({
+      key: group.key,
+      label: group.label,
+      value: (groupTables[group.key] ?? []).reduce((total, table) => total + getRows(data, table).length, 0),
+      color: groupColors[group.key] ?? '#8093aa',
+    }))
+}
+
+type UpcomingEvent = { title: string; detail: string; date: Date; route: string; kind: string }
+
+function buildUpcomingEvents(data: Dataset): UpcomingEvent[] {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const events: UpcomingEvent[] = []
+  const addRows = (table: string, field: string, route: string, kind: string, titleKeys: string[], detailKeys: string[]) => {
+    for (const row of getRows(data, table)) {
+      const date = parseRecordDate(row[field])
+      if (!date || date < today) continue
+      if (table === 'fee_invoices' && outstandingInvoiceBalance(row) <= 0) continue
+      events.push({
+        title: firstText(row, titleKeys, kind),
+        detail: firstText(row, detailKeys, 'Institution schedule'),
+        date,
+        route,
+        kind,
+      })
+    }
+  }
+  addRows('exams', 'exam_date', 'exams', 'Examination', ['title'], ['class_name', 'subject'])
+  addRows('assignments', 'due_date', 'assignments', 'Assignment deadline', ['title'], ['class_name', 'subject'])
+  addRows('fee_invoices', 'due_date', 'fees', 'Fee payment deadline', ['fee_title', 'invoice_no'], ['student_name'])
+  return events.sort((a, b) => a.date.getTime() - b.date.getTime()).slice(0, 3)
+}
+
+function monthCount(rows: RecordRow[], now: Date) {
+  return rows.filter(row => {
+    const date = parseRecordDate(row.created_at)
+    return !!date && date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth()
+  }).length
+}
+
+function buildQuickStats(role: AppRole, data: Dataset, upcomingCount: number, now: Date) {
   if (role === 'owner' || role === 'admin') return [
-    { key: 'students', label: 'Add a student', detail: 'Register a learner', icon: GraduationCap },
-    { key: 'teachers', label: 'Add faculty', detail: 'Create a staff record', icon: Users },
-    { key: 'attendance', label: 'Record attendance', detail: 'Mark a class session', icon: CalendarCheck },
-    { key: 'accounts', label: 'Create an account', detail: 'Invite a portal user', icon: ShieldCheck },
-  ]
-  if (role === 'teacher') return [
-    { key: 'attendance', label: 'Record attendance', detail: 'Update class attendance', icon: CalendarCheck },
-    { key: 'assignments', label: 'Manage assignments', detail: 'Create coursework', icon: BookOpen },
-    { key: 'exams', label: 'View examinations', detail: 'Check exam schedules', icon: ClipboardCheck },
-    { key: 'exam_results', label: 'Enter results', detail: 'Review student results', icon: ClipboardList },
-  ]
-  if (role === 'student') return [
-    { key: 'assignments', label: 'My assignments', detail: 'Review coursework', icon: BookOpen },
-    { key: 'exam_results', label: 'My results', detail: 'View available marks', icon: ClipboardCheck },
-    { key: 'timetable', label: 'My timetable', detail: 'Check class schedule', icon: CalendarDays },
-    { key: 'announcements', label: 'Announcements', detail: 'Read institution updates', icon: Megaphone },
-  ]
-  if (role === 'parent') return [
-    { key: 'attendance', label: 'Attendance', detail: 'Review linked learner records', icon: CalendarCheck },
-    { key: 'exam_results', label: 'Academic progress', detail: 'View shared results', icon: ClipboardCheck },
-    { key: 'fees', label: 'Fee information', detail: 'Review invoices and balance', icon: Wallet },
-    { key: 'announcements', label: 'Announcements', detail: 'Read institution updates', icon: Megaphone },
+    { label: 'New Admissions', value: monthCount(getRows(data, 'students'), now), icon: GraduationCap, tone: 'blue' },
+    { label: 'Total Subjects', value: getRows(data, 'subjects').length, icon: BookOpen, tone: 'purple' },
+    { label: 'Departments', value: getRows(data, 'departments').length, icon: Building2, tone: 'green' },
+    { label: 'Class Sections', value: getRows(data, 'classes').length, icon: School, tone: 'orange' },
   ]
   if (role === 'accountant') return [
-    { key: 'fees', label: 'Fee invoices', detail: 'Review payments and balances', icon: Wallet },
-    { key: 'students', label: 'Student directory', detail: 'Look up learner records', icon: GraduationCap },
+    { label: 'Invoices', value: getRows(data, 'fee_invoices').length, icon: FileText, tone: 'blue' },
+    { label: 'Collected', value: money(getRows(data, 'fee_invoices').reduce((total, row) => total + Number(row.paid_amount ?? 0), 0)), icon: Wallet, tone: 'green' },
+    { label: 'Outstanding', value: money(sumOutstanding(getRows(data, 'fee_invoices'))), icon: TrendingUp, tone: 'orange' },
+    { label: 'Students', value: getRows(data, 'students').length, icon: GraduationCap, tone: 'purple' },
+  ]
+  if (role === 'student' || role === 'parent') return [
+    { label: 'Attendance Records', value: getRows(data, 'attendance').length, icon: CalendarCheck, tone: 'blue' },
+    { label: 'Assignments', value: getRows(data, 'assignments').length, icon: BookOpen, tone: 'purple' },
+    { label: 'Exam Results', value: getRows(data, 'exam_results').length, icon: ClipboardList, tone: 'green' },
+    { label: 'Upcoming Items', value: upcomingCount, icon: CalendarDays, tone: 'orange' },
   ]
   return [
-    { key: 'exams', label: 'Examinations', detail: 'Manage exam schedules', icon: ClipboardCheck },
-    { key: 'exam_results', label: 'Exam results', detail: 'Review published results', icon: ClipboardList },
-    { key: 'students', label: 'Student directory', detail: 'View permitted students', icon: GraduationCap },
+    { label: 'Students', value: getRows(data, 'students').length, icon: GraduationCap, tone: 'blue' },
+    { label: 'Examinations', value: getRows(data, 'exams').length, icon: ClipboardCheck, tone: 'purple' },
+    { label: 'Assignments', value: getRows(data, 'assignments').length, icon: BookOpen, tone: 'green' },
+    { label: 'Upcoming Items', value: upcomingCount, icon: CalendarDays, tone: 'orange' },
   ]
 }
 
@@ -181,6 +291,7 @@ function Overview({ onNavigate }: { onNavigate: (key: string) => void }) {
   const [data, setData] = useState<Dataset>({})
   const [loading, setLoading] = useState(true)
   const [loadNote, setLoadNote] = useState('')
+  const [range, setRange] = useState<DashboardRange>('year')
   const available = useMemo(() => modulesForRole(user!.role), [user?.role])
 
   useEffect(() => {
@@ -188,7 +299,10 @@ function Overview({ onNavigate }: { onNavigate: (key: string) => void }) {
     async function load() {
       setLoading(true)
       setLoadNote('')
-      const uniqueTables = [...new Set(available.map(module => module.table))]
+      const administrativeTables = ['owner', 'admin'].includes(user!.role)
+        ? ['departments', 'programs', 'classes', 'academic_sessions', 'subjects', 'rooms']
+        : []
+      const uniqueTables = [...new Set([...available.map(module => module.table), ...administrativeTables])]
       const entries = await Promise.all(uniqueTables.map(async table => {
         try { return [table, await listRecords(mode, user!, table)] as const }
         catch (error) {
@@ -204,75 +318,164 @@ function Overview({ onNavigate }: { onNavigate: (key: string) => void }) {
     }
     void load()
     return () => { live = false }
-  }, [mode, user?.id, user?.institutionId, available])
+  }, [mode, user?.id, user?.institutionId, available, user?.role])
 
   const stats = useMemo(() => buildStats(user!.role, data), [user?.role, data])
-  const actions = actionsForRole(user!.role).filter(action => action.key === 'accounts' || action.key === 'files' || available.some(m => m.key === action.key))
-  const studentProfile = getRows(data, 'students').find(row => row.id === user?.linkedStudentId) ?? getRows(data, 'students')[0]
   const recent = useMemo(() => Object.entries(data).flatMap(([table, rows]) => rows.map(row => ({ table, row })))
-    .sort((a, b) => String(b.row.created_at ?? '').localeCompare(String(a.row.created_at ?? ''))).slice(0, 6), [data])
-  const welcome = user!.role === 'owner' || user!.role === 'admin'
-    ? 'Your institution, brought into focus.'
-    : user!.role === 'teacher' ? 'Your teaching day, organised.'
-      : user!.role === 'parent' ? 'A clearer view of your learner’s progress.'
-        : user!.role === 'student' ? 'Your learning journey, in one place.'
-          : user!.role === 'accountant' ? 'A clear view of your institution’s finances.'
-            : 'Your examination workspace, at a glance.'
-  const primaryAction = actions[0]
+    .sort((a, b) => String(b.row.created_at ?? '').localeCompare(String(a.row.created_at ?? ''))).slice(0, 4), [data])
   const now = new Date()
-  const today = now.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
-  const hour = now.getHours()
-  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
+  const trend = useMemo(() => buildAcademicTrend(data, range, now), [data, range])
+  const maxTrendValue = Math.max(4, ...trend.series.flatMap(series => series.values))
+  const trendStep = Math.max(1, Math.ceil(maxTrendValue / 4))
+  const trendMax = trendStep * 4
+  const chartWidth = 650
+  const chartHeight = 230
+  const chartLeft = 45
+  const chartRight = 632
+  const chartTop = 20
+  const chartBottom = 192
+  const chartX = (index: number) => chartLeft + (trend.buckets.length <= 1 ? 0 : index * (chartRight - chartLeft) / (trend.buckets.length - 1))
+  const chartY = (value: number) => chartBottom - (value / trendMax) * (chartBottom - chartTop)
+  const chartTicks = [0, 1, 2, 3, 4].map(index => trendStep * index)
+  const breakdown = useMemo(() => buildModuleBreakdown(user!.role, data), [user?.role, data])
+  const breakdownTotal = breakdown.reduce((total, item) => total + item.value, 0)
+  let gradientStart = 0
+  const donutStops = breakdown.map(item => {
+    const end = breakdownTotal > 0 ? gradientStart + item.value / breakdownTotal * 100 : gradientStart
+    const segment = item.color + ' ' + gradientStart.toFixed(2) + '% ' + end.toFixed(2) + '%'
+    gradientStart = end
+    return segment
+  })
+  const donutGradient = breakdownTotal > 0 ? 'conic-gradient(' + donutStops.join(',') + ')' : 'conic-gradient(#e8eef7 0 100%)'
+  const upcoming = useMemo(() => buildUpcomingEvents(data), [data])
+  const quickStats = useMemo(() => buildQuickStats(user!.role, data, upcoming.length, now), [user?.role, data, upcoming.length])
+  const recentRoutes: Record<string, string> = {
+    fee_invoices: 'fees',
+    timetable_entries: 'timetable',
+    departments: 'admin:departments',
+    programs: 'admin:programs',
+    classes: 'admin:classes',
+    academic_sessions: 'admin:academic_sessions',
+    subjects: 'admin:subjects',
+    rooms: 'admin:rooms',
+  }
+  const currentSession = getRows(data, 'academic_sessions').find(row => row.is_current === true)
+  const sessionName = currentSession ? firstText(currentSession, ['name', 'title'], 'Current session') : 'Academic Session'
+  const today = now.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
+  const firstName = user!.fullName.split(' ')[0]
   const attendance = getRows(data, 'attendance')
   const presentCount = attendance.filter(row => String(row.status ?? '').toLowerCase() === 'present').length
-  const absentCount = attendance.filter(row => String(row.status ?? '').toLowerCase() === 'absent').length
-  const lateCount = attendance.filter(row => String(row.status ?? '').toLowerCase() === 'late').length
-  const presentPercent = attendance.length ? Math.round((presentCount / attendance.length) * 100) : 0
 
   return <div className="pro-dashboard-page">
     <header className="pro-dashboard-heading">
-      <div><div className="pro-section-kicker">INSTITUTION WORKSPACE <span /> OVERVIEW</div><h1>{greeting}, {user!.fullName.split(' ')[0]}.</h1><p>{welcome}</p></div>
-      <div className="pro-dashboard-heading-actions"><span className="pro-date-chip"><CalendarClock size={15}/>{today}</span>{primaryAction && <button className="pro-create-button" onClick={() => onNavigate(primaryAction.key)}><Plus size={16}/>{primaryAction.label}</button>}</div>
+      <div className="pro-dashboard-title">
+        <span className="pro-dashboard-title-icon"><LayoutDashboard size={23}/></span>
+        <div><h1>Dashboard</h1><p>Welcome back, {firstName}! Here's your institution overview.</p></div>
+      </div>
+      <div className="pro-dashboard-heading-actions">
+        <span className="pro-date-chip"><CalendarClock size={15}/>{today}</span>
+        <span className="pro-session-chip"><CalendarDays size={15}/>{sessionName}</span>
+      </div>
     </header>
 
-    <section className={`pro-campus-banner role-${user!.role}`}>
-      <div className="pro-campus-copy"><span className="pro-campus-label">YOUR CAMPUS AT A GLANCE</span><h2>{user!.institutionName}</h2><p>{welcome} Your workspace brings the people, learning and operations of your institution together.</p><div className="pro-campus-meta"><span><i className="pro-status-dot" />Cloud workspace connected</span><span><ShieldCheck size={14}/> {roleLabels[user!.role]} access</span></div></div>
-      <div className="pro-campus-emblem"><div className="pro-emblem-orbit orbit-outer"/><div className="pro-emblem-orbit orbit-inner"/><div className="pro-emblem-center"><GraduationCap size={34}/><b>360</b></div><span className="pro-emblem-caption">ONE CONNECTED CAMPUS</span></div>
-    </section>
-
-    <div className="pro-section-heading"><div><span className="pro-section-kicker">LIVE WORKSPACE SUMMARY</span><h2>Key metrics</h2></div><span className="pro-live-label"><i />{loading ? 'Updating records' : 'Based on available records'}</span></div>
-    <section className="pro-metrics-grid">
-      {stats.map((stat, index) => <button className={`pro-metric-card metric-${index + 1}`} key={stat.label} onClick={() => onNavigate(stat.route)}>
-        <span className="pro-metric-icon"><stat.icon size={20}/></span><span className="pro-metric-label">{stat.label}</span><strong>{loading ? '—' : stat.value}</strong><small>{stat.hint}</small><span className="pro-metric-open"><ArrowRight size={16}/></span>
+    <section className="pro-metrics-grid" aria-label="Institution statistics">
+      {stats.map((stat, index) => <button className={'pro-metric-card metric-' + (index + 1) + ' tone-' + stat.tone} key={stat.label} onClick={() => onNavigate(stat.route)}>
+        <span className="pro-metric-icon"><stat.icon size={27}/></span>
+        <span className="pro-metric-copy"><strong>{loading ? '—' : stat.value}</strong><span className="pro-metric-label">{stat.label}</span><small>{stat.hint}</small></span>
+        <ArrowRight className="pro-metric-open" size={15}/>
       </button>)}
     </section>
 
-    <section className="pro-dashboard-grid">
-      <div className="pro-dashboard-panel pro-activity-panel">
-        <div className="pro-panel-heading"><div><span className="pro-section-kicker">WHAT’S HAPPENING</span><h2>Recent activity</h2><p>The latest records visible in your workspace.</p></div><button onClick={() => onNavigate(available[0]?.key ?? 'overview')}>View workspace <ArrowRight size={15}/></button></div>
-        {loading ? <div className="pro-loading-state"><span /> Loading your institution records…</div> : recent.length ? <div className="pro-activity-list">{recent.map(({ table, row }, index) => {
-          const title = firstText(row, ['full_name', 'title', 'fee_title', 'student_name', 'exam_title', 'admission_no'], tableLabels[table] ?? 'Record')
-          const subtitle = firstText(row, ['class_name', 'subject', 'department', 'admission_no', 'audience'], tableLabels[table] ?? 'Institution record')
-          const route = tableToModule[table] ?? table
-          const Icon = moduleIcons[route] ?? FileText
-          return <button className="pro-activity-row" key={`${table}-${row.id}`} onClick={() => onNavigate(route)}><span className={`pro-activity-icon activity-${index % 4}`}><Icon size={17}/></span><span className="pro-activity-text"><b>{title}</b><small>{tableLabels[table] ?? 'Record'} <i /> {subtitle}</small></span><span className="pro-activity-date">{shortDate(row.created_at)}</span><ArrowRight size={15}/></button>
-        })}</div> : <div className="pro-empty-state"><span><FileText size={24}/></span><b>Your activity feed starts here</b><small>Records created in your permitted modules will appear here.</small></div>}
-        {loadNote && <div className="pro-data-note"><Activity size={15}/><span>Some dashboard information could not be loaded: {loadNote}</span></div>}
-      </div>
+    <section className="pro-dashboard-grid pro-dashboard-primary-grid">
+      <section className="pro-dashboard-panel pro-academic-panel">
+        <div className="pro-panel-heading">
+          <div className="pro-panel-title"><BarChart3 size={19}/><h2>Academic Overview</h2></div>
+          <div className="pro-chart-controls" role="group" aria-label="Academic overview range">
+            {(['month', 'term', 'year'] as DashboardRange[]).map(option => <button type="button" key={option} className={range === option ? 'active' : ''} onClick={() => setRange(option)}>
+              {option === 'month' ? 'This Month' : option === 'term' ? 'This Term' : 'This Year'}
+            </button>)}
+          </div>
+        </div>
+        <div className="pro-chart-legend">
+          {trend.series.map(series => <span key={series.label}><i style={{ background: series.color }}/>{series.label}</span>)}
+        </div>
+        {loading ? <div className="pro-loading-state"><span/> Loading academic records…</div> : <div className="pro-academic-chart">
+          <svg viewBox={'0 0 ' + chartWidth + ' ' + chartHeight} role="img" aria-label="Monthly student, attendance and fee record trends">
+            {chartTicks.map(tick => <g key={tick}>
+              <line x1={chartLeft} y1={chartY(tick)} x2={chartRight} y2={chartY(tick)} stroke="#e7edf5" strokeWidth="1"/>
+              <text x="31" y={chartY(tick) + 4} textAnchor="end" fill="#7f90a7" fontSize="11">{tick.toLocaleString()}</text>
+            </g>)}
+            <line x1={chartLeft} y1={chartTop} x2={chartLeft} y2={chartBottom} stroke="#cbd7e6" strokeWidth="1"/>
+            <line x1={chartLeft} y1={chartBottom} x2={chartRight} y2={chartBottom} stroke="#cbd7e6" strokeWidth="1"/>
+            {trend.series.map(series => <g key={series.label}>
+              <polyline points={series.values.map((value, index) => chartX(index) + ',' + chartY(value)).join(' ')} fill="none" stroke={series.color} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+              {series.values.map((value, index) => <circle key={index} cx={chartX(index)} cy={chartY(value)} r="4" fill={series.color}/>)}
+            </g>)}
+            {trend.buckets.map((bucket, index) => <text key={bucket.label + index} x={chartX(index)} y="216" textAnchor="middle" fill="#637791" fontSize="11">{bucket.label}</text>)}
+          </svg>
+        </div>}
+        <div className="pro-chart-caption">Record counts from the information available to your signed-in role.</div>
+      </section>
 
-      <aside className="pro-dashboard-panel pro-quick-panel">
-        <div className="pro-panel-heading"><div><span className="pro-section-kicker">GET THINGS DONE</span><h2>Quick actions</h2><p>Jump straight into your common tasks.</p></div></div>
-        <div className="pro-quick-list">{actions.map((action, index) => <button className="pro-quick-action" key={action.key} onClick={() => onNavigate(action.key)}><span className={`pro-quick-number quick-${index + 1}`}>0{index + 1}</span><span className="pro-quick-action-icon"><action.icon size={18}/></span><span><b>{action.label}</b><small>{action.detail}</small></span><ArrowRight size={16}/></button>)}</div>
-        {['student', 'parent'].includes(user!.role) && <div className="pro-linked-learner"><span><UserRound size={19}/></span><div><small>LINKED LEARNER</small><b>{studentProfile ? firstText(studentProfile, ['full_name'], 'Student profile') : 'No student linked yet'}</b><em>{studentProfile ? firstText(studentProfile, ['class_name'], 'Class not set') : 'Ask the institution administrator to link your account.'}</em></div></div>}
-      </aside>
-
-      {available.some(module => module.key === 'attendance') && <section className="pro-dashboard-panel pro-attendance-panel">
-        <div className="pro-panel-heading"><div><span className="pro-section-kicker">ATTENDANCE SNAPSHOT</span><h2>Presence overview</h2><p>Distribution across attendance records available to you.</p></div><span className="pro-panel-count">{attendance.length} records</span></div>
-        <div className="pro-attendance-content"><div className="pro-attendance-ring" style={{ background: `conic-gradient(#b4d96e 0 ${presentPercent}%, #e8b16e ${presentPercent}% ${attendance.length ? Math.min(100, presentPercent + Math.round(lateCount / attendance.length * 100)) : 0}%, #e6e9e1 0)` }}><div><b>{attendance.length ? `${presentPercent}%` : '—'}</b><small>Present</small></div></div><div className="pro-attendance-legend"><div><i className="present"/><span>Present</span><b>{loading ? '—' : presentCount}</b></div><div><i className="late"/><span>Late</span><b>{loading ? '—' : lateCount}</b></div><div><i className="absent"/><span>Absent</span><b>{loading ? '—' : absentCount}</b></div><div className="pro-attendance-total"><span>Total records</span><b>{loading ? '—' : attendance.length}</b></div></div></div>
-      </section>}
-
-      <div className="pro-dashboard-note"><ShieldCheck size={17}/><span><b>Your workspace is permission-aware.</b> All figures and records shown here reflect information available to your signed-in role.</span></div>
+      <section className="pro-dashboard-panel pro-module-overview-panel">
+        <div className="pro-panel-heading">
+          <div className="pro-panel-title"><PieChart size={19}/><h2>Module Overview</h2></div>
+          <span className="pro-panel-count">{breakdown.length} areas</span>
+        </div>
+        <div className="pro-module-overview">
+          <div className="pro-module-donut" style={{ background: donutGradient }}>
+            <div><strong>{loading ? '—' : breakdownTotal.toLocaleString()}</strong><small>Records</small></div>
+          </div>
+          <div className="pro-module-legend">
+            {breakdown.map(item => <div key={item.key}><i style={{ background: item.color }}/><span>{item.label}</span><b>{loading ? '—' : item.value.toLocaleString()}</b></div>)}
+          </div>
+        </div>
+        {breakdownTotal === 0 && !loading && <div className="pro-chart-caption">Module activity will appear here as records are added.</div>}
+      </section>
     </section>
+
+    <section className="pro-dashboard-grid pro-dashboard-secondary-grid">
+      <section className="pro-dashboard-panel pro-activity-panel">
+        <div className="pro-panel-heading">
+          <div className="pro-panel-title"><Activity size={18}/><h2>Recent Activity</h2></div>
+          <span className="pro-panel-count">Latest records</span>
+        </div>
+        {loading ? <div className="pro-loading-state"><span/> Loading recent activity…</div> : recent.length ? <div className="pro-activity-list">{recent.map(({ table, row }, index) => {
+          const title = firstText(row, ['full_name', 'name', 'title', 'fee_title', 'student_name', 'exam_title', 'admission_no'], tableLabels[table] ?? 'Record')
+          const subtitle = firstText(row, ['class_name', 'subject', 'department', 'admission_no', 'audience'], tableLabels[table] ?? 'Institution record')
+          const route = recentRoutes[table] ?? tableToModule[table] ?? table
+          const Icon = moduleIcons[route] ?? FileText
+          return <button className="pro-activity-row" key={table + '-' + row.id} onClick={() => onNavigate(route)}>
+            <span className={'pro-activity-icon activity-' + (index % 4)}><Icon size={17}/></span>
+            <span className="pro-activity-text"><b>{title}</b><small>{tableLabels[table] ?? 'Institution record'} <i/> {subtitle}</small></span>
+            <span className="pro-activity-date">{shortDate(row.created_at)}</span>
+            <ArrowRight size={14}/>
+          </button>
+        })}</div> : <div className="pro-empty-state"><span><FileText size={23}/></span><b>Your activity feed starts here</b><small>Records created in your permitted modules will appear here.</small></div>}
+      </section>
+
+      <section className="pro-dashboard-panel pro-upcoming-panel">
+        <div className="pro-panel-heading">
+          <div className="pro-panel-title"><CalendarDays size={18}/><h2>Upcoming Events</h2></div>
+          <span className="pro-panel-count">{upcoming.length} upcoming</span>
+        </div>
+        {loading ? <div className="pro-loading-state"><span/> Loading upcoming items…</div> : upcoming.length ? <div className="pro-upcoming-list">{upcoming.map((event, index) => <button type="button" className="pro-upcoming-row" key={event.kind + '-' + event.date.toISOString() + '-' + index} onClick={() => onNavigate(event.route)}>
+          <span className="pro-event-date"><b>{event.date.getDate()}</b><small>{event.date.toLocaleDateString(undefined, { month: 'short' })}</small></span>
+          <span className="pro-event-copy"><b>{event.title}</b><small>{event.kind} · {event.detail}</small></span>
+          <ArrowRight size={14}/>
+        </button>)}</div> : <div className="pro-empty-state"><span><CalendarDays size={23}/></span><b>No upcoming events</b><small>Scheduled examinations, deadlines and fee due dates will appear here.</small></div>}
+      </section>
+
+      <section className="pro-dashboard-panel pro-quick-stats-panel">
+        <div className="pro-panel-heading"><div className="pro-panel-title"><BarChart3 size={18}/><h2>Quick Statistics</h2></div></div>
+        <div className="pro-quick-stats-grid">{quickStats.map((item, index) => <div className={'pro-quick-stat tone-' + item.tone} key={item.label}>
+          <span><item.icon size={19}/></span><small>{item.label}</small><b>{loading ? '—' : item.value}</b>
+        </div>)}</div>
+      </section>
+    </section>
+
+    {loadNote && <div className="pro-data-note"><Activity size={15}/><span>Some dashboard information could not be loaded: {loadNote}</span></div>}
+    {['student', 'parent'].includes(user!.role) && <div className="pro-dashboard-note">Your overview only includes records that your account is permitted to view.</div>}
   </div>
 }
 
@@ -280,7 +483,7 @@ const quickAccessByRole: Record<AppRole, Array<{ title: string; key: string; ico
   owner: [
     { title: 'Attendance Registration', key: 'attendance', icon: CalendarCheck },
     { title: 'Fees Invoice', key: 'fees', icon: Wallet },
-    { title: 'Files & Documentation', key: 'files', icon: FileText },
+    { title: 'Files', key: 'files', icon: FileText },
   ],
   admin: [
     { title: 'Attendance Registration', key: 'attendance', icon: CalendarCheck },
@@ -322,7 +525,7 @@ export function Dashboard({ onToast }: Props) {
   const [active, setActive] = useState('overview')
   const [activePage, setActivePage] = useState('Dashboard')
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [expandedGroups, setExpandedGroups] = useState<string[]>(['institution'])
+  const [expandedGroups, setExpandedGroups] = useState<string[]>(['students', 'people', 'institution', 'academics', 'finance', 'communication', 'operations'])
   const [profileOpen, setProfileOpen] = useState(false)
   const [searchText, setSearchText] = useState('')
   const [searchOpen, setSearchOpen] = useState(false)
@@ -383,9 +586,8 @@ export function Dashboard({ onToast }: Props) {
   const pageTitle = activePage
 
   return <div className={`pro-app-shell ${sidebarOpen ? 'navigation-open' : ''}`}>
-    <aside className={`pro-sidebar ${sidebarOpen ? 'is-open' : ''}`} aria-hidden={!sidebarOpen}>
-      <div className="pro-sidebar-brand"><div className="pro-sidebar-mark"><GraduationCap size={25}/></div><div><b>EduSphere <i>360</i></b><small>INSTITUTION MANAGEMENT</small></div><button className="pro-mobile-close" onClick={() => setSidebarOpen(false)} aria-label="Close navigation"><X size={21}/></button></div>
-      <div className="pro-institution-card"><span className="pro-institution-symbol"><Building2 size={20}/></span><span><b>{user?.institutionName}</b><small>{roleLabels[user!.role]}</small></span></div>
+    <aside className={`pro-sidebar ${sidebarOpen ? 'is-open' : ''}`} >
+      <div className="pro-sidebar-brand"><div className="pro-sidebar-mark"><BookOpen size={25}/></div><div><b>EduSphere <i>360</i></b><small>INSTITUTION MANAGEMENT</small></div><button className="pro-mobile-close" onClick={() => setSidebarOpen(false)} aria-label="Close navigation"><X size={21}/></button></div>
       <nav className="pro-navigation" aria-label="Institution workspace">
         {visibleGroups.map(group => {
           const GroupIcon = catalogIcons[group.icon] ?? LayoutDashboard
@@ -407,7 +609,7 @@ export function Dashboard({ onToast }: Props) {
         })}
       </nav>
       <section className="pro-quick-access" aria-label="Quick access">
-        <div className="pro-nav-section-label">QUICK ACCESS · UNPINNED</div>
+        <div className="pro-nav-section-label">QUICK ACCESS</div>
         {quickAccessItems.map(item => <button key={item.key} className={`pro-nav-item ${active === item.key ? 'active' : ''}`} onClick={() => navigate(item.key)}><span className="pro-nav-icon"><item.icon size={15}/></span><span className="pro-nav-title">{item.title}</span></button>)}
       </section>
     </aside>
@@ -415,13 +617,17 @@ export function Dashboard({ onToast }: Props) {
 
     <main className="pro-main-shell">
       <header className="pro-topbar">
-        <div className="pro-topbar-left"><button className="pro-mobile-menu" onClick={() => setSidebarOpen(open => !open)} aria-label={sidebarOpen ? 'Close navigation' : 'Open navigation'} aria-expanded={sidebarOpen}><Menu size={19}/><span>Menu</span></button><div className="pro-breadcrumb"><span>EduSphere 360</span><i>/</i><b>{pageTitle}</b></div></div>
-        <div className="pro-topbar-right">
+        <div className="pro-topbar-left">
+          <button className="pro-mobile-menu" onClick={() => setSidebarOpen(open => !open)} aria-label={sidebarOpen ? 'Close navigation' : 'Open navigation'} aria-expanded={sidebarOpen}><Menu size={19}/></button>
           <div className="pro-search-wrap">
-            <label className="pro-global-search"><Search size={16}/><input aria-label="Search workspace" placeholder="Search workspace…" value={searchText} onFocus={() => setSearchOpen(true)} onChange={event => { setSearchText(event.target.value); setSearchOpen(true) }} onKeyDown={event => { if (event.key === 'Escape') { setSearchOpen(false); setSearchText('') } else if (event.key === 'Enter' && searchResults[0]) selectSearchResult(searchResults[0]) }}/>{searchText && <button type="button" aria-label="Clear search" onClick={() => { setSearchText(''); setSearchOpen(false) }}>×</button>}</label>
-            {searchOpen && searchText.trim() && <div className="pro-search-results" role="listbox" aria-label="Workspace search results">{searchResults.length ? searchResults.map(result => <button type="button" key={`${result.group}-${result.title}`} role="option" onClick={() => selectSearchResult(result)}><span><b>{result.title}</b><small>{result.group}</small></span><ArrowRight size={15}/></button>) : <div className="pro-search-empty">No matching workspace found.</div>}</div>}
+            <label className="pro-global-search"><Search size={17}/><input aria-label="Search workspace" placeholder="Search modules, students, or records…" value={searchText} onFocus={() => setSearchOpen(true)} onChange={event => { setSearchText(event.target.value); setSearchOpen(true) }} onKeyDown={event => { if (event.key === 'Escape') { setSearchOpen(false); setSearchText('') } else if (event.key === 'Enter' && searchResults[0]) selectSearchResult(searchResults[0]) }}/>{searchText && <button type="button" aria-label="Clear search" onClick={() => { setSearchText(''); setSearchOpen(false) }}>×</button>}</label>
+            {searchOpen && searchText.trim() && <div className="pro-search-results" role="listbox" aria-label="Workspace search results">{searchResults.length ? searchResults.map(result => <button type="button" key={result.group + '-' + result.title} role="option" onClick={() => selectSearchResult(result)}><span><b>{result.title}</b><small>{result.group}</small></span><ArrowRight size={15}/></button>) : <div className="pro-search-empty">No matching workspace found.</div>}</div>}
           </div>
-          <div className="pro-profile-wrap"><button className="pro-profile-trigger" onClick={() => setProfileOpen(open => !open)} aria-expanded={profileOpen}><span className="pro-profile-avatar">{user?.fullName.slice(0, 1).toUpperCase()}</span><span className="pro-profile-copy"><b>{user?.fullName}</b><small>{roleLabels[user!.role]}</small></span><ChevronDown size={14}/></button>{profileOpen && <div className="pro-profile-menu"><div className="pro-profile-details"><b>{user?.fullName}</b><small>{user?.email}</small><small>{user?.institutionName}</small>{user?.institutionType && <small>Institution type: {user.institutionType.replaceAll('_', ' ')}</small>}<small>Account role: {roleLabels[user!.role]}</small><span className={`pro-profile-mode ${mode}`}>Cloud workspace</span></div>{['student', 'parent'].includes(user!.role) && <button type="button" onClick={() => navigate('profile')}><UserRound size={15}/> My Profile</button>}<button type="button" onClick={() => void logout()}><LogOut size={15}/> Sign out</button></div>}</div>
+        </div>
+        <div className="pro-topbar-right">
+          <div className="pro-topbar-institution"><span className="pro-topbar-institution-icon"><Building2 size={19}/></span><span><b>{user?.institutionName}</b><small><i/>Online</small></span></div>
+          {visibleGroups.some(group => group.items.includes('Announcements')) && <button type="button" className="pro-topbar-bell" aria-label="Open announcements" onClick={() => navigate('announcements')}><Bell size={19}/></button>}
+          <div className="pro-profile-wrap"><button className="pro-profile-trigger" onClick={() => setProfileOpen(open => !open)} aria-expanded={profileOpen}><span className="pro-profile-avatar">{user?.fullName.split(' ').map(part => part[0]).join('').slice(0, 2).toUpperCase()}</span><span className="pro-profile-copy"><b>{user?.fullName}</b><small>{roleLabels[user!.role]}</small></span><ChevronDown size={14}/></button>{profileOpen && <div className="pro-profile-menu"><div className="pro-profile-details"><b>{user?.fullName}</b><small>{user?.email}</small><small>{user?.institutionName}</small>{user?.institutionType && <small>Institution type: {user.institutionType.replaceAll('_', ' ')}</small>}<small>Account role: {roleLabels[user!.role]}</small><span className={'pro-profile-mode ' + mode}>Cloud workspace</span></div>{['student', 'parent'].includes(user!.role) && <button type="button" onClick={() => navigate('profile')}><UserRound size={15}/> My Profile</button>}<button type="button" onClick={() => void logout()}><LogOut size={15}/> Sign out</button></div>}</div>
         </div>
       </header>
       <div className="pro-module-stage">{active === 'overview' ? <Overview onNavigate={navigate}/> : adminKey ? <AdministrationModule key={adminKey} initialKey={adminKey as 'departments' | 'programs' | 'classes' | 'academic_sessions' | 'subjects' | 'rooms'}/> : active === 'accounts' ? <AccountsModule onToast={onToast}/> : active === 'files' ? <FilesModule onToast={onToast}/> : active === 'reports' ? <ReportsModule onToast={onToast}/> : active === 'profile' ? <ProfileModule/> : activeModule ? <RecordModule module={activeModule as ModuleConfig} onToast={onToast}/> : <Overview onNavigate={navigate}/>}</div>
