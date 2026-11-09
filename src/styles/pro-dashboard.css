@@ -598,3 +598,17 @@
   .ed360-gauge-content { flex-direction: column; padding: 16px 0; }
   .ed360-people-compare-panel { grid-column: auto; }
 }
+
+
+/* Nested workspace tabs retain a visible parent/child relationship. */
+.pro-workspace-tab.is-child { border-style: dashed; border-color: #d9e0d7; background: #f7f8f4; }
+.pro-workspace-tab.is-child.is-active { border-style: solid; border-color: #cadac4; background: #fff; }
+.pro-workspace-tab-main { display: grid; grid-template-columns: auto minmax(0,1fr); column-gap: 8px; row-gap: 2px; }
+.pro-workspace-tab-main > svg { grid-column: 1; grid-row: 1 / span 2; }
+.pro-workspace-tab-main > span { grid-column: 2; min-width: 0; }
+.pro-workspace-tab-main > small { grid-column: 2; display: block; overflow: hidden; color: #8b998e; font-size: 9px; font-weight: 600; line-height: 1.2; text-overflow: ellipsis; white-space: nowrap; }
+.pro-workspace-tab.is-child.is-active .pro-workspace-tab-main > small { color: #597a60; }
+@media (max-width: 720px) {
+  .pro-workspace-tab.is-child { max-width: 154px; }
+  .pro-workspace-tab-main > small { font-size: 8px; }
+}
