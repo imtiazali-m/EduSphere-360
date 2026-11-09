@@ -48,7 +48,7 @@ export function printOfficeReport(title:string,rows:Record<string,unknown>[],col
  '<script>window.addEventListener("load",()=>window.print())<\/script></body></html>'
  const blob=new Blob([html],{type:'text/html'})
  const url=URL.createObjectURL(blob)
- const win=window.open(url,'_blank','noopener,noreferrer')
+ const win=window.open(url,'_blank')
  if(!win){URL.revokeObjectURL(url);throw new Error('Allow pop-ups to open the print-ready report.')}
  window.setTimeout(()=>URL.revokeObjectURL(url),10000)
 }
