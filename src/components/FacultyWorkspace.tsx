@@ -12,6 +12,8 @@ import { userFacingError } from '../lib/userErrors'
 import { downloadCsv } from '../lib/csv'
 import type { RecordRow } from '../lib/types'
 import '../styles/faculty-workspace.css'
+import { WorkspaceSubwindowNav, useWorkspaceHierarchy } from './WorkspaceHierarchy'
+import { getFacultySubwindows, matchesWorkspaceFilter } from '../lib/workspaceBlueprints'
 
 interface Props { onToast: (message: string, error?: boolean) => void; onNavigate: (key: string) => void }
 type Tab = 'overview'|'registration'|'directory'|'profile'|'departments'|'designations'|'assignments'|'attendance'|'leave'|'workload'|'documents'|'history'|'reports'
@@ -79,6 +81,8 @@ export function FacultyWorkspace({onToast,onNavigate}:Props) {
   const {user,mode}=useAuth()
   const admin=user!.role==='owner'||user!.role==='admin'
   const [tab,setTab]=useState<Tab>('overview')
+  const hierarchy=useWorkspaceHierarchy()
+  useEffect(()=>{hierarchy.setWindowKey(tab)},[tab])
   const [data,setData]=useState<Record<string,RecordRow[]>>({})
   const [accounts,setAccounts]=useState<Account[]>([])
   const [loading,setLoading]=useState(true)
@@ -216,13 +220,14 @@ export function FacultyWorkspace({onToast,onNavigate}:Props) {
   function exportCsv(){downloadCsv('edusphere360-staff-report.csv',employees,[{key:'employee_no',label:'Employee ID'},{key:'full_name',label:'Employee'},{key:'email',label:'Email'},{key:'employee_type',label:'Category'},{key:'department',label:'Department'},{key:'employment_status',label:'Status'},{key:'joining_date',label:'Joining date'}])}
 
   const table=(rows:RecordRow[],cols:{key:string;label:string}[],empty:string,actions?: (row:RecordRow)=>ReactNode)=>{
-    if(!rows.length)return <div className="staff-empty"><span><BriefcaseBusiness size={21}/></span><strong>No records yet</strong><p>{empty}</p></div>
-    return <div className="staff-table-wrap"><table className="staff-table"><thead><tr>{cols.map(c=><th key={c.key}>{c.label}</th>)}{actions&&<th>Actions</th>}</tr></thead><tbody>{rows.map(row=><tr key={row.id}>{cols.map(c=><td key={c.key}>{['status','employment_status'].includes(c.key)?<Status value={row[c.key]}/>:c.key.endsWith('_date')||c.key==='created_at'?dateLabel(row[c.key]):value(row[c.key])}</td>)}{actions&&<td><div className="staff-row-actions">{actions(row)}</div></td>}</tr>)}</tbody></table></div>
+    const taskRows=rows.filter(row=>matchesWorkspaceFilter(hierarchy.subwindowKey,row as Record<string,unknown>,user?.email))
+    if(!taskRows.length)return <div className="staff-empty"><span><BriefcaseBusiness size={21}/></span><strong>No records in this task view</strong><p>{empty}</p></div>
+    return <div className="staff-table-wrap"><table className="staff-table"><thead><tr>{cols.map(c=><th key={c.key}>{c.label}</th>)}{actions&&<th>Actions</th>}</tr></thead><tbody>{taskRows.map(row=><tr key={row.id}>{cols.map(c=><td key={c.key}>{['status','employment_status'].includes(c.key)?<Status value={row[c.key]}/>:c.key.endsWith('_date')||c.key==='created_at'?dateLabel(row[c.key]):value(row[c.key])}</td>)}{actions&&<td><div className="staff-row-actions">{actions(row)}</div></td>}</tr>)}</tbody></table></div>
   }
   const header=<header className="staff-workspace-heading"><div><span className="staff-kicker">PEOPLE / HUMAN RESOURCES</span><h1>Faculty &amp; Employee Management</h1><p>{admin?'Employee records, teaching allocation, attendance, leave, confidential documents and workforce reporting.':'Your employee information, assignments, attendance, leave, documents and history.'}</p></div><div className="staff-heading-actions"><button type="button" className="staff-button staff-button-outline" onClick={()=>void load()} disabled={loading}><RefreshCw size={15}/> Refresh</button>{admin&&<button type="button" className="staff-button staff-button-primary" onClick={()=>{setTab('registration');open('employee')}}><Plus size={15}/> Register employee</button>}</div></header>
 
   const employeeActions=(row:RecordRow)=><><button type="button" title="Open profile" onClick={()=>{setEmployeeId(row.id);setTab('profile')}}><Eye size={14}/></button>{admin&&<button type="button" title="Edit employee" onClick={()=>{setEmployeeId(row.id);open('employee',row)}}><Edit3 size={14}/></button>}{admin&&<button type="button" className="staff-action-danger" title="Delete employee" onClick={()=>void remove('teachers',row)}><Trash2 size={14}/></button>}</>
-  const visibleEmployees=useMemo(()=>employees.filter(row=>{const q=query.trim().toLowerCase();const match=!q||[row.employee_no,row.full_name,row.email,row.department].some(v=>String(v??'').toLowerCase().includes(q));return match&&(statusFilter==='all'||String(row.employment_status??'active')===statusFilter)}),[employees,query,statusFilter])
+  const visibleEmployees=useMemo(()=>employees.filter(row=>{const q=query.trim().toLowerCase();const match=!q||[row.employee_no,row.full_name,row.email,row.department].some(v=>String(v??'').toLowerCase().includes(q));return match&&(statusFilter==='all'||String(row.employment_status??'active')===statusFilter)&&matchesWorkspaceFilter(hierarchy.subwindowKey,row,user?.email)}),[employees,query,statusFilter])
   const ownAssignmentRows=assignments.filter(row=>row.teacher_id===selected?.id)
   const ownAttendanceRows=attendance.filter(row=>row.teacher_id===selected?.id)
   const ownLeaveRows=leaves.filter(row=>row.teacher_id===selected?.id)
@@ -237,6 +242,7 @@ export function FacultyWorkspace({onToast,onNavigate}:Props) {
     {header}
     <nav className="staff-window-nav" aria-label="Faculty and employee windows">{tabs.map(item=>{const Icon=item.icon;return <button type="button" key={item.key} className={tab===item.key?'active':''} onClick={()=>setTab(item.key)}><Icon size={15}/><span>{item.label}</span></button>})}</nav>
     <div className="staff-context-bar"><div><span>Current window</span><strong>{tabs.find(item=>item.key===tab)?.label??'Overview'}</strong></div><label>Employee record<select value={selected?.id??''} onChange={e=>setEmployeeId(e.target.value)} disabled={employees.length<=1}>{!employees.length&&<option value="">No linked employee record</option>}{employees.map(r=><option key={r.id} value={r.id}>{value(r.full_name)} · {value(r.employee_no)}</option>)}</select></label>{loading&&<span className="staff-loading"><RefreshCw size={13}/> Loading staff records</span>}</div>
+    <WorkspaceSubwindowNav items={getFacultySubwindows(tab,admin)}/>
 
     {tab==='overview'&&<>
       <section className="staff-metric-grid">{(admin?[['Employees',employees.length,Users],['Active',activeStaff.length,Activity],['Teaching allocations',activeAllocation.length,GraduationCap],['Pending leave',pendingLeave.length,CalendarDays],['Attendance this month',thisMonth.length,CalendarCheck]]:[['My assignments',ownAssignmentRows.length,GraduationCap],['My attendance',ownAttendanceRows.length,CalendarCheck],['Pending leave',ownLeaveRows.filter(r=>r.status==='pending').length,CalendarDays],['My documents',ownDocRows.length,FileText]]).map(([name,count,Icon])=>{const I=Icon as typeof Users;return <article key={String(name)} className="staff-metric-card"><span><I size={18}/></span><small>{String(name)}</small><strong>{Number(count).toLocaleString()}</strong></article>})}</section>
