@@ -9,7 +9,7 @@ import {
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { roleNavigationGroups } from '../lib/navigationAccess'
-import { navigationRoutes } from '../lib/navigationRoutes'
+import { getNavigationRoute } from '../lib/navigationRoutes'
 import { useAuth } from '../context/AuthContext'
 import { modulesForRole, roleLabels } from '../lib/modules'
 import { listRecords } from '../lib/data'
@@ -28,6 +28,7 @@ import { InstitutionalWorkspace } from './InstitutionalWorkspace'
 import { AttendanceWorkspace } from './AttendanceWorkspace'
 import { LinkedOperationsWorkspace } from './LinkedOperationsWorkspace'
 import { NotificationCenter } from './NotificationCenter'
+import { WorkspaceUnavailable } from './WorkspaceUnavailable'
 import { supabase } from '../lib/supabase'
 
 interface Props { onToast: (message: string, error?: boolean) => void }
@@ -67,7 +68,6 @@ function pageIcon(title: string, fallback: LucideIcon): LucideIcon {
   return fallback
 }
 
-const pageRoutes = navigationRoutes
 
 const tableLabels: Record<string, string> = {
   institutional_records: 'Institutional operation',
@@ -452,7 +452,7 @@ const adminModuleLabels: Record<string, string> = {
   academic_sessions: 'Academic Sessions', subjects: 'Subjects', rooms: 'Rooms & Facilities',
 }
 
-type WorkspaceTab = { id: string; route: string; targetKey: string; targetWindow: string; title: string }
+type WorkspaceTab = { id: string; route: string; targetKey: string; targetWindow: string; title: string; parentId?: string; groupKey?: string; itemKey?: string }
 
 export function Dashboard({ onToast }: Props) {
   const { user, mode, signOut } = useAuth()
@@ -472,9 +472,10 @@ export function Dashboard({ onToast }: Props) {
   const searchResults = useMemo(() => {
     const query = searchText.trim().toLowerCase()
     if (!query) return []
-    const items = visibleGroups.flatMap(group => (group.key === 'dashboard' ? ['Dashboard'] : group.items).map(title => ({
-      title, group: group.label, route: pageRoutes[title],
-    })))
+    const items = visibleGroups.flatMap(group => (group.key === 'dashboard' ? ['Dashboard'] : group.items).map(title => {
+      const itemKey = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+      return { title, group: group.label, groupKey: group.key, itemKey, route: group.key === 'dashboard' ? 'overview' : getNavigationRoute(group.key, title) }
+    }))
     return items.filter(item => item.route && `${item.title} ${item.group}`.toLowerCase().includes(query)).slice(0, 8)
   }, [searchText, visibleGroups])
 
@@ -514,52 +515,88 @@ export function Dashboard({ onToast }: Props) {
     return () => { live = false }
   }, [user?.id, user?.institutionId, active, mode])
 
-  function navigate(key: string) {
+  function navigate(key: string, options: { parentId?: string; title?: string; groupKey?: string; itemKey?: string } = {}) {
     const studentWindowRoute = key.startsWith('students:')
     const attendanceWindowRoute = key.startsWith('attendance:')
     const institutionalWindowRoute = key.startsWith('institutional:')
-    const targetKey = studentWindowRoute ? 'students' : attendanceWindowRoute ? 'attendance' : institutionalWindowRoute ? 'institutional' : key
-    const targetWindow = studentWindowRoute ? key.slice('students:'.length) : attendanceWindowRoute ? key.slice('attendance:'.length) : institutionalWindowRoute ? key.slice('institutional:'.length) : 'overview'
-    let title = 'Dashboard'
+    const unavailableWindowRoute = key.startsWith('unavailable:')
+    const employeeWindowRoute = key.startsWith('employees:')
+    const reportsWindowRoute = key.startsWith('reports:')
+    const routeParts = key.split(':')
+    const moduleWindowRoute = routeParts.length === 2 && ['fees', 'exams', 'exam_results', 'assignments', 'assignment_submissions', 'timetable', 'announcements', 'work_tasks'].includes(routeParts[0])
+    const targetKey = studentWindowRoute ? 'students'
+      : attendanceWindowRoute ? 'attendance'
+      : institutionalWindowRoute ? 'institutional'
+      : unavailableWindowRoute ? 'unavailable'
+      : employeeWindowRoute ? 'teachers'
+      : reportsWindowRoute ? 'reports'
+      : moduleWindowRoute ? routeParts[0]
+      : key
+    const targetWindow = studentWindowRoute ? key.slice('students:'.length)
+      : attendanceWindowRoute ? key.slice('attendance:'.length)
+      : institutionalWindowRoute ? key.slice('institutional:'.length)
+      : unavailableWindowRoute ? key.slice('unavailable:'.length)
+      : employeeWindowRoute ? key.slice('employees:'.length)
+      : reportsWindowRoute ? key.slice('reports:'.length)
+      : moduleWindowRoute ? routeParts[1]
+      : 'overview'
+    let title = options.title ?? 'Dashboard'
 
-    if (targetKey === 'overview') title = 'Dashboard'
-    else if (targetKey === 'notifications') title = 'Notification Centre'
-    else if (targetKey === 'institutional') title = 'Institutional Workspace'
-    else if (targetKey === 'attendance') title = 'Attendance Management'
-    else if (targetKey.startsWith('admin:')) {
-      const subkey = targetKey.slice(6)
-      title = adminModuleLabels[subkey] ?? 'Administration'
-    } else if (targetKey === 'accounts') title = 'User Accounts'
-    else if (targetKey === 'files') title = 'Files & Documentation'
-    else if (targetKey === 'reports') title = 'Reports'
-    else if (targetKey === 'profile') title = 'My Profile'
-    else {
-      const module = available.find(item => item.key === targetKey)
-      if (!module) {
-        onToast('This workspace is not enabled for your role.', true)
-        return
+    if (!options.title) {
+      if (targetKey === 'overview') title = 'Dashboard'
+      else if (targetKey === 'notifications') title = 'Notification Centre'
+      else if (targetKey === 'institutional') title = 'Institutional Workspace'
+      else if (targetKey === 'unavailable') title = 'Workspace not connected'
+      else if (targetKey === 'attendance') title = 'Attendance Management'
+      else if (targetKey === 'reports') title = 'Reports'
+      else if (targetKey.startsWith('admin:')) {
+        const subkey = targetKey.slice(6)
+        title = adminModuleLabels[subkey] ?? 'Administration'
+      } else if (targetKey === 'accounts') title = 'User Accounts'
+      else if (targetKey === 'files') title = 'Files & Documentation'
+      else if (targetKey === 'profile') title = 'My Profile'
+      else {
+        const module = available.find(item => item.key === targetKey)
+        if (!module && targetKey !== 'teachers') {
+          onToast('This workspace is not enabled for your role.', true)
+          return
+        }
+        title = targetKey === 'teachers' ? 'Employees and Faculty' : module?.title ?? 'Workspace'
       }
-      title = module.title
     }
 
-    const nextTab: WorkspaceTab = { id: key, route: key, targetKey, targetWindow, title }
+    const identity = options.groupKey && options.itemKey ? `${options.groupKey}:${options.itemKey}` : key
+    const id = options.parentId ? `${options.parentId}::${identity}` : identity
+    const nextTab: WorkspaceTab = {
+      id, route: key, targetKey, targetWindow, title,
+      parentId: options.parentId, groupKey: options.groupKey, itemKey: options.itemKey,
+    }
     setWorkspaceTabs(current => {
-      const existing = current.some(tab => tab.id === key)
+      const existing = current.some(tab => tab.id === id)
       return existing
-        ? current.map(tab => tab.id === key ? nextTab : tab)
+        ? current.map(tab => tab.id === id ? nextTab : tab)
         : [...current, nextTab]
     })
-    setActiveTabId(key)
+    setActiveTabId(id)
     setSidebarOpen(false)
     setSearchText('')
     setSearchOpen(false)
     setProfileOpen(false)
   }
-  function navigateCatalogPage(title: string) {
-    const route = pageRoutes[title]
-    if (!route) { onToast('This menu item has no connected workflow yet.', true); return }
-    navigate(route)
-    setWorkspaceTabs(current => current.map(tab => tab.id === route ? { ...tab, title } : tab))
+
+  function navigateChild(key: string) {
+    navigate(key, { parentId: activeTabId })
+  }
+
+  function navigateCatalogPage(groupKey: string, title: string) {
+    const itemKey = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+    const route = groupKey === 'dashboard' ? 'overview' : getNavigationRoute(groupKey, title)
+    navigate(route, { title, groupKey, itemKey })
+  }
+
+  function selectSearchResult(result: { title: string; group: string; groupKey: string; itemKey: string; route?: string }) {
+    if (!result.route) return
+    navigate(result.route, { title: result.title, groupKey: result.groupKey, itemKey: result.itemKey })
   }
 
   function toggleGroup(key: string) {
@@ -574,9 +611,24 @@ export function Dashboard({ onToast }: Props) {
 
   function closeWorkspaceTab(id: string) {
     if (id === 'overview') return
-    const remaining = workspaceTabs.filter(tab => tab.id !== id)
+    const closing = new Set([id])
+    let changed = true
+    while (changed) {
+      changed = false
+      workspaceTabs.forEach(tab => {
+        if (tab.parentId && closing.has(tab.parentId) && !closing.has(tab.id)) {
+          closing.add(tab.id)
+          changed = true
+        }
+      })
+    }
+    const closingTab = workspaceTabs.find(tab => tab.id === id)
+    const remaining = workspaceTabs.filter(tab => !closing.has(tab.id))
     setWorkspaceTabs(remaining.length ? remaining : [{ id: 'overview', route: 'overview', targetKey: 'overview', targetWindow: 'overview', title: 'Dashboard' }])
-    if (activeTabId === id) setActiveTabId(remaining[remaining.length - 1]?.id ?? 'overview')
+    if (closing.has(activeTabId)) {
+      const parentStillOpen = closingTab?.parentId && remaining.some(tab => tab.id === closingTab.parentId)
+      setActiveTabId(parentStillOpen ? closingTab!.parentId! : remaining[remaining.length - 1]?.id ?? 'overview')
+    }
   }
 
   async function logout() {
@@ -596,10 +648,12 @@ export function Dashboard({ onToast }: Props) {
           return <section className={`pro-nav-group ${isExpanded ? 'expanded' : ''}`} key={group.key}>
             <button className={`pro-nav-group-head ${group.key === "dashboard" ? "pro-nav-dashboard-link" : ""}`} aria-expanded={isExpanded} onClick={() => toggleGroup(group.key)}><span className="pro-nav-group-icon"><GroupIcon size={19}/></span><span className="pro-nav-group-name">{group.label}</span><ChevronRight className="pro-nav-chevron" size={17}/></button>
             {isExpanded && <div className="pro-nav-children">{group.items.map(item => {
-              const route = pageRoutes[item]
-              const isActive = activePage === item
+              const itemKey = item.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+              const route = group.key === 'dashboard' ? 'overview' : getNavigationRoute(group.key, item)
+              const isActive = activeTab.groupKey === group.key && activeTab.itemKey === itemKey
               const ItemIcon = pageIcon(item, GroupIcon)
-              return <button key={item} className={`pro-nav-item ${isActive ? 'active' : ''}`} aria-current={isActive ? 'page' : undefined} onClick={() => navigateCatalogPage(item)}><span className="pro-nav-icon"><ItemIcon size={16}/></span><span className="pro-nav-title">{item}</span>{route && <i className="pro-nav-connected" title="Connected workspace"/>}</button>
+              const connected = Boolean(route && !route.startsWith('unavailable:'))
+              return <button key={item} className={`pro-nav-item ${isActive ? 'active' : ''}`} aria-current={isActive ? 'page' : undefined} onClick={() => navigateCatalogPage(group.key, item)}><span className="pro-nav-icon"><ItemIcon size={16}/></span><span className="pro-nav-title">{item}</span>{connected && <i className="pro-nav-connected" title="Connected workspace"/>}</button>
             })}</div>}
           </section>
         })}
@@ -629,13 +683,17 @@ export function Dashboard({ onToast }: Props) {
       </header>
       <nav className="pro-workspace-tabs" aria-label="Open workspace windows">
         <div className="pro-workspace-tabs-label">OPEN WINDOWS</div>
-        {workspaceTabs.map(tab => <div className={`pro-workspace-tab ${activeTabId === tab.id ? 'is-active' : ''}`} key={tab.id}>
-          <button type="button" className="pro-workspace-tab-main" aria-current={activeTabId === tab.id ? 'page' : undefined} onClick={() => setActiveTabId(tab.id)}>
-            {tab.targetKey === 'overview' ? <LayoutDashboard size={15}/> : <FileText size={15}/>}
-            <span>{tab.title}</span>
-          </button>
-          {tab.id !== 'overview' && <button type="button" className="pro-workspace-tab-close" aria-label={`Close ${tab.title}`} title={`Close ${tab.title}`} onClick={() => closeWorkspaceTab(tab.id)}><X size={13}/></button>}
-        </div>)}
+        {workspaceTabs.map(tab => {
+          const parentTab = tab.parentId ? workspaceTabs.find(parent => parent.id === tab.parentId) : undefined
+          return <div className={`pro-workspace-tab ${activeTabId === tab.id ? 'is-active' : ''} ${parentTab ? 'is-child' : ''}`} key={tab.id}>
+            <button type="button" className="pro-workspace-tab-main" aria-current={activeTabId === tab.id ? 'page' : undefined} onClick={() => setActiveTabId(tab.id)}>
+              {parentTab ? <ChevronRight size={14}/> : tab.targetKey === 'overview' ? <LayoutDashboard size={15}/> : <FileText size={15}/>}
+              <span>{tab.title}</span>
+              {parentTab && <small title={`Opened from ${parentTab.title}`}>{parentTab.title}</small>}
+            </button>
+            {tab.id !== 'overview' && <button type="button" className="pro-workspace-tab-close" aria-label={`Close ${tab.title} and its sub-windows`} title={`Close ${tab.title} and its sub-windows`} onClick={() => closeWorkspaceTab(tab.id)}><X size={13}/></button>}
+          </div>
+        })}
         <span className="pro-workspace-tabs-help">Switch between open workspaces</span>
       </nav>
       <div className="pro-module-stage">
@@ -646,17 +704,18 @@ export function Dashboard({ onToast }: Props) {
             const linkedWorkspaceKeys = ['administration:campus-and-branch-management','library:book-issue-and-returns','inventory:stock-in','inventory:stock-out','inventory:stock-allocation','inventory:stock-adjustments','inventory:inventory-history','inventory:stock-reports','transport:student-transport-allocation']
             return <section className="pro-window-panel" key={tab.id} hidden={activeTabId !== tab.id} aria-label={tab.title}>
               {tab.targetKey === 'notifications' ? <NotificationCenter onToast={onToast} onUnreadCountChange={setUnreadAnnouncementCount}/> :
-                tab.targetKey === 'overview' ? <Overview onNavigate={navigate}/> :
-                tab.targetKey === 'institutional' && linkedWorkspaceKeys.includes(tab.targetWindow) ? <LinkedOperationsWorkspace workspaceKey={tab.targetWindow} onToast={onToast} onNavigate={navigate}/> :
+                tab.targetKey === 'overview' ? <Overview onNavigate={navigateChild}/> :
+                tab.targetKey === 'institutional' && linkedWorkspaceKeys.includes(tab.targetWindow) ? <LinkedOperationsWorkspace workspaceKey={tab.targetWindow} onToast={onToast} onNavigate={navigateChild}/> :
                 tab.targetKey === 'institutional' ? <InstitutionalWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'unavailable' ? <WorkspaceUnavailable groupKey={tab.targetWindow.split(':')[0]} itemKey={tab.targetWindow.split(':').slice(1).join(':')} onNavigate={navigateChild}/> :
                 tab.targetKey === 'attendance' ? <AttendanceWorkspace initialWindow={tab.targetWindow || 'students'} onToast={onToast}/> :
                 tabAdminKey ? <AdministrationModule initialKey={tabAdminKey as 'departments' | 'programs' | 'classes' | 'academic_sessions' | 'subjects' | 'rooms'}/> :
                 tab.targetKey === 'accounts' ? <AccountsModule onToast={onToast}/> :
                 tab.targetKey === 'files' ? <FilesModule onToast={onToast}/> :
-                tab.targetKey === 'reports' ? <ReportsModule onToast={onToast}/> :
+                tab.targetKey === 'reports' ? <ReportsModule onToast={onToast} initialWindow={tab.targetWindow}/> :
                 tab.targetKey === 'profile' ? <ProfileModule/> :
-                tab.targetKey === 'teachers' ? <FacultyWorkspace onToast={onToast} onNavigate={navigate}/> :
-                tabModule ? <RecordModule module={tabModule as ModuleConfig} onToast={onToast} initialWindow={tab.targetKey === 'students' ? tab.targetWindow : undefined} showWindowNavigation={tab.targetKey !== 'students'}/> :
+                tab.targetKey === 'teachers' ? <FacultyWorkspace onToast={onToast} onNavigate={navigateChild} initialWindow={tab.targetWindow}/> :
+                tabModule ? <RecordModule module={tabModule as ModuleConfig} onToast={onToast} initialWindow={tab.targetWindow} showWindowNavigation={tab.targetKey !== 'students'}/> :
                 <Overview onNavigate={navigate}/>}
             </section>
           })}
