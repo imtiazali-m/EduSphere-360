@@ -28,7 +28,7 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
  const [saving,setSaving]=useState(false)
  const [loadingError,setLoadingError]=useState('')
  const [lastSaved,setLastSaved]=useState('')
- const [autoTab,setAutoTab]=useState<'register'|'history'|'devices'>('register')
+ const [autoTab,setAutoTab]=useState<'register'|'history'|'devices'>(initialWindow==='history'?'history':initialWindow==='devices'?'devices':'register')
  const [devices,setDevices]=useState<RecordRow[]>([])
  const [deviceName,setDeviceName]=useState('')
  const [deviceType,setDeviceType]=useState('qr')
