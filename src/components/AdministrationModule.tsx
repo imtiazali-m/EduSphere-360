@@ -200,6 +200,7 @@ function AdminWorkspaceInsights({ activeKey, records, references, loading }: {
 export default function AdministrationModule({ initialKey = 'departments' }: { initialKey?: AdminModuleKey }) {
   const { user, mode } = useAuth()
   const activeKey: AdminModuleKey = initialKey
+  const [workspaceTab,setWorkspaceTab] = useState<'overview'|'directory'|'editor'>('overview')
   const [records, setRecords] = useState<AdminRecord[]>([])
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -224,6 +225,15 @@ export default function AdministrationModule({ initialKey = 'departments' }: { i
     () => MODULES.find((item) => item.key === activeKey) ?? MODULES[0],
     [activeKey],
   )
+  const windowLabels: Record<AdminModuleKey,{overview:string;directory:string;editor:string;scope:string}> = {
+    departments:{overview:'Department Structure',directory:'Department Register',editor:'Department Setup',scope:'Organisational units and their active/inactive status.'},
+    programs:{overview:'Program Overview',directory:'Program Catalogue',editor:'Program Definition',scope:'Academic programs linked to departments.'},
+    classes:{overview:'Class Capacity Overview',directory:'Class & Section Register',editor:'Class Placement Setup',scope:'Sections, grade levels, program links and learner capacity.'},
+    academic_sessions:{overview:'Academic Calendar Overview',directory:'Session Register',editor:'Session Configuration',scope:'Academic years, dates and current-session designation.'},
+    subjects:{overview:'Subject Catalogue Overview',directory:'Subject Register',editor:'Subject Definition',scope:'Subject types, departments and credit-hour definitions.'},
+    rooms:{overview:'Facilities Overview',directory:'Room & Facility Register',editor:'Facility Setup',scope:'Room types, capacity and timetable usage.'},
+  }
+  const currentWindow = windowLabels[activeKey]
 
   const loadRecords = useCallback(async () => {
     setLoading(true)
@@ -430,18 +440,21 @@ export default function AdministrationModule({ initialKey = 'departments' }: { i
           <h1>{activeModule.label}</h1>
           <p className="admin-muted">{activeModule.description}</p>
         </div>
-        <button className="admin-button" type="button" onClick={() => { void loadRecords(); setReferencesReload((value) => value + 1) }}>
-          Refresh records
-        </button>
+        <div className="admin-actions"><button className="admin-button" type="button" onClick={() => { void loadRecords(); setReferencesReload((value) => value + 1) }}>Refresh records</button><button className="admin-button primary" type="button" onClick={() => { resetForm(); setWorkspaceTab('editor') }}>Add {activeModule.singular}</button></div>
       </header>
-
-      <AdminWorkspaceInsights activeKey={activeKey} records={records} references={references} loading={loading}/>
+      <nav className="ed360-operations-window-nav" aria-label={activeModule.label + ' workspace windows'}>
+        <button type="button" className={workspaceTab==='overview'?'active':''} aria-current={workspaceTab==='overview'?'page':undefined} onClick={()=>setWorkspaceTab('overview')}>{currentWindow.overview}</button>
+        <button type="button" className={workspaceTab==='directory'?'active':''} aria-current={workspaceTab==='directory'?'page':undefined} onClick={()=>setWorkspaceTab('directory')}>{currentWindow.directory}<b>{records.length}</b></button>
+        <button type="button" className={workspaceTab==='editor'?'active':''} aria-current={workspaceTab==='editor'?'page':undefined} onClick={()=>setWorkspaceTab('editor')}>{currentWindow.editor}</button>
+      </nav>
+      <section className="ed360-operations-context-window"><div><span>INSTITUTE ADMINISTRATION / {activeModule.label.toUpperCase()}</span><h2>{currentWindow[workspaceTab]}</h2><p>{currentWindow.scope}</p></div><div><strong>{records.length}</strong><small>{activeModule.label.toLowerCase()}</small></div></section>
+      <div hidden={workspaceTab!=='overview'}><AdminWorkspaceInsights activeKey={activeKey} records={records} references={references} loading={loading}/></div>
       {error && <div className="admin-alert error" role="alert">{error}</div>}
       {referencesError && <div className="admin-alert error" role="alert">{referencesError} Use Refresh records to retry linked options.</div>}
       {notice && <div className="admin-alert success" role="status">{notice}</div>}
 
       <section className="admin-grid">
-        <form className="admin-card" onSubmit={saveRecord}>
+        <form className="admin-card" hidden={workspaceTab!=='editor'} onSubmit={saveRecord}>
           <h2>{editingId ? `Edit ${activeModule.singular}` : `Add ${activeModule.singular}`}</h2>
           <p className="admin-muted">{activeModule.description}</p>
 
@@ -522,7 +535,7 @@ export default function AdministrationModule({ initialKey = 'departments' }: { i
           </div>
         </form>
 
-        <section className="admin-card">
+        <section className="admin-card" hidden={workspaceTab!=='directory'}>
           <div className="admin-list-head">
             <div>
               <h2>{activeModule.label}</h2>
@@ -561,7 +574,7 @@ export default function AdministrationModule({ initialKey = 'departments' }: { i
                       <td>
                         <div className="admin-actions">
                           <button className="admin-button" type="button" onClick={() => setViewingRecord(record)}>View</button>
-                          <button className="admin-button" type="button" onClick={() => startEdit(record)}>Edit</button>
+                          <button className="admin-button" type="button" onClick={() => { startEdit(record); setWorkspaceTab('editor') }}>Edit</button>
                           <button className="admin-button danger" type="button" onClick={() => void deleteRecord(record)}>Delete</button>
                         </div>
                       </td>

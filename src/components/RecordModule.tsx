@@ -16,11 +16,11 @@ import '../styles/student-module.css'
 import '../styles/faculty-module.css'
 import '../styles/module-workspaces.css'
 import { ModuleInsights } from './ModuleInsights'
+import { operationalWorkspaceConfigs } from '../lib/operationalWorkspaceViews'
 
 interface Props { module: ModuleConfig; onToast: (message: string, error?: boolean) => void; initialWindow?: string; showWindowNavigation?: boolean }
 type StudentStatus = 'all' | 'active' | 'pending' | 'graduated' | 'inactive'
 type EmployeeStatus = 'all' | 'active' | 'on_leave' | 'inactive'
-type FeeStatus = 'all' | 'unpaid' | 'partial' | 'overdue' | 'paid'
 type StudentWorkspaceTab = 'overview' | 'admissions' | 'directory' | 'profile' | 'classes' | 'guardians' | 'attendance' | 'results' | 'assignments' | 'timetable' | 'documents' | 'history'
 const studentRelatedTables = ['attendance', 'exams', 'exam_results', 'assignments', 'assignment_submissions', 'timetable_entries', 'classes', 'academic_sessions', 'programs', 'guardian_students', 'parent_guardians', 'student_placements', 'student_documents', 'student_history'] as const
 
@@ -354,6 +354,18 @@ function FeePaymentHistoryDialog({ invoice, onClose }: { invoice: RecordRow; onC
 
 function RecordDetailsDialog({ module, row, onClose }: { module: ModuleConfig; row: RecordRow; onClose: () => void }) {
   const displayFields = module.fields.filter(field => field.name !== 'photo_path')
+  const workflowContext: Record<string, { title: string; summary: string; next: string }> = {
+    attendance: { title: 'Attendance review window', summary: `Marked ${String(row.status ?? 'unconfirmed')} for ${String(row.attendance_date ?? 'an undated register')} · ${String(row.class_name ?? 'class not specified')}`, next: 'Check the register note and confirm any absence or late-arrival follow-up with the responsible class team.' },
+    exams: { title: 'Assessment sitting window', summary: `${String(row.exam_type ?? 'Assessment')} · ${String(row.exam_date ?? 'date not scheduled')} · ${String(row.room ?? 'room not assigned')}`, next: 'Confirm the schedule, venue and invigilation details before the examination takes place.' },
+    exam_results: { title: 'Marks moderation & release window', summary: `${String(row.marks_obtained ?? 'No marks')} / ${String(row.total_marks ?? 'total not set')} · ${String(row.result_status ?? 'draft')} publication status`, next: 'Verify the student, examination and marks before publishing. Draft results are not student-visible.' },
+    fees: { title: 'Invoice settlement window', summary: `Billed PKR ${netInvoiceAmount(row).toLocaleString()} · received PKR ${Number(row.paid_amount ?? 0).toLocaleString()} · balance PKR ${outstandingInvoiceBalance(row).toLocaleString()}`, next: 'Use the Collect action to record an authorised payment, then review the receipt history for this invoice.' },
+    assignments: { title: 'Coursework delivery window', summary: `${String(row.class_name ?? 'Class not specified')} · due ${String(row.due_date ?? 'date not set')} · ${String(row.status ?? 'status not set')}`, next: 'Check the instructions and deadline, then monitor the linked submission inbox for learner work.' },
+    assignment_submissions: { title: 'Submission assessment window', summary: `${String(row.status ?? 'unreviewed')} · submitted ${String(row.submitted_at ?? 'date not recorded')} · marks ${String(row.marks_obtained ?? 'not graded')}`, next: 'Review the submitted work, record marks and feedback, or return it for revision when appropriate.' },
+    timetable: { title: 'Teaching session window', summary: `${String(row.weekday ?? 'Day not set')} · ${String(row.start_time ?? 'start not set')}–${String(row.end_time ?? 'end not set')} · ${String(row.room ?? 'room not allocated')}`, next: 'Check teacher, class and room allocations together before confirming or changing this timetable entry.' },
+    announcements: { title: 'Communication distribution window', summary: `Audience: ${String(row.audience ?? 'not specified')} · published record: ${String(row.created_at ?? 'date not recorded')}`, next: 'Confirm the intended audience and message content before creating or sharing a notice.' },
+    work_tasks: { title: 'Task ownership & progress window', summary: `${String(row.status ?? 'pending')} · ${String(row.priority ?? 'normal')} priority · ${String(row.progress_percent ?? 0)}% complete`, next: 'Review the owner, deadline and progress update; resolve blockers or record the next progress milestone.' },
+  }
+  const context = workflowContext[module.key]
   return <div className="modal-backdrop" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) onClose() }}>
     <section className="modal-card ed360-record-details" role="dialog" aria-modal="true" aria-labelledby="record-details-title">
       <div className="modal-heading">
@@ -361,6 +373,7 @@ function RecordDetailsDialog({ module, row, onClose }: { module: ModuleConfig; r
         <button type="button" className="icon-button" onClick={onClose} aria-label="Close"><X size={19}/></button>
       </div>
       {module.key === 'students' && <div className="student-photo-row"><StudentPhoto row={row}/><div className="student-photo-copy"><strong>{String(row.full_name ?? 'Student')}</strong><p>{String(row.admission_no ?? 'Admission number not set')}</p></div></div>}
+      {context && <section className="ed360-contextual-subwindow"><div><span>CONTEXTUAL SUB-WINDOW</span><h3>{context.title}</h3><p>{context.summary}</p></div><aside><b>Operational next step</b><p>{context.next}</p></aside></section>}
       <div className="ed360-record-details-grid">
         {displayFields.map(field => {
           const raw = row[field.name]
@@ -422,7 +435,9 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
   const [documentVisibility, setDocumentVisibility] = useState('staff_only')
   const [documentNotes, setDocumentNotes] = useState('')
   const [employeeStatus, setEmployeeStatus] = useState<EmployeeStatus>('all')
-  const [feeStatus, setFeeStatus] = useState<FeeStatus>('all')
+  const [operationalView, setOperationalView] = useState('')
+  const operationalWorkspace = operationalWorkspaceConfigs[module.key]
+  const activeOperationalView = operationalWorkspace?.views.find(item => item.key === operationalView) ?? operationalWorkspace?.views[0]
   const canEdit = ['owner', 'admin'].includes(user!.role)
     || (user!.role === 'teacher' && ['attendance', 'exams', 'exam_results', 'assignments', 'assignment_submissions', 'timetable', 'announcements', 'work_tasks'].includes(module.key))
     || (user!.role === 'student' && module.key === 'assignment_submissions')
@@ -474,8 +489,8 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
 
   const filtered = useMemo(() => rows.filter(row =>
     module.columns.some(column => String(row[column.key] ?? '').toLowerCase().includes(search.toLowerCase()))
-    && (module.key !== 'fees' || feeStatus === 'all' || String(row.status ?? 'unpaid').toLowerCase() === feeStatus)
-  ), [rows, search, module, feeStatus])
+    && (!activeOperationalView || activeOperationalView.matches(row))
+  ), [rows, search, module, activeOperationalView])
   const studentFiltered = useMemo(() => filtered.filter(row => studentStatus === 'all' || String(row.status ?? 'active').toLowerCase() === studentStatus), [filtered, studentStatus])
   const studentCounts = useMemo(() => ({
     total: rows.length,
@@ -525,14 +540,6 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
     onLeave: rows.filter(row => String(row.employment_status ?? '').toLowerCase() === 'on_leave').length,
     departments: new Set(rows.map(row => String(row.department ?? '').trim()).filter(Boolean)).size,
   }), [rows])
-  const feeCounts = useMemo(() => {
-    const billed = rows.reduce((sum, row) => sum + netInvoiceAmount(row), 0)
-    const received = rows.reduce((sum, row) => sum + Math.max(0, Number(row.paid_amount ?? 0)), 0)
-    const outstanding = rows.reduce((sum, row) => sum + outstandingInvoiceBalance(row), 0)
-    const overdue = rows.filter(row => String(row.status ?? '').toLowerCase() === 'overdue').length
-    return { invoices: rows.length, billed, received, outstanding, overdue }
-  }, [rows])
-
   const teacherFiltered = useMemo(() => filtered.filter(row => employeeStatus === 'all' || String(row.employment_status ?? 'active').toLowerCase() === employeeStatus), [filtered, employeeStatus])
   const studentPageCount = Math.max(1, Math.ceil(studentFiltered.length / pageSize))
   const teacherPageCount = Math.max(1, Math.ceil(teacherFiltered.length / pageSize))
@@ -1388,18 +1395,22 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
     </div>
   }
 
-  const feeFilters: { key: FeeStatus; label: string }[] = [
-    { key: 'all', label: 'All invoices' }, { key: 'unpaid', label: 'Unpaid' },
-    { key: 'partial', label: 'Partially paid' }, { key: 'overdue', label: 'Overdue' },
-    { key: 'paid', label: 'Paid' },
-  ]
-
   return <div className="page-content ed360-module-page">
-    <div className="page-title-row"><div><div className="eyebrow">{module.key === 'fees' ? 'FINANCE / RECEIVABLES' : 'INSTITUTION WORKSPACE'}</div><h1>{module.title}</h1><p>{module.description}</p></div>{canCreate && <button className="button button-primary" onClick={() => { setEditing(null); setShowForm(true) }}><Plus size={17}/> Add {module.title.replace(/s$/, '').toLowerCase()}</button>}</div>
-    <ModuleInsights module={module} rows={rows} loading={loading}/>
-    <div className="table-card">{module.key === 'fees' && <div className="student-filter-row fee-filter-row" role="group" aria-label="Filter invoices by payment status">
-      {feeFilters.map(filter => <button type="button" key={filter.key} className={feeStatus === filter.key ? 'active' : ''} onClick={() => { setFeeStatus(filter.key); setCurrentPage(1) }}>{filter.label}{filter.key === 'all' ? <span>{feeCounts.invoices}</span> : filter.key === 'overdue' ? <span>{feeCounts.overdue}</span> : null}</button>)}
-    </div>}<div className="table-toolbar"><div className="table-count"><strong>{filtered.length}</strong> records <span>·</span> Live institutional database</div><div className="toolbar-actions"><div className="search-box"><Search size={16}/><input placeholder="Search records…" value={search} onChange={event => { setSearch(event.target.value); setCurrentPage(1) }}/></div><button className="icon-button" onClick={() => void load()} aria-label="Refresh records"><RefreshCw size={16}/></button></div></div>
+    {operationalWorkspace ? <>
+      <header className="ed360-operations-heading">
+        <div><span className="ed360-operations-kicker">{operationalWorkspace.eyebrow}</span><h1>{operationalWorkspace.title}</h1><p>{operationalWorkspace.description}</p></div>
+        <div className="ed360-operations-heading-actions"><span className="ed360-operations-live"><i/> Institution cloud records</span>{canCreate && <button className="button button-primary" onClick={() => { setEditing(null); setShowForm(true) }}><Plus size={17}/> {module.key === 'fees' ? 'Create invoice' : module.key === 'timetable' ? 'Add session' : module.key === 'work_tasks' ? 'Assign task' : module.key === 'announcements' ? 'Compose notice' : 'Create ' + module.title.replace(/s$/, '').toLowerCase()}</button>}</div>
+      </header>
+      <nav className="ed360-operations-window-nav" aria-label={module.title + ' workspace windows'}>
+        {operationalWorkspace.views.map(item => <button type="button" key={item.key} className={activeOperationalView?.key === item.key ? 'active' : ''} aria-current={activeOperationalView?.key === item.key ? 'page' : undefined} onClick={() => { setOperationalView(item.key); setCurrentPage(1) }}><span>{item.label}</span><b>{rows.filter(item.matches).length.toLocaleString()}</b></button>)}
+      </nav>
+      <section className="ed360-operations-context-window">
+        <div><span>WORKSPACE WINDOW / {module.title.toUpperCase()}</span><h2>{activeOperationalView?.label}</h2><p>{activeOperationalView?.description}</p></div>
+        <div><strong>{filtered.length.toLocaleString()}</strong><small>{operationalWorkspace.recordLabel} in this view</small></div>
+      </section>
+    </> : <div className="page-title-row"><div><div className="eyebrow">INSTITUTION WORKSPACE</div><h1>{module.title}</h1><p>{module.description}</p></div>{canCreate && <button className="button button-primary" onClick={() => { setEditing(null); setShowForm(true) }}><Plus size={17}/> Add {module.title.replace(/s$/, '').toLowerCase()}</button>}</div>}
+    {(!operationalWorkspace || activeOperationalView?.key === operationalWorkspace.views[0]?.key) && <ModuleInsights module={module} rows={rows} loading={loading}/>}
+    <div className="table-card"><div className="table-toolbar"><div className="table-count"><strong>{filtered.length}</strong> records <span>·</span> Live institutional database</div><div className="toolbar-actions"><div className="search-box"><Search size={16}/><input placeholder="Search records…" value={search} onChange={event => { setSearch(event.target.value); setCurrentPage(1) }}/></div><button className="icon-button" onClick={() => void load()} aria-label="Refresh records"><RefreshCw size={16}/></button></div></div>
       {loading ? <div className="table-empty"><RefreshCw className="spin" size={21}/> Loading records…</div> : filtered.length === 0 ? <div className="table-empty"><div className="empty-icon"><AlertCircle size={22}/></div><strong>{search ? 'No matching records' : 'No records yet'}</strong><span>{search ? 'Try another search term.' : canEdit ? 'Add the first record to start using this module.' : 'Records will appear here when your institution adds them.'}</span></div> : <div className="table-scroll"><table><thead><tr>{module.columns.map(column => <th key={column.key}>{column.label}</th>)}<th className="action-column">Actions</th></tr></thead><tbody>{filteredPageRows.map(row => <tr key={row.id}>{module.columns.map(column => <td key={column.key}>{column.key === 'created_at' || column.key === 'due_date' || column.key === 'exam_date' ? niceDate(row[column.key]) : column.key === 'balance' && module.key === 'fees' ? outstandingInvoiceBalance(row).toLocaleString(undefined, { maximumFractionDigits: 2 }) : column.key === 'status' || column.key === 'result_status' ? <span className={`status-pill status-${String(row[column.key] ?? '').toLowerCase()}`}>{String(row[column.key] ?? '—').replace('_', ' ')}</span> : ['amount', 'paid_amount', 'balance', 'marks_obtained', 'total_marks'].includes(column.key) ? Number(row[column.key] ?? 0).toLocaleString(undefined, { maximumFractionDigits: 2 }) : String(row[column.key] ?? '—')}</td>)}<td className="row-actions ed360-student-actions"><button className="icon-button" onClick={() => setViewing(row)} title="View record"><Eye size={15}/></button>{module.key === 'fees' && <button type="button" className="button button-outline" onClick={() => setHistoryTarget(row)}>History</button>}{module.key === 'fees' && canCollectFeePayment && outstandingInvoiceBalance(row) > 0 && <button type="button" className="button button-primary" onClick={() => setPaymentTarget(row)}>Collect</button>}{canEdit && !(module.key === 'assignment_submissions' && user!.role === 'student' && ['graded', 'returned'].includes(String(row.status))) && <button className="icon-button" onClick={() => { setEditing(row); setShowForm(true) }} title="Edit"><Edit3 size={15}/></button>}{canDelete && !(module.key === 'fees' && Number(row.paid_amount ?? 0) > 0) && <button className="icon-button danger-icon" onClick={() => void remove(row)} title="Delete"><Trash2 size={15}/></button>}</td></tr>)}</tbody></table></div>}
     </div>
     <WorkspacePagination page={currentPage} pageCount={filteredPageCount} pageSize={pageSize} total={filtered.length} onChange={setCurrentPage}/>

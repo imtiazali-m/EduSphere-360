@@ -40,6 +40,8 @@ export function FilesModule({ onToast }: Props) {
   const [busy, setBusy] = useState(false)
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const [categoryFilter, setCategoryFilter] = useState<'all'|'Documents'|'Images'|'Other files'>('all')
+  const [viewingFile,setViewingFile] = useState<StoredFile|null>(null)
   const [page, setPage] = useState(1)
   const canUpload = canUploadInstitutionFiles(user?.role)
   const canDelete = canDeleteInstitutionFiles(user?.role)
@@ -91,9 +93,10 @@ export function FilesModule({ onToast }: Props) {
   }, [files])
 
   const filteredFiles = useMemo(() => files.filter(file =>
-    file.name.toLowerCase().includes(search.trim().toLowerCase())
-      || String(file.metadata?.mimetype ?? '').toLowerCase().includes(search.trim().toLowerCase())
-  ), [files, search])
+    (categoryFilter === 'all' || fileCategory(file) === categoryFilter)
+      && (file.name.toLowerCase().includes(search.trim().toLowerCase())
+        || String(file.metadata?.mimetype ?? '').toLowerCase().includes(search.trim().toLowerCase()))
+  ), [files, search, categoryFilter])
   const pageCount = Math.max(1, Math.ceil(filteredFiles.length / PAGE_SIZE))
   const pageFiles = filteredFiles.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
   const maxCategory = Math.max(1, ...fileStats.categories.map(item => item.value))
@@ -161,8 +164,12 @@ export function FilesModule({ onToast }: Props) {
         <input hidden type="file" disabled={busy} onChange={event => { void upload(event.target.files?.[0]); event.currentTarget.value = '' }}/>
       </label>}
     </div>
+    <nav className="ed360-operations-window-nav" aria-label="File documentation workspace windows">
+      {([{key:'all',label:'File Register',count:files.length},{key:'Documents',label:'Documents',count:fileStats.documents},{key:'Images',label:'Images',count:fileStats.images},{key:'Other files',label:'Other files',count:fileStats.categories.find(item=>item.label==='Other files')?.value??0}] as const).map(item=><button type="button" key={item.key} className={categoryFilter===item.key?'active':''} aria-current={categoryFilter===item.key?'page':undefined} onClick={()=>{setCategoryFilter(item.key);setPage(1)}}>{item.label}<b>{loading?'—':item.count}</b></button>)}
+    </nav>
+    <section className="ed360-operations-context-window"><div><span>DOCUMENT CENTRE / PRIVATE STORAGE</span><h2>{categoryFilter==='all'?'Institution file register':categoryFilter+' workspace'}</h2><p>{categoryFilter==='all'?'Browse every institution file, or narrow the register by document type.':categoryFilter==='Documents'?'Review PDF, Word, Excel and text documents stored for this institution.':categoryFilter==='Images'?'Review image assets stored in the institution’s private file space.':'Review other file types returned by the private storage bucket.'}</p></div><div><strong>{filteredFiles.length}</strong><small>files in this window</small></div></section>
 
-    <section className="ed360-module-insights">
+    <section className="ed360-module-insights" hidden={categoryFilter!=='all'}>
       <header className="ed360-module-insights-heading"><div><span>INSTITUTION DOCUMENTS</span><h2>Storage overview</h2><p>Files currently visible in this private institution folder.</p></div><small>{loading ? 'Updating…' : 'Latest 100 files'}</small></header>
       <div className="ed360-workspace-metrics">
         <div className="ed360-workspace-metric blue"><span><Files size={19}/></span><small>Files available</small><strong>{loading ? '—' : files.length}</strong><em>Most recent files listed</em></div>
@@ -186,12 +193,13 @@ export function FilesModule({ onToast }: Props) {
         : filteredFiles.length === 0 ? <div className="table-empty"><div className="empty-icon"><FileUp size={22}/></div><strong>{search ? 'No matching files' : 'No files uploaded'}</strong><span>{search ? 'Try another filename or file type.' : 'Upload a document, assignment brief or institution learning resource.'}</span></div>
           : <div className="file-list">{pageFiles.map(file => <div className="file-row" key={file.id ?? file.name}>
             <div className="file-icon"><FileIcon size={19}/></div>
-            <div className="file-meta"><strong>{file.name}</strong><small>{formatBytes(fileSize(file))} · {file.metadata?.mimetype ?? fileCategory(file)} · Private cloud storage</small></div>
+            <div className="file-meta"><button type="button" className="file-name-open" onClick={()=>setViewingFile(file)}>{file.name}</button><small>{formatBytes(fileSize(file))} · {file.metadata?.mimetype ?? fileCategory(file)} · Private cloud storage</small></div>
             <button className="icon-button" onClick={() => void download(file)} title="Download"><Download size={16}/></button>
             {canDelete && <button className="icon-button danger-icon" onClick={() => void remove(file)} title="Delete"><Trash2 size={16}/></button>}
           </div>)}</div>}
       {filteredFiles.length > PAGE_SIZE && <div className="ed360-table-pagination"><span>Showing <b>{(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filteredFiles.length)}</b> of <b>{filteredFiles.length}</b> files</span><div className="ed360-pagination-controls"><button type="button" disabled={page <= 1} onClick={() => setPage(value => value - 1)}>‹</button>{Array.from({ length: pageCount }, (_, index) => index + 1).filter(number => number === 1 || number === pageCount || Math.abs(number - page) <= 1).map(number => <button type="button" key={number} className={number === page ? 'active' : ''} onClick={() => setPage(number)}>{number}</button>)}<button type="button" disabled={page >= pageCount} onClick={() => setPage(value => value + 1)}>›</button></div></div>}
     </section>
     <p className="field-help file-storage-footnote">Files are stored in the institution's private cloud bucket and are available to authorised users with internet access.</p>
+    {viewingFile&&<div className="modal-backdrop" role="presentation" onMouseDown={event=>{if(event.target===event.currentTarget)setViewingFile(null)}}><section className="modal-card ed360-record-details" role="dialog" aria-modal="true" aria-labelledby="file-detail-title"><div className="modal-heading"><div><div className="eyebrow">PRIVATE DOCUMENT / CONTEXTUAL SUB-WINDOW</div><h2 id="file-detail-title">{viewingFile.name}</h2><p>{fileCategory(viewingFile)} · {formatBytes(fileSize(viewingFile))}</p></div><button type="button" className="icon-button" onClick={()=>setViewingFile(null)} aria-label="Close"><X size={18}/></button></div><div className="ed360-contextual-subwindow"><div><span>FILE RECORD</span><h3>{viewingFile.name}</h3><p>{viewingFile.metadata?.mimetype??fileCategory(viewingFile)} · {formatBytes(fileSize(viewingFile))}</p></div><aside><b>Storage access</b><p>Stored in the institution’s private cloud folder. A secure short-lived download link is created only when an authorised user downloads the file.</p></aside></div><div className="ed360-record-details-grid"><div className="ed360-record-detail"><small>File category</small><b>{fileCategory(viewingFile)}</b></div><div className="ed360-record-detail"><small>File size</small><b>{formatBytes(fileSize(viewingFile))}</b></div><div className="ed360-record-detail"><small>MIME type</small><b>{viewingFile.metadata?.mimetype??'Not provided'}</b></div><div className="ed360-record-detail"><small>Uploaded</small><b>{viewingFile.created_at?new Date(viewingFile.created_at).toLocaleString():'Date not provided'}</b></div></div><div className="modal-actions"><button type="button" className="button button-outline" onClick={()=>setViewingFile(null)}>Close</button><button type="button" className="button button-primary" onClick={()=>void download(viewingFile)}><Download size={15}/> Secure download</button></div></section></div>}
   </div>
 }

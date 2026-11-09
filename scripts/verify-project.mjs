@@ -198,6 +198,28 @@ check('Finance balance calculations include fees, fines and discounts', () => {
   assert.ok(recordModule.includes('outstandingInvoiceBalance') && recordModule.includes('netInvoiceAmount'))
 })
 
+check('Operational modules expose distinct nested workspace windows and contextual sub-windows', () => {
+  const views = read('src/lib/operationalWorkspaceViews.ts')
+  const record = read('src/components/RecordModule.tsx')
+  for (const key of ['attendance', 'exams', 'exam_results', 'fees', 'assignments', 'assignment_submissions', 'timetable', 'announcements', 'work_tasks']) {
+    assert.ok(views.includes(key + ':'), 'Dedicated workspace configuration missing for ' + key)
+  }
+  assert.ok(record.includes('operationalWorkspace.views.map'), 'Operational modules must render their configured internal windows')
+  assert.ok(record.includes('activeOperationalView.matches(row)'), 'Selecting an internal window must filter its actual database records')
+  assert.ok(record.includes('ed360-operations-context-window'), 'Each operational view must identify its current workspace window')
+  assert.ok(record.includes('ed360-contextual-subwindow') && record.includes('Operational next step'), 'Record detail must open a module-specific contextual sub-window')
+  const accounts = read('src/components/AccountsModule.tsx')
+  const files = read('src/components/FilesModule.tsx')
+  const reports = read('src/components/ReportsModule.tsx')
+  const administration = read('src/components/AdministrationModule.tsx')
+  assert.ok(accounts.includes('Access Overview') && accounts.includes('Account Directory') && accounts.includes('Provision Account'), 'Accounts must have separate overview, directory and provisioning windows')
+  assert.ok(files.includes('File Register') && files.includes('categoryFilter') && files.includes('viewingFile') && files.includes('CONTEXTUAL SUB-WINDOW'), 'Files must have category windows and a contextual file detail window')
+  assert.ok(reports.includes('Finance & Collections') && reports.includes('Attendance Analysis') && reports.includes('Examination Results'), 'Reports must have separate subject-specific windows')
+  assert.ok(administration.includes('Department Structure') && administration.includes('Class Capacity Overview') && administration.includes('Session Configuration'), 'Administration workspaces must use structure-specific tabs')
+  const styles = read('src/styles/operational-hierarchy.css')
+  assert.ok(styles.includes('zoom: 1.06') && styles.includes('.ed360-operations-window-nav') && styles.includes('.ed360-contextual-subwindow'), 'Readable UI scale and nested workspace styles are required')
+})
+
 check('Private file controls match institution storage permissions', () => {
   assert.equal(packageJson.scripts['test:file-access'], 'node scripts/test-file-access.mjs')
   const files = read('src/components/FilesModule.tsx')
