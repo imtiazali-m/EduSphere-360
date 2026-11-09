@@ -329,6 +329,44 @@ function FeePaymentHistoryDialog({ invoice, onClose }: { invoice: RecordRow; onC
   </div>
 }
 
+function RecordDetailsDialog({ module, row, onClose }: { module: ModuleConfig; row: RecordRow; onClose: () => void }) {
+  const displayFields = module.fields.filter(field => field.name !== 'photo_path')
+  return <div className="modal-backdrop" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) onClose() }}>
+    <section className="modal-card ed360-record-details" role="dialog" aria-modal="true" aria-labelledby="record-details-title">
+      <div className="modal-heading">
+        <div><div className="eyebrow">RECORD DETAILS</div><h2 id="record-details-title">{String(row.full_name ?? row.title ?? row.name ?? row.admission_no ?? module.title)}</h2><p>{module.title} · {String(row.admission_no ?? row.code ?? row.id)}</p></div>
+        <button type="button" className="icon-button" onClick={onClose} aria-label="Close"><X size={19}/></button>
+      </div>
+      {module.key === 'students' && <div className="student-photo-row"><StudentPhoto row={row}/><div className="student-photo-copy"><strong>{String(row.full_name ?? 'Student')}</strong><p>{String(row.admission_no ?? 'Admission number not set')}</p></div></div>}
+      <div className="ed360-record-details-grid">
+        {displayFields.map(field => {
+          const raw = row[field.name]
+          const option = field.options?.find(item => item.value === String(raw ?? ''))
+          const value = field.type === 'date' ? niceDate(raw) : option?.label ?? String(raw ?? '—').replaceAll('_', ' ')
+          return <div className="ed360-record-detail" key={field.name}><small>{field.label}</small><b>{value || '—'}</b></div>
+        })}
+      </div>
+      <div className="modal-actions"><button type="button" className="button button-primary" onClick={onClose}>Close</button></div>
+    </section>
+  </div>
+}
+
+function WorkspacePagination({ page, pageCount, pageSize, total, onChange }: {
+  page: number; pageCount: number; pageSize: number; total: number; onChange: (next: number) => void
+}) {
+  if (total <= pageSize) return null
+  const first = (page - 1) * pageSize + 1
+  const last = Math.min(page * pageSize, total)
+  return <div className="ed360-table-pagination">
+    <span>Showing <b>{first}–{last}</b> of <b>{total.toLocaleString()}</b> records</span>
+    <div className="ed360-pagination-controls">
+      <button type="button" aria-label="Previous page" disabled={page <= 1} onClick={() => onChange(page - 1)}><ChevronLeft size={14}/></button>
+      {Array.from({ length: pageCount }, (_, index) => index + 1).filter(number => number === 1 || number === pageCount || Math.abs(number - page) <= 1).map(number => <button type="button" key={number} className={number === page ? 'active' : ''} aria-current={number === page ? 'page' : undefined} onClick={() => onChange(number)}>{number}</button>)}
+      <button type="button" aria-label="Next page" disabled={page >= pageCount} onClick={() => onChange(page + 1)}><ChevronRight size={14}/></button>
+    </div>
+  </div>
+}
+
 export function RecordModule({ module, onToast }: Props) {
   const { mode, user } = useAuth()
   const [rows, setRows] = useState<RecordRow[]>([])
