@@ -5,7 +5,7 @@ import {
   GraduationCap, LayoutDashboard, LogOut, Menu, Megaphone, PieChart, Search,
   School, Settings, ShieldCheck, Users, Wallet, X, UserRound, BrainCircuit,
   Calculator, Banknote, TrendingUp, BookOpenCheck, HeartHandshake, MessageSquare,
-  FileQuestion, ListChecks, BarChart3, Award, Library, Wrench, Database,
+  FileQuestion, ListChecks, BarChart3, Award, Library, Wrench, Database, Bell,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { roleNavigationGroups } from '../lib/navigationAccess'
@@ -27,6 +27,8 @@ import { institutionalMenu } from '../lib/institutionalCatalog'
 import { InstitutionalWorkspace } from './InstitutionalWorkspace'
 import { AttendanceWorkspace } from './AttendanceWorkspace'
 import { LinkedOperationsWorkspace } from './LinkedOperationsWorkspace'
+import { NotificationCenter } from './NotificationCenter'
+import { supabase } from '../lib/supabase'
 
 interface Props { onToast: (message: string, error?: boolean) => void }
 type Dataset = Record<string, RecordRow[]>
@@ -460,6 +462,7 @@ export function Dashboard({ onToast }: Props) {
   const [profileOpen, setProfileOpen] = useState(false)
   const [searchText, setSearchText] = useState('')
   const [searchOpen, setSearchOpen] = useState(false)
+  const [unreadAnnouncementCount, setUnreadAnnouncementCount] = useState(0)
   const available = useMemo(() => modulesForRole(user!.role), [user?.role])
   const activeModule = available.find(module => module.key === active)
   const visibleGroups = useMemo(() => roleNavigationGroups(user!.role), [user?.role])
@@ -473,6 +476,28 @@ export function Dashboard({ onToast }: Props) {
     return items.filter(item => item.route && `${item.title} ${item.group}`.toLowerCase().includes(query)).slice(0, 8)
   }, [searchText, visibleGroups])
 
+  useEffect(() => {
+    let live = true
+    async function loadUnreadCount() {
+      if (!supabase || !user) { if (live) setUnreadAnnouncementCount(0); return }
+      try {
+        const announcements = await listRecords(mode, user, 'announcements')
+        if (!announcements.length) { if (live) setUnreadAnnouncementCount(0); return }
+        const ids = announcements.map(row => String(row.id))
+        const { data, error } = await supabase.from('announcement_reads')
+          .select('announcement_id').eq('institution_id', user.institutionId)
+          .eq('user_id', user.id).in('announcement_id', ids)
+        if (error) throw error
+        const read = new Set((data ?? []).map(row => String(row.announcement_id)))
+        if (live) setUnreadAnnouncementCount(announcements.filter(row => !read.has(String(row.id))).length)
+      } catch {
+        if (live) setUnreadAnnouncementCount(0)
+      }
+    }
+    void loadUnreadCount()
+    return () => { live = false }
+  }, [user?.id, user?.institutionId, active, mode])
+
   function navigate(key: string) {
     const studentWindowRoute = key.startsWith('students:')
     const attendanceWindowRoute = key.startsWith('attendance:')
@@ -481,6 +506,8 @@ export function Dashboard({ onToast }: Props) {
     const targetWindow = studentWindowRoute ? key.slice('students:'.length) : attendanceWindowRoute ? key.slice('attendance:'.length) : institutionalWindowRoute ? key.slice('institutional:'.length) : 'overview'
     if (targetKey === 'overview') {
       setActive('overview'); setActivePage('Dashboard'); setActiveWorkspaceWindow('overview')
+    } else if (targetKey === 'notifications') {
+      setActive('notifications'); setActivePage('Notification Centre'); setActiveWorkspaceWindow('overview')
     } else if (targetKey === 'institutional') {
       setActive('institutional'); setActivePage('Institutional Workspace'); setActiveWorkspaceWindow(targetWindow)
     } else if (targetKey === 'attendance') {
@@ -562,11 +589,11 @@ export function Dashboard({ onToast }: Props) {
         </div>
         <div className="pro-topbar-right">
           <div className="ed360-topbar-institution"><Building2 size={19}/><span><b>{user?.institutionName}</b><small><i className={'ed360-status-dot ' + (mode === 'cloud' ? 'is-cloud' : 'is-local')}/>{mode === 'cloud' ? 'Online' : 'Local workspace'}</small></span></div>
-          <button type="button" className="pro-topbar-bell ed360-topbar-notice" aria-label="Open announcements" title="Open announcements" onClick={() => navigate(available.some(module => module.key === 'announcements') ? 'announcements' : 'overview')}><Megaphone size={18}/></button>
+          <button type="button" className="pro-topbar-bell ed360-topbar-notice" aria-label={`Open notifications${unreadAnnouncementCount ? `, ${unreadAnnouncementCount} unread` : ''}`} title="Open notification centre" onClick={() => navigate('notifications')}><Bell size={18}/>{unreadAnnouncementCount > 0 && <span className="ed360-notification-count">{unreadAnnouncementCount > 99 ? '99+' : unreadAnnouncementCount}</span>}</button>
           <div className="pro-profile-wrap"><button className="pro-profile-trigger" onClick={() => setProfileOpen(open => !open)} aria-expanded={profileOpen}><span className="pro-profile-avatar">{user?.fullName.slice(0, 1).toUpperCase()}</span><span className="pro-profile-copy"><b>{user?.fullName}</b><small>{roleLabels[user!.role]}</small></span><ChevronDown size={14}/></button>{profileOpen && <div className="pro-profile-menu"><div className="pro-profile-details"><b>{user?.fullName}</b><small>{user?.email}</small><small>{user?.institutionName}</small>{user?.institutionType && <small>Institution type: {user.institutionType.replaceAll('_', ' ')}</small>}<small>Account role: {roleLabels[user!.role]}</small><span className={'pro-profile-mode ' + mode}>Cloud workspace</span></div>{['student', 'parent'].includes(user!.role) && <button type="button" onClick={() => navigate('profile')}><UserRound size={15}/> My Profile</button>}<button type="button" onClick={() => void logout()}><LogOut size={15}/> Sign out</button></div>}</div>
         </div>
       </header>
-      <div className="pro-module-stage">{active === 'overview' ? <Overview onNavigate={navigate}/> : active === 'institutional' && ['administration:campus-and-branch-management','library:book-issue-and-returns','inventory:stock-in','inventory:stock-out','inventory:stock-allocation','inventory:stock-adjustments','inventory:inventory-history','inventory:stock-reports','transport:student-transport-allocation'].includes(activeWorkspaceWindow) ? <LinkedOperationsWorkspace key={activeWorkspaceWindow} workspaceKey={activeWorkspaceWindow} onToast={onToast} onNavigate={navigate}/> : active === 'institutional' ? <InstitutionalWorkspace key={activeWorkspaceWindow} workspaceKey={activeWorkspaceWindow} onToast={onToast}/> : active === 'attendance' ? <AttendanceWorkspace key={activeWorkspaceWindow} initialWindow={activeWorkspaceWindow} onToast={onToast}/> : adminKey ? <AdministrationModule key={adminKey} initialKey={adminKey as 'departments' | 'programs' | 'classes' | 'academic_sessions' | 'subjects' | 'rooms'}/> : active === 'accounts' ? <AccountsModule onToast={onToast}/> : active === 'files' ? <FilesModule onToast={onToast}/> : active === 'reports' ? <ReportsModule onToast={onToast}/> : active === 'profile' ? <ProfileModule/> : active === 'teachers' ? <FacultyWorkspace onToast={onToast} onNavigate={navigate}/> : activeModule ? <RecordModule key={active + ':' + activeWorkspaceWindow} module={activeModule as ModuleConfig} onToast={onToast} initialWindow={active === 'students' ? activeWorkspaceWindow : undefined} showWindowNavigation={active !== 'students'}/> : <Overview onNavigate={navigate}/>}</div>
+      <div className="pro-module-stage">{active === 'notifications' ? <NotificationCenter onToast={onToast} onUnreadCountChange={setUnreadAnnouncementCount}/> : active === 'overview' ? <Overview onNavigate={navigate}/> : active === 'institutional' && ['administration:campus-and-branch-management','library:book-issue-and-returns','inventory:stock-in','inventory:stock-out','inventory:stock-allocation','inventory:stock-adjustments','inventory:inventory-history','inventory:stock-reports','transport:student-transport-allocation'].includes(activeWorkspaceWindow) ? <LinkedOperationsWorkspace key={activeWorkspaceWindow} workspaceKey={activeWorkspaceWindow} onToast={onToast} onNavigate={navigate}/> : active === 'institutional' ? <InstitutionalWorkspace key={activeWorkspaceWindow} workspaceKey={activeWorkspaceWindow} onToast={onToast}/> : active === 'attendance' ? <AttendanceWorkspace key={activeWorkspaceWindow} initialWindow={activeWorkspaceWindow} onToast={onToast}/> : adminKey ? <AdministrationModule key={adminKey} initialKey={adminKey as 'departments' | 'programs' | 'classes' | 'academic_sessions' | 'subjects' | 'rooms'}/> : active === 'accounts' ? <AccountsModule onToast={onToast}/> : active === 'files' ? <FilesModule onToast={onToast}/> : active === 'reports' ? <ReportsModule onToast={onToast}/> : active === 'profile' ? <ProfileModule/> : active === 'teachers' ? <FacultyWorkspace onToast={onToast} onNavigate={navigate}/> : activeModule ? <RecordModule key={active + ':' + activeWorkspaceWindow} module={activeModule as ModuleConfig} onToast={onToast} initialWindow={active === 'students' ? activeWorkspaceWindow : undefined} showWindowNavigation={active !== 'students'}/> : <Overview onNavigate={navigate}/>}</div>
     </main>
   </div>
 }
