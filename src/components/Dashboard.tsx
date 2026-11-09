@@ -4,7 +4,7 @@ import {
   ChevronDown, ChevronRight, ClipboardCheck, ClipboardList, DoorOpen, FileText,
   GraduationCap, LayoutDashboard, LogOut, Menu, Megaphone, Search, School, Settings,
   Users, Wallet, X, TrendingUp, UserRound, BrainCircuit, Calculator, Banknote,
-  BookOpenCheck, HeartHandshake, MessageSquare, FileQuestion, ListChecks, BarChart3,
+  BookOpenCheck, HeartHandshake, MessageSquare, FileQuestion, ListChecks, BarChart3, PieChart,
   Award, Library, Wrench, Database,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
@@ -102,11 +102,13 @@ function buildStats(role: AppRole, data: Dataset) {
   const invoices = getRows(data, 'fee_invoices')
   const unpaid = sumOutstanding(invoices)
   const present = attendance.filter(row => row.status === 'present').length
+  const collected = invoices.reduce((total, row) => total + Number(row.paid_amount ?? 0), 0)
+  const attendanceRate = attendance.length ? Math.round(present / attendance.length * 100) + '%' : '—'
   if (role === 'owner' || role === 'admin') return [
-    { label: 'Students', value: students.length.toLocaleString(), hint: 'Registered learner profiles', icon: GraduationCap, tone: 'blue', route: 'students' },
-    { label: 'Faculty & staff', value: teachers.length.toLocaleString(), hint: 'Institution team records', icon: Users, tone: 'violet', route: 'teachers' },
-    { label: 'Attendance entries', value: attendance.length.toLocaleString(), hint: `${present} marked present`, icon: CalendarCheck, tone: 'green', route: 'attendance' },
-    { label: 'Outstanding fees', value: money(unpaid), hint: `${invoices.length} invoices recorded`, icon: Wallet, tone: 'amber', route: 'fees' },
+    { label: 'Total Students', value: students.length.toLocaleString(), hint: 'Registered learner profiles', icon: GraduationCap, tone: 'blue', route: 'students' },
+    { label: 'Faculty & Staff', value: teachers.length.toLocaleString(), hint: 'Institution team records', icon: Users, tone: 'green', route: 'teachers' },
+    { label: 'Attendance Rate', value: attendanceRate, hint: present.toLocaleString() + ' present of ' + attendance.length.toLocaleString(), icon: CalendarCheck, tone: 'purple', route: 'attendance' },
+    { label: 'Fees Collected', value: money(collected), hint: invoices.length.toLocaleString() + ' invoices on record', icon: Wallet, tone: 'amber', route: 'fees' },
   ]
   if (role === 'teacher') return [
     { label: 'Visible students', value: students.length.toLocaleString(), hint: 'Students in your permitted view', icon: GraduationCap, tone: 'blue', route: 'students' },
@@ -363,9 +365,6 @@ function Overview({ onNavigate }: { onNavigate: (key: string) => void }) {
   const sessionName = currentSession ? firstText(currentSession, ['name', 'title'], 'Current session') : 'Academic Session'
   const today = now.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
   const firstName = user!.fullName.split(' ')[0]
-  const attendance = getRows(data, 'attendance')
-  const presentCount = attendance.filter(row => String(row.status ?? '').toLowerCase() === 'present').length
-
   return <div className="pro-dashboard-page">
     <header className="pro-dashboard-heading">
       <div className="pro-dashboard-title">
@@ -488,7 +487,7 @@ const quickAccessByRole: Record<AppRole, Array<{ title: string; key: string; ico
   admin: [
     { title: 'Attendance Registration', key: 'attendance', icon: CalendarCheck },
     { title: 'Fees Invoice', key: 'fees', icon: Wallet },
-    { title: 'Files & Documentation', key: 'files', icon: FileText },
+    { title: 'Files', key: 'files', icon: FileText },
   ],
   teacher: [
     { title: 'Attendance Registration', key: 'attendance', icon: CalendarCheck },
