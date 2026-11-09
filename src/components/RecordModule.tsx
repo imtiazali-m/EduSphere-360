@@ -2,8 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import {
   Activity, AlertCircle, BookOpen, CalendarCheck, CalendarDays,
   Check, ChevronLeft, ChevronRight, ClipboardCheck, Edit3, Eye,
-  FileText, FolderOpen, GraduationCap, HeartHandshake, History, ImagePlus,
-  LayoutDashboard, Plus, RefreshCw, Search, ShieldCheck, Trash2,
+  FileCheck2, FileText, FolderOpen, GraduationCap, HeartHandshake, History, ImagePlus,
+  LayoutDashboard, Plus, RefreshCw, Search, ShieldCheck, Trash2, Upload,
   UserRound, Users, X,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
@@ -22,7 +22,7 @@ type StudentStatus = 'all' | 'active' | 'pending' | 'graduated' | 'inactive'
 type EmployeeStatus = 'all' | 'active' | 'on_leave' | 'inactive'
 type FeeStatus = 'all' | 'unpaid' | 'partial' | 'overdue' | 'paid'
 type StudentWorkspaceTab = 'overview' | 'admissions' | 'directory' | 'profile' | 'classes' | 'guardians' | 'attendance' | 'results' | 'assignments' | 'timetable' | 'documents' | 'history'
-const studentRelatedTables = ['attendance', 'exams', 'exam_results', 'assignments', 'assignment_submissions', 'timetable_entries'] as const
+const studentRelatedTables = ['attendance', 'exams', 'exam_results', 'assignments', 'assignment_submissions', 'timetable_entries', 'classes', 'guardian_students', 'parent_guardians', 'student_placements', 'student_documents', 'student_history'] as const
 
 function makeEmployeeNumber() {
   const suffix = crypto.randomUUID().replace(/-/g, '').slice(0, 8).toUpperCase()
@@ -409,6 +409,17 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
   const [studentRelatedRows, setStudentRelatedRows] = useState<Record<string, RecordRow[]>>({})
   const [studentRelatedLoading, setStudentRelatedLoading] = useState(false)
   const [studentRelatedErrors, setStudentRelatedErrors] = useState<string[]>([])
+  const [guardianForm, setGuardianForm] = useState({ full_name: '', relationship: 'guardian', phone: '', email: '', address: '', occupation: '' })
+  const [guardianEditing, setGuardianEditing] = useState<RecordRow | null>(null)
+  const [guardianToLink, setGuardianToLink] = useState('')
+  const [placementClassId, setPlacementClassId] = useState('')
+  const [placementEffectiveFrom, setPlacementEffectiveFrom] = useState(localDateValue())
+  const [placementReason, setPlacementReason] = useState('')
+  const [documentFile, setDocumentFile] = useState<File | null>(null)
+  const [documentTitle, setDocumentTitle] = useState('')
+  const [documentType, setDocumentType] = useState('other')
+  const [documentVisibility, setDocumentVisibility] = useState('staff_only')
+  const [documentNotes, setDocumentNotes] = useState('')
   const [employeeStatus, setEmployeeStatus] = useState<EmployeeStatus>('all')
   const [feeStatus, setFeeStatus] = useState<FeeStatus>('all')
   const canEdit = ['owner', 'admin'].includes(user!.role)
@@ -480,14 +491,7 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
     if (rows.length && !rows.some(row => row.id === selectedStudentId)) setSelectedStudentId(rows[0].id)
     if (!rows.length && selectedStudentId) setSelectedStudentId('')
   }, [rows, selectedStudentId])
-  const matchesStudent = (row: RecordRow, student: RecordRow | null) => {
-    if (!student) return false
-    const sameId = Boolean(row.student_id && row.student_id === student.id)
-    const rowName = String(row.student_name ?? '').trim().toLowerCase()
-    const sameName = Boolean(rowName && rowName === String(student.full_name ?? '').trim().toLowerCase())
-    const sameAdmission = Boolean(row.admission_no && row.admission_no === student.admission_no)
-    return sameId || sameAdmission || sameName
-  }
+  const matchesStudent = (row: RecordRow, student: RecordRow | null) => Boolean(student && row.student_id === student.id)
   const studentAttendanceRows = (studentRelatedRows.attendance ?? []).filter(row => matchesStudent(row, selectedStudent))
   const studentResultRows = (studentRelatedRows.exam_results ?? []).filter(row => matchesStudent(row, selectedStudent))
   const studentSubmissionRows = (studentRelatedRows.assignment_submissions ?? []).filter(row => matchesStudent(row, selectedStudent))
@@ -495,6 +499,15 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
   const studentAssignmentRows = (studentRelatedRows.assignments ?? []).filter(row => !studentClass || String(row.class_name ?? '').toLowerCase() === studentClass.toLowerCase())
   const studentExamRows = (studentRelatedRows.exams ?? []).filter(row => !studentClass || String(row.class_name ?? '').toLowerCase() === studentClass.toLowerCase())
   const studentTimetableRows = (studentRelatedRows.timetable_entries ?? []).filter(row => !studentClass || String(row.class_name ?? '').toLowerCase() === studentClass.toLowerCase())
+  const studentGuardianLinks = (studentRelatedRows.guardian_students ?? []).filter(row => row.student_id === selectedStudent?.id)
+  const linkedGuardianIds = new Set(studentGuardianLinks.map(row => String(row.guardian_id ?? '')))
+  const studentGuardianRows = (studentRelatedRows.parent_guardians ?? []).filter(row => linkedGuardianIds.has(row.id))
+  const availableGuardianRows = (studentRelatedRows.parent_guardians ?? []).filter(row => !linkedGuardianIds.has(row.id))
+  const studentPlacementRows = (studentRelatedRows.student_placements ?? []).filter(row => row.student_id === selectedStudent?.id).sort((a,b) => String(b.effective_from ?? '').localeCompare(String(a.effective_from ?? '')))
+  const activeStudentPlacement = studentPlacementRows.find(row => row.status === 'active' && !row.effective_to) ?? null
+  const studentClassRows = studentRelatedRows.classes ?? []
+  const studentDocumentRows = (studentRelatedRows.student_documents ?? []).filter(row => row.student_id === selectedStudent?.id)
+  const studentHistoryRows = (studentRelatedRows.student_history ?? []).filter(row => row.student_id === selectedStudent?.id).sort((a,b) => String(b.created_at ?? '').localeCompare(String(a.created_at ?? '')))
   const studentClassCounts = useMemo(() => {
     const counts = new Map<string, number>()
     rows.forEach(row => {
