@@ -3,11 +3,11 @@
 begin;
 
 -- Composite keys allow every relationship to prove that both records belong to the same institution.
-alter table public.subjects add constraint subjects_id_institution_uq unique(id,institution_id);
-alter table public.classes add constraint classes_id_institution_uq unique(id,institution_id);
-alter table public.academic_sessions add constraint academic_sessions_id_institution_uq unique(id,institution_id);
-alter table public.teachers add constraint teachers_id_institution_uq unique(id,institution_id);
-alter table public.students add constraint students_id_institution_uq unique(id,institution_id);
+alter table public.subjects add constraint subjects_id_institution_uq unique using index subjects_id_institution_uq;
+alter table public.classes add constraint classes_id_institution_uq unique using index classes_id_institution_uq;
+alter table public.academic_sessions add constraint academic_sessions_id_institution_uq unique using index academic_sessions_id_institution_uq;
+alter table public.teachers add constraint teachers_id_institution_uq unique using index teachers_id_institution_uq;
+alter table public.students add constraint students_id_institution_uq unique using index students_id_institution_uq;
 alter table public.institution_rooms add constraint institution_rooms_id_institution_uq unique(id,institution_id);
 
 create table public.question_bank_items (
