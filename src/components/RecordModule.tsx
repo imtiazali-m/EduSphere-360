@@ -410,6 +410,7 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
   const [studentRelatedLoading, setStudentRelatedLoading] = useState(false)
   const [studentRelatedErrors, setStudentRelatedErrors] = useState<string[]>([])
   const [guardianForm, setGuardianForm] = useState({ full_name: '', relationship: 'guardian', phone: '', email: '', address: '', occupation: '' })
+  const [guardianFormOpen, setGuardianFormOpen] = useState(false)
   const [guardianEditing, setGuardianEditing] = useState<RecordRow | null>(null)
   const [guardianToLink, setGuardianToLink] = useState('')
   const [placementClassId, setPlacementClassId] = useState('')
