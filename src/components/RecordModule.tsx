@@ -896,7 +896,9 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
             address: guardianForm.address.trim() || null,
             occupation: guardianForm.occupation.trim() || null,
           })
-          await refreshStudentTables('parent_guardians', 'student_history')
+          const linkedContact = studentGuardianLinks.find(link => link.guardian_id === guardianEditing.id)
+          if (linkedContact) await updateRecord(mode, user!, 'guardian_students', linkedContact.id, { relationship: guardianForm.relationship })
+          await refreshStudentTables('parent_guardians', 'guardian_students', 'student_history')
           onToast('Guardian contact updated.')
         } else {
           const created = await createRecord(mode, user!, 'parent_guardians', {
@@ -926,10 +928,11 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
     async function linkExistingGuardian() {
       if (!ownerOrAdmin || !selectedStudent || !guardianToLink) return
       try {
+        const guardian = availableGuardianRows.find(row => row.id === guardianToLink)
         await createRecord(mode, user!, 'guardian_students', {
           student_id: selectedStudent.id,
           guardian_id: guardianToLink,
-          relationship: 'guardian',
+          relationship: String(guardian?.relationship ?? 'guardian'),
         })
         await refreshStudentTables('guardian_students', 'student_history')
         setGuardianToLink('')
