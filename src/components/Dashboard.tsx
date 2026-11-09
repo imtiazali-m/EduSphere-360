@@ -303,6 +303,12 @@ function Overview({ onNavigate }: { onNavigate: (key: string) => void }) {
     const date = rowDate(row, ['created_at'])
     return date && date >= admissionStart
   }).length
+  const presentEntries = attendance.filter(row => String(row.status ?? '').toLowerCase() === 'present').length
+  const attendanceRate = attendance.length ? Math.round((presentEntries / attendance.length) * 100) : 0
+  const feesCollected = invoices.reduce((total, row) => total + Number(row.paid_amount ?? 0), 0)
+  const feesOutstanding = invoices.reduce((total, row) => total + outstandingInvoiceBalance(row), 0)
+  const financeScale = Math.max(1, feesCollected, feesOutstanding)
+  const peopleScale = Math.max(1, students.length, teachers.length)
   const isAdmin = user!.role === 'owner' || user!.role === 'admin'
   const quickStats = isAdmin
     ? [
@@ -383,6 +389,36 @@ function Overview({ onNavigate }: { onNavigate: (key: string) => void }) {
       </section>
     </div>
 
+    <div className="ed360-dashboard-row ed360-analytics-row">
+      <section className="ed360-panel ed360-gauge-panel">
+        <div className="ed360-panel-heading"><div><span className="ed360-panel-icon"><Activity size={18}/></span><div><h2>Attendance Gauge</h2><p>Present entries in the selected date range.</p></div></div></div>
+        <div className="ed360-gauge-content">
+          <div className="ed360-attendance-gauge" style={{ background: `conic-gradient(#2f765d 0 ${attendanceRate}%, #e8efe7 ${attendanceRate}% 100%)` }} role="img" aria-label={attendance.length ? `${attendanceRate}% of attendance entries are marked present` : 'No attendance entries recorded'}>
+            <div><strong>{loading || !attendance.length ? '—' : attendanceRate + '%'}</strong><span>{attendance.length ? 'Present' : 'No data yet'}</span></div>
+          </div>
+          <div className="ed360-gauge-details"><strong>{loading ? '—' : presentEntries.toLocaleString()}</strong><span>Present entries</span><strong>{loading ? '—' : Math.max(0, attendance.length - presentEntries).toLocaleString()}</strong><span>Other statuses</span></div>
+        </div>
+      </section>
+
+      <section className="ed360-panel ed360-finance-compare-panel">
+        <div className="ed360-panel-heading"><div><span className="ed360-panel-icon"><Wallet size={18}/></span><div><h2>Fee Collection Comparison</h2><p>Collected and outstanding invoice balances.</p></div></div></div>
+        <div className="ed360-compare-bars">
+          <div><div className="ed360-compare-label"><span>Collected</span><strong>{loading ? '—' : money(feesCollected)}</strong></div><div className="ed360-compare-track"><i className="is-collected" style={{ width: (feesCollected / financeScale * 100) + '%' }}/></div></div>
+          <div><div className="ed360-compare-label"><span>Outstanding</span><strong>{loading ? '—' : money(feesOutstanding)}</strong></div><div className="ed360-compare-track"><i className="is-outstanding" style={{ width: (feesOutstanding / financeScale * 100) + '%' }}/></div></div>
+        </div>
+        <div className="ed360-chart-footnote">Amounts use the current institution fee records and generated invoice balances.</div>
+      </section>
+
+      <section className="ed360-panel ed360-people-compare-panel">
+        <div className="ed360-panel-heading"><div><span className="ed360-panel-icon"><Users size={18}/></span><div><h2>People Overview</h2><p>Student and faculty record comparison.</p></div></div></div>
+        <div className="ed360-column-compare">
+          <div><span>Students</span><strong>{loading ? '—' : students.length.toLocaleString()}</strong><i className="is-students" style={{ height: (students.length / peopleScale * 100) + '%' }}/></div>
+          <div><span>Faculty</span><strong>{loading ? '—' : teachers.length.toLocaleString()}</strong><i className="is-faculty" style={{ height: (teachers.length / peopleScale * 100) + '%' }}/></div>
+        </div>
+        <div className="ed360-chart-footnote">Counts reflect records visible to your signed-in role.</div>
+      </section>
+    </div>
+
     <div className="ed360-dashboard-row ed360-dashboard-row-secondary">
       <section className="ed360-panel ed360-recent-panel">
         <div className="ed360-panel-heading"><div><span className="ed360-panel-icon"><Activity size={18}/></span><div><h2>Recent Activity</h2><p>The latest records added to your available workspaces.</p></div></div><button type="button" className="ed360-view-link" onClick={() => onNavigate(available[0]?.key ?? 'overview')}>View all <ArrowRight size={14}/></button></div>
@@ -411,52 +447,21 @@ function Overview({ onNavigate }: { onNavigate: (key: string) => void }) {
   </div>
 }
 
-const quickAccessByRole: Record<AppRole, Array<{ title: string; key: string; icon: LucideIcon }>> = {
-  owner: [
-    { title: 'Attendance Registration', key: 'attendance', icon: CalendarCheck },
-    { title: 'Fees Invoice', key: 'fees', icon: Wallet },
-    { title: 'Files & Documentation', key: 'files', icon: FileText },
-  ],
-  admin: [
-    { title: 'Attendance Registration', key: 'attendance', icon: CalendarCheck },
-    { title: 'Fees Invoice', key: 'fees', icon: Wallet },
-    { title: 'Files & Documentation', key: 'files', icon: FileText },
-  ],
-  teacher: [
-    { title: 'Attendance Registration', key: 'attendance', icon: CalendarCheck },
-    { title: 'Assignments', key: 'assignments', icon: BookOpen },
-    { title: 'Assignment Submission', key: 'assignment_submissions', icon: ClipboardList },
-  ],
-  student: [
-    { title: 'Assignments', key: 'assignments', icon: BookOpen },
-    { title: 'Exam Results', key: 'exam_results', icon: ClipboardCheck },
-    { title: 'Timetable', key: 'timetable', icon: CalendarDays },
-  ],
-  parent: [
-    { title: 'Attendance Registration', key: 'attendance', icon: CalendarCheck },
-    { title: 'Fees Invoice', key: 'fees', icon: Wallet },
-    { title: 'Exam Results', key: 'exam_results', icon: ClipboardCheck },
-  ],
-  accountant: [
-    { title: 'Fees Invoice', key: 'fees', icon: Wallet },
-  ],
-  exam_officer: [
-    { title: 'Examination', key: 'exams', icon: ClipboardCheck },
-    { title: 'Exam Results', key: 'exam_results', icon: ClipboardList },
-    { title: 'Reports', key: 'reports', icon: BarChart3 },
-  ],
-}
-
 const adminModuleLabels: Record<string, string> = {
   departments: 'Departments', programs: 'Programs', classes: 'Class Sections',
   academic_sessions: 'Academic Sessions', subjects: 'Subjects', rooms: 'Rooms & Facilities',
 }
 
+type WorkspaceTab = { id: string; route: string; targetKey: string; targetWindow: string; title: string }
+
 export function Dashboard({ onToast }: Props) {
   const { user, mode, signOut } = useAuth()
-  const [active, setActive] = useState('overview')
-  const [activePage, setActivePage] = useState('Dashboard')
-  const [activeWorkspaceWindow, setActiveWorkspaceWindow] = useState('overview')
+  const [workspaceTabs, setWorkspaceTabs] = useState<WorkspaceTab[]>([{ id: 'overview', route: 'overview', targetKey: 'overview', targetWindow: 'overview', title: 'Dashboard' }])
+  const [activeTabId, setActiveTabId] = useState('overview')
+  const activeTab = workspaceTabs.find(tab => tab.id === activeTabId) ?? workspaceTabs[0]
+  const active = activeTab?.targetKey ?? 'overview'
+  const activePage = activeTab?.title ?? 'Dashboard'
+  const activeWorkspaceWindow = activeTab?.targetWindow ?? 'overview'
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [expandedGroups, setExpandedGroups] = useState<string[]>(['dashboard'])
   const [profileOpen, setProfileOpen] = useState(false)
@@ -464,9 +469,7 @@ export function Dashboard({ onToast }: Props) {
   const [searchOpen, setSearchOpen] = useState(false)
   const [unreadAnnouncementCount, setUnreadAnnouncementCount] = useState(0)
   const available = useMemo(() => modulesForRole(user!.role), [user?.role])
-  const activeModule = available.find(module => module.key === active)
   const visibleGroups = useMemo(() => roleNavigationGroups(user!.role), [user?.role])
-  const quickAccessItems = quickAccessByRole[user!.role]
   const searchResults = useMemo(() => {
     const query = searchText.trim().toLowerCase()
     if (!query) return []
@@ -475,6 +478,20 @@ export function Dashboard({ onToast }: Props) {
     })))
     return items.filter(item => item.route && `${item.title} ${item.group}`.toLowerCase().includes(query)).slice(0, 8)
   }, [searchText, visibleGroups])
+
+  useEffect(() => {
+    const onShortcut = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault()
+        setSearchOpen(true)
+        document.getElementById('ed360-workspace-search')?.focus()
+      } else if (event.key === 'Escape') {
+        setSearchOpen(false)
+      }
+    }
+    window.addEventListener('keydown', onShortcut)
+    return () => window.removeEventListener('keydown', onShortcut)
+  }, [])
 
   useEffect(() => {
     let live = true
@@ -504,34 +521,46 @@ export function Dashboard({ onToast }: Props) {
     const institutionalWindowRoute = key.startsWith('institutional:')
     const targetKey = studentWindowRoute ? 'students' : attendanceWindowRoute ? 'attendance' : institutionalWindowRoute ? 'institutional' : key
     const targetWindow = studentWindowRoute ? key.slice('students:'.length) : attendanceWindowRoute ? key.slice('attendance:'.length) : institutionalWindowRoute ? key.slice('institutional:'.length) : 'overview'
-    if (targetKey === 'overview') {
-      setActive('overview'); setActivePage('Dashboard'); setActiveWorkspaceWindow('overview')
-    } else if (targetKey === 'notifications') {
-      setActive('notifications'); setActivePage('Notification Centre'); setActiveWorkspaceWindow('overview')
-    } else if (targetKey === 'institutional') {
-      setActive('institutional'); setActivePage('Institutional Workspace'); setActiveWorkspaceWindow(targetWindow)
-    } else if (targetKey === 'attendance') {
-      setActive('attendance'); setActivePage('Attendance Management'); setActiveWorkspaceWindow(targetWindow || 'students')
-    } else if (targetKey.startsWith('admin:')) {
-      const subkey = targetKey.slice(6)
-      setActive(targetKey); setActivePage(adminModuleLabels[subkey] ?? 'Administration'); setActiveWorkspaceWindow('overview')
-    } else if (targetKey === 'accounts' || targetKey === 'files' || targetKey === 'reports' || targetKey === 'profile' || available.some(module => module.key === targetKey)) {
-      const module = available.find(item => item.key === targetKey)
-      setActive(targetKey)
-      setActiveWorkspaceWindow(targetWindow)
-      setActivePage(targetKey === 'accounts' ? 'User Account' : targetKey === 'files' ? 'Files & Documentation' : targetKey === 'reports' ? 'Reports' : targetKey === 'profile' ? 'My Profile' : module?.title ?? targetKey)
-    } else {
-      onToast('This workspace is not enabled for your role.', true)
-      return
-    }
-    setSidebarOpen(false); setSearchText(''); setSearchOpen(false); setProfileOpen(false)
-  }
+    let title = 'Dashboard'
 
+    if (targetKey === 'overview') title = 'Dashboard'
+    else if (targetKey === 'notifications') title = 'Notification Centre'
+    else if (targetKey === 'institutional') title = 'Institutional Workspace'
+    else if (targetKey === 'attendance') title = 'Attendance Management'
+    else if (targetKey.startsWith('admin:')) {
+      const subkey = targetKey.slice(6)
+      title = adminModuleLabels[subkey] ?? 'Administration'
+    } else if (targetKey === 'accounts') title = 'User Accounts'
+    else if (targetKey === 'files') title = 'Files & Documentation'
+    else if (targetKey === 'reports') title = 'Reports'
+    else if (targetKey === 'profile') title = 'My Profile'
+    else {
+      const module = available.find(item => item.key === targetKey)
+      if (!module) {
+        onToast('This workspace is not enabled for your role.', true)
+        return
+      }
+      title = module.title
+    }
+
+    const nextTab: WorkspaceTab = { id: key, route: key, targetKey, targetWindow, title }
+    setWorkspaceTabs(current => {
+      const existing = current.some(tab => tab.id === key)
+      return existing
+        ? current.map(tab => tab.id === key ? nextTab : tab)
+        : [...current, nextTab]
+    })
+    setActiveTabId(key)
+    setSidebarOpen(false)
+    setSearchText('')
+    setSearchOpen(false)
+    setProfileOpen(false)
+  }
   function navigateCatalogPage(title: string) {
     const route = pageRoutes[title]
     if (!route) { onToast('This menu item has no connected workflow yet.', true); return }
     navigate(route)
-    setActivePage(title)
+    setWorkspaceTabs(current => current.map(tab => tab.id === route ? { ...tab, title } : tab))
   }
 
   function toggleGroup(key: string) {
@@ -541,7 +570,14 @@ export function Dashboard({ onToast }: Props) {
   function selectSearchResult(result: { title: string; group: string; route?: string }) {
     if (!result.route) return
     navigate(result.route)
-    setActivePage(result.title)
+    setWorkspaceTabs(current => current.map(tab => tab.id === result.route ? { ...tab, title: result.title } : tab))
+  }
+
+  function closeWorkspaceTab(id: string) {
+    if (id === 'overview') return
+    const remaining = workspaceTabs.filter(tab => tab.id !== id)
+    setWorkspaceTabs(remaining.length ? remaining : [{ id: 'overview', route: 'overview', targetKey: 'overview', targetWindow: 'overview', title: 'Dashboard' }])
+    if (activeTabId === id) setActiveTabId(remaining[remaining.length - 1]?.id ?? 'overview')
   }
 
   async function logout() {
@@ -549,8 +585,6 @@ export function Dashboard({ onToast }: Props) {
     setProfileOpen(false)
     window.location.hash = '#/'
   }
-
-  const adminKey = active.startsWith('admin:') ? active.slice(6) : undefined
 
   return <div className={`pro-app-shell ${sidebarOpen ? 'navigation-open' : ''}`}>
     <aside className={`pro-sidebar ${sidebarOpen ? 'is-open' : ''}`} aria-hidden={!sidebarOpen}>
@@ -571,9 +605,10 @@ export function Dashboard({ onToast }: Props) {
           </section>
         })}
       </nav>
-      <section className="pro-quick-access" aria-label="Quick access">
-        <div className="pro-nav-section-label">QUICK ACCESS</div>
-        {quickAccessItems.map(item => <button key={item.key} className={`pro-nav-item ${active === item.key ? 'active' : ''}`} onClick={() => navigate(item.key)}><span className="pro-nav-icon"><item.icon size={15}/></span><span className="pro-nav-title">{item.title}</span></button>)}
+      <section className="pro-quick-access" aria-label="Session">
+        <button type="button" className="pro-nav-item pro-signout-item" onClick={() => void logout()}>
+          <span className="pro-nav-icon"><LogOut size={16}/></span><span className="pro-nav-title">Sign out</span>
+        </button>
       </section>
     </aside>
     {sidebarOpen && <button className="pro-sidebar-scrim" aria-label="Close navigation" onClick={() => setSidebarOpen(false)}/>}
@@ -583,7 +618,7 @@ export function Dashboard({ onToast }: Props) {
         <div className="pro-topbar-left">
           <button className="pro-mobile-menu" onClick={() => setSidebarOpen(open => !open)} aria-label={sidebarOpen ? 'Close navigation' : 'Open navigation'} aria-expanded={sidebarOpen}><Menu size={19}/></button>
           <div className="pro-search-wrap">
-            <label className="pro-global-search"><Search size={17}/><input aria-label="Search workspace" placeholder="Search modules, students, or records…" value={searchText} onFocus={() => setSearchOpen(true)} onChange={event => { setSearchText(event.target.value); setSearchOpen(true) }} onKeyDown={event => { if (event.key === 'Escape') { setSearchOpen(false); setSearchText('') } else if (event.key === 'Enter' && searchResults[0]) selectSearchResult(searchResults[0]) }}/>{searchText && <button type="button" aria-label="Clear search" onClick={() => { setSearchText(''); setSearchOpen(false) }}>×</button>}</label>
+            <label className="pro-global-search"><Search size={17}/><input id="ed360-workspace-search" type="search" aria-label="Search available pages and tools" placeholder="Search pages and tools…" value={searchText} onFocus={() => setSearchOpen(true)} onChange={event => { setSearchText(event.target.value); setSearchOpen(true) }} onKeyDown={event => { if (event.key === 'Escape') { setSearchOpen(false); setSearchText('') } else if (event.key === 'Enter' && searchResults[0]) selectSearchResult(searchResults[0]) }}/>{searchText && <button type="button" aria-label="Clear search" onClick={() => { setSearchText(''); setSearchOpen(false) }}>×</button>}</label>
             {searchOpen && searchText.trim() && <div className="pro-search-results" role="listbox" aria-label="Workspace search results">{searchResults.length ? searchResults.map(result => <button type="button" key={result.group + '-' + result.title} role="option" onClick={() => selectSearchResult(result)}><span><b>{result.title}</b><small>{result.group}</small></span><ArrowRight size={15}/></button>) : <div className="pro-search-empty">No matching workspace found.</div>}</div>}
           </div>
         </div>
@@ -593,7 +628,41 @@ export function Dashboard({ onToast }: Props) {
           <div className="pro-profile-wrap"><button className="pro-profile-trigger" onClick={() => setProfileOpen(open => !open)} aria-expanded={profileOpen}><span className="pro-profile-avatar">{user?.fullName.slice(0, 1).toUpperCase()}</span><span className="pro-profile-copy"><b>{user?.fullName}</b><small>{roleLabels[user!.role]}</small></span><ChevronDown size={14}/></button>{profileOpen && <div className="pro-profile-menu"><div className="pro-profile-details"><b>{user?.fullName}</b><small>{user?.email}</small><small>{user?.institutionName}</small>{user?.institutionType && <small>Institution type: {user.institutionType.replaceAll('_', ' ')}</small>}<small>Account role: {roleLabels[user!.role]}</small><span className={'pro-profile-mode ' + mode}>Cloud workspace</span></div>{['student', 'parent'].includes(user!.role) && <button type="button" onClick={() => navigate('profile')}><UserRound size={15}/> My Profile</button>}<button type="button" onClick={() => void logout()}><LogOut size={15}/> Sign out</button></div>}</div>
         </div>
       </header>
-      <div className="pro-module-stage">{active === 'notifications' ? <NotificationCenter onToast={onToast} onUnreadCountChange={setUnreadAnnouncementCount}/> : active === 'overview' ? <Overview onNavigate={navigate}/> : active === 'institutional' && ['administration:campus-and-branch-management','library:book-issue-and-returns','inventory:stock-in','inventory:stock-out','inventory:stock-allocation','inventory:stock-adjustments','inventory:inventory-history','inventory:stock-reports','transport:student-transport-allocation'].includes(activeWorkspaceWindow) ? <LinkedOperationsWorkspace key={activeWorkspaceWindow} workspaceKey={activeWorkspaceWindow} onToast={onToast} onNavigate={navigate}/> : active === 'institutional' ? <InstitutionalWorkspace key={activeWorkspaceWindow} workspaceKey={activeWorkspaceWindow} onToast={onToast}/> : active === 'attendance' ? <AttendanceWorkspace key={activeWorkspaceWindow} initialWindow={activeWorkspaceWindow} onToast={onToast}/> : adminKey ? <AdministrationModule key={adminKey} initialKey={adminKey as 'departments' | 'programs' | 'classes' | 'academic_sessions' | 'subjects' | 'rooms'}/> : active === 'accounts' ? <AccountsModule onToast={onToast}/> : active === 'files' ? <FilesModule onToast={onToast}/> : active === 'reports' ? <ReportsModule onToast={onToast}/> : active === 'profile' ? <ProfileModule/> : active === 'teachers' ? <FacultyWorkspace onToast={onToast} onNavigate={navigate}/> : activeModule ? <RecordModule key={active + ':' + activeWorkspaceWindow} module={activeModule as ModuleConfig} onToast={onToast} initialWindow={active === 'students' ? activeWorkspaceWindow : undefined} showWindowNavigation={active !== 'students'}/> : <Overview onNavigate={navigate}/>}</div>
+      <nav className="pro-workspace-tabs" aria-label="Open workspace windows">
+        <div className="pro-workspace-tabs-label">OPEN WINDOWS</div>
+        {workspaceTabs.map(tab => <div className={`pro-workspace-tab ${activeTabId === tab.id ? 'is-active' : ''}`} key={tab.id}>
+          <button type="button" className="pro-workspace-tab-main" aria-current={activeTabId === tab.id ? 'page' : undefined} onClick={() => setActiveTabId(tab.id)}>
+            {tab.targetKey === 'overview' ? <LayoutDashboard size={15}/> : <FileText size={15}/>}
+            <span>{tab.title}</span>
+          </button>
+          {tab.id !== 'overview' && <button type="button" className="pro-workspace-tab-close" aria-label={`Close ${tab.title}`} title={`Close ${tab.title}`} onClick={() => closeWorkspaceTab(tab.id)}><X size={13}/></button>}
+        </div>)}
+        <span className="pro-workspace-tabs-help">Switch between open workspaces</span>
+      </nav>
+      <div className="pro-module-stage">
+        <div className="pro-window-stack">
+          {workspaceTabs.map(tab => {
+            const tabModule = available.find(module => module.key === tab.targetKey)
+            const tabAdminKey = tab.targetKey.startsWith('admin:') ? tab.targetKey.slice(6) : undefined
+            const linkedWorkspaceKeys = ['administration:campus-and-branch-management','library:book-issue-and-returns','inventory:stock-in','inventory:stock-out','inventory:stock-allocation','inventory:stock-adjustments','inventory:inventory-history','inventory:stock-reports','transport:student-transport-allocation']
+            return <section className="pro-window-panel" key={tab.id} hidden={activeTabId !== tab.id} aria-label={tab.title}>
+              {tab.targetKey === 'notifications' ? <NotificationCenter onToast={onToast} onUnreadCountChange={setUnreadAnnouncementCount}/> :
+                tab.targetKey === 'overview' ? <Overview onNavigate={navigate}/> :
+                tab.targetKey === 'institutional' && linkedWorkspaceKeys.includes(tab.targetWindow) ? <LinkedOperationsWorkspace workspaceKey={tab.targetWindow} onToast={onToast} onNavigate={navigate}/> :
+                tab.targetKey === 'institutional' ? <InstitutionalWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'attendance' ? <AttendanceWorkspace initialWindow={tab.targetWindow || 'students'} onToast={onToast}/> :
+                tabAdminKey ? <AdministrationModule initialKey={tabAdminKey as 'departments' | 'programs' | 'classes' | 'academic_sessions' | 'subjects' | 'rooms'}/> :
+                tab.targetKey === 'accounts' ? <AccountsModule onToast={onToast}/> :
+                tab.targetKey === 'files' ? <FilesModule onToast={onToast}/> :
+                tab.targetKey === 'reports' ? <ReportsModule onToast={onToast}/> :
+                tab.targetKey === 'profile' ? <ProfileModule/> :
+                tab.targetKey === 'teachers' ? <FacultyWorkspace onToast={onToast} onNavigate={navigate}/> :
+                tabModule ? <RecordModule module={tabModule as ModuleConfig} onToast={onToast} initialWindow={tab.targetKey === 'students' ? tab.targetWindow : undefined} showWindowNavigation={tab.targetKey !== 'students'}/> :
+                <Overview onNavigate={navigate}/>}
+            </section>
+          })}
+        </div>
+      </div>
     </main>
   </div>
 }

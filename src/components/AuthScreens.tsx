@@ -52,6 +52,7 @@ export function WelcomeScreen({ navigate }: ScreenProps) {
           <a className="edm-nav-link" href="#solutions" onClick={closeMenu}>Solutions</a>
           <a className="edm-nav-link" href="#self-hosted" onClick={closeMenu}>USV 360 Pro</a>
           <a className="edm-nav-link" href="#features" onClick={closeMenu}>Explore</a>
+          <a className="edm-nav-link" href="#analytics" onClick={closeMenu}>Insights</a>
           <a className="edm-nav-link" href="#workflow" onClick={closeMenu}>How it works</a>
         </nav>
         <div className="edm-header-actions"><button className="edm-login-link" onClick={() => go('login')}>Login</button><button className="edm-signup-button" onClick={() => go('setup')}>Sign up now <ArrowUpRight size={16}/></button></div>
@@ -94,6 +95,45 @@ export function WelcomeScreen({ navigate }: ScreenProps) {
           <div><strong>7</strong><span>Role types<br/>Access for every stakeholder</span></div>
           <div><strong>7</strong><span>Role-specific workspaces<br/>Access shaped by responsibility</span></div>
           <div><strong>1</strong><span>Unified platform<br/>One consistent experience</span></div>
+        </section>
+
+        <section className="edm-analytics-section edm-section" id="analytics">
+          <div className="edm-analytics-heading">
+            <div><span className="edm-section-kicker">VISUAL ANALYTICS</span><h2>See the whole picture.<br/><em>Act on what matters.</em></h2><p>Turn everyday institutional records into clear trends, comparisons and operational insight.</p></div>
+            <span className="edm-analytics-disclaimer"><ShieldCheck size={16}/> Illustrative dashboard preview · Sample data</span>
+          </div>
+          <div className="edm-analytics-grid">
+            <article className="edm-analytics-card edm-analytics-area-card">
+              <div className="edm-analytics-card-head"><div><small>AREA CHART · SAMPLE</small><b>Enrollment trend</b></div><span>6-month view</span></div>
+              <svg className="edm-sample-area-chart" viewBox="0 0 520 160" role="img" aria-label="Illustrative area chart showing a rising enrollment trend">
+                <defs><linearGradient id="edmAreaFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#8fb96b" stopOpacity=".38"/><stop offset="100%" stopColor="#8fb96b" stopOpacity=".02"/></linearGradient></defs>
+                <path d="M18 132 L18 112 L110 95 L202 104 L294 68 L386 76 L478 28 L478 132 Z" fill="url(#edmAreaFill)"/>
+                <path d="M18 112 L110 95 L202 104 L294 68 L386 76 L478 28" fill="none" stroke="#6f9e51" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
+                {[18,110,202,294,386,478].map((x,i)=><circle key={x} cx={x} cy={[112,95,104,68,76,28][i]} r="4.5" fill="#6f9e51" stroke="#fff" strokeWidth="2"/>)}
+                {[42,82,122].map(y=><line key={y} x1="18" y1={y} x2="478" y2={y} stroke="#e8eee5" strokeDasharray="4 6"/>)}
+              </svg>
+              <div className="edm-chart-axis"><span>JAN</span><span>FEB</span><span>MAR</span><span>APR</span><span>MAY</span><span>JUN</span></div>
+            </article>
+            <article className="edm-analytics-card edm-analytics-gauge-card">
+              <div className="edm-analytics-card-head"><div><small>GAUGE · SAMPLE</small><b>Attendance rate</b></div><span>Illustration</span></div>
+              <div className="edm-sample-gauge"><div><strong>92%</strong><small>Present</small></div></div>
+              <p>At-a-glance attendance health</p>
+            </article>
+            <article className="edm-analytics-card">
+              <div className="edm-analytics-card-head"><div><small>COLUMN CHART · SAMPLE</small><b>Fee collection</b></div><span>By term</span></div>
+              <div className="edm-sample-columns"><div><i style={{height:'48%'}}/><span>Term 1</span></div><div><i style={{height:'66%'}}/><span>Term 2</span></div><div><i style={{height:'83%'}}/><span>Term 3</span></div><div><i style={{height:'92%'}}/><span>Term 4</span></div></div>
+              <div className="edm-sample-legend"><i/> Collected <i className="muted"/> Previous period</div>
+            </article>
+            <article className="edm-analytics-card">
+              <div className="edm-analytics-card-head"><div><small>PIE CHART · SAMPLE</small><b>Learner distribution</b></div><span>By level</span></div>
+              <div className="edm-sample-pie-wrap"><div className="edm-sample-pie"><span>100%</span></div><div className="edm-sample-pie-legend"><span><i/>Primary</span><span><i/>Middle</span><span><i/>Secondary</span></div></div>
+            </article>
+            <article className="edm-analytics-card edm-analytics-comparison-card">
+              <div className="edm-analytics-card-head"><div><small>COMPARISON · SAMPLE</small><b>Academic performance</b></div><span>Term comparison</span></div>
+              <div className="edm-sample-comparison"><div><span>Term 1</span><div><i style={{width:'68%'}}/></div><b>68</b></div><div><span>Term 2</span><div><i style={{width:'79%'}}/></div><b>79</b></div><div><span>Term 3</span><div><i style={{width:'86%'}}/></div><b>86</b></div></div>
+              <p className="edm-sample-caption">Example only — actual charts use your institution's available records.</p>
+            </article>
+          </div>
         </section>
 
         <section className="edm-intro-section edm-section" id="platform">

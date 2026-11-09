@@ -326,3 +326,43 @@ body:has(.es-auth-page) .build-corner { display: none !important; }
 .es-verification-help { margin: 17px 0 0; color: #89958c; text-align: center; font-size: 10px; line-height: 1.6; }
 
 .es-resend-login-link { align-self: flex-start; margin-top: -6px; }
+
+
+/* Readability and responsive polish — preserve existing role-specific authentication flows. */
+.es-auth-topline p { font-size: 13px; }
+.es-auth-back { min-height: 38px; font-size: 12px; }
+.es-auth-visual-copy p { font-size: 15px; line-height: 1.8; }
+.es-auth-kicker { font-size: 11px; }
+.es-auth-form-heading p { font-size: 13px; line-height: 1.75; }
+.es-auth-overline { font-size: 10px; }
+.es-auth-field { font-size: 12px; gap: 8px; }
+.es-auth-input { min-height: 52px; }
+.es-auth-input input { font-size: 14px; }
+.es-account-type button b { font-size: 13px; }
+.es-auth-check { font-size: 12px; }
+.es-auth-text-button { font-size: 12px; }
+.es-auth-submit { min-height: 54px; font-size: 14px; }
+.es-auth-secure-note { font-size: 10px; }
+.es-auth-main-foot { font-size: 10px; }
+.es-signup-form .es-auth-field { font-size: 12px; }
+.es-signup-form .es-auth-input { min-height: 50px; }
+.es-auth-select { min-height: 50px; font-size: 13px; }
+.es-signup-form .es-auth-input input { font-size: 14px; }
+.es-signup-card .es-auth-form-heading p { font-size: 13px; }
+.es-signup-account-note { font-size: 12px; }
+.es-terms-copy { font-size: 12px; }
+.es-auth-inline-switch { font-size: 12px; }
+.es-auth-session-hint { font-size: 10px; }
+@media (max-width: 760px) {
+  .es-auth-topline p { font-size: 12px; }
+  .es-auth-visual-copy p { font-size: 13px; }
+  .es-auth-form-heading p { font-size: 12px; }
+  .es-auth-field { font-size: 12px; }
+  .es-auth-input input { font-size: 14px; }
+  .es-auth-check,.es-auth-text-button,.es-auth-inline-switch { font-size: 12px; }
+  .es-auth-submit { min-height: 52px; font-size: 13px; }
+  .es-auth-main-foot { font-size: 9px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .es-auth-page *, .es-auth-page *::before, .es-auth-page *::after { scroll-behavior: auto !important; }
+}
