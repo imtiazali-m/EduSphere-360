@@ -48,13 +48,25 @@ const { roleNavigationGroups } = require(path.join(root, 'src/lib/navigationAcce
 const { modules, modulesForRole } = require(path.join(root, 'src/lib/modules.ts'))
 const roles = ['owner', 'admin', 'teacher', 'student', 'parent', 'accountant', 'exam_officer']
 
-check('Navigation only exposes real destinations with connected routes', () => {
-  assert.ok(navigationCatalog.length >= 8 && navigationCatalog.length <= 16, 'Navigation should be concise and limited to implemented workspaces')
-  assert.ok(navigationCatalog.some(group => group.key === 'dashboard' && group.items.length === 0), 'Dashboard should be a direct destination, not a duplicate Overview submenu')
-  for (const group of navigationCatalog) {
-    for (const page of group.items) {
-      assert.ok(navigationRoutes[page], `No route is connected for ${group.label}/${page}`)
-    }
+check('The approved eight-group menu maps every submenu to a real workspace', () => {
+  const expected = [
+    ['Dashboard', []],
+    ['Admission & Students', ['Student Record']],
+    ['People & Staff', ['Faculty & Staff', 'User Account']],
+    ['Institute Administration', ['Departments', 'Programs', 'Class Sections', 'Academic Session', 'Subjects', 'Rooms & Facilities', 'Files & Documentation']],
+    ['Academic Management', ['Attendance Registration', 'Examination', 'Exam Results', 'Assignments', 'Assignment Submission', 'Timetable']],
+    ['Finance & Payments', ['Fees Invoice']],
+    ['Communication', ['Announcement']],
+    ['Operations & Reports', ['Work Management', 'Reports']],
+  ]
+  assert.equal(navigationCatalog.length, expected.length, 'The main menu must contain exactly eight groups')
+  for (let i = 0; i < expected.length; i++) {
+    assert.equal(navigationCatalog[i].label, expected[i][0], `Unexpected menu group at position ${i + 1}`)
+    assert.deepEqual(navigationCatalog[i].items, expected[i][1], `Unexpected submenu list for ${expected[i][0]}`)
+  }
+  assert.ok(navigationCatalog.some(group => group.key === 'dashboard' && group.items.length === 0), 'Dashboard should be a direct destination')
+  for (const group of navigationCatalog) for (const page of group.items) {
+    assert.ok(navigationRoutes[page], `No route is connected for ${group.label}/${page}`)
   }
   const moduleKeys = new Set(modules.map(module => module.key))
   const adminKeys = new Set(['departments', 'programs', 'classes', 'academic_sessions', 'subjects', 'rooms'])
@@ -83,16 +95,20 @@ check('All seven roles receive focused, permission-aware workspaces', () => {
 })
 
 const dashboardSource = read('src/components/Dashboard.tsx')
-check('Dashboard removes placeholder counts, duplicate overview, fake shortcut hints and pinned sidebar controls', () => {
+check('Dashboard matches the menu and keeps Quick Access at the sidebar bottom', () => {
   for (const forbidden of ['CatalogWorkspace', '22-group, 122-section', 'WORKSPACE PAGES', 'MENU GROUPS', '⌘ K', '<kbd>/</kbd>', 'pro-sidebar-footer']) {
     assert.ok(!dashboardSource.includes(forbidden), `Found outdated dashboard element: ${forbidden}`)
   }
   const navStart = dashboardSource.indexOf('<nav className="pro-navigation"')
-  const quickStart = dashboardSource.indexOf('className="pro-quick-access"')
   const navEnd = dashboardSource.indexOf('</nav>', navStart)
-  assert.ok(navStart >= 0 && quickStart > navStart && quickStart < navEnd, 'Quick Access must be inside the normal scrollable navigation')
+  const quickStart = dashboardSource.indexOf('className="pro-quick-access"')
+  assert.ok(navStart >= 0 && navEnd > navStart, 'Scrollable navigation is missing')
+  assert.ok(quickStart > navEnd, 'Quick Access must be outside the scrollable navigation at the sidebar bottom')
+  assert.ok(dashboardSource.includes('pro-menu-overview'), 'Dashboard must display the role-based menu overview')
+  assert.ok(dashboardSource.includes('roleNavigationGroups(user!.role)'), 'Dashboard menu overview must follow role permissions')
   assert.ok(dashboardSource.includes('Search workspace'), 'Workspace search is missing')
   assert.ok(dashboardSource.includes('pro-profile-menu'), 'Account menu is missing')
+  assert.ok(dashboardSource.includes("available.some(module => module.key === 'attendance')"), 'Attendance insights must only display for roles with attendance access')
 })
 
 const authScreens = read('src/components/AuthScreens.tsx')
