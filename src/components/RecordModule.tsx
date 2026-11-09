@@ -831,6 +831,253 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
         return <td key={column.key}>{['status', 'result_status'].includes(column.key) ? <span className={'status-pill status-' + String(raw ?? '').toLowerCase()}>{value}</span> : value}</td>
       })}</tr>)}</tbody></table></div>
 
+
+    async function refreshStudentTables(...tables: string[]) {
+      const entries = await Promise.all(tables.map(async table => [table, await listRecords(mode, user!, table)] as const))
+      setStudentRelatedRows(old => ({ ...old, ...Object.fromEntries(entries) }))
+    }
+
+    async function updateAdmissionStatus(row: RecordRow, nextStatus: string) {
+      if (!ownerOrAdmin) return
+      const current = String(row.application_status ?? 'submitted')
+      const transitions: Record<string, string[]> = {
+        draft: ['submitted', 'withdrawn'],
+        submitted: ['under_review', 'documents_required', 'rejected', 'withdrawn'],
+        under_review: ['documents_required', 'approved', 'rejected', 'withdrawn'],
+        documents_required: ['under_review', 'rejected', 'withdrawn'],
+        approved: ['enrolled', 'withdrawn'],
+        enrolled: ['withdrawn'],
+        rejected: ['under_review', 'withdrawn'],
+        withdrawn: ['submitted'],
+      }
+      if (!transitions[current]?.includes(nextStatus)) {
+        onToast('This admission transition is not allowed from the current status.', true)
+        return
+      }
+      const note = window.prompt('Add a review note for this admission (optional):', String(row.application_review_notes ?? ''))
+      if (note === null) return
+      const now = new Date().toISOString()
+      const payload: Record<string, unknown> = {
+        application_status: nextStatus,
+        application_reviewed_by: user!.id,
+        application_reviewed_at: now,
+        application_review_notes: note.trim() || null,
+      }
+      if (nextStatus === 'submitted') payload.application_submitted_at = now
+      if (nextStatus === 'enrolled') {
+        payload.status = 'active'
+        payload.admission_date = now.slice(0, 10)
+      }
+      if (nextStatus === 'rejected' || nextStatus === 'withdrawn') payload.status = 'inactive'
+      try {
+        await updateRecord(mode, user!, 'students', row.id, payload)
+        await load({ silent: true })
+        await refreshStudentTables('student_history')
+        onToast('Admission moved to ' + nextStatus.replaceAll('_', ' ') + '.')
+      } catch (error) {
+        onToast(userFacingError(error, 'The admission status could not be updated.'), true)
+      }
+    }
+
+    async function saveGuardianContact() {
+      if (!ownerOrAdmin || !selectedStudent) return
+      const fullName = guardianForm.full_name.trim()
+      if (!fullName) {
+        onToast('Enter the guardian full name.', true)
+        return
+      }
+      try {
+        if (guardianEditing) {
+          await updateRecord(mode, user!, 'parent_guardians', guardianEditing.id, {
+            full_name: fullName,
+            relationship: guardianForm.relationship,
+            phone: guardianForm.phone.trim() || null,
+            email: guardianForm.email.trim() || null,
+            address: guardianForm.address.trim() || null,
+            occupation: guardianForm.occupation.trim() || null,
+          })
+          await refreshStudentTables('parent_guardians', 'student_history')
+          onToast('Guardian contact updated.')
+        } else {
+          const created = await createRecord(mode, user!, 'parent_guardians', {
+            full_name: fullName,
+            relationship: guardianForm.relationship,
+            phone: guardianForm.phone.trim() || null,
+            email: guardianForm.email.trim() || null,
+            address: guardianForm.address.trim() || null,
+            occupation: guardianForm.occupation.trim() || null,
+          })
+          if (!created) throw new Error('The guardian contact was not confirmed by the database.')
+          await createRecord(mode, user!, 'guardian_students', {
+            student_id: selectedStudent.id,
+            guardian_id: created.id,
+            relationship: guardianForm.relationship,
+          })
+          await refreshStudentTables('parent_guardians', 'guardian_students', 'student_history')
+          onToast('Guardian contact saved and linked to the selected student.')
+        }
+        setGuardianForm({ full_name: '', relationship: 'guardian', phone: '', email: '', address: '', occupation: '' })
+        setGuardianEditing(null)
+      } catch (error) {
+        onToast(userFacingError(error, 'The guardian contact could not be saved.'), true)
+      }
+    }
+
+    async function linkExistingGuardian() {
+      if (!ownerOrAdmin || !selectedStudent || !guardianToLink) return
+      try {
+        await createRecord(mode, user!, 'guardian_students', {
+          student_id: selectedStudent.id,
+          guardian_id: guardianToLink,
+          relationship: 'guardian',
+        })
+        await refreshStudentTables('guardian_students', 'student_history')
+        setGuardianToLink('')
+        onToast('Existing guardian linked to the selected student.')
+      } catch (error) {
+        onToast(userFacingError(error, 'The guardian could not be linked. Check whether this relationship already exists.'), true)
+      }
+    }
+
+    async function unlinkGuardian(link: RecordRow) {
+      if (!ownerOrAdmin) return
+      const confirmed = window.confirm('Remove this guardian relationship? The guardian contact itself will remain in the institution directory.')
+      if (!confirmed) return
+      try {
+        await deleteRecord(mode, user!, 'guardian_students', link.id)
+        await refreshStudentTables('guardian_students', 'student_history')
+        onToast('Guardian relationship removed.')
+      } catch (error) {
+        onToast(userFacingError(error, 'The guardian relationship could not be removed.'), true)
+      }
+    }
+
+    async function saveStudentPlacement() {
+      if (!ownerOrAdmin || !selectedStudent) return
+      const selectedClass = studentClassRows.find(row => row.id === placementClassId)
+      if (!selectedClass) {
+        onToast('Select a configured class or programme before saving placement.', true)
+        return
+      }
+      if (!placementEffectiveFrom) {
+        onToast('Choose the placement effective date.', true)
+        return
+      }
+      try {
+        await createRecord(mode, user!, 'student_placements', {
+          student_id: selectedStudent.id,
+          class_id: selectedClass.id,
+          effective_from: placementEffectiveFrom,
+          status: 'active',
+          placement_reason: placementReason.trim() || null,
+        })
+        await load({ silent: true })
+        await refreshStudentTables('student_placements', 'student_history')
+        setPlacementClassId('')
+        setPlacementReason('')
+        onToast('Student placement saved. The previous active placement was closed automatically.')
+      } catch (error) {
+        onToast(userFacingError(error, 'The student placement could not be saved.'), true)
+      }
+    }
+
+    async function uploadStudentDocument() {
+      if (!ownerOrAdmin || !selectedStudent || !documentFile) return
+      if (documentFile.size <= 0 || documentFile.size > 10 * 1024 * 1024) {
+        onToast('Choose a document smaller than 10 MB.', true)
+        return
+      }
+      const allowedTypes = [
+        'application/pdf', 'image/png', 'image/jpeg', 'image/webp', 'text/plain',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      ]
+      if (!allowedTypes.includes(documentFile.type)) {
+        onToast('This document type is not supported. Use PDF, PNG, JPG, WEBP, DOC, DOCX or TXT.', true)
+        return
+      }
+      if (!supabase) {
+        onToast('Secure cloud document storage is not configured.', true)
+        return
+      }
+      const safeName = documentFile.name.replace(/[^a-zA-Z0-9._-]/g, '_')
+      const storagePath = user!.institutionId + '/' + selectedStudent.id + '/' + crypto.randomUUID() + '-' + safeName
+      try {
+        const { error: uploadError } = await supabase.storage.from('student-files').upload(storagePath, documentFile, {
+          cacheControl: '3600', contentType: documentFile.type, upsert: false,
+        })
+        if (uploadError) throw uploadError
+        try {
+          await createRecord(mode, user!, 'student_documents', {
+            student_id: selectedStudent.id,
+            document_type: documentType,
+            title: documentTitle.trim() || documentFile.name,
+            file_name: documentFile.name,
+            storage_path: storagePath,
+            mime_type: documentFile.type,
+            file_size: documentFile.size,
+            verification_status: 'pending',
+            visibility: documentVisibility,
+            notes: documentNotes.trim() || null,
+          })
+        } catch (metadataError) {
+          await supabase.storage.from('student-files').remove([storagePath])
+          throw metadataError
+        }
+        await refreshStudentTables('student_documents', 'student_history')
+        setDocumentFile(null)
+        setDocumentTitle('')
+        setDocumentNotes('')
+        onToast('Student document uploaded and added to the document register.')
+      } catch (error) {
+        onToast(userFacingError(error, 'The student document could not be uploaded.'), true)
+      }
+    }
+
+    async function openStudentDocument(row: RecordRow) {
+      if (!supabase) return
+      try {
+        const { data, error } = await supabase.storage.from('student-files').createSignedUrl(String(row.storage_path ?? ''), 5 * 60)
+        if (error) throw error
+        if (!data?.signedUrl) throw new Error('A secure document link could not be created.')
+        window.open(data.signedUrl, '_blank', 'noopener,noreferrer')
+      } catch (error) {
+        onToast(userFacingError(error, 'This document is not available to your account.'), true)
+      }
+    }
+
+    async function updateStudentDocumentStatus(row: RecordRow, status: string) {
+      if (!ownerOrAdmin) return
+      try {
+        await updateRecord(mode, user!, 'student_documents', row.id, {
+          verification_status: status,
+          verified_by: user!.id,
+          verified_at: new Date().toISOString(),
+        })
+        await refreshStudentTables('student_documents', 'student_history')
+        onToast('Document verification status updated.')
+      } catch (error) {
+        onToast(userFacingError(error, 'Document verification could not be updated.'), true)
+      }
+    }
+
+    async function removeStudentDocument(row: RecordRow) {
+      if (!ownerOrAdmin || !supabase) return
+      if (!window.confirm('Remove this student document from the register and secure storage?')) return
+      try {
+        await deleteRecord(mode, user!, 'student_documents', row.id)
+        const { error } = await supabase.storage.from('student-files').remove([String(row.storage_path ?? '')])
+        await refreshStudentTables('student_documents', 'student_history')
+        if (error) {
+          onToast('Document record removed, but its private storage object could not be deleted. An administrator should review storage cleanup.', true)
+        } else {
+          onToast('Student document removed.')
+        }
+      } catch (error) {
+        onToast(userFacingError(error, 'The student document could not be removed.'), true)
+      }
+    }
+
     return <div className="page-content ed360-module-page students-page ed360-student-workspace">
       <header className="ed360-student-workspace-heading">
         <div className="ed360-student-heading-copy">
