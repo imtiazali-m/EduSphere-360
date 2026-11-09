@@ -91,7 +91,7 @@ check('All seven roles receive focused, permission-aware workspaces', () => {
   assert.ok(!roleNavigationGroups('student').some(group => ['administration','institution-config','employees','accounts-finance','payroll'].includes(group.key)))
   assert.ok(!roleNavigationGroups('parent').some(group => ['administration','institution-config','employees','accounts-finance','payroll'].includes(group.key)))
   assert.ok(!roleNavigationGroups('accountant').some(group => ['employees','students','question-bank','examinations'].includes(group.key)))
-  assert.ok(!roleNavigationGroups('exam_officer').some(group => ['employees','students','accounts-finance','payroll'].includes(group.key))
+  assert.ok(!roleNavigationGroups('exam_officer').some(group => ['employees','students','accounts-finance','payroll'].includes(group.key)))
 })
 
 check('Bulk attendance uses class registers with P A L marking and atomic saves', () => {
