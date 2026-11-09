@@ -365,7 +365,7 @@ export function Dashboard({ onToast }: Props) {
     } else if (key === 'accounts' || key === 'files' || key === 'reports' || key === 'profile' || available.some(module => module.key === key)) {
       const module = available.find(item => item.key === key)
       setActive(key)
-      setActivePage(key === 'accounts' ? 'User Accounts' : key === 'files' ? 'Files & Documents' : key === 'reports' ? 'Reports' : key === 'profile' ? 'My Profile' : module?.title ?? key)
+      setActivePage(key === 'accounts' ? 'User Account' : key === 'files' ? 'Files & Documentation' : key === 'reports' ? 'Reports' : key === 'profile' ? 'My Profile' : module?.title ?? key)
     } else {
       onToast('This workspace is not enabled for your role.', true)
       return
