@@ -1211,15 +1211,48 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
       </section>}
 
       {studentWorkspaceTab === 'classes' && <div className="ed360-student-overview-grid">
-        <section className="ed360-student-panel"><header><div><span className="ed360-student-panel-icon"><BookOpen size={17}/></span><div><h2>Class / programme distribution</h2><p>Counts based on students.class_name.</p></div></div></header>
-          {studentClassCounts.length ? <div className="ed360-student-class-bars">{studentClassCounts.map(item => <button type="button" key={item.name} className={studentClass.toLowerCase() === item.name.toLowerCase() ? 'active' : ''} onClick={() => { const match = rows.find(row => String(row.class_name ?? 'Not assigned').trim() === item.name); if (match) setSelectedStudentId(match.id) }}><div><span>{item.name}</span><b>{item.count}</b></div><i><span style={{ width: (item.count / Math.max(1, studentCounts.total) * 100) + '%' }}/></i></button>)}</div> : <div className="ed360-student-empty"><strong>No class placements yet</strong><p>Class statistics appear after student records have been registered.</p></div>}
+        <section className="ed360-student-panel">
+          <header><div><span className="ed360-student-panel-icon"><BookOpen size={17}/></span><div><h2>Current class placement</h2><p>Placement is linked to a configured class and academic session.</p></div></div></header>
+          {selectedStudent ? <>
+            <dl>
+              <div><dt>Student</dt><dd>{String(selectedStudent.full_name ?? '—')}</dd></div>
+              <div><dt>Class / programme</dt><dd>{String(activeStudentClass?.name ?? selectedStudent.class_name ?? 'Not assigned')}</dd></div>
+              <div><dt>Section</dt><dd>{String(activeStudentClass?.section ?? 'Not assigned')}</dd></div>
+              <div><dt>Academic session</dt><dd>{String(activeStudentSession?.name ?? 'Not linked')}</dd></div>
+              <div><dt>Placement start</dt><dd>{activeStudentPlacement ? niceDate(activeStudentPlacement.effective_from) : 'No active placement record'}</dd></div>
+            </dl>
+          </> : <div className="ed360-student-empty"><strong>No student selected</strong><p>Select a student to review class placement.</p></div>}
+          {ownerOrAdmin && selectedStudent && <div className="ed360-student-placement-editor">
+            <div className="ed360-student-table-heading"><strong>Assign or transfer class</strong><span>Creates a dated placement record</span></div>
+            <label className="form-field"><span>Configured class / programme</span>
+              <select value={placementClassId} onChange={event => setPlacementClassId(event.target.value)} disabled={!studentClassRows.length}>
+                <option value="">Select a class</option>
+                {studentClassRows.map(classRow => {
+                  const session = (studentRelatedRows.academic_sessions ?? []).find(row => row.id === classRow.academic_session_id)
+                  return <option key={classRow.id} value={classRow.id}>{String(classRow.name ?? classRow.code ?? 'Class')} {classRow.section ? '· ' + String(classRow.section) : ''}{session?.name ? ' · ' + String(session.name) : ''}</option>
+                })}
+              </select>
+            </label>
+            <label className="form-field"><span>Effective from</span><input type="date" value={placementEffectiveFrom} onChange={event => setPlacementEffectiveFrom(event.target.value)}/></label>
+            <label className="form-field"><span>Reason / transfer note</span><textarea value={placementReason} onChange={event => setPlacementReason(event.target.value)} rows={2} placeholder="New admission, promotion, transfer or correction…"/></label>
+            <button type="button" className="button button-primary" onClick={() => void saveStudentPlacement()} disabled={!placementClassId || !studentClassRows.length}><Check size={15}/> Save placement</button>
+            {!studentClassRows.length && <p className="ed360-student-limitation-note">No classes are configured yet. Create the class, programme and academic session first in Institute Administration; this window will then use those real records.</p>}
+          </div>}
         </section>
-        <section className="ed360-student-panel"><header><div><span className="ed360-student-panel-icon green"><ShieldCheck size={17}/></span><div><h2>Placement details</h2><p>Current student's recorded placement.</p></div></div></header>
-          <dl><div><dt>Selected student</dt><dd>{String(selectedStudent?.full_name ?? '—')}</dd></div><div><dt>Class / programme</dt><dd>{studentClass || 'Not assigned'}</dd></div><div><dt>Active students in class</dt><dd>{rows.filter(row => String(row.class_name ?? '').toLowerCase() === studentClass.toLowerCase() && String(row.status ?? 'active') === 'active').length}</dd></div></dl>
-          <p className="ed360-student-limitation-note">The current students table contains a class/programme field but no separate section or academic-session link. This workspace does not invent those relationships.</p>
+        <section className="ed360-student-panel">
+          <header><div><span className="ed360-student-panel-icon green"><Users size={17}/></span><div><h2>Enrolment distribution</h2><p>Counts grouped by the class recorded on student profiles.</p></div></div></header>
+          {studentClassCounts.length ? <div className="ed360-student-class-bars">{studentClassCounts.map(item => <button type="button" key={item.name} className={studentClass.toLowerCase() === item.name.toLowerCase() ? 'active' : ''} onClick={() => { const match = rows.find(row => String(row.class_name ?? 'Not assigned').trim() === item.name); if (match) setSelectedStudentId(match.id) }}><div><span>{item.name}</span><b>{item.count}</b></div><i><span style={{ width: (item.count / Math.max(1, studentCounts.total) * 100) + '%' }}/></i></button>)}</div> : <div className="ed360-student-empty"><strong>No enrolments yet</strong><p>Class distribution appears when students are assigned to configured classes.</p></div>}
+        </section>
+        <section className="ed360-student-panel ed360-student-panel-wide">
+          <header><div><span className="ed360-student-panel-icon violet"><History size={17}/></span><div><h2>Placement and transfer history</h2><p>Each placement is retained with its class, session, effective dates and reason.</p></div></div><span className="ed360-student-record-count">{studentPlacementRows.length} placements</span></header>
+          {studentPlacementRows.length ? <div className="ed360-student-table-wrap"><table className="ed360-student-table"><thead><tr><th>Class / programme</th><th>Section</th><th>Academic session</th><th>Effective from</th><th>Effective to</th><th>Status</th><th>Reason</th></tr></thead><tbody>{studentPlacementRows.map(placement => {
+            const classRow = studentClassRows.find(row => row.id === placement.class_id)
+            const session = (studentRelatedRows.academic_sessions ?? []).find(row => row.id === classRow?.academic_session_id)
+            const program = (studentRelatedRows.programs ?? []).find(row => row.id === classRow?.program_id)
+            return <tr key={placement.id}><td><strong>{String(classRow?.name ?? 'Class record')}</strong><small>{String(program?.name ?? classRow?.code ?? '')}</small></td><td>{String(classRow?.section ?? '—')}</td><td>{String(session?.name ?? '—')}</td><td>{niceDate(placement.effective_from)}</td><td>{niceDate(placement.effective_to)}</td><td><span className={'status-pill status-' + String(placement.status ?? '')}>{String(placement.status ?? '—').replaceAll('_',' ')}</span></td><td>{String(placement.placement_reason ?? '—')}</td></tr>
+          })}</tbody></table></div> : <div className="ed360-student-empty"><strong>No placement history recorded</strong><p>Assign a configured class above to start the student's placement history.</p></div>}
         </section>
       </div>}
-
       {studentWorkspaceTab === 'guardians' && <section className="ed360-student-panel ed360-student-full-panel"><header><div><span className="ed360-student-panel-icon violet"><HeartHandshake size={17}/></span><div><h2>Parent & guardian contacts</h2><p>Guardian name and email from each student record.</p></div></div><span className="ed360-student-record-count">{rows.filter(row => row.guardian_name || row.guardian_email).length} contact records</span></header>
         {renderTable(rows.filter(row => row.guardian_name || row.guardian_email),[{key:'admission_no',label:'Admission ID'},{key:'full_name',label:'Student'},{key:'class_name',label:'Class / programme'},{key:'guardian_name',label:'Guardian name'},{key:'guardian_email',label:'Guardian email'}],'Guardian contact details have not been entered for these students.')}
         <p className="ed360-student-limitation-note">The current student register stores one guardian contact pair per student. Multiple guardian accounts and relationships require a separate approved data-model update.</p>
