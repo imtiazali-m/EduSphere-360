@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Activity, CalendarCheck, Check, Clock3, Download, Fingerprint, RefreshCw, Search, Users, X } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
+import { Activity, CalendarCheck, Check, Download, Fingerprint, RefreshCw, Search, X } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { downloadCsv } from '../lib/csv'
@@ -43,7 +43,7 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
   return !q||p.full_name.toLowerCase().includes(q)||String(p.admission_no??p.employee_no??'').toLowerCase().includes(q)
  }),[people,search])
  const stats=useMemo(()=>Object.values(marks).reduce((acc,status)=>{acc[status]+=1;return acc},{present:0,absent:0,late:0}),[marks])
- const readOnly=['student','parent'].includes(user?.role??'')
+ const readOnly=population==='students'?!canManageStudents:!canManageStaff
 
  const loadRoster=useCallback(async()=>{
   if(!supabase||!user){setLoading(false);return}
@@ -141,7 +141,7 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
   ])
  }
 
- async function createDevice(event:React.FormEvent){
+ async function createDevice(event:FormEvent){
   event.preventDefault()
   if(!supabase||!user||!canManageStaff)return
   const {error}=await supabase.from('attendance_device_sources').insert({
@@ -162,13 +162,13 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
   <div className="ed360-attendance-main-tabs">
    <button className={autoTab==='register'?'active':''} onClick={()=>setAutoTab('register')}>Manual register</button>
    <button className={autoTab==='history'?'active':''} onClick={()=>setAutoTab('history')}>Attendance history</button>
-   <button className={autoTab==='devices'?'active':''} onClick={()=>{setAutoTab('devices');void loadDevices()}}>Automatic / device setup</button>
+   {canManageStaff&&<button className={autoTab==='devices'?'active':''} onClick={()=>{setAutoTab('devices');void loadDevices()}}>Automatic / device setup</button>}
   </div>
   {autoTab==='register'&&<>
    <section className="ed360-attendance-filter-card">
     <div className="ed360-attendance-filter">
      <label>Attendance type<select value={population} onChange={e=>{setPopulation(e.target.value as 'students'|'staff');setSearch('')}} disabled={readOnly}><option value="students">Student attendance</option>{canManageStaff&&<option value="staff">Faculty and staff attendance</option>}</select></label>
-     {population==='students'&&!readOnly&&<label>Class / section<select value={className} onChange={e=>setClassName(e.target.value)}><option value="">Select class</option>{classes.map(c=><option key={c} value={c}>{c}</option>)}</select></label>}
+     {population==='students'&&canManageStudents&&<label>Class / section<select value={className} onChange={e=>setClassName(e.target.value)}><option value="">Select class</option>{classes.map(c=><option key={c} value={c}>{c}</option>)}</select></label>}
      <label>Date<input type="date" value={date} max={today()} onChange={e=>setDate(e.target.value)} /></label>
      {population==='students'&&<label>Attendance period<select value={period} onChange={e=>setPeriod(e.target.value)}>{['Daily','Period 1','Period 2','Period 3','Period 4','Period 5','Period 6','Morning','Afternoon'].map(p=><option key={p}>{p}</option>)}</select></label>}
      <label className="ed360-attendance-search"><Search size={15}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Find name or ID"/></label>
