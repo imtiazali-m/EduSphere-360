@@ -186,7 +186,6 @@ const governanceRoutes: Record<string,string> = {
   'system-configuration': 'settings',
   'approval-and-workflows': 'approvals',
   'administrative-audit': 'audit',
-  'security-and-access-history': 'audit',
   'institution-configuration': 'settings',
   'education-system-configuration': 'settings',
   'education-levels': 'academic',
@@ -196,11 +195,6 @@ const governanceRoutes: Record<string,string> = {
   'campus-settings': 'settings',
   'user-management': 'accounts',
   'invitations-and-access': 'accounts',
-  'role-management': 'accounts',
-  'user-permissions': 'accounts',
-  'module-permissions': 'accounts',
-  'approval-permissions': 'approvals',
-  'security-configuration': 'audit',
 }
 
 function dedicatedRoute(groupKey: string, itemKey: string): string | undefined {
@@ -258,6 +252,7 @@ function dedicatedRoute(groupKey: string, itemKey: string): string | undefined {
     return view ? `reports:${view}` : undefined
   }
   if (groupKey === 'administration') {
+    if (itemKey === 'designations') return 'employees:designations'
     const adminKey = itemKey === 'academic-structure-and-sections' ? 'classes'
       : itemKey === 'departments' ? 'departments'
       : itemKey === 'system-configuration' || itemKey === 'academic-configuration' ? 'academic_sessions'
