@@ -92,6 +92,9 @@ check('The full institutional menu maps every submenu to a working destination',
   assert.equal(getNavigationRoute('teaching', 'Homework'), 'assignments:open', 'Homework must open the open-coursework view')
   assert.equal(getNavigationRoute('attendance', 'Attendance Reports'), 'reports:attendance', 'Attendance report shortcut must open the correct report view')
   assert.equal(getNavigationRoute('students', 'Student Directory'), 'students:directory', 'Student Directory must open the student directory view')
+  assert.equal(getNavigationRoute('employees', 'Employee Directory'), 'employees:directory', 'Employee Directory must open the staff directory window')
+  assert.equal(getNavigationRoute('employees', 'Employee Reports'), 'employees:reports', 'Employee reports must open the staff report window')
+  assert.ok(!roleNavigationGroups('teacher').find(group => group.key === 'employees')?.items.includes('Employee Reports'), 'Staff reporting summary is owner/admin-only')
   for (const [page, route] of Object.entries(navigationRoutes)) {
     if (route.startsWith('institutional:')) {
       const groupKey = route.split(':')[1]
@@ -372,6 +375,12 @@ check('Faculty & Employee Management uses dedicated institution-scoped HR worksp
   assert.ok(!migration.includes('drop table') && !migration.includes('truncate '), 'Faculty management migration must remain additive and non-destructive')
 })
 
+check('Teacher reporting routes expose only the teacher-permitted report datasets', () => {
+  const reports = read('src/components/ReportsModule.tsx')
+  assert.ok(reports.includes("const wantsPeople = ['owner', 'admin', 'teacher'].includes(role)"))
+  assert.ok(reports.includes("const wantsResults = ['owner', 'admin', 'teacher', 'exam_officer'].includes(role)"))
+})
+ 
 check('GitHub-hosted release pipeline builds assets and keeps production deploy manual', () => {
   const workflow = read('.github/workflows/cloudflare-pages-release.yml')
   for (const phrase of ['workflow_dispatch', 'npm ci --no-audit --no-fund', 'npm run verify:project', 'npm run test:user-errors', 'npm run test:finance', 'npm run test:file-access', 'npm run build', 'edusphere360-cloudflare-direct-upload.zip', 'cloudflare/wrangler-action@v4']) {
