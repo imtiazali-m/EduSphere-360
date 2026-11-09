@@ -132,14 +132,42 @@ export async function createRecord(
   user: AppUser,
   table: string,
   payload: Record<string, unknown>,
-) {
+): Promise<RecordRow | null> {
   void mode
   checkTable(table)
   requireInstitution(user)
   const actorId = await verifyCloudActor(user)
+  const insertPayload = { ...payload, institution_id: user.institutionId, created_by: actorId }
+
+  if (table === 'students') {
+    if (!['owner', 'admin'].includes(user.role)) {
+      throw new Error('Only the institution owner or an administrator can register a new student.')
+    }
+
+    // Use the exact authorization helper enforced by the students INSERT policy.
+    // This diagnoses a stale/mismatched institution session before any write.
+    const { data: canManageStudents, error: permissionError } = await supabase!.rpc('has_institution_role', {
+      target_institution: user.institutionId,
+      allowed_roles: ['owner', 'admin'],
+    })
+    if (permissionError) {
+      throw new Error('EduSphere could not verify your owner/administrator access for this institution. No student record was submitted. Refresh your sign-in and try again.')
+    }
+    if (canManageStudents !== true) {
+      throw new Error('Your current sign-in is not recognised as an active owner or administrator for this institution. No student record was submitted. Sign out and sign in again with the correct institution account.')
+    }
+
+    // Do not request INSERT ... RETURNING for student admission. PostgREST
+    // applies the separate SELECT policy to returned rows; the client confirms
+    // visibility by reloading the institution directory after this minimal insert.
+    const { error } = await supabase!.from(table).insert(insertPayload)
+    if (error) throw error
+    return null
+  }
+
   const { data, error } = await supabase!
     .from(table)
-    .insert({ ...payload, institution_id: user.institutionId, created_by: actorId })
+    .insert(insertPayload)
     .select()
     .single()
   if (error) throw error
