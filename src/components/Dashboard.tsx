@@ -460,7 +460,6 @@ export function Dashboard({ onToast }: Props) {
   const [activeTabId, setActiveTabId] = useState('overview')
   const activeTab = workspaceTabs.find(tab => tab.id === activeTabId) ?? workspaceTabs[0]
   const active = activeTab?.targetKey ?? 'overview'
-  const activePage = activeTab?.title ?? 'Dashboard'
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [expandedGroups, setExpandedGroups] = useState<string[]>(['dashboard'])
   const [profileOpen, setProfileOpen] = useState(false)
