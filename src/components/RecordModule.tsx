@@ -22,7 +22,7 @@ type StudentStatus = 'all' | 'active' | 'pending' | 'graduated' | 'inactive'
 type EmployeeStatus = 'all' | 'active' | 'on_leave' | 'inactive'
 type FeeStatus = 'all' | 'unpaid' | 'partial' | 'overdue' | 'paid'
 type StudentWorkspaceTab = 'overview' | 'admissions' | 'directory' | 'profile' | 'classes' | 'guardians' | 'attendance' | 'results' | 'assignments' | 'timetable' | 'documents' | 'history'
-const studentRelatedTables = ['attendance', 'exams', 'exam_results', 'assignments', 'assignment_submissions', 'timetable_entries', 'classes', 'guardian_students', 'parent_guardians', 'student_placements', 'student_documents', 'student_history'] as const
+const studentRelatedTables = ['attendance', 'exams', 'exam_results', 'assignments', 'assignment_submissions', 'timetable_entries', 'classes', 'academic_sessions', 'guardian_students', 'parent_guardians', 'student_placements', 'student_documents', 'student_history'] as const
 
 function makeEmployeeNumber() {
   const suffix = crypto.randomUUID().replace(/-/g, '').slice(0, 8).toUpperCase()
@@ -790,9 +790,9 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
       { key: 'profile' as const, label: 'Student Profile', icon: UserRound },
       { key: 'classes' as const, label: 'Class Placement', icon: BookOpen },
       { key: 'guardians' as const, label: 'Guardians', icon: HeartHandshake },
-      { key: 'attendance' as const, label: 'Attendance', icon: CalendarCheck },
-      { key: 'results' as const, label: 'Exam Results', icon: ClipboardCheck },
-      { key: 'assignments' as const, label: 'Assignments', icon: FileText },
+      { key: 'attendance' as const, label: 'Student Attendance', icon: CalendarCheck },
+      { key: 'results' as const, label: 'Student Exam Results', icon: ClipboardCheck },
+      { key: 'assignments' as const, label: 'Student Assignments', icon: FileText },
       { key: 'timetable' as const, label: 'Student Timetable', icon: CalendarDays },
       { key: 'documents' as const, label: 'Student Documentation', icon: FolderOpen },
       { key: 'history' as const, label: 'Student History', icon: History },
@@ -803,32 +803,30 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
       if (user!.role === 'teacher') return ['overview', 'directory', 'profile', 'classes', 'attendance', 'results', 'assignments', 'timetable', 'history'].includes(item.key)
       return ['overview', 'profile', 'classes', 'guardians', 'attendance', 'results', 'assignments', 'timetable', 'documents', 'history'].includes(item.key)
     })
-    const pendingRows = rows.filter(row => String(row.status ?? 'active').toLowerCase() === 'pending')
+    const pendingRows = rows.filter(row => ['draft','submitted','under_review','documents_required','approved'].includes(String(row.application_status ?? 'submitted').toLowerCase()))
     const presentCount = studentAttendanceRows.filter(row => ['present', 'late'].includes(String(row.status ?? '').toLowerCase())).length
     const absentCount = studentAttendanceRows.filter(row => String(row.status ?? '').toLowerCase() === 'absent').length
     const attendanceRate = studentAttendanceRows.length ? Math.round(presentCount / studentAttendanceRows.length * 100) : 0
     const publishedResults = studentResultRows.filter(row => String(row.result_status ?? '').toLowerCase() === 'published')
-    const studentTimeline = [
-      ...(selectedStudent ? [{
-        id: 'student-' + selectedStudent.id,
-        date: selectedStudent.created_at ?? '',
-        label: 'Student registration',
-        detail: String(selectedStudent.full_name ?? 'Student') + ' was registered',
-        status: String(selectedStudent.status ?? 'active'),
-      }] : []),
-      ...studentAttendanceRows.map(row => ({ id: 'attendance-' + row.id, date: String(row.attendance_date ?? row.created_at ?? ''), label: 'Attendance', detail: String(row.status ?? 'Attendance') + ' · ' + String(row.class_name ?? studentClass), status: String(row.status ?? '') })),
-      ...studentResultRows.map(row => ({ id: 'result-' + row.id, date: String(row.created_at ?? ''), label: 'Examination result', detail: String(row.exam_title ?? 'Examination') + ' · ' + String(row.grade ?? row.marks_obtained ?? 'Marks recorded'), status: String(row.result_status ?? 'draft') })),
-      ...studentSubmissionRows.map(row => ({ id: 'submission-' + row.id, date: String(row.submitted_at ?? row.created_at ?? ''), label: 'Assignment submission', detail: String(row.assignment_title ?? 'Assignment') + ' · ' + String(row.status ?? 'submitted'), status: String(row.status ?? '') })),
-    ].filter(item => item.date).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 30)
+    const studentTimeline = studentHistoryRows
+      .map(row => ({
+        id: row.id,
+        date: String(row.created_at ?? ''),
+        label: String(row.event_type ?? 'student_event').replaceAll('_', ' '),
+        detail: String(row.summary ?? 'Student record event'),
+        status: String(row.event_type ?? 'recorded'),
+      }))
+      .filter(item => item.date)
+      .slice(0, 100)
     const renderTable = (dataRows: RecordRow[], columns: { key: string; label: string }[], emptyMessage: string) => dataRows.length === 0
       ? <div className="ed360-student-empty"><span><FolderOpen size={21}/></span><strong>No records to display</strong><p>{emptyMessage}</p></div>
       : <div className="ed360-student-table-wrap"><table className="ed360-student-table"><thead><tr>{columns.map(column => <th key={column.key}>{column.label}</th>)}</tr></thead><tbody>{dataRows.map(row => <tr key={row.id}>{columns.map(column => {
         const raw = row[column.key]
         const value = raw === null || raw === undefined || raw === '' ? '—'
-          : ['attendance_date', 'due_date', 'exam_date', 'submitted_at', 'created_at', 'invoice_date'].includes(column.key) ? niceDate(raw)
+          : ['attendance_date', 'due_date', 'exam_date', 'submitted_at', 'created_at', 'invoice_date', 'effective_from', 'effective_to', 'issue_date', 'expiry_date', 'application_submitted_at', 'application_reviewed_at'].includes(column.key) ? niceDate(raw)
           : ['amount', 'paid_amount', 'marks_obtained', 'total_marks', 'balance'].includes(column.key) ? Number(raw).toLocaleString(undefined, { maximumFractionDigits: 2 })
           : String(raw).replaceAll('_', ' ')
-        return <td key={column.key}>{['status', 'result_status'].includes(column.key) ? <span className={'status-pill status-' + String(raw ?? '').toLowerCase()}>{value}</span> : value}</td>
+        return <td key={column.key}>{['status', 'result_status', 'application_status', 'verification_status'].includes(column.key) ? <span className={'status-pill status-' + String(raw ?? '').toLowerCase()}>{value}</span> : value}</td>
       })}</tr>)}</tbody></table></div>
 
 
