@@ -32,6 +32,7 @@ import { WorkspaceUnavailable } from './WorkspaceUnavailable'
 import { FinanceWorkspace } from './FinanceWorkspace'
 import { PayrollWorkspace } from './PayrollWorkspace'
 import { GovernanceWorkspace } from './GovernanceWorkspace'
+import { InstitutionOperationsWorkspace } from './InstitutionOperationsWorkspace'
 import { supabase } from '../lib/supabase'
 
 interface Props { onToast: (message: string, error?: boolean) => void }
@@ -527,6 +528,7 @@ export function Dashboard({ onToast }: Props) {
     const financeWindowRoute = key.startsWith('finance:')
     const payrollWindowRoute = key.startsWith('payroll:')
     const governanceWindowRoute = key.startsWith('governance:')
+    const operationsWindowRoute = key.startsWith('operations:')
     const routeParts = key.split(':')
     const moduleWindowRoute = routeParts.length === 2 && ['fees', 'exams', 'exam_results', 'assignments', 'assignment_submissions', 'timetable', 'announcements', 'work_tasks'].includes(routeParts[0])
     const targetKey = studentWindowRoute ? 'students'
@@ -538,6 +540,7 @@ export function Dashboard({ onToast }: Props) {
       : financeWindowRoute ? 'finance'
       : payrollWindowRoute ? 'payroll'
       : governanceWindowRoute ? 'governance'
+      : operationsWindowRoute ? 'operations'
       : moduleWindowRoute ? routeParts[0]
       : key
     const targetWindow = studentWindowRoute ? key.slice('students:'.length)
@@ -549,6 +552,7 @@ export function Dashboard({ onToast }: Props) {
       : financeWindowRoute ? key.slice('finance:'.length)
       : payrollWindowRoute ? key.slice('payroll:'.length)
       : governanceWindowRoute ? key.slice('governance:'.length)
+      : operationsWindowRoute ? key.slice('operations:'.length)
       : moduleWindowRoute ? routeParts[1]
       : 'overview'
     let title = options.title ?? 'Dashboard'
@@ -563,6 +567,7 @@ export function Dashboard({ onToast }: Props) {
       else if (targetKey === 'finance') title = 'Finance & Payments'
       else if (targetKey === 'payroll') title = 'Salary and Payroll'
       else if (targetKey === 'governance') title = 'Institution Governance'
+      else if (targetKey === 'operations') title = 'Institution Operations'
       else if (targetKey.startsWith('admin:')) {
         const subkey = targetKey.slice(6)
         title = adminModuleLabels[subkey] ?? 'Administration'
@@ -724,6 +729,7 @@ export function Dashboard({ onToast }: Props) {
                 tab.targetKey === 'finance' ? <FinanceWorkspace workspaceKey={tab.targetWindow} initialWindow={tab.targetWindow.split(':')[1]} onToast={onToast}/> :
                 tab.targetKey === 'payroll' ? <PayrollWorkspace initialWindow={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'governance' ? <GovernanceWorkspace initialWindow={tab.targetWindow} onToast={onToast} onNavigate={navigateChild}/> :
+                tab.targetKey === 'operations' ? <InstitutionOperationsWorkspace workspaceKey={tab.targetWindow} initialWindow={tab.targetWindow.split(':')[1]} onToast={onToast}/> :
                 tab.targetKey === 'profile' ? <ProfileModule/> :
                 tab.targetKey === 'teachers' ? <FacultyWorkspace onToast={onToast} onNavigate={navigateChild} initialWindow={tab.targetWindow}/> :
                 tabModule ? <RecordModule module={tabModule as ModuleConfig} onToast={onToast} initialWindow={tab.targetWindow} showWindowNavigation={tab.targetKey !== 'students'}/> :
