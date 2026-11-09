@@ -42,7 +42,6 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
   const q=search.trim().toLowerCase()
   return !q||p.full_name.toLowerCase().includes(q)||String(p.admission_no??p.employee_no??'').toLowerCase().includes(q)
  }),[people,search])
- const stats=useMemo(()=>Object.values(marks).reduce((acc,status)=>{acc[status]+=1;return acc},{present:0,absent:0,late:0}),[marks])
  const readOnly=population==='students'?!canManageStudents:!canManageStaff
 
  const loadRoster=useCallback(async()=>{
