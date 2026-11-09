@@ -65,3 +65,5 @@
   .ed360-contextual-subwindow{grid-template-columns:1fr;margin:12px 14px 4px}
   .ed360-operations-heading-actions{align-items:stretch;flex-direction:column}
 }
+
+.file-name-open{display:block;padding:0;border:0;background:transparent;color:#2e5e95;font:inherit;font-size:12px;font-weight:750;text-align:left;cursor:pointer}.file-name-open:hover{text-decoration:underline;color:#1d63c5}
