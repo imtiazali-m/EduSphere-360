@@ -43,8 +43,8 @@ export function ReportsModule({ onToast, initialWindow }: { onToast: (message: s
   const role = user!.role
   const [reportTab,setReportTab] = useState<'overview'|'finance'|'attendance'|'academics'|'students'>(() => (['overview','finance','attendance','academics','students'].includes(initialWindow ?? '') ? initialWindow as 'overview'|'finance'|'attendance'|'academics'|'students' : 'overview'))
   const wantsFees = ['owner', 'admin', 'accountant'].includes(role)
-  const wantsPeople = ['owner', 'admin'].includes(role)
-  const wantsResults = ['owner', 'admin', 'exam_officer'].includes(role)
+  const wantsPeople = ['owner', 'admin', 'teacher'].includes(role)
+  const wantsResults = ['owner', 'admin', 'teacher', 'exam_officer'].includes(role)
   const [loading, setLoading] = useState(true)
   const [fees, setFees] = useState<Loaded>(empty)
   const [students, setStudents] = useState<Loaded>(empty)
