@@ -1349,8 +1349,16 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
           </tr>)}</tbody></table></div> : <div className="ed360-student-empty"><span><FileCheck2 size={21}/></span><strong>No student documents registered</strong><p>Upload verified admission and identity documents here. Files are stored in a private bucket and are not placed in the general institution file area.</p></div>}
         </> : <div className="ed360-student-empty"><strong>No student selected</strong><p>Select a student to manage their document register.</p></div>}
       </section>}
-      {studentWorkspaceTab === 'history' && <section className="ed360-student-panel ed360-student-full-panel"><header><div><span className="ed360-student-panel-icon violet"><History size={17}/></span><div><h2>Student activity history</h2><p>Registration, attendance, examination and assignment activity visible to your role.</p></div></div><span className="ed360-student-record-count">{studentTimeline.length} events</span></header>
-        {studentTimeline.length ? <div className="ed360-student-timeline">{studentTimeline.map(item=><div className="ed360-student-timeline-item" key={item.id}><i/><div><strong>{item.label}</strong><p>{item.detail}</p></div><time>{niceDate(item.date)}</time><span className={'status-pill status-' + item.status.toLowerCase()}>{item.status.replaceAll('_',' ')}</span></div>)}</div> : <div className="ed360-student-empty"><strong>No student activity history yet</strong><p>Linked activity will appear as attendance, results, submissions and fee records are created.</p></div>}
+      {studentWorkspaceTab === 'history' && <section className="ed360-student-panel ed360-student-full-panel">
+        <header><div><span className="ed360-student-panel-icon violet"><History size={17}/></span><div><h2>Student audit history</h2><p>Database-recorded registration, admission decisions, profile changes, guardian links, placements and document events.</p></div></div><span className="ed360-student-record-count">{studentHistoryRows.length} recorded events</span></header>
+        {studentHistoryRows.length ? <div className="ed360-student-timeline">{studentHistoryRows.map(event => <div className="ed360-student-timeline-item" key={event.id}>
+          <i/>
+          <div><strong>{String(event.summary ?? 'Student record event')}</strong><p>{String(event.event_type ?? 'event').replaceAll('_',' ')}</p>
+            {(event.old_values || event.new_values) && <details className="ed360-student-history-details"><summary>View recorded changes</summary><div className="ed360-student-history-values">{event.old_values && <div><b>Before</b><pre>{JSON.stringify(event.old_values,null,2)}</pre></div>}{event.new_values && <div><b>After</b><pre>{JSON.stringify(event.new_values,null,2)}</pre></div>}</div></details>}
+          </div>
+          <time>{niceDate(event.created_at)}</time>
+          <span className="status-pill">{String(event.event_type ?? 'event').replaceAll('_',' ')}</span>
+        </div>)}</div> : <div className="ed360-student-empty"><strong>No student audit events available</strong><p>New registration, admission decisions, profile edits, guardian changes, placements and document verification will be recorded automatically from this point onward. Earlier edits cannot be reconstructed unless they were previously audited.</p></div>}
       </section>}
 
       {formDialog}{detailDialog}
