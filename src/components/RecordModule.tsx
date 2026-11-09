@@ -10,7 +10,7 @@ import { useAuth } from '../context/AuthContext'
 import { createRecord, deleteRecord, listAccounts, listFeePayments, listRecords, recordFeePayment, updateRecord } from '../lib/data'
 import { supabase } from '../lib/supabase'
 import { userFacingError } from '../lib/userErrors'
-import { netInvoiceAmount, outstandingInvoiceBalance } from '../lib/finance'
+import { outstandingInvoiceBalance } from '../lib/finance'
 import type { AppMode, FieldConfig, ModuleConfig, RecordRow } from '../lib/types'
 import '../styles/student-module.css'
 import '../styles/faculty-module.css'
@@ -354,6 +354,18 @@ function FeePaymentHistoryDialog({ invoice, onClose }: { invoice: RecordRow; onC
 
 function RecordDetailsDialog({ module, row, onClose }: { module: ModuleConfig; row: RecordRow; onClose: () => void }) {
   const displayFields = module.fields.filter(field => field.name !== 'photo_path')
+  const workflowContext: Record<string, { title: string; summary: string; next: string }> = {
+    attendance: { title: 'Attendance review window', summary: `Marked ${String(row.status ?? 'unconfirmed')} for ${String(row.attendance_date ?? 'an undated register')} · ${String(row.class_name ?? 'class not specified')}`, next: 'Check the register note and confirm any absence or late-arrival follow-up with the responsible class team.' },
+    exams: { title: 'Assessment sitting window', summary: `${String(row.exam_type ?? 'Assessment')} · ${String(row.exam_date ?? 'date not scheduled')} · ${String(row.room ?? 'room not assigned')}`, next: 'Confirm the schedule, venue and invigilation details before the examination takes place.' },
+    exam_results: { title: 'Marks moderation & release window', summary: `${String(row.marks_obtained ?? 'No marks')} / ${String(row.total_marks ?? 'total not set')} · ${String(row.result_status ?? 'draft')} publication status`, next: 'Verify the student, examination and marks before publishing. Draft results are not student-visible.' },
+    fees: { title: 'Invoice settlement window', summary: `Billed PKR ${Number(row.amount ?? 0).toLocaleString()} · received PKR ${Number(row.paid_amount ?? 0).toLocaleString()} · balance PKR ${outstandingInvoiceBalance(row).toLocaleString()}`, next: 'Use the Collect action to record an authorised payment, then review the receipt history for this invoice.' },
+    assignments: { title: 'Coursework delivery window', summary: `${String(row.class_name ?? 'Class not specified')} · due ${String(row.due_date ?? 'date not set')} · ${String(row.status ?? 'status not set')}`, next: 'Check the instructions and deadline, then monitor the linked submission inbox for learner work.' },
+    assignment_submissions: { title: 'Submission assessment window', summary: `${String(row.status ?? 'unreviewed')} · submitted ${String(row.submitted_at ?? 'date not recorded')} · marks ${String(row.marks_obtained ?? 'not graded')}`, next: 'Review the submitted work, record marks and feedback, or return it for revision when appropriate.' },
+    timetable: { title: 'Teaching session window', summary: `${String(row.weekday ?? 'Day not set')} · ${String(row.start_time ?? 'start not set')}–${String(row.end_time ?? 'end not set')} · ${String(row.room ?? 'room not allocated')}`, next: 'Check teacher, class and room allocations together before confirming or changing this timetable entry.' },
+    announcements: { title: 'Communication distribution window', summary: `Audience: ${String(row.audience ?? 'not specified')} · published record: ${String(row.created_at ?? 'date not recorded')}`, next: 'Confirm the intended audience and message content before creating or sharing a notice.' },
+    work_tasks: { title: 'Task ownership & progress window', summary: `${String(row.status ?? 'pending')} · ${String(row.priority ?? 'normal')} priority · ${String(row.progress_percent ?? 0)}% complete`, next: 'Review the owner, deadline and progress update; resolve blockers or record the next progress milestone.' },
+  }
+  const context = workflowContext[module.key]
   return <div className="modal-backdrop" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) onClose() }}>
     <section className="modal-card ed360-record-details" role="dialog" aria-modal="true" aria-labelledby="record-details-title">
       <div className="modal-heading">
@@ -361,6 +373,7 @@ function RecordDetailsDialog({ module, row, onClose }: { module: ModuleConfig; r
         <button type="button" className="icon-button" onClick={onClose} aria-label="Close"><X size={19}/></button>
       </div>
       {module.key === 'students' && <div className="student-photo-row"><StudentPhoto row={row}/><div className="student-photo-copy"><strong>{String(row.full_name ?? 'Student')}</strong><p>{String(row.admission_no ?? 'Admission number not set')}</p></div></div>}
+      {context && <section className="ed360-contextual-subwindow"><div><span>CONTEXTUAL SUB-WINDOW</span><h3>{context.title}</h3><p>{context.summary}</p></div><aside><b>Operational next step</b><p>{context.next}</p></aside></section>}
       <div className="ed360-record-details-grid">
         {displayFields.map(field => {
           const raw = row[field.name]
