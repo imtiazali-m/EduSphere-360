@@ -405,6 +405,7 @@ export function Dashboard({ onToast }: Props) {
   const { user, mode, signOut } = useAuth()
   const [active, setActive] = useState('overview')
   const [activePage, setActivePage] = useState('Dashboard')
+  const [activeWorkspaceWindow, setActiveWorkspaceWindow] = useState('overview')
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [expandedGroups, setExpandedGroups] = useState<string[]>(['students', 'people', 'institution', 'academics', 'finance', 'communication', 'operations'])
   const [profileOpen, setProfileOpen] = useState(false)
@@ -424,15 +425,19 @@ export function Dashboard({ onToast }: Props) {
   }, [searchText, visibleGroups])
 
   function navigate(key: string) {
-    if (key === 'overview') {
-      setActive('overview'); setActivePage('Dashboard')
-    } else if (key.startsWith('admin:')) {
-      const subkey = key.slice(6)
-      setActive(key); setActivePage(adminModuleLabels[subkey] ?? 'Administration')
-    } else if (key === 'accounts' || key === 'files' || key === 'reports' || key === 'profile' || available.some(module => module.key === key)) {
-      const module = available.find(item => item.key === key)
-      setActive(key)
-      setActivePage(key === 'accounts' ? 'User Account' : key === 'files' ? 'Files & Documentation' : key === 'reports' ? 'Reports' : key === 'profile' ? 'My Profile' : module?.title ?? key)
+    const studentWindowRoute = key.startsWith('students:')
+    const targetKey = studentWindowRoute ? 'students' : key
+    const targetWindow = studentWindowRoute ? key.slice('students:'.length) : 'overview'
+    if (targetKey === 'overview') {
+      setActive('overview'); setActivePage('Dashboard'); setActiveWorkspaceWindow('overview')
+    } else if (targetKey.startsWith('admin:')) {
+      const subkey = targetKey.slice(6)
+      setActive(targetKey); setActivePage(adminModuleLabels[subkey] ?? 'Administration'); setActiveWorkspaceWindow('overview')
+    } else if (targetKey === 'accounts' || targetKey === 'files' || targetKey === 'reports' || targetKey === 'profile' || available.some(module => module.key === targetKey)) {
+      const module = available.find(item => item.key === targetKey)
+      setActive(targetKey)
+      setActiveWorkspaceWindow(targetWindow)
+      setActivePage(targetKey === 'accounts' ? 'User Account' : targetKey === 'files' ? 'Files & Documentation' : targetKey === 'reports' ? 'Reports' : targetKey === 'profile' ? 'My Profile' : module?.title ?? targetKey)
     } else {
       onToast('This workspace is not enabled for your role.', true)
       return
@@ -511,7 +516,7 @@ export function Dashboard({ onToast }: Props) {
           <div className="pro-profile-wrap"><button className="pro-profile-trigger" onClick={() => setProfileOpen(open => !open)} aria-expanded={profileOpen}><span className="pro-profile-avatar">{user?.fullName.slice(0, 1).toUpperCase()}</span><span className="pro-profile-copy"><b>{user?.fullName}</b><small>{roleLabels[user!.role]}</small></span><ChevronDown size={14}/></button>{profileOpen && <div className="pro-profile-menu"><div className="pro-profile-details"><b>{user?.fullName}</b><small>{user?.email}</small><small>{user?.institutionName}</small>{user?.institutionType && <small>Institution type: {user.institutionType.replaceAll('_', ' ')}</small>}<small>Account role: {roleLabels[user!.role]}</small><span className={'pro-profile-mode ' + mode}>Cloud workspace</span></div>{['student', 'parent'].includes(user!.role) && <button type="button" onClick={() => navigate('profile')}><UserRound size={15}/> My Profile</button>}<button type="button" onClick={() => void logout()}><LogOut size={15}/> Sign out</button></div>}</div>
         </div>
       </header>
-      <div className="pro-module-stage">{active === 'overview' ? <Overview onNavigate={navigate}/> : adminKey ? <AdministrationModule key={adminKey} initialKey={adminKey as 'departments' | 'programs' | 'classes' | 'academic_sessions' | 'subjects' | 'rooms'}/> : active === 'accounts' ? <AccountsModule onToast={onToast}/> : active === 'files' ? <FilesModule onToast={onToast}/> : active === 'reports' ? <ReportsModule onToast={onToast}/> : active === 'profile' ? <ProfileModule/> : activeModule ? <RecordModule module={activeModule as ModuleConfig} onToast={onToast}/> : <Overview onNavigate={navigate}/>}</div>
+      <div className="pro-module-stage">{active === 'overview' ? <Overview onNavigate={navigate}/> : adminKey ? <AdministrationModule key={adminKey} initialKey={adminKey as 'departments' | 'programs' | 'classes' | 'academic_sessions' | 'subjects' | 'rooms'}/> : active === 'accounts' ? <AccountsModule onToast={onToast}/> : active === 'files' ? <FilesModule onToast={onToast}/> : active === 'reports' ? <ReportsModule onToast={onToast}/> : active === 'profile' ? <ProfileModule/> : activeModule ? <RecordModule key={active + ':' + activeWorkspaceWindow} module={activeModule as ModuleConfig} onToast={onToast} initialWindow={active === 'students' ? activeWorkspaceWindow : undefined} showWindowNavigation={active !== 'students'}/> : <Overview onNavigate={navigate}/>}</div>
     </main>
   </div>
 }
