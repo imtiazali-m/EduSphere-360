@@ -3,7 +3,7 @@ import { Activity, ArrowUpRight, CheckCircle2, Download, FileSpreadsheet, FileTe
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { getWorkspaceGroup, getWorkspaceItem, institutionalMenu } from '../lib/institutionalCatalog'
-import { exportExcelXml, exportWordXml, printOfficeReport, type OfficeColumn } from '../lib/officeExport'
+import { exportDocx, exportXlsx, printOfficeReport, type OfficeColumn } from '../lib/officeExport'
 import { downloadCsv } from '../lib/csv'
 import type { RecordRow } from '../lib/types'
 
@@ -162,8 +162,8 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
  const baseName=(group.label+'-'+item.label).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'')
  const columns=dashboard?exportColumns:exportColumns
  function exportCsv(){downloadCsv(baseName+'.csv',filtered as unknown as Record<string,unknown>[],columns)}
- function exportExcel(){exportExcelXml(baseName+'.xls',group.label+' — '+item.label,filtered as unknown as Record<string,unknown>[],columns)}
- function exportWord(){exportWordXml(baseName+'.doc',group.label+' — '+item.label,filtered as unknown as Record<string,unknown>[],columns)}
+ function exportExcel(){exportXlsx(baseName+'.xlsx',group.label+' — '+item.label,filtered as unknown as Record<string,unknown>[],columns)}
+ function exportWord(){exportDocx(baseName+'.docx',group.label+' — '+item.label,filtered as unknown as Record<string,unknown>[],columns)}
  function print(){try{printOfficeReport(group.label+' — '+item.label,filtered as unknown as Record<string,unknown>[],columns,user?.institutionName??'EduSphere 360')}catch(error){onToast(error instanceof Error?error.message:'Print view could not be opened.',true)}}
 
  return <main className="page-content ed360-module-page ed360-institutional-workspace" style={{'--workspace-accent':theme.accent,'--workspace-soft':theme.soft,'--workspace-ink':theme.ink} as CSSProperties}>
@@ -186,8 +186,8 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
    <label className="ed360-workspace-search"><Search size={16}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search this workspace..." aria-label="Search records"/></label>
    <div className="ed360-export-actions">
     <button type="button" onClick={exportCsv}><Download size={14}/> CSV</button>
-    <button type="button" onClick={exportExcel}><FileSpreadsheet size={14}/> Excel</button>
-    <button type="button" onClick={exportWord}><FileText size={14}/> Word</button>
+    <button type="button" onClick={exportExcel}><FileSpreadsheet size={14}/> XLSX</button>
+    <button type="button" onClick={exportWord}><FileText size={14}/> DOCX</button>
     <button type="button" onClick={print}><Printer size={14}/> Print / PDF</button>
    </div>
   </div>
