@@ -143,7 +143,7 @@ create policy finance_journal_lines_insert_draft on public.finance_journal_lines
     public.has_institution_role(institution_id,array['owner','admin','accountant']::text[])
     and exists (
       select 1 from public.finance_journals j
-      where j.id = journal_id and j.institution_id = institution_id and j.status = 'draft'
+      where j.id = finance_journal_lines.journal_id and j.institution_id = finance_journal_lines.institution_id and j.status = 'draft'
     )
   );
 create policy finance_journal_lines_update_draft on public.finance_journal_lines
@@ -178,7 +178,7 @@ create policy employee_salary_profiles_finance_read on public.employee_salary_pr
     public.has_institution_role(institution_id,array['owner','admin','accountant']::text[])
     or exists (
       select 1 from public.teachers t
-      where t.id = teacher_id and t.institution_id = institution_id and t.user_id = (select auth.uid())
+      where t.id = employee_salary_profiles.teacher_id and t.institution_id = employee_salary_profiles.institution_id and t.user_id = (select auth.uid())
     )
   );
 create policy employee_salary_profiles_finance_insert on public.employee_salary_profiles
@@ -205,6 +205,10 @@ revoke all on public.finance_accounts,public.finance_journals,public.finance_jou
 -- Status transitions are performed through the validated posting/approval functions.
 revoke update on public.finance_journals from authenticated;
 grant update (journal_date,description,reference) on public.finance_journals to authenticated;
+revoke update on public.payroll_runs from authenticated;
+grant update (notes,pay_date) on public.payroll_runs to authenticated;
+revoke update on public.payroll_items from authenticated;
+grant update (payment_status,payslip_reference,notes) on public.payroll_items to authenticated;
 
 create or replace function public.post_finance_journal(p_institution_id uuid,p_journal_id uuid)
 returns public.finance_journals
@@ -336,5 +340,38 @@ end;
 $function$;
 revoke all on function public.approve_payroll_run(uuid,uuid) from public,anon;
 grant execute on function public.approve_payroll_run(uuid,uuid) to authenticated;
+
+
+create or replace function public.mark_payroll_run_paid(p_institution_id uuid,p_payroll_run_id uuid)
+returns public.payroll_runs
+language plpgsql
+security definer
+set search_path = ''
+as $function$
+declare
+  v_run public.payroll_runs;
+  v_unpaid integer;
+begin
+  if auth.uid() is null then raise exception 'Authentication is required.'; end if;
+  if not public.has_institution_role(p_institution_id,array['owner','admin','accountant']::text[]) then
+    raise exception 'You do not have permission to close payroll for this institution.';
+  end if;
+  select * into v_run from public.payroll_runs
+   where id=p_payroll_run_id and institution_id=p_institution_id for update;
+  if not found then raise exception 'Payroll run not found.'; end if;
+  if v_run.status <> 'approved' then raise exception 'Only approved payroll runs can be marked paid.'; end if;
+  select count(*) into v_unpaid
+    from public.payroll_items
+   where institution_id=p_institution_id and payroll_run_id=p_payroll_run_id
+     and payment_status <> 'paid';
+  if v_unpaid>0 then raise exception 'All employee payments must be marked paid before closing the payroll run.'; end if;
+  update public.payroll_runs set status='paid',updated_at=now()
+   where id=p_payroll_run_id and institution_id=p_institution_id
+   returning * into v_run;
+  return v_run;
+end;
+$function$;
+revoke all on function public.mark_payroll_run_paid(uuid,uuid) from public,anon;
+grant execute on function public.mark_payroll_run_paid(uuid,uuid) to authenticated;
 
 commit;
