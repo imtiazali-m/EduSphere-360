@@ -22,7 +22,7 @@ type StudentStatus = 'all' | 'active' | 'pending' | 'graduated' | 'inactive'
 type EmployeeStatus = 'all' | 'active' | 'on_leave' | 'inactive'
 type FeeStatus = 'all' | 'unpaid' | 'partial' | 'overdue' | 'paid'
 type StudentWorkspaceTab = 'overview' | 'admissions' | 'directory' | 'profile' | 'classes' | 'guardians' | 'attendance' | 'results' | 'assignments' | 'timetable' | 'documents' | 'history'
-const studentRelatedTables = ['attendance', 'exams', 'exam_results', 'assignments', 'assignment_submissions', 'timetable_entries', 'classes', 'academic_sessions', 'guardian_students', 'parent_guardians', 'student_placements', 'student_documents', 'student_history'] as const
+const studentRelatedTables = ['attendance', 'exams', 'exam_results', 'assignments', 'assignment_submissions', 'timetable_entries', 'classes', 'academic_sessions', 'programs', 'guardian_students', 'parent_guardians', 'student_placements', 'student_documents', 'student_history'] as const
 
 function makeEmployeeNumber() {
   const suffix = crypto.randomUUID().replace(/-/g, '').slice(0, 8).toUpperCase()
