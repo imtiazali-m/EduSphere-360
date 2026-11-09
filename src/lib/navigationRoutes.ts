@@ -203,7 +203,7 @@ const institutionalOperationsItems: Record<string, Record<string,string>> = {
     'long-questions':'pool','subject-wise-questions':'pool','chapter-wise-questions':'pool',
     'difficulty-levels':'pool','question-categories':'pool','question-builder':'pool',
     'question-paper-designer':'papers','marks-distribution':'papers','random-question-selection':'papers',
-    'question-review':'pool','question-bank-import-and-export':'pool','question-paper-download':'papers',
+    'question-review':'pool','question-paper-download':'papers',
   },
   curriculum: {
     'curriculum-dashboard':'units','curriculum-map':'units','syllabus-management':'units',
@@ -224,8 +224,7 @@ const institutionalOperationsItems: Record<string, Record<string,string>> = {
     'visitor-passes':'log','entry-and-exit-records':'checked-in','visit-history':'history',
   },
   facilities: {
-    'facilities-dashboard':'assets','classroom-management':'assets','laboratories':'assets',
-    'library-rooms':'assets','facility-maintenance':'maintenance','facility-history':'maintenance',
+    'facilities-dashboard':'assets','facility-maintenance':'maintenance','facility-history':'history',
   },
 }
 
@@ -311,6 +310,7 @@ export function getNavigationRoute(groupKey: string, itemLabel: string): string 
 
   const financeDestination = financeRoute(groupKey,itemKey)
   if (financeDestination) return financeDestination
+  if(groupKey==='facilities'&&['classroom-management','laboratories','library-rooms','room-allocation','room-availability'].includes(itemKey)) return 'admin:rooms'
   const operationsDestination=institutionOperationsRoute(groupKey,itemKey)
   if (operationsDestination) return operationsDestination
   if (groupKey === 'payroll') return payrollRoute(itemKey)
