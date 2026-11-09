@@ -4,9 +4,10 @@ import {
   ChevronDown, ChevronRight, ClipboardCheck, ClipboardList, DoorOpen, FileText,
   GraduationCap, LayoutDashboard, LogOut, Menu, Megaphone, PieChart, Search,
   School, Settings, ShieldCheck, Users, Wallet, X, UserRound, BrainCircuit,
-  Calculator, Banknote, BookOpenCheck, HeartHandshake, MessageSquare,
+  Calculator, Banknote, TrendingUp, BookOpenCheck, HeartHandshake, MessageSquare,
   FileQuestion, ListChecks, BarChart3, Award, Library, Wrench, Database,
-} from 'lucide-react'import type { LucideIcon } from 'lucide-react'
+} from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { roleNavigationGroups } from '../lib/navigationAccess'
 import { navigationRoutes } from '../lib/navigationRoutes'
 import { useAuth } from '../context/AuthContext'
