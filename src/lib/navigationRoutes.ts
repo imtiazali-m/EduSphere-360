@@ -14,6 +14,7 @@ export const navigationRoutes: Record<string, string> = {
   'Student Documentation': 'students:documents',
   'Student History': 'students:history',
   'Faculty & Staff': 'teachers',
+  'My Staff Workspace': 'teachers',
   'User Account': 'accounts',
   Departments: 'admin:departments',
   Programs: 'admin:programs',
