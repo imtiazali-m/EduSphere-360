@@ -21,7 +21,7 @@ check('Vite development and production scripts exist', () => {
 const requiredFiles = [
   'index.html', 'src/main.tsx', 'src/App.tsx', 'src/components/Dashboard.tsx',
   'src/components/AuthScreens.tsx', 'src/components/AdministrationModule.tsx',
-  'src/components/RecordModule.tsx', 'src/context/AuthContext.tsx', 'src/lib/auth.ts',
+  'src/components/RecordModule.tsx', 'src/components/ReportsModule.tsx', 'src/components/ProfileModule.tsx', 'src/context/AuthContext.tsx', 'src/lib/auth.ts',
   'src/lib/data.ts', 'src/lib/navigationAccess.ts', 'src/lib/userErrors.ts', 'scripts/test-user-errors.mjs',
   'src/lib/finance.ts', 'scripts/test-finance.mjs', 'src/lib/fileAccess.ts', 'scripts/test-file-access.mjs',
   'src/lib/navigationCatalog.ts', 'src/lib/navigationRoutes.ts', 'public/_redirects',
@@ -88,10 +88,10 @@ check('All seven roles receive focused, permission-aware workspaces', () => {
     }
     for (const module of modulesForRole(role)) assert.ok(module.roles.includes(role), `${role} received an unauthorised module ${module.key}`)
   }
-  assert.ok(!roleNavigationGroups('teacher').some(group => group.key === 'administration'))
-  assert.ok(!roleNavigationGroups('student').some(group => group.key === 'administration'))
-  assert.ok(!roleNavigationGroups('accountant').some(group => group.key === 'employees'))
-  assert.ok(!roleNavigationGroups('exam_officer').some(group => group.key === 'employees'))
+  assert.ok(!roleNavigationGroups('teacher').some(group => group.key === 'institution' || group.key === 'people'))
+  assert.ok(!roleNavigationGroups('student').some(group => group.key === 'institution' || group.key === 'people'))
+  assert.ok(!roleNavigationGroups('accountant').some(group => group.key === 'people' || group.key === 'students'))
+  assert.ok(!roleNavigationGroups('exam_officer').some(group => group.key === 'people' || group.key === 'students'))
 })
 
 const dashboardSource = read('src/components/Dashboard.tsx')
