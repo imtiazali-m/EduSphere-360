@@ -38,7 +38,7 @@ const moduleIcons: Record<string, LucideIcon> = {
 const catalogIcons: Record<string, LucideIcon> = {
   LayoutDashboard, BrainCircuit, Building2, School, BookOpen, GraduationCap, Users, Calculator,
   Wallet, Banknote, CalendarCheck, CalendarDays, BookOpenCheck, HeartHandshake, MessageSquare,
-  FileQuestion, ClipboardCheck, ListChecks, BarChart3, Award, Library, Wrench, FileText, UserRound,
+  FileQuestion, ClipboardCheck, ClipboardList, ListChecks, BarChart3, Award, Library, Wrench, FileText, UserRound, Megaphone,
 }
 
 function pageIcon(title: string, fallback: LucideIcon): LucideIcon {
@@ -182,6 +182,7 @@ function Overview({ onNavigate }: { onNavigate: (key: string) => void }) {
   const [loading, setLoading] = useState(true)
   const [loadNote, setLoadNote] = useState('')
   const available = useMemo(() => modulesForRole(user!.role), [user?.role])
+  const menuGroups = useMemo(() => roleNavigationGroups(user!.role), [user?.role])
 
   useEffect(() => {
     let live = true
@@ -266,9 +267,25 @@ function Overview({ onNavigate }: { onNavigate: (key: string) => void }) {
         {['student', 'parent'].includes(user!.role) && <div className="pro-linked-learner"><span><UserRound size={19}/></span><div><small>LINKED LEARNER</small><b>{studentProfile ? firstText(studentProfile, ['full_name'], 'Student profile') : 'No student linked yet'}</b><em>{studentProfile ? firstText(studentProfile, ['class_name'], 'Class not set') : 'Ask the institution administrator to link your account.'}</em></div></div>}
       </aside>
 
-      <section className="pro-dashboard-panel pro-attendance-panel">
+      {available.some(module => module.key === 'attendance') && <section className="pro-dashboard-panel pro-attendance-panel">
         <div className="pro-panel-heading"><div><span className="pro-section-kicker">ATTENDANCE SNAPSHOT</span><h2>Presence overview</h2><p>Distribution across attendance records available to you.</p></div><span className="pro-panel-count">{attendance.length} records</span></div>
         <div className="pro-attendance-content"><div className="pro-attendance-ring" style={{ background: `conic-gradient(#b4d96e 0 ${presentPercent}%, #e8b16e ${presentPercent}% ${attendance.length ? Math.min(100, presentPercent + Math.round(lateCount / attendance.length * 100)) : 0}%, #e6e9e1 0)` }}><div><b>{attendance.length ? `${presentPercent}%` : '—'}</b><small>Present</small></div></div><div className="pro-attendance-legend"><div><i className="present"/><span>Present</span><b>{loading ? '—' : presentCount}</b></div><div><i className="late"/><span>Late</span><b>{loading ? '—' : lateCount}</b></div><div><i className="absent"/><span>Absent</span><b>{loading ? '—' : absentCount}</b></div><div className="pro-attendance-total"><span>Total records</span><b>{loading ? '—' : attendance.length}</b></div></div></div>
+      </section>}
+
+      <section className="pro-dashboard-panel pro-menu-overview">
+        <div className="pro-panel-heading"><div><span className="pro-section-kicker">YOUR ROLE-BASED WORKSPACE</span><h2>Menu overview</h2><p>Open any destination below. Each shortcut opens its matching workspace and respects your account permissions.</p></div><span className="pro-panel-count">{menuGroups.reduce((count, group) => count + (group.key === 'dashboard' ? 1 : group.items.length), 0)} destinations</span></div>
+        <div className="pro-menu-overview-grid">{menuGroups.map(group => {
+          const GroupIcon = catalogIcons[group.icon] ?? LayoutDashboard
+          const items = group.key === 'dashboard' ? ['Dashboard'] : group.items
+          return <article className="pro-menu-group-card" key={group.key}>
+            <div className="pro-menu-group-title"><span><GroupIcon size={16}/></span><b>{group.label}</b><small>{items.length}</small></div>
+            <div className="pro-menu-group-links">{items.map(item => {
+              const route = pageRoutes[item]
+              const ItemIcon = pageIcon(item, GroupIcon)
+              return <button type="button" key={item} onClick={() => route && onNavigate(route)} disabled={!route}><ItemIcon size={13}/><span>{item}</span><ArrowRight size={12}/></button>
+            })}</div>
+          </article>
+        })}</div>
       </section>
 
       <div className="pro-dashboard-note"><ShieldCheck size={17}/><span><b>Your workspace is permission-aware.</b> All figures and records shown here reflect information available to your signed-in role.</span></div>
@@ -278,49 +295,43 @@ function Overview({ onNavigate }: { onNavigate: (key: string) => void }) {
 
 const quickAccessByRole: Record<AppRole, Array<{ title: string; key: string; icon: LucideIcon }>> = {
   owner: [
-    { title: 'Student Records', key: 'students', icon: GraduationCap },
-    { title: 'Attendance Register', key: 'attendance', icon: CalendarCheck },
-    { title: 'Fee Invoices', key: 'fees', icon: Wallet },
-    { title: 'Files & Documents', key: 'files', icon: FileText },
+    { title: 'Attendance Registration', key: 'attendance', icon: CalendarCheck },
+    { title: 'Fees Invoice', key: 'fees', icon: Wallet },
+    { title: 'Files & Documentation', key: 'files', icon: FileText },
   ],
   admin: [
-    { title: 'Student Records', key: 'students', icon: GraduationCap },
-    { title: 'Attendance Register', key: 'attendance', icon: CalendarCheck },
-    { title: 'Fee Invoices', key: 'fees', icon: Wallet },
-    { title: 'Files & Documents', key: 'files', icon: FileText },
+    { title: 'Attendance Registration', key: 'attendance', icon: CalendarCheck },
+    { title: 'Fees Invoice', key: 'fees', icon: Wallet },
+    { title: 'Files & Documentation', key: 'files', icon: FileText },
   ],
   teacher: [
-    { title: 'Attendance Register', key: 'attendance', icon: CalendarCheck },
+    { title: 'Attendance Registration', key: 'attendance', icon: CalendarCheck },
     { title: 'Assignments', key: 'assignments', icon: BookOpen },
-    { title: 'Assignment Submissions', key: 'assignment_submissions', icon: ClipboardList },
-    { title: 'Announcements', key: 'announcements', icon: Megaphone },
+    { title: 'Assignment Submission', key: 'assignment_submissions', icon: ClipboardList },
   ],
   student: [
     { title: 'Assignments', key: 'assignments', icon: BookOpen },
     { title: 'Exam Results', key: 'exam_results', icon: ClipboardCheck },
     { title: 'Timetable', key: 'timetable', icon: CalendarDays },
-    { title: 'Announcements', key: 'announcements', icon: Megaphone },
   ],
   parent: [
-    { title: 'Attendance Register', key: 'attendance', icon: CalendarCheck },
+    { title: 'Attendance Registration', key: 'attendance', icon: CalendarCheck },
+    { title: 'Fees Invoice', key: 'fees', icon: Wallet },
     { title: 'Exam Results', key: 'exam_results', icon: ClipboardCheck },
-    { title: 'Fee Invoices', key: 'fees', icon: Wallet },
-    { title: 'Announcements', key: 'announcements', icon: Megaphone },
   ],
   accountant: [
-    { title: 'Fee Invoices', key: 'fees', icon: Wallet },
-    { title: 'Accounts', key: 'accounts', icon: Calculator },
+    { title: 'Fees Invoice', key: 'fees', icon: Wallet },
   ],
   exam_officer: [
-    { title: 'Examinations', key: 'exams', icon: ClipboardCheck },
+    { title: 'Examination', key: 'exams', icon: ClipboardCheck },
     { title: 'Exam Results', key: 'exam_results', icon: ClipboardList },
-    { title: 'Announcements', key: 'announcements', icon: Megaphone },
+    { title: 'Reports', key: 'reports', icon: BarChart3 },
   ],
 }
 
 const adminModuleLabels: Record<string, string> = {
-  departments: 'Departments', programs: 'Programs', classes: 'Classes & Sections',
-  academic_sessions: 'Academic Sessions', subjects: 'Subjects', rooms: 'Rooms & Facilities',
+  departments: 'Departments', programs: 'Programs', classes: 'Class Sections',
+  academic_sessions: 'Academic Session', subjects: 'Subjects', rooms: 'Rooms & Facilities',
 }
 
 export function Dashboard({ onToast }: Props) {
@@ -328,7 +339,7 @@ export function Dashboard({ onToast }: Props) {
   const [active, setActive] = useState('overview')
   const [activePage, setActivePage] = useState('Dashboard')
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [expandedGroups, setExpandedGroups] = useState<string[]>(['administration'])
+  const [expandedGroups, setExpandedGroups] = useState<string[]>(['institution'])
   const [profileOpen, setProfileOpen] = useState(false)
   const [searchText, setSearchText] = useState('')
   const [searchOpen, setSearchOpen] = useState(false)
@@ -354,7 +365,7 @@ export function Dashboard({ onToast }: Props) {
     } else if (key === 'accounts' || key === 'files' || key === 'reports' || key === 'profile' || available.some(module => module.key === key)) {
       const module = available.find(item => item.key === key)
       setActive(key)
-      setActivePage(key === 'accounts' ? 'User Accounts' : key === 'files' ? 'Files & Documents' : key === 'reports' ? 'Reports' : key === 'profile' ? 'My Profile' : module?.title ?? key)
+      setActivePage(key === 'accounts' ? 'User Account' : key === 'files' ? 'Files & Documentation' : key === 'reports' ? 'Reports' : key === 'profile' ? 'My Profile' : module?.title ?? key)
     } else {
       onToast('This workspace is not enabled for your role.', true)
       return
@@ -411,11 +422,11 @@ export function Dashboard({ onToast }: Props) {
             })}</div>}
           </section>
         })}
-        <section className="pro-quick-access" aria-label="Quick access">
-          <div className="pro-nav-section-label">QUICK ACCESS</div>
-          {quickAccessItems.map(item => <button key={item.key} className={`pro-nav-item ${active === item.key ? 'active' : ''}`} onClick={() => navigate(item.key)}><span className="pro-nav-icon"><item.icon size={15}/></span><span className="pro-nav-title">{item.title}</span></button>)}
-        </section>
       </nav>
+      <section className="pro-quick-access" aria-label="Quick access">
+        <div className="pro-nav-section-label">QUICK ACCESS · UNPINNED</div>
+        {quickAccessItems.map(item => <button key={item.key} className={`pro-nav-item ${active === item.key ? 'active' : ''}`} onClick={() => navigate(item.key)}><span className="pro-nav-icon"><item.icon size={15}/></span><span className="pro-nav-title">{item.title}</span></button>)}
+      </section>
     </aside>
     {sidebarOpen && <button className="pro-sidebar-scrim" aria-label="Close navigation" onClick={() => setSidebarOpen(false)}/>}
 
@@ -427,7 +438,7 @@ export function Dashboard({ onToast }: Props) {
             <label className="pro-global-search"><Search size={16}/><input aria-label="Search workspace" placeholder="Search workspace…" value={searchText} onFocus={() => setSearchOpen(true)} onChange={event => { setSearchText(event.target.value); setSearchOpen(true) }} onKeyDown={event => { if (event.key === 'Escape') { setSearchOpen(false); setSearchText('') } else if (event.key === 'Enter' && searchResults[0]) selectSearchResult(searchResults[0]) }}/>{searchText && <button type="button" aria-label="Clear search" onClick={() => { setSearchText(''); setSearchOpen(false) }}>×</button>}</label>
             {searchOpen && searchText.trim() && <div className="pro-search-results" role="listbox" aria-label="Workspace search results">{searchResults.length ? searchResults.map(result => <button type="button" key={`${result.group}-${result.title}`} role="option" onClick={() => selectSearchResult(result)}><span><b>{result.title}</b><small>{result.group}</small></span><ArrowRight size={15}/></button>) : <div className="pro-search-empty">No matching workspace found.</div>}</div>}
           </div>
-          <div className="pro-profile-wrap"><button className="pro-profile-trigger" onClick={() => setProfileOpen(open => !open)} aria-expanded={profileOpen}><span className="pro-profile-avatar">{user?.fullName.slice(0, 1).toUpperCase()}</span><span className="pro-profile-copy"><b>{user?.fullName}</b><small>{roleLabels[user!.role]}</small></span><ChevronDown size={14}/></button>{profileOpen && <div className="pro-profile-menu"><div className="pro-profile-details"><b>{user?.fullName}</b><small>{user?.email}</small><small>{user?.institutionName}</small>{user?.institutionType && <small>Institution type: {user.institutionType.replaceAll('_', ' ')}</small>}<small>Account role: {roleLabels[user!.role]}</small><span className={`pro-profile-mode ${mode}`}>Cloud workspace</span></div><button type="button" onClick={() => void logout()}><LogOut size={15}/> Sign out</button></div>}</div>
+          <div className="pro-profile-wrap"><button className="pro-profile-trigger" onClick={() => setProfileOpen(open => !open)} aria-expanded={profileOpen}><span className="pro-profile-avatar">{user?.fullName.slice(0, 1).toUpperCase()}</span><span className="pro-profile-copy"><b>{user?.fullName}</b><small>{roleLabels[user!.role]}</small></span><ChevronDown size={14}/></button>{profileOpen && <div className="pro-profile-menu"><div className="pro-profile-details"><b>{user?.fullName}</b><small>{user?.email}</small><small>{user?.institutionName}</small>{user?.institutionType && <small>Institution type: {user.institutionType.replaceAll('_', ' ')}</small>}<small>Account role: {roleLabels[user!.role]}</small><span className={`pro-profile-mode ${mode}`}>Cloud workspace</span></div>{['student', 'parent'].includes(user!.role) && <button type="button" onClick={() => navigate('profile')}><UserRound size={15}/> My Profile</button>}<button type="button" onClick={() => void logout()}><LogOut size={15}/> Sign out</button></div>}</div>
         </div>
       </header>
       <div className="pro-module-stage">{active === 'overview' ? <Overview onNavigate={navigate}/> : adminKey ? <AdministrationModule key={adminKey} initialKey={adminKey as 'departments' | 'programs' | 'classes' | 'academic_sessions' | 'subjects' | 'rooms'}/> : active === 'accounts' ? <AccountsModule onToast={onToast}/> : active === 'files' ? <FilesModule onToast={onToast}/> : active === 'reports' ? <ReportsModule onToast={onToast}/> : active === 'profile' ? <ProfileModule/> : activeModule ? <RecordModule module={activeModule as ModuleConfig} onToast={onToast}/> : <Overview onNavigate={navigate}/>}</div>
