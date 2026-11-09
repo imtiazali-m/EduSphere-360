@@ -453,8 +453,8 @@ export default function AdministrationModule({ initialKey = 'departments' }: { i
       {referencesError && <div className="admin-alert error" role="alert">{referencesError} Use Refresh records to retry linked options.</div>}
       {notice && <div className="admin-alert success" role="status">{notice}</div>}
 
-      <section className="admin-grid" hidden={workspaceTab!=='editor'}>
-        <form className="admin-card" onSubmit={saveRecord}>
+      <section className="admin-grid">
+        <form className="admin-card" hidden={workspaceTab!=='editor'} onSubmit={saveRecord}>
           <h2>{editingId ? `Edit ${activeModule.singular}` : `Add ${activeModule.singular}`}</h2>
           <p className="admin-muted">{activeModule.description}</p>
 
