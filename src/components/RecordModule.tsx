@@ -21,6 +21,8 @@ interface Props { module: ModuleConfig; onToast: (message: string, error?: boole
 type StudentStatus = 'all' | 'active' | 'pending' | 'graduated' | 'inactive'
 type EmployeeStatus = 'all' | 'active' | 'on_leave' | 'inactive'
 type FeeStatus = 'all' | 'unpaid' | 'partial' | 'overdue' | 'paid'
+type StudentWorkspaceTab = 'overview' | 'admissions' | 'directory' | 'profile' | 'classes' | 'guardians' | 'attendance' | 'results' | 'assignments' | 'fees' | 'timetable' | 'documents' | 'history'
+const studentRelatedTables = ['attendance', 'exams', 'exam_results', 'assignments', 'assignment_submissions', 'fee_invoices', 'timetable_entries'] as const
 
 function makeEmployeeNumber() {
   const suffix = crypto.randomUUID().replace(/-/g, '').slice(0, 8).toUpperCase()
@@ -402,6 +404,11 @@ export function RecordModule({ module, onToast }: Props) {
   const [currentPage, setCurrentPage] = useState(1)
   const pageSize = 10
   const [studentStatus, setStudentStatus] = useState<StudentStatus>('all')
+  const [studentWorkspaceTab, setStudentWorkspaceTab] = useState<StudentWorkspaceTab>('overview')
+  const [selectedStudentId, setSelectedStudentId] = useState('')
+  const [studentRelatedRows, setStudentRelatedRows] = useState<Record<string, RecordRow[]>>({})
+  const [studentRelatedLoading, setStudentRelatedLoading] = useState(false)
+  const [studentRelatedErrors, setStudentRelatedErrors] = useState<string[]>([])
   const [employeeStatus, setEmployeeStatus] = useState<EmployeeStatus>('all')
   const [feeStatus, setFeeStatus] = useState<FeeStatus>('all')
   const canEdit = ['owner', 'admin'].includes(user!.role)
@@ -430,6 +437,28 @@ export function RecordModule({ module, onToast }: Props) {
     } finally { setLoading(false) }
   }
   useEffect(() => { setCurrentPage(1); void load() }, [mode, user?.id, user?.institutionId, module.table])
+
+  useEffect(() => {
+    if (module.key !== 'students') return
+    let active = true
+    setStudentRelatedLoading(true)
+    setStudentRelatedErrors([])
+    void Promise.all(studentRelatedTables.map(async table => {
+      try {
+        const related = await listRecords(mode, user!, table)
+        return { table, rows: related, error: '' }
+      } catch (error) {
+        return { table, rows: [] as RecordRow[], error: userFacingError(error, 'A related student section could not be loaded.') }
+      }
+    })).then(results => {
+      if (!active) return
+      setStudentRelatedRows(Object.fromEntries(results.map(result => [result.table, result.rows])))
+      setStudentRelatedErrors(results.filter(result => result.error).map(result => result.error))
+    }).finally(() => {
+      if (active) setStudentRelatedLoading(false)
+    })
+    return () => { active = false }
+  }, [module.key, mode, user?.id, user?.institutionId, user?.role, user?.linkedStudentId])
 
   const filtered = useMemo(() => rows.filter(row =>
     module.columns.some(column => String(row[column.key] ?? '').toLowerCase().includes(search.toLowerCase()))
@@ -477,6 +506,18 @@ export function RecordModule({ module, onToast }: Props) {
       for (const field of module.fields) {
         if (payload[field.name] === '') payload[field.name] = field.type === 'number' ? (field.name === 'paid_amount' ? 0 : null) : null
         if (field.type === 'number' && payload[field.name] !== null && payload[field.name] !== undefined) payload[field.name] = Number(payload[field.name])
+      }
+
+      if (module.key === 'students' && !targetEditing) {
+        const admissionNo = String(payload.admission_no ?? '').trim().toLowerCase()
+        const fullName = String(payload.full_name ?? '').trim()
+        if (!admissionNo || !fullName || !String(payload.class_name ?? '').trim()) {
+          throw new Error('Enter the admission number, student name and class/programme before saving.')
+        }
+        const existingStudents = await listRecords(mode, user!, 'students')
+        if (existingStudents.some(student => String(student.admission_no ?? '').trim().toLowerCase() === admissionNo)) {
+          throw new Error('This admission number is already registered. Generate a new student ID before saving.')
+        }
       }
 
       if (module.key === 'students' && photoFile) {
