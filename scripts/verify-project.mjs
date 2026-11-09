@@ -104,8 +104,8 @@ check('Institutional workspace includes real record CRUD and office-compatible e
   const workspace = read('src/components/InstitutionalWorkspace.tsx')
   const exporters = read('src/lib/officeExport.ts')
   for (const value of ['institutional_records','created_by','updated_by','approval_status','CONTEXTUAL SUB-WINDOW']) assert.ok(workspace.includes(value))
-  for (const value of ['exportExcelXml','exportWordXml','printOfficeReport']) assert.ok(workspace.includes(value))
-  for (const value of ['application/vnd.ms-excel','application/msword','window.print']) assert.ok(exporters.includes(value))
+  for (const value of ['exportXlsx','exportDocx','printOfficeReport']) assert.ok(workspace.includes(value))
+  for (const value of ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','application/vnd.openxmlformats-officedocument.wordprocessingml.document','window.print']) assert.ok(exporters.includes(value))
 })
 
 const dashboardSource = read('src/components/Dashboard.tsx')
