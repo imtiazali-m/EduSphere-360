@@ -3,6 +3,8 @@ import { Activity, BookOpen, Building2, CalendarDays, DoorOpen, Layers3, Users }
 import { useAuth } from '../context/AuthContext'
 import { createRecord, deleteRecord as deleteDataRecord, listRecords, updateRecord } from '../lib/data'
 import { userFacingError } from '../lib/userErrors'
+import { WorkspaceWindowSummary, useWorkspaceHierarchy } from './WorkspaceHierarchy'
+import { getWorkspaceBlueprint, matchesWorkspaceFilter } from '../lib/workspaceBlueprints'
 
 type AdminModuleKey =
   | 'departments'
@@ -200,6 +202,7 @@ function AdminWorkspaceInsights({ activeKey, records, references, loading }: {
 export default function AdministrationModule({ initialKey = 'departments' }: { initialKey?: AdminModuleKey }) {
   const { user, mode } = useAuth()
   const activeKey: AdminModuleKey = initialKey
+  const hierarchy = useWorkspaceHierarchy()
   const [records, setRecords] = useState<AdminRecord[]>([])
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -376,11 +379,21 @@ export default function AdministrationModule({ initialKey = 'departments' }: { i
     }
   }
 
+  const adminWindow = getWorkspaceBlueprint('admin:'+activeKey).windows.find(item=>item.key===hierarchy.windowKey)
   const filteredRecords = records.filter((record) => {
     const query = search.trim().toLowerCase()
-    if (!query) return true
-    return [record.name, record.title, record.code, record.description]
+    const queryMatch = !query || [record.name, record.title, record.code, record.description]
       .some((value) => String(value ?? '').toLowerCase().includes(query))
+    const taskMatch = matchesWorkspaceFilter(hierarchy.subwindowKey,record,user?.email)
+    if (!queryMatch || !taskMatch) return false
+    if (activeKey==='departments' && hierarchy.windowKey==='programme-links') return (references.programs??[]).some(item=>item.department_id===record.id)
+    if (activeKey==='departments' && hierarchy.windowKey==='staffing') return (references.teachers??[]).some(item=>item.department_id===record.id || String(item.department??'')===String(record.name??''))
+    if (activeKey==='programs' && hierarchy.windowKey==='class-coverage') return (references.classes??[]).some(item=>item.program_id===record.id)
+    if (activeKey==='classes' && hierarchy.windowKey==='enrolment') return (references.students??[]).some(item=>String(item.class_name??'').toLowerCase()===String(record.name??'').toLowerCase())
+    if (activeKey==='academic_sessions' && hierarchy.windowKey==='class-links') return (references.classes??[]).some(item=>item.academic_session_id===record.id)
+    if (activeKey==='subjects' && hierarchy.windowKey==='department-map') return Boolean(record.department_id)
+    if (activeKey==='rooms' && hierarchy.windowKey==='utilisation') return (references.timetable_entries??[]).some(item=>String(item.room??'').toLowerCase()===String(record.name??'').toLowerCase())
+    return true
   })
   const pageCount = Math.max(1, Math.ceil(filteredRecords.length / pageSize))
   const pagedRecords = filteredRecords.slice((currentPage - 1) * pageSize, currentPage * pageSize)
@@ -435,6 +448,7 @@ export default function AdministrationModule({ initialKey = 'departments' }: { i
         </button>
       </header>
 
+      <WorkspaceWindowSummary title={adminWindow?.label ?? activeModule.label} description={adminWindow?.description ?? activeModule.description} count={filteredRecords.length}/>
       <AdminWorkspaceInsights activeKey={activeKey} records={records} references={references} loading={loading}/>
       {error && <div className="admin-alert error" role="alert">{error}</div>}
       {referencesError && <div className="admin-alert error" role="alert">{referencesError} Use Refresh records to retry linked options.</div>}
