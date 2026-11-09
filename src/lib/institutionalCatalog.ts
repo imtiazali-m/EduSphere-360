@@ -50,13 +50,13 @@ export const institutionalMenu:WorkspaceMenuGroup[]=[
  group('fees','Fees Management','Fee structures, invoices, discounts, scholarships, collection and receipts.','Wallet','amber','fees',finance.concat(['student','parent']),[
   'Fees Dashboard','Fee Structure','Fee Categories','Student Fee Assignment','Fee Invoices','Payment Collection','Online Payments','Partial Payments','Discounts','Scholarships','Outstanding Dues','Fee Refunds','Fee Receipts','Class-wise Collection Reports','Section-wise Collection Reports','Overall Collection Reports'
  ]),
- group('receivables','Accounts Receivable','Outstanding balances, ageing, follow-ups and collection forecasting from live invoice balances.','TrendingDown','orange','receivables',finance,[
+ group('receivables','Accounts Receivable','Outstanding balances, ageing, follow-ups and collection forecasting from live invoice balances.','TrendingUp','orange','receivables',finance,[
   'Receivables Dashboard','Total Outstanding','Student-wise Receivables','Invoice-wise Receivables','Overdue Accounts','Ageing Analysis','Partial Payment Balances','Collection Follow-ups','Outstanding History','Receivable Reconciliation','Collection Forecasts','Receivables Reports'
  ]),
- group('payments','Payments and Collections','Cash/bank/online payment processing, verification, allocation, refunds and reconciliation.','CreditCard','green','payments',finance,[
+ group('payments','Payments and Collections','Cash/bank/online payment processing, verification, allocation, refunds and reconciliation.','Wallet','green','payments',finance,[
   'Payments Dashboard','Payment Collection','Online Payment Records','Cash Payments','Bank Payments','Partial Payments','Payment Verification','Payment Reconciliation','Refund Processing','Payment History','Failed and Pending Payments','Collection Reports'
  ]),
- group('receipts','Receipts','Receipt numbering, templates, generation, reprinting, verification and bulk issue.','ReceiptText','indigo','receipts',finance,[
+ group('receipts','Receipts','Receipt numbering, templates, generation, reprinting, verification and bulk issue.','FileText','indigo','receipts',finance,[
   'Receipt Dashboard','Generate Receipt','Fee Receipts','Payment Receipts','Receipt Templates','Receipt Numbering','Receipt Reprinting','Receipt Verification','Bulk Receipt Generation','Receipt History'
  ]),
  group('payroll','Salary and Payroll','Compensation setup, monthly payroll, allowances, deductions, advances, payslips and salary payment.','Banknote','emerald','payroll',finance,[
@@ -65,10 +65,10 @@ export const institutionalMenu:WorkspaceMenuGroup[]=[
  group('attendance','Attendance Management','Bulk class and staff registers, exception follow-up, leave, corrections and device-assisted attendance.','CalendarCheck','rose','attendance',staff.concat(['student','parent']),[
   'Attendance Dashboard','Student Attendance','Daily Attendance','Period-wise Attendance','Class-wise Attendance','Bulk Student Attendance','Faculty and Staff Attendance','Bulk Staff Attendance','Attendance Corrections','Leave Applications','Late Arrival','Early Departure','Attendance Calendar','Attendance Reports','Attendance History','Attendance Analytics','Attendance Alerts'
  ]),
- group('timetable','Timetable','Master and role-based schedules, teacher availability, room allocation, substitution and class coverage.','CalendarClock','cyan','timetable',academic.concat(['student','parent']),[
+ group('timetable','Timetable','Master and role-based schedules, teacher availability, room allocation, substitution and class coverage.','CalendarDays','cyan','timetable',academic.concat(['student','parent']),[
   'Timetable Dashboard','Master Timetable','Class Timetable','Teacher Timetable','Room Timetable','Period Timetable','Teacher Availability','Substitution Management','Timetable Conflicts','Timetable Publishing','Timetable History','Class Coverage','Engaged Classes'
  ]),
- group('teaching','Teaching, Homework and Assignments','Lesson delivery, homework, coursework, submissions, grading, teacher review and student feedback.','NotebookPen','violet','teaching',family,[
+ group('teaching','Teaching, Homework and Assignments','Lesson delivery, homework, coursework, submissions, grading, teacher review and student feedback.','BookOpenCheck','violet','teaching',family,[
   'Teaching Dashboard','Homework','Create Assignment','Assignment Design and Management','Student Submissions','Teacher Review','Marks and Feedback','Teaching Materials','Lesson Plans','Homework Calendar','Pending Assignments','Pending Reviews','Assignment History','Assignment Reports','Downloadable Attachments'
  ]),
  group('behaviour','Behaviour and Skills','Positive recognition, safeguarding-aware behaviour logs, incidents, skills and competency tracking.','HeartHandshake','pink','behaviour',staff.concat(['student','parent']),[
@@ -92,22 +92,22 @@ export const institutionalMenu:WorkspaceMenuGroup[]=[
  group('certificates','Certificates and Documentation','Template-driven institutional documents, certificates, ID cards, signatures, serial numbers and verification.','Award','gold','certificates',management.concat(['teacher','student','parent']),[
   'Certificate Dashboard','Character Certificate','Leaving Certificate','Enrollment Certificate','Bonafide Certificate','Achievement Certificate','Experience Certificate','ID Card Designer','Certificate Templates','Editable Document Templates','Bulk Certificate Generation','Certificate Verification','Certificate History'
  ]),
- group('curriculum','Curriculum and Learning Resources','Curriculum maps, syllabus, outcomes, teaching resources, chapter materials and progress analytics.','LibraryBig','teal','curriculum',family,[
+ group('curriculum','Curriculum and Learning Resources','Curriculum maps, syllabus, outcomes, teaching resources, chapter materials and progress analytics.','BookOpen','teal','curriculum',family,[
   'Curriculum Dashboard','Curriculum Map','Syllabus Management','Learning Outcomes','Lesson Plans','Teaching Resources','Learning Materials','Resource Downloads','Subject-wise Curriculum','Chapter-wise Learning Resources','Curriculum Coverage','Learning Progress Tracking','Curriculum Reports'
  ]),
  group('library','Digital Library','Catalogue, book inventory, member reading records, circulation, returns, fines and reports.','Library','indigo','library',family,[
   'Library Dashboard','Digital Library','Book Management','Book Catalogue','Book Categories','Book Registration','Reading Records','Reading Cards','Student Reading History','Book Issue and Returns','Learning Materials','Resource Downloads','Library Reports'
  ]),
- group('transport','Transport Management','Vehicles, drivers, route stops, student allocations, transport attendance, fees and maintenance.','Bus','orange','transport',management.concat(['teacher','student','parent','accountant']),[
+ group('transport','Transport Management','Vehicles, drivers, route stops, student allocations, transport attendance, fees and maintenance.','Database','orange','transport',management.concat(['teacher','student','parent','accountant']),[
   'Transport Dashboard','Vehicle Management','Drivers Management','Transport Routes','Route Stops','Student Transport Allocation','Transport Fees','Transport Assignments','Vehicle Maintenance','Transport Attendance','Transport History','Transport Reports'
  ]),
- group('inventory','Inventory Management','Item catalogue, suppliers, procurement, stock-in/out, allocation, adjustments and stock audit.','Boxes','amber','inventory',management.concat(['accountant']),[
+ group('inventory','Inventory Management','Item catalogue, suppliers, procurement, stock-in/out, allocation, adjustments and stock audit.','Database','amber','inventory',management.concat(['accountant']),[
   'Inventory Dashboard','Items Management','Item Catalogue','Item Categories','Stock In','Stock Out','Suppliers','Purchase Records','Stock Allocation','Stock Adjustments','Inventory History','Stock Reports'
  ]),
  group('facilities','Rooms and Facilities','Classrooms, specialist rooms, availability, reservations, maintenance and facility history.','DoorOpen','cyan','facilities',management.concat(['teacher']),[
   'Facilities Dashboard','Classroom Management','Laboratories','Library Rooms','Room Allocation','Room Availability','Room Reservations','Facility Maintenance','Facility History','Facilities Reports'
  ]),
- group('visitors','Visitor Management','Visitor registration, passes, approvals, entry/exit records, notifications and history.','ContactRound','slate','visitors',management.concat(['teacher']),[
+ group('visitors','Visitor Management','Visitor registration, passes, approvals, entry/exit records, notifications and history.','UserRound','slate','visitors',management.concat(['teacher']),[
   'Visitor Dashboard','Visitor Registration','Visitor Information','Visitor Passes','Entry and Exit Records','Visitor Approvals','Visit History','Visitor Notifications','Visitor Reports'
  ]),
  group('institution-config','Institutional Systems and Configuration','Education levels, institution/campus settings, invitations, role rights, module rights and security.','Settings','slate','institution_config',management,[
@@ -164,7 +164,6 @@ export const existingRouteOverrides:Record<string,string>={
  'attendance:class-wise-attendance':'attendance:students',
  'attendance:bulk-student-attendance':'attendance:students',
  'attendance:faculty-and-staff-attendance':'attendance:staff',
- 'attendance:bulk-staff-attendance':'attendance:staff',
  'attendance:attendance-corrections':'attendance:students',
  'attendance:leave-applications':'attendance:staff',
  'attendance:late-arrival':'attendance:students',
