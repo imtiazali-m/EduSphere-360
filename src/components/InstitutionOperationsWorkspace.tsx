@@ -50,7 +50,7 @@ const views:Record<Domain,View[]>={
   behaviour:['register','positive','follow-up'],
   certificates:['verify','issue'],
   visitors:['log','checked-in','history'],
-  facilities:['assets','maintenance'],
+  facilities:['assets','maintenance','history'],
 }
 const initialViews:Record<Domain,string>={'question-bank':'pool',curriculum:'units',behaviour:'register',certificates:'verify',visitors:'log',facilities:'assets'}
 
@@ -273,12 +273,25 @@ export function InstitutionOperationsWorkspace({workspaceKey,initialWindow,onToa
   async function changePaperStatus(row:Row,status:'review'|'approved'){
     if(!examiner)return
     if(status==='approved'){
-      const lines=paperItems.filter(item=>item.paper_id===row.id)
-      if(!lines.length){onToast('Add at least one question before approving this paper.',true);return}
-      const total=lines.reduce((sum,item)=>sum+number(item.marks_override??questions.find(q=>q.id===item.question_id)?.marks),0)
-      if(Math.abs(total-number(row.maximum_marks))>0.01){onToast('Question marks total '+total+' but the paper maximum is '+number(row.maximum_marks)+'. Adjust the paper before approval.',true);return}
+      if(!supabase)return
+      setBusy(true)
+      const {error:approvalError}=await supabase.rpc('approve_assessment_paper',{p_institution_id:user!.institutionId,p_paper_id:row.id})
+      if(approvalError)onToast(userFacingError(approvalError,'Question paper could not be approved.'),true)
+      else{onToast('Question paper approved after database validation.');await load(true)}
+      setBusy(false)
+      return
     }
-    await updateStatus('assessment_papers',row,{status,approved_by:status==='approved'?user!.id:null,approved_at:status==='approved'?time():null},status==='approved'?'Question paper approved.':'Question paper sent for review.')
+    await updateStatus('assessment_papers',row,{status,approved_by:null,approved_at:null},'Question paper sent for review.')
+  }
+  async function removePaperQuestion(line:Row){
+    if(!supabase)return
+    setBusy(true)
+    try{
+      const {error:removeError}=await supabase.from('assessment_paper_items').delete().eq('institution_id',user!.institutionId).eq('id',line.id)
+      if(removeError)throw removeError
+      onToast('Question removed from the paper draft.');await load(true)
+    }catch(err){onToast(userFacingError(err,'Question could not be removed from this paper.'),true)}
+    finally{setBusy(false)}
   }
   async function addRandomQuestions(){
     if(!supabase||!selectedPaper)return
@@ -317,7 +330,7 @@ export function InstitutionOperationsWorkspace({workspaceKey,initialWindow,onToa
     const selectedLines=paperItems.filter(row=>row.paper_id===selected?.id)
     return <div className="iop-split">
       <section className="iop-panel"><header><div><h2>Question pool</h2><p>Questions are private drafts until reviewed and published by an authorised examiner or administrator.</p></div><div className="iop-actions"><button className="iop-button" onClick={()=>exportRows('question-bank',visibleQuestions,[{key:'question_code',label:'Question code'},{key:'question_type',label:'Type'},{key:'prompt',label:'Prompt'},{key:'marks',label:'Marks'},{key:'difficulty',label:'Difficulty'},{key:'status',label:'Status'}])}><Download size={14}/> Export</button><button className="iop-button primary" onClick={()=>openDialog('question')}><Plus size={14}/> Add question</button></div></header><label className="iop-search">Search questions<input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Code, text, topic or status…"/></label>{visibleQuestions.length?<div className="iop-record-list">{visibleQuestions.map(row=><article key={row.id}><div className="iop-record-heading"><b>{String(row.question_code)}</b><span className={'iop-status '+String(row.status)}>{toLabel(row.status)}</span></div><p>{String(row.prompt)}</p><div className="iop-meta"><span>{toLabel(row.question_type)}</span><span>{number(row.marks)} marks</span><span>{toLabel(row.difficulty)}</span><span>{String(row.topic??'No topic')}</span></div>{examiner&&row.status==='draft'&&<button className="iop-button" onClick={()=>void updateStatus('question_bank_items',row,{status:'published',reviewed_by:user!.id,reviewed_at:time()},'Question published to the authorised question bank.')}>Publish question</button>}</article>)}</div>:<div className="iop-empty"><FileQuestion size={22}/><b>No questions yet</b><span>Create the first question or change the search term.</span></div>}</section>
-      <section className="iop-panel"><header><div><h2>Question paper designer</h2><p>Build a paper from saved institution questions. The paper remains a draft until review and approval.</p></div><button className="iop-button primary" onClick={()=>openDialog('paper')}><Plus size={14}/> New paper</button></header>{visiblePapers.length?<div className="iop-record-list">{visiblePapers.map(row=><button type="button" className={'iop-select-record '+(selected?.id===row.id?'selected':'')} key={row.id} onClick={()=>setSelectedPaper(row.id)}><span><b>{String(row.paper_code)} · {String(row.title)}</b><small>{number(row.duration_minutes)} minutes · {number(row.maximum_marks)} marks</small></span><span className={'iop-status '+String(row.status)}>{toLabel(row.status)}</span></button>)}</div>:<div className="iop-empty">No question papers have been created.</div>}{selected&&<div className="iop-paper-detail"><h3>{String(selected.title)}</h3><div className="iop-meta"><span>{selectedLines.length} questions</span><span>{number(selected.maximum_marks)} maximum marks</span><span>{toLabel(selected.status)}</span></div><label className="iop-field">Add a question<select value={questionToAdd} onChange={e=>setQuestionToAdd(e.target.value)}><option value="">Select question</option>{questions.filter(q=>['draft','published'].includes(String(q.status))&&q.subject_id===selected.subject_id).map(q=><option key={q.id} value={q.id}>{String(q.question_code)} · {String(q.prompt).slice(0,80)}</option>)}</select></label><button className="iop-button" disabled={!questionToAdd||busy} onClick={()=>void addPaperQuestion()}>Add question to draft</button>{selectedLines.map(line=><div className="iop-paper-line" key={line.id}><span>{number(line.sequence_no)}.</span><b>{String(questions.find(q=>q.id===line.question_id)?.question_code??'Question')}</b><small>{String(questions.find(q=>q.id===line.question_id)?.prompt??'')}</small></div>)}<div className="iop-actions"><button className="iop-button" onClick={()=>window.print()}><Printer size={13}/> Print paper</button><button className="iop-button" disabled={busy} onClick={()=>void addRandomQuestions()}>Randomly add 3</button></div>{examiner&&selected.status==='draft'&&<button className="iop-button primary" onClick={()=>void changePaperStatus(selected,'review')}>Submit paper for review</button>}{examiner&&selected.status==='review'&&<button className="iop-button primary" onClick={()=>void changePaperStatus(selected,'approved')}>Approve paper</button>}</div>}</section>
+      <section className="iop-panel"><header><div><h2>Question paper designer</h2><p>Build a paper from saved institution questions. The paper remains a draft until review and approval.</p></div><button className="iop-button primary" onClick={()=>openDialog('paper')}><Plus size={14}/> New paper</button></header>{visiblePapers.length?<div className="iop-record-list">{visiblePapers.map(row=><button type="button" className={'iop-select-record '+(selected?.id===row.id?'selected':'')} key={row.id} onClick={()=>setSelectedPaper(row.id)}><span><b>{String(row.paper_code)} · {String(row.title)}</b><small>{number(row.duration_minutes)} minutes · {number(row.maximum_marks)} marks</small></span><span className={'iop-status '+String(row.status)}>{toLabel(row.status)}</span></button>)}</div>:<div className="iop-empty">No question papers have been created.</div>}{selected&&<div className="iop-paper-detail"><h3>{String(selected.title)}</h3><div className="iop-meta"><span>{selectedLines.length} questions</span><span>{number(selected.maximum_marks)} maximum marks</span><span>{toLabel(selected.status)}</span></div><label className="iop-field">Add a question<select value={questionToAdd} onChange={e=>setQuestionToAdd(e.target.value)}><option value="">Select question</option>{questions.filter(q=>q.status==='published'&&q.subject_id===selected.subject_id&&!selectedLines.some(line=>line.question_id===q.id)).map(q=><option key={q.id} value={q.id}>{String(q.question_code)} · {String(q.prompt).slice(0,80)}</option>)}</select></label><button className="iop-button" disabled={!questionToAdd||busy} onClick={()=>void addPaperQuestion()}>Add question to draft</button>{selectedLines.map(line=><div className="iop-paper-line" key={line.id}><span>{number(line.sequence_no)}.</span><b>{String(questions.find(q=>q.id===line.question_id)?.question_code??'Question')}</b><small>{String(questions.find(q=>q.id===line.question_id)?.prompt??'')}</small>{selected.status==='draft'&&<button className="iop-button danger" disabled={busy} onClick={()=>void removePaperQuestion(line)}>Remove</button>}</div>)}<div className="iop-actions"><button className="iop-button" onClick={()=>window.print()}><Printer size={13}/> Print paper</button>{selected.status==='draft'&&<button className="iop-button" disabled={busy} onClick={()=>void addRandomQuestions()}>Randomly add 3</button>}</div>{examiner&&selected.status==='draft'&&<button className="iop-button primary" onClick={()=>void changePaperStatus(selected,'review')}>Submit paper for review</button>}{examiner&&selected.status==='review'&&<button className="iop-button primary" onClick={()=>void changePaperStatus(selected,'approved')}>Approve paper</button>}</div>}</section>
     </div>
   }
 
