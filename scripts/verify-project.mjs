@@ -25,7 +25,7 @@ const requiredFiles = [
   'src/lib/data.ts', 'src/lib/navigationAccess.ts', 'src/lib/userErrors.ts', 'scripts/test-user-errors.mjs',
   'src/lib/finance.ts', 'scripts/test-finance.mjs', 'src/lib/fileAccess.ts', 'scripts/test-file-access.mjs',
   'src/lib/navigationCatalog.ts', 'src/lib/navigationRoutes.ts', 'public/_redirects',
-  '.env.example', 'package-lock.json', 'src/lib/types.ts', 'supabase/migrations/20261108053651_owner_signup_institution_details.sql', 'supabase/migrations/20261109083133_faculty_employee_management.sql',
+  '.env.example', 'package-lock.json', 'src/lib/types.ts', 'supabase/migrations/20261108053651_owner_signup_institution_details.sql', 'supabase/migrations/20261109083133_faculty_employee_management.sql', 'supabase/migrations/20261109092734_student_management_operations.sql', 'supabase/migrations/20261109092920_student_management_scope_indexes_and_guardian_portal_read.sql',
   '.github/workflows/cloudflare-pages-release.yml', 'docs/FINAL_REBUILD_STAGE.md', 'docs/NAVIGATION_RECONCILIATION.md',
 ]
 check('Integrated frontend, authentication, modules and deployment files exist', () => {
@@ -236,11 +236,11 @@ check('Module definitions and generic CRUD table allowlist remain valid', () => 
 
 check('Student Record is a complete permission-aware multi-window workspace', () => {
   const recordModule = read('src/components/RecordModule.tsx')
-  for (const label of ['Overview', 'Admissions', 'Student Directory', 'Student Profile', 'Class Placement', 'Guardians', 'Attendance', 'Exam Results', 'Assignments', 'Student Timetable', 'Student Documentation', 'Student History']) {
+  for (const label of ['Overview', 'Admissions', 'Student Directory', 'Student Profile', 'Class Placement', 'Guardians', 'Student Attendance', 'Student Exam Results', 'Student Assignments', 'Student Timetable', 'Student Documentation', 'Student History']) {
     assert.ok(recordModule.includes("label: '" + label + "'"), 'Student workspace window is missing: ' + label)
   }
   const studentWorkspace = recordModule.slice(recordModule.indexOf("if (module.key === 'students')"), recordModule.indexOf("if (module.key === 'teachers')"))
-  for (const table of ['attendance', 'exams', 'exam_results', 'assignments', 'assignment_submissions', 'timetable_entries']) {
+  for (const table of ['attendance', 'exams', 'exam_results', 'assignments', 'assignment_submissions', 'timetable_entries', 'classes', 'academic_sessions', 'programs', 'guardian_students', 'parent_guardians', 'student_placements', 'student_documents', 'student_history']) {
     assert.ok(studentWorkspace.includes("'" + table + "'"), 'Student workspace is missing related data source: ' + table)
   }
   assert.ok(!studentWorkspace.includes("'fee_invoices'") && !studentWorkspace.includes("label: 'Fees & Payments'"), 'Fee management must remain exclusively in Finance, not Student Management')
@@ -253,6 +253,13 @@ check('Student Record is a complete permission-aware multi-window workspace', ()
   assert.ok(recordModule.includes('Student admission saved successfully.'), 'Student admission confirmation is missing')
   assert.ok(recordModule.includes('Do not submit this admission again'), 'Unconfirmed admissions must not encourage duplicate submission')
   assert.ok(recordModule.includes('This admission number is already registered'), 'Duplicate admission numbers must be checked before insert')
+  assert.ok(recordModule.includes('async function updateAdmissionStatus'), 'Admission review and approval workflow is missing')
+  assert.ok(recordModule.includes("application_status: nextStatus"), 'Admission status transitions are not persisted')
+  assert.ok(recordModule.includes('async function saveGuardianContact') && recordModule.includes("'guardian_students'"), 'Guardian contacts must be linked to students')
+  assert.ok(recordModule.includes('async function saveStudentPlacement') && recordModule.includes("'student_placements'"), 'Class placement must use linked class records')
+  assert.ok(recordModule.includes("from('student-files')") && recordModule.includes('async function uploadStudentDocument'), 'Private student document upload is missing')
+  assert.ok(recordModule.includes("studentHistoryRows.map(event") && recordModule.includes("'student_history'"), 'Student History must render database audit events')
+  assert.ok(dataSource.includes("const READ_ONLY_TABLES = new Set(['student_history'])"), 'Student audit history must be read-only to the client')
   assert.ok(recordModule.includes("isStudent && field.name === 'status'") && recordModule.includes("? 'pending'"), 'New student admissions must start in Pending status')
   const dataSource = read('src/lib/data.ts')
   assert.ok(dataSource.includes("if (table === 'students')"), 'Student insertion must use its specific authorization-safe path')
