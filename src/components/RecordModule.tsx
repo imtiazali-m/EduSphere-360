@@ -1254,11 +1254,45 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
           })}</tbody></table></div> : <div className="ed360-student-empty"><strong>No placement history recorded</strong><p>Assign a configured class above to start the student's placement history.</p></div>}
         </section>
       </div>}
-      {studentWorkspaceTab === 'guardians' && <section className="ed360-student-panel ed360-student-full-panel"><header><div><span className="ed360-student-panel-icon violet"><HeartHandshake size={17}/></span><div><h2>Parent & guardian contacts</h2><p>Guardian name and email from each student record.</p></div></div><span className="ed360-student-record-count">{rows.filter(row => row.guardian_name || row.guardian_email).length} contact records</span></header>
-        {renderTable(rows.filter(row => row.guardian_name || row.guardian_email),[{key:'admission_no',label:'Admission ID'},{key:'full_name',label:'Student'},{key:'class_name',label:'Class / programme'},{key:'guardian_name',label:'Guardian name'},{key:'guardian_email',label:'Guardian email'}],'Guardian contact details have not been entered for these students.')}
-        <p className="ed360-student-limitation-note">The current student register stores one guardian contact pair per student. Multiple guardian accounts and relationships require a separate approved data-model update.</p>
+      {studentWorkspaceTab === 'guardians' && <section className="ed360-student-panel ed360-student-full-panel">
+        <header><div><span className="ed360-student-panel-icon violet"><HeartHandshake size={17}/></span><div><h2>Guardian relationships</h2><p>Manage family contacts and their links to the selected student. Parent login accounts remain a separate access relationship.</p></div></div><span className="ed360-student-record-count">{studentGuardianRows.length} linked contacts</span></header>
+        {selectedStudent ? <>
+          <div className="ed360-student-window-context">
+            <div><span className="ed360-context-label">SELECTED STUDENT</span><strong>{String(selectedStudent.full_name ?? 'Student')} · {String(selectedStudent.admission_no ?? 'No admission ID')}</strong></div>
+            <span className="ed360-student-record-count">{studentGuardianLinks.length} guardian links</span>
+          </div>
+          {ownerOrAdmin && <div className="ed360-student-guardian-actions">
+            <button type="button" className="button button-primary" onClick={() => { setGuardianEditing(null); setGuardianForm({ full_name: '', relationship: 'guardian', phone: '', email: '', address: '', occupation: '' }); setGuardianFormOpen(true) }}><Plus size={15}/> Add guardian contact</button>
+            <div className="ed360-student-guardian-link">
+              <select className="input-control" value={guardianToLink} onChange={event => setGuardianToLink(event.target.value)} disabled={!availableGuardianRows.length}>
+                <option value="">Link an existing guardian…</option>
+                {availableGuardianRows.map(guardian => <option key={guardian.id} value={guardian.id}>{String(guardian.full_name ?? 'Guardian')} · {String(guardian.email ?? guardian.phone ?? 'No contact detail')}</option>)}
+              </select>
+              <button type="button" className="button button-outline" onClick={() => void linkExistingGuardian()} disabled={!guardianToLink}><HeartHandshake size={14}/> Link contact</button>
+            </div>
+          </div>}
+          {guardianFormOpen && ownerOrAdmin && <form className="modal-form ed360-student-inline-form" onSubmit={event => { event.preventDefault(); void saveGuardianContact() }}>
+            <div className="student-form-section-label">{guardianEditing ? 'UPDATE GUARDIAN CONTACT' : 'NEW GUARDIAN CONTACT'}</div>
+            <div className="student-form-grid">
+              <label className="field-label student-field"><span>Full name *</span><input className="input-control" required value={guardianForm.full_name} onChange={event => setGuardianForm(old => ({ ...old, full_name: event.target.value }))}/></label>
+              <label className="field-label student-field"><span>Relationship</span><select className="input-control" value={guardianForm.relationship} onChange={event => setGuardianForm(old => ({ ...old, relationship: event.target.value }))}>{['guardian','mother','father','grandparent','sibling','spouse','other'].map(value => <option key={value} value={value}>{value.replaceAll('_',' ')}</option>)}</select></label>
+              <label className="field-label student-field"><span>Phone</span><input className="input-control" value={guardianForm.phone} onChange={event => setGuardianForm(old => ({ ...old, phone: event.target.value }))}/></label>
+              <label className="field-label student-field"><span>Email</span><input className="input-control" type="email" value={guardianForm.email} onChange={event => setGuardianForm(old => ({ ...old, email: event.target.value }))}/></label>
+              <label className="field-label student-field"><span>Occupation</span><input className="input-control" value={guardianForm.occupation} onChange={event => setGuardianForm(old => ({ ...old, occupation: event.target.value }))}/></label>
+              <label className="field-label student-field"><span>Address</span><input className="input-control" value={guardianForm.address} onChange={event => setGuardianForm(old => ({ ...old, address: event.target.value }))}/></label>
+            </div>
+            <div className="modal-actions">
+              <button type="button" className="button button-quiet" onClick={() => { setGuardianFormOpen(false); setGuardianEditing(null) }}>Cancel</button>
+              <button type="submit" className="button button-primary">{guardianEditing ? 'Save contact changes' : 'Save and link guardian'}</button>
+            </div>
+          </form>}
+          {studentGuardianRows.length ? <div className="ed360-student-table-wrap"><table className="ed360-student-table"><thead><tr><th>Guardian</th><th>Relationship</th><th>Phone</th><th>Email</th><th>Address</th><th>Actions</th></tr></thead><tbody>{studentGuardianRows.map(guardian => {
+            const link = studentGuardianLinks.find(item => item.guardian_id === guardian.id)
+            return <tr key={guardian.id}><td><strong>{String(guardian.full_name ?? 'Guardian')}</strong><small>{String(guardian.occupation ?? '')}</small></td><td>{String(link?.relationship ?? guardian.relationship ?? 'guardian').replaceAll('_',' ')}</td><td>{String(guardian.phone ?? '—')}</td><td>{String(guardian.email ?? '—')}</td><td>{String(guardian.address ?? '—')}</td><td><div className="ed360-student-row-actions">{ownerOrAdmin && <><button type="button" onClick={() => { setGuardianEditing(guardian); setGuardianForm({ full_name: String(guardian.full_name ?? ''), relationship: String(link?.relationship ?? guardian.relationship ?? 'guardian'), phone: String(guardian.phone ?? ''), email: String(guardian.email ?? ''), address: String(guardian.address ?? ''), occupation: String(guardian.occupation ?? '') }); setGuardianFormOpen(true) }}>Edit</button>{link && <button type="button" className="danger-icon" onClick={() => void unlinkGuardian(link)}>Unlink</button>}</>}</div></td></tr>
+          })}</tbody></table></div> : <div className="ed360-student-empty"><span><HeartHandshake size={21}/></span><strong>No guardian contacts linked</strong><p>Create a guardian contact or link an existing institution contact to this student.</p></div>}
+          <p className="ed360-student-limitation-note">Guardian contact records and student relationships are stored separately in parent_guardians and guardian_students. A parent portal account is linked separately through the student-guardian access relationship; a contact email alone does not grant login access.</p>
+        </> : <div className="ed360-student-empty"><strong>No student selected</strong><p>Select a student to manage linked guardian contacts.</p></div>}
       </section>}
-
       {studentWorkspaceTab === 'attendance' && <section className="ed360-student-panel ed360-student-full-panel"><header><div><span className="ed360-student-panel-icon green"><CalendarCheck size={17}/></span><div><h2>Attendance history</h2><p>{selectedStudent ? 'Attendance records for ' + String(selectedStudent.full_name ?? 'the selected student') : 'Student attendance history'}</p></div></div><span className="ed360-student-record-count">{studentAttendanceRows.length} entries</span></header>
         <div className="ed360-student-status-cards"><div><small>Attendance records</small><strong>{studentAttendanceRows.length}</strong><span>Recorded sessions</span></div><div><small>Present / late</small><strong>{presentCount}</strong><span>Attended sessions</span></div><div><small>Absent</small><strong>{absentCount}</strong><span>Absence records</span></div><div><small>Attendance rate</small><strong>{studentAttendanceRows.length ? attendanceRate + '%' : '—'}</strong><span>Present plus late</span></div></div>
         {renderTable(studentAttendanceRows,[{key:'attendance_date',label:'Date'},{key:'student_name',label:'Student'},{key:'class_name',label:'Class'},{key:'status',label:'Status'},{key:'notes',label:'Notes'}],'No attendance entries are currently available for this student.')}
