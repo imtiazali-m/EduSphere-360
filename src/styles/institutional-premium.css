@@ -148,3 +148,15 @@
 .ed360-dashboard-scope label{display:grid;gap:5px;min-width:145px;color:#7388a0;font-size:10px;font-weight:800}
 .ed360-dashboard-scope select{height:35px;padding:0 10px;border:1px solid #dbe4ed;border-radius:7px;background:#fbfcfe;color:#34516d;font-size:11px;font-weight:650}
 @media(max-width:650px){.ed360-dashboard-scope{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.ed360-dashboard-scope label{min-width:0}.ed360-dashboard-scope select{width:100%;min-width:0}}
+
+.ed360-module-specific-form{display:grid;gap:11px;padding:13px;border:1px solid #dce7f2;border-radius:10px;background:#f8fafd}
+.ed360-module-specific-heading span{color:#7890a8;font-size:9px;font-weight:850;letter-spacing:1px}
+.ed360-module-specific-heading p{margin:4px 0 0;color:#627a94;font-size:11px}
+.ed360-context-form-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.ed360-context-form-fields label{display:grid;gap:5px;color:#47627e;font-size:10px;font-weight:750}
+.ed360-context-form-fields input,.ed360-context-form-fields select,.ed360-context-form-fields textarea{width:100%;min-width:0;box-sizing:border-box;padding:9px 10px;border:1px solid #d8e2ed;border-radius:7px;background:#fff;color:#294560;font:inherit;font-size:11px}
+.ed360-context-form-fields textarea{resize:vertical}
+.ed360-workspace-integration-note{display:flex;align-items:flex-start;gap:9px;margin:0 0 13px;padding:11px 13px;border:1px solid #eedeb9;border-radius:9px;background:#fff9ed;color:#8a6c34}
+.ed360-workspace-integration-note b{flex:0 0 auto;color:#745821;font-size:11px}
+.ed360-workspace-integration-note span{color:#8b7855;font-size:10px;line-height:1.5}
+@media(max-width:620px){.ed360-context-form-fields{grid-template-columns:1fr}.ed360-workspace-integration-note{flex-direction:column;gap:4px}}
