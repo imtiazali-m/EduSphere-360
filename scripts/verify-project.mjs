@@ -53,10 +53,10 @@ check('The approved eight-group menu maps every submenu to a real workspace', ()
     ['Dashboard', []],
     ['Admission & Students', ['Student Record']],
     ['People & Staff', ['Faculty & Staff', 'User Account']],
-    ['Institute Administration', ['Departments', 'Programs', 'Class Sections', 'Academic Session', 'Subjects', 'Rooms & Facilities', 'Files & Documentation']],
+    ['Institute Administration', ['Departments', 'Programs', 'Class Sections', 'Academic Sessions', 'Subjects', 'Rooms & Facilities', 'Files & Documentation']],
     ['Academic Management', ['Attendance Registration', 'Examination', 'Exam Results', 'Assignments', 'Assignment Submission', 'Timetable']],
-    ['Finance & Payments', ['Fees Invoice']],
-    ['Communication', ['Announcement']],
+    ['Finance & Payments', ['Fees Invoices']],
+    ['Communication', ['Announcements']],
     ['Operations & Reports', ['Work Management', 'Reports']],
   ]
   assert.equal(navigationCatalog.length, expected.length, 'The main menu must contain exactly eight groups')
@@ -104,8 +104,9 @@ check('Dashboard matches the menu and keeps Quick Access at the sidebar bottom',
   const quickStart = dashboardSource.indexOf('className="pro-quick-access"')
   assert.ok(navStart >= 0 && navEnd > navStart, 'Scrollable navigation is missing')
   assert.ok(quickStart > navEnd, 'Quick Access must be outside the scrollable navigation at the sidebar bottom')
-  assert.ok(dashboardSource.includes('pro-menu-overview'), 'Dashboard must display the role-based menu overview')
-  assert.ok(dashboardSource.includes('roleNavigationGroups(user!.role)'), 'Dashboard menu overview must follow role permissions')
+  assert.ok(!dashboardSource.includes('pro-menu-overview') && !dashboardSource.includes('Menu overview'), 'Dashboard must not repeat the sidebar menu')
+  assert.ok(dashboardSource.includes('roleNavigationGroups(user!.role)'), 'Sidebar navigation must follow role permissions')
+  assert.ok(dashboardSource.includes('pro-metrics-grid') && dashboardSource.includes('pro-attendance-ring'), 'Dashboard statistics and attendance overview are missing')
   assert.ok(dashboardSource.includes('Search workspace'), 'Workspace search is missing')
   assert.ok(dashboardSource.includes('pro-profile-menu'), 'Account menu is missing')
   assert.ok(dashboardSource.includes("available.some(module => module.key === 'attendance')"), 'Attendance insights must only display for roles with attendance access')
