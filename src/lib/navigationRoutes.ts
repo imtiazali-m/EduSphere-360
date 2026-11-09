@@ -81,6 +81,129 @@ const reportViews: Record<string, string> = {
   'financial-reports': 'finance',
 }
 
+const financeSections: Record<string, string> = {
+  'accounts-dashboard': 'overview',
+  'chart-of-accounts': 'accounts',
+  'income': 'journals',
+  'expenses': 'journals',
+  'cash-book': 'reconciliation',
+  'bank-book': 'reconciliation',
+  'transactions': 'journals',
+  'vouchers': 'journals',
+  'general-ledger': 'journals',
+  'financial-statements': 'reconciliation',
+  'account-reconciliation': 'reconciliation',
+  'financial-reports': 'reconciliation',
+  'fees-dashboard': 'overview',
+  'fee-structure': 'structures',
+  'fee-categories': 'structures',
+  'student-fee-assignment': 'structures',
+  'fee-invoices': 'invoices',
+  'payment-collection': 'payments',
+  'online-payments': 'payments',
+  'partial-payments': 'receivables',
+  'discounts': 'discounts',
+  'scholarships': 'discounts',
+  'outstanding-dues': 'receivables',
+  'fee-refunds': 'refunds',
+  'fee-receipts': 'receipts',
+  'class-wise-collection-reports': 'reconciliation',
+  'section-wise-collection-reports': 'reconciliation',
+  'overall-collection-reports': 'reconciliation',
+  'receivables-dashboard': 'overview',
+  'total-outstanding': 'receivables',
+  'student-wise-receivables': 'receivables',
+  'invoice-wise-receivables': 'receivables',
+  'overdue-accounts': 'receivables',
+  'ageing-analysis': 'receivables',
+  'partial-payment-balances': 'receivables',
+  'collection-follow-ups': 'receivables',
+  'outstanding-history': 'receivables',
+  'receivable-reconciliation': 'reconciliation',
+  'collection-forecasts': 'receivables',
+  'receivables-reports': 'reconciliation',
+  'payments-dashboard': 'overview',
+  'online-payment-records': 'payments',
+  'cash-payments': 'payments',
+  'bank-payments': 'payments',
+  'payment-verification': 'reconciliation',
+  'payment-reconciliation': 'reconciliation',
+  'refund-processing': 'refunds',
+  'payment-history': 'payments',
+  'failed-and-pending-payments': 'payments',
+  'collection-reports': 'reconciliation',
+  'receipt-dashboard': 'overview',
+  'generate-receipt': 'receipts',
+  'payment-receipts': 'receipts',
+  'receipt-history': 'receipts',
+  'receipt-reprinting': 'receipts',
+  'receipt-templates': 'receipts',
+  'receipt-numbering': 'receipts',
+  'receipt-verification': 'receipts',
+  'bulk-receipt-generation': 'receipts',
+  'reconciliation-dashboard': 'overview',
+  'financial-reconciliation': 'reconciliation',
+  'bank-reconciliation': 'reconciliation',
+  'cash-reconciliation': 'reconciliation',
+  'fee-collection-reconciliation': 'reconciliation',
+  'transaction-verification': 'reconciliation',
+  'audit-logs': 'reconciliation',
+  'administrative-audit': 'reconciliation',
+  'user-activity-logs': 'reconciliation',
+  'access-history': 'reconciliation',
+  'change-history': 'reconciliation',
+  'audit-reports': 'reconciliation',
+}
+
+function financeRoute(groupKey: string, itemKey: string): string | undefined {
+  if (!['accounts-finance', 'fees', 'receivables', 'payments', 'receipts', 'reconciliation'].includes(groupKey)) return undefined
+  return `finance:${groupKey}:${financeSections[itemKey] ?? (groupKey === 'fees' ? 'invoices' : groupKey === 'receivables' ? 'receivables' : groupKey === 'payments' ? 'payments' : groupKey === 'receipts' ? 'receipts' : groupKey === 'reconciliation' ? 'reconciliation' : 'accounts')}`
+}
+
+const payrollSections: Record<string, string> = {
+  'payroll-dashboard': 'overview',
+  'salary-structure': 'salary',
+  'salary-components': 'salary',
+  'employee-salary-assignment': 'salary',
+  'monthly-payroll': 'runs',
+  'allowances': 'salary',
+  'deductions': 'salary',
+  'advances-and-loans': 'runs',
+  'advance-recovery': 'runs',
+  'payslips': 'payslips',
+  'salary-payments': 'runs',
+  'payroll-reports': 'payslips',
+}
+
+function payrollRoute(itemKey: string): string {
+  return `payroll:${payrollSections[itemKey] ?? 'overview'}`
+}
+
+const governanceRoutes: Record<string,string> = {
+  'institute-profile': 'profile',
+  'institution-settings': 'settings',
+  'branding-and-document-settings': 'settings',
+  'system-configuration': 'settings',
+  'institution-settings': 'settings',
+  'approval-and-workflows': 'approvals',
+  'administrative-audit': 'audit',
+  'security-and-access-history': 'audit',
+  'institution-configuration': 'settings',
+  'education-system-configuration': 'settings',
+  'education-levels': 'academic',
+  'grade-and-academic-level-configuration': 'academic',
+  'academic-settings': 'academic',
+  'general-system-settings': 'settings',
+  'campus-settings': 'settings',
+  'user-management': 'accounts',
+  'invitations-and-access': 'accounts',
+  'role-management': 'accounts',
+  'user-permissions': 'accounts',
+  'module-permissions': 'accounts',
+  'approval-permissions': 'approvals',
+  'security-configuration': 'audit',
+}
+
 function dedicatedRoute(groupKey: string, itemKey: string): string | undefined {
   if (groupKey === 'students') {
     const view = studentViews[itemKey]
@@ -154,6 +277,14 @@ export function getNavigationRoute(groupKey: string, itemLabel: string): string 
   const itemKey = slug(itemLabel)
   const compositeKey = `${groupKey}:${itemKey}`
   const override = existingRouteOverrides[compositeKey]
+
+  const financeDestination = financeRoute(groupKey,itemKey)
+  if (financeDestination) return financeDestination
+  if (groupKey === 'payroll') return payrollRoute(itemKey)
+  if (groupKey === 'administration' && governanceRoutes[itemKey] && !['campus-and-branch-management','departments','designations','academic-structure-and-sections'].includes(itemKey)) {
+    return `governance:${governanceRoutes[itemKey]}`
+  }
+  if (groupKey === 'institution-config' && governanceRoutes[itemKey]) return `governance:${governanceRoutes[itemKey]}`
 
   // A few older shortcuts pointed at a module root, losing the requested
   // report/employee/coursework sub-view. Prefer the typed sub-view in those groups.
