@@ -8,3 +8,4 @@ export const navigationRoutes:Record<string,string>=Object.fromEntries(
   ]))
 )
 navigationRoutes.Dashboard='overview'
+navigationRoutes['Notification Centre']='notifications'

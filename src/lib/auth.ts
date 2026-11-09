@@ -157,3 +157,15 @@ export async function resendInstitutionOwnerVerification(email: string): Promise
   })
   if (error) throw error
 }
+
+
+/** Send a self-service password recovery email. */
+export async function requestCloudPasswordReset(email: string): Promise<void> {
+  if (!supabase) throw new Error('Online password recovery is unavailable because cloud mode is not configured.')
+  const address = email.trim().toLowerCase()
+  if (!address) throw new Error('Enter the email address for your EduSphere 360 account.')
+  const { error } = await supabase.auth.resetPasswordForEmail(address, {
+    redirectTo: getEmailConfirmationRedirectUrl(),
+  })
+  if (error) throw error
+}
