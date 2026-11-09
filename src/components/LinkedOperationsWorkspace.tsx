@@ -3,7 +3,6 @@ import { BookOpen, Bus, MapPin, Package, Plus, RefreshCw, X } from 'lucide-react
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { getWorkspaceGroup } from '../lib/institutionalCatalog'
-import type { RecordRow } from '../lib/types'
 
 type Props={workspaceKey:string;onToast:(message:string,error?:boolean)=>void;onNavigate:(key:string)=>void}
 type Campus={id:string;name:string;campus_code?:string|null;address?:string|null;phone?:string|null;email?:string|null;is_headquarters:boolean;is_active:boolean}
