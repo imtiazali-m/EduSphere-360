@@ -786,6 +786,12 @@ export function RecordModule({ module, onToast }: Props) {
       { key: 'documents' as const, label: 'Documents', icon: FolderOpen },
       { key: 'history' as const, label: 'History', icon: History },
     ]
+    const ownerOrAdmin = ['owner', 'admin'].includes(user!.role)
+    const visibleTabItems = tabItems.filter(item => {
+      if (ownerOrAdmin) return true
+      if (user!.role === 'teacher') return ['overview', 'directory', 'profile', 'classes', 'attendance', 'results', 'assignments', 'timetable', 'history'].includes(item.key)
+      return ['overview', 'profile', 'classes', 'guardians', 'attendance', 'results', 'assignments', 'fees', 'timetable', 'documents', 'history'].includes(item.key)
+    })
     const pendingRows = rows.filter(row => String(row.status ?? 'active').toLowerCase() === 'pending')
     const presentCount = studentAttendanceRows.filter(row => ['present', 'late'].includes(String(row.status ?? '').toLowerCase())).length
     const absentCount = studentAttendanceRows.filter(row => String(row.status ?? '').toLowerCase() === 'absent').length
@@ -832,7 +838,7 @@ export function RecordModule({ module, onToast }: Props) {
       </header>
 
       <nav className="ed360-student-window-nav" aria-label="Student management windows">
-        {tabItems.map(item => {
+        {visibleTabItems.map(item => {
           const Icon = item.icon
           return <button type="button" key={item.key} className={studentWorkspaceTab === item.key ? 'active' : ''} aria-current={studentWorkspaceTab === item.key ? 'page' : undefined} onClick={() => { setStudentWorkspaceTab(item.key); setCurrentPage(1) }}>
             <Icon size={15}/><span>{item.label}</span>{typeof item.count === 'number' && <b>{item.count.toLocaleString()}</b>}
@@ -841,7 +847,7 @@ export function RecordModule({ module, onToast }: Props) {
       </nav>
 
       <div className="ed360-student-window-context">
-        <div><span className="ed360-context-label">CURRENT WINDOW</span><strong>{tabItems.find(item => item.key === studentWorkspaceTab)?.label ?? 'Overview'}</strong></div>
+        <div><span className="ed360-context-label">CURRENT WINDOW</span><strong>{visibleTabItems.find(item => item.key === studentWorkspaceTab)?.label ?? 'Overview'}</strong></div>
         <label>Selected student
           <select value={selectedStudent?.id ?? ''} onChange={event => setSelectedStudentId(event.target.value)} disabled={!rows.length}>
             {rows.length === 0 && <option value="">No student records</option>}
