@@ -114,7 +114,7 @@ export const modules: ModuleConfig[] = [
     ],
   },
   {
-    key: 'fees', title: 'Fees Invoice', description: 'Fee schedules, invoices, collections and outstanding balances.', table: 'fee_invoices', icon: 'Wallet', roles: ['owner', 'admin', 'accountant', 'student', 'parent'],
+    key: 'fees', title: 'Fees Invoices', description: 'Fee schedules, invoices, collections and outstanding balances.', table: 'fee_invoices', icon: 'Wallet', roles: ['owner', 'admin', 'accountant', 'student', 'parent'],
     fields: [
       { name: 'student_id', label: 'Student', type: 'select', required: true },
       { name: 'invoice_no', label: 'Invoice / voucher number', placeholder: 'Generated automatically when blank' },
@@ -231,7 +231,7 @@ export const modules: ModuleConfig[] = [
     ],
   },
   {
-    key: 'announcements', title: 'Announcement', description: 'Institution-wide updates for staff, students and parents.', table: 'announcements', icon: 'Megaphone', roles: everyone,
+    key: 'announcements', title: 'Announcements', description: 'Institution-wide updates for staff, students and parents.', table: 'announcements', icon: 'Megaphone', roles: everyone,
     fields: [
       { name: 'title', label: 'Announcement title', required: true },
       { name: 'body', label: 'Message', type: 'textarea', required: true },
