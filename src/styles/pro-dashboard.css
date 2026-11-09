@@ -199,9 +199,10 @@
 .pro-sidebar .pro-quick-access .pro-nav-item{min-height:30px;margin:1px 0;font-size:10px}
 
 
-/* Approved menu overview and fixed-bottom Quick Access. */
-.pro-navigation{flex:1 1 auto;min-height:0;overflow-y:auto}
-.pro-quick-access{flex:0 0 auto;margin-top:auto;padding-top:12px;border-top:1px solid rgba(231,244,224,.14)}
+/* Quick Access follows the menu in normal document flow and scrolls with the sidebar. */
+.pro-sidebar{overflow-y:auto;overflow-x:hidden}
+.pro-navigation{flex:0 0 auto;min-height:0;overflow:visible}
+.pro-quick-access{position:static;flex:0 0 auto;margin-top:10px;padding-top:12px;border-top:1px solid rgba(231,244,224,.14)}
 .pro-menu-overview{margin-top:22px}
 .pro-menu-overview-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .pro-menu-group-card{min-width:0;border:1px solid var(--pro-line);border-radius:14px;background:#fff;padding:13px}
