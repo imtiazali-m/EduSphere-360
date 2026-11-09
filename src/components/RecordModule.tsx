@@ -470,7 +470,40 @@ export function RecordModule({ module, onToast }: Props) {
     active: rows.filter(row => String(row.status ?? 'active').toLowerCase() === 'active').length,
     pending: rows.filter(row => String(row.status ?? '').toLowerCase() === 'pending').length,
     graduated: rows.filter(row => String(row.status ?? '').toLowerCase() === 'graduated').length,
+    inactive: rows.filter(row => String(row.status ?? '').toLowerCase() === 'inactive').length,
   }), [rows])
+  const selectedStudent = useMemo(
+    () => rows.find(row => row.id === selectedStudentId) ?? rows[0] ?? null,
+    [rows, selectedStudentId],
+  )
+  useEffect(() => {
+    if (rows.length && !rows.some(row => row.id === selectedStudentId)) setSelectedStudentId(rows[0].id)
+    if (!rows.length && selectedStudentId) setSelectedStudentId('')
+  }, [rows, selectedStudentId])
+  const matchesStudent = (row: RecordRow, student: RecordRow | null) => {
+    if (!student) return false
+    const sameId = Boolean(row.student_id && row.student_id === student.id)
+    const rowName = String(row.student_name ?? '').trim().toLowerCase()
+    const sameName = Boolean(rowName && rowName === String(student.full_name ?? '').trim().toLowerCase())
+    const sameAdmission = Boolean(row.admission_no && row.admission_no === student.admission_no)
+    return sameId || sameAdmission || sameName
+  }
+  const studentAttendanceRows = (studentRelatedRows.attendance ?? []).filter(row => matchesStudent(row, selectedStudent))
+  const studentResultRows = (studentRelatedRows.exam_results ?? []).filter(row => matchesStudent(row, selectedStudent))
+  const studentSubmissionRows = (studentRelatedRows.assignment_submissions ?? []).filter(row => matchesStudent(row, selectedStudent))
+  const studentFeeRows = (studentRelatedRows.fee_invoices ?? []).filter(row => matchesStudent(row, selectedStudent))
+  const studentClass = String(selectedStudent?.class_name ?? '')
+  const studentAssignmentRows = (studentRelatedRows.assignments ?? []).filter(row => !studentClass || String(row.class_name ?? '').toLowerCase() === studentClass.toLowerCase())
+  const studentExamRows = (studentRelatedRows.exams ?? []).filter(row => !studentClass || String(row.class_name ?? '').toLowerCase() === studentClass.toLowerCase())
+  const studentTimetableRows = (studentRelatedRows.timetable_entries ?? []).filter(row => !studentClass || String(row.class_name ?? '').toLowerCase() === studentClass.toLowerCase())
+  const studentClassCounts = useMemo(() => {
+    const counts = new Map<string, number>()
+    rows.forEach(row => {
+      const name = String(row.class_name ?? 'Not assigned').trim() || 'Not assigned'
+      counts.set(name, (counts.get(name) ?? 0) + 1)
+    })
+    return [...counts.entries()].map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count)
+  }, [rows])
   const teacherCounts = useMemo(() => ({
     total: rows.length,
     active: rows.filter(row => String(row.employment_status ?? 'active').toLowerCase() === 'active').length,
