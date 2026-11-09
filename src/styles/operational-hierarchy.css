@@ -1,0 +1,66 @@
+/* Operational workspace hierarchy and readability scale */
+:root {
+  --ed360-text-scale: 1.08;
+}
+#root {
+  zoom: 1.06;
+}
+.ed360-operations-heading {
+  display:flex; align-items:flex-start; justify-content:space-between; gap:18px;
+  margin:0 0 16px; padding:20px 22px;
+  border:1px solid #dce7f4; border-radius:15px;
+  background:linear-gradient(112deg,#fff 0%,#f4f8ff 100%);
+  box-shadow:0 7px 22px rgba(16,45,77,.045);
+}
+.ed360-operations-heading>div:first-child{min-width:0}
+.ed360-operations-kicker{display:block;color:#6482a6;font-size:10px;font-weight:850;letter-spacing:1.15px;line-height:1.5}
+.ed360-operations-heading h1{margin:5px 0 6px;color:#173858;font-size:26px;font-weight:850;letter-spacing:-.65px;line-height:1.18}
+.ed360-operations-heading p{max-width:760px;margin:0;color:#627c98;font-size:13px;line-height:1.55}
+.ed360-operations-heading-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+.ed360-operations-live{display:inline-flex;align-items:center;gap:7px;padding:8px 11px;border:1px solid #dce9e3;border-radius:22px;background:#f5fbf7;color:#34785d;font-size:11px;font-weight:750;white-space:nowrap}
+.ed360-operations-live i{width:7px;height:7px;border-radius:50%;background:#19a66b;box-shadow:0 0 0 3px #e1f5e9}
+.ed360-operations-window-nav{display:flex;align-items:stretch;gap:6px;max-width:100%;overflow-x:auto;margin:0 0 12px;padding:6px;border:1px solid #dce6f1;border-radius:12px;background:#fff;scrollbar-width:thin}
+.ed360-operations-window-nav button{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:42px;flex:0 0 auto;padding:0 13px;border:1px solid transparent;border-radius:8px;background:#f8fafd;color:#526d8a;font-size:12px;font-weight:750;white-space:nowrap;transition:background .15s,border-color .15s,color .15s}
+.ed360-operations-window-nav button:hover{border-color:#cbdcf0;background:#f0f6ff;color:#245fae}
+.ed360-operations-window-nav button.active{border-color:#286fdb;background:#286fdb;color:#fff;box-shadow:0 4px 11px rgba(40,111,219,.2)}
+.ed360-operations-window-nav button b{min-width:22px;padding:3px 6px;border-radius:12px;background:rgba(35,83,145,.09);color:inherit;font-size:10px;text-align:center}
+.ed360-operations-window-nav button.active b{background:rgba(255,255,255,.2)}
+.ed360-operations-context-window{display:flex;align-items:center;justify-content:space-between;gap:15px;margin:0 0 14px;padding:13px 16px;border:1px solid #dce7f4;border-left:4px solid #3478e5;border-radius:10px;background:#f9fbff}
+.ed360-operations-context-window>div:first-child{min-width:0}
+.ed360-operations-context-window>div:first-child>span{display:block;color:#8194ab;font-size:9px;font-weight:850;letter-spacing:1px}
+.ed360-operations-context-window h2{margin:4px 0 3px;color:#1c3c5e;font-size:18px;font-weight:850}
+.ed360-operations-context-window p{margin:0;color:#6d829b;font-size:12px;line-height:1.5}
+.ed360-operations-context-window>div:last-child{display:grid;justify-items:end;gap:3px;flex:0 0 auto}
+.ed360-operations-context-window>div:last-child strong{color:#1b4d85;font-size:21px;font-weight:850}
+.ed360-operations-context-window>div:last-child small{color:#758aa3;font-size:10px}
+.ed360-contextual-subwindow{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(220px,.7fr);gap:13px;margin:16px 22px 4px;padding:14px 15px;border:1px solid #dbe7f5;border-radius:11px;background:linear-gradient(110deg,#f4f8ff,#fbfdff)}
+.ed360-contextual-subwindow>div>span{color:#6f89a8;font-size:9px;font-weight:850;letter-spacing:1px}
+.ed360-contextual-subwindow h3{margin:5px 0;color:#1c3d61;font-size:15px;font-weight:850}
+.ed360-contextual-subwindow p{margin:0;color:#617a96;font-size:11px;line-height:1.55}
+.ed360-contextual-subwindow aside{padding:10px 12px;border:1px solid #e1eaf5;border-radius:8px;background:#fff}
+.ed360-contextual-subwindow aside b{display:block;margin-bottom:4px;color:#315477;font-size:10px}
+.ed360-contextual-subwindow aside p{color:#6d829a;font-size:10px;line-height:1.5}
+.ed360-record-details .ed360-record-details-grid{margin-top:14px}
+.ed360-module-page .page-title-row h1,.ed360-module-page .students-page-heading h1,.ed360-module-page .faculty-page-heading h1{font-size:25px}
+.ed360-module-page .page-title-row p,.ed360-module-page .students-page-heading p,.ed360-module-page .faculty-page-heading p{font-size:12px;line-height:1.55}
+.ed360-module-page .table-toolbar,.ed360-module-page .table-count{font-size:12px}
+.ed360-module-page .table-scroll th,.ed360-module-page .table-scroll td{font-size:11px;padding:13px 14px}
+.ed360-module-page .table-scroll th{font-size:10px;letter-spacing:.55px}
+.ed360-module-page .table-empty{font-size:12px}
+.ed360-module-page .table-empty strong{font-size:14px}
+.ed360-module-page .button,.ed360-module-page .icon-button{font-size:12px}
+.ed360-module-page input,.ed360-module-page select,.ed360-module-page textarea{font-size:12px}
+@media(max-width:850px){
+  .ed360-operations-heading{flex-direction:column;padding:16px}
+  .ed360-operations-heading-actions{width:100%;justify-content:flex-start}
+  .ed360-operations-heading h1{font-size:23px}
+}
+@media(max-width:600px){
+  #root{zoom:1.02}
+  .ed360-operations-window-nav button{min-height:39px;padding:0 10px;font-size:11px}
+  .ed360-operations-context-window{align-items:flex-start}
+  .ed360-operations-context-window>div:last-child{padding-top:5px}
+  .ed360-operations-context-window h2{font-size:16px}
+  .ed360-contextual-subwindow{grid-template-columns:1fr;margin:12px 14px 4px}
+  .ed360-operations-heading-actions{align-items:stretch;flex-direction:column}
+}
