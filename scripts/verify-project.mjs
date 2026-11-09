@@ -106,10 +106,13 @@ check('Dashboard matches the menu and keeps Quick Access at the sidebar bottom',
   assert.ok(quickStart > navEnd, 'Quick Access must be outside the scrollable navigation at the sidebar bottom')
   assert.ok(!dashboardSource.includes('pro-menu-overview') && !dashboardSource.includes('Menu overview'), 'Dashboard must not repeat the sidebar menu')
   assert.ok(dashboardSource.includes('roleNavigationGroups(user!.role)'), 'Sidebar navigation must follow role permissions')
-  assert.ok(dashboardSource.includes('pro-metrics-grid') && dashboardSource.includes('pro-attendance-ring'), 'Dashboard statistics and attendance overview are missing')
-  assert.ok(dashboardSource.includes('Search workspace'), 'Workspace search is missing')
+  assert.ok(dashboardSource.includes('ed360-dashboard'), 'Approved first-image dashboard layout is missing')
+  assert.ok(dashboardSource.includes('ed360-metric-grid') && dashboardSource.includes('ed360-line-chart') && dashboardSource.includes('ed360-module-panel'), 'Dashboard statistics, academic chart or module overview is missing')
+  assert.ok(dashboardSource.includes('ed360-recent-panel') && dashboardSource.includes('ed360-events-panel') && dashboardSource.includes('ed360-quick-stats-panel'), 'Dashboard activity, events or quick statistics panel is missing')
+  assert.ok(dashboardSource.includes('Search modules, students, or records'), 'Workspace search is missing')
+  assert.ok(dashboardSource.includes('ed360-topbar-institution') && dashboardSource.includes('ed360-topbar-notice'), 'Approved institution topbar is missing')
   assert.ok(dashboardSource.includes('pro-profile-menu'), 'Account menu is missing')
-  assert.ok(dashboardSource.includes("available.some(module => module.key === 'attendance')"), 'Attendance insights must only display for roles with attendance access')
+  assert.ok(dashboardSource.includes('QUICK ACCESS') && !dashboardSource.includes('QUICK ACCESS · PINNED'), 'Quick Access must remain a separate unpinned sidebar section')
 })
 
 const authScreens = read('src/components/AuthScreens.tsx')
@@ -220,6 +223,33 @@ check('Module definitions and generic CRUD table allowlist remain valid', () => 
   for (const operation of ['createRecord', 'updateRecord', 'deleteRecord', 'recordFeePayment']) assert.ok(dataSource.includes(`export async function ${operation}`), `${operation} is missing`)
 })
 
+check('Student Record is a complete permission-aware multi-window workspace', () => {
+  const recordModule = read('src/components/RecordModule.tsx')
+  for (const label of ['Overview', 'Admissions', 'Student Directory', 'Student Profile', 'Class Placement', 'Guardians', 'Attendance', 'Exams & Results', 'Assignments', 'Fees & Payments', 'Timetable', 'Documents', 'History']) {
+    assert.ok(recordModule.includes("label: '" + label + "'"), 'Student workspace window is missing: ' + label)
+  }
+  for (const table of ['attendance', 'exams', 'exam_results', 'assignments', 'assignment_submissions', 'fee_invoices', 'timetable_entries']) {
+    assert.ok(recordModule.includes("'" + table + "'"), 'Student workspace is missing related data source: ' + table)
+  }
+  assert.ok(recordModule.includes('studentRelatedTables.map'), 'Student related workspaces must load their linked records')
+  assert.ok(recordModule.includes('setStudentWorkspaceTab'), 'Student workspace windows must navigate independently inside Student Record')
+  assert.ok(recordModule.includes('Student admission saved successfully.'), 'Student admission confirmation is missing')
+  assert.ok(recordModule.includes('Do not submit this admission again'), 'Unconfirmed admissions must not encourage duplicate submission')
+  assert.ok(recordModule.includes('This admission number is already registered'), 'Duplicate admission numbers must be checked before insert')
+  assert.ok(recordModule.includes("isStudent && field.name === 'status'") && recordModule.includes("? 'pending'"), 'New student admissions must start in Pending status')
+  const dataSource = read('src/lib/data.ts')
+  assert.ok(dataSource.includes("if (table === 'students')"), 'Student insertion must use its specific authorization-safe path')
+  assert.ok(dataSource.includes("rpc('has_institution_role'") || dataSource.includes("rpc('has_institution_role',"), 'Student admission must verify existing owner/admin authorization')
+  assert.ok(recordModule.includes('The database accepted this admission'), 'Student admission must distinguish database insert from read-back confirmation')
+  const dashboard = read('src/components/Dashboard.tsx')
+  const navStart = dashboard.indexOf('<nav className="pro-navigation"')
+  const navEnd = dashboard.indexOf('</nav>', navStart)
+  const quickStart = dashboard.indexOf('className="pro-quick-access"')
+  assert.ok(quickStart > navEnd, 'Quick Access must remain outside the scrollable menu')
+  const workspaceCss = read('src/styles/module-workspaces.css')
+  assert.ok(workspaceCss.includes('.ed360-student-window-nav') && workspaceCss.includes('.ed360-student-profile-grid'), 'Student workspace styling is missing')
+})
+
 check('GitHub-hosted release pipeline builds assets and keeps production deploy manual', () => {
   const workflow = read('.github/workflows/cloudflare-pages-release.yml')
   for (const phrase of ['workflow_dispatch', 'npm ci --no-audit --no-fund', 'npm run verify:project', 'npm run test:user-errors', 'npm run test:finance', 'npm run test:file-access', 'npm run build', 'edusphere360-cloudflare-direct-upload.zip', 'cloudflare/wrangler-action@v4']) {
@@ -260,7 +290,7 @@ check('All TypeScript and TSX sources parse without syntax diagnostics', () => {
     const source = fs.readFileSync(file, 'utf8')
     const kind = file.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS
     const parsed = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, kind)
-    for (const diagnostic of parsed.parseDiagnostics ?? []) diagnostics.push(`${path.relative(root, file)}: ${ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n')}`)
+    for (const diagnostic of parsed.parseDiagnostics ?? []) { const position = parsed.getLineAndCharacterOfPosition(diagnostic.start ?? 0); diagnostics.push(`${path.relative(root, file)}:${position.line + 1}:${position.character + 1}: ${ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n')}`) }
   }
   assert.deepEqual(diagnostics, [], diagnostics.join('\n'))
   console.log(`      Parsed ${sourceFiles.length} TypeScript/TSX files.`)

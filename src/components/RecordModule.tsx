@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
-  AlertCircle, BadgeCheck, Check, Clock3, Edit3, GraduationCap, ImagePlus,
-  Plus, RefreshCw, Search, Trash2, Users, X,
+  Activity, AlertCircle, BookOpen, CalendarCheck, CalendarDays,
+  Check, ChevronLeft, ChevronRight, ClipboardCheck, Edit3, Eye,
+  FileText, FolderOpen, GraduationCap, HeartHandshake, History, ImagePlus,
+  LayoutDashboard, Plus, RefreshCw, Search, ShieldCheck, Trash2,
+  UserRound, Users, Wallet, X,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { createRecord, deleteRecord, listAccounts, listFeePayments, listRecords, recordFeePayment, updateRecord } from '../lib/data'
@@ -11,11 +14,15 @@ import { netInvoiceAmount, outstandingInvoiceBalance } from '../lib/finance'
 import type { AppMode, FieldConfig, ModuleConfig, RecordRow } from '../lib/types'
 import '../styles/student-module.css'
 import '../styles/faculty-module.css'
+import '../styles/module-workspaces.css'
+import { ModuleInsights } from './ModuleInsights'
 
 interface Props { module: ModuleConfig; onToast: (message: string, error?: boolean) => void }
 type StudentStatus = 'all' | 'active' | 'pending' | 'graduated' | 'inactive'
 type EmployeeStatus = 'all' | 'active' | 'on_leave' | 'inactive'
 type FeeStatus = 'all' | 'unpaid' | 'partial' | 'overdue' | 'paid'
+type StudentWorkspaceTab = 'overview' | 'admissions' | 'directory' | 'profile' | 'classes' | 'guardians' | 'attendance' | 'results' | 'assignments' | 'fees' | 'timetable' | 'documents' | 'history'
+const studentRelatedTables = ['attendance', 'exams', 'exam_results', 'assignments', 'assignment_submissions', 'fee_invoices', 'timetable_entries'] as const
 
 function makeEmployeeNumber() {
   const suffix = crypto.randomUUID().replace(/-/g, '').slice(0, 8).toUpperCase()
@@ -46,9 +53,11 @@ function RecordForm({ module, initial, onCancel, onSave, saving, mode }: {
       String(initial?.[field.name] ?? (
         isStudent && field.name === 'admission_no'
           ? makeAdmissionNumber()
-          : isTeacher && field.name === 'employee_no'
-            ? makeEmployeeNumber()
-            : field.type === 'select' ? field.options?.[0]?.value ?? '' : ''
+          : isStudent && field.name === 'status'
+            ? 'pending'
+            : isTeacher && field.name === 'employee_no'
+              ? makeEmployeeNumber()
+              : field.type === 'select' ? field.options?.[0]?.value ?? '' : ''
       )),
     ]),
   ))
@@ -60,6 +69,18 @@ function RecordForm({ module, initial, onCancel, onSave, saving, mode }: {
     let alive = true
     async function loadDynamicOptions() {
       const next: Record<string, { label: string; value: string }[]> = {}
+      if (isStudent) {
+        try {
+          const classRecords = await listRecords(mode, user!, 'classes')
+          next.student_class = classRecords.map(record => ({
+            value: String(record.name ?? record.title ?? record.class_name ?? ''),
+            label: String(record.name ?? record.title ?? record.class_name ?? ''),
+          })).filter(option => option.value)
+        } catch {
+          // The existing students.class_name field accepts a value directly when
+          // the institution has not configured class records yet.
+        }
+      }
       if (module.fields.some((field) => field.name === 'student_id')) {
         const learners = await listRecords(mode, user!, 'students')
         next.student_id = learners.map((student) => ({
@@ -178,7 +199,11 @@ function RecordForm({ module, initial, onCancel, onSave, saving, mode }: {
             if (isStudentSubmission && ['marks_obtained', 'feedback', 'status'].includes(field.name)) return null
             return <label key={field.name} className={`field-label ${field.type === 'textarea' ? 'full-field' : ''} ${isStudent ? 'student-field' : ''}`}>
               <span>{isAutoStudentId ? 'Student ID / admission number' : isAutoEmployeeId ? 'Employee ID' : field.label}{field.required && !(module.key === 'assignment_submissions' && user!.role === 'student' && field.name === 'student_id') ? <span className="student-required"> *</span> : null}</span>
-              {isAutoStudentId || isAutoEmployeeId ? <div className={isAutoStudentId ? 'student-generated-id-wrap' : 'faculty-generated-id-wrap'}>
+              {isStudent && field.name === 'class_name' ? <>
+                <input className="input-control" list="ed360-student-class-options" required={field.required} value={values[field.name] ?? ''} onChange={event => update(field, event.target.value)} placeholder="Choose or enter class / programme"/>
+                <datalist id="ed360-student-class-options">{(dynamicOptions.student_class ?? []).map(option => <option key={option.value} value={option.value}/>)}</datalist>
+                <small className="student-field-help">Choose a configured class or enter the class/programme name.</small>
+              </> : isAutoStudentId || isAutoEmployeeId ? <div className={isAutoStudentId ? 'student-generated-id-wrap' : 'faculty-generated-id-wrap'}>
                 <input className={`input-control ${isAutoStudentId ? 'student-generated-id' : 'faculty-generated-id'}`} value={values[field.name] ?? ''} readOnly required aria-label={isAutoStudentId ? 'Automatically generated student ID' : 'Automatically generated employee ID'}/>
                 <button type="button" className={isAutoStudentId ? 'student-regenerate-button' : 'faculty-regenerate-button'} onClick={() => update(field, isAutoStudentId ? makeAdmissionNumber() : makeEmployeeNumber())} title={isAutoStudentId ? 'Generate another student ID' : 'Generate another employee ID'}>Regenerate</button>
               </div> : module.key === 'assignment_submissions' && user!.role === 'student' && field.name === 'student_id' ? <div className="input-control" aria-label="Your linked student account">Your linked student record</div> : field.type === 'select' ? <select className="input-control" disabled={(lockTaskAssignee && lockTaskDefinitionFields.includes(field.name)) || (module.key === 'assignment_submissions' && user!.role === 'student' && field.name === 'assignment_id' && Boolean(initial))} required={field.required && !(module.key === 'assignment_submissions' && user!.role === 'student' && field.name === 'student_id')} value={values[field.name] ?? ''} onChange={event => update(field, event.target.value)}>
@@ -327,6 +352,44 @@ function FeePaymentHistoryDialog({ invoice, onClose }: { invoice: RecordRow; onC
   </div>
 }
 
+function RecordDetailsDialog({ module, row, onClose }: { module: ModuleConfig; row: RecordRow; onClose: () => void }) {
+  const displayFields = module.fields.filter(field => field.name !== 'photo_path')
+  return <div className="modal-backdrop" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) onClose() }}>
+    <section className="modal-card ed360-record-details" role="dialog" aria-modal="true" aria-labelledby="record-details-title">
+      <div className="modal-heading">
+        <div><div className="eyebrow">RECORD DETAILS</div><h2 id="record-details-title">{String(row.full_name ?? row.title ?? row.name ?? row.admission_no ?? module.title)}</h2><p>{module.title} · {String(row.admission_no ?? row.code ?? row.id)}</p></div>
+        <button type="button" className="icon-button" onClick={onClose} aria-label="Close"><X size={19}/></button>
+      </div>
+      {module.key === 'students' && <div className="student-photo-row"><StudentPhoto row={row}/><div className="student-photo-copy"><strong>{String(row.full_name ?? 'Student')}</strong><p>{String(row.admission_no ?? 'Admission number not set')}</p></div></div>}
+      <div className="ed360-record-details-grid">
+        {displayFields.map(field => {
+          const raw = row[field.name]
+          const option = field.options?.find(item => item.value === String(raw ?? ''))
+          const value = field.type === 'date' ? niceDate(raw) : option?.label ?? String(raw ?? '—').replaceAll('_', ' ')
+          return <div className="ed360-record-detail" key={field.name}><small>{field.label}</small><b>{value || '—'}</b></div>
+        })}
+      </div>
+      <div className="modal-actions"><button type="button" className="button button-primary" onClick={onClose}>Close</button></div>
+    </section>
+  </div>
+}
+
+function WorkspacePagination({ page, pageCount, pageSize, total, onChange }: {
+  page: number; pageCount: number; pageSize: number; total: number; onChange: (next: number) => void
+}) {
+  if (total <= pageSize) return null
+  const first = (page - 1) * pageSize + 1
+  const last = Math.min(page * pageSize, total)
+  return <div className="ed360-table-pagination">
+    <span>Showing <b>{first}–{last}</b> of <b>{total.toLocaleString()}</b> records</span>
+    <div className="ed360-pagination-controls">
+      <button type="button" aria-label="Previous page" disabled={page <= 1} onClick={() => onChange(page - 1)}><ChevronLeft size={14}/></button>
+      {Array.from({ length: pageCount }, (_, index) => index + 1).filter(number => number === 1 || number === pageCount || Math.abs(number - page) <= 1).map(number => <button type="button" key={number} className={number === page ? 'active' : ''} aria-current={number === page ? 'page' : undefined} onClick={() => onChange(number)}>{number}</button>)}
+      <button type="button" aria-label="Next page" disabled={page >= pageCount} onClick={() => onChange(page + 1)}><ChevronRight size={14}/></button>
+    </div>
+  </div>
+}
+
 export function RecordModule({ module, onToast }: Props) {
   const { mode, user } = useAuth()
   const [rows, setRows] = useState<RecordRow[]>([])
@@ -337,7 +400,15 @@ export function RecordModule({ module, onToast }: Props) {
   const [showForm, setShowForm] = useState(false)
   const [paymentTarget, setPaymentTarget] = useState<RecordRow | null>(null)
   const [historyTarget, setHistoryTarget] = useState<RecordRow | null>(null)
+  const [viewing, setViewing] = useState<RecordRow | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const pageSize = 10
   const [studentStatus, setStudentStatus] = useState<StudentStatus>('all')
+  const [studentWorkspaceTab, setStudentWorkspaceTab] = useState<StudentWorkspaceTab>('overview')
+  const [selectedStudentId, setSelectedStudentId] = useState('')
+  const [studentRelatedRows, setStudentRelatedRows] = useState<Record<string, RecordRow[]>>({})
+  const [studentRelatedLoading, setStudentRelatedLoading] = useState(false)
+  const [studentRelatedErrors, setStudentRelatedErrors] = useState<string[]>([])
   const [employeeStatus, setEmployeeStatus] = useState<EmployeeStatus>('all')
   const [feeStatus, setFeeStatus] = useState<FeeStatus>('all')
   const canEdit = ['owner', 'admin'].includes(user!.role)
@@ -354,13 +425,40 @@ export function RecordModule({ module, onToast }: Props) {
     || (user!.role === 'exam_officer' && ['exams', 'exam_results'].includes(module.key))
   const canCollectFeePayment = module.key === 'fees' && ['owner', 'admin', 'accountant'].includes(user!.role)
 
-  async function load() {
+  async function load(options: { silent?: boolean } = {}): Promise<RecordRow[] | null> {
     setLoading(true)
-    try { setRows(await listRecords(mode, user!, module.table)) }
-    catch (error) { onToast(userFacingError(error, 'Could not load records. Refresh and try again.'), true) }
-    finally { setLoading(false) }
+    try {
+      const nextRows = await listRecords(mode, user!, module.table)
+      setRows(nextRows)
+      return nextRows
+    } catch (error) {
+      if (!options.silent) onToast(userFacingError(error, 'Could not load records. Refresh and try again.'), true)
+      return null
+    } finally { setLoading(false) }
   }
-  useEffect(() => { void load() }, [mode, user?.id, module.table])
+  useEffect(() => { setCurrentPage(1); void load() }, [mode, user?.id, user?.institutionId, module.table])
+
+  useEffect(() => {
+    if (module.key !== 'students') return
+    let active = true
+    setStudentRelatedLoading(true)
+    setStudentRelatedErrors([])
+    void Promise.all(studentRelatedTables.map(async table => {
+      try {
+        const related = await listRecords(mode, user!, table)
+        return { table, rows: related, error: '' }
+      } catch (error) {
+        return { table, rows: [] as RecordRow[], error: userFacingError(error, 'A related student section could not be loaded.') }
+      }
+    })).then(results => {
+      if (!active) return
+      setStudentRelatedRows(Object.fromEntries(results.map(result => [result.table, result.rows])))
+      setStudentRelatedErrors(results.filter(result => result.error).map(result => result.error))
+    }).finally(() => {
+      if (active) setStudentRelatedLoading(false)
+    })
+    return () => { active = false }
+  }, [module.key, mode, user?.id, user?.institutionId, user?.role, user?.linkedStudentId])
 
   const filtered = useMemo(() => rows.filter(row =>
     module.columns.some(column => String(row[column.key] ?? '').toLowerCase().includes(search.toLowerCase()))
@@ -372,7 +470,40 @@ export function RecordModule({ module, onToast }: Props) {
     active: rows.filter(row => String(row.status ?? 'active').toLowerCase() === 'active').length,
     pending: rows.filter(row => String(row.status ?? '').toLowerCase() === 'pending').length,
     graduated: rows.filter(row => String(row.status ?? '').toLowerCase() === 'graduated').length,
+    inactive: rows.filter(row => String(row.status ?? '').toLowerCase() === 'inactive').length,
   }), [rows])
+  const selectedStudent = useMemo(
+    () => rows.find(row => row.id === selectedStudentId) ?? rows[0] ?? null,
+    [rows, selectedStudentId],
+  )
+  useEffect(() => {
+    if (rows.length && !rows.some(row => row.id === selectedStudentId)) setSelectedStudentId(rows[0].id)
+    if (!rows.length && selectedStudentId) setSelectedStudentId('')
+  }, [rows, selectedStudentId])
+  const matchesStudent = (row: RecordRow, student: RecordRow | null) => {
+    if (!student) return false
+    const sameId = Boolean(row.student_id && row.student_id === student.id)
+    const rowName = String(row.student_name ?? '').trim().toLowerCase()
+    const sameName = Boolean(rowName && rowName === String(student.full_name ?? '').trim().toLowerCase())
+    const sameAdmission = Boolean(row.admission_no && row.admission_no === student.admission_no)
+    return sameId || sameAdmission || sameName
+  }
+  const studentAttendanceRows = (studentRelatedRows.attendance ?? []).filter(row => matchesStudent(row, selectedStudent))
+  const studentResultRows = (studentRelatedRows.exam_results ?? []).filter(row => matchesStudent(row, selectedStudent))
+  const studentSubmissionRows = (studentRelatedRows.assignment_submissions ?? []).filter(row => matchesStudent(row, selectedStudent))
+  const studentFeeRows = (studentRelatedRows.fee_invoices ?? []).filter(row => matchesStudent(row, selectedStudent))
+  const studentClass = String(selectedStudent?.class_name ?? '')
+  const studentAssignmentRows = (studentRelatedRows.assignments ?? []).filter(row => !studentClass || String(row.class_name ?? '').toLowerCase() === studentClass.toLowerCase())
+  const studentExamRows = (studentRelatedRows.exams ?? []).filter(row => !studentClass || String(row.class_name ?? '').toLowerCase() === studentClass.toLowerCase())
+  const studentTimetableRows = (studentRelatedRows.timetable_entries ?? []).filter(row => !studentClass || String(row.class_name ?? '').toLowerCase() === studentClass.toLowerCase())
+  const studentClassCounts = useMemo(() => {
+    const counts = new Map<string, number>()
+    rows.forEach(row => {
+      const name = String(row.class_name ?? 'Not assigned').trim() || 'Not assigned'
+      counts.set(name, (counts.get(name) ?? 0) + 1)
+    })
+    return [...counts.entries()].map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count)
+  }, [rows])
   const teacherCounts = useMemo(() => ({
     total: rows.length,
     active: rows.filter(row => String(row.employment_status ?? 'active').toLowerCase() === 'active').length,
@@ -387,6 +518,14 @@ export function RecordModule({ module, onToast }: Props) {
     return { invoices: rows.length, billed, received, outstanding, overdue }
   }, [rows])
 
+  const teacherFiltered = useMemo(() => filtered.filter(row => employeeStatus === 'all' || String(row.employment_status ?? 'active').toLowerCase() === employeeStatus), [filtered, employeeStatus])
+  const studentPageCount = Math.max(1, Math.ceil(studentFiltered.length / pageSize))
+  const teacherPageCount = Math.max(1, Math.ceil(teacherFiltered.length / pageSize))
+  const filteredPageCount = Math.max(1, Math.ceil(filtered.length / pageSize))
+  const studentPageRows = studentFiltered.slice((currentPage - 1) * pageSize, currentPage * pageSize)
+  const teacherPageRows = teacherFiltered.slice((currentPage - 1) * pageSize, currentPage * pageSize)
+  const filteredPageRows = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize)
+
   async function save(values: Record<string, unknown>) {
     setSaving(true)
     let targetEditing = editing
@@ -400,6 +539,18 @@ export function RecordModule({ module, onToast }: Props) {
       for (const field of module.fields) {
         if (payload[field.name] === '') payload[field.name] = field.type === 'number' ? (field.name === 'paid_amount' ? 0 : null) : null
         if (field.type === 'number' && payload[field.name] !== null && payload[field.name] !== undefined) payload[field.name] = Number(payload[field.name])
+      }
+
+      if (module.key === 'students') {
+        const admissionNo = String(payload.admission_no ?? '').trim().toLowerCase()
+        const fullName = String(payload.full_name ?? '').trim()
+        if (!admissionNo || !fullName || !String(payload.class_name ?? '').trim()) {
+          throw new Error('Enter the admission number, student name and class/programme before saving.')
+        }
+        const existingStudents = await listRecords(mode, user!, 'students')
+        if (existingStudents.some(student => student.id !== targetEditing?.id && String(student.admission_no ?? '').trim().toLowerCase() === admissionNo)) {
+          throw new Error('This admission number is already registered. Generate a new student ID before saving.')
+        }
       }
 
       if (module.key === 'students' && photoFile) {
@@ -560,15 +711,39 @@ export function RecordModule({ module, onToast }: Props) {
         if (collision) throw new Error('This time overlaps an existing class, teacher or room booking. Choose another slot.')
       }
 
-      if (targetEditing) await updateRecord(mode, user!, module.table, targetEditing.id, payload)
-      else await createRecord(mode, user!, module.table, payload)
+      if (targetEditing) {
+        await updateRecord(mode, user!, module.table, targetEditing.id, payload)
+      } else {
+        await createRecord(mode, user!, module.table, payload)
+      }
 
       if (newlyUploadedPhotoPath && targetEditing?.photo_path && typeof targetEditing.photo_path === 'string' && supabase) {
         // Best-effort cleanup after the new record path has been saved.
         await supabase.storage.from('institution-files').remove([targetEditing.photo_path])
       }
-      onToast(targetEditing ? 'Record updated successfully.' : 'Record created successfully.')
-      setShowForm(false); setEditing(null); await load()
+
+      setShowForm(false)
+      setEditing(null)
+      const refreshedRows = await load({ silent: module.key === 'students' })
+      if (module.key === 'students') {
+        const savedStudent = refreshedRows?.find(row => row.id === targetEditing?.id)
+          ?? refreshedRows?.find(row => String(row.admission_no ?? '').trim().toLowerCase() === String(payload.admission_no ?? '').trim().toLowerCase())
+        const confirmed = Boolean(savedStudent
+          && String(savedStudent.full_name ?? '') === String(payload.full_name ?? '')
+          && String(savedStudent.class_name ?? '') === String(payload.class_name ?? '')
+          && String(savedStudent.status ?? '') === String(payload.status ?? 'pending'))
+        if (!confirmed) {
+          onToast(targetEditing
+            ? 'The student update was accepted, but the refreshed directory could not confirm the latest values. Do not repeat the update; refresh the directory or ask an owner to review access.'
+            : 'The database accepted this admission, but the student directory could not confirm the new record. Do not submit this admission again; refresh the directory or ask an owner to review read access.', true)
+          return
+        }
+        setSelectedStudentId(savedStudent!.id)
+        setStudentWorkspaceTab('profile')
+        onToast(targetEditing ? 'Student record updated successfully.' : 'Student admission saved successfully.')
+      } else {
+        onToast(targetEditing ? 'Record updated successfully.' : 'Record created successfully.')
+      }
     } catch (error) {
       if (newlyUploadedPhotoPath && supabase) {
         try { await supabase.storage.from('institution-files').remove([newlyUploadedPhotoPath]) } catch { /* best-effort cleanup */ }
@@ -589,81 +764,261 @@ export function RecordModule({ module, onToast }: Props) {
   }
 
   const formDialog = showForm ? <RecordForm module={module} initial={editing} saving={saving} mode={mode} onCancel={() => { setShowForm(false); setEditing(null) }} onSave={values => void save(values)}/> : null
+  const detailDialog = viewing ? <RecordDetailsDialog module={module} row={viewing} onClose={() => setViewing(null)}/> : null
 
   if (module.key === 'students') {
     const filters: { key: StudentStatus; label: string }[] = [
-      { key: 'all', label: 'All students' }, { key: 'active', label: 'Active' },
+      { key: 'all', label: 'All' }, { key: 'active', label: 'Active' },
       { key: 'pending', label: 'Pending' }, { key: 'graduated', label: 'Graduated' }, { key: 'inactive', label: 'Inactive' },
     ]
-    return <div className="page-content students-page">
-      <div className="students-page-heading">
-        <div><div className="eyebrow">PEOPLE / STUDENT DIRECTORY</div><h1>Students</h1><p>Manage admissions, student profiles, class placement and learner records.</p></div>
-        {canEdit && <button className="button button-primary students-add-button" onClick={() => { setEditing(null); setShowForm(true) }}><Plus size={17}/> Add student</button>}
+    const tabItems = [
+      { key: 'overview' as const, label: 'Overview', icon: LayoutDashboard },
+      { key: 'admissions' as const, label: 'Admissions', icon: GraduationCap, count: studentCounts.pending },
+      { key: 'directory' as const, label: 'Student Directory', icon: Users, count: studentCounts.total },
+      { key: 'profile' as const, label: 'Student Profile', icon: UserRound },
+      { key: 'classes' as const, label: 'Class Placement', icon: BookOpen },
+      { key: 'guardians' as const, label: 'Guardians', icon: HeartHandshake },
+      { key: 'attendance' as const, label: 'Attendance', icon: CalendarCheck },
+      { key: 'results' as const, label: 'Exams & Results', icon: ClipboardCheck },
+      { key: 'assignments' as const, label: 'Assignments', icon: FileText },
+      { key: 'fees' as const, label: 'Fees & Payments', icon: Wallet },
+      { key: 'timetable' as const, label: 'Timetable', icon: CalendarDays },
+      { key: 'documents' as const, label: 'Documents', icon: FolderOpen },
+      { key: 'history' as const, label: 'History', icon: History },
+    ]
+    const ownerOrAdmin = ['owner', 'admin'].includes(user!.role)
+    const visibleTabItems = tabItems.filter(item => {
+      if (ownerOrAdmin) return true
+      if (user!.role === 'teacher') return ['overview', 'directory', 'profile', 'classes', 'attendance', 'results', 'assignments', 'timetable', 'history'].includes(item.key)
+      return ['overview', 'profile', 'classes', 'guardians', 'attendance', 'results', 'assignments', 'fees', 'timetable', 'documents', 'history'].includes(item.key)
+    })
+    const pendingRows = rows.filter(row => String(row.status ?? 'active').toLowerCase() === 'pending')
+    const presentCount = studentAttendanceRows.filter(row => ['present', 'late'].includes(String(row.status ?? '').toLowerCase())).length
+    const absentCount = studentAttendanceRows.filter(row => String(row.status ?? '').toLowerCase() === 'absent').length
+    const attendanceRate = studentAttendanceRows.length ? Math.round(presentCount / studentAttendanceRows.length * 100) : 0
+    const publishedResults = studentResultRows.filter(row => String(row.result_status ?? '').toLowerCase() === 'published')
+    const totalBilled = studentFeeRows.reduce((sum, row) => sum + netInvoiceAmount(row), 0)
+    const totalPaid = studentFeeRows.reduce((sum, row) => sum + Math.max(0, Number(row.paid_amount ?? 0)), 0)
+    const totalOutstanding = studentFeeRows.reduce((sum, row) => sum + outstandingInvoiceBalance(row), 0)
+    const studentTimeline = [
+      ...(selectedStudent ? [{
+        id: 'student-' + selectedStudent.id,
+        date: selectedStudent.created_at ?? '',
+        label: 'Student registration',
+        detail: String(selectedStudent.full_name ?? 'Student') + ' was registered',
+        status: String(selectedStudent.status ?? 'active'),
+      }] : []),
+      ...studentAttendanceRows.map(row => ({ id: 'attendance-' + row.id, date: String(row.attendance_date ?? row.created_at ?? ''), label: 'Attendance', detail: String(row.status ?? 'Attendance') + ' · ' + String(row.class_name ?? studentClass), status: String(row.status ?? '') })),
+      ...studentResultRows.map(row => ({ id: 'result-' + row.id, date: String(row.created_at ?? ''), label: 'Examination result', detail: String(row.exam_title ?? 'Examination') + ' · ' + String(row.grade ?? row.marks_obtained ?? 'Marks recorded'), status: String(row.result_status ?? 'draft') })),
+      ...studentSubmissionRows.map(row => ({ id: 'submission-' + row.id, date: String(row.submitted_at ?? row.created_at ?? ''), label: 'Assignment submission', detail: String(row.assignment_title ?? 'Assignment') + ' · ' + String(row.status ?? 'submitted'), status: String(row.status ?? '') })),
+      ...studentFeeRows.map(row => ({ id: 'fee-' + row.id, date: String(row.invoice_date ?? row.created_at ?? ''), label: 'Fee invoice', detail: String(row.invoice_no ?? row.invoice_number ?? 'Invoice') + ' · ' + String(row.fee_title ?? 'Fees'), status: String(row.status ?? '') })),
+    ].filter(item => item.date).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 30)
+    const renderTable = (dataRows: RecordRow[], columns: { key: string; label: string }[], emptyMessage: string) => dataRows.length === 0
+      ? <div className="ed360-student-empty"><span><FolderOpen size={21}/></span><strong>No records to display</strong><p>{emptyMessage}</p></div>
+      : <div className="ed360-student-table-wrap"><table className="ed360-student-table"><thead><tr>{columns.map(column => <th key={column.key}>{column.label}</th>)}</tr></thead><tbody>{dataRows.map(row => <tr key={row.id}>{columns.map(column => {
+        const raw = row[column.key]
+        const value = raw === null || raw === undefined || raw === '' ? '—'
+          : ['attendance_date', 'due_date', 'exam_date', 'submitted_at', 'created_at', 'invoice_date'].includes(column.key) ? niceDate(raw)
+          : ['amount', 'paid_amount', 'marks_obtained', 'total_marks', 'balance'].includes(column.key) ? Number(raw).toLocaleString(undefined, { maximumFractionDigits: 2 })
+          : String(raw).replaceAll('_', ' ')
+        return <td key={column.key}>{['status', 'result_status'].includes(column.key) ? <span className={'status-pill status-' + String(raw ?? '').toLowerCase()}>{value}</span> : value}</td>
+      })}</tr>)}</tbody></table></div>
+
+    return <div className="page-content ed360-module-page students-page ed360-student-workspace">
+      <header className="ed360-student-workspace-heading">
+        <div className="ed360-student-heading-copy">
+          <span className="ed360-workspace-kicker">ADMISSION & STUDENT MANAGEMENT</span>
+          <h1>Student Management</h1>
+          <p>Admissions, student profiles and the complete learner lifecycle in one workspace.</p>
+        </div>
+        <div className="ed360-student-heading-actions">
+          <button type="button" className="button button-outline" onClick={() => void load()} disabled={loading}><RefreshCw size={15} className={loading ? 'spin' : ''}/> Refresh</button>
+          {canCreate && <button type="button" className="button button-primary" onClick={() => { setEditing(null); setShowForm(true) }}><Plus size={16}/> New admission</button>}
+        </div>
+      </header>
+
+      <nav className="ed360-student-window-nav" aria-label="Student management windows">
+        {visibleTabItems.map(item => {
+          const Icon = item.icon
+          return <button type="button" key={item.key} className={studentWorkspaceTab === item.key ? 'active' : ''} aria-current={studentWorkspaceTab === item.key ? 'page' : undefined} onClick={() => { setStudentWorkspaceTab(item.key); setCurrentPage(1) }}>
+            <Icon size={15}/><span>{item.label}</span>{typeof item.count === 'number' && <b>{item.count.toLocaleString()}</b>}
+          </button>
+        })}
+      </nav>
+
+      <div className="ed360-student-window-context">
+        <div><span className="ed360-context-label">CURRENT WINDOW</span><strong>{visibleTabItems.find(item => item.key === studentWorkspaceTab)?.label ?? 'Overview'}</strong></div>
+        <label>Selected student
+          <select value={selectedStudent?.id ?? ''} onChange={event => setSelectedStudentId(event.target.value)} disabled={!rows.length}>
+            {rows.length === 0 && <option value="">No student records</option>}
+            {rows.map(row => <option key={row.id} value={row.id}>{String(row.full_name ?? 'Student')} · {String(row.admission_no ?? 'No ID')}</option>)}
+          </select>
+        </label>
+        {studentRelatedLoading && <span className="ed360-related-loading"><RefreshCw className="spin" size={13}/> Updating linked records</span>}
       </div>
-      <div className="student-stats-grid">
-        <div className="student-stat-card"><span className="student-stat-icon blue"><Users size={19}/></span><span className="student-stat-label">Total students</span><strong>{loading ? '—' : studentCounts.total.toLocaleString()}</strong><small>All admission records</small></div>
-        <div className="student-stat-card"><span className="student-stat-icon green"><BadgeCheck size={19}/></span><span className="student-stat-label">Active students</span><strong>{loading ? '—' : studentCounts.active.toLocaleString()}</strong><small>Currently enrolled</small></div>
-        <div className="student-stat-card"><span className="student-stat-icon amber"><Clock3 size={19}/></span><span className="student-stat-label">Pending admissions</span><strong>{loading ? '—' : studentCounts.pending.toLocaleString()}</strong><small>Awaiting confirmation</small></div>
-        <div className="student-stat-card"><span className="student-stat-icon violet"><GraduationCap size={19}/></span><span className="student-stat-label">Graduated</span><strong>{loading ? '—' : studentCounts.graduated.toLocaleString()}</strong><small>Completed programmes</small></div>
-      </div>
-      <section className="student-directory-card">
-        <div className="student-directory-heading"><div><h2>Student directory</h2><p>Search and manage students registered at your institution.</p></div><span className="student-mode-tag cloud">Cloud records</span></div>
+      {studentRelatedErrors.length > 0 && <div className="ed360-student-data-note" role="status"><ShieldCheck size={15}/><span>Some related information is not available to this role. Your student records and permitted sections remain available.</span></div>}
+
+      {studentWorkspaceTab === 'overview' && <>
+        <ModuleInsights module={module} rows={rows} loading={loading}/>
+        <div className="ed360-student-overview-grid">
+          <section className="ed360-student-panel">
+            <header><div><span className="ed360-student-panel-icon"><BookOpen size={17}/></span><div><h2>Students by class / programme</h2><p>Enrolment distribution using the class field on student records.</p></div></div><button type="button" onClick={() => setStudentWorkspaceTab('classes')}>Open class placement <ChevronRight size={14}/></button></header>
+            {studentClassCounts.length ? <div className="ed360-student-class-bars">{studentClassCounts.slice(0, 7).map(item => <div key={item.name}><div><span>{item.name}</span><b>{item.count}</b></div><i><span style={{ width: (item.count / Math.max(1, studentCounts.total) * 100) + '%' }}/></i></div>)}</div> : <div className="ed360-student-empty"><strong>No class information yet</strong><p>Class distribution will appear when student admissions are registered.</p></div>}
+          </section>
+          <section className="ed360-student-panel">
+            <header><div><span className="ed360-student-panel-icon green"><Activity size={17}/></span><div><h2>Admission pipeline</h2><p>Current student registration status.</p></div></div><button type="button" onClick={() => setStudentWorkspaceTab('admissions')}>Review admissions <ChevronRight size={14}/></button></header>
+            <div className="ed360-student-pipeline">
+              <div><span>Active</span><b>{studentCounts.active}</b><i><span style={{ width: (studentCounts.total ? studentCounts.active / studentCounts.total * 100 : 0) + '%', background: '#16a36b' }}/></i></div>
+              <div><span>Pending</span><b>{studentCounts.pending}</b><i><span style={{ width: (studentCounts.total ? studentCounts.pending / studentCounts.total * 100 : 0) + '%', background: '#e6a23c' }}/></i></div>
+              <div><span>Inactive</span><b>{studentCounts.inactive}</b><i><span style={{ width: (studentCounts.total ? studentCounts.inactive / studentCounts.total * 100 : 0) + '%', background: '#8b62e8' }}/></i></div>
+              <div><span>Graduated</span><b>{studentCounts.graduated}</b><i><span style={{ width: (studentCounts.total ? studentCounts.graduated / studentCounts.total * 100 : 0) + '%', background: '#2877ee' }}/></i></div>
+            </div>
+          </section>
+          <section className="ed360-student-panel ed360-student-panel-wide">
+            <header><div><span className="ed360-student-panel-icon violet"><History size={17}/></span><div><h2>Recent admissions</h2><p>Latest registered student profiles.</p></div></div><button type="button" onClick={() => setStudentWorkspaceTab('directory')}>Open directory <ChevronRight size={14}/></button></header>
+            {rows.length ? <div className="ed360-student-recent-list">{[...rows].slice(0, 5).map(row => <button type="button" key={row.id} onClick={() => { setSelectedStudentId(row.id); setStudentWorkspaceTab('profile') }}><StudentPhoto row={row}/><span><strong>{String(row.full_name ?? 'Student')}</strong><small>{String(row.admission_no ?? 'No admission ID')} · {String(row.class_name ?? 'Class not assigned')}</small></span><em className={'status-pill status-' + String(row.status ?? 'active')}>{statusLabel(row.status)}</em></button>)}</div> : <div className="ed360-student-empty"><span><GraduationCap size={22}/></span><strong>No student admissions yet</strong><p>Use New admission to register the first student. New applications start in Pending status.</p>{canCreate && <button type="button" className="button button-primary" onClick={() => { setEditing(null); setShowForm(true) }}>Create first admission</button>}</div>}
+          </section>
+        </div>
+      </>}
+
+      {studentWorkspaceTab === 'admissions' && <section className="ed360-student-panel ed360-student-full-panel">
+        <header><div><span className="ed360-student-panel-icon"><GraduationCap size={17}/></span><div><h2>Admission applications</h2><p>Review new and pending student registrations. New admissions are created as Pending.</p></div></div>{canCreate && <button type="button" className="button button-primary" onClick={() => { setEditing(null); setShowForm(true) }}><Plus size={15}/> Register student</button>}</header>
+        <div className="ed360-student-status-cards">
+          <div><small>Pending review</small><strong>{studentCounts.pending}</strong><span>Awaiting admission decision</span></div>
+          <div><small>Active registrations</small><strong>{studentCounts.active}</strong><span>Currently enrolled</span></div>
+          <div><small>All applications</small><strong>{studentCounts.total}</strong><span>Student records in this institution</span></div>
+        </div>
+        <div className="ed360-student-table-heading"><strong>Pending admission queue</strong><span>{pendingRows.length} awaiting review</span></div>
+        {loading ? <div className="ed360-student-empty">Loading admissions…</div> : pendingRows.length ? <div className="ed360-student-table-wrap"><table className="ed360-student-table"><thead><tr><th>Admission ID</th><th>Applicant</th><th>Class / programme</th><th>Guardian</th><th>Registered</th><th>Actions</th></tr></thead><tbody>{pendingRows.map(row => <tr key={row.id}><td>{String(row.admission_no ?? '—')}</td><td><strong>{String(row.full_name ?? 'Student')}</strong><small>{String(row.email ?? '')}</small></td><td>{String(row.class_name ?? '—')}</td><td>{String(row.guardian_name ?? '—')}</td><td>{niceDate(row.created_at)}</td><td><div className="ed360-student-row-actions"><button type="button" onClick={() => { setSelectedStudentId(row.id); setStudentWorkspaceTab('profile') }}>View</button>{canEdit && <button type="button" onClick={() => { setEditing(row); setShowForm(true) }}>Review / Edit</button>}</div></td></tr>)}</tbody></table></div> : <div className="ed360-student-empty"><span><Check size={20}/></span><strong>No pending applications</strong><p>There are currently no student applications awaiting review.</p></div>}
+      </section>}
+
+      {studentWorkspaceTab === 'directory' && <section className="student-directory-card ed360-student-directory-window">
+        <div className="student-directory-heading"><div><h2>Student directory</h2><p>Institution-wide student register with search, status filters and profile actions.</p></div><span className="student-mode-tag cloud">Live records</span></div>
         <div className="student-directory-toolbar">
-          <label className="student-search"><Search size={17}/><input aria-label="Search students" placeholder="Search name, admission number or class…" value={search} onChange={event => setSearch(event.target.value)}/>{search && <button type="button" onClick={() => setSearch('')} aria-label="Clear search"><X size={15}/></button>}</label>
-          <button className="student-refresh-button" onClick={() => void load()} disabled={loading}><RefreshCw size={15} className={loading ? 'spin' : ''}/> Refresh</button>
+          <label className="student-search"><Search size={17}/><input aria-label="Search students" placeholder="Search name, admission number or class…" value={search} onChange={event => { setSearch(event.target.value); setCurrentPage(1) }}/>{search && <button type="button" onClick={() => { setSearch(''); setCurrentPage(1) }} aria-label="Clear search"><X size={15}/></button>}</label>
+          <button className="student-refresh-button" type="button" onClick={() => void load()} disabled={loading}><RefreshCw size={15} className={loading ? 'spin' : ''}/> Refresh</button>
         </div>
         <div className="student-filter-row" role="group" aria-label="Filter students by status">
-          {filters.map(filter => <button type="button" key={filter.key} className={studentStatus === filter.key ? 'active' : ''} onClick={() => setStudentStatus(filter.key)}>{filter.label}{filter.key === 'all' ? <span>{studentCounts.total}</span> : null}</button>)}
+          {filters.map(filter => <button type="button" key={filter.key} className={studentStatus === filter.key ? 'active' : ''} onClick={() => { setStudentStatus(filter.key); setCurrentPage(1) }}>{filter.label}{filter.key === 'all' ? <span>{studentCounts.total}</span> : null}</button>)}
         </div>
-        {loading ? <div className="student-empty-state"><RefreshCw className="spin" size={22}/><strong>Loading students…</strong></div> : studentFiltered.length === 0 ? <div className="student-empty-state"><span className="student-empty-icon"><GraduationCap size={25}/></span><strong>{search ? 'No matching students' : studentStatus === 'all' ? 'No students registered yet' : `No ${studentStatus} students`}</strong><p>{search ? 'Try a different name, admission number or class.' : canEdit ? 'Add your first student to begin building the institution directory.' : 'Student records will appear here when they are added by an authorized administrator.'}</p>{canEdit && !search && studentStatus === 'all' && <button className="button button-primary" onClick={() => { setEditing(null); setShowForm(true) }}><Plus size={16}/> Add first student</button>}</div> : <div className="student-table-wrap"><table className="student-table"><thead><tr><th>Student ID</th><th>Student</th><th>Class / programme</th><th>Parent / guardian</th><th>Status</th>{canEdit && <th className="action-column">Actions</th>}</tr></thead><tbody>{studentFiltered.map(row => <tr key={row.id}>
+        {loading ? <div className="student-empty-state"><RefreshCw className="spin" size={22}/><strong>Loading students…</strong></div> : studentFiltered.length === 0 ? <div className="student-empty-state"><span className="student-empty-icon"><GraduationCap size={25}/></span><strong>{search ? 'No matching students' : studentStatus === 'all' ? 'No students registered yet' : 'No ' + studentStatus + ' students'}</strong><p>{search ? 'Try a different name, admission number or class.' : canEdit ? 'Add your first student to begin building the institution directory.' : 'Student records will appear here when an authorized administrator adds them.'}</p>{canCreate && !search && studentStatus === 'all' && <button className="button button-primary" onClick={() => { setEditing(null); setShowForm(true) }}><Plus size={16}/> Add first student</button>}</div> : <div className="student-table-wrap"><table className="student-table"><thead><tr><th>Admission ID</th><th>Student</th><th>Class / programme</th><th>Parent / guardian</th><th>Status</th><th className="action-column">Actions</th></tr></thead><tbody>{studentPageRows.map(row => <tr key={row.id}>
           <td><span className="student-admission-number">{String(row.admission_no ?? '—')}</span></td>
           <td><div className="student-person-cell"><StudentPhoto row={row}/><span><strong>{String(row.full_name ?? 'Unnamed student')}</strong><small>{String(row.email ?? 'No email provided')}</small></span></div></td>
           <td>{String(row.class_name ?? '—')}</td><td>{String(row.guardian_name ?? '—')}</td>
-          <td><span className={`status-pill status-${String(row.status ?? 'active').toLowerCase()}`}>{statusLabel(row.status)}</span></td>
-          {canEdit && <td className="row-actions"><button className="icon-button" onClick={() => { setEditing(row); setShowForm(true) }} title="Edit student"><Edit3 size={15}/></button>{canDelete && <button className="icon-button danger-icon" onClick={() => void remove(row)} title="Delete student"><Trash2 size={15}/></button>}</td>}
+          <td><span className={'status-pill status-' + String(row.status ?? 'active').toLowerCase()}>{statusLabel(row.status)}</span></td>
+          <td className="row-actions ed360-student-actions"><button className="icon-button" onClick={() => { setSelectedStudentId(row.id); setStudentWorkspaceTab('profile') }} title="Open student profile"><Eye size={15}/></button>{canEdit && <button className="icon-button" onClick={() => { setEditing(row); setShowForm(true) }} title="Edit student"><Edit3 size={15}/></button>}{canDelete && <button className="icon-button danger-icon" onClick={() => void remove(row)} title="Delete student"><Trash2 size={15}/></button>}</td>
         </tr>)}</tbody></table></div>}
-        <div className="student-directory-footer"><span>Showing <strong>{studentFiltered.length}</strong> of <strong>{studentCounts.total}</strong> students</span><span>Student records are restricted to authorized institution members.</span></div>
-      </section>
-      {formDialog}
+        <div className="student-directory-footer"><span>Found <strong>{studentFiltered.length}</strong> of <strong>{studentCounts.total}</strong> students</span><span>Actions follow your institution role permissions.</span></div>
+        <WorkspacePagination page={currentPage} pageCount={studentPageCount} pageSize={pageSize} total={studentFiltered.length} onChange={setCurrentPage}/>
+      </section>}
+
+      {studentWorkspaceTab === 'profile' && <section className="ed360-student-profile-window">
+        {selectedStudent ? <>
+          <div className="ed360-student-profile-banner">
+            <StudentPhoto row={selectedStudent}/>
+            <div><span>STUDENT PROFILE</span><h2>{String(selectedStudent.full_name ?? 'Student')}</h2><p>{String(selectedStudent.admission_no ?? 'No admission number')} · {String(selectedStudent.class_name ?? 'Class not assigned')}</p></div>
+            <span className={'status-pill status-' + String(selectedStudent.status ?? 'active')}>{statusLabel(selectedStudent.status)}</span>
+            {canEdit && <button type="button" className="button button-outline" onClick={() => { setEditing(selectedStudent); setShowForm(true) }}><Edit3 size={14}/> Edit profile</button>}
+          </div>
+          <div className="ed360-student-profile-grid">
+            <section className="ed360-student-panel"><header><div><span className="ed360-student-panel-icon"><UserRound size={16}/></span><div><h3>Personal information</h3><p>Details stored in the student record.</p></div></div></header><dl><div><dt>Full name</dt><dd>{String(selectedStudent.full_name ?? '—')}</dd></div><div><dt>Admission ID</dt><dd>{String(selectedStudent.admission_no ?? '—')}</dd></div><div><dt>Email address</dt><dd>{String(selectedStudent.email ?? '—')}</dd></div><div><dt>Date of birth</dt><dd>{niceDate(selectedStudent.date_of_birth)}</dd></div><div><dt>Registered on</dt><dd>{niceDate(selectedStudent.created_at)}</dd></div></dl></section>
+            <section className="ed360-student-panel"><header><div><span className="ed360-student-panel-icon green"><BookOpen size={16}/></span><div><h3>Academic placement</h3><p>Current class/programme information.</p></div></div></header><dl><div><dt>Class / programme</dt><dd>{String(selectedStudent.class_name ?? 'Not assigned')}</dd></div><div><dt>Student status</dt><dd>{statusLabel(selectedStudent.status)}</dd></div><div><dt>Academic session</dt><dd>Not linked in the current student record</dd></div><div><dt>Section</dt><dd>Not stored in the current student record</dd></div></dl></section>
+            <section className="ed360-student-panel"><header><div><span className="ed360-student-panel-icon violet"><HeartHandshake size={16}/></span><div><h3>Parent / guardian</h3><p>Guardian contact details stored with the student.</p></div></div></header><dl><div><dt>Guardian name</dt><dd>{String(selectedStudent.guardian_name ?? 'Not provided')}</dd></div><div><dt>Guardian email</dt><dd>{String(selectedStudent.guardian_email ?? 'Not provided')}</dd></div></dl></section>
+            <section className="ed360-student-panel"><header><div><span className="ed360-student-panel-icon amber"><Activity size={16}/></span><div><h3>Student activity</h3><p>Related records visible to your role.</p></div></div></header><dl><div><dt>Attendance entries</dt><dd>{studentAttendanceRows.length}</dd></div><div><dt>Published results</dt><dd>{publishedResults.length}</dd></div><div><dt>Assignment submissions</dt><dd>{studentSubmissionRows.length}</dd></div><div><dt>Fee invoices</dt><dd>{studentFeeRows.length}</dd></div></dl></section>
+          </div>
+        </> : <div className="ed360-student-empty"><strong>No student selected</strong><p>Register or select a student from the directory to open a profile.</p></div>}
+      </section>}
+
+      {studentWorkspaceTab === 'classes' && <div className="ed360-student-overview-grid">
+        <section className="ed360-student-panel"><header><div><span className="ed360-student-panel-icon"><BookOpen size={17}/></span><div><h2>Class / programme distribution</h2><p>Counts based on students.class_name.</p></div></div></header>
+          {studentClassCounts.length ? <div className="ed360-student-class-bars">{studentClassCounts.map(item => <button type="button" key={item.name} className={studentClass.toLowerCase() === item.name.toLowerCase() ? 'active' : ''} onClick={() => { const match = rows.find(row => String(row.class_name ?? 'Not assigned').trim() === item.name); if (match) setSelectedStudentId(match.id) }}><div><span>{item.name}</span><b>{item.count}</b></div><i><span style={{ width: (item.count / Math.max(1, studentCounts.total) * 100) + '%' }}/></i></button>)}</div> : <div className="ed360-student-empty"><strong>No class placements yet</strong><p>Class statistics appear after student records have been registered.</p></div>}
+        </section>
+        <section className="ed360-student-panel"><header><div><span className="ed360-student-panel-icon green"><ShieldCheck size={17}/></span><div><h2>Placement details</h2><p>Current student's recorded placement.</p></div></div></header>
+          <dl><div><dt>Selected student</dt><dd>{String(selectedStudent?.full_name ?? '—')}</dd></div><div><dt>Class / programme</dt><dd>{studentClass || 'Not assigned'}</dd></div><div><dt>Active students in class</dt><dd>{rows.filter(row => String(row.class_name ?? '').toLowerCase() === studentClass.toLowerCase() && String(row.status ?? 'active') === 'active').length}</dd></div></dl>
+          <p className="ed360-student-limitation-note">The current students table contains a class/programme field but no separate section or academic-session link. This workspace does not invent those relationships.</p>
+        </section>
+      </div>}
+
+      {studentWorkspaceTab === 'guardians' && <section className="ed360-student-panel ed360-student-full-panel"><header><div><span className="ed360-student-panel-icon violet"><HeartHandshake size={17}/></span><div><h2>Parent & guardian contacts</h2><p>Guardian name and email from each student record.</p></div></div><span className="ed360-student-record-count">{rows.filter(row => row.guardian_name || row.guardian_email).length} contact records</span></header>
+        {renderTable(rows.filter(row => row.guardian_name || row.guardian_email),[{key:'admission_no',label:'Admission ID'},{key:'full_name',label:'Student'},{key:'class_name',label:'Class / programme'},{key:'guardian_name',label:'Guardian name'},{key:'guardian_email',label:'Guardian email'}],'Guardian contact details have not been entered for these students.')}
+        <p className="ed360-student-limitation-note">The current student register stores one guardian contact pair per student. Multiple guardian accounts and relationships require a separate approved data-model update.</p>
+      </section>}
+
+      {studentWorkspaceTab === 'attendance' && <section className="ed360-student-panel ed360-student-full-panel"><header><div><span className="ed360-student-panel-icon green"><CalendarCheck size={17}/></span><div><h2>Attendance history</h2><p>{selectedStudent ? 'Attendance records for ' + String(selectedStudent.full_name ?? 'the selected student') : 'Student attendance history'}</p></div></div><span className="ed360-student-record-count">{studentAttendanceRows.length} entries</span></header>
+        <div className="ed360-student-status-cards"><div><small>Attendance records</small><strong>{studentAttendanceRows.length}</strong><span>Recorded sessions</span></div><div><small>Present / late</small><strong>{presentCount}</strong><span>Attended sessions</span></div><div><small>Absent</small><strong>{absentCount}</strong><span>Absence records</span></div><div><small>Attendance rate</small><strong>{studentAttendanceRows.length ? attendanceRate + '%' : '—'}</strong><span>Present plus late</span></div></div>
+        {renderTable(studentAttendanceRows,[{key:'attendance_date',label:'Date'},{key:'student_name',label:'Student'},{key:'class_name',label:'Class'},{key:'status',label:'Status'},{key:'notes',label:'Notes'}],'No attendance entries are currently available for this student.')}
+      </section>}
+
+      {studentWorkspaceTab === 'results' && <div className="ed360-student-overview-grid">
+        <section className="ed360-student-panel ed360-student-panel-wide"><header><div><span className="ed360-student-panel-icon violet"><ClipboardCheck size={17}/></span><div><h2>Published examination results</h2><p>Results currently visible for the selected student.</p></div></div><span className="ed360-student-record-count">{publishedResults.length} published</span></header>
+          {renderTable(publishedResults,[{key:'exam_title',label:'Examination'},{key:'subject',label:'Subject'},{key:'marks_obtained',label:'Marks'},{key:'total_marks',label:'Out of'},{key:'grade',label:'Grade'},{key:'result_status',label:'Publication'}],'No published examination results are available for this student.')}
+        </section>
+        <section className="ed360-student-panel ed360-student-panel-wide"><header><div><span className="ed360-student-panel-icon"><CalendarDays size={17}/></span><div><h2>Class examinations</h2><p>Examination schedule for the selected student's class.</p></div></div><span className="ed360-student-record-count">{studentExamRows.length} exams</span></header>
+          {renderTable(studentExamRows,[{key:'title',label:'Examination'},{key:'exam_type',label:'Type'},{key:'subject',label:'Subject'},{key:'exam_date',label:'Date'},{key:'total_marks',label:'Maximum marks'},{key:'status',label:'Status'}],'No examinations are currently scheduled for this class.')}
+        </section>
+      </div>}
+
+      {studentWorkspaceTab === 'assignments' && <div className="ed360-student-overview-grid">
+        <section className="ed360-student-panel ed360-student-panel-wide"><header><div><span className="ed360-student-panel-icon"><BookOpen size={17}/></span><div><h2>Class assignments</h2><p>Assignments available for the selected student's class.</p></div></div><span className="ed360-student-record-count">{studentAssignmentRows.length} assignments</span></header>
+          {renderTable(studentAssignmentRows,[{key:'title',label:'Assignment'},{key:'subject',label:'Subject'},{key:'due_date',label:'Due date'},{key:'points',label:'Maximum marks'},{key:'status',label:'Status'}],'No class assignments are currently available.')}
+        </section>
+        <section className="ed360-student-panel ed360-student-panel-wide"><header><div><span className="ed360-student-panel-icon green"><FileText size={17}/></span><div><h2>Student submissions</h2><p>Submission status, marks and teacher feedback.</p></div></div><span className="ed360-student-record-count">{studentSubmissionRows.length} submissions</span></header>
+          {renderTable(studentSubmissionRows,[{key:'assignment_title',label:'Assignment'},{key:'submitted_at',label:'Submitted'},{key:'marks_obtained',label:'Marks'},{key:'status',label:'Status'},{key:'feedback',label:'Teacher feedback'}],'No assignment submissions are available for this student.')}
+        </section>
+      </div>}
+
+      {studentWorkspaceTab === 'fees' && <section className="ed360-student-panel ed360-student-full-panel"><header><div><span className="ed360-student-panel-icon amber"><Wallet size={17}/></span><div><h2>Fees & payment account</h2><p>Invoice and payment information linked to the selected student.</p></div></div><span className="ed360-student-record-count">{studentFeeRows.length} invoices</span></header>
+        <div className="ed360-student-status-cards"><div><small>Total invoiced</small><strong>PKR {totalBilled.toLocaleString(undefined,{maximumFractionDigits:0})}</strong><span>Net amount billed</span></div><div><small>Paid</small><strong>PKR {totalPaid.toLocaleString(undefined,{maximumFractionDigits:0})}</strong><span>Payments received</span></div><div><small>Outstanding</small><strong>PKR {totalOutstanding.toLocaleString(undefined,{maximumFractionDigits:0})}</strong><span>Remaining balance</span></div><div><small>Unpaid / overdue</small><strong>{studentFeeRows.filter(row=>['unpaid','overdue','partial'].includes(String(row.status??'').toLowerCase())).length}</strong><span>Invoices needing attention</span></div></div>
+        {renderTable(studentFeeRows,[{key:'invoice_no',label:'Invoice'},{key:'fee_title',label:'Description'},{key:'amount',label:'Amount (PKR)'},{key:'paid_amount',label:'Paid (PKR)'},{key:'due_date',label:'Due date'},{key:'status',label:'Status'}],'No fee invoices are currently linked to this student.')}
+      </section>}
+
+      {studentWorkspaceTab === 'timetable' && <section className="ed360-student-panel ed360-student-full-panel"><header><div><span className="ed360-student-panel-icon"><CalendarDays size={17}/></span><div><h2>Class timetable</h2><p>Weekly periods for {studentClass || 'the selected class'}.</p></div></div><span className="ed360-student-record-count">{studentTimetableRows.length} periods</span></header>
+        {renderTable(studentTimetableRows,[{key:'weekday',label:'Day'},{key:'start_time',label:'Start'},{key:'end_time',label:'End'},{key:'subject',label:'Subject'},{key:'teacher_name',label:'Teacher'},{key:'room',label:'Room'}],'No timetable entries are available for this class.')}
+      </section>}
+
+      {studentWorkspaceTab === 'documents' && <section className="ed360-student-panel ed360-student-full-panel"><header><div><span className="ed360-student-panel-icon violet"><FolderOpen size={17}/></span><div><h2>Student documents</h2><p>Photo and document references currently stored on the student record.</p></div></div></header>
+        {selectedStudent ? <div className="ed360-student-document-card"><StudentPhoto row={selectedStudent}/><div><strong>{String(selectedStudent.full_name ?? 'Student')}</strong><small>{String(selectedStudent.admission_no ?? 'No admission number')}</small><p>{typeof selectedStudent.photo_path === 'string' && selectedStudent.photo_path ? 'A student photograph is linked to the private institution storage.' : 'No student photograph has been uploaded.'}</p></div><span className={selectedStudent.photo_path ? 'ed360-document-ready' : 'ed360-document-missing'}>{selectedStudent.photo_path ? 'Photo uploaded' : 'Photo missing'}</span></div> : <div className="ed360-student-empty">Select a student to review their document information.</div>}
+        <p className="ed360-student-limitation-note">The current student data structure stores a photograph path but does not have a separate student-document register. General institution files remain available under Files & Documentation.</p>
+      </section>}
+
+      {studentWorkspaceTab === 'history' && <section className="ed360-student-panel ed360-student-full-panel"><header><div><span className="ed360-student-panel-icon violet"><History size={17}/></span><div><h2>Student activity history</h2><p>Registration, attendance, examination, submission and invoice events visible to your role.</p></div></div><span className="ed360-student-record-count">{studentTimeline.length} events</span></header>
+        {studentTimeline.length ? <div className="ed360-student-timeline">{studentTimeline.map(item=><div className="ed360-student-timeline-item" key={item.id}><i/><div><strong>{item.label}</strong><p>{item.detail}</p></div><time>{niceDate(item.date)}</time><span className={'status-pill status-' + item.status.toLowerCase()}>{item.status.replaceAll('_',' ')}</span></div>)}</div> : <div className="ed360-student-empty"><strong>No student activity history yet</strong><p>Linked activity will appear as attendance, results, submissions and fee records are created.</p></div>}
+      </section>}
+
+      {formDialog}{detailDialog}
     </div>
   }
-
   if (module.key === 'teachers') {
     const filters: { key: EmployeeStatus; label: string }[] = [
       { key: 'all', label: 'All faculty' }, { key: 'active', label: 'Active' },
       { key: 'on_leave', label: 'On leave' }, { key: 'inactive', label: 'Inactive' },
     ]
-    const teacherFiltered = filtered.filter(row => employeeStatus === 'all' || String(row.employment_status ?? 'active').toLowerCase() === employeeStatus)
-    return <div className="page-content faculty-page">
+    return <div className="page-content ed360-module-page faculty-page">
       <div className="faculty-page-heading">
         <div><div className="eyebrow">PEOPLE / FACULTY DIRECTORY</div><h1>Faculty &amp; staff</h1><p>Manage employee profiles, departments, subjects and employment records.</p></div>
         {canEdit && <button className="button button-primary faculty-add-button" onClick={() => { setEditing(null); setShowForm(true) }}><Plus size={17}/> Add faculty member</button>}
       </div>
-      <div className="faculty-stats-grid">
-        <div className="faculty-stat-card"><span className="faculty-stat-icon blue"><Users size={19}/></span><span className="faculty-stat-label">Total faculty</span><strong>{loading ? '—' : teacherCounts.total.toLocaleString()}</strong><small>Employee profiles</small></div>
-        <div className="faculty-stat-card"><span className="faculty-stat-icon green"><BadgeCheck size={19}/></span><span className="faculty-stat-label">Active staff</span><strong>{loading ? '—' : teacherCounts.active.toLocaleString()}</strong><small>Currently employed</small></div>
-        <div className="faculty-stat-card"><span className="faculty-stat-icon amber"><Clock3 size={19}/></span><span className="faculty-stat-label">On leave</span><strong>{loading ? '—' : teacherCounts.onLeave.toLocaleString()}</strong><small>Temporary leave</small></div>
-        <div className="faculty-stat-card"><span className="faculty-stat-icon violet"><GraduationCap size={19}/></span><span className="faculty-stat-label">Departments</span><strong>{loading ? '—' : teacherCounts.departments.toLocaleString()}</strong><small>Departments represented</small></div>
-      </div>
+      <ModuleInsights module={module} rows={rows} loading={loading}/>
       <section className="faculty-directory-card">
         <div className="faculty-directory-heading"><div><h2>Faculty directory</h2><p>Search and manage employees registered at your institution.</p></div><span className="faculty-mode-tag cloud">Cloud records</span></div>
         <div className="faculty-directory-toolbar">
-          <label className="faculty-search"><Search size={17}/><input aria-label="Search faculty" placeholder="Search employee, name, department or subject…" value={search} onChange={event => setSearch(event.target.value)}/>{search && <button type="button" onClick={() => setSearch('')} aria-label="Clear search"><X size={15}/></button>}</label>
+          <label className="faculty-search"><Search size={17}/><input aria-label="Search faculty" placeholder="Search employee, name, department or subject…" value={search} onChange={event => { setSearch(event.target.value); setCurrentPage(1) }}/>{search && <button type="button" onClick={() => { setSearch(''); setCurrentPage(1) }} aria-label="Clear search"><X size={15}/></button>}</label>
           <button className="faculty-refresh-button" onClick={() => void load()} disabled={loading}><RefreshCw size={15} className={loading ? 'spin' : ''}/> Refresh</button>
         </div>
         <div className="faculty-filter-row" role="group" aria-label="Filter faculty by employment status">
-          {filters.map(filter => <button type="button" key={filter.key} className={employeeStatus === filter.key ? 'active' : ''} onClick={() => setEmployeeStatus(filter.key)}>{filter.label}{filter.key === 'all' ? <span>{teacherCounts.total}</span> : null}</button>)}
+          {filters.map(filter => <button type="button" key={filter.key} className={employeeStatus === filter.key ? 'active' : ''} onClick={() => { setEmployeeStatus(filter.key); setCurrentPage(1) }}>{filter.label}{filter.key === 'all' ? <span>{teacherCounts.total}</span> : null}</button>)}
         </div>
-        {loading ? <div className="faculty-empty-state"><RefreshCw className="spin" size={22}/><strong>Loading faculty…</strong></div> : teacherFiltered.length === 0 ? <div className="faculty-empty-state"><span className="faculty-empty-icon"><Users size={25}/></span><strong>{search ? 'No matching faculty' : employeeStatus === 'all' ? 'No faculty registered yet' : `No ${employeeStatus.replace('_', ' ')} staff`}</strong><p>{search ? 'Try a different name, employee number, department or subject.' : canEdit ? 'Add your first faculty member to begin building the staff directory.' : 'Faculty records will appear here when an authorized administrator adds them.'}</p>{canEdit && !search && employeeStatus === 'all' && <button className="button button-primary" onClick={() => { setEditing(null); setShowForm(true) }}><Plus size={16}/> Add first faculty member</button>}</div> : <div className="faculty-table-wrap"><table className="faculty-table"><thead><tr><th>Employee ID</th><th>Faculty member</th><th>Department</th><th>Subject</th><th>Contact</th><th>Employment status</th>{canEdit && <th className="action-column">Actions</th>}</tr></thead><tbody>{teacherFiltered.map(row => <tr key={row.id}>
+        {loading ? <div className="faculty-empty-state"><RefreshCw className="spin" size={22}/><strong>Loading faculty…</strong></div> : teacherFiltered.length === 0 ? <div className="faculty-empty-state"><span className="faculty-empty-icon"><Users size={25}/></span><strong>{search ? 'No matching faculty' : employeeStatus === 'all' ? 'No faculty registered yet' : `No ${employeeStatus.replace('_', ' ')} staff`}</strong><p>{search ? 'Try a different name, employee number, department or subject.' : canEdit ? 'Add your first faculty member to begin building the staff directory.' : 'Faculty records will appear here when an authorized administrator adds them.'}</p>{canEdit && !search && employeeStatus === 'all' && <button className="button button-primary" onClick={() => { setEditing(null); setShowForm(true) }}><Plus size={16}/> Add first faculty member</button>}</div> : <div className="faculty-table-wrap"><table className="faculty-table"><thead><tr><th>Employee ID</th><th>Faculty member</th><th>Department</th><th>Subject</th><th>Contact</th><th>Employment status</th><th className="action-column">Actions</th></tr></thead><tbody>{teacherPageRows.map(row => <tr key={row.id}>
           <td><span className="faculty-employee-number">{String(row.employee_no ?? '—')}</span></td>
           <td><div className="faculty-person-cell"><span className="faculty-avatar">{String(row.full_name ?? '?').trim().slice(0,1).toUpperCase()}</span><span><strong>{String(row.full_name ?? 'Unnamed employee')}</strong><small>{String(row.email ?? 'No email')}</small></span></div></td>
           <td>{String(row.department ?? '—')}</td><td>{String(row.subject ?? '—')}</td><td>{String(row.phone ?? '—')}</td>
           <td><span className={`status-pill status-${String(row.employment_status ?? 'active').toLowerCase()}`}>{String(row.employment_status ?? 'active').replace('_', ' ')}</span></td>
-          {canEdit && <td className="row-actions"><button className="icon-button" onClick={() => { setEditing(row); setShowForm(true) }} title="Edit faculty"><Edit3 size={15}/></button>{canDelete && <button className="icon-button danger-icon" onClick={() => void remove(row)} title="Delete faculty"><Trash2 size={15}/></button>}</td>}
+          <td className="row-actions ed360-student-actions"><button className="icon-button" onClick={() => setViewing(row)} title="View faculty record"><Eye size={15}/></button>{canEdit && <button className="icon-button" onClick={() => { setEditing(row); setShowForm(true) }} title="Edit faculty"><Edit3 size={15}/></button>}{canDelete && <button className="icon-button danger-icon" onClick={() => void remove(row)} title="Delete faculty"><Trash2 size={15}/></button>}</td>
         </tr>)}</tbody></table></div>}
-        <div className="faculty-directory-footer"><span>Showing <strong>{teacherFiltered.length}</strong> of <strong>{teacherCounts.total}</strong> faculty records</span><span>Staff records are restricted to authorized institution members.</span></div>
+        <div className="faculty-directory-footer"><span>Found <strong>{teacherFiltered.length}</strong> of <strong>{teacherCounts.total}</strong> faculty records</span><span>Staff records are restricted to authorized institution members.</span></div>
+        <WorkspacePagination page={currentPage} pageCount={teacherPageCount} pageSize={pageSize} total={teacherFiltered.length} onChange={setCurrentPage}/>
       </section>
-      {formDialog}
+      {formDialog}{detailDialog}
     </div>
   }
 
@@ -673,19 +1028,16 @@ export function RecordModule({ module, onToast }: Props) {
     { key: 'paid', label: 'Paid' },
   ]
 
-  return <div className="page-content">
+  return <div className="page-content ed360-module-page">
     <div className="page-title-row"><div><div className="eyebrow">{module.key === 'fees' ? 'FINANCE / RECEIVABLES' : 'INSTITUTION WORKSPACE'}</div><h1>{module.title}</h1><p>{module.description}</p></div>{canCreate && <button className="button button-primary" onClick={() => { setEditing(null); setShowForm(true) }}><Plus size={17}/> Add {module.title.replace(/s$/, '').toLowerCase()}</button>}</div>
-    {module.key === 'fees' && <div className="student-stats-grid fee-overview-grid">
-      <div className="student-stat-card"><span className="student-stat-icon blue"><AlertCircle size={19}/></span><span className="student-stat-label">Total invoices</span><strong>{loading ? '—' : feeCounts.invoices.toLocaleString()}</strong><small>{feeCounts.overdue} overdue invoices</small></div>
-      <div className="student-stat-card"><span className="student-stat-icon violet"><BadgeCheck size={19}/></span><span className="student-stat-label">Net billed · PKR</span><strong>{loading ? '—' : feeCounts.billed.toLocaleString(undefined, { maximumFractionDigits: 0 })}</strong><small>After discounts and late fees</small></div>
-      <div className="student-stat-card"><span className="student-stat-icon green"><Check size={19}/></span><span className="student-stat-label">Collected · PKR</span><strong>{loading ? '—' : feeCounts.received.toLocaleString(undefined, { maximumFractionDigits: 0 })}</strong><small>Payments received</small></div>
-      <div className="student-stat-card"><span className="student-stat-icon amber"><Clock3 size={19}/></span><span className="student-stat-label">Outstanding · PKR</span><strong>{loading ? '—' : feeCounts.outstanding.toLocaleString(undefined, { maximumFractionDigits: 0 })}</strong><small>Remaining receivables</small></div>
-    </div>}
+    <ModuleInsights module={module} rows={rows} loading={loading}/>
     <div className="table-card">{module.key === 'fees' && <div className="student-filter-row fee-filter-row" role="group" aria-label="Filter invoices by payment status">
-      {feeFilters.map(filter => <button type="button" key={filter.key} className={feeStatus === filter.key ? 'active' : ''} onClick={() => setFeeStatus(filter.key)}>{filter.label}{filter.key === 'all' ? <span>{feeCounts.invoices}</span> : filter.key === 'overdue' ? <span>{feeCounts.overdue}</span> : null}</button>)}
-    </div>}<div className="table-toolbar"><div className="table-count"><strong>{filtered.length}</strong> records <span>·</span> Live institutional database</div><div className="toolbar-actions"><div className="search-box"><Search size={16}/><input placeholder="Search records…" value={search} onChange={event => setSearch(event.target.value)}/></div><button className="icon-button" onClick={() => void load()} aria-label="Refresh records"><RefreshCw size={16}/></button></div></div>
-      {loading ? <div className="table-empty"><RefreshCw className="spin" size={21}/> Loading records…</div> : filtered.length === 0 ? <div className="table-empty"><div className="empty-icon"><AlertCircle size={22}/></div><strong>{search ? 'No matching records' : 'No records yet'}</strong><span>{search ? 'Try another search term.' : canEdit ? 'Add the first record to start using this module.' : 'Records will appear here when your institution adds them.'}</span></div> : <div className="table-scroll"><table><thead><tr>{module.columns.map(column => <th key={column.key}>{column.label}</th>)}{(canEdit || module.key === 'fees') && <th className="action-column">Actions</th>}</tr></thead><tbody>{filtered.map(row => <tr key={row.id}>{module.columns.map(column => <td key={column.key}>{column.key === 'created_at' || column.key === 'due_date' || column.key === 'exam_date' ? niceDate(row[column.key]) : column.key === 'balance' && module.key === 'fees' ? outstandingInvoiceBalance(row).toLocaleString(undefined, { maximumFractionDigits: 2 }) : column.key === 'status' || column.key === 'result_status' ? <span className={`status-pill status-${String(row[column.key] ?? '').toLowerCase()}`}>{String(row[column.key] ?? '—').replace('_', ' ')}</span> : ['amount', 'paid_amount', 'balance', 'marks_obtained', 'total_marks'].includes(column.key) ? Number(row[column.key] ?? 0).toLocaleString(undefined, { maximumFractionDigits: 2 }) : String(row[column.key] ?? '—')}</td>)}{(canEdit || module.key === 'fees') && <td className="row-actions">{module.key === 'fees' && <><button type="button" className="button button-outline" onClick={() => setHistoryTarget(row)}>History</button>{canCollectFeePayment && outstandingInvoiceBalance(row) > 0 && <button type="button" className="button button-primary" onClick={() => setPaymentTarget(row)}>Collect</button>}</>}{canEdit && !(module.key === 'assignment_submissions' && user!.role === 'student' && ['graded', 'returned'].includes(String(row.status))) && <button className="icon-button" onClick={() => { setEditing(row); setShowForm(true) }} title="Edit"><Edit3 size={15}/></button>}{canDelete && !(module.key === 'fees' && Number(row.paid_amount ?? 0) > 0) && <button className="icon-button danger-icon" onClick={() => void remove(row)} title="Delete"><Trash2 size={15}/></button>}</td>}</tr>)}</tbody></table></div>}
-    </div>{formDialog}
+      {feeFilters.map(filter => <button type="button" key={filter.key} className={feeStatus === filter.key ? 'active' : ''} onClick={() => { setFeeStatus(filter.key); setCurrentPage(1) }}>{filter.label}{filter.key === 'all' ? <span>{feeCounts.invoices}</span> : filter.key === 'overdue' ? <span>{feeCounts.overdue}</span> : null}</button>)}
+    </div>}<div className="table-toolbar"><div className="table-count"><strong>{filtered.length}</strong> records <span>·</span> Live institutional database</div><div className="toolbar-actions"><div className="search-box"><Search size={16}/><input placeholder="Search records…" value={search} onChange={event => { setSearch(event.target.value); setCurrentPage(1) }}/></div><button className="icon-button" onClick={() => void load()} aria-label="Refresh records"><RefreshCw size={16}/></button></div></div>
+      {loading ? <div className="table-empty"><RefreshCw className="spin" size={21}/> Loading records…</div> : filtered.length === 0 ? <div className="table-empty"><div className="empty-icon"><AlertCircle size={22}/></div><strong>{search ? 'No matching records' : 'No records yet'}</strong><span>{search ? 'Try another search term.' : canEdit ? 'Add the first record to start using this module.' : 'Records will appear here when your institution adds them.'}</span></div> : <div className="table-scroll"><table><thead><tr>{module.columns.map(column => <th key={column.key}>{column.label}</th>)}<th className="action-column">Actions</th></tr></thead><tbody>{filteredPageRows.map(row => <tr key={row.id}>{module.columns.map(column => <td key={column.key}>{column.key === 'created_at' || column.key === 'due_date' || column.key === 'exam_date' ? niceDate(row[column.key]) : column.key === 'balance' && module.key === 'fees' ? outstandingInvoiceBalance(row).toLocaleString(undefined, { maximumFractionDigits: 2 }) : column.key === 'status' || column.key === 'result_status' ? <span className={`status-pill status-${String(row[column.key] ?? '').toLowerCase()}`}>{String(row[column.key] ?? '—').replace('_', ' ')}</span> : ['amount', 'paid_amount', 'balance', 'marks_obtained', 'total_marks'].includes(column.key) ? Number(row[column.key] ?? 0).toLocaleString(undefined, { maximumFractionDigits: 2 }) : String(row[column.key] ?? '—')}</td>)}<td className="row-actions ed360-student-actions"><button className="icon-button" onClick={() => setViewing(row)} title="View record"><Eye size={15}/></button>{module.key === 'fees' && <button type="button" className="button button-outline" onClick={() => setHistoryTarget(row)}>History</button>}{module.key === 'fees' && canCollectFeePayment && outstandingInvoiceBalance(row) > 0 && <button type="button" className="button button-primary" onClick={() => setPaymentTarget(row)}>Collect</button>}{canEdit && !(module.key === 'assignment_submissions' && user!.role === 'student' && ['graded', 'returned'].includes(String(row.status))) && <button className="icon-button" onClick={() => { setEditing(row); setShowForm(true) }} title="Edit"><Edit3 size={15}/></button>}{canDelete && !(module.key === 'fees' && Number(row.paid_amount ?? 0) > 0) && <button className="icon-button danger-icon" onClick={() => void remove(row)} title="Delete"><Trash2 size={15}/></button>}</td></tr>)}</tbody></table></div>}
+    </div>
+    <WorkspacePagination page={currentPage} pageCount={filteredPageCount} pageSize={pageSize} total={filtered.length} onChange={setCurrentPage}/>
+    {formDialog}{detailDialog}
     {paymentTarget && <FeePaymentDialog invoice={paymentTarget} onClose={() => setPaymentTarget(null)} onSaved={(receiptNo) => { setPaymentTarget(null); onToast(`Payment recorded successfully. Receipt ${receiptNo}.`); void load() }}/>}
     {historyTarget && <FeePaymentHistoryDialog invoice={historyTarget} onClose={() => setHistoryTarget(null)}/>}
   </div>

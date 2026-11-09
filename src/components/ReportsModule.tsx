@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Download } from 'lucide-react'
+import { BarChart3, CalendarCheck, ClipboardCheck, Download, Users, Wallet } from 'lucide-react'
 import '../styles/reports.css'
+import '../styles/module-workspaces.css'
 import { useAuth } from '../context/AuthContext'
 import { listRecords } from '../lib/data'
 import { userFacingError } from '../lib/userErrors'
@@ -97,7 +98,41 @@ export function ReportsModule({ onToast }: { onToast: (message: string, error?: 
     { key: 'guardian_name', label: 'Guardian' }, { key: 'status', label: 'Status' },
   ]
 
-  return <div className="report-stage">
+  const reportMetrics = [
+    ...(wantsPeople ? [
+      { label: 'Students', value: String(students.rows.length), note: 'Visible enrolment records', icon: Users, tone: 'blue' },
+      { label: 'Attendance rate', value: percent(attended, attendance.rows.length), note: 'Present plus late', icon: CalendarCheck, tone: 'green' },
+    ] : []),
+    ...(wantsFees ? [
+      { label: 'Fees collected', value: money(received), note: 'Payments recorded', icon: Wallet, tone: 'green' },
+      { label: 'Outstanding fees', value: money(outstanding), note: 'Remaining receivables', icon: Wallet, tone: 'amber' },
+    ] : []),
+    ...(wantsResults ? [
+      { label: 'Published results', value: String(published.length), note: 'Available exam results', icon: ClipboardCheck, tone: 'violet' },
+      { label: 'Average result', value: averagePercent === null ? '—' : averagePercent.toFixed(1) + '%', note: 'Published graded results', icon: BarChart3, tone: 'blue' },
+    ] : []),
+  ]
+  const attendanceBreakdown = countBy(attendance.rows, 'status')
+  const gradeBreakdown = countBy(published, 'grade')
+  const reportBars = (items: [string, number][], color: string) => {
+    const maximum = Math.max(1, ...items.map(item => item[1]))
+    return items.map(([label, value]) => ({ label, value, width: value / maximum * 100, color }))
+  }
+
+  return <div className="report-stage page-content ed360-module-page">
+    <header className="ed360-module-insights-heading">
+      <div><span>INSTITUTION ANALYTICS</span><h2>Reports overview</h2><p>Live report totals from the records your role is permitted to view.</p></div>
+      <small>Live institutional records</small>
+    </header>
+    <div className="ed360-workspace-metrics">{reportMetrics.map(item => {
+      const Icon = item.icon
+      return <div className={'ed360-workspace-metric ' + item.tone} key={item.label}><span><Icon size={19}/></span><small>{item.label}</small><strong>{item.value}</strong><em>{item.note}</em></div>
+    })}</div>
+    <div className="ed360-workspace-insight-grid">
+      {wantsPeople && <section className="ed360-workspace-chart-card"><div><h3>Attendance distribution</h3><p>Present, late, absent and excused records.</p></div><div className="ed360-workspace-bar-list">{reportBars(attendanceBreakdown.map(([label, value]) => [label.replaceAll('_',' '), value] as [string,number]), '#16a36b').map(item=><div className="ed360-workspace-bar-row" key={item.label}><div><span>{item.label}</span><b>{item.value}</b></div><span className="ed360-workspace-bar-track"><i style={{width:item.width+'%',background:item.color}}/></span></div>)}{attendanceBreakdown.length===0&&<p className="ed360-workspace-empty">No attendance records available.</p>}</div></section>}
+      {wantsResults && <section className="ed360-workspace-chart-card"><div><h3>Published grade distribution</h3><p>Grades from published exam results.</p></div><div className="ed360-workspace-bar-list">{reportBars(gradeBreakdown, '#8b62e8').map(item=><div className="ed360-workspace-bar-row" key={item.label}><div><span>{item.label}</span><b>{item.value}</b></div><span className="ed360-workspace-bar-track"><i style={{width:item.width+'%',background:item.color}}/></span></div>)}{gradeBreakdown.length===0&&<p className="ed360-workspace-empty">No published grades available.</p>}</div></section>}
+      {wantsFees && <section className="ed360-workspace-chart-card"><div><h3>Fee collection progress</h3><p>Collected and outstanding against invoiced amounts.</p></div><div className="ed360-workspace-bar-list">{reportBars([['Collected',received],['Outstanding',outstanding]], '#2877ee').map(item=><div className="ed360-workspace-bar-row" key={item.label}><div><span>{item.label}</span><b>{money(item.value)}</b></div><span className="ed360-workspace-bar-track"><i style={{width:item.width+'%',background:item.label==='Collected'?'#16a36b':'#ef9226'}}/></span></div>)}</div></section>}
+    </div>
     {wantsFees && <Section title="Fee collection" note="Invoiced, received and outstanding amounts across all invoices you can access." onExport={() => exportRows('outstanding-fees', outstandingRows, feeColumns)}>
       {fees.error ? <div className="report-error" role="alert">{fees.error}</div> : <>
         <div className="report-stats"><Stat label="Invoices" value={String(fees.rows.length)}/><Stat label="Total invoiced" value={money(invoiced)}/><Stat label="Received" value={money(received)}/><Stat label="Outstanding" value={money(outstanding)}/></div>

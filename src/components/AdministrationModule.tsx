@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Activity, BookOpen, Building2, CalendarDays, DoorOpen, Layers3, Users } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { createRecord, deleteRecord as deleteDataRecord, listRecords, updateRecord } from '../lib/data'
 import { userFacingError } from '../lib/userErrors'
@@ -125,15 +126,89 @@ const NO_ADVANCED_FIELDS: AdvancedField[] = []
 const getDisplayName = (record: AdminRecord) =>
   String(record.name ?? record.title ?? record.code ?? 'Unnamed record')
 
+const relatedSources: Record<AdminModuleKey, string[]> = {
+  departments: ['programs'],
+  programs: ['departments', 'classes'],
+  classes: ['programs', 'academic_sessions', 'students'],
+  academic_sessions: ['classes'],
+  subjects: ['departments'],
+  rooms: ['timetable_entries'],
+}
+
+function AdminWorkspaceInsights({ activeKey, records, references, loading }: {
+  activeKey: AdminModuleKey; records: AdminRecord[]; references: Record<string, AdminRecord[]>; loading: boolean
+}) {
+  const linkedSource = ({
+    departments: 'programs', programs: 'classes', classes: 'students',
+    academic_sessions: 'classes', subjects: 'departments', rooms: 'timetable_entries',
+  } as Record<AdminModuleKey, string>)[activeKey]
+  const linkedRows = references[linkedSource] ?? []
+  const active = records.filter(row => row.is_active !== false).length
+  const capacity = records.reduce((sum, row) => sum + Math.max(0, Number(row.capacity ?? 0)), 0)
+  const current = records.filter(row => row.is_current === true).length
+  const groupRows = (() => {
+    if (activeKey === 'departments') return records.map(parent => ({
+      label: String(parent.name ?? 'Department'),
+      value: linkedRows.filter(child => child.department_id === parent.id).length,
+    }))
+    if (activeKey === 'programs') return records.map(parent => ({
+      label: String(parent.name ?? 'Program'),
+      value: linkedRows.filter(child => child.program_id === parent.id).length,
+    }))
+    if (activeKey === 'classes') return records.map(parent => ({
+      label: String(parent.name ?? parent.title ?? 'Class'),
+      value: linkedRows.filter(child => String(child.class_name ?? '').toLowerCase() === String(parent.name ?? parent.title ?? '').toLowerCase()).length,
+    }))
+    if (activeKey === 'academic_sessions') return records.map(parent => ({
+      label: String(parent.name ?? 'Session'),
+      value: linkedRows.filter(child => child.academic_session_id === parent.id).length,
+    }))
+    const field = activeKey === 'subjects' ? 'subject_type' : activeKey === 'rooms' ? 'room_type' : 'name'
+    const counts = new Map<string, number>()
+    records.forEach(record => {
+      const label = String(record[field] ?? 'Not specified').replaceAll('_', ' ')
+      counts.set(label, (counts.get(label) ?? 0) + 1)
+    })
+    return [...counts.entries()].map(([label, value]) => ({ label, value }))
+  })().sort((a, b) => b.value - a.value).slice(0, 6)
+  const metrics = [
+    { label: 'Total ' + MODULES.find(item => item.key === activeKey)!.label, value: records.length.toLocaleString(), note: 'Institution records', icon: Building2, tone: 'blue' },
+    { label: 'Active records', value: active.toLocaleString(), note: 'Available for use', icon: Activity, tone: 'green' },
+    { label: ({ departments: 'Programs linked', programs: 'Class sections', classes: 'Students linked', academic_sessions: 'Classes linked', subjects: 'Departments linked', rooms: 'Timetable bookings' } as Record<AdminModuleKey, string>)[activeKey], value: linkedRows.length.toLocaleString(), note: 'Related workspace records', icon: Layers3, tone: 'violet' },
+    { label: activeKey === 'academic_sessions' ? 'Current sessions' : ['classes', 'rooms'].includes(activeKey) ? 'Total capacity' : 'Defined categories', value: activeKey === 'academic_sessions' ? current.toLocaleString() : ['classes', 'rooms'].includes(activeKey) ? capacity.toLocaleString() : groupRows.length.toLocaleString(), note: activeKey === 'academic_sessions' ? 'Marked as current' : ['classes', 'rooms'].includes(activeKey) ? 'Places / seats capacity' : 'Groups represented', icon: activeKey === 'rooms' ? DoorOpen : activeKey === 'subjects' ? BookOpen : activeKey === 'classes' ? Users : CalendarDays, tone: 'amber' },
+  ]
+  const max = Math.max(1, ...groupRows.map(item => item.value))
+  return <section className="ed360-module-insights ed360-admin-insights">
+    <header className="ed360-module-insights-heading">
+      <div><span>INSTITUTE STRUCTURE</span><h2>{MODULES.find(item => item.key === activeKey)!.label} overview</h2><p>Live totals and relationships with the other administration records.</p></div>
+      <small>{loading ? 'Updating records…' : records.length + ' records loaded'}</small>
+    </header>
+    <div className="ed360-workspace-metrics">{metrics.map(item => {
+      const Icon = item.icon
+      return <div className={'ed360-workspace-metric ' + item.tone} key={item.label}><span><Icon size={19}/></span><small>{item.label}</small><strong>{loading ? '—' : item.value}</strong><em>{item.note}</em></div>
+    })}</div>
+    <div className="ed360-workspace-chart-card">
+      <div><h3>{({ departments: 'Programs per department', programs: 'Class sections per program', classes: 'Students by class section', academic_sessions: 'Classes per academic session', subjects: 'Subjects by type', rooms: 'Facilities by type' } as Record<AdminModuleKey, string>)[activeKey]}</h3><p>Relationship counts from the existing institution records.</p></div>
+      <div className="ed360-workspace-bar-list">
+        {groupRows.map(item => <div className="ed360-workspace-bar-row" key={item.label}><div><span>{item.label}</span><b>{loading ? '—' : item.value.toLocaleString()}</b></div><span className="ed360-workspace-bar-track"><i style={{ width: (item.value / max * 100) + '%', background: '#2877ee' }}/></span></div>)}
+        {!loading && groupRows.length === 0 && <p className="ed360-workspace-empty">Add records to see their linked structure and distribution here.</p>}
+      </div>
+    </div>
+  </section>
+}
+
 export default function AdministrationModule({ initialKey = 'departments' }: { initialKey?: AdminModuleKey }) {
   const { user, mode } = useAuth()
-  const [activeKey, setActiveKey] = useState<AdminModuleKey>(initialKey)
+  const activeKey: AdminModuleKey = initialKey
   const [records, setRecords] = useState<AdminRecord[]>([])
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const [search, setSearch] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [viewingRecord, setViewingRecord] = useState<AdminRecord | null>(null)
+  const pageSize = 10
   const [editingId, setEditingId] = useState<string | null>(null)
   const [name, setName] = useState('')
   const [code, setCode] = useState('')
@@ -174,7 +249,7 @@ export default function AdministrationModule({ initialKey = 'departments' }: { i
 
   useEffect(() => {
     let alive = true
-    const sources = [...new Set(advancedFields.map((field) => field.source).filter(Boolean))] as string[]
+    const sources = [...new Set([...advancedFields.map((field) => field.source).filter(Boolean), ...relatedSources[activeKey]])] as string[]
     setReferencesError('')
     if (!user || sources.length === 0) {
       setReferences({})
@@ -200,6 +275,7 @@ export default function AdministrationModule({ initialKey = 'departments' }: { i
 
   const resetForm = () => {
     setEditingId(null)
+    setCurrentPage(1)
     setName('')
     setCode('')
     setDescription('')
@@ -306,13 +382,15 @@ export default function AdministrationModule({ initialKey = 'departments' }: { i
     return [record.name, record.title, record.code, record.description]
       .some((value) => String(value ?? '').toLowerCase().includes(query))
   })
+  const pageCount = Math.max(1, Math.ceil(filteredRecords.length / pageSize))
+  const pagedRecords = filteredRecords.slice((currentPage - 1) * pageSize, currentPage * pageSize)
 
   if (!user || !['owner', 'admin'].includes(user.role)) {
     return <section className="admin-page"><div className="admin-alert error" role="alert">You do not have permission to manage institution settings.</div></section>
   }
 
   return (
-    <main className="admin-page">
+    <main className="admin-page ed360-module-page">
       <style>{`
         .admin-page{color:var(--text-primary,#172033);display:grid;gap:20px}
         .admin-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
@@ -349,33 +427,15 @@ export default function AdministrationModule({ initialKey = 'departments' }: { i
 
       <header className="admin-heading">
         <div>
-          <h1>Administration</h1>
-          <p className="admin-muted">Manage the institution's academic structure and facilities.</p>
+          <h1>{activeModule.label}</h1>
+          <p className="admin-muted">{activeModule.description}</p>
         </div>
         <button className="admin-button" type="button" onClick={() => { void loadRecords(); setReferencesReload((value) => value + 1) }}>
           Refresh records
         </button>
       </header>
 
-      <nav className="admin-tabs" aria-label="Administration sections">
-        {MODULES.map((item) => (
-          <button
-            className="admin-tab"
-            type="button"
-            key={item.key}
-            aria-pressed={activeKey === item.key}
-            onClick={() => {
-              setActiveKey(item.key)
-              resetForm()
-              setSearch('')
-              setReferencesError('')
-            }}
-          >
-            {item.label}
-          </button>
-        ))}
-      </nav>
-
+      <AdminWorkspaceInsights activeKey={activeKey} records={records} references={references} loading={loading}/>
       {error && <div className="admin-alert error" role="alert">{error}</div>}
       {referencesError && <div className="admin-alert error" role="alert">{referencesError} Use Refresh records to retry linked options.</div>}
       {notice && <div className="admin-alert success" role="status">{notice}</div>}
@@ -471,7 +531,7 @@ export default function AdministrationModule({ initialKey = 'departments' }: { i
             <input
               className="admin-search"
               value={search}
-              onChange={(event) => setSearch(event.target.value)}
+              onChange={(event) => { setSearch(event.target.value); setCurrentPage(1) }}
               placeholder="Search records…"
               aria-label="Search records"
             />
@@ -490,7 +550,7 @@ export default function AdministrationModule({ initialKey = 'departments' }: { i
                   <tr><th>Name</th><th>Code</th><th>Status</th><th>Actions</th></tr>
                 </thead>
                 <tbody>
-                  {filteredRecords.map((record) => (
+                  {pagedRecords.map((record) => (
                     <tr key={record.id}>
                       <td>
                         <strong>{getDisplayName(record)}</strong>
@@ -500,6 +560,7 @@ export default function AdministrationModule({ initialKey = 'departments' }: { i
                       <td><span className={`admin-status${record.is_active === false ? ' off' : ''}`}>{record.is_active === false ? 'Inactive' : 'Active'}</span></td>
                       <td>
                         <div className="admin-actions">
+                          <button className="admin-button" type="button" onClick={() => setViewingRecord(record)}>View</button>
                           <button className="admin-button" type="button" onClick={() => startEdit(record)}>Edit</button>
                           <button className="admin-button danger" type="button" onClick={() => void deleteRecord(record)}>Delete</button>
                         </div>
@@ -510,8 +571,25 @@ export default function AdministrationModule({ initialKey = 'departments' }: { i
               </table>
             </div>
           )}
+          {filteredRecords.length > pageSize && <div className="ed360-table-pagination">
+            <span>Showing <b>{(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, filteredRecords.length)}</b> of <b>{filteredRecords.length}</b> records</span>
+            <div className="ed360-pagination-controls">
+              <button type="button" disabled={currentPage <= 1} onClick={() => setCurrentPage(value => value - 1)}>‹</button>
+              {Array.from({ length: pageCount }, (_, index) => index + 1).filter(number => number === 1 || number === pageCount || Math.abs(number - currentPage) <= 1).map(number => <button type="button" key={number} className={number === currentPage ? 'active' : ''} onClick={() => setCurrentPage(number)}>{number}</button>)}
+              <button type="button" disabled={currentPage >= pageCount} onClick={() => setCurrentPage(value => value + 1)}>›</button>
+            </div>
+          </div>}
         </section>
       </section>
+      {viewingRecord && <div className="modal-backdrop" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) setViewingRecord(null) }}>
+        <section className="modal-card ed360-record-details" role="dialog" aria-modal="true">
+          <div className="modal-heading"><div><div className="eyebrow">{activeModule.label.toUpperCase()}</div><h2>{getDisplayName(viewingRecord)}</h2><p>Institution administration record details</p></div><button type="button" className="icon-button" onClick={() => setViewingRecord(null)}>×</button></div>
+          <div className="ed360-record-details-grid">
+            {Object.entries(viewingRecord).filter(([key, value]) => !['id', 'institution_id', 'created_by', 'updated_at'].includes(key) && value !== null && value !== '').map(([key, value]) => <div className="ed360-record-detail" key={key}><small>{key.replaceAll('_', ' ')}</small><b>{typeof value === 'boolean' ? (value ? 'Yes' : 'No') : String(value)}</b></div>)}
+          </div>
+          <div className="modal-actions"><button type="button" className="button button-primary" onClick={() => setViewingRecord(null)}>Close</button></div>
+        </section>
+      </div>}
     </main>
   )
 }
