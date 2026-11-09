@@ -19,7 +19,7 @@ check('Vite development and production scripts exist', () => {
 })
 
 const requiredFiles = [
-  'index.html', 'src/main.tsx', 'src/App.tsx', 'src/components/Dashboard.tsx',
+  'index.html', 'src/main.tsx', 'src/App.tsx', 'src/components/Dashboard.tsx', 'src/components/WorkspaceUnavailable.tsx',
   'src/components/AuthScreens.tsx', 'src/components/AdministrationModule.tsx',
   'src/components/RecordModule.tsx', 'src/components/FacultyWorkspace.tsx', 'src/styles/faculty-workspace.css', 'src/components/ReportsModule.tsx', 'src/components/ProfileModule.tsx', 'src/context/AuthContext.tsx', 'src/lib/auth.ts',
   'src/lib/data.ts', 'src/lib/navigationAccess.ts', 'src/lib/userErrors.ts', 'scripts/test-user-errors.mjs',
@@ -44,7 +44,7 @@ require.extensions['.ts'] = (module, filename) => {
 }
 
 const { navigationCatalog } = require(path.join(root, 'src/lib/navigationCatalog.ts'))
-const { navigationRoutes } = require(path.join(root, 'src/lib/navigationRoutes.ts'))
+const { navigationRoutes, getNavigationRoute } = require(path.join(root, 'src/lib/navigationRoutes.ts'))
 const { roleNavigationGroups } = require(path.join(root, 'src/lib/navigationAccess.ts'))
 const { modules, modulesForRole } = require(path.join(root, 'src/lib/modules.ts'))
 const roles = ['owner', 'admin', 'teacher', 'student', 'parent', 'accountant', 'exam_officer']
@@ -65,6 +65,33 @@ check('The full institutional menu maps every submenu to a working destination',
   }
   const menuDestinationCount = navigationCatalog.reduce((total, group) => total + group.items.length, 0)
   assert.ok(menuDestinationCount >= 400, 'All specified submenu destinations should be present')
+  const permittedLinkedRoutes = new Set([
+    'administration:campus-and-branch-management',
+    'library:book-issue-and-returns',
+    'inventory:stock-in',
+    'inventory:stock-out',
+    'inventory:stock-allocation',
+    'inventory:stock-adjustments',
+    'inventory:inventory-history',
+    'inventory:stock-reports',
+    'transport:student-transport-allocation',
+  ])
+  for (const group of navigationCatalog) {
+    for (const page of group.items) {
+      const itemKey = page.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+      const route = getNavigationRoute(group.key, page)
+      assert.ok(route, `${group.label}/${page} has no contextual route`)
+      assert.equal(navigationRoutes[`${group.key}:${itemKey}`], route, `${group.label}/${page} contextual route index is stale`)
+      if (route.startsWith('institutional:')) {
+        assert.ok(permittedLinkedRoutes.has(`${group.key}:${itemKey}`), `${group.label}/${page} must not fall back to generic institutional CRUD`)
+      }
+    }
+  }
+  assert.equal(getNavigationRoute('reports', 'Student Reports'), 'reports:students', 'Student reports must open the student report window')
+  assert.equal(getNavigationRoute('reports', 'Attendance Reports'), 'reports:attendance', 'Attendance reports must open the attendance report window')
+  assert.equal(getNavigationRoute('teaching', 'Homework'), 'assignments:open', 'Homework must open the open-coursework view')
+  assert.equal(getNavigationRoute('attendance', 'Attendance Reports'), 'reports:attendance', 'Attendance report shortcut must open the correct report view')
+  assert.equal(getNavigationRoute('students', 'Student Directory'), 'students:directory', 'Student Directory must open the student directory view')
   for (const [page, route] of Object.entries(navigationRoutes)) {
     if (route.startsWith('institutional:')) {
       const groupKey = route.split(':')[1]
@@ -126,6 +153,8 @@ check('Dashboard matches the menu and keeps Quick Access at the sidebar bottom',
   assert.ok(dashboardSource.includes('ed360-recent-panel') && dashboardSource.includes('ed360-events-panel') && dashboardSource.includes('ed360-quick-stats-panel'), 'Dashboard activity, events or quick statistics panel is missing')
   assert.ok(dashboardSource.includes('id="ed360-workspace-search"') && dashboardSource.includes('Search pages and tools…'), 'Workspace page-and-tool search is missing')
   assert.ok(dashboardSource.includes('pro-workspace-tabs') && dashboardSource.includes('pro-window-stack') && dashboardSource.includes('closeWorkspaceTab'), 'Dashboard multi-window tab management is missing')
+  assert.ok(dashboardSource.includes('parentId?: string') && dashboardSource.includes('function navigateChild') && dashboardSource.includes('tab.parentId'), 'Nested child workspace state must remain attached to a parent window')
+  assert.ok(dashboardSource.includes('closing.add(tab.id)') && dashboardSource.includes('parentStillOpen'), 'Closing a parent must close descendants and restore the parent context')
   assert.ok(dashboardSource.includes('ed360-topbar-institution') && dashboardSource.includes('ed360-topbar-notice'), 'Approved institution topbar is missing')
   assert.ok(dashboardSource.includes('pro-profile-menu'), 'Account menu is missing')
   const quickAccessBlock = dashboardSource.slice(quickStart, dashboardSource.indexOf('</section>', quickStart) + 10)
@@ -169,7 +198,7 @@ check('Notification centre has per-user read state and a tenant-scoped RLS table
   const dashboard = read('src/components/Dashboard.tsx')
   const migration = read('supabase/migrations/20261109125937_announcement_read_receipts.sql')
   assert.ok(dashboard.includes('unreadAnnouncementCount') && dashboard.includes("navigate('notifications')"))
-  assert.ok(read('src/lib/navigationRoutes.ts').includes("navigationRoutes['Notification Centre']='notifications'"))
+  assert.equal(navigationRoutes['Notification Centre'], 'notifications')
   for (const feature of ['announcement_reads', 'markAllRead', 'Mark read', 'Unread (']) assert.ok(notifications.includes(feature))
   for (const safeguard of ['enable row level security', 'users read own announcement receipts', 'users create own announcement receipts', 'users update own announcement receipts', 'auth.uid()', 'memberships']) assert.ok(migration.includes(safeguard))
 })
@@ -295,7 +324,7 @@ check('Student Record is a complete permission-aware multi-window workspace', ()
   assert.ok(!studentWorkspace.includes("'fee_invoices'") && !studentWorkspace.includes("label: 'Fees & Payments'"), 'Fee management must remain exclusively in Finance, not Student Management')
   assert.ok(recordModule.includes('studentRelatedTables.map'), 'Student related workspaces must load their linked records')
   const dashboardSource = read('src/components/Dashboard.tsx')
-  assert.ok(dashboardSource.includes('key={tab.id}') && dashboardSource.includes("initialWindow={tab.targetKey === 'students' ? tab.targetWindow : undefined}"), 'Student workspace destinations must open in their own persistent dashboard window')
+  assert.ok(dashboardSource.includes('key={tab.id}') && dashboardSource.includes('initialWindow={tab.targetWindow}'), 'Student workspace destinations must open in their own persistent dashboard window')
   assert.ok(dashboardSource.includes("showWindowNavigation={tab.targetKey !== 'students'}"), 'Student sidebar tabs must not duplicate the internal student-window navigation')
   assert.ok(recordModule.includes('showWindowNavigation = true') && recordModule.includes('showWindowNavigation && ('), 'Student sidebar windows must not be duplicated by a second copy of the same window navigation')
   assert.ok(recordModule.includes('setStudentWorkspaceTab'), 'Student workspace windows must navigate independently inside Student Record')
@@ -335,7 +364,7 @@ check('Faculty & Employee Management uses dedicated institution-scoped HR worksp
   assert.ok(faculty.includes("from('staff-files')"), 'Confidential documents must use the dedicated private staff-files bucket')
   assert.ok(faculty.includes('createSignedUrl'), 'Staff documents must be retrieved with signed URLs')
   const dashboard = read('src/components/Dashboard.tsx')
-  assert.ok(dashboard.includes("<FacultyWorkspace onToast={onToast} onNavigate={navigate}/>"), 'Existing dashboard must route Faculty & Staff into the dedicated workspace')
+  assert.ok(dashboard.includes('<FacultyWorkspace onToast={onToast} onNavigate={navigateChild} initialWindow={tab.targetWindow}/>'), 'Existing dashboard must route Faculty & Staff into their selected nested workspace')
   const migration = read('supabase/migrations/20261109083133_faculty_employee_management.sql')
   for (const required of ['enable row level security', 'teacher_assignments', 'employee_attendance', 'employee_leave_requests', 'staff_documents', 'employee_history', 'staff-files', 'teachers_owner_admin_or_self_read', 'audit_teacher_history']) {
     assert.ok(migration.includes(required), 'Faculty management migration is missing: ' + required)
