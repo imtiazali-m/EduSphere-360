@@ -28,7 +28,7 @@ export const modules: ModuleConfig[] = [
     ],
   },
   {
-    key: 'teachers', title: 'Faculty & Staff', description: 'Teacher profiles, departments, subjects and employment records.', table: 'teachers', icon: 'Users', roles: admins,
+    key: 'teachers', title: 'Faculty & Staff', description: 'Employee registration, profiles, teaching allocations, faculty attendance, leave and HR records.', table: 'teachers', icon: 'Users', roles: ['owner', 'admin', 'teacher'],
     fields: [
       { name: 'employee_no', label: 'Employee ID', required: true },
       { name: 'full_name', label: 'Full name', required: true },
