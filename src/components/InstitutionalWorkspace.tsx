@@ -47,6 +47,9 @@ const workspaceFields:Record<string,WorkspaceField[]>={
  reconciliation:[fld('account_name','Bank / cash account'),fld('statement_period','Statement period'),fld('opening_balance','Opening balance (PKR)','number'),fld('closing_balance','Closing balance (PKR)','number'),fld('matched_total','Matched total (PKR)','number'),fld('unmatched_total','Unmatched total (PKR)','number'),fld('variance','Variance (PKR)','number'),fld('bank_reference','Bank reference')],
  backup:[fld('backup_type','Backup type','select',['Database','Files','Full institution export','Module export']),fld('backup_window','Backup schedule / window'),fld('export_format','Export format','select',['ZIP','CSV','JSON','XLSX','DOCX','PDF']),fld('integrity_check','Validation status','select',['Not run','Passed','Failed','Requires platform action']),fld('platform_job_reference','Platform job reference'),fld('recovery_status','Recovery status','select',['Not requested','Pending approval','Restored','Failed'])],
 }
+workspaceFields['academic-sessions']=[fld('session_code','Session code'),fld('start_date','Session start date','date'),fld('end_date','Session end date','date'),fld('is_current','Current session','select',['Yes','No']),fld('student_rollover_status','Student rollover status','select',['Not started','In progress','Completed'])]
+workspaceFields['classes-sections']=[fld('grade_level','Grade / academic level'),fld('section','Section'),fld('class_teacher','Class teacher'),fld('capacity','Maximum capacity','number'),fld('room_name','Room / classroom'),fld('promotion_status','Promotion status','select',['Not started','In progress','Completed'])]
+workspaceFields.subjects=[fld('subject_code','Subject code'),fld('subject_category','Subject category'),fld('department','Department'),fld('grade_level','Academic level'),fld('credit_hours','Credit hours','number'),fld('syllabus_reference','Syllabus reference')]
 const statusOptions=['draft','open','in_progress','pending','approved','published','completed','closed','on_hold','cancelled','rejected']
 const themes:Record<string,{accent:string;soft:string;ink:string}>={
  blue:{accent:'#3477dc',soft:'#edf4ff',ink:'#1c477b'},violet:{accent:'#7955d6',soft:'#f2efff',ink:'#49358b'},
@@ -94,7 +97,9 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
  const [dueDate,setDueDate]=useState('')
  const [amount,setAmount]=useState('')
  const [quantity,setQuantity]=useState('')
- const [payloadText,setPayloadText]=useState('{}')
+ const [payloadData,setPayloadData]=useState<Record<string,unknown>>({})
+ const structuredFields=workspaceFields[group.key]??workspaceFields[group.dataModule]??[]
+ const tableFields=structuredFields.slice(0,4)
  const theme=themes[group.theme]||themes.blue
  const canAdmin=Boolean(user&&['owner','admin'].includes(user.role))
  const canWrite=Boolean(user&&(
@@ -149,14 +154,13 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
   setStatus(row?.status??'draft');setApproval(row?.approval_status??'not_required')
   setRecordDate(row?.record_date??new Date().toISOString().slice(0,10));setDueDate(row?.due_date??'')
   setAmount(row?.amount===null||row?.amount===undefined?'':String(row.amount));setQuantity(row?.quantity===null||row?.quantity===undefined?'':String(row.quantity))
-  setPayloadText(JSON.stringify(row?.payload??{},null,2));setShowForm(true)
+  setPayloadData(row?.payload??{});setShowForm(true)
  }
  async function save(event:FormEvent){
   event.preventDefault()
   if(!supabase||!user)return
-  let payload:Record<string,unknown>
-  try{const parsed=JSON.parse(payloadText||'{}');if(!parsed||Array.isArray(parsed)||typeof parsed!=='object')throw new Error('Enter a JSON object');payload=parsed as Record<string,unknown>}
-  catch(error){onToast(error instanceof Error?error.message:'Extra data must be valid JSON',true);return}
+  const payload:Record<string,unknown>={...payloadData}
+  for(const field of structuredFields){if(field.type==='number'&&payload[field.key]!==undefined&&payload[field.key]!==''&&payload[field.key]!==null){const numeric=Number(payload[field.key]);if(!Number.isFinite(numeric)){onToast(field.label+' must be a valid number.',true);return}payload[field.key]=numeric}}
   if(amount.trim()&&(!Number.isFinite(Number(amount))||Number(amount)<0)){onToast('Amount must be a valid non-negative number.',true);return}
   if(quantity.trim()&&(!Number.isFinite(Number(quantity))||Number(quantity)<0)){onToast('Quantity must be a valid non-negative number.',true);return}
   setSaving(true)
