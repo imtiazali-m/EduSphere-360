@@ -40,6 +40,7 @@ export function FilesModule({ onToast }: Props) {
   const [busy, setBusy] = useState(false)
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const [categoryFilter, setCategoryFilter] = useState<'all'|'Documents'|'Images'|'Other files'>('all')
   const [page, setPage] = useState(1)
   const canUpload = canUploadInstitutionFiles(user?.role)
   const canDelete = canDeleteInstitutionFiles(user?.role)
@@ -91,9 +92,10 @@ export function FilesModule({ onToast }: Props) {
   }, [files])
 
   const filteredFiles = useMemo(() => files.filter(file =>
-    file.name.toLowerCase().includes(search.trim().toLowerCase())
-      || String(file.metadata?.mimetype ?? '').toLowerCase().includes(search.trim().toLowerCase())
-  ), [files, search])
+    (categoryFilter === 'all' || fileCategory(file) === categoryFilter)
+      && (file.name.toLowerCase().includes(search.trim().toLowerCase())
+        || String(file.metadata?.mimetype ?? '').toLowerCase().includes(search.trim().toLowerCase()))
+  ), [files, search, categoryFilter])
   const pageCount = Math.max(1, Math.ceil(filteredFiles.length / PAGE_SIZE))
   const pageFiles = filteredFiles.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
   const maxCategory = Math.max(1, ...fileStats.categories.map(item => item.value))
@@ -161,8 +163,12 @@ export function FilesModule({ onToast }: Props) {
         <input hidden type="file" disabled={busy} onChange={event => { void upload(event.target.files?.[0]); event.currentTarget.value = '' }}/>
       </label>}
     </div>
+    <nav className="ed360-operations-window-nav" aria-label="File documentation workspace windows">
+      {([{key:'all',label:'File Register',count:files.length},{key:'Documents',label:'Documents',count:fileStats.documents},{key:'Images',label:'Images',count:fileStats.images},{key:'Other files',label:'Other files',count:fileStats.categories.find(item=>item.label==='Other files')?.value??0}] as const).map(item=><button type="button" key={item.key} className={categoryFilter===item.key?'active':''} aria-current={categoryFilter===item.key?'page':undefined} onClick={()=>{setCategoryFilter(item.key);setPage(1)}}>{item.label}<b>{loading?'—':item.count}</b></button>)}
+    </nav>
+    <section className="ed360-operations-context-window"><div><span>DOCUMENT CENTRE / PRIVATE STORAGE</span><h2>{categoryFilter==='all'?'Institution file register':categoryFilter+' workspace'}</h2><p>{categoryFilter==='all'?'Browse every institution file, or narrow the register by document type.':categoryFilter==='Documents'?'Review PDF, Word, Excel and text documents stored for this institution.':categoryFilter==='Images'?'Review image assets stored in the institution’s private file space.':'Review other file types returned by the private storage bucket.'}</p></div><div><strong>{filteredFiles.length}</strong><small>files in this window</small></div></section>
 
-    <section className="ed360-module-insights">
+    <section className="ed360-module-insights" hidden={categoryFilter!=='all'}>
       <header className="ed360-module-insights-heading"><div><span>INSTITUTION DOCUMENTS</span><h2>Storage overview</h2><p>Files currently visible in this private institution folder.</p></div><small>{loading ? 'Updating…' : 'Latest 100 files'}</small></header>
       <div className="ed360-workspace-metrics">
         <div className="ed360-workspace-metric blue"><span><Files size={19}/></span><small>Files available</small><strong>{loading ? '—' : files.length}</strong><em>Most recent files listed</em></div>
