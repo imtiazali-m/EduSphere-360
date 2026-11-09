@@ -41,6 +41,7 @@ function SimpleTable({ columns, rows }: { columns: CsvColumn[]; rows: Record<str
 export function ReportsModule({ onToast }: { onToast: (message: string, error?: boolean) => void }) {
   const { user, mode } = useAuth()
   const role = user!.role
+  const [reportTab,setReportTab] = useState<'overview'|'finance'|'attendance'|'academics'|'students'>('overview')
   const wantsFees = ['owner', 'admin', 'accountant'].includes(role)
   const wantsPeople = ['owner', 'admin'].includes(role)
   const wantsResults = ['owner', 'admin', 'exam_officer'].includes(role)
@@ -119,39 +120,49 @@ export function ReportsModule({ onToast }: { onToast: (message: string, error?: 
     return items.map(([label, value]) => ({ label, value, width: value / maximum * 100, color }))
   }
 
+  const reportWindows = [
+    {key:'overview',label:'Analytics Overview',visible:true},
+    {key:'finance',label:'Finance & Collections',visible:wantsFees},
+    {key:'attendance',label:'Attendance Analysis',visible:wantsPeople},
+    {key:'academics',label:'Examination Results',visible:wantsResults},
+    {key:'students',label:'Enrolment Reports',visible:wantsPeople},
+  ].filter(item=>item.visible)
+
   return <div className="report-stage page-content ed360-module-page">
     <header className="ed360-module-insights-heading">
       <div><span>INSTITUTION ANALYTICS</span><h2>Reports overview</h2><p>Live report totals from the records your role is permitted to view.</p></div>
       <small>Live institutional records</small>
     </header>
-    <div className="ed360-workspace-metrics">{reportMetrics.map(item => {
+    <nav className="ed360-operations-window-nav" aria-label="Reports workspace windows">{reportWindows.map(item=><button type="button" key={item.key} className={reportTab===item.key?'active':''} aria-current={reportTab===item.key?'page':undefined} onClick={()=>setReportTab(item.key as typeof reportTab)}>{item.label}</button>)}</nav>
+    <section className="ed360-operations-context-window"><div><span>REPORTS / ANALYTICS WORKSPACE</span><h2>{reportWindows.find(item=>item.key===reportTab)?.label??'Analytics Overview'}</h2><p>{reportTab==='overview'?'Institution-wide indicators from the live records your role can access.':reportTab==='finance'?'Collections, receivables and invoice balances from Finance & Payments.':reportTab==='attendance'?'Attendance patterns and status distribution across available registers.':reportTab==='academics'?'Published examination performance and result publication statistics.':'Student enrolment totals and class distribution.'}</p></div><div><strong>{reportMetrics.length}</strong><small>available report indicators</small></div></section>
+    <div className="ed360-workspace-metrics" hidden={reportTab!=='overview'}>{reportMetrics.map(item => {
       const Icon = item.icon
       return <div className={'ed360-workspace-metric ' + item.tone} key={item.label}><span><Icon size={19}/></span><small>{item.label}</small><strong>{item.value}</strong><em>{item.note}</em></div>
     })}</div>
-    <div className="ed360-workspace-insight-grid">
+    <div className="ed360-workspace-insight-grid" hidden={reportTab!=='overview'}>
       {wantsPeople && <section className="ed360-workspace-chart-card"><div><h3>Attendance distribution</h3><p>Present, late, absent and excused records.</p></div><div className="ed360-workspace-bar-list">{reportBars(attendanceBreakdown.map(([label, value]) => [label.replaceAll('_',' '), value] as [string,number]), '#16a36b').map(item=><div className="ed360-workspace-bar-row" key={item.label}><div><span>{item.label}</span><b>{item.value}</b></div><span className="ed360-workspace-bar-track"><i style={{width:item.width+'%',background:item.color}}/></span></div>)}{attendanceBreakdown.length===0&&<p className="ed360-workspace-empty">No attendance records available.</p>}</div></section>}
       {wantsResults && <section className="ed360-workspace-chart-card"><div><h3>Published grade distribution</h3><p>Grades from published exam results.</p></div><div className="ed360-workspace-bar-list">{reportBars(gradeBreakdown, '#8b62e8').map(item=><div className="ed360-workspace-bar-row" key={item.label}><div><span>{item.label}</span><b>{item.value}</b></div><span className="ed360-workspace-bar-track"><i style={{width:item.width+'%',background:item.color}}/></span></div>)}{gradeBreakdown.length===0&&<p className="ed360-workspace-empty">No published grades available.</p>}</div></section>}
       {wantsFees && <section className="ed360-workspace-chart-card"><div><h3>Fee collection progress</h3><p>Collected and outstanding against invoiced amounts.</p></div><div className="ed360-workspace-bar-list">{reportBars([['Collected',received],['Outstanding',outstanding]], '#2877ee').map(item=><div className="ed360-workspace-bar-row" key={item.label}><div><span>{item.label}</span><b>{money(item.value)}</b></div><span className="ed360-workspace-bar-track"><i style={{width:item.width+'%',background:item.label==='Collected'?'#16a36b':'#ef9226'}}/></span></div>)}</div></section>}
     </div>
-    {wantsFees && <Section title="Fee collection" note="Invoiced, received and outstanding amounts across all invoices you can access." onExport={() => exportRows('outstanding-fees', outstandingRows, feeColumns)}>
+    {wantsFees && reportTab==='finance' && <Section title="Fee collection" note="Invoiced, received and outstanding amounts across all invoices you can access." onExport={() => exportRows('outstanding-fees', outstandingRows, feeColumns)}>
       {fees.error ? <div className="report-error" role="alert">{fees.error}</div> : <>
         <div className="report-stats"><Stat label="Invoices" value={String(fees.rows.length)}/><Stat label="Total invoiced" value={money(invoiced)}/><Stat label="Received" value={money(received)}/><Stat label="Outstanding" value={money(outstanding)}/></div>
         <SimpleTable columns={feeColumns} rows={outstandingRows}/>
       </>}
     </Section>}
-    {wantsPeople && <Section title="Attendance" note="Share of attendance records by status. Attended = present plus late." onExport={() => exportRows('attendance', attendance.rows, attendanceColumns)}>
+    {wantsPeople && reportTab==='attendance' && <Section title="Attendance" note="Share of attendance records by status. Attended = present plus late." onExport={() => exportRows('attendance', attendance.rows, attendanceColumns)}>
       {attendance.error ? <div className="report-error" role="alert">{attendance.error}</div> : attendance.rows.length === 0 ? <div className="report-empty">No attendance has been recorded yet.</div> : <>
         <div className="report-stats"><Stat label="Records" value={String(attendance.rows.length)}/><Stat label="Attended" value={percent(attended, attendance.rows.length)}/>
           {countBy(attendance.rows, 'status').map(([status, count]) => <Stat key={status} label={status} value={`${count} · ${percent(count, attendance.rows.length)}`}/>)}</div>
       </>}
     </Section>}
-    {wantsResults && <Section title="Examination results" note="Only published results count towards the average." onExport={() => exportRows('exam-results', results.rows, resultColumns)}>
+    {wantsResults && reportTab==='academics' && <Section title="Examination results" note="Only published results count towards the average." onExport={() => exportRows('exam-results', results.rows, resultColumns)}>
       {results.error ? <div className="report-error" role="alert">{results.error}</div> : results.rows.length === 0 ? <div className="report-empty">No results have been entered yet.</div> : <>
         <div className="report-stats"><Stat label="Results entered" value={String(results.rows.length)}/><Stat label="Published" value={String(published.length)}/><Stat label="Draft" value={String(results.rows.length - published.length)}/><Stat label="Average (published)" value={averagePercent === null ? '—' : `${averagePercent.toFixed(1)}%`}/></div>
         <SimpleTable columns={[{ key: 'grade', label: 'Grade' }, { key: 'count', label: 'Results' }]} rows={countBy(published, 'grade').map(([grade, count]) => ({ id: grade, grade, count }))}/>
       </>}
     </Section>}
-    {wantsPeople && <Section title="Students" note="Enrolment by class and status." onExport={() => exportRows('students', students.rows, studentColumns)}>
+    {wantsPeople && reportTab==='students' && <Section title="Students" note="Enrolment by class and status." onExport={() => exportRows('students', students.rows, studentColumns)}>
       {students.error ? <div className="report-error" role="alert">{students.error}</div> : students.rows.length === 0 ? <div className="report-empty">No students have been added yet.</div> : <>
         <div className="report-stats"><Stat label="Total students" value={String(students.rows.length)}/>{countBy(students.rows, 'status').map(([status, count]) => <Stat key={status} label={status} value={String(count)}/>)}</div>
         <SimpleTable columns={[{ key: 'class_name', label: 'Class / program' }, { key: 'count', label: 'Students' }]} rows={countBy(students.rows, 'class_name').map(([name, count]) => ({ id: name, class_name: name, count }))}/>
