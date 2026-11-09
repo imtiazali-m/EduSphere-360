@@ -1,0 +1,5 @@
+.ed360-notification-page{font-size:13px}
+.ed360-notification-page button{cursor:pointer}
+.ed360-notification-page button:disabled{opacity:.55;cursor:not-allowed}
+.ed360-notification-page .ed360-notification-card-actions>span{display:inline-flex;align-items:center;gap:5px;padding:7px 9px;color:#228259;font-size:10px;font-weight:800}
+.ed360-notification-card-meta svg{margin-right:3px}
