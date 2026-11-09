@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Activity, ArrowDownToLine, ArrowUpRight, CheckCircle2, Clock3, Download, FileSpreadsheet, FileText, Filter, Plus, Printer, Search, ShieldCheck, X } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useState, type CSSProperties, type FormEvent } from 'react'
+import { Activity, ArrowUpRight, CheckCircle2, Download, FileSpreadsheet, FileText, Filter, Plus, Printer, Search, X } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { getWorkspaceGroup, getWorkspaceItem, institutionalMenu } from '../lib/institutionalCatalog'
@@ -117,7 +117,7 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
   setAmount(row?.amount===null||row?.amount===undefined?'':String(row.amount));setQuantity(row?.quantity===null||row?.quantity===undefined?'':String(row.quantity))
   setPayloadText(JSON.stringify(row?.payload??{},null,2));setShowForm(true)
  }
- async function save(event:React.FormEvent){
+ async function save(event:FormEvent){
   event.preventDefault()
   if(!supabase||!user)return
   let payload:Record<string,unknown>
@@ -167,7 +167,7 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
  function exportWord(){exportWordXml(baseName+'.doc',group.label+' — '+item.label,filtered as unknown as Record<string,unknown>[],columns)}
  function print(){try{printOfficeReport(group.label+' — '+item.label,filtered as unknown as Record<string,unknown>[],columns,user?.institutionName??'EduSphere 360')}catch(error){onToast(error instanceof Error?error.message:'Print view could not be opened.',true)}}
 
- return <main className="page-content ed360-module-page ed360-institutional-workspace" style={{'--workspace-accent':theme.accent,'--workspace-soft':theme.soft,'--workspace-ink':theme.ink} as React.CSSProperties}>
+ return <main className="page-content ed360-module-page ed360-institutional-workspace" style={{'--workspace-accent':theme.accent,'--workspace-soft':theme.soft,'--workspace-ink':theme.ink} as CSSProperties}>
   <header className="ed360-workspace-hero">
    <div className="ed360-workspace-hero-icon"><Activity size={21}/></div>
    <div className="ed360-workspace-hero-copy"><span>{group.label.toUpperCase()} / INSTITUTIONAL WORKSPACE</span><h1>{group.label}</h1><p>{group.description}</p></div>
