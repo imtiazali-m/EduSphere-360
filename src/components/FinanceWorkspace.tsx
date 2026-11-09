@@ -201,7 +201,7 @@ export function FinanceWorkspace({workspaceKey,initialWindow,onToast}:Props){
       await createRecord(mode,user!,'fee_invoices',{
         student_id:student.id,student_name:student.full_name,admission_no:student.admission_no??null,class_name:student.class_name??null,
         fee_title:invoiceTitle.trim(),fee_category:invoiceCategory,amount,discount_amount:discount,fine_amount:0,
-        paid_amount:0,balance:amount-discount,status:'unpaid',invoice_no:'INV-'+new Date().getFullYear()+'-'+crypto.randomUUID().replaceAll('-','').slice(0,10).toUpperCase(),
+        paid_amount:0,status:'unpaid',invoice_no:'INV-'+new Date().getFullYear()+'-'+crypto.randomUUID().replaceAll('-','').slice(0,10).toUpperCase(),
         invoice_date:today(),due_date:invoiceDue,academic_session:structureSession||null,notes:invoiceNotes.trim()||null
       })
       setInvoiceForm(false);setInvoiceStudent('');setInvoiceTitle('Tuition Fee');setInvoiceAmount('');setInvoiceDiscount('0');setInvoiceDue('');setInvoiceNotes('')
@@ -269,7 +269,8 @@ export function FinanceWorkspace({workspaceKey,initialWindow,onToast}:Props){
     event.preventDefault();if(!supabase||!financeRole)return
     const payment=payments.find(row=>row.id===refundPayment)
     const amount=Number(refundAmount)
-    if(!payment||!(amount>0)||amount>number(payment.amount)||!refundReason.trim()){onToast('Select a payment and enter a valid refund amount and reason.',true);return}
+    const alreadyRefunded=refunds.filter(row=>row.payment_id===refundPayment&&row.status!=='rejected').reduce((sum,row)=>sum+number(row.amount),0)
+    if(!payment||!(amount>0)||amount>Math.max(0,number(payment.amount)-alreadyRefunded)||!refundReason.trim()){onToast('Select a payment and enter a refund amount within the original payment less any existing pending or approved refunds.',true);return}
     setSaving(true)
     const {error:saveError}=await supabase.from('fee_refunds').insert({
       institution_id:user!.institutionId,payment_id:payment.id,invoice_id:payment.invoice_id,amount,
