@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent, ReactNode } from 'react'
 import {
-  Activity, ArrowUpRight, BookOpen, BriefcaseBusiness, CalendarCheck, CalendarDays,
+  Activity, ArrowUpRight, BriefcaseBusiness, CalendarCheck, CalendarDays,
   Check, Clock3, Download, Edit3, Eye, FileText, GraduationCap, History,
   Plus, RefreshCw, Search, ShieldCheck, Trash2, UserRound, Users, X,
 } from 'lucide-react'
@@ -49,7 +49,6 @@ const statusOptions = [{label:'Active',value:'active'},{label:'On leave',value:'
 const employmentTypes = [{label:'Full-time',value:'full_time'},{label:'Part-time',value:'part_time'},{label:'Contract',value:'contract'},{label:'Temporary',value:'temporary'}]
 const documentTypes = [{label:'Contract',value:'contract'},{label:'Identity',value:'identity'},{label:'Qualification',value:'qualification'},{label:'Certificate',value:'certificate'},{label:'Letter',value:'letter'},{label:'Other',value:'other'}]
 const days = ['annual','sick','casual','unpaid','maternity','paternity','other']
-const roles = ['owner','admin','teacher']
 
 function value(raw: unknown, fallback='—') { return raw === null || raw === undefined || raw === '' ? fallback : String(raw) }
 function label(raw: unknown) { return value(raw).replaceAll('_',' ').replace(/\b\w/g, c => c.toUpperCase()) }
@@ -128,21 +127,11 @@ export function FacultyWorkspace({onToast,onNavigate}:Props) {
   }
   useEffect(()=>{void load()},[user?.id,user?.institutionId,mode])
 
-  const filteredEmployees=useMemo(()=>employees.filter(r=>{
-    const q=query.trim().toLowerCase()
-    const textMatch=!q||[r.employee_no,r.full_name,r.email,r.department].some(v=>String(v??'').toLowerCase().includes(q))
-    return textMatch&&(statusFilter==='all'||String(r.employment_status??'active')===statusFilter)
-  }),[employees,query,statusFilter])
   const ownRows=(table:string)=> (data[table]??[]).filter(r=>r.teacher_id===selected?.id)
-  const ownAssignments=ownRows('teacher_assignments')
-  const ownAttendance=ownRows('employee_attendance')
-  const ownLeaves=ownRows('employee_leave_requests')
   const ownDocuments=ownRows('staff_documents')
   const ownHistory=ownRows('employee_history')
   const activeAssignments=assignments.filter(r=>r.status==='active')
   const pendingLeaves=leaves.filter(r=>r.status==='pending')
-  const activeEmployees=employees.filter(r=>r.employment_status==='active')
-  const monthAttendance=attendance.filter(r=>String(r.attendance_date??'').slice(0,7)===new Date().toISOString().slice(0,7))
 
   function open(kind:Kind,row:RecordRow|null=null){setDialog({kind,row,values:getDefaults(kind,row,selected?.id??'',admin)})}
   function setField(k:string,v:string){setDialog(d=>d?{...d,values:{...d.values,[k]:v}}:d)}
