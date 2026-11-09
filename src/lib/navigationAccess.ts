@@ -1,31 +1,45 @@
 import type { AppRole } from './types'
 import { navigationCatalog } from './navigationCatalog'
 
+const studentOwnerWindows = [
+  'Overview', 'Admissions', 'Student Directory', 'Student Profile', 'Class Placement', 'Guardians',
+  'Student Attendance', 'Student Exam Results', 'Student Assignments', 'Student Timetable',
+  'Student Documentation', 'Student History',
+]
+const studentStaffWindows = [
+  'Overview', 'Student Directory', 'Student Profile', 'Class Placement', 'Student Attendance',
+  'Student Exam Results', 'Student Assignments', 'Student Timetable', 'Student History',
+]
+const studentSelfServiceWindows = [
+  'Overview', 'Student Profile', 'Class Placement', 'Guardians', 'Student Attendance',
+  'Student Exam Results', 'Student Assignments', 'Student Timetable', 'Student Documentation', 'Student History',
+]
+
 const rolePageAccess: Record<AppRole, Record<string, string[]>> = {
   owner: {
-    dashboard: [], students: ['Student Record'], people: ['Faculty & Staff', 'User Account'],
+    dashboard: [], students: studentOwnerWindows, people: ['Faculty & Staff', 'User Account'],
     institution: ['Departments', 'Programs', 'Class Sections', 'Academic Sessions', 'Subjects', 'Rooms & Facilities', 'Files & Documentation'],
     academics: ['Attendance Registration', 'Examination', 'Exam Results', 'Assignments', 'Assignment Submission', 'Timetable'],
     finance: ['Fees Invoices'], communication: ['Announcements'], operations: ['Work Management', 'Reports'],
   },
   admin: {
-    dashboard: [], students: ['Student Record'], people: ['Faculty & Staff', 'User Account'],
+    dashboard: [], students: studentOwnerWindows, people: ['Faculty & Staff', 'User Account'],
     institution: ['Departments', 'Programs', 'Class Sections', 'Academic Sessions', 'Subjects', 'Rooms & Facilities', 'Files & Documentation'],
     academics: ['Attendance Registration', 'Examination', 'Exam Results', 'Assignments', 'Assignment Submission', 'Timetable'],
     finance: ['Fees Invoices'], communication: ['Announcements'], operations: ['Work Management', 'Reports'],
   },
   teacher: {
-    dashboard: [], students: ['Student Record'],
+    dashboard: [], students: studentStaffWindows,
     academics: ['Attendance Registration', 'Examination', 'Exam Results', 'Assignments', 'Assignment Submission', 'Timetable'],
     communication: ['Announcements'], operations: ['Work Management'],
   },
   student: {
-    dashboard: [], students: ['Student Record'],
+    dashboard: [], students: studentSelfServiceWindows,
     academics: ['Attendance Registration', 'Exam Results', 'Assignments', 'Assignment Submission', 'Timetable'],
     finance: ['Fees Invoices'], communication: ['Announcements'],
   },
   parent: {
-    dashboard: [],
+    dashboard: [], students: studentSelfServiceWindows,
     academics: ['Attendance Registration', 'Exam Results', 'Assignments', 'Timetable'],
     finance: ['Fees Invoices'], communication: ['Announcements'],
   },
