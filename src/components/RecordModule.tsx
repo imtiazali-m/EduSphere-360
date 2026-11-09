@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
-  AlertCircle, Check, Edit3, Eye, GraduationCap, ImagePlus,
-  Plus, RefreshCw, Search, Trash2, Users, X, ChevronLeft, ChevronRight,
+  Activity, AlertCircle, Banknote, BookOpen, CalendarCheck, CalendarDays,
+  Check, ChevronLeft, ChevronRight, ClipboardCheck, Clock3, Edit3, Eye,
+  FileText, FolderOpen, GraduationCap, HeartHandshake, History, ImagePlus,
+  LayoutDashboard, Library, Plus, RefreshCw, Search, ShieldCheck, Trash2,
+  UserRound, Users, Wallet, X,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { createRecord, deleteRecord, listAccounts, listFeePayments, listRecords, recordFeePayment, updateRecord } from '../lib/data'
@@ -48,9 +51,11 @@ function RecordForm({ module, initial, onCancel, onSave, saving, mode }: {
       String(initial?.[field.name] ?? (
         isStudent && field.name === 'admission_no'
           ? makeAdmissionNumber()
-          : isTeacher && field.name === 'employee_no'
-            ? makeEmployeeNumber()
-            : field.type === 'select' ? field.options?.[0]?.value ?? '' : ''
+          : isStudent && field.name === 'status'
+            ? 'pending'
+            : isTeacher && field.name === 'employee_no'
+              ? makeEmployeeNumber()
+              : field.type === 'select' ? field.options?.[0]?.value ?? '' : ''
       )),
     ]),
   ))
@@ -62,6 +67,18 @@ function RecordForm({ module, initial, onCancel, onSave, saving, mode }: {
     let alive = true
     async function loadDynamicOptions() {
       const next: Record<string, { label: string; value: string }[]> = {}
+      if (isStudent) {
+        try {
+          const classRecords = await listRecords(mode, user!, 'classes')
+          next.student_class = classRecords.map(record => ({
+            value: String(record.name ?? record.title ?? record.class_name ?? ''),
+            label: String(record.name ?? record.title ?? record.class_name ?? ''),
+          })).filter(option => option.value)
+        } catch {
+          // The existing students.class_name field accepts a value directly when
+          // the institution has not configured class records yet.
+        }
+      }
       if (module.fields.some((field) => field.name === 'student_id')) {
         const learners = await listRecords(mode, user!, 'students')
         next.student_id = learners.map((student) => ({
@@ -180,7 +197,11 @@ function RecordForm({ module, initial, onCancel, onSave, saving, mode }: {
             if (isStudentSubmission && ['marks_obtained', 'feedback', 'status'].includes(field.name)) return null
             return <label key={field.name} className={`field-label ${field.type === 'textarea' ? 'full-field' : ''} ${isStudent ? 'student-field' : ''}`}>
               <span>{isAutoStudentId ? 'Student ID / admission number' : isAutoEmployeeId ? 'Employee ID' : field.label}{field.required && !(module.key === 'assignment_submissions' && user!.role === 'student' && field.name === 'student_id') ? <span className="student-required"> *</span> : null}</span>
-              {isAutoStudentId || isAutoEmployeeId ? <div className={isAutoStudentId ? 'student-generated-id-wrap' : 'faculty-generated-id-wrap'}>
+              {isStudent && field.name === 'class_name' ? <>
+                <input className="input-control" list="ed360-student-class-options" required={field.required} value={values[field.name] ?? ''} onChange={event => update(field, event.target.value)} placeholder="Choose or enter class / programme"/>
+                <datalist id="ed360-student-class-options">{(dynamicOptions.student_class ?? []).map(option => <option key={option.value} value={option.value}/>)}</datalist>
+                <small className="student-field-help">Choose a configured class or enter the class/programme name.</small>
+              </> : isAutoStudentId || isAutoEmployeeId ? <div className={isAutoStudentId ? 'student-generated-id-wrap' : 'faculty-generated-id-wrap'}>
                 <input className={`input-control ${isAutoStudentId ? 'student-generated-id' : 'faculty-generated-id'}`} value={values[field.name] ?? ''} readOnly required aria-label={isAutoStudentId ? 'Automatically generated student ID' : 'Automatically generated employee ID'}/>
                 <button type="button" className={isAutoStudentId ? 'student-regenerate-button' : 'faculty-regenerate-button'} onClick={() => update(field, isAutoStudentId ? makeAdmissionNumber() : makeEmployeeNumber())} title={isAutoStudentId ? 'Generate another student ID' : 'Generate another employee ID'}>Regenerate</button>
               </div> : module.key === 'assignment_submissions' && user!.role === 'student' && field.name === 'student_id' ? <div className="input-control" aria-label="Your linked student account">Your linked student record</div> : field.type === 'select' ? <select className="input-control" disabled={(lockTaskAssignee && lockTaskDefinitionFields.includes(field.name)) || (module.key === 'assignment_submissions' && user!.role === 'student' && field.name === 'assignment_id' && Boolean(initial))} required={field.required && !(module.key === 'assignment_submissions' && user!.role === 'student' && field.name === 'student_id')} value={values[field.name] ?? ''} onChange={event => update(field, event.target.value)}>
