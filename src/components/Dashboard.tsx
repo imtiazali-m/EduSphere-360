@@ -23,6 +23,8 @@ import AdministrationModule from './AdministrationModule'
 import { ReportsModule } from './ReportsModule'
 import { ProfileModule } from './ProfileModule'
 import { FacultyWorkspace } from './FacultyWorkspace'
+import { WorkspaceHierarchy } from './WorkspaceHierarchy'
+import '../styles/workspace-hierarchy.css'
 
 interface Props { onToast: (message: string, error?: boolean) => void }
 type Dataset = Record<string, RecordRow[]>
@@ -470,6 +472,27 @@ export function Dashboard({ onToast }: Props) {
   }
 
   const adminKey = active.startsWith('admin:') ? active.slice(6) : undefined
+  const activeGroupLabel = visibleGroups.find(group => group.items.includes(activePage))?.label
+    ?? (active === 'profile' ? 'People & Staff' : active === 'overview' ? 'Dashboard' : 'Operations & Reports')
+  const activePageLabel = activePage || (adminKey ? adminModuleLabels[adminKey] : undefined) || activeModule?.title || active
+  const hierarchyRoute = adminKey ? 'admin:' + adminKey : active
+
+  function renderActiveWorkspace() {
+    if (active === 'overview') return <Overview onNavigate={navigate}/>
+    if (adminKey) return <WorkspaceHierarchy routeKey={hierarchyRoute} groupLabel={activeGroupLabel} pageLabel={activePageLabel} mode="embedded"><AdministrationModule key={adminKey} initialKey={adminKey as 'departments' | 'programs' | 'classes' | 'academic_sessions' | 'subjects' | 'rooms'}/></WorkspaceHierarchy>
+    if (active === 'accounts') return <WorkspaceHierarchy routeKey="accounts" groupLabel={activeGroupLabel} pageLabel="User Account"><AccountsModule onToast={onToast}/></WorkspaceHierarchy>
+    if (active === 'files') return <WorkspaceHierarchy routeKey="files" groupLabel={activeGroupLabel} pageLabel="Files & Documentation"><FilesModule onToast={onToast}/></WorkspaceHierarchy>
+    if (active === 'reports') return <WorkspaceHierarchy routeKey="reports" groupLabel={activeGroupLabel} pageLabel="Reports"><ReportsModule onToast={onToast}/></WorkspaceHierarchy>
+    if (active === 'profile') return <WorkspaceHierarchy routeKey="profile" groupLabel={activeGroupLabel} pageLabel="My Profile"><ProfileModule/></WorkspaceHierarchy>
+    if (active === 'teachers') return <WorkspaceHierarchy routeKey="teachers" groupLabel={activeGroupLabel} pageLabel="Faculty & Employee Management" mode="embedded"><FacultyWorkspace onToast={onToast} onNavigate={navigate}/></WorkspaceHierarchy>
+    if (activeModule) {
+      const student = active === 'students'
+      return <WorkspaceHierarchy routeKey={active} groupLabel={activeGroupLabel} pageLabel={activePageLabel} mode={student ? 'embedded' : 'full'}>
+        <RecordModule key={active + ':' + activeWorkspaceWindow} module={activeModule as ModuleConfig} onToast={onToast} initialWindow={student ? activeWorkspaceWindow : undefined} showWindowNavigation={student}/>
+      </WorkspaceHierarchy>
+    }
+    return <Overview onNavigate={navigate}/>
+  }
 
   return <div className={`pro-app-shell ${sidebarOpen ? 'navigation-open' : ''}`}>
     <aside className={`pro-sidebar ${sidebarOpen ? 'is-open' : ''}`} aria-hidden={!sidebarOpen}>
@@ -517,7 +540,7 @@ export function Dashboard({ onToast }: Props) {
           <div className="pro-profile-wrap"><button className="pro-profile-trigger" onClick={() => setProfileOpen(open => !open)} aria-expanded={profileOpen}><span className="pro-profile-avatar">{user?.fullName.slice(0, 1).toUpperCase()}</span><span className="pro-profile-copy"><b>{user?.fullName}</b><small>{roleLabels[user!.role]}</small></span><ChevronDown size={14}/></button>{profileOpen && <div className="pro-profile-menu"><div className="pro-profile-details"><b>{user?.fullName}</b><small>{user?.email}</small><small>{user?.institutionName}</small>{user?.institutionType && <small>Institution type: {user.institutionType.replaceAll('_', ' ')}</small>}<small>Account role: {roleLabels[user!.role]}</small><span className={'pro-profile-mode ' + mode}>Cloud workspace</span></div>{['student', 'parent'].includes(user!.role) && <button type="button" onClick={() => navigate('profile')}><UserRound size={15}/> My Profile</button>}<button type="button" onClick={() => void logout()}><LogOut size={15}/> Sign out</button></div>}</div>
         </div>
       </header>
-      <div className="pro-module-stage">{active === 'overview' ? <Overview onNavigate={navigate}/> : adminKey ? <AdministrationModule key={adminKey} initialKey={adminKey as 'departments' | 'programs' | 'classes' | 'academic_sessions' | 'subjects' | 'rooms'}/> : active === 'accounts' ? <AccountsModule onToast={onToast}/> : active === 'files' ? <FilesModule onToast={onToast}/> : active === 'reports' ? <ReportsModule onToast={onToast}/> : active === 'profile' ? <ProfileModule/> : active === 'teachers' ? <FacultyWorkspace onToast={onToast} onNavigate={navigate}/> : activeModule ? <RecordModule key={active + ':' + activeWorkspaceWindow} module={activeModule as ModuleConfig} onToast={onToast} initialWindow={active === 'students' ? activeWorkspaceWindow : undefined} showWindowNavigation={active !== 'students'}/> : <Overview onNavigate={navigate}/>}</div>
+      <div className="pro-module-stage">{renderActiveWorkspace()}</div>
     </main>
   </div>
 }
