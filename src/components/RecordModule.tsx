@@ -17,7 +17,7 @@ import '../styles/faculty-module.css'
 import '../styles/module-workspaces.css'
 import { ModuleInsights } from './ModuleInsights'
 
-interface Props { module: ModuleConfig; onToast: (message: string, error?: boolean) => void }
+interface Props { module: ModuleConfig; onToast: (message: string, error?: boolean) => void; initialWindow?: string; showWindowNavigation?: boolean }
 type StudentStatus = 'all' | 'active' | 'pending' | 'graduated' | 'inactive'
 type EmployeeStatus = 'all' | 'active' | 'on_leave' | 'inactive'
 type FeeStatus = 'all' | 'unpaid' | 'partial' | 'overdue' | 'paid'
@@ -390,7 +390,7 @@ function WorkspacePagination({ page, pageCount, pageSize, total, onChange }: {
   </div>
 }
 
-export function RecordModule({ module, onToast }: Props) {
+export function RecordModule({ module, onToast, initialWindow, showWindowNavigation = true }: Props) {
   const { mode, user } = useAuth()
   const [rows, setRows] = useState<RecordRow[]>([])
   const [loading, setLoading] = useState(true)
@@ -404,7 +404,7 @@ export function RecordModule({ module, onToast }: Props) {
   const [currentPage, setCurrentPage] = useState(1)
   const pageSize = 10
   const [studentStatus, setStudentStatus] = useState<StudentStatus>('all')
-  const [studentWorkspaceTab, setStudentWorkspaceTab] = useState<StudentWorkspaceTab>('overview')
+  const [studentWorkspaceTab, setStudentWorkspaceTab] = useState<StudentWorkspaceTab>(() => (initialWindow as StudentWorkspaceTab | undefined) ?? 'overview')
   const [selectedStudentId, setSelectedStudentId] = useState('')
   const [studentRelatedRows, setStudentRelatedRows] = useState<Record<string, RecordRow[]>>({})
   const [studentRelatedLoading, setStudentRelatedLoading] = useState(false)
@@ -831,14 +831,16 @@ export function RecordModule({ module, onToast }: Props) {
         </div>
       </header>
 
-      <nav className="ed360-student-window-nav" aria-label="Student management windows">
-        {visibleTabItems.map(item => {
-          const Icon = item.icon
-          return <button type="button" key={item.key} className={studentWorkspaceTab === item.key ? 'active' : ''} aria-current={studentWorkspaceTab === item.key ? 'page' : undefined} onClick={() => { setStudentWorkspaceTab(item.key); setCurrentPage(1) }}>
-            <Icon size={15}/><span>{item.label}</span>{typeof item.count === 'number' && <b>{item.count.toLocaleString()}</b>}
-          </button>
-        })}
-      </nav>
+      {showWindowNavigation && (
+        <nav className="ed360-student-window-nav" aria-label="Student management windows">
+          {visibleTabItems.map(item => {
+            const Icon = item.icon
+            return <button type="button" key={item.key} className={studentWorkspaceTab === item.key ? 'active' : ''} aria-current={studentWorkspaceTab === item.key ? 'page' : undefined} onClick={() => { setStudentWorkspaceTab(item.key); setCurrentPage(1) }}>
+              <Icon size={15}/><span>{item.label}</span>{typeof item.count === 'number' && <b>{item.count.toLocaleString()}</b>}
+            </button>
+          })}
+        </nav>
+      )}
 
       <div className="ed360-student-window-context">
         <div><span className="ed360-context-label">CURRENT WINDOW</span><strong>{visibleTabItems.find(item => item.key === studentWorkspaceTab)?.label ?? 'Overview'}</strong></div>
