@@ -7,7 +7,7 @@ const everyone: AppRole[] = ['owner', 'admin', 'teacher', 'student', 'parent', '
 
 export const modules: ModuleConfig[] = [
   {
-    key: 'students', title: 'Students', description: 'Admissions, profiles, class placement and learner records.', table: 'students', icon: 'GraduationCap', roles: ['owner', 'admin', 'teacher', 'student', 'parent'],
+    key: 'students', title: 'Student Record', description: 'Admissions, profiles, class placement and learner records.', table: 'students', icon: 'GraduationCap', roles: ['owner', 'admin', 'teacher', 'student', 'parent'],
     fields: [
       { name: 'admission_no', label: 'Admission number', required: true },
       { name: 'full_name', label: 'Student full name', required: true },
@@ -28,7 +28,7 @@ export const modules: ModuleConfig[] = [
     ],
   },
   {
-    key: 'teachers', title: 'Faculty & staff', description: 'Teacher profiles, departments, subjects and employment records.', table: 'teachers', icon: 'Users', roles: admins,
+    key: 'teachers', title: 'Faculty & Staff', description: 'Teacher profiles, departments, subjects and employment records.', table: 'teachers', icon: 'Users', roles: admins,
     fields: [
       { name: 'employee_no', label: 'Employee ID', required: true },
       { name: 'full_name', label: 'Full name', required: true },
@@ -47,7 +47,7 @@ export const modules: ModuleConfig[] = [
     ],
   },
   {
-    key: 'attendance', title: 'Attendance', description: 'Daily student attendance with absence and lateness tracking.', table: 'attendance', icon: 'CalendarCheck', roles: allStaff.concat(['student', 'parent']),
+    key: 'attendance', title: 'Attendance Registration', description: 'Daily student attendance with absence and lateness tracking.', table: 'attendance', icon: 'CalendarCheck', roles: allStaff.concat(['student', 'parent']),
     fields: [
       { name: 'student_id', label: 'Student', type: 'select', required: true },
       { name: 'attendance_date', label: 'Attendance date', type: 'date', required: true },
@@ -64,7 +64,7 @@ export const modules: ModuleConfig[] = [
     ],
   },
   {
-    key: 'exams', title: 'Examinations', description: 'Tests, examination schedules, marks and result publication.', table: 'exams', icon: 'ClipboardCheck', roles: ['owner', 'admin', 'teacher', 'exam_officer', 'student', 'parent'],
+    key: 'exams', title: 'Examination', description: 'Tests, examination schedules, marks and result publication.', table: 'exams', icon: 'ClipboardCheck', roles: ['owner', 'admin', 'teacher', 'exam_officer', 'student', 'parent'],
     fields: [
       { name: 'title', label: 'Examination / test name', required: true },
       { name: 'exam_type', label: 'Examination type', type: 'select', options: [
@@ -96,7 +96,7 @@ export const modules: ModuleConfig[] = [
     ],
   },
   {
-    key: 'exam_results', title: 'Exam results', description: 'Enter student marks and publish graded examination results.', table: 'exam_results', icon: 'ClipboardCheck', roles: ['owner', 'admin', 'teacher', 'exam_officer', 'student', 'parent'],
+    key: 'exam_results', title: 'Exam Results', description: 'Enter student marks and publish graded examination results.', table: 'exam_results', icon: 'ClipboardCheck', roles: ['owner', 'admin', 'teacher', 'exam_officer', 'student', 'parent'],
     fields: [
       { name: 'student_id', label: 'Student', type: 'select', required: true },
       { name: 'exam_id', label: 'Examination', type: 'select', required: true },
@@ -114,7 +114,7 @@ export const modules: ModuleConfig[] = [
     ],
   },
   {
-    key: 'fees', title: 'Fees & invoices', description: 'Fee schedules, invoices, collections and outstanding balances.', table: 'fee_invoices', icon: 'Wallet', roles: ['owner', 'admin', 'accountant', 'student', 'parent'],
+    key: 'fees', title: 'Fees Invoice', description: 'Fee schedules, invoices, collections and outstanding balances.', table: 'fee_invoices', icon: 'Wallet', roles: ['owner', 'admin', 'accountant', 'student', 'parent'],
     fields: [
       { name: 'student_id', label: 'Student', type: 'select', required: true },
       { name: 'invoice_no', label: 'Invoice / voucher number', placeholder: 'Generated automatically when blank' },
@@ -163,7 +163,7 @@ export const modules: ModuleConfig[] = [
     ],
   },
   {
-    key: 'assignment_submissions', title: 'Assignment Submissions', description: 'Submit coursework, review student work, award marks and provide feedback.', table: 'assignment_submissions', icon: 'FileCheck2', roles: ['owner', 'admin', 'teacher', 'student', 'parent'],
+    key: 'assignment_submissions', title: 'Assignment Submission', description: 'Submit coursework, review student work, award marks and provide feedback.', table: 'assignment_submissions', icon: 'FileCheck2', roles: ['owner', 'admin', 'teacher', 'student', 'parent'],
     fields: [
       { name: 'assignment_id', label: 'Assignment', type: 'select', required: true },
       { name: 'student_id', label: 'Student', type: 'select', required: true },
@@ -231,7 +231,7 @@ export const modules: ModuleConfig[] = [
     ],
   },
   {
-    key: 'announcements', title: 'Announcements', description: 'Institution-wide updates for staff, students and parents.', table: 'announcements', icon: 'Megaphone', roles: everyone,
+    key: 'announcements', title: 'Announcement', description: 'Institution-wide updates for staff, students and parents.', table: 'announcements', icon: 'Megaphone', roles: everyone,
     fields: [
       { name: 'title', label: 'Announcement title', required: true },
       { name: 'body', label: 'Message', type: 'textarea', required: true },
