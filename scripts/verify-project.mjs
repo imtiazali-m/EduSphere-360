@@ -225,12 +225,14 @@ check('Module definitions and generic CRUD table allowlist remain valid', () => 
 
 check('Student Record is a complete permission-aware multi-window workspace', () => {
   const recordModule = read('src/components/RecordModule.tsx')
-  for (const label of ['Overview', 'Admissions', 'Student Directory', 'Student Profile', 'Class Placement', 'Guardians', 'Attendance', 'Exams & Results', 'Assignments', 'Fees & Payments', 'Timetable', 'Documents', 'History']) {
+  for (const label of ['Overview', 'Admissions', 'Student Directory', 'Student Profile', 'Class Placement', 'Guardians', 'Attendance', 'Exam Results', 'Assignments', 'Student Timetable', 'Student Documentation', 'Student History']) {
     assert.ok(recordModule.includes("label: '" + label + "'"), 'Student workspace window is missing: ' + label)
   }
-  for (const table of ['attendance', 'exams', 'exam_results', 'assignments', 'assignment_submissions', 'fee_invoices', 'timetable_entries']) {
-    assert.ok(recordModule.includes("'" + table + "'"), 'Student workspace is missing related data source: ' + table)
+  const studentWorkspace = recordModule.slice(recordModule.indexOf("if (module.key === 'students')"), recordModule.indexOf("if (module.key === 'teachers')"))
+  for (const table of ['attendance', 'exams', 'exam_results', 'assignments', 'assignment_submissions', 'timetable_entries']) {
+    assert.ok(studentWorkspace.includes("'" + table + "'"), 'Student workspace is missing related data source: ' + table)
   }
+  assert.ok(!studentWorkspace.includes("'fee_invoices'") && !studentWorkspace.includes("label: 'Fees & Payments'"), 'Fee management must remain exclusively in Finance, not Student Management')
   assert.ok(recordModule.includes('studentRelatedTables.map'), 'Student related workspaces must load their linked records')
   assert.ok(recordModule.includes('setStudentWorkspaceTab'), 'Student workspace windows must navigate independently inside Student Record')
   assert.ok(recordModule.includes('Student admission saved successfully.'), 'Student admission confirmation is missing')
