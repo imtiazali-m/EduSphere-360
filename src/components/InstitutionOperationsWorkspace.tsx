@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
 import { BookOpen, CalendarDays, Check, CheckCircle2, ClipboardCheck, Download, FileBadge, FileQuestion, History, Plus, Printer, RefreshCw, Search, ShieldCheck, Users, Wrench, X } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
@@ -62,7 +62,6 @@ export function InstitutionOperationsWorkspace({workspaceKey,initialWindow,onToa
   const admin=['owner','admin'].includes(user!.role)
   const examiner=['owner','admin','exam_officer'].includes(user!.role)
   const teacher=['owner','admin','teacher'].includes(user!.role)
-  const finance=false
   const firstView=(views[selectedDomain] as string[]).includes(initialWindow??'')?initialWindow as View:initialViews[selectedDomain] as View
   const [view,setView]=useState<View>(firstView)
   const [loading,setLoading]=useState(true)
@@ -321,7 +320,7 @@ export function InstitutionOperationsWorkspace({workspaceKey,initialWindow,onToa
   function renderDialog(){
     if(!dialog)return null
     let title='Create record'
-    const fields:React.ReactNode[]=[]
+    const fields:ReactNode[]=[]
     const subjectOptions=subjects.map(row=>({label:String(row.name),value:String(row.id)}))
     const classOptions=classes.map(row=>({label:String(row.name),value:String(row.id)}))
     const sessionOptions=sessions.map(row=>({label:String(row.name??row.session_name),value:String(row.id)}))
