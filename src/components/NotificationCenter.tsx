@@ -56,7 +56,7 @@ export function NotificationCenter({ onToast, onUnreadCountChange }: Props) {
   const visible = useMemo(() => rows.filter(row => {
     if (filter === 'unread' && row.read_at) return false
     const query = search.trim().toLowerCase()
-    return !query || \`\${row.title} \${row.body} \${row.audience}\`.toLowerCase().includes(query)
+    return !query || `${row.title} ${row.body} ${row.audience}`.toLowerCase().includes(query)
   }), [rows, filter, search])
 
   async function markRead(row: NoticeRow) {
@@ -121,7 +121,7 @@ export function NotificationCenter({ onToast, onUnreadCountChange }: Props) {
     {loadError && <div className="ed360-notification-error" role="alert">{loadError}</div>}
     {loading ? <div className="ed360-notification-empty"><RefreshCw size={19}/><strong>Loading notifications</strong><span>Checking the notices available to your account.</span></div>
       : visible.length ? <section className="ed360-notification-list" aria-label="Notifications">
-        {visible.map(row => <article className={\`ed360-notification-card \${row.read_at ? '' : 'is-unread'}\`} key={row.id}>
+        {visible.map(row => <article className={`ed360-notification-card ${row.read_at ? '' : 'is-unread'}`} key={row.id}>
           <span className="ed360-notification-card-icon"><Megaphone size={18}/></span>
           <div className="ed360-notification-card-copy">
             <div className="ed360-notification-card-meta">{!row.read_at && <i className="ed360-notification-dot"/>}<span className="ed360-notification-audience">{row.audience}</span><span><Clock3 size={12} style={{ verticalAlign: 'middle' }}/> {dateLabel(row.created_at)}</span></div>
