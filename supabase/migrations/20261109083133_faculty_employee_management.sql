@@ -348,6 +348,35 @@ create trigger teachers_employee_history_audit
 after insert or update on public.teachers
 for each row execute function private.audit_teacher_history();
 
+insert into public.employee_history (
+  institution_id, teacher_id, event_type, effective_date,
+  old_values, new_values, created_by, created_at
+)
+select
+  t.institution_id, t.id, 'employee_registered', t.created_at::date,
+  null,
+  jsonb_build_object(
+    'employee_no', t.employee_no,
+    'full_name', t.full_name,
+    'email', t.email,
+    'employee_type', t.employee_type,
+    'department_id', t.department_id,
+    'designation_id', t.designation_id,
+    'employment_type', t.employment_type,
+    'employment_status', t.employment_status,
+    'joining_date', t.joining_date,
+    'contract_end_date', t.contract_end_date,
+    'work_location', t.work_location
+  ),
+  t.created_by, t.created_at
+from public.teachers t
+where not exists (
+  select 1 from public.employee_history h
+  where h.institution_id = t.institution_id
+    and h.teacher_id = t.id
+    and h.event_type = 'employee_registered'
+);
+
 -- All new records are institution-scoped; RLS remains the enforcement layer.
 alter table public.designations enable row level security;
 alter table public.teacher_assignments enable row level security;
@@ -657,7 +686,13 @@ for delete to authenticated
 using (
   bucket_id = 'staff-files'
   and array_length(storage.foldername(name), 1) = 2
-  and public.has_institution_role((storage.foldername(name))[1]::uuid, array['owner', 'admin'])
+  and exists (
+    select 1 from public.memberships m
+    where m.institution_id::text = (storage.foldername(name))[1]
+      and m.user_id = (select auth.uid())
+      and m.status = 'active'
+      and m.role in ('owner', 'admin')
+  )
 );
 
 commit;
