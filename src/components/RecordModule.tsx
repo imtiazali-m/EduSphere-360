@@ -16,6 +16,8 @@ import '../styles/student-module.css'
 import '../styles/faculty-module.css'
 import '../styles/module-workspaces.css'
 import { ModuleInsights } from './ModuleInsights'
+import { WorkspaceSubwindowNav, WorkspaceWindowSummary, useWorkspaceHierarchy } from './WorkspaceHierarchy'
+import { getStudentSubwindows, getWorkspaceBlueprint, matchesWorkspaceFilter } from '../lib/workspaceBlueprints'
 
 interface Props { module: ModuleConfig; onToast: (message: string, error?: boolean) => void; initialWindow?: string; showWindowNavigation?: boolean }
 type StudentStatus = 'all' | 'active' | 'pending' | 'graduated' | 'inactive'
@@ -423,6 +425,8 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
   const [documentNotes, setDocumentNotes] = useState('')
   const [employeeStatus, setEmployeeStatus] = useState<EmployeeStatus>('all')
   const [feeStatus, setFeeStatus] = useState<FeeStatus>('all')
+  const hierarchy = useWorkspaceHierarchy()
+  useEffect(() => { if (module.key === 'students') hierarchy.setWindowKey(studentWorkspaceTab) }, [module.key, studentWorkspaceTab])
   const canEdit = ['owner', 'admin'].includes(user!.role)
     || (user!.role === 'teacher' && ['attendance', 'exams', 'exam_results', 'assignments', 'assignment_submissions', 'timetable', 'announcements', 'work_tasks'].includes(module.key))
     || (user!.role === 'student' && module.key === 'assignment_submissions')
@@ -475,8 +479,12 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
   const filtered = useMemo(() => rows.filter(row =>
     module.columns.some(column => String(row[column.key] ?? '').toLowerCase().includes(search.toLowerCase()))
     && (module.key !== 'fees' || feeStatus === 'all' || String(row.status ?? 'unpaid').toLowerCase() === feeStatus)
-  ), [rows, search, module, feeStatus])
-  const studentFiltered = useMemo(() => filtered.filter(row => studentStatus === 'all' || String(row.status ?? 'active').toLowerCase() === studentStatus), [filtered, studentStatus])
+    && matchesWorkspaceFilter(hierarchy.subwindowKey, row, user?.email)
+  ), [rows, search, module, feeStatus, hierarchy.subwindowKey, user?.email])
+  const studentFiltered = useMemo(() => filtered.filter(row =>
+    (studentStatus === 'all' || String(row.status ?? 'active').toLowerCase() === studentStatus)
+    && matchesWorkspaceFilter(hierarchy.subwindowKey, row, user?.email)
+  ), [filtered, studentStatus, hierarchy.subwindowKey, user?.email])
   const studentCounts = useMemo(() => ({
     total: rows.length,
     active: rows.filter(row => String(row.status ?? 'active').toLowerCase() === 'active').length,
@@ -493,24 +501,24 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
     if (!rows.length && selectedStudentId) setSelectedStudentId('')
   }, [rows, selectedStudentId])
   const matchesStudent = (row: RecordRow, student: RecordRow | null) => Boolean(student && row.student_id === student.id)
-  const studentAttendanceRows = (studentRelatedRows.attendance ?? []).filter(row => matchesStudent(row, selectedStudent))
+  const studentAttendanceRows = (studentRelatedRows.attendance ?? []).filter(row => matchesStudent(row, selectedStudent) && matchesWorkspaceFilter(hierarchy.subwindowKey,row,user?.email))
   const studentResultRows = (studentRelatedRows.exam_results ?? []).filter(row => matchesStudent(row, selectedStudent))
-  const studentSubmissionRows = (studentRelatedRows.assignment_submissions ?? []).filter(row => matchesStudent(row, selectedStudent))
+  const studentSubmissionRows = (studentRelatedRows.assignment_submissions ?? []).filter(row => matchesStudent(row, selectedStudent) && matchesWorkspaceFilter(hierarchy.subwindowKey,row,user?.email))
   const studentClass = String(selectedStudent?.class_name ?? '')
-  const studentAssignmentRows = (studentRelatedRows.assignments ?? []).filter(row => !studentClass || String(row.class_name ?? '').toLowerCase() === studentClass.toLowerCase())
+  const studentAssignmentRows = (studentRelatedRows.assignments ?? []).filter(row => (!studentClass || String(row.class_name ?? '').toLowerCase() === studentClass.toLowerCase()) && matchesWorkspaceFilter(hierarchy.subwindowKey,row,user?.email))
   const studentExamRows = (studentRelatedRows.exams ?? []).filter(row => !studentClass || String(row.class_name ?? '').toLowerCase() === studentClass.toLowerCase())
-  const studentTimetableRows = (studentRelatedRows.timetable_entries ?? []).filter(row => !studentClass || String(row.class_name ?? '').toLowerCase() === studentClass.toLowerCase())
+  const studentTimetableRows = (studentRelatedRows.timetable_entries ?? []).filter(row => (!studentClass || String(row.class_name ?? '').toLowerCase() === studentClass.toLowerCase()) && matchesWorkspaceFilter(hierarchy.subwindowKey,row,user?.email))
   const studentGuardianLinks = (studentRelatedRows.guardian_students ?? []).filter(row => row.student_id === selectedStudent?.id)
   const linkedGuardianIds = new Set(studentGuardianLinks.map(row => String(row.guardian_id ?? '')))
-  const studentGuardianRows = (studentRelatedRows.parent_guardians ?? []).filter(row => linkedGuardianIds.has(row.id))
+  const studentGuardianRows = (studentRelatedRows.parent_guardians ?? []).filter(row => linkedGuardianIds.has(row.id) && hierarchy.subwindowKey !== 'available')
   const availableGuardianRows = (studentRelatedRows.parent_guardians ?? []).filter(row => !linkedGuardianIds.has(row.id))
-  const studentPlacementRows = (studentRelatedRows.student_placements ?? []).filter(row => row.student_id === selectedStudent?.id).sort((a,b) => String(b.effective_from ?? '').localeCompare(String(a.effective_from ?? '')))
+  const studentPlacementRows = (studentRelatedRows.student_placements ?? []).filter(row => row.student_id === selectedStudent?.id && matchesWorkspaceFilter(hierarchy.subwindowKey,row,user?.email)).sort((a,b) => String(b.effective_from ?? '').localeCompare(String(a.effective_from ?? '')))
   const activeStudentPlacement = studentPlacementRows.find(row => row.status === 'active' && !row.effective_to) ?? null
   const studentClassRows = studentRelatedRows.classes ?? []
   const activeStudentClass = studentClassRows.find(row => row.id === activeStudentPlacement?.class_id) ?? null
   const activeStudentSession = (studentRelatedRows.academic_sessions ?? []).find(row => row.id === activeStudentClass?.academic_session_id) ?? null
-  const studentDocumentRows = (studentRelatedRows.student_documents ?? []).filter(row => row.student_id === selectedStudent?.id)
-  const studentHistoryRows = (studentRelatedRows.student_history ?? []).filter(row => row.student_id === selectedStudent?.id).sort((a,b) => String(b.created_at ?? '').localeCompare(String(a.created_at ?? '')))
+  const studentDocumentRows = (studentRelatedRows.student_documents ?? []).filter(row => row.student_id === selectedStudent?.id && matchesWorkspaceFilter(hierarchy.subwindowKey,row,user?.email))
+  const studentHistoryRows = (studentRelatedRows.student_history ?? []).filter(row => row.student_id === selectedStudent?.id && (hierarchy.subwindowKey === 'all' || (hierarchy.subwindowKey === 'admissions' && /admission|registration|student_/.test(String(row.event_type))) || (hierarchy.subwindowKey === 'academic' && /attendance|exam|assignment|class_placement/.test(String(row.event_type))) || (hierarchy.subwindowKey === 'family' && /guardian/.test(String(row.event_type))) || (hierarchy.subwindowKey === 'documents' && /document/.test(String(row.event_type)))).sort((a,b) => String(b.created_at ?? '').localeCompare(String(a.created_at ?? '')))
   const studentClassCounts = useMemo(() => {
     const counts = new Map<string, number>()
     rows.forEach(row => {
@@ -806,7 +814,7 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
       if (user!.role === 'teacher') return ['overview', 'directory', 'profile', 'classes', 'attendance', 'results', 'assignments', 'timetable', 'history'].includes(item.key)
       return ['overview', 'profile', 'classes', 'guardians', 'attendance', 'results', 'assignments', 'timetable', 'documents', 'history'].includes(item.key)
     })
-    const pendingRows = rows.filter(row => ['draft','submitted','under_review','documents_required','approved'].includes(String(row.application_status ?? 'submitted').toLowerCase()))
+    const pendingRows = rows.filter(row => ['draft','submitted','under_review','documents_required','approved'].includes(String(row.application_status ?? 'submitted').toLowerCase()) && matchesWorkspaceFilter(hierarchy.subwindowKey,row,user?.email))
     const presentCount = studentAttendanceRows.filter(row => ['present', 'late'].includes(String(row.status ?? '').toLowerCase())).length
     const absentCount = studentAttendanceRows.filter(row => String(row.status ?? '').toLowerCase() === 'absent').length
     const attendanceRate = studentAttendanceRows.length ? Math.round(presentCount / studentAttendanceRows.length * 100) : 0
@@ -1106,6 +1114,7 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
         </label>
         {studentRelatedLoading && <span className="ed360-related-loading"><RefreshCw className="spin" size={13}/> Updating linked records</span>}
       </div>
+      <WorkspaceSubwindowNav items={getStudentSubwindows(studentWorkspaceTab,user!.role)}/>
       {studentRelatedErrors.length > 0 && <div className="ed360-student-data-note" role="status"><ShieldCheck size={15}/><span>Some related information is not available to this role. Your student records and permitted sections remain available.</span></div>}
 
       {studentWorkspaceTab === 'overview' && <>
@@ -1394,9 +1403,12 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
     { key: 'paid', label: 'Paid' },
   ]
 
+  const genericBlueprint = getWorkspaceBlueprint(module.key)
+  const genericWindow = genericBlueprint.windows.find(item => item.key === hierarchy.windowKey) ?? genericBlueprint.windows[0]
   return <div className="page-content ed360-module-page">
     <div className="page-title-row"><div><div className="eyebrow">{module.key === 'fees' ? 'FINANCE / RECEIVABLES' : 'INSTITUTION WORKSPACE'}</div><h1>{module.title}</h1><p>{module.description}</p></div>{canCreate && <button className="button button-primary" onClick={() => { setEditing(null); setShowForm(true) }}><Plus size={17}/> Add {module.title.replace(/s$/, '').toLowerCase()}</button>}</div>
-    <ModuleInsights module={module} rows={rows} loading={loading}/>
+    <WorkspaceWindowSummary title={genericWindow?.label ?? module.title} description={genericWindow?.description ?? module.description} count={filtered.length}/>
+    <ModuleInsights module={module} rows={filtered} loading={loading}/>
     <div className="table-card">{module.key === 'fees' && <div className="student-filter-row fee-filter-row" role="group" aria-label="Filter invoices by payment status">
       {feeFilters.map(filter => <button type="button" key={filter.key} className={feeStatus === filter.key ? 'active' : ''} onClick={() => { setFeeStatus(filter.key); setCurrentPage(1) }}>{filter.label}{filter.key === 'all' ? <span>{feeCounts.invoices}</span> : filter.key === 'overdue' ? <span>{feeCounts.overdue}</span> : null}</button>)}
     </div>}<div className="table-toolbar"><div className="table-count"><strong>{filtered.length}</strong> records <span>·</span> Live institutional database</div><div className="toolbar-actions"><div className="search-box"><Search size={16}/><input placeholder="Search records…" value={search} onChange={event => { setSearch(event.target.value); setCurrentPage(1) }}/></div><button className="icon-button" onClick={() => void load()} aria-label="Refresh records"><RefreshCw size={16}/></button></div></div>
