@@ -215,7 +215,7 @@ function AuthTopline({ navigate, mode }: { navigate: ScreenProps['navigate']; mo
 }
 
 export function LoginScreen({ navigate, initialRole }: ScreenProps & { initialRole?: AppRole }) {
-  const { mode, signIn } = useAuth()
+  const { mode, signIn, requestPasswordReset } = useAuth()
   type LoginAccountType = 'owner_admin' | 'employee' | 'student' | 'parent'
   const initialAccountType: LoginAccountType = initialRole === 'student' ? 'student' : initialRole === 'parent' ? 'parent' : initialRole === 'owner' || initialRole === 'admin' || !initialRole ? 'owner_admin' : 'employee'
   const [accountType, setAccountType] = useState<LoginAccountType>(initialAccountType)
@@ -228,6 +228,8 @@ export function LoginScreen({ navigate, initialRole }: ScreenProps & { initialRo
   const [notice, setNotice] = useState('')
   const [resendBusy, setResendBusy] = useState(false)
   const [resendNotice, setResendNotice] = useState('')
+  const [resetMode, setResetMode] = useState(false)
+  const [resetBusy, setResetBusy] = useState(false)
 
   async function submit(event: FormEvent) {
     event.preventDefault()
@@ -257,7 +259,22 @@ export function LoginScreen({ navigate, initialRole }: ScreenProps & { initialRo
   }
 
   function showForgotPassword() {
-    setNotice('For your online account, contact your institution administrator to request a secure password reset.')
+    setResetMode(true)
+    setError('')
+    setNotice('')
+    setResendNotice('')
+  }
+
+  async function sendPasswordReset(event: FormEvent) {
+    event.preventDefault()
+    if (!email.trim()) { setError('Enter your account email address first.'); return }
+    setResetBusy(true); setError(''); setNotice('')
+    try {
+      await requestPasswordReset(email.trim())
+      setNotice('If an account matches this email, a password-reset link has been sent. Check your inbox and spam folder.')
+    } catch (err) {
+      setError(userFacingError(err, 'The password-reset request could not be sent. Please try again.'))
+    } finally { setResetBusy(false) }
   }
 
   return (
@@ -270,10 +287,10 @@ export function LoginScreen({ navigate, initialRole }: ScreenProps & { initialRo
             <div className="es-auth-avatar"><span><GraduationCap size={23}/></span><i><Check size={11}/></i></div>
             <div className="es-auth-form-heading">
               <span className="es-auth-overline">YOUR LEARNING COMMUNITY</span>
-              <h2>Welcome back</h2>
-              <p>Enter your account details to continue to EduSphere 360.</p>
+              <h2>{resetMode ? 'Reset your password' : 'Welcome back'}</h2>
+              <p>{resetMode ? 'Enter the email address associated with your institution account. We will send a secure reset link when an account matches.' : 'Enter your account details to continue to EduSphere 360.'}</p>
             </div>
-            <div className="es-account-type" role="group" aria-label="Choose account type">
+            {!resetMode && <div className="es-account-type" role="group" aria-label="Choose account type">
               <button type="button" className={accountType === 'owner_admin' ? 'is-active' : ''} onClick={() => { setAccountType('owner_admin'); setError('') }} aria-pressed={accountType === 'owner_admin'}>
                 <span><Building2 size={17}/></span><b>Owner / Admin</b>
               </button>
@@ -286,8 +303,14 @@ export function LoginScreen({ navigate, initialRole }: ScreenProps & { initialRo
               <button type="button" className={accountType === 'parent' ? 'is-active' : ''} onClick={() => { setAccountType('parent'); setError('') }} aria-pressed={accountType === 'parent'}>
                 <span><Users size={17}/></span><b>Parent</b>
               </button>
-            </div>
-            <form className="es-auth-form" onSubmit={submit}>
+            </div>}
+            {resetMode ? <form className="es-auth-form" onSubmit={sendPasswordReset}>
+              <label className="es-auth-field"><span>Email address</span><div className="es-auth-input"><Mail size={17}/><input type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="you@institution.edu" /></div></label>
+              {notice && <div className="es-auth-notice" role="status">{notice}</div>}
+              {error && <div className="es-auth-error" role="alert">{error}</div>}
+              <button className="es-auth-submit" type="submit" disabled={resetBusy}>{resetBusy ? 'Sending reset link…' : 'Send password-reset link'} <ArrowRight size={17}/></button>
+              <button type="button" className="es-auth-text-button" onClick={() => { setResetMode(false); setError(''); setNotice('') }}>Back to login</button>
+            </form> : <form className="es-auth-form" onSubmit={submit}>
               <label className="es-auth-field"><span>Email address</span><div className="es-auth-input"><Mail size={17}/><input type="email" autoComplete="username" required value={email} onChange={e => setEmail(e.target.value)} placeholder="you@institution.edu" /></div></label>
               <label className="es-auth-field"><span>Password</span><div className="es-auth-input"><LockKeyhole size={17}/><input type={showPassword ? 'text' : 'password'} autoComplete="current-password" required value={password} onChange={e => setPassword(e.target.value)} placeholder="Enter your password"/><button type="button" className="es-password-toggle" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Hide password' : 'Show password'}>{showPassword ? <EyeOff size={17}/> : <Eye size={17}/>}</button></div></label>
               <div className="es-auth-form-options"><label className="es-auth-check"><input type="checkbox" checked={rememberMe} onChange={e => setRememberMe(e.target.checked)}/><span className="es-check-box"/><span>Remember me</span></label><button type="button" className="es-auth-text-button" onClick={showForgotPassword}>Forgot your password?</button></div>
@@ -301,8 +324,8 @@ export function LoginScreen({ navigate, initialRole }: ScreenProps & { initialRo
               )}
               {resendNotice && <div className="es-auth-notice" role="status">{resendNotice}</div>}
               <button className="es-auth-submit" type="submit" disabled={busy}>{busy ? 'Signing in…' : 'Login'} <ArrowRight size={17}/></button>
-            </form>
-            <div className="es-auth-mobile-signup">Don't have an account? <button type="button" onClick={() => navigate('setup')}>Sign up</button></div>
+            </form>}
+            {!resetMode && <div className="es-auth-mobile-signup">Don't have an account? <button type="button" onClick={() => navigate('setup')}>Sign up</button></div>}
             <div className="es-auth-secure-note"><ShieldCheck size={15}/> Your account is protected with role-based access.</div>
           </section>
         </div>
@@ -466,4 +489,57 @@ export function SetupScreen({ navigate }: ScreenProps) {
       {legalDocument && <LegalNotice kind={legalDocument} onClose={() => setLegalDocument(null)}/>}
     </div>
   )
+}
+
+
+export function ResetPasswordScreen({ navigate }: ScreenProps) {
+  const { completePasswordReset, signOut, clearRecoveryMode } = useAuth()
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [completed, setCompleted] = useState(false)
+  const [error, setError] = useState('')
+
+  async function submit(event: FormEvent) {
+    event.preventDefault()
+    setError('')
+    if (password.length < 10) { setError('Use a password with at least 10 characters.'); return }
+    if (password !== confirmPassword) { setError('Your passwords do not match.'); return }
+    setBusy(true)
+    try {
+      await completePasswordReset(password)
+      setCompleted(true)
+    } catch (err) {
+      setError(userFacingError(err, 'Your password could not be updated. Request a new reset link and try again.'))
+    } finally { setBusy(false) }
+  }
+
+  async function returnToLogin() {
+    try { await signOut() } finally { clearRecoveryMode(); navigate('login') }
+  }
+
+  return <div className="es-auth-page">
+    <AuthVisualPanel variant="login" />
+    <main className="es-auth-main">
+      <div className="es-auth-form-wrap">
+        <section className="es-auth-card es-login-card" aria-live="polite">
+          <div className="es-auth-avatar"><span><LockKeyhole size={22}/></span><i><Check size={11}/></i></div>
+          <div className="es-auth-form-heading">
+            <span className="es-auth-overline">SECURE ACCOUNT RECOVERY</span>
+            <h2>{completed ? 'Password updated' : 'Choose a new password'}</h2>
+            <p>{completed ? 'Your password has been changed. Sign in again with your new password.' : 'Create a new password for your EduSphere 360 account.'}</p>
+          </div>
+          {completed ? <button className="es-auth-submit" type="button" onClick={() => void returnToLogin()}>Return to login <ArrowRight size={17}/></button> : <form className="es-auth-form" onSubmit={submit}>
+            <label className="es-auth-field"><span>New password</span><div className="es-auth-input"><LockKeyhole size={17}/><input type={showPassword ? 'text' : 'password'} autoComplete="new-password" minLength={10} required value={password} onChange={e => setPassword(e.target.value)} placeholder="At least 10 characters"/><button type="button" className="es-password-toggle" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Hide password' : 'Show password'}>{showPassword ? <EyeOff size={17}/> : <Eye size={17}/>}</button></div></label>
+            <label className="es-auth-field"><span>Confirm new password</span><div className="es-auth-input"><LockKeyhole size={17}/><input type={showPassword ? 'text' : 'password'} autoComplete="new-password" minLength={10} required value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Enter your new password again"/></div></label>
+            {error && <div className="es-auth-error" role="alert">{error}</div>}
+            <button className="es-auth-submit" type="submit" disabled={busy}>{busy ? 'Updating password…' : 'Update password'} <ArrowRight size={17}/></button>
+          </form>}
+          <div className="es-auth-secure-note"><ShieldCheck size={15}/> Use a unique password of at least 10 characters.</div>
+        </section>
+      </div>
+      <footer className="es-auth-main-foot"><span>© {new Date().getFullYear()} EduSphere 360</span><span>Secure account recovery.</span></footer>
+    </main>
+  </div>
 }
