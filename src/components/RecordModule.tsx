@@ -527,14 +527,6 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
     onLeave: rows.filter(row => String(row.employment_status ?? '').toLowerCase() === 'on_leave').length,
     departments: new Set(rows.map(row => String(row.department ?? '').trim()).filter(Boolean)).size,
   }), [rows])
-  const feeCounts = useMemo(() => {
-    const billed = rows.reduce((sum, row) => sum + netInvoiceAmount(row), 0)
-    const received = rows.reduce((sum, row) => sum + Math.max(0, Number(row.paid_amount ?? 0)), 0)
-    const outstanding = rows.reduce((sum, row) => sum + outstandingInvoiceBalance(row), 0)
-    const overdue = rows.filter(row => String(row.status ?? '').toLowerCase() === 'overdue').length
-    return { invoices: rows.length, billed, received, outstanding, overdue }
-  }, [rows])
-
   const teacherFiltered = useMemo(() => filtered.filter(row => employeeStatus === 'all' || String(row.employment_status ?? 'active').toLowerCase() === employeeStatus), [filtered, employeeStatus])
   const studentPageCount = Math.max(1, Math.ceil(studentFiltered.length / pageSize))
   const teacherPageCount = Math.max(1, Math.ceil(teacherFiltered.length / pageSize))
