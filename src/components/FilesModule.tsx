@@ -59,10 +59,15 @@ export function FilesModule({ onToast }: Props) {
       })
       if (error) throw error
       setFiles((data ?? []).filter(file => file.name !== '.emptyFolderPlaceholder').map(file => ({
-        ...file,
+        name: file.name,
         id: file.id ?? undefined,
-        metadata: file.metadata ?? undefined,
-        size: file.metadata?.size,
+        created_at: file.created_at ?? undefined,
+        size: typeof file.metadata?.size === 'number' ? file.metadata.size : undefined,
+        metadata: file.metadata ? {
+          size: typeof file.metadata.size === 'number' ? file.metadata.size : undefined,
+          mimetype: typeof file.metadata.mimetype === 'string' ? file.metadata.mimetype : undefined,
+          lastModified: typeof file.metadata.lastModified === 'string' ? file.metadata.lastModified : undefined,
+        } : undefined,
       })))
     } catch (error) {
       onToast(userFacingError(error, 'Could not load institution files. Refresh and try again.'), true)
