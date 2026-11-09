@@ -199,7 +199,7 @@ function AdminWorkspaceInsights({ activeKey, records, references, loading }: {
 
 export default function AdministrationModule({ initialKey = 'departments' }: { initialKey?: AdminModuleKey }) {
   const { user, mode } = useAuth()
-  const [activeKey, setActiveKey] = useState<AdminModuleKey>(initialKey)
+  const activeKey: AdminModuleKey = initialKey
   const [records, setRecords] = useState<AdminRecord[]>([])
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
