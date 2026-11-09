@@ -1344,7 +1344,7 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
         {studentHistoryRows.length ? <div className="ed360-student-timeline">{studentHistoryRows.map(event => <div className="ed360-student-timeline-item" key={event.id}>
           <i/>
           <div><strong>{String(event.summary ?? 'Student record event')}</strong><p>{String(event.event_type ?? 'event').replaceAll('_',' ')}</p>
-            {(event.old_values || event.new_values) && <details className="ed360-student-history-details"><summary>View recorded changes</summary><div className="ed360-student-history-values">{event.old_values && <div><b>Before</b><pre>{JSON.stringify(event.old_values,null,2)}</pre></div>}{event.new_values && <div><b>After</b><pre>{JSON.stringify(event.new_values,null,2)}</pre></div>}</div></details>}
+            {Boolean(event.old_values || event.new_values) && <details className="ed360-student-history-details"><summary>View recorded changes</summary><div className="ed360-student-history-values">{Boolean(event.old_values) && <div><b>Before</b><pre>{JSON.stringify(event.old_values,null,2)}</pre></div>}{Boolean(event.new_values) && <div><b>After</b><pre>{JSON.stringify(event.new_values,null,2)}</pre></div>}</div></details>}
           </div>
           <time>{niceDate(event.created_at)}</time>
           <span className="status-pill">{String(event.event_type ?? 'event').replaceAll('_',' ')}</span>
