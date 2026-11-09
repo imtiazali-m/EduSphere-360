@@ -184,7 +184,6 @@ const governanceRoutes: Record<string,string> = {
   'institution-settings': 'settings',
   'branding-and-document-settings': 'settings',
   'system-configuration': 'settings',
-  'institution-settings': 'settings',
   'approval-and-workflows': 'approvals',
   'administrative-audit': 'audit',
   'security-and-access-history': 'audit',
