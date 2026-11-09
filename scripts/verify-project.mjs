@@ -110,7 +110,7 @@ check('The full institutional menu maps every submenu to a working destination',
     }
   }
   assert.ok(navigationRoutes['Student Directory']?.startsWith('students:'), 'Student Directory must open the student workspace')
-  assert.equal(navigationRoutes['Fee Invoices'], 'fees', 'Fees remain in the dedicated Finance & Payments workspace')
+  assert.equal(navigationRoutes['fees:fee-invoices'], 'finance:fees:invoices', 'Fee invoices must open the dedicated Finance & Payments workspace')
 })
 
 const roleCounts = {}
@@ -393,10 +393,11 @@ check('Finance menu destinations open the dedicated fee and ledger workspace', (
   assert.equal(getNavigationRoute('accounts-finance', 'Chart of Accounts'), 'finance:accounts-finance:accounts')
   assert.equal(getNavigationRoute('accounts-finance', 'General Ledger'), 'finance:accounts-finance:journals')
   const finance = read('src/components/FinanceWorkspace.tsx')
-  for (const value of ['recordFeePayment', 'record_fee_payment', 'fee_structures', 'fee_structure_items', 'fee_discounts', 'fee_refunds', 'finance_accounts', 'finance_journals', 'post_finance_journal']) {
+  for (const value of ['recordFeePayment', 'fee_structures', 'fee_structure_items', 'fee_discounts', 'fee_refunds', 'finance_accounts', 'finance_journals', 'post_finance_journal']) {
     assert.ok(finance.includes(value), 'Finance workflow is missing ' + value)
   }
   assert.ok(finance.includes('Refund request recorded for manual processing'), 'Refund workflow must not claim an external payment-provider transfer')
+  assert.ok(read('src/lib/data.ts').includes("rpc('record_fee_payment'"), 'Fee payments must use the atomic record_fee_payment database operation')
 })
 
 check('Payroll routes use database salary, approval and payment workflows', () => {
