@@ -63,13 +63,13 @@ const MODULES: ModuleConfig[] = [
   },
   {
     key: 'classes',
-    label: 'Classes & Sections',
+    label: 'Class Sections',
     singular: 'Class / Section',
     description: 'Manage classes and section names.',
   },
   {
     key: 'academic_sessions',
-    label: 'Academic Sessions',
+    label: 'Academic Session',
     singular: 'Academic Session',
     description: 'Manage academic years and sessions.',
   },
