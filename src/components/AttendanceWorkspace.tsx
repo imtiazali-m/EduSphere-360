@@ -26,6 +26,7 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
  const [notes,setNotes]=useState<Record<string,string>>({})
  const [existing,setExisting]=useState<AttendanceEntry[]>([])
  const [loading,setLoading]=useState(true)
+ const [historyLoading,setHistoryLoading]=useState(false)
  const [saving,setSaving]=useState(false)
  const [loadingError,setLoadingError]=useState('')
  const [lastSaved,setLastSaved]=useState('')
@@ -69,6 +70,8 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
 
  const loadAttendance=useCallback(async()=>{
   if(!supabase||!user)return
+  setHistoryLoading(true)
+  setLoadingError('')
   const table=population==='students'?'attendance':'employee_attendance'
   try{
    let query=supabase.from(table).select('*').eq('institution_id',user.institutionId).eq('attendance_date',date)
@@ -87,6 +90,7 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
    })
    setMarks(initial);setNotes(noteMap)
   }catch(error){setExisting([]);setMarks({});setNotes({});setLoadingError(error instanceof Error?error.message:'Attendance could not be loaded.')}
+  finally{setHistoryLoading(false)}
  },[user?.id,user?.institutionId,population,date,className,period])
 
  const loadDevices=useCallback(async()=>{
@@ -209,7 +213,7 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
    </div>
    <label className="ed360-attendance-search"><Search size={15}/><input value={historySearch} onChange={e=>setHistorySearch(e.target.value)} placeholder="Search person, ID, status or note"/></label>
    <div className="ed360-attendance-counts"><div className="count-p"><b>{existing.filter(x=>x.status==='present').length}</b><span>Present</span></div><div className="count-a"><b>{existing.filter(x=>x.status==='absent').length}</b><span>Absent</span></div><div className="count-l"><b>{existing.filter(x=>x.status==='late').length}</b><span>Late</span></div><div><b>{existing.length}</b><span>Entries</span></div></div>
-   {loading&&<p className="ed360-attendance-empty">Loading attendance history…</p>}
+   {historyLoading&&<p className="ed360-attendance-empty">Loading attendance history…</p>}
    {!loadingError&&visibleHistory.length>0&&<div className="ed360-attendance-history-list">{visibleHistory.map((entry,index)=>{
     const personId=population==='students'?entry.student_id:entry.teacher_id
     const person=people.find(item=>item.id===personId)
