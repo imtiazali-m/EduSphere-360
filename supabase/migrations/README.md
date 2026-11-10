@@ -1,6 +1,6 @@
 # Migration history
 
-The twenty-seven timestamped migration files in this folder match the remote migration history recorded by the linked Supabase project. Keep each 14-digit timestamp unchanged so local and remote migration histories remain aligned.
+The twenty-eight timestamped migration files in this folder match the remote migration history recorded by the linked Supabase project. Keep each 14-digit timestamp unchanged so local and remote migration histories remain aligned.
 
 The current online application includes the reviewed schema changes for the existing live schema, Faculty & Employee Management, and Student Management operations (admission lifecycle, linked guardian contacts, class placements, private student documents and audit history for attendance, published results, assignment submissions, guardian policy consolidation and activity indexes). The Student Management and Faculty/Employee migrations have already been applied to the linked project; do not replay them manually.
 
@@ -39,3 +39,6 @@ The institutional catalogue permission migration aligns the generic catalogue wr
 
 
 The atomic library circulation migration adds invoker-security issue and return functions. A row lock on the registered book serializes concurrent checkouts against the stored copy count; active duplicate loans are rejected. Return processing locks the loan, prevents duplicate returns, and calculates the overdue fine from the book's configured per-day rate. Both functions require an active owner, administrator or teacher role and continue to execute under the caller's row-level security permissions.
+
+
+The atomic transport allocation migration adds database-side creation and end-allocation functions. It validates institution-scoped active students and registered route/stop/vehicle records, locks the student to serialize overlapping allocation checks, locks the vehicle for seat-capacity checks, and records lifecycle changes with the authenticated administrator. The UI calls these functions rather than issuing direct inserts or status updates.
