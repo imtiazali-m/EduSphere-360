@@ -224,6 +224,19 @@ const authScreens = read('src/components/AuthScreens.tsx')
 const authContext = read('src/context/AuthContext.tsx')
 const authSource = read('src/lib/auth.ts')
 const signupMigration = read('supabase/migrations/20261108053651_owner_signup_institution_details.sql')
+
+check('Public welcome page includes an accessible feature showcase and FAQ', () => {
+  const welcome = read('src/components/AuthScreens.tsx')
+  const styles = read('src/styles/welcome-marketing.css')
+  for (const value of ['role="tablist"', 'role="tab"', 'role="tabpanel"', "event.key === 'ArrowRight'", "event.key === 'ArrowLeft'", 'aria-selected={showcaseTab === tab.key}', 'welcomeFaqs.map', 'aria-expanded={openFaq === index}', 'edm-faq-answer-' ]) {
+    assert.ok(welcome.includes(value), 'Welcome page interaction is missing: ' + value)
+  }
+  for (const value of ['edm-showcase-tabs', 'edm-showcase-preview', 'edm-faq-layout', 'edm-faq-item', '@media(max-width:620px)']) {
+    assert.ok(styles.includes(value), 'Welcome interaction styling is missing: ' + value)
+  }
+  assert.ok(welcome.includes('Offline/local operation is not available in this release.'), 'The public FAQ must accurately disclose the online-only release')
+  assert.ok(welcome.includes('self-hosted deployment is not currently offered as a released installation.'), 'The public FAQ must not imply the planned self-hosted edition is released')
+})
 check('Owner signup collects and sends name, institution and institution type', () => {
   for (const value of ['Your full name', 'Institution name', 'Institution type', 'Owner / Admin']) assert.ok(authScreens.includes(value), `${value} is missing from authentication screens`)
   for (const value of ['institutionName', 'institutionType', 'fullName']) assert.ok(authContext.includes(value) && authSource.includes(value), `${value} is missing from auth context/client`)
