@@ -1,6 +1,6 @@
 # Migration history
 
-The twenty-six timestamped migration files in this folder match the remote migration history recorded by the linked Supabase project. Keep each 14-digit timestamp unchanged so local and remote migration histories remain aligned.
+The twenty-seven timestamped migration files in this folder match the remote migration history recorded by the linked Supabase project. Keep each 14-digit timestamp unchanged so local and remote migration histories remain aligned.
 
 The current online application includes the reviewed schema changes for the existing live schema, Faculty & Employee Management, and Student Management operations (admission lifecycle, linked guardian contacts, class placements, private student documents and audit history for attendance, published results, assignment submissions, guardian policy consolidation and activity indexes). The Student Management and Faculty/Employee migrations have already been applied to the linked project; do not replay them manually.
 
@@ -36,3 +36,6 @@ Question-paper approval is a separate guarded database function. It requires an 
 
 
 The institutional catalogue permission migration aligns the generic catalogue write policy with the role-specific UI: only owners and administrators can create or edit institution-wide library, transport and facilities master records. Teachers retain the dedicated library circulation workflow and teaching/academic operations; accountants retain inventory and finance access subject to their existing policies. Read access and portal visibility are unchanged.
+
+
+The atomic library circulation migration adds invoker-security issue and return functions. A row lock on the registered book serializes concurrent checkouts against the stored copy count; active duplicate loans are rejected. Return processing locks the loan, prevents duplicate returns, and calculates the overdue fine from the book's configured per-day rate. Both functions require an active owner, administrator or teacher role and continue to execute under the caller's row-level security permissions.
