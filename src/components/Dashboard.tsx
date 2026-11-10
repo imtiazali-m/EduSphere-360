@@ -662,7 +662,7 @@ export function Dashboard({ onToast }: Props) {
             <button className={`pro-nav-group-head ${group.key === "dashboard" ? "pro-nav-dashboard-link" : ""}`} aria-expanded={isExpanded} onClick={() => toggleGroup(group.key)}><span className="pro-nav-group-icon"><GroupIcon size={19}/></span><span className="pro-nav-group-name">{group.label}</span><ChevronRight className="pro-nav-chevron" size={17}/></button>
             {isExpanded && <div className="pro-nav-children">{group.items.map(item => {
               const itemKey = item.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
-              const route = group.key === 'dashboard' ? 'overview' : getNavigationRoute(group.key, item)
+              const route = getNavigationRoute(group.key, item, user!.role)
               const isActive = activeTab.groupKey === group.key && activeTab.itemKey === itemKey
               const ItemIcon = pageIcon(item, GroupIcon)
               const connected = Boolean(route && !route.startsWith('unavailable:'))
