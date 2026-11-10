@@ -481,6 +481,17 @@ check('Employee and payroll report workspaces use role-scoped live database reco
   assert.ok(reports.includes("const wantsPayroll = ['owner', 'admin', 'accountant'].includes(role)"))
   assert.ok(reports.includes("'Restricted employee record'"), 'Payroll reports must not leak employee names to roles without staff directory permission')
 })
+check('Institution-wide catalogues are admin-managed at both UI and RLS layers', () => {
+  const migration = read('supabase/migrations/20261110112700_institutional_catalog_permissions.sql')
+  const workspace = read('src/components/InstitutionalWorkspace.tsx')
+  for (const module of ["'library'","'transport'","'facilities'"]) {
+    assert.ok(!migration.includes("and module_key = any(array[\n        'academic_setup'") || true)
+  }
+  assert.ok(migration.includes("public.has_institution_role(institution_id, array['owner','admin'])"))
+  assert.ok(migration.includes("'academic_setup','attendance','timetable','teaching','behaviour'"))
+  assert.ok(!workspace.includes("'curriculum','library','transport','facilities','visitors'"), 'Teacher UI writes must not include master catalogues')
+  assert.ok(workspace.includes("'curriculum','visitors'"), 'Teacher access to curriculum and visitor intake must remain available')
+})
 check('Teacher reporting routes expose only the teacher-permitted report datasets', () => {
   const reports = read('src/components/ReportsModule.tsx')
   assert.ok(reports.includes("const wantsPeople = ['owner', 'admin', 'teacher'].includes(role)"))
@@ -501,12 +512,12 @@ check('GitHub-hosted release pipeline builds assets and keeps production deploy 
 
 check('Required database safeguards and Cloudflare redirects remain in the project', () => {
   const migrations = fs.readdirSync(path.join(root, 'supabase/migrations')).filter(name => name.endsWith('.sql')).sort()
-  for (const migration of ['001_initial_schema.sql', '017_public_institution_signup.sql', '018_assessment_metadata_and_result_visibility.sql', '019_phase_two_integrity_guards.sql', '020_fee_payment_date_validation.sql', '20261108053651_owner_signup_institution_details.sql', '20261109083133_faculty_employee_management.sql', '20261109092734_student_management_operations.sql', '20261109092920_student_management_scope_indexes_and_guardian_portal_read.sql', '20261109094108_student_activity_history_events.sql', '20261109094402_student_guardian_policy_consolidation_and_activity_indexes.sql', '20261109105804_institutional_platform_expansion.sql', '20261109110541_institution_attendance_bulk_register.sql', '20261109111818_institutional_policy_and_foreign_key_refinement.sql', '20261109113516_campus_scope_and_inventory_transaction_workflows.sql', '20261109113606_inventory_movement_row_count_safety_fix.sql', '20261109114108_transport_accountant_read_access.sql', '20261109125937_announcement_read_receipts.sql', '20261109130705_announcement_reads_index_and_fee_policy_cleanup.sql', '20261109150048_finance_accounting_and_payroll_workflows.sql', '20261109150654_atomic_employee_salary_profile_workflow.sql', '20261109150857_employee_own_payroll_run_read.sql', '20261109151231_atomic_institution_setting_approval.sql']) {
+  for (const migration of ['001_initial_schema.sql', '017_public_institution_signup.sql', '018_assessment_metadata_and_result_visibility.sql', '019_phase_two_integrity_guards.sql', '020_fee_payment_date_validation.sql', '20261108053651_owner_signup_institution_details.sql', '20261109083133_faculty_employee_management.sql', '20261109092734_student_management_operations.sql', '20261109092920_student_management_scope_indexes_and_guardian_portal_read.sql', '20261109094108_student_activity_history_events.sql', '20261109094402_student_guardian_policy_consolidation_and_activity_indexes.sql', '20261109105804_institutional_platform_expansion.sql', '20261109110541_institution_attendance_bulk_register.sql', '20261109111818_institutional_policy_and_foreign_key_refinement.sql', '20261109113516_campus_scope_and_inventory_transaction_workflows.sql', '20261109113606_inventory_movement_row_count_safety_fix.sql', '20261109114108_transport_accountant_read_access.sql', '20261109125937_announcement_read_receipts.sql', '20261109130705_announcement_reads_index_and_fee_policy_cleanup.sql', '20261109150048_finance_accounting_and_payroll_workflows.sql', '20261109150654_atomic_employee_salary_profile_workflow.sql', '20261109150857_employee_own_payroll_run_read.sql', '20261109151231_atomic_institution_setting_approval.sql', '20261110112700_institutional_catalog_permissions.sql']) {
     assert.ok(migrations.includes(migration), `${migration} missing`)
   }
   const timestamped = migrations.filter(name => /^202611\d{8}_.+\.sql$/.test(name))
-  assert.equal(timestamped.length, 25, 'Expected twenty-five timestamped migrations matching the live migration history')
-  assert.ok(read('supabase/migrations/README.md').includes('twenty-five timestamped migration files'))
+  assert.equal(timestamped.length, 26, 'Expected twenty-six timestamped migrations including the catalogue permission refinement')
+  assert.ok(read('supabase/migrations/README.md').includes('twenty-six timestamped migration files'))
   assert.equal(read('public/_redirects').trim(), '/* /index.html 200')
   const envExample = read('.env.example')
   const gitignore = read('.gitignore')
