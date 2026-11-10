@@ -487,10 +487,40 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
     return () => { active = false }
   }, [module.key, mode, user?.id, user?.institutionId, user?.role, user?.linkedStudentId])
 
+  const timetableConflictIds = useMemo(() => {
+    const conflicts = new Set<string>()
+    if (module.key !== 'timetable') return conflicts
+    const ordered = [...rows]
+    const overlaps = (startA: string, endA: string, startB: string, endB: string) => startA < endB && endA > startB
+    for (let i = 0; i < ordered.length; i += 1) {
+      const a = ordered[i]
+      const aStart = String(a.start_time ?? '')
+      const aEnd = String(a.end_time ?? '')
+      if (!aStart || !aEnd) continue
+      for (let j = i + 1; j < ordered.length; j += 1) {
+        const b = ordered[j]
+        if (String(a.weekday ?? '').toLowerCase() !== String(b.weekday ?? '').toLowerCase()) continue
+        const bStart = String(b.start_time ?? '')
+        const bEnd = String(b.end_time ?? '')
+        if (!bStart || !bEnd || !overlaps(aStart, aEnd, bStart, bEnd)) continue
+        const sharedClass = Boolean(String(a.class_name ?? '').trim()) && String(a.class_name).toLowerCase() === String(b.class_name ?? '').toLowerCase()
+        const sharedTeacher = Boolean(String(a.teacher_name ?? '').trim()) && String(a.teacher_name).toLowerCase() === String(b.teacher_name ?? '').toLowerCase()
+        const sharedRoom = Boolean(String(a.room ?? '').trim()) && String(a.room).toLowerCase() === String(b.room ?? '').toLowerCase()
+        if (sharedClass || sharedTeacher || sharedRoom) {
+          conflicts.add(a.id)
+          conflicts.add(b.id)
+        }
+      }
+    }
+    return conflicts
+  }, [rows, module.key])
+
   const filtered = useMemo(() => rows.filter(row =>
     module.columns.some(column => String(row[column.key] ?? '').toLowerCase().includes(search.toLowerCase()))
-    && (!activeOperationalView || activeOperationalView.matches(row))
-  ), [rows, search, module, activeOperationalView])
+    && (!activeOperationalView || (module.key === 'timetable' && activeOperationalView.key === 'conflicts'
+      ? timetableConflictIds.has(row.id)
+      : activeOperationalView.matches(row)))
+  ), [rows, search, module, activeOperationalView, timetableConflictIds])
   const studentFiltered = useMemo(() => filtered.filter(row => studentStatus === 'all' || String(row.status ?? 'active').toLowerCase() === studentStatus), [filtered, studentStatus])
   const studentCounts = useMemo(() => ({
     total: rows.length,
