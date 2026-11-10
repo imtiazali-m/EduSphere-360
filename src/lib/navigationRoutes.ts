@@ -46,7 +46,7 @@ const studentViews: Record<string, string> = {
   'student-performance-charts': 'results',
   'student-reports': 'results',
   'student-data-export': 'directory',
-  'bulk-student-operations': 'directory',
+  'bulk-student-operations': 'unavailable',
 }
 
 const employeeViews: Record<string, string> = {
@@ -61,7 +61,7 @@ const employeeViews: Record<string, string> = {
   'employee-documentation': 'documents',
   'employee-id-cards': 'id-cards',
   'employee-history': 'history',
-  'employee-performance': 'reports',
+  'employee-performance': 'unavailable',
   'employee-attendance': 'attendance',
   'employee-leave-management': 'leave',
   'employee-reports': 'reports',
@@ -77,7 +77,7 @@ const attendanceViews: Record<string, string> = {
   'faculty-and-staff-attendance': 'staff',
   'bulk-staff-attendance': 'staff',
   'attendance-corrections': 'history',
-  'leave-applications': 'staff',
+  'leave-applications': 'leave',
   'late-arrival': 'history',
   'early-departure': 'staff',
   'attendance-calendar': 'history',
@@ -274,14 +274,17 @@ function dedicatedRoute(groupKey: string, itemKey: string): string | undefined {
   }
 
   if (groupKey === 'students') {
+    if (itemKey === 'bulk-student-operations') return 'unavailable:students:bulk-student-operations'
     const view = studentViews[itemKey]
-    return view ? `students:${view}` : undefined
+    return view && view !== 'unavailable' ? `students:${view}` : undefined
   }
   if (groupKey === 'employees') {
+    if (itemKey === 'employee-performance') return 'unavailable:employees:employee-performance'
     const view = employeeViews[itemKey]
-    return view ? `employees:${view}` : undefined
+    return view && view !== 'unavailable' ? `employees:${view}` : undefined
   }
   if (groupKey === 'attendance') {
+    if (itemKey === 'leave-applications') return 'employees:leave'
     const view = attendanceViews[itemKey]
     return view ? `attendance:${view}` : undefined
   }
