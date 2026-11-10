@@ -45,7 +45,7 @@ export function WorkspaceUnavailable({ groupKey, itemKey, onNavigate }: Props) {
       </p>
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: 16, borderRadius: 12, background: '#f3f7fb', color: '#40536b', margin: '20px 0' }}>
         <ShieldCheck size={18} style={{ flexShrink: 0, marginTop: 2 }}/>
-        <span style={{ lineHeight: 1.55 }}>Your institution data is not changed by opening this screen. Existing supported workspaces remain available from the main navigation.</span>
+        <span style={{ lineHeight: 1.55 }}>{alternative} Existing supported workspaces remain available from the main navigation.</span>
       </div>
       <button type="button" className="button button-outline" onClick={() => onNavigate('overview')}><ArrowLeft size={15}/> Return to dashboard</button>
     </section>
