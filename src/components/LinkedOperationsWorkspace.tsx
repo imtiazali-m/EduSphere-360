@@ -212,17 +212,34 @@ export function LinkedOperationsWorkspace({workspaceKey,onToast,onNavigate}:Prop
  async function createAllocation(event:FormEvent){
   event.preventDefault();if(!supabase||!user||!canAdmin)return
   if(!allocationStudent||!allocationRoute||!allocationFrom){onToast('Select a student, route and allocation start date.',true);return}
+  if(allocationTo&&allocationTo<allocationFrom){onToast('Allocation end date cannot precede its start date.',true);return}
+  const selectedRoute=routes.find(row=>row.id===allocationRoute)
+  const selectedStop=stops.find(row=>row.id===allocationStop)
+  const selectedVehicle=vehicles.find(row=>row.id===allocationVehicle)
+  if(!selectedRoute){onToast('Select a route registered by this institution.',true);return}
+  if(allocationStop&&(!selectedStop||String(selectedStop.payload?.route_record_id??selectedStop.payload?.route_id??'')!==allocationRoute)){
+   onToast('The selected stop is not linked to the selected route. Choose a stop from that route.',true);return
+  }
+  if(allocationVehicle&&!selectedVehicle){onToast('Select a vehicle registered by this institution.',true);return}
+  const overlaps=(startA:string,endA:string|null|undefined,startB:string,endB:string|null|undefined)=>startA<=(endB||'9999-12-31')&&startB<=(endA||'9999-12-31')
+  const conflict=allocations.find(row=>row.status==='active'&&row.student_id===allocationStudent&&overlaps(allocationFrom,allocationTo||null,row.effective_from,row.effective_to??null))
+  if(conflict){onToast('This student already has an active transport allocation covering part of these dates. End the current allocation or choose a non-overlapping period.',true);return}
   const fee=transportFee.trim()?Number(transportFee):0
   if(!Number.isFinite(fee)||fee<0){onToast('Transport fee must be a valid non-negative amount.',true);return}
+  if(selectedVehicle){
+   const capacity=Number(selectedVehicle.payload?.capacity??selectedVehicle.payload?.seating_capacity??0)
+   const occupied=allocations.filter(row=>row.status==='active'&&row.vehicle_record_id===selectedVehicle.id&&overlaps(allocationFrom,allocationTo||null,row.effective_from,row.effective_to??null)).length
+   if(Number.isFinite(capacity)&&capacity>0&&occupied>=capacity){onToast('The selected vehicle is at capacity for at least part of this allocation period.',true);return}
+  }
   setSaving(true)
   const {error}=await supabase.from('student_transport_allocations').insert({
-   institution_id:user.institutionId,student_id:allocationStudent,route_record_id:allocationRoute,
+   institution_id:user.institutionId,student_id:allocationStudent,route_record_id:selectedRoute.id,
    stop_record_id:allocationStop||null,vehicle_record_id:allocationVehicle||null,effective_from:allocationFrom,
    effective_to:allocationTo||null,transport_fee:fee,status:'active',notes:allocationNotes.trim()||null,created_by:user.id
   })
   if(error){onToast(error.message,true);setSaving(false);return}
-  setShowAllocationForm(false);setAllocationStudent('');setAllocationRoute('');setAllocationStop('');setAllocationVehicle('');setTransportFee('');setAllocationNotes('')
-  onToast('Student transport allocation created.');setSaving(false);await load()
+  setShowAllocationForm(false);setAllocationStudent('');setAllocationRoute('');setAllocationStop('');setAllocationVehicle('');setTransportFee('');setAllocationNotes('');setAllocationFrom(today());setAllocationTo('')
+  onToast('Transport allocation created after checking route, stop, date conflicts and available vehicle capacity.');setSaving(false);await load()
  }
  async function cancelAllocation(row:Allocation){
   if(!supabase||!user||!canAdmin)return
