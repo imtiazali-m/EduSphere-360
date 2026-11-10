@@ -17,8 +17,8 @@
   --es-teal-700: #147d80;
   --es-teal-100: #e4f5f3;
   --es-ink: #172b43;
-  --es-muted: #687b91;
-  --es-subtle: #8a9aae;
+  --es-muted: #5e7289;
+  --es-subtle: #5e7289;
   --es-line: #dfe7f0;
   --es-line-soft: #eaf0f6;
   --es-canvas: #f3f6fb;
@@ -215,7 +215,9 @@ button { -webkit-tap-highlight-color: transparent; }
   border-bottom: 1px solid var(--es-line-soft);
   background: #f9fbfe;
 }
-.pro-workspace-tabs-label { color: #8293a7; font-size: 8px; letter-spacing: 1.2px; }
+.pro-workspace-tabs-label { color: var(--es-muted); font-size: 8px; letter-spacing: 1.2px; }
+.pro-workspace-tabs-help { color: var(--es-muted); }
+.ed360-start-number, .ed360-start-footnote { color: var(--es-muted); }
 .pro-workspace-tab {
   border: 1px solid transparent; border-radius: 9px;
   color: #62768c; background: transparent;
