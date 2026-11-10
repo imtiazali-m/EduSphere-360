@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { BarChart3, CalendarCheck, ClipboardCheck, Download, Users, Wallet } from 'lucide-react'
 import '../styles/reports.css'
 import '../styles/module-workspaces.css'
@@ -35,8 +35,38 @@ function Section({ title, note, onExport, children }: { title: string; note: str
 }
 
 function SimpleTable({ columns, rows }: { columns: CsvColumn[]; rows: Record<string, unknown>[] }) {
+  const [sortKey,setSortKey] = useState(columns[0]?.key ?? '')
+  const [sortDirection,setSortDirection] = useState<'asc'|'desc'>('asc')
+  const [page,setPage] = useState(1)
+  const pageSize = 10
+  const orderedRows = useMemo(() => {
+    if (!sortKey) return rows
+    return [...rows].sort((a,b) => {
+      const left=a[sortKey],right=b[sortKey]
+      const leftEmpty=left===null||left===undefined||left===''
+      const rightEmpty=right===null||right===undefined||right===''
+      if(leftEmpty||rightEmpty)return leftEmpty===rightEmpty?0:leftEmpty?1:-1
+      const leftNumber=Number(left),rightNumber=Number(right)
+      const numeric=String(left).trim()!==''&&String(right).trim()!==''&&Number.isFinite(leftNumber)&&Number.isFinite(rightNumber)
+      const comparison=numeric?leftNumber-rightNumber:String(left).localeCompare(String(right),undefined,{numeric:true,sensitivity:'base'})
+      return sortDirection==='asc'?comparison:-comparison
+    })
+  },[rows,sortKey,sortDirection])
+  const pageCount=Math.max(1,Math.ceil(orderedRows.length/pageSize))
+  const currentPage=Math.min(page,pageCount)
+  const pageRows=orderedRows.slice((currentPage-1)*pageSize,currentPage*pageSize)
+  function toggleSort(key:string){
+    if(sortKey===key)setSortDirection(value=>value==='asc'?'desc':'asc')
+    else{setSortKey(key);setSortDirection('asc')}
+    setPage(1)
+  }
   if (!rows.length) return <div className="report-empty">No records to show.</div>
-  return <div className="table-scroll"><table><thead><tr>{columns.map(column => <th key={column.key}>{column.label}</th>)}</tr></thead><tbody>{rows.slice(0, 200).map((row, index) => <tr key={String(row.id ?? index)}>{columns.map(column => <td key={column.key}>{String(row[column.key] ?? '')}</td>)}</tr>)}</tbody></table></div>
+  return <>
+    <div className="table-scroll"><table><thead><tr>{columns.map(column=><th key={column.key} aria-sort={sortKey===column.key?(sortDirection==='asc'?'ascending':'descending'):'none'}><button type="button" className="report-sort-header" onClick={()=>toggleSort(column.key)}>{column.label}<span aria-hidden="true">{sortKey===column.key?(sortDirection==='asc'?'↑':'↓'):'↕'}</span></button></th>)}</tr></thead>
+      <tbody>{pageRows.map((row,index)=><tr key={String(row.id??index)}>{columns.map(column=><td key={column.key}>{String(row[column.key]??'')}</td>)}</tr>)}</tbody>
+    </table></div>
+    {orderedRows.length>pageSize&&<div className="report-table-pagination"><span>Showing <b>{(currentPage-1)*pageSize+1}–{Math.min(currentPage*pageSize,orderedRows.length)}</b> of <b>{orderedRows.length}</b> rows</span><div><button type="button" className="button button-outline" disabled={currentPage<=1} onClick={()=>setPage(currentPage-1)}>Previous</button><span>Page {currentPage} of {pageCount}</span><button type="button" className="button button-outline" disabled={currentPage>=pageCount} onClick={()=>setPage(currentPage+1)}>Next</button></div></div>}
+  </>
 }
 
 export function ReportsModule({ onToast, initialWindow }: { onToast: (message: string, error?: boolean) => void; initialWindow?: string }) {
