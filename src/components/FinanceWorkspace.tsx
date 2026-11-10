@@ -50,6 +50,13 @@ export function FinanceWorkspace({workspaceKey,initialWindow,onToast}:Props){
   const [saving,setSaving]=useState(false)
   const [error,setError]=useState('')
   const [query,setQuery]=useState('')
+  const [invoiceSortKey,setInvoiceSortKey]=useState('due_date')
+  const [invoiceSortDirection,setInvoiceSortDirection]=useState<'asc'|'desc'>('asc')
+  const [invoicePage,setInvoicePage]=useState(1)
+  const [paymentSortKey,setPaymentSortKey]=useState('payment_date')
+  const [paymentSortDirection,setPaymentSortDirection]=useState<'asc'|'desc'>('desc')
+  const [paymentPage,setPaymentPage]=useState(1)
+  const financePageSize=10
   const [invoices,setInvoices]=useState<FinanceRow[]>([])
   const [payments,setPayments]=useState<FinanceRow[]>([])
   const [students,setStudents]=useState<FinanceRow[]>([])
@@ -337,6 +344,35 @@ export function FinanceWorkspace({workspaceKey,initialWindow,onToast}:Props){
       {key:'invoice_no',label:'Invoice number'},{key:'student_name',label:'Student'},{key:'fee_title',label:'Fee description'},
       {key:'amount',label:'Invoice amount'},{key:'paid_amount',label:'Paid amount'},{key:'due_date',label:'Due date'},{key:'status',label:'Status'}
     ])
+  }
+
+  function sortedFinanceRows(rows:FinanceRow[],key:string,direction:'asc'|'desc'){
+    return [...rows].sort((left,right)=>{
+      const value=(row:FinanceRow):unknown => key==='balance'?outstandingInvoiceBalance(row):key==='net_amount'?netInvoiceAmount(row):row[key]
+      const a=value(left),b=value(right)
+      const aEmpty=a===null||a===undefined||a===''
+      const bEmpty=b===null||b===undefined||b===''
+      if(aEmpty||bEmpty)return aEmpty===bEmpty?0:aEmpty?1:-1
+      const an=Number(a),bn=Number(b)
+      const numeric=String(a).trim()!==''&&String(b).trim()!==''&&Number.isFinite(an)&&Number.isFinite(bn)
+      const comparison=numeric?an-bn:String(a).localeCompare(String(b),undefined,{numeric:true,sensitivity:'base'})
+      return direction==='asc'?comparison:-comparison
+    })
+  }
+
+  function financeSortHeader(labelText:string,key:string,currentKey:string,direction:'asc'|'desc',onSort:()=>void){
+    return <th aria-sort={currentKey===key?(direction==='asc'?'ascending':'descending'):'none'}>
+      <button type="button" className="fin-sort-header" onClick={onSort}>{labelText}<span aria-hidden="true">{currentKey===key?(direction==='asc'?'↑':'↓'):'↕'}</span></button>
+    </th>
+  }
+
+  function pageControls(total:number,page:number,setPage:(page:number)=>void){
+    const pageCount=Math.max(1,Math.ceil(total/financePageSize))
+    const current=Math.min(page,pageCount)
+    return total>financePageSize?<div className="fin-table-pagination">
+      <span>Showing <b>{(current-1)*financePageSize+1}–{Math.min(current*financePageSize,total)}</b> of <b>{total}</b></span>
+      <div><button type="button" className="fin-button" disabled={current<=1} onClick={()=>setPage(current-1)}>Previous</button><span>Page {current} of {pageCount}</span><button type="button" className="fin-button" disabled={current>=pageCount} onClick={()=>setPage(current+1)}>Next</button></div>
+    </div>:null
   }
 
   const invoiceTable=(rows:FinanceRow[])=>rows.length?<div className="table-scroll"><table><thead><tr><th>Invoice</th><th>Student</th><th>Fee</th><th>Amount</th><th>Received</th><th>Balance</th><th>Due</th><th>Status</th>{financeRole&&<th>Actions</th>}</tr></thead><tbody>{rows.map(row=><tr key={row.id}><td><b>{String(row.invoice_no??row.invoice_number??'—')}</b></td><td>{String(row.student_name??'—')}<small>{String(row.admission_no??'')}</small></td><td>{String(row.fee_title??'—')}</td><td>{money(netInvoiceAmount(row))}</td><td>{money(number(row.paid_amount))}</td><td><b>{money(outstandingInvoiceBalance(row))}</b></td><td>{dateLabel(row.due_date)}</td><td><span className={'fin-status '+String(row.status??'unpaid')}>{label(row.status)}</span></td>{financeRole&&<td>{outstandingInvoiceBalance(row)>0&&<button className="fin-button primary" onClick={()=>{setPaymentTarget(row);setPaymentAmount(String(outstandingInvoiceBalance(row)));setPaymentDate(today())}}>Collect</button>}</td>}</tr>)}</tbody></table></div>:<div className="fin-empty">No invoices are available in this view yet.</div>
