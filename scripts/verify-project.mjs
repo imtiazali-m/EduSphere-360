@@ -814,6 +814,8 @@ check('Unified design system is loaded last and removes global browser zoom', ()
   assert.ok(!/#root\s*\{[^}]*zoom\s*:/.test(operational), 'Global root zoom must not be used')
   assert.ok(!/zoom\s*:/.test(operational), 'Operational styles must not apply browser-level zoom')
   assert.ok(read('docs/PHASE_1_DETAILED_AUDIT.md').includes('Phase 1 disposition'), 'Detailed Phase 1 audit document is missing')
+  const roleMenu = read('docs/PHASE_1_ROLE_MENU_INVENTORY.md')
+  assert.ok(roleMenu.includes('430 submenu entries') && roleMenu.includes('Examination officer') && roleMenu.includes('Owner 430'), 'Complete role menu inventory must cover all submenu entries and all seven role totals')
   assert.ok(read('docs/PHASE_2_DESIGN_SYSTEM.md').includes('Core colour tokens'), 'Phase 2 design specification is missing')
 })
 
