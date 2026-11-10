@@ -368,9 +368,32 @@ function dedicatedRoute(groupKey: string, itemKey: string): string | undefined {
  * two groups contain the same display label and prevents silent routing into
  * the generic institutional_records CRUD screen.
  */
-export function getNavigationRoute(groupKey: string, itemLabel: string): string {
+export function getNavigationRoute(groupKey: string, itemLabel: string, role?: string): string {
   const itemKey = slug(itemLabel)
   const compositeKey = `${groupKey}:${itemKey}`
+  const actorRole = role ?? 'owner'
+  if (groupKey === 'dashboard') {
+    if (itemKey === 'employee-performance') {
+      if (['owner','admin'].includes(actorRole)) return 'employees:reports'
+      if (actorRole === 'teacher') return 'employees:overview'
+      return 'unavailable:dashboard:employee-performance'
+    }
+    if (itemKey === 'student-behaviour') {
+      return ['owner','admin','teacher'].includes(actorRole)
+        ? 'operations:behaviour:register'
+        : 'unavailable:dashboard:student-behaviour'
+    }
+    if (['recent-activities','institutional-alerts'].includes(itemKey) && !['owner','admin'].includes(actorRole)) {
+      return 'unavailable:dashboard:' + itemKey
+    }
+    if (itemKey === 'financial-overview' && !['owner','admin','accountant','student','parent'].includes(actorRole)) {
+      return 'unavailable:dashboard:financial-overview'
+    }
+    if (itemKey === 'attendance-overview' && actorRole === 'accountant') return 'unavailable:dashboard:attendance-overview'
+    if (itemKey === 'student-performance' && actorRole === 'accountant') return 'unavailable:dashboard:student-performance'
+    if (itemKey === 'tasks-and-reminders' && ['student','parent'].includes(actorRole)) return 'unavailable:dashboard:tasks-and-reminders'
+    if (itemKey === 'academic-overview' && ['student','parent'].includes(actorRole)) return 'exams:calendar'
+  }
   const override = existingRouteOverrides[compositeKey]
 
   const financeDestination = financeRoute(groupKey,itemKey)
