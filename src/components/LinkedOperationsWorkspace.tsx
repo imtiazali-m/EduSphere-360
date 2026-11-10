@@ -3,6 +3,7 @@ import { BookOpen, Bus, MapPin, Package, Plus, RefreshCw, X } from 'lucide-react
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { userFacingError } from '../lib/userErrors'
+import { downloadCsv } from '../lib/csv'
 import { getWorkspaceGroup } from '../lib/institutionalCatalog'
 
 type Props={workspaceKey:string;onToast:(message:string,error?:boolean)=>void;onNavigate:(key:string)=>void}
@@ -76,9 +77,11 @@ export function LinkedOperationsWorkspace({workspaceKey,onToast,onNavigate}:Prop
  const [showAllocationForm,setShowAllocationForm]=useState(false)
 
  const isCampus=groupKey==='administration'&&itemKey==='campus-and-branch-management'
- const isLibrary=groupKey==='library'&&itemKey==='book-issue-and-returns'
+ const isLibrary=groupKey==='library'&&['book-issue-and-returns','library-reports'].includes(itemKey)
+ const isLibraryReport=groupKey==='library'&&itemKey==='library-reports'
  const isInventory=groupKey==='inventory'&&['stock-in','stock-out','stock-allocation','stock-adjustments','inventory-history','stock-reports'].includes(itemKey)
- const isTransport=groupKey==='transport'&&itemKey==='student-transport-allocation'
+ const isTransport=groupKey==='transport'&&['student-transport-allocation','transport-reports'].includes(itemKey)
+ const isTransportReport=groupKey==='transport'&&itemKey==='transport-reports'
  const canAdmin=Boolean(user&&['owner','admin'].includes(user.role))
  const canLibrary=Boolean(user&&['owner','admin','teacher'].includes(user.role))
  const theme=palette[groupKey]??palette.administration
@@ -251,9 +254,9 @@ export function LinkedOperationsWorkspace({workspaceKey,onToast,onNavigate}:Prop
  }
 
  if(!user||!group)return null
- const specialTitle=isCampus?'Campus and Branch Management':isLibrary?'Book Issue and Returns':isInventory?'Inventory Stock Movements':'Student Transport Allocation'
+ const specialTitle=isCampus?'Campus and Branch Management':isLibrary?(isLibraryReport?'Library Circulation Reports':'Book Issue and Returns'):isInventory?(itemKey==='stock-reports'?'Inventory Stock Reports':itemKey==='inventory-history'?'Inventory Movement History':itemKey==='stock-in'?'Stock In':itemKey==='stock-out'?'Stock Out':itemKey==='stock-allocation'?'Stock Allocation':itemKey==='stock-adjustments'?'Stock Adjustments':'Inventory Stock Movements'):isTransport?(isTransportReport?'Transport Allocation Reports':'Student Transport Allocation'):'Institution Operations'
  const nav=<nav className="ed360-operations-window-nav ed360-workspace-tabs" aria-label={group.label+' submenus'}>{group.items.map(menu=><button key={menu.key} className={menu.key===itemKey?'active':''} type="button" onClick={()=>onNavigate('institutional:'+group.key+':'+menu.key)}>{menu.label}</button>)}</nav>
- const header=<header className="ed360-workspace-hero" style={{'--workspace-accent':theme.accent,'--workspace-soft':theme.soft,'--workspace-ink':theme.ink} as CSSProperties}><div className="ed360-workspace-hero-icon">{isCampus?<MapPin size={21}/>:isLibrary?<BookOpen size={21}/>:isInventory?<Package size={21}/>:<Bus size={21}/>}</div><div className="ed360-workspace-hero-copy"><span>{group.label.toUpperCase()} / LIVE RELATIONAL WORKFLOW</span><h1>{specialTitle}</h1><p>{isCampus?'Manage real institution branches. Campus assignments are referenced by existing institutional tables.':isLibrary?'Issue and return books against student records, with due dates and traceable circulation history.':isInventory?'Record stock movement through an atomic transaction that prevents inventory going below zero.':'Allocate students to registered routes, stops and vehicles with effective dates and transport fees.'}</p></div><div className="ed360-workspace-hero-tools"><span className="ed360-data-state"><i/> Live Supabase records</span>{isCampus&&canAdmin&&<button className="button button-primary" onClick={()=>resetCampus()}><Plus size={16}/> Add campus</button>}{isLibrary&&canLibrary&&<button className="button button-primary" onClick={()=>setShowLoanForm(true)}><Plus size={16}/> Issue book</button>}{isInventory&&canAdmin&&<button className="button button-primary" onClick={()=>setShowMovementForm(true)}><Plus size={16}/> Record movement</button>}{isTransport&&canAdmin&&<button className="button button-primary" onClick={()=>setShowAllocationForm(true)}><Plus size={16}/> Allocate student</button>}</div></header>
+ const header=<header className="ed360-workspace-hero" style={{'--workspace-accent':theme.accent,'--workspace-soft':theme.soft,'--workspace-ink':theme.ink} as CSSProperties}><div className="ed360-workspace-hero-icon">{isCampus?<MapPin size={21}/>:isLibrary?<BookOpen size={21}/>:isInventory?<Package size={21}/>:<Bus size={21}/>}</div><div className="ed360-workspace-hero-copy"><span>{group.label.toUpperCase()} / LIVE RELATIONAL WORKFLOW</span><h1>{specialTitle}</h1><p>{isCampus?'Manage real institution branches. Campus assignments are referenced by existing institutional tables.':isLibrary?(isLibraryReport?'Review actual issue, return, overdue and fine activity from the library loan ledger.':'Issue and return books against student records, with due dates and traceable circulation history.'):isInventory?'Record stock movement through an atomic transaction that prevents inventory going below zero.':isTransport?(isTransportReport?'Review active allocations, registered routes, vehicle usage and recorded transport fees.':'Allocate students to registered routes, stops and vehicles with effective dates and transport fees.'):'Institution operations'}</p></div><div className="ed360-workspace-hero-tools"><span className="ed360-data-state"><i/> Live Supabase records</span>{isCampus&&canAdmin&&<button className="button button-primary" onClick={()=>resetCampus()}><Plus size={16}/> Add campus</button>}{isLibrary&&canLibrary&&<button className="button button-primary" onClick={()=>setShowLoanForm(true)}><Plus size={16}/> Issue book</button>}{isInventory&&canAdmin&&<button className="button button-primary" onClick={()=>setShowMovementForm(true)}><Plus size={16}/> Record movement</button>}{isTransport&&canAdmin&&<button className="button button-primary" onClick={()=>setShowAllocationForm(true)}><Plus size={16}/> Allocate student</button>}</div></header>
 
  return <main className="page-content ed360-module-page ed360-institutional-workspace ed360-linked-operations" style={{'--workspace-accent':theme.accent,'--workspace-soft':theme.soft,'--workspace-ink':theme.ink} as React.CSSProperties}>
   {header}{nav}
