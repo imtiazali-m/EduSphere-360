@@ -262,3 +262,36 @@
   .ed360-student-guardian-link select{min-width:0;width:100%}
   .ed360-student-history-values{grid-template-columns:1fr}
 }
+
+/* Student identity card workspace and print layout. */
+.ed360-student-id-card{width:min(100%,520px);min-height:245px;overflow:hidden;border:1px solid #d9e3f0;border-radius:18px;background:linear-gradient(135deg,#ffffff 0%,#f0f5fb 100%);box-shadow:0 14px 35px rgba(34,63,96,.10);color:#203b59}
+.ed360-student-id-card-brand{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 20px;background:#173d34;color:#fff}
+.ed360-student-id-card-brand strong{display:block;font-size:17px;font-weight:800;line-height:1.2}
+.ed360-student-id-card-brand small{display:block;margin-top:5px;color:#d2e1da;font-size:9px;font-weight:800;letter-spacing:1.5px}
+.ed360-student-id-card-brand>span{display:grid;width:38px;height:38px;place-items:center;border:1px solid rgba(255,255,255,.5);border-radius:12px;font-size:11px;font-weight:900;letter-spacing:1px}
+.ed360-student-id-card-body{display:flex;align-items:center;gap:20px;padding:22px 20px}
+.ed360-student-id-card-body>div:first-child{width:92px;height:112px;flex:0 0 92px;overflow:hidden;border:2px solid #d8e2ee;border-radius:12px;background:#eaf0f6}
+.ed360-student-id-card-body>div:first-child img{width:100%;height:100%;object-fit:cover}
+.ed360-student-id-card-body>div:last-child{display:grid;gap:7px;min-width:0}
+.ed360-student-id-card-body>div:last-child strong{color:#173d34;font-size:20px;line-height:1.2}
+.ed360-student-id-card-body>div:last-child small{color:#526d89;font-size:11px;font-weight:650}
+.ed360-student-id-card-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 20px;border-top:1px solid #e0e8f1;color:#72869e;font-size:9px}
+.ed360-student-id-card-footer b{color:#315577;font-size:10px;letter-spacing:1px}
+.ed360-student-id-card-note{max-width:540px;margin-top:12px;color:#73849a;font-size:12px;line-height:1.5}
+@media(max-width:580px){.ed360-student-id-card-body{gap:12px;padding:16px}.ed360-student-id-card-body>div:first-child{width:76px;height:96px;flex-basis:76px}.ed360-student-id-card-body>div:last-child strong{font-size:16px}}
+@media print{
+  body *{visibility:hidden!important}
+  .ed360-student-id-card,.ed360-student-id-card *{visibility:visible!important}
+  .ed360-student-id-card{position:absolute;left:0;top:0;width:85.6mm;min-height:54mm;border:1px solid #b9c7d7;border-radius:3mm;box-shadow:none;break-inside:avoid;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+  .ed360-student-id-card-brand{padding:4mm}
+  .ed360-student-id-card-brand strong{font-size:12pt}
+  .ed360-student-id-card-brand small{font-size:6pt}
+  .ed360-student-id-card-brand>span{width:9mm;height:9mm;border-radius:2mm}
+  .ed360-student-id-card-body{gap:4mm;padding:5mm 4mm}
+  .ed360-student-id-card-body>div:first-child{width:23mm;height:29mm;flex-basis:23mm;border-radius:2mm}
+  .ed360-student-id-card-body>div:last-child strong{font-size:12pt}
+  .ed360-student-id-card-body>div:last-child small{font-size:6.5pt}
+  .ed360-student-id-card-footer{padding:2mm 4mm;font-size:5.5pt}
+  .ed360-student-id-card-note,.ed360-student-panel header,.ed360-student-window-nav,.ed360-student-window-context,.ed360-student-data-note{display:none!important}
+  @page{size:85.6mm 54mm;margin:0}
+}
