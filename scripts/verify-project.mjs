@@ -484,13 +484,18 @@ check('Employee and payroll report workspaces use role-scoped live database reco
 check('Institution-wide catalogues are admin-managed at both UI and RLS layers', () => {
   const migration = read('supabase/migrations/20261110112700_institutional_catalog_permissions.sql')
   const workspace = read('src/components/InstitutionalWorkspace.tsx')
-  for (const module of ["'library'","'transport'","'facilities'"]) {
-    assert.ok(!migration.includes("and module_key = any(array[\n        'academic_setup'") || true)
+  const teacherInsert = migration.match(/has_institution_role\\(institution_id, array\\['teacher'\\]\\)\\s*and module_key = any\\(array\\[([\\s\\S]*?)\\]\\)/)
+  assert.ok(teacherInsert, 'Teacher insert policy must remain explicitly scoped')
+  for (const module of ["'library'","'transport'","'facilities'","'visitors'","'certificates'"]) {
+    assert.ok(!teacherInsert[1].includes(module), 'Teacher insert policy must not grant generic catalogue writes for ' + module)
+  }
+  const teacherUi = workspace.match(/user\\.role==='teacher'&&\\[([^\\]]+)\\]\\.includes\\(group\\.dataModule\\)/)
+  assert.ok(teacherUi, 'Teacher write UI must remain explicitly scoped')
+  for (const module of ["'library'","'transport'","'facilities'","'visitors'","'certificates'"]) {
+    assert.ok(!teacherUi[1].includes(module), 'Teacher UI must not offer generic catalogue writes for ' + module)
   }
   assert.ok(migration.includes("public.has_institution_role(institution_id, array['owner','admin'])"))
   assert.ok(migration.includes("'academic_setup','attendance','timetable','teaching','behaviour'"))
-  assert.ok(!workspace.includes("'curriculum','library','transport','facilities','visitors'"), 'Teacher UI writes must not include master catalogues')
-  assert.ok(workspace.includes("'curriculum','visitors'"), 'Teacher access to curriculum and visitor intake must remain available')
 })
 check('Teacher reporting routes expose only the teacher-permitted report datasets', () => {
   const reports = read('src/components/ReportsModule.tsx')
