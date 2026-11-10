@@ -466,7 +466,7 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
       return null
     } finally { setLoading(false) }
   }
-  useEffect(() => { setCurrentPage(1); void load() }, [mode, user?.id, user?.institutionId, module.table])
+  useEffect(() => { setCurrentPage(1); setSortKey(''); setSortDirection('asc'); void load() }, [mode, user?.id, user?.institutionId, module.table])
 
   useEffect(() => {
     if (module.key !== 'students') return
