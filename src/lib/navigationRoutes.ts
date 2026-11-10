@@ -374,6 +374,9 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
   const itemKey = slug(itemLabel)
   const compositeKey = `${groupKey}:${itemKey}`
   const actorRole = role ?? 'owner'
+  if (groupKey === 'ai' || groupKey === 'backup') {
+    return 'unavailable:' + groupKey + ':' + itemKey
+  }
   if (groupKey === 'dashboard') {
     if (itemKey === 'employee-performance') {
       if (['owner','admin'].includes(actorRole)) return 'employees:reports'
