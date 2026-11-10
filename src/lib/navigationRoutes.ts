@@ -36,6 +36,7 @@ const studentViews: Record<string, string> = {
   'new-admissions': 'admissions',
   'admission-applications': 'admissions',
   'student-profiles': 'profile',
+  'student-id-cards': 'id-cards',
   'enrollment': 'admissions',
   'class-and-section-assignments': 'classes',
   'promotion-and-transfer': 'classes',
