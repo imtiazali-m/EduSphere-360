@@ -412,6 +412,16 @@ check('Governance settings and approval queues support sorting and pagination', 
   assert.ok(styles.includes('.gov-sort-header:focus-visible') && styles.includes('.gov-pagination'), 'Governance controls need accessible responsive styles')
 })
 
+check('Report tables show all rows through accessible sorting and pagination', () => {
+  const reports = read('src/components/ReportsModule.tsx')
+  const styles = read('src/styles/reports.css')
+  for (const value of ['orderedRows', 'pageRows', 'toggleSort', 'aria-sort=', 'report-sort-header', 'report-table-pagination']) {
+    assert.ok(reports.includes(value), 'Report table interaction is missing: ' + value)
+  }
+  assert.ok(!reports.includes('rows.slice(0, 200)'), 'Reports must not silently truncate records at 200 rows')
+  assert.ok(styles.includes('.report-sort-header:focus-visible') && styles.includes('.report-table-pagination'), 'Report tables require responsive accessible controls')
+})
+
 check('Private file controls match institution storage permissions', () => {
   assert.equal(packageJson.scripts['test:file-access'], 'node scripts/test-file-access.mjs')
   const files = read('src/components/FilesModule.tsx')
