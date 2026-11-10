@@ -78,14 +78,14 @@ check('The full institutional menu maps every submenu to a working destination',
   assert.ok(menuDestinationCount >= 400, 'All specified submenu destinations should be present')
   const permittedLinkedRoutes = new Set([
     'administration:campus-and-branch-management',
-    'library:book-issue-and-returns',
-    'inventory:stock-in',
-    'inventory:stock-out',
-    'inventory:stock-allocation',
-    'inventory:stock-adjustments',
-    'inventory:inventory-history',
-    'inventory:stock-reports',
-    'transport:student-transport-allocation',
+    'library:digital-library','library:book-management','library:book-catalogue','library:book-categories',
+    'library:book-registration','library:reading-records','library:reading-cards','library:student-reading-history',
+    'library:book-issue-and-returns','library:learning-materials','library:resource-downloads','library:library-reports',
+    'inventory:items-management','inventory:item-catalogue','inventory:item-categories','inventory:suppliers','inventory:purchase-records',
+    'inventory:stock-in','inventory:stock-out','inventory:stock-allocation','inventory:stock-adjustments','inventory:inventory-history','inventory:stock-reports',
+    'transport:vehicle-management','transport:drivers-management','transport:transport-routes','transport:route-stops',
+    'transport:student-transport-allocation','transport:transport-fees','transport:transport-assignments','transport:vehicle-maintenance',
+    'transport:transport-attendance','transport:transport-history','transport:transport-reports',
   ])
   for (const group of navigationCatalog) {
     for (const page of group.items) {
@@ -105,6 +105,17 @@ check('The full institutional menu maps every submenu to a working destination',
   assert.equal(getNavigationRoute('students', 'Student Directory'), 'students:directory', 'Student Directory must open the student directory view')
   assert.equal(getNavigationRoute('employees', 'Employee Directory'), 'employees:directory', 'Employee Directory must open the staff directory window')
   assert.equal(getNavigationRoute('employees', 'Employee Reports'), 'employees:reports', 'Employee reports must open the staff report window')
+  assert.equal(getNavigationRoute('dashboard', 'Institutional Overview', 'owner'), 'overview', 'Institutional overview must open the dashboard')
+  assert.equal(getNavigationRoute('dashboard', 'Employee Performance', 'owner'), 'employees:reports', 'Owner employee dashboard drill-down must open HR reports')
+  assert.equal(getNavigationRoute('dashboard', 'Employee Performance', 'teacher'), 'employees:overview', 'Teacher employee dashboard drill-down must stay on the self workspace')
+  assert.equal(getNavigationRoute('dashboard', 'Financial Overview', 'teacher'), 'unavailable:dashboard:financial-overview', 'Teacher navigation must not expose institutional finance totals')
+  assert.equal(getNavigationRoute('dashboard', 'Student Behaviour', 'student'), 'unavailable:dashboard:student-behaviour', 'Student dashboard must not expose staff-only behaviour logs')
+  assert.equal(getNavigationRoute('reports', 'Employee Reports'), 'employees:reports', 'Employee report shortcut must open the HR report view')
+  assert.equal(getNavigationRoute('reports', 'Payroll Reports'), 'reports:payroll', 'Payroll report shortcut must open the payroll report view')
+  assert.equal(getNavigationRoute('library', 'Book Registration'), 'institutional:library:book-registration', 'Library catalogue must use its structured master-record form')
+  assert.equal(getNavigationRoute('inventory', 'Items Management'), 'institutional:inventory:items-management', 'Inventory catalogue must use its structured master-record form')
+  assert.equal(getNavigationRoute('transport', 'Transport Routes'), 'institutional:transport:transport-routes', 'Transport routes must use their structured master-record form')
+  assert.ok(!roleNavigationGroups('student').find(group => group.key === 'dashboard')?.items.includes('Employee Performance'), 'Student dashboard must not contain workforce analytics')
   assert.ok(!roleNavigationGroups('teacher').find(group => group.key === 'employees')?.items.includes('Employee Reports'), 'Staff reporting summary is owner/admin-only')
   for (const [page, route] of Object.entries(navigationRoutes)) {
     if (route.startsWith('institutional:')) {
@@ -168,6 +179,8 @@ check('Dashboard matches the menu and keeps Quick Access at the sidebar bottom',
   assert.ok(dashboardSource.includes('id="ed360-workspace-search"') && dashboardSource.includes('Search pages and tools…'), 'Workspace page-and-tool search is missing')
   assert.ok(dashboardSource.includes('pro-workspace-tabs') && dashboardSource.includes('pro-window-stack') && dashboardSource.includes('closeWorkspaceTab'), 'Dashboard multi-window tab management is missing')
   assert.ok(dashboardSource.includes('parentId?: string') && dashboardSource.includes('function navigateChild') && dashboardSource.includes('tab.parentId'), 'Nested child workspace state must remain attached to a parent window')
+  assert.ok(dashboardSource.includes("getNavigationRoute(group.key, item, user!.role)"), 'Sidebar destinations must use their exact group and active role')
+  assert.ok(!dashboardSource.includes("group.key === 'dashboard' ? 'overview' : getNavigationRoute"), 'Dashboard submenu items must not all collapse to overview')
   assert.ok(dashboardSource.includes('closing.add(tab.id)') && dashboardSource.includes('parentStillOpen'), 'Closing a parent must close descendants and restore the parent context')
   assert.ok(dashboardSource.includes('ed360-topbar-institution') && dashboardSource.includes('ed360-topbar-notice'), 'Approved institution topbar is missing')
   assert.ok(dashboardSource.includes('pro-profile-menu'), 'Account menu is missing')
@@ -455,6 +468,19 @@ check('Administration settings, approvals and audit are connected to governance 
   assert.ok(read('supabase/migrations/20261109151231_atomic_institution_setting_approval.sql').includes('decide_institution_setting_approval'))
 })
 
+check('Timetable workspace exposes schedule resources and detects real conflicts', () => {
+  const views = read('src/lib/operationalWorkspaceViews.ts')
+  const record = read('src/components/RecordModule.tsx')
+  for (const key of ["view('classes'", "view('teachers'", "view('rooms'", "view('conflicts'", "view('history'"]) assert.ok(views.includes(key), 'Timetable view is missing: ' + key)
+  assert.ok(record.includes('timetableConflictIds') && record.includes('const overlaps =') && record.includes("activeOperationalView.key === 'conflicts'"), 'Timetable conflicts must be derived from saved class/teacher/room overlaps')
+})
+check('Employee and payroll report workspaces use role-scoped live database records', () => {
+  const reports = read('src/components/ReportsModule.tsx')
+  for (const value of ['payroll_runs','payroll_items','Employee Reports','Payroll Reports','employeeColumns','payrollColumns']) assert.ok(reports.includes(value), 'Report workflow feature is missing: ' + value)
+  assert.ok(reports.includes("const wantsEmployees = ['owner', 'admin'].includes(role)"))
+  assert.ok(reports.includes("const wantsPayroll = ['owner', 'admin', 'accountant'].includes(role)"))
+  assert.ok(reports.includes("'Restricted employee record'"), 'Payroll reports must not leak employee names to roles without staff directory permission')
+})
 check('Teacher reporting routes expose only the teacher-permitted report datasets', () => {
   const reports = read('src/components/ReportsModule.tsx')
   assert.ok(reports.includes("const wantsPeople = ['owner', 'admin', 'teacher'].includes(role)"))
