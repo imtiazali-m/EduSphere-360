@@ -72,7 +72,8 @@ Responsive styles and source-verification assertions were added alongside the co
 
 ## 6. Release evidence and limits
 
-- The latest working-branch Vercel integration status observed during this change was `success`. This is not evidence of a Cloudflare production deployment or complete authenticated acceptance testing.
+- GitHub Actions run `42875451852` completed successfully on the working branch: source verifier, user-error tests, finance tests, private-file tests, production Vite build, Cloudflare output validation and both artifact uploads passed. The separate production deployment job was skipped by the production-branch/manual-approval guard.
+- The latest working-branch Vercel status context also reports `success`; its deployment-detail URL redirects to Vercel login, so an anonymous browser preview URL was not confirmed. Neither check alone proves complete authenticated acceptance testing.
 - The repository contains a Cloudflare Pages release workflow that installs the lockfile, runs the project verifier and focused test suites, builds `dist/`, packages a Direct Upload ZIP and keeps production deployment behind a manual workflow input.
 - No Cloudflare production deployment was made during this work.
 - No authenticated browser E2E test was run against all seven roles during this work.
