@@ -484,9 +484,10 @@ check('Employee and payroll report workspaces use role-scoped live database reco
 check('Institution-wide catalogues are admin-managed at both UI and RLS layers', () => {
   const migration = read('supabase/migrations/20261110112700_institutional_catalog_permissions.sql')
   const workspace = read('src/components/InstitutionalWorkspace.tsx')
-  const teacherPolicyStart = migration.indexOf("public.has_institution_role(institution_id, array['teacher'])")
+  const teacherRoleStart = migration.indexOf("public.has_institution_role(institution_id, array['teacher'])")
+  const teacherPolicyStart = migration.indexOf('and module_key = any(array[', teacherRoleStart)
   const teacherPolicyEnd = migration.indexOf('])', teacherPolicyStart)
-  assert.ok(teacherPolicyStart >= 0 && teacherPolicyEnd > teacherPolicyStart, 'Teacher insert policy must remain explicitly scoped')
+  assert.ok(teacherRoleStart >= 0 && teacherPolicyStart > teacherRoleStart && teacherPolicyEnd > teacherPolicyStart, 'Teacher insert policy must remain explicitly scoped')
   const teacherPolicy = migration.slice(teacherPolicyStart, teacherPolicyEnd)
   for (const module of ["'library'","'transport'","'facilities'","'visitors'","'certificates'"]) {
     assert.ok(!teacherPolicy.includes(module), 'Teacher insert policy must not grant generic catalogue writes for ' + module)
