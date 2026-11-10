@@ -234,19 +234,19 @@ export function LinkedOperationsWorkspace({workspaceKey,onToast,onNavigate}:Prop
    if(Number.isFinite(capacity)&&capacity>0&&occupied>=capacity){onToast('The selected vehicle is at capacity for at least part of this allocation period.',true);return}
   }
   setSaving(true)
-  const {error}=await supabase.from('student_transport_allocations').insert({
-   institution_id:user.institutionId,student_id:allocationStudent,route_record_id:selectedRoute.id,
-   stop_record_id:allocationStop||null,vehicle_record_id:allocationVehicle||null,effective_from:allocationFrom,
-   effective_to:allocationTo||null,transport_fee:fee,status:'active',notes:allocationNotes.trim()||null,created_by:user.id
+  const {error}=await supabase.rpc('create_student_transport_allocation',{
+   p_institution_id:user.institutionId,p_student_id:allocationStudent,p_route_record_id:selectedRoute.id,
+   p_stop_record_id:allocationStop||null,p_vehicle_record_id:allocationVehicle||null,
+   p_effective_from:allocationFrom,p_effective_to:allocationTo||null,p_transport_fee:fee,p_notes:allocationNotes.trim()||null
   })
-  if(error){onToast(error.message,true);setSaving(false);return}
+  if(error){onToast(userFacingError(error,'The transport allocation could not be created. Recheck dates, route and vehicle capacity.'),true);setSaving(false);return}
   setShowAllocationForm(false);setAllocationStudent('');setAllocationRoute('');setAllocationStop('');setAllocationVehicle('');setTransportFee('');setAllocationNotes('');setAllocationFrom(today());setAllocationTo('')
   onToast('Transport allocation created after checking route, stop, date conflicts and available vehicle capacity.');setSaving(false);await load()
  }
  async function cancelAllocation(row:Allocation){
   if(!supabase||!user||!canAdmin)return
-  const {error}=await supabase.from('student_transport_allocations').update({status:'cancelled',effective_to:today()}).eq('institution_id',user.institutionId).eq('id',row.id)
-  if(error){onToast(error.message,true);return}
+  const {error}=await supabase.rpc('end_student_transport_allocation',{p_institution_id:user.institutionId,p_allocation_id:row.id})
+  if(error){onToast(userFacingError(error,'The transport allocation could not be ended.'),true);return}
   onToast('Transport allocation ended.');await load()
  }
 
