@@ -342,7 +342,7 @@ function Overview({ onNavigate }: { onNavigate: (key: string) => void }) {
         { title: 'Register your learners', detail: 'Create admission records and connect each learner to the right class and family.', route: 'students:admissions', action: 'Open admissions', icon: GraduationCap, started: hasRecords('students') },
         { title: 'Build your team', detail: 'Add faculty and staff profiles and organise responsibilities across departments.', route: 'teachers', action: 'Open staff', icon: Users, started: hasRecords('teachers') },
         { title: 'Activate daily operations', detail: 'Start the attendance register and publish the first class timetable.', route: 'attendance:students', action: 'Open attendance', icon: CalendarCheck, started: hasRecords('attendance', 'timetable_entries') },
-        { title: 'Set up fee administration', detail: 'Create fee invoices and review received payments and outstanding balances.', route: 'fees:ledger', action: 'Open fee ledger', icon: Wallet, started: hasRecords('fee_invoices') },
+        { title: 'Set up fee administration', detail: 'Create fee invoices and review received payments and outstanding balances.', route: 'finance:fees:invoices', action: 'Open fee ledger', icon: Wallet, started: hasRecords('fee_invoices') },
         { title: 'Connect your community', detail: 'Publish an institution announcement for the relevant staff and families.', route: 'announcements', action: 'Open announcements', icon: Megaphone, started: hasRecords('announcements') },
       ],
     }
@@ -366,6 +366,7 @@ function Overview({ onNavigate }: { onNavigate: (key: string) => void }) {
             { title: 'Review homework', detail: 'See coursework, instructions and upcoming submission deadlines.', route: 'assignments:open', action: 'Open homework', icon: BookOpen, started: hasRecords('assignments') },
             { title: 'Follow your attendance', detail: 'Review the attendance entries visible to your account.', route: 'attendance:students', action: 'View attendance', icon: CalendarCheck, started: hasRecords('attendance') },
             { title: 'View published results', detail: 'Check examination results released by your institution.', route: 'exam_results:published', action: 'View results', icon: Award, started: hasRecords('exam_results') },
+            { title: 'Check fee balance', detail: 'Review fee information currently available in your student account.', route: 'finance:fees:invoices', action: 'View fee balance', icon: Wallet, started: hasRecords('fee_invoices') },
           ],
         }
         : user!.role === 'parent'
@@ -376,7 +377,8 @@ function Overview({ onNavigate }: { onNavigate: (key: string) => void }) {
               { title: 'Review your linked learner', detail: 'Open the learner profile and confirm the information shared with your account.', route: 'students:profile', action: 'Open learner profile', icon: UserRound, started: hasRecords('students') },
               { title: 'Follow attendance', detail: 'Review attendance updates for the learner linked to your account.', route: 'attendance:students', action: 'View attendance', icon: CalendarCheck, started: hasRecords('attendance') },
               { title: 'Keep up with learning', detail: 'Review homework and available academic activities.', route: 'assignments:open', action: 'View learning', icon: BookOpen, started: hasRecords('assignments') },
-              { title: 'Check progress and fees', detail: 'Review published results and institution fee information.', route: 'exam_results:published', action: 'View progress', icon: Award, started: hasRecords('exam_results', 'fee_invoices') },
+              { title: 'Check academic progress', detail: 'Review examination results released by the institution.', route: 'exam_results:published', action: 'View results', icon: Award, started: hasRecords('exam_results') },
+              { title: 'Check fee information', detail: 'Review the fee invoices and balances shared for your linked learner.', route: 'finance:fees:invoices', action: 'View fee information', icon: Wallet, started: hasRecords('fee_invoices') },
             ],
           }
           : user!.role === 'accountant'
@@ -384,9 +386,9 @@ function Overview({ onNavigate }: { onNavigate: (key: string) => void }) {
               heading: 'Your finance workbench',
               intro: 'Work from the current institution fee and finance records available to your account.',
               steps: [
-                { title: 'Review fee invoices', detail: 'Check invoice values, due dates and current balances.', route: 'fees:ledger', action: 'Open invoices', icon: Wallet, started: hasRecords('fee_invoices') },
-                { title: 'Record collections', detail: 'Open an invoice and record a verified payment against its balance.', route: 'fees:payments', action: 'Open collections', icon: Banknote, started: getRows(data, 'fee_invoices').some(row => Number(row.paid_amount ?? 0) > 0) },
-                { title: 'Follow outstanding dues', detail: 'Identify unpaid and partially paid invoices for follow-up.', route: 'fees:due', action: 'Review dues', icon: TrendingUp, started: getRows(data, 'fee_invoices').some(row => outstandingInvoiceBalance(row) > 0) },
+                { title: 'Review fee invoices', detail: 'Check invoice values, due dates and current balances.', route: 'finance:fees:invoices', action: 'Open invoices', icon: Wallet, started: hasRecords('fee_invoices') },
+                { title: 'Record collections', detail: 'Open an invoice and record a verified payment against its balance.', route: 'finance:fees:payments', action: 'Open collections', icon: Banknote, started: getRows(data, 'fee_invoices').some(row => Number(row.paid_amount ?? 0) > 0) },
+                { title: 'Follow outstanding dues', detail: 'Identify unpaid and partially paid invoices for follow-up.', route: 'finance:receivables:receivables', action: 'Review dues', icon: TrendingUp, started: getRows(data, 'fee_invoices').some(row => outstandingInvoiceBalance(row) > 0) },
                 { title: 'Review finance reports', detail: 'Use current institution records to review collection and balances.', route: 'reports:finance', action: 'Open reports', icon: FileText, started: hasRecords('fee_invoices') },
               ],
             }
@@ -394,6 +396,7 @@ function Overview({ onNavigate }: { onNavigate: (key: string) => void }) {
               heading: 'Your examination workbench',
               intro: 'Organise assessments and follow the result records available to your examination role.',
               steps: [
+                { title: 'Build the question bank', detail: 'Review institution question pools and prepare examination paper drafts.', route: 'operations:question-bank:pool', action: 'Open question bank', icon: FileQuestion, started: hasRecords('exams') },
                 { title: 'Review the exam calendar', detail: 'Check planned and completed examination schedules.', route: 'exams:calendar', action: 'Open exam calendar', icon: CalendarDays, started: hasRecords('exams') },
                 { title: 'Enter and review marks', detail: 'Work with examination marks and result records.', route: 'exam_results:all', action: 'Open marks', icon: ClipboardCheck, started: hasRecords('exam_results') },
                 { title: 'Review published results', detail: 'Check the results currently released to authorised users.', route: 'exam_results:published', action: 'View published results', icon: Award, started: getRows(data, 'exam_results').some(row => row.result_status === 'published') },
