@@ -212,6 +212,12 @@ check('Dashboard matches the menu and keeps Quick Access at the sidebar bottom',
   assert.ok(quickAccessBlock.includes('Sign out') && quickAccessBlock.includes('logout()'), 'Sidebar bottom area must retain Sign out')
   for (const shortcut of ['Attendance Registration', 'Fees Invoice', 'Files & Documentation']) assert.ok(!quickAccessBlock.includes(shortcut), 'Shortcut must not remain in Quick Access: ' + shortcut)
   assert.ok(dashboardSource.includes('pro-quick-access'), 'Bottom session action area is missing')
+  assert.ok(dashboardSource.includes('sidebarCollapsed') && dashboardSource.includes('compactSidebar'), 'Desktop sidebar collapse state is missing')
+  assert.ok(dashboardSource.includes('aria-hidden={isMobileNav && !sidebarOpen}'), 'Visible desktop navigation must remain in the accessibility tree')
+  const sidebarCss = read('src/styles/pro-dashboard.css')
+  for (const feature of ['sidebar-collapsed', 'width:72px', 'width:calc(100% - 72px)', 'pro-sidebar-brand-copy', 'pro-sidebar-collapse']) {
+    assert.ok(sidebarCss.includes(feature), 'Compact sidebar styling is missing: ' + feature)
+  }
 })
 
 const authScreens = read('src/components/AuthScreens.tsx')
