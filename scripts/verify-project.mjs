@@ -422,6 +422,18 @@ check('Report tables show all rows through accessible sorting and pagination', (
   assert.ok(styles.includes('.report-sort-header:focus-visible') && styles.includes('.report-table-pagination'), 'Report tables require responsive accessible controls')
 })
 
+check('Institution operations lists are paginated without changing their domain workflows', () => {
+  const operations = read('src/components/InstitutionOperationsWorkspace.tsx')
+  const styles = read('src/styles/institution-operations.css')
+  for (const value of ['listPage', 'pageSize=10', 'function pageRows', 'function pageControls', 'viewRowCount', 'pageRows(visibleQuestions)', 'pageRows(visiblePapers)', 'pageRows(visibleCurriculum)', 'pageRows(rows)', 'pageRows(completed)', 'pageRows(visibleAssets)', 'pageRows(visibleMaintenance)']) {
+    assert.ok(operations.includes(value), 'Institution operations pagination is missing: ' + value)
+  }
+  for (const domain of ['renderQuestionBank', 'renderCurriculum', 'renderBehaviour', 'renderCertificates', 'renderVisitors', 'renderFacilities']) {
+    assert.ok(operations.includes('function ' + domain), 'Dedicated operations domain is missing: ' + domain)
+  }
+  assert.ok(styles.includes('.iop-pagination') && styles.includes('.iop-global-pagination'), 'Operations pagination needs responsive styles')
+})
+
 check('Private file controls match institution storage permissions', () => {
   assert.equal(packageJson.scripts['test:file-access'], 'node scripts/test-file-access.mjs')
   const files = read('src/components/FilesModule.tsx')
