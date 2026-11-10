@@ -477,7 +477,7 @@ export function Dashboard({ onToast }: Props) {
     if (!query) return []
     const items = visibleGroups.flatMap(group => (group.key === 'dashboard' ? ['Dashboard'] : group.items).map(title => {
       const itemKey = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
-      return { title, group: group.label, groupKey: group.key, itemKey, route: getNavigationRoute(group.key, title) }
+      return { title, group: group.label, groupKey: group.key, itemKey, route: getNavigationRoute(group.key, title, user!.role) }
     }))
     return items.filter(item => item.route && `${item.title} ${item.group}`.toLowerCase().includes(query)).slice(0, 8)
   }, [searchText, visibleGroups])
@@ -609,7 +609,7 @@ export function Dashboard({ onToast }: Props) {
 
   function navigateCatalogPage(groupKey: string, title: string) {
     const itemKey = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
-    const route = getNavigationRoute(groupKey, title)
+    const route = getNavigationRoute(groupKey, title, user!.role)
     navigate(route, { title, groupKey, itemKey })
   }
 
