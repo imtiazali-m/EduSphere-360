@@ -131,6 +131,7 @@ export function LinkedOperationsWorkspace({workspaceKey,onToast,onNavigate}:Prop
 
  const load=useCallback(async()=>{
   if(!supabase||!user){setLoading(false);return}
+  const db=supabase
   setLoading(true);setLoadError('')
   try{
    if(isCampus){
@@ -141,7 +142,7 @@ export function LinkedOperationsWorkspace({workspaceKey,onToast,onNavigate}:Prop
     const [bookResult,studentResult,loanRows]=await Promise.all([
      supabase.from('institutional_records').select('id,title,reference_code,quantity,payload').eq('institution_id',user.institutionId).eq('module_key','library').eq('record_type','book-registration').order('title'),
      supabase.from('students').select('id,full_name,admission_no,class_name').eq('institution_id',user.institutionId).eq('status','active').order('full_name'),
-     loadAllPages<Loan>((from,to)=>supabase.from('library_loans').select('*').eq('institution_id',user.institutionId).order('issued_at',{ascending:false}).range(from,to))
+     loadAllPages<Loan>((from,to)=>db.from('library_loans').select('*').eq('institution_id',user.institutionId).order('issued_at',{ascending:false}).range(from,to))
     ])
     if(bookResult.error)throw bookResult.error
     if(studentResult.error)throw studentResult.error
@@ -149,7 +150,7 @@ export function LinkedOperationsWorkspace({workspaceKey,onToast,onNavigate}:Prop
    }else if(isInventory){
     const [itemResult,movementRows]=await Promise.all([
      supabase.from('institutional_records').select('id,title,reference_code,quantity,payload').eq('institution_id',user.institutionId).eq('module_key','inventory').in('record_type',['items-management','item-catalogue']).order('title'),
-     loadAllPages<Movement>((from,to)=>supabase.from('inventory_movements').select('*').eq('institution_id',user.institutionId).order('movement_date',{ascending:false}).range(from,to))
+     loadAllPages<Movement>((from,to)=>db.from('inventory_movements').select('*').eq('institution_id',user.institutionId).order('movement_date',{ascending:false}).range(from,to))
     ])
     if(itemResult.error)throw itemResult.error
     setItems((itemResult.data??[]) as Item[]);setMovements(movementRows)
@@ -159,7 +160,7 @@ export function LinkedOperationsWorkspace({workspaceKey,onToast,onNavigate}:Prop
      supabase.from('institutional_records').select('id,title,reference_code,payload').eq('institution_id',user.institutionId).eq('module_key','transport').eq('record_type','transport-routes').order('title'),
      supabase.from('institutional_records').select('id,title,reference_code,parent_record_id,payload').eq('institution_id',user.institutionId).eq('module_key','transport').eq('record_type','route-stops').order('title'),
      supabase.from('institutional_records').select('id,title,reference_code,payload').eq('institution_id',user.institutionId).eq('module_key','transport').eq('record_type','vehicle-management').order('title'),
-     loadAllPages<Allocation>((from,to)=>supabase.from('student_transport_allocations').select('*').eq('institution_id',user.institutionId).order('created_at',{ascending:false}).range(from,to))
+     loadAllPages<Allocation>((from,to)=>db.from('student_transport_allocations').select('*').eq('institution_id',user.institutionId).order('created_at',{ascending:false}).range(from,to))
     ])
     for(const result of [studentResult,routeResult,stopResult,vehicleResult])if(result.error)throw result.error
     setStudents((studentResult.data??[]) as Student[]);setRoutes((routeResult.data??[]) as RouteRecord[])
@@ -219,32 +220,6 @@ export function LinkedOperationsWorkspace({workspaceKey,onToast,onNavigate}:Prop
   const vehicle=vehicles.find(item=>item.id===row.vehicle_record_id)
   return matches([student?.full_name,student?.admission_no,route?.title,stop?.title,vehicle?.title,row.status,row.effective_from,row.effective_to,row.transport_fee],allocationSearch)
  }),[allocations,allocationMap,routes,stops,vehicles,allocationSearch])
- const visibleRouteRows=useMemo(()=>routeAllocationRows.filter(row=>matches([row.route,row.students,row.vehicles,row.fees],routeSearch)),[routeAllocationRows,routeSearch])
- function pageRows<T>(rows:T[],page:number){return rows.slice((Math.min(page,Math.max(1,Math.ceil(rows.length/pageSize)))-1)*pageSize,Math.min(page,Math.max(1,Math.ceil(rows.length/pageSize)))*pageSize)}
- function pageControls(total:number,page:number,setPage:(page:number)=>void){
-  const count=Math.max(1,Math.ceil(total/pageSize))
-  const current=Math.min(page,count)
-  return total>pageSize?<div className="ed360-linked-pagination"><span>Showing <b>{(current-1)*pageSize+1}–{Math.min(current*pageSize,total)}</b> of <b>{total}</b></span><div><button type="button" disabled={current<=1} onClick={()=>setPage(current-1)}>Previous</button><span>Page {current} of {count}</span><button type="button" disabled={current>=count} onClick={()=>setPage(current+1)}>Next</button></div></div>:null
- }
-
-
- const matches=(values:unknown[],query:string)=>!query.trim()||values.map(value=>String(value??'')).join(' ').toLowerCase().includes(query.trim().toLowerCase())
- const visibleCampuses=useMemo(()=>campuses.filter(row=>matches([row.name,row.campus_code,row.address,row.phone,row.email,row.is_active?'active':'inactive'],campusSearch)),[campuses,campusSearch])
- const visibleLoans=useMemo(()=>loans.filter(row=>{
-  const book=bookMap.get(row.book_record_id)
-  const student=students.find(item=>item.id===row.student_id)
-  return matches([book?.title,book?.reference_code,student?.full_name,student?.admission_no,row.status,row.due_at,row.fine_amount,row.notes],librarySearch)
- }),[loans,bookMap,students,librarySearch])
- const visibleStockRows=useMemo(()=>stockRows.filter(row=>matches([row.title,row.reference_code,row.payload?.sku,row.payload?.item_category,row.available,row.payload?.reorder_level,row.payload?.unit_cost],inventorySearch)),[stockRows,inventorySearch])
- const visibleMovements=useMemo(()=>displayedMovements.filter(row=>matches([itemMap.get(row.item_record_id)?.title,row.movement_type,row.movement_date,row.quantity,row.reference_code,row.notes],movementSearch)),[displayedMovements,itemMap,movementSearch])
- const visibleAllocations=useMemo(()=>allocations.filter(row=>{
-  const student=allocationMap.get(row.student_id)
-  const route=routes.find(item=>item.id===row.route_record_id)
-  const stop=stops.find(item=>item.id===row.stop_record_id)
-  const vehicle=vehicles.find(item=>item.id===row.vehicle_record_id)
-  return matches([student?.full_name,student?.admission_no,route?.title,stop?.title,vehicle?.title,row.status,row.effective_from,row.effective_to,row.transport_fee],allocationSearch)
- }),[allocations,allocationMap,routes,stops,vehicles,allocationSearch])
- const visibleRouteRows=useMemo(()=>routeAllocationRows.filter(row=>matches([row.route,row.students,row.vehicles,row.fees],routeSearch)),[routeAllocationRows,routeSearch])
  function pageRows<T>(rows:T[],page:number){
   const current=Math.min(page,Math.max(1,Math.ceil(rows.length/pageSize)))
   return rows.slice((current-1)*pageSize,current*pageSize)
@@ -268,6 +243,7 @@ export function LinkedOperationsWorkspace({workspaceKey,onToast,onNavigate}:Prop
   const assigned=transportActive.filter(row=>row.route_record_id===route.id)
   return {route:route.title,students:assigned.length,vehicles:new Set(assigned.map(row=>row.vehicle_record_id).filter(Boolean)).size,fees:assigned.reduce((sum,row)=>sum+Number(row.transport_fee??0),0)}
  })
+ const visibleRouteRows=useMemo(()=>routeAllocationRows.filter(row=>matches([row.route,row.students,row.vehicles,row.fees],routeSearch)),[routeAllocationRows,routeSearch])
 
  function resetCampus(row?:Campus){
   setEditingCampus(row??null);setCampusName(row?.name??'');setCampusCode(row?.campus_code??'');setCampusAddress(row?.address??'')
