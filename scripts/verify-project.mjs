@@ -446,6 +446,17 @@ check('Campus library inventory and transport registers support independent sear
   assert.ok(styles.includes('.ed360-linked-search:focus-within') && styles.includes('.ed360-linked-pagination'), 'Linked operations filters and page controls need responsive focus styling')
 })
 
+check('Linked library inventory and transport ledgers load all pages from Supabase', () => {
+  const linked = read('src/components/LinkedOperationsWorkspace.tsx')
+  assert.ok(linked.includes('async function loadAllPages'), 'Unbounded Supabase page reader is missing')
+  assert.ok(linked.includes("loadAllPages<Loan>") && linked.includes("loadAllPages<Movement>") && linked.includes("loadAllPages<Allocation>"), 'Library loans, inventory movements and transport allocations must load every database page')
+  assert.ok(linked.includes('.range(from,to)'), 'Linked operational data must use explicit server-side page ranges')
+  assert.ok(!linked.includes(".limit(500)") && !linked.includes(".limit(1000)"), 'Linked operations must not silently truncate circulation, movements or allocations')
+  for (const value of ['visibleCampuses','visibleLoans','visibleStockRows','visibleMovements','visibleAllocations','visibleRouteRows','pageRows','pageControls']) {
+    assert.ok(linked.includes(value), 'Linked operation list interaction is missing: ' + value)
+  }
+})
+
 check('Private file controls match institution storage permissions', () => {
   assert.equal(packageJson.scripts['test:file-access'], 'node scripts/test-file-access.mjs')
   const files = read('src/components/FilesModule.tsx')
