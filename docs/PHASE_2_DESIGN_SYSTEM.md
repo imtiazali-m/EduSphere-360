@@ -84,6 +84,7 @@ Core foreground/background combinations are checked in the project verifier usin
 
 ### Module workspaces, tables and forms
 - Standardise workspace hero, sub-navigation, record cards, KPI cards, table header/row/hover, form controls, action buttons, state pills, empty states and feedback.
+- Remove the separate green brand palettes from finance, payroll, governance and campus operations; keep their success, warning and error indicators semantic. Set the dynamic institutional workspace accents to the shared sapphire brand.
 - Keep column sets and available actions role-specific.
 - Preserve existing data validation, RLS, RPC and file-security logic.
 - Keep wide data tables scrollable within their own containers on mobile; do not shrink the entire page to make a wide table fit.
