@@ -526,9 +526,16 @@ check('Transport allocation and cancellation use atomic tenant-scoped capacity c
 check('Library checkout and return run as atomic tenant-scoped transactions', () => {
   const migration = read('supabase/migrations/20261110114500_atomic_library_circulation.sql')
   const linked = read('src/components/LinkedOperationsWorkspace.tsx')
-  for (const value of ['issue_library_book','return_library_book','security invoker','for update','All registered copies of this book are currently issued','v_late_days * v_daily_fine']) {
+  for (const value of ['issue_library_book','return_library_book','security invoker','pg_advisory_xact_lock','All registered copies of this book are currently issued','v_late_days * v_daily_fine']) {
     assert.ok(migration.toLowerCase().includes(value.toLowerCase()), 'Atomic library circulation safeguard is missing: ' + value)
   }
+  const bookRead = migration.slice(
+    migration.indexOf('select * into v_book'),
+    migration.indexOf('if not found then raise exception', migration.indexOf('select * into v_book')),
+  )
+  assert.ok(bookRead.includes('pg_advisory_xact_lock'), 'Library checkout must serialize per-book copies')
+  assert.ok(!bookRead.includes('for update'), 'Library checkout must not require UPDATE access to the admin-managed book catalogue')
+  assert.ok(migration.includes('select * into v_loan') && migration.includes('for update'), 'Returning a library loan must lock its own loan record')
   assert.ok(linked.includes("rpc('issue_library_book'") && linked.includes("rpc('return_library_book'"), 'Library UI must use the atomic database functions')
   assert.ok(!linked.includes("from('library_loans').insert("), 'Library checkout must not bypass the atomic checkout function')
 })
