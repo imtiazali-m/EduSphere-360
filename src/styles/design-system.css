@@ -610,3 +610,213 @@ button { -webkit-tap-highlight-color: transparent; }
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+
+
+/* Specialist workspaces: finance, payroll, governance and campus operations */
+.fin-stage, .payroll-stage, .gov-stage, .iop-stage {
+  color: var(--es-ink);
+}
+.fin-page-heading h1, .payroll-heading h1, .gov-heading h1, .iop-heading h1,
+.fin-context h2, .payroll-context h2, .gov-context h2, .iop-context h2,
+.fin-panel>header h2, .payroll-panel>header h2, .gov-panel>header h2, .iop-panel>header h2,
+.gov-profile-grid strong, .iop-kpis b {
+  color: var(--es-brand-900);
+}
+.fin-page-heading>div>span, .payroll-heading>div>span, .gov-heading>div>span,
+.iop-heading>div>span, .fin-modal .eyebrow, .payroll-modal .eyebrow,
+.gov-modal .eyebrow, .iop-modal .eyebrow {
+  color: var(--es-primary-700);
+}
+.fin-page-heading p, .payroll-heading p, .gov-heading p, .iop-heading p,
+.fin-context p, .payroll-context p, .gov-context p, .iop-context p,
+.fin-panel>header p, .payroll-panel>header p, .gov-panel>header p, .iop-panel>header p,
+.fin-inline-stats, .fin-followup small, .fin-list-row small,
+.payroll-panel>header p, .payroll-context p, .gov-context p, .gov-panel>header p,
+.gov-approval-list dt, .gov-approval-heading small, .gov-timeline small,
+.iop-panel>header p, .iop-meta, .iop-footer, .gov-footer {
+  color: var(--es-muted);
+}
+.fin-cloud-state, .payroll-cloud, .gov-live, .iop-live {
+  border-color: #d5ebdf;
+  background: var(--es-success-bg);
+  color: var(--es-success);
+}
+.fin-cloud-state i, .payroll-cloud i, .gov-live i, .iop-live i { background: var(--es-success); }
+
+.fin-window-nav, .payroll-nav, .gov-nav, .iop-nav {
+  border-color: var(--es-line);
+  background: var(--es-surface-soft);
+}
+.fin-window-nav button, .payroll-nav button, .gov-nav button, .iop-nav button {
+  color: var(--es-muted);
+}
+.fin-window-nav button.active, .payroll-nav button.active,
+.gov-nav button.active, .iop-nav button.active {
+  border-color: var(--es-primary-600);
+  color: #fff;
+  background: var(--es-primary-600);
+  box-shadow: 0 4px 12px rgba(49,111,224,.17);
+}
+.fin-context, .payroll-context, .gov-context, .iop-context,
+.fin-panel, .payroll-panel, .gov-panel, .iop-panel {
+  border-color: var(--es-line);
+  background: var(--es-surface);
+  box-shadow: var(--es-shadow-sm);
+}
+.fin-context small, .payroll-context small, .gov-context small, .iop-context small,
+.fin-metric-grid article small, .payroll-metric-grid article small,
+.fin-panel th, .payroll-panel th, .gov-panel th, .iop-panel th {
+  color: var(--es-muted);
+}
+.fin-metric-grid article, .payroll-metric-grid article,
+.gov-profile-grid article, .iop-kpis article, .fin-select-card,
+.payroll-run-card, .gov-approval-list article, .gov-shortcuts button,
+.iop-record-list article, .iop-select-record {
+  border-color: var(--es-line);
+  background: #fff;
+  box-shadow: none;
+}
+.fin-metric-grid article span, .payroll-metric-grid article span,
+.fin-followup strong, .fin-list-row strong, .gov-profile-grid strong,
+.iop-kpis b, .iop-record-heading b {
+  color: var(--es-brand-900);
+}
+.fin-panel table th, .payroll-panel table th, .gov-panel table th, .iop-panel table th {
+  border-color: var(--es-line-soft);
+  color: var(--es-muted);
+  background: #f4f7fb;
+}
+.fin-panel table td, .payroll-panel table td, .gov-panel table td, .iop-panel table td {
+  border-color: var(--es-line-soft);
+  color: #405a73;
+}
+.fin-panel table tbody tr:hover, .payroll-panel table tbody tr:hover,
+.gov-panel table tbody tr:hover, .iop-panel table tbody tr:hover {
+  background: #f8fbff;
+}
+.fin-panel td small, .payroll-panel td small { color: var(--es-muted); }
+.fin-progress { background: var(--es-line-soft); }
+.fin-progress span { background: linear-gradient(90deg, var(--es-primary-700), var(--es-teal-700)); }
+.fin-inline-stats b, .fin-balance-check b { color: var(--es-brand-900); }
+.fin-button, .payroll-button, .gov-button, .iop-button {
+  border-color: var(--es-line);
+  color: #405a73;
+  background: #fff;
+}
+.fin-button:hover, .payroll-button:hover, .gov-button:hover, .iop-button:hover {
+  border-color: #bdd0ed;
+  color: var(--es-primary-700);
+  background: var(--es-primary-050);
+}
+.fin-button.primary, .payroll-button.primary, .gov-button.primary, .iop-button.primary {
+  border-color: var(--es-primary-600);
+  color: #fff;
+  background: var(--es-primary-600);
+  box-shadow: 0 5px 12px rgba(49,111,224,.16);
+}
+.fin-button.primary:hover, .payroll-button.primary:hover, .gov-button.primary:hover,
+.iop-button.primary:hover {
+  border-color: var(--es-primary-700);
+  background: var(--es-primary-700);
+}
+.fin-button.danger, .payroll-button.danger, .gov-button.danger, .iop-button.danger {
+  border-color: #efcfcc;
+  color: var(--es-danger);
+  background: #fff;
+}
+.fin-icon-button { border-color: var(--es-line); color: var(--es-muted); }
+.fin-icon-button:hover { color: var(--es-primary-700); background: var(--es-primary-050); }
+.fin-select-card.selected, .payroll-run-card.selected, .iop-select-record.selected {
+  border-color: #9bbaf0;
+  background: var(--es-primary-050);
+  box-shadow: inset 3px 0 var(--es-primary-600);
+}
+.fin-select-card span, .fin-select-card small,
+.payroll-run-card small, .payroll-header-total small { color: var(--es-muted); }
+.fin-note, .payroll-note, .gov-note, .gov-payload,
+.fin-bottom-bar, .payroll-footer, .gov-footer, .iop-footer,
+.gov-profile-grid article, .iop-kpis article, .iop-paper-detail {
+  border-color: var(--es-line);
+  color: var(--es-muted);
+  background: var(--es-surface-soft);
+}
+.fin-error, .payroll-error, .gov-error, .iop-error {
+  border-color: #f0d0cc;
+  color: var(--es-danger);
+  background: #fff4f2;
+}
+.fin-empty, .payroll-empty, .gov-empty, .iop-empty { color: var(--es-muted); }
+.fin-empty, .payroll-empty, .gov-empty, .iop-empty { border-color: #cbd8e6; }
+.fin-form-grid label, .fin-inline-form label, .fin-line-edit label,
+.payroll-form label, .payroll-search, .gov-form label, .gov-search,
+.iop-field, .iop-search { color: #405a73; }
+.fin-form-grid input, .fin-form-grid select, .fin-form-grid textarea,
+.fin-inline-form input, .fin-inline-form select, .fin-line-edit select, .fin-line-edit input,
+.payroll-search input, .payroll-form input, .payroll-form select, .payroll-form textarea,
+.gov-search input, .gov-form input, .gov-form textarea,
+.iop-search input, .iop-field input, .iop-field select, .iop-field textarea {
+  border-color: #d6e0eb;
+  border-radius: 9px;
+  color: var(--es-ink);
+  background: #fff;
+}
+.fin-form-grid input:focus, .fin-form-grid select:focus, .fin-form-grid textarea:focus,
+.fin-inline-form input:focus, .fin-inline-form select:focus,
+.fin-line-edit select:focus, .fin-line-edit input:focus,
+.payroll-search input:focus, .payroll-form input:focus, .payroll-form select:focus,
+.payroll-form textarea:focus, .gov-search input:focus, .gov-form input:focus,
+.gov-form textarea:focus, .iop-search input:focus, .iop-field input:focus,
+.iop-field select:focus, .iop-field textarea:focus {
+  border-color: #83a9ed;
+  outline: 0;
+  box-shadow: 0 0 0 3px rgba(49,111,224,.10);
+}
+.fin-progress, .payroll-flow li { border-color: var(--es-line); }
+.payroll-flow li { color: #405a73; background: var(--es-surface-soft); }
+.payroll-flow li:before { color: var(--es-primary-700); }
+.payroll-warning, .gov-pending, .gov-status.pending {
+  border-color: #f0dfbd;
+  color: var(--es-warning);
+  background: var(--es-warning-bg);
+}
+.gov-profile-grid strong, .gov-approval-heading strong { color: var(--es-brand-900); }
+.gov-shortcuts button { color: #405a73; }
+.gov-shortcuts button:hover { border-color: #bdd0ed; color: var(--es-primary-700); background: var(--es-primary-050); }
+.gov-status.approved, .fin-status.paid, .fin-status.approved, .fin-status.posted,
+.payroll-status.active, .payroll-status.approved, .payroll-status.paid,
+.iop-status.published, .iop-status.approved, .iop-status.completed,
+.iop-status.checked_out, .iop-status.issued, .iop-status.resolved {
+  color: var(--es-success);
+  background: var(--es-success-bg);
+}
+.gov-status.pending, .fin-status.pending, .fin-status.draft, .fin-status.overdue,
+.payroll-status.draft, .payroll-status.review, .payroll-status.unpaid,
+.payroll-status.pending, .iop-status.review, .iop-status.in_progress,
+.iop-status.checked_in, .iop-status.follow_up, .iop-status.expected {
+  color: var(--es-warning);
+  background: var(--es-warning-bg);
+}
+.gov-status.rejected, .fin-status.rejected, .fin-status.void,
+.payroll-status.inactive, .payroll-status.held, .payroll-status.cancelled,
+.iop-status.revoked, .iop-status.denied, .iop-status.cancelled, .iop-status.critical {
+  color: var(--es-danger);
+  background: var(--es-danger-bg);
+}
+.ed360-institutional-workspace, .ed360-attendance-workspace {
+  --workspace-accent: var(--es-primary-600) !important;
+  --workspace-soft: var(--es-primary-050) !important;
+  --workspace-ink: var(--es-brand-900) !important;
+}
+.ed360-notification-page .ed360-notification-card-actions>span { color: var(--es-primary-700); }
+.fin-sort-header:hover, .payroll-sort-header:hover, .gov-sort-header:hover,
+.report-sort-header:hover { color: var(--es-primary-700); }
+.fin-sort-header:focus-visible, .payroll-sort-header:focus-visible,
+.gov-sort-header:focus-visible, .report-sort-header:focus-visible {
+  outline-color: var(--es-primary-600);
+}
+.fin-sort-header span, .payroll-sort-header span, .gov-sort-header span,
+.report-sort-header span, .fin-table-pagination>div>span,
+.payroll-table-pagination>div>span, .gov-pagination>div>span,
+.report-table-pagination>div>span { color: var(--es-muted); }
+
