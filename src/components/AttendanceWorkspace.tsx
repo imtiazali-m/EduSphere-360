@@ -19,6 +19,7 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
  const [period,setPeriod]=useState('Daily')
  const [className,setClassName]=useState('')
  const [search,setSearch]=useState('')
+ const [historySearch,setHistorySearch]=useState('')
  const [students,setStudents]=useState<Person[]>([])
  const [staff,setStaff]=useState<Person[]>([])
  const [marks,setMarks]=useState<Record<string,AttendanceMark>>({})
@@ -43,6 +44,12 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
   return !q||p.full_name.toLowerCase().includes(q)||String(p.admission_no??p.employee_no??'').toLowerCase().includes(q)
  }),[people,search])
  const readOnly=population==='students'?!canManageStudents:!canManageStaff
+ const visibleHistory=useMemo(()=>existing.filter(entry=>{
+  const personId=population==='students'?entry.student_id:entry.teacher_id
+  const person=people.find(item=>item.id===personId)
+  const searchable=[person?.full_name,person?.admission_no,person?.employee_no,person?.class_name,entry.status,entry.notes].map(value=>String(value??'')).join(' ').toLowerCase()
+  return searchable.includes(historySearch.trim().toLowerCase())
+ }),[existing,people,population,historySearch])
 
  const loadRoster=useCallback(async()=>{
   if(!supabase||!user){setLoading(false);return}
@@ -190,7 +197,31 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
    </section>
    <p className="ed360-attendance-method-note">Manual mode starts with <b>P (Present)</b> selected for each roster member. Change exceptions to <b>A</b> or <b>L</b> and save the chart once; no individual student forms are required. This follows the common register-first pattern documented by established school ERP systems. <a href="https://fedena.freshdesk.com/support/solutions/articles/211464-how-can-i-mark-student-attendance-daily-" target="_blank" rel="noreferrer">Attendance register workflow reference</a>.</p>
   </>}
-  {autoTab==='history'&&<section className="ed360-attendance-board"><div className="ed360-attendance-board-head"><div><span>REGISTER HISTORY</span><h2>Saved attendance for {date}</h2><p>Stored attendance records for the selected roster and date.</p></div><button onClick={()=>void loadAttendance()}><RefreshCw size={14}/> Refresh history</button></div><div className="ed360-attendance-counts"><div className="count-p"><b>{existing.filter(x=>x.status==='present').length}</b><span>Present</span></div><div className="count-a"><b>{existing.filter(x=>x.status==='absent').length}</b><span>Absent</span></div><div className="count-l"><b>{existing.filter(x=>x.status==='late').length}</b><span>Late</span></div><div><b>{existing.length}</b><span>Entries</span></div></div><div className="ed360-attendance-history-list">{existing.length?existing.map((entry,i)=><div key={entry.id??i}><span>{population==='students'?entry.student_id:entry.teacher_id}</span><b>{entry.status.toUpperCase()}</b><small>{entry.notes||'No note'}</small></div>):<p className="ed360-attendance-empty">No attendance entries were found for the current date and filters.</p>}</div></section>}
+  {autoTab==='history'&&<section className="ed360-attendance-board">
+   <div className="ed360-attendance-board-head">
+    <div><span>REGISTER HISTORY</span><h2>Saved attendance history</h2><p>Choose the roster and date to inspect stored attendance entries.</p></div>
+    <div className="ed360-attendance-history-controls">
+     <label>Roster<select value={population} onChange={e=>{setPopulation(e.target.value as 'students'|'staff');setHistorySearch('')}} disabled={readOnly}><option value="students">Students</option>{canManageStaff&&<option value="staff">Faculty and staff</option>}</select></label>
+     {population==='students'&&canManageStudents&&<label>Class / section<select value={className} onChange={e=>setClassName(e.target.value)}><option value="">All classes</option>{classes.map(value=><option key={value} value={value}>{value}</option>)}</select></label>}
+     <label>Date<input type="date" value={date} max={today()} onChange={e=>setDate(e.target.value)}/></label>
+     <button type="button" onClick={()=>void loadAttendance()}><RefreshCw size={14}/> Refresh history</button>
+    </div>
+   </div>
+   <label className="ed360-attendance-search"><Search size={15}/><input value={historySearch} onChange={e=>setHistorySearch(e.target.value)} placeholder="Search person, ID, status or note"/></label>
+   <div className="ed360-attendance-counts"><div className="count-p"><b>{existing.filter(x=>x.status==='present').length}</b><span>Present</span></div><div className="count-a"><b>{existing.filter(x=>x.status==='absent').length}</b><span>Absent</span></div><div className="count-l"><b>{existing.filter(x=>x.status==='late').length}</b><span>Late</span></div><div><b>{existing.length}</b><span>Entries</span></div></div>
+   {loading&&<p className="ed360-attendance-empty">Loading attendance history…</p>}
+   {!loadingError&&visibleHistory.length>0&&<div className="ed360-attendance-history-list">{visibleHistory.map((entry,index)=>{
+    const personId=population==='students'?entry.student_id:entry.teacher_id
+    const person=people.find(item=>item.id===personId)
+    return <div key={entry.id??index}>
+     <span><b>{person?.full_name??'Person record unavailable'}</b><small>{person?.admission_no??person?.employee_no??String(personId??'—')}{person?.class_name?' · '+person.class_name:''}</small></span>
+     <b className={'attendance-history-status status-'+entry.status}>{entry.status.toUpperCase()}</b>
+     <small>{entry.notes||'No note'}</small>
+    </div>
+   })}</div>}
+   {!loading&&loadingError&&<p className="ed360-attendance-empty error">{loadingError}</p>}
+   {!loading&& !loadingError&&visibleHistory.length===0&&<p className="ed360-attendance-empty">{existing.length?'No history rows match your search.':'No attendance entries were found for the selected date and filters.'}</p>}
+  </section>}
   {autoTab==='devices'&&<section className="ed360-attendance-board ed360-device-workspace"><div className="ed360-attendance-board-head"><div><span>AUTOMATIC ATTENDANCE</span><h2>Connected device and provider setup</h2><p>Register supported data sources. Actual automated marking requires a verified QR, RFID, biometric or provider feed.</p></div>{canManageStaff&&<button className="button button-primary" onClick={()=>setShowDeviceForm(true)}>+ Register device source</button>}</div><div className="ed360-device-notice"><Fingerprint size={22}/><div><strong>Automatic attendance is not yet connected to a physical device.</strong><p>These are connection profiles only. No attendance is marked automatically until a device/provider is integrated and its events pass authentication, identity matching and duplicate checks.</p></div></div><div className="ed360-device-list">{devices.length?devices.map(device=><div key={device.id}><span><Fingerprint size={18}/></span><div><b>{String(device.name??'Device source')}</b><small>{String(device.provider_type??'provider').toUpperCase()} · {String(device.external_device_id??'No device ID')}</small></div><em>{String(device.status??'not_configured').replaceAll('_',' ')}</em></div>):<p className="ed360-attendance-empty">No device sources have been registered.</p>}</div></section>}
   {showDeviceForm&&<div className="modal-backdrop"><section className="modal-card" role="dialog" aria-modal="true"><div className="modal-heading"><div><h2>Register attendance source</h2><p>Register a source before connecting its provider or device feed.</p></div><button type="button" className="icon-button" onClick={()=>setShowDeviceForm(false)}><X size={18}/></button></div><form className="ed360-context-form-grid" onSubmit={createDevice}><label>Device / provider name<input required value={deviceName} onChange={e=>setDeviceName(e.target.value)}/></label><label>Source type<select value={deviceType} onChange={e=>setDeviceType(e.target.value)}><option value="qr">QR</option><option value="rfid">RFID</option><option value="biometric">Biometric</option><option value="third_party">Third-party provider</option><option value="csv">CSV import</option></select></label><label>External device ID (optional)<input value={deviceId} onChange={e=>setDeviceId(e.target.value)}/></label><div className="ed360-device-notice"><Activity size={18}/><p>This profile will remain <b>Not configured</b> until a trusted feed is connected and tested.</p></div><div className="modal-actions"><button type="button" className="button button-outline" onClick={()=>setShowDeviceForm(false)}>Cancel</button><button type="submit" className="button button-primary">Save device profile</button></div></form></section></div>}
  </main>
