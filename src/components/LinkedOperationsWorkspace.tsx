@@ -34,6 +34,19 @@ export function LinkedOperationsWorkspace({workspaceKey,onToast,onNavigate}:Prop
  const [loading,setLoading]=useState(true)
  const [loadError,setLoadError]=useState('')
  const [saving,setSaving]=useState(false)
+ const [campusSearch,setCampusSearch]=useState('')
+ const [campusPage,setCampusPage]=useState(1)
+ const [librarySearch,setLibrarySearch]=useState('')
+ const [libraryPage,setLibraryPage]=useState(1)
+ const [inventorySearch,setInventorySearch]=useState('')
+ const [inventoryPage,setInventoryPage]=useState(1)
+ const [movementSearch,setMovementSearch]=useState('')
+ const [movementPage,setMovementPage]=useState(1)
+ const [allocationSearch,setAllocationSearch]=useState('')
+ const [allocationPage,setAllocationPage]=useState(1)
+ const [routeSearch,setRouteSearch]=useState('')
+ const [routePage,setRoutePage]=useState(1)
+ const pageSize=10
  const [campuses,setCampuses]=useState<Campus[]>([])
  const [books,setBooks]=useState<Book[]>([])
  const [students,setStudents]=useState<Student[]>([])
@@ -162,6 +175,30 @@ export function LinkedOperationsWorkspace({workspaceKey,onToast,onNavigate}:Prop
   if(itemKey==='stock-adjustments')return movements.filter(row=>['adjustment','write_off'].includes(row.movement_type))
   return movements
  },[movements,itemKey])
+ const matches=(values:unknown[],query:string)=>!query.trim()||values.map(value=>String(value??'')).join(' ').toLowerCase().includes(query.trim().toLowerCase())
+ const visibleCampuses=useMemo(()=>campuses.filter(row=>matches([row.name,row.campus_code,row.address,row.phone,row.email,row.is_active?'active':'inactive'],campusSearch)),[campuses,campusSearch])
+ const visibleLoans=useMemo(()=>loans.filter(row=>{
+  const book=bookMap.get(row.book_record_id)
+  const student=students.find(item=>item.id===row.student_id)
+  return matches([book?.title,book?.reference_code,student?.full_name,student?.admission_no,row.status,row.due_at,row.fine_amount,row.notes],librarySearch)
+ }),[loans,bookMap,students,librarySearch])
+ const visibleStockRows=useMemo(()=>stockRows.filter(row=>matches([row.title,row.reference_code,row.payload?.sku,row.payload?.item_category,row.available,row.payload?.reorder_level,row.payload?.unit_cost],inventorySearch)),[stockRows,inventorySearch])
+ const visibleMovements=useMemo(()=>displayedMovements.filter(row=>matches([itemMap.get(row.item_record_id)?.title,row.movement_type,row.movement_date,row.quantity,row.reference_code,row.notes],movementSearch)),[displayedMovements,itemMap,movementSearch])
+ const visibleAllocations=useMemo(()=>allocations.filter(row=>{
+  const student=allocationMap.get(row.student_id)
+  const route=routes.find(item=>item.id===row.route_record_id)
+  const stop=stops.find(item=>item.id===row.stop_record_id)
+  const vehicle=vehicles.find(item=>item.id===row.vehicle_record_id)
+  return matches([student?.full_name,student?.admission_no,route?.title,stop?.title,vehicle?.title,row.status,row.effective_from,row.effective_to,row.transport_fee],allocationSearch)
+ }),[allocations,allocationMap,routes,stops,vehicles,allocationSearch])
+ const visibleRouteRows=useMemo(()=>routeAllocationRows.filter(row=>matches([row.route,row.students,row.vehicles,row.fees],routeSearch)),[routeAllocationRows,routeSearch])
+ function pageRows<T>(rows:T[],page:number){return rows.slice((Math.min(page,Math.max(1,Math.ceil(rows.length/pageSize)))-1)*pageSize,Math.min(page,Math.max(1,Math.ceil(rows.length/pageSize)))*pageSize)}
+ function pageControls(total:number,page:number,setPage:(page:number)=>void){
+  const count=Math.max(1,Math.ceil(total/pageSize))
+  const current=Math.min(page,count)
+  return total>pageSize?<div className="ed360-linked-pagination"><span>Showing <b>{(current-1)*pageSize+1}–{Math.min(current*pageSize,total)}</b> of <b>{total}</b></span><div><button type="button" disabled={current<=1} onClick={()=>setPage(current-1)}>Previous</button><span>Page {current} of {count}</span><button type="button" disabled={current>=count} onClick={()=>setPage(current+1)}>Next</button></div></div>:null
+ }
+
  const stockInUnits=movements.filter(row=>['stock_in','return'].includes(row.movement_type)).reduce((sum,row)=>sum+Number(row.quantity),0)
  const stockOutUnits=movements.filter(row=>['stock_out','write_off','allocation'].includes(row.movement_type)).reduce((sum,row)=>sum+Number(row.quantity),0)
  const overdueLoans=loans.filter(row=>row.status==='issued'&&row.due_at<today())
