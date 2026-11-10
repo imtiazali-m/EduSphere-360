@@ -30,6 +30,12 @@ const ALLOWED_TABLES = new Set([
   'exams',
   'exam_results',
   'fee_invoices',
+  'fee_payments',
+  'fee_payment_allocations',
+  'fee_audit_logs',
+  'employee_salary_profiles',
+  'payroll_runs',
+  'payroll_items',
   'fee_structures',
   'fee_structure_items',
   'fee_invoice_items',
@@ -55,7 +61,7 @@ const ALLOWED_TABLES = new Set([
   'rooms',
 ])
 
-const READ_ONLY_TABLES = new Set(['student_history'])
+const READ_ONLY_TABLES = new Set(['student_history', 'fee_payments', 'fee_payment_allocations', 'fee_audit_logs', 'employee_salary_profiles', 'payroll_runs', 'payroll_items'])
 const TABLES_WITHOUT_CREATED_BY = new Set(['parent_guardians', 'guardian_students', 'student_documents', 'fee_structure_items', 'fee_invoice_items', 'fee_discount_applications', 'fee_late_fees', 'fee_refunds', 'finance_journal_lines'])
 
 function checkTable(table: string) {
