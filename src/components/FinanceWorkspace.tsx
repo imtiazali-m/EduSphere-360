@@ -366,6 +366,18 @@ export function FinanceWorkspace({workspaceKey,initialWindow,onToast}:Props){
     </th>
   }
 
+  function sortInvoices(key:string){
+    if(invoiceSortKey===key)setInvoiceSortDirection(value=>value==='asc'?'desc':'asc')
+    else{setInvoiceSortKey(key);setInvoiceSortDirection('asc')}
+    setInvoicePage(1)
+  }
+
+  function sortPayments(key:string){
+    if(paymentSortKey===key)setPaymentSortDirection(value=>value==='asc'?'desc':'asc')
+    else{setPaymentSortKey(key);setPaymentSortDirection('asc')}
+    setPaymentPage(1)
+  }
+
   function pageControls(total:number,page:number,setPage:(page:number)=>void){
     const pageCount=Math.max(1,Math.ceil(total/financePageSize))
     const current=Math.min(page,pageCount)
@@ -375,7 +387,37 @@ export function FinanceWorkspace({workspaceKey,initialWindow,onToast}:Props){
     </div>:null
   }
 
-  const invoiceTable=(rows:FinanceRow[])=>rows.length?<div className="table-scroll"><table><thead><tr><th>Invoice</th><th>Student</th><th>Fee</th><th>Amount</th><th>Received</th><th>Balance</th><th>Due</th><th>Status</th>{financeRole&&<th>Actions</th>}</tr></thead><tbody>{rows.map(row=><tr key={row.id}><td><b>{String(row.invoice_no??row.invoice_number??'—')}</b></td><td>{String(row.student_name??'—')}<small>{String(row.admission_no??'')}</small></td><td>{String(row.fee_title??'—')}</td><td>{money(netInvoiceAmount(row))}</td><td>{money(number(row.paid_amount))}</td><td><b>{money(outstandingInvoiceBalance(row))}</b></td><td>{dateLabel(row.due_date)}</td><td><span className={'fin-status '+String(row.status??'unpaid')}>{label(row.status)}</span></td>{financeRole&&<td>{outstandingInvoiceBalance(row)>0&&<button className="fin-button primary" onClick={()=>{setPaymentTarget(row);setPaymentAmount(String(outstandingInvoiceBalance(row)));setPaymentDate(today())}}>Collect</button>}</td>}</tr>)}</tbody></table></div>:<div className="fin-empty">No invoices are available in this view yet.</div>
+  const invoiceTable=(rows:FinanceRow[])=>{
+    if(!rows.length)return <div className="fin-empty">No invoices are available in this view yet.</div>
+    const ordered=sortedFinanceRows(rows,invoiceSortKey,invoiceSortDirection)
+    const pageCount=Math.max(1,Math.ceil(ordered.length/financePageSize))
+    const currentPage=Math.min(invoicePage,pageCount)
+    const pageRows=ordered.slice((currentPage-1)*financePageSize,currentPage*financePageSize)
+    return <>
+      <div className="table-scroll"><table><thead><tr>
+        {financeSortHeader('Invoice','invoice_no',invoiceSortKey,invoiceSortDirection,()=>sortInvoices('invoice_no'))}
+        {financeSortHeader('Student','student_name',invoiceSortKey,invoiceSortDirection,()=>sortInvoices('student_name'))}
+        {financeSortHeader('Fee','fee_title',invoiceSortKey,invoiceSortDirection,()=>sortInvoices('fee_title'))}
+        {financeSortHeader('Amount','net_amount',invoiceSortKey,invoiceSortDirection,()=>sortInvoices('net_amount'))}
+        {financeSortHeader('Received','paid_amount',invoiceSortKey,invoiceSortDirection,()=>sortInvoices('paid_amount'))}
+        {financeSortHeader('Balance','balance',invoiceSortKey,invoiceSortDirection,()=>sortInvoices('balance'))}
+        {financeSortHeader('Due','due_date',invoiceSortKey,invoiceSortDirection,()=>sortInvoices('due_date'))}
+        {financeSortHeader('Status','status',invoiceSortKey,invoiceSortDirection,()=>sortInvoices('status'))}
+        {financeRole&&<th>Actions</th>}
+      </tr></thead><tbody>{pageRows.map(row=><tr key={row.id}>
+        <td><b>{String(row.invoice_no??row.invoice_number??'—')}</b></td>
+        <td>{String(row.student_name??'—')}<small>{String(row.admission_no??'')}</small></td>
+        <td>{String(row.fee_title??'—')}</td>
+        <td>{money(netInvoiceAmount(row))}</td>
+        <td>{money(number(row.paid_amount))}</td>
+        <td><b>{money(outstandingInvoiceBalance(row))}</b></td>
+        <td>{dateLabel(row.due_date)}</td>
+        <td><span className={'fin-status '+String(row.status??'unpaid')}>{label(row.status)}</span></td>
+        {financeRole&&<td>{outstandingInvoiceBalance(row)>0&&<button className="fin-button primary" onClick={()=>{setPaymentTarget(row);setPaymentAmount(String(outstandingInvoiceBalance(row)));setPaymentDate(today())}}>Collect</button>}</td>}
+      </tr>)}</tbody></table></div>
+      {pageControls(ordered.length,currentPage,setInvoicePage)}
+    </>
+  }
 
   const paymentTable=(rows:FinanceRow[])=>rows.length?<div className="table-scroll"><table><thead><tr><th>Receipt</th><th>Invoice</th><th>Payment date</th><th>Method</th><th>Reference</th><th>Amount</th><th>Status</th></tr></thead><tbody>{rows.map(row=>{const invoice=invoices.find(item=>item.id===row.invoice_id);return <tr key={row.id}><td><b>{String(row.receipt_no??row.receipt_number??'—')}</b></td><td>{String(invoice?.invoice_no??'Invoice')}<small>{String(invoice?.student_name??'')}</small></td><td>{dateLabel(row.payment_date)}</td><td>{label(row.payment_method)}</td><td>{String(row.payment_reference??row.transaction_reference??row.cheque_number??'—')}</td><td>{money(number(row.amount))}</td><td><span className="fin-status paid">{label(row.status??'completed')}</span></td></tr>})}</tbody></table></div>:<div className="fin-empty">No payments are recorded for this institution yet.</div>
 
