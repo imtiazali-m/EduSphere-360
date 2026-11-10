@@ -343,6 +343,16 @@ check('Operational modules expose distinct nested workspace windows and contextu
   assert.ok(styles.includes('zoom: 1.06') && styles.includes('.ed360-operations-window-nav') && styles.includes('.ed360-contextual-subwindow'), 'Readable UI scale and nested workspace styles are required')
 })
 
+check('Attendance history is searchable and independently date-filterable', () => {
+  const attendance = read('src/components/AttendanceWorkspace.tsx')
+  const styles = read('src/styles/module-workspaces.css')
+  for (const value of ['historySearch', 'visibleHistory', 'historyLoading', 'Attendance history', 'type="date"', 'Search person, ID, status or note', 'person?.full_name', 'person?.admission_no', 'person?.employee_no']) {
+    assert.ok(attendance.includes(value), 'Attendance history view is missing: ' + value)
+  }
+  assert.ok(styles.includes('.ed360-attendance-history-controls') && styles.includes('.attendance-history-status'), 'Attendance history needs responsive filter and status styles')
+  assert.ok(attendance.includes('await loadAttendance()'), 'Attendance history refresh must reload saved database records')
+})
+
 check('Student, faculty and operational record tables support accessible sorting', () => {
   const record = read('src/components/RecordModule.tsx')
   const styles = read('src/styles/module-workspaces.css')
