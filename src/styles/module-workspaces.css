@@ -262,3 +262,120 @@
   .ed360-student-guardian-link select{min-width:0;width:100%}
   .ed360-student-history-values{grid-template-columns:1fr}
 }
+
+/* Student identity card workspace and print layout. */
+.ed360-student-id-card{width:min(100%,520px);min-height:245px;overflow:hidden;border:1px solid #d9e3f0;border-radius:18px;background:linear-gradient(135deg,#ffffff 0%,#f0f5fb 100%);box-shadow:0 14px 35px rgba(34,63,96,.10);color:#203b59}
+.ed360-student-id-card-brand{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 20px;background:#173d34;color:#fff}
+.ed360-student-id-card-brand strong{display:block;font-size:17px;font-weight:800;line-height:1.2}
+.ed360-student-id-card-brand small{display:block;margin-top:5px;color:#d2e1da;font-size:9px;font-weight:800;letter-spacing:1.5px}
+.ed360-student-id-card-brand>span{display:grid;width:38px;height:38px;place-items:center;border:1px solid rgba(255,255,255,.5);border-radius:12px;font-size:11px;font-weight:900;letter-spacing:1px}
+.ed360-student-id-card-body{display:flex;align-items:center;gap:20px;padding:22px 20px}
+.ed360-student-id-card-body>div:first-child{width:92px;height:112px;flex:0 0 92px;overflow:hidden;border:2px solid #d8e2ee;border-radius:12px;background:#eaf0f6}
+.ed360-student-id-card-body>div:first-child img{width:100%;height:100%;object-fit:cover}
+.ed360-student-id-card-body>div:last-child{display:grid;gap:7px;min-width:0}
+.ed360-student-id-card-body>div:last-child strong{color:#173d34;font-size:20px;line-height:1.2}
+.ed360-student-id-card-body>div:last-child small{color:#526d89;font-size:11px;font-weight:650}
+.ed360-student-id-card-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 20px;border-top:1px solid #e0e8f1;color:#72869e;font-size:9px}
+.ed360-student-id-card-footer b{color:#315577;font-size:10px;letter-spacing:1px}
+.ed360-student-id-card-note{max-width:540px;margin-top:12px;color:#73849a;font-size:12px;line-height:1.5}
+@media(max-width:580px){.ed360-student-id-card-body{gap:12px;padding:16px}.ed360-student-id-card-body>div:first-child{width:76px;height:96px;flex-basis:76px}.ed360-student-id-card-body>div:last-child strong{font-size:16px}}
+@media print{
+  body *{visibility:hidden!important}
+  .ed360-student-id-card,.ed360-student-id-card *{visibility:visible!important}
+  .ed360-student-id-card{position:absolute;left:0;top:0;width:85.6mm;min-height:54mm;border:1px solid #b9c7d7;border-radius:3mm;box-shadow:none;break-inside:avoid;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+  .ed360-student-id-card-brand{padding:4mm}
+  .ed360-student-id-card-brand strong{font-size:12pt}
+  .ed360-student-id-card-brand small{font-size:6pt}
+  .ed360-student-id-card-brand>span{width:9mm;height:9mm;border-radius:2mm}
+  .ed360-student-id-card-body{gap:4mm;padding:5mm 4mm}
+  .ed360-student-id-card-body>div:first-child{width:23mm;height:29mm;flex-basis:23mm;border-radius:2mm}
+  .ed360-student-id-card-body>div:last-child strong{font-size:12pt}
+  .ed360-student-id-card-body>div:last-child small{font-size:6.5pt}
+  .ed360-student-id-card-footer{padding:2mm 4mm;font-size:5.5pt}
+  .ed360-student-id-card-note,.ed360-student-panel header,.ed360-student-window-nav,.ed360-student-window-context,.ed360-student-data-note{display:none!important}
+  @page{size:85.6mm 54mm;margin:0}
+}
+
+/* Keyboard-accessible sortable table headings shared by student, faculty
+   and operational record directories. */
+.ed360-sort-header{
+  display:inline-flex;align-items:center;gap:6px;max-width:100%;
+  padding:2px 0;border:0;color:inherit;background:transparent;
+  font:inherit;font-weight:inherit;text-align:left;white-space:nowrap;
+}
+.ed360-sort-header:hover{color:#245fb8}
+.ed360-sort-header:focus-visible{outline:2px solid #78a7ea;outline-offset:3px;border-radius:3px}
+.ed360-sort-header span{color:#8b9bb0;font-size:10px;font-weight:900}
+.ed360-sort-header:hover span{color:#286bd0}
+
+
+.ed360-attendance-history-controls{
+  display:flex;align-items:end;justify-content:flex-end;gap:10px;flex-wrap:wrap;
+}
+.ed360-attendance-history-controls label{
+  display:grid;gap:5px;min-width:145px;color:#718096;font-size:10px;font-weight:750;
+}
+.ed360-attendance-history-controls input,
+.ed360-attendance-history-controls select{
+  min-height:38px;padding:0 10px;border:1px solid #dce5ef;border-radius:8px;
+  color:#34465d;background:#fff;font:inherit;font-size:11px;
+}
+.ed360-attendance-history-controls button{
+  min-height:38px;display:inline-flex;align-items:center;gap:7px;padding:0 12px;
+  border:1px solid #dce5ef;border-radius:8px;color:#3e5c7b;background:#fff;
+  font-size:10px;font-weight:750;
+}
+.ed360-attendance-history-controls button:hover{border-color:#9bb6d2;background:#f5f9fd}
+.ed360-attendance-history-list>div{
+  display:grid;grid-template-columns:minmax(160px,1.1fr) minmax(65px,.3fr) minmax(120px,1fr);
+  align-items:center;gap:12px;
+}
+.ed360-attendance-history-list>div>span{min-width:0;display:grid;gap:3px}
+.ed360-attendance-history-list>div>span>b{overflow:hidden;color:#34465d;font-size:11px;text-overflow:ellipsis}
+.ed360-attendance-history-list>div>span>small{color:#8a98a9;font-size:9px}
+.attendance-history-status{
+  display:inline-flex;justify-content:center;min-width:62px;padding:5px 8px;
+  border-radius:7px;font-size:9px;font-weight:850;
+}
+.attendance-history-status.status-present{color:#16815b;background:#e9f7f0}
+.attendance-history-status.status-absent{color:#b54745;background:#fff0ef}
+.attendance-history-status.status-late{color:#a86c1d;background:#fff6e8}
+@media(max-width:720px){
+  .ed360-attendance-history-controls{justify-content:stretch}
+  .ed360-attendance-history-controls label{min-width:calc(50% - 6px);flex:1}
+  .ed360-attendance-history-list>div{grid-template-columns:1fr auto}
+  .ed360-attendance-history-list>div>small{grid-column:1 / -1}
+}
+
+
+/* Per-row action menus keep secondary operations together without removing
+   any role-authorised action from the underlying record workspace. */
+.ed360-row-action-menu{position:relative;display:inline-block;min-width:34px;text-align:left}
+.ed360-row-action-menu>summary{
+  width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;gap:5px;
+  padding:0 7px;border:1px solid #e0e7ef;border-radius:8px;
+  color:#52657a;background:#fff;cursor:pointer;list-style:none;
+}
+.ed360-row-action-menu>summary::-webkit-details-marker{display:none}
+.ed360-row-action-menu>summary::marker{content:''}
+.ed360-row-action-menu>summary span{font-size:9px;font-weight:750}
+.ed360-row-action-menu>summary:hover,
+.ed360-row-action-menu[open]>summary{border-color:#a9c4e2;color:#245eaa;background:#f5f9fe}
+.ed360-row-action-menu>div{
+  position:absolute;z-index:55;right:0;top:calc(100% + 5px);
+  min-width:158px;display:grid;gap:3px;padding:6px;
+  border:1px solid #e3e9f1;border-radius:10px;background:#fff;
+  box-shadow:0 12px 28px rgba(31,52,79,.16);
+}
+.ed360-row-action-menu>div>button{
+  width:100%;min-height:34px;display:flex;align-items:center;gap:8px;
+  padding:7px 9px;border:0;border-radius:7px;text-align:left;
+  color:#40546b;background:transparent;font-size:10px;font-weight:650;white-space:nowrap;
+}
+.ed360-row-action-menu>div>button:hover{background:#f1f6fb;color:#245eaa}
+.ed360-row-action-menu>div>button.danger-icon{color:#b64845}
+.ed360-row-action-menu>div>button.danger-icon:hover{background:#fff1ef;color:#a63e3b}
+.ed360-row-action-menu>summary:focus-visible,
+.ed360-row-action-menu>div>button:focus-visible{
+  outline:2px solid #7da8df;outline-offset:2px;
+}

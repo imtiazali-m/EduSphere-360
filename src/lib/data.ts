@@ -30,6 +30,22 @@ const ALLOWED_TABLES = new Set([
   'exams',
   'exam_results',
   'fee_invoices',
+  'fee_payments',
+  'fee_payment_allocations',
+  'fee_audit_logs',
+  'employee_salary_profiles',
+  'payroll_runs',
+  'payroll_items',
+  'fee_structures',
+  'fee_structure_items',
+  'fee_invoice_items',
+  'fee_discounts',
+  'fee_discount_applications',
+  'fee_late_fees',
+  'fee_refunds',
+  'finance_accounts',
+  'finance_journals',
+  'finance_journal_lines',
   'assignments',
   'assignment_submissions',
   'work_tasks',
@@ -45,8 +61,8 @@ const ALLOWED_TABLES = new Set([
   'rooms',
 ])
 
-const READ_ONLY_TABLES = new Set(['student_history'])
-const TABLES_WITHOUT_CREATED_BY = new Set(['parent_guardians', 'guardian_students', 'student_documents'])
+const READ_ONLY_TABLES = new Set(['student_history', 'fee_payments', 'fee_payment_allocations', 'fee_audit_logs', 'employee_salary_profiles', 'payroll_runs', 'payroll_items'])
+const TABLES_WITHOUT_CREATED_BY = new Set(['parent_guardians', 'guardian_students', 'student_documents', 'fee_structure_items', 'fee_invoice_items', 'fee_discount_applications', 'fee_late_fees', 'fee_refunds', 'finance_journal_lines'])
 
 function checkTable(table: string) {
   if (!ALLOWED_TABLES.has(table)) throw new Error(`Unsupported data module: ${table}`)
@@ -140,13 +156,28 @@ export async function listRecords(mode: AppMode, user: AppUser, table: string): 
   requireInstitution(user)
 
   if (!supabase) throw new Error('Supabase is not configured.')
-  const { data, error } = await supabase
-    .from(table)
-    .select('*')
-    .eq('institution_id', user.institutionId)
-    .order('created_at', { ascending: false })
-  if (error) throw error
-  return filterRowsForRole(mode, user, table, (data ?? []) as RecordRow[])
+  const db = supabase
+  const rows: RecordRow[] = []
+  const pageSize = 500
+
+  // Supabase applies a maximum response window per request. Read every
+  // institution-scoped page before applying the existing role visibility
+  // filter, so older records never disappear from large registers or exports.
+  for (let from = 0; ; from += pageSize) {
+    const { data, error } = await db
+      .from(table)
+      .select('*')
+      .eq('institution_id', user.institutionId)
+      .order('created_at', { ascending: false })
+      .order('id', { ascending: true })
+      .range(from, from + pageSize - 1)
+    if (error) throw error
+    const page = (data ?? []) as RecordRow[]
+    rows.push(...page)
+    if (page.length < pageSize) break
+  }
+
+  return filterRowsForRole(mode, user, table, rows)
 }
 
 export async function createRecord(

@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useState, type FormEvent, type KeyboardEvent as ReactKeyboardEvent } from 'react'
 import {
   ArrowLeft, ArrowRight, ArrowUpRight, BarChart3, BookOpen, Building2,
   CalendarCheck, Check, CheckCircle2, ClipboardCheck,
@@ -32,8 +32,105 @@ function Brand() {
   </div>
 }
 
+
+type ShowcaseKey = 'students' | 'teaching' | 'finance' | 'governance'
+
+const showcaseTabs: { key: ShowcaseKey; label: string }[] = [
+  { key: 'students', label: 'Student journey' },
+  { key: 'teaching', label: 'Teaching & assessment' },
+  { key: 'finance', label: 'Finance operations' },
+  { key: 'governance', label: 'Administration' },
+]
+
+const showcasePanels: Record<ShowcaseKey, {
+  eyebrow: string
+  title: string
+  description: string
+  steps: string[]
+  previewTitle: string
+  previewRows: { label: string; detail: string }[]
+}> = {
+  students: {
+    eyebrow: 'PEOPLE / STUDENT LIFECYCLE',
+    title: 'From first admission to a complete learner record.',
+    description: 'Keep the admission queue, student directory, class placement, guardian links, documents and student history connected around the same learner record.',
+    steps: ['Review admission applications', 'Place learners in a class and session', 'Connect guardians and verified documents'],
+    previewTitle: 'Student record workspace',
+    previewRows: [
+      { label: 'Admissions', detail: 'Applications and decisions' },
+      { label: 'Class placement', detail: 'Class, section and session' },
+      { label: 'Family & documents', detail: 'Guardian links and private files' },
+    ],
+  },
+  teaching: {
+    eyebrow: 'ACADEMICS / TEACHING & ASSESSMENT',
+    title: 'Bring lesson work, assessment and results into one flow.',
+    description: 'Organise assignments and submissions, review student work, schedule examinations and publish results through the academic records your role can access.',
+    steps: ['Create and assign coursework', 'Review submissions and provide feedback', 'Schedule examinations and publish approved results'],
+    previewTitle: 'Teaching and assessment',
+    previewRows: [
+      { label: 'Coursework', detail: 'Open work and due dates' },
+      { label: 'Submission review', detail: 'Teacher feedback and marks' },
+      { label: 'Examinations', detail: 'Schedules and published results' },
+    ],
+  },
+  finance: {
+    eyebrow: 'FINANCE / FEES & ACCOUNTS',
+    title: 'See the fee obligation, payment history and ledger together.',
+    description: 'Build fee structures, issue invoices, record receipts, follow outstanding balances and maintain double-entry journal records with database-side posting validation.',
+    steps: ['Set fee schedules and discounts', 'Issue invoices and record payments', 'Reconcile receivables and post balanced journals'],
+    previewTitle: 'Finance workspace',
+    previewRows: [
+      { label: 'Fee structures', detail: 'Classes, sessions and components' },
+      { label: 'Invoices & receipts', detail: 'Balances and payment history' },
+      { label: 'Accounts & journals', detail: 'Double-entry financial records' },
+    ],
+  },
+  governance: {
+    eyebrow: 'ADMINISTRATION / INSTITUTION CONTROL',
+    title: 'Manage institutional settings with clear responsibility.',
+    description: 'Keep institution identity, academic structure, role-based access, setting approvals and operational audit records in focused administrative workspaces.',
+    steps: ['Maintain institution and academic settings', 'Provision accounts with role-specific access', 'Review approval requests and recorded changes'],
+    previewTitle: 'Administration workspace',
+    previewRows: [
+      { label: 'Institution settings', detail: 'Tenant-scoped configuration' },
+      { label: 'User access', detail: 'Accounts and role assignments' },
+      { label: 'Approvals & audit', detail: 'Decisions and change history' },
+    ],
+  },
+}
+
+const welcomeFaqs = [
+  {
+    question: 'Is EduSphere 360 currently an online or offline platform?',
+    answer: 'The current release is cloud-based and requires an internet connection. Offline/local operation is not available in this release.',
+  },
+  {
+    question: 'Which people can have their own workspace?',
+    answer: 'The platform has separate role access for institution owners, administrators, teachers, students, parents or guardians, accountants and examination officers. Menus and actions are shaped by each role.',
+  },
+  {
+    question: 'What can an institution owner do after registration?',
+    answer: 'The owner creates the institution workspace, manages institution-level settings and can provision administrator and other institution accounts. Administrators can then manage the day-to-day records permitted by their role.',
+  },
+  {
+    question: 'Can EduSphere 360 process payments through an external payment gateway?',
+    answer: 'The current finance workspace supports fee invoices and recording payment and receipt records. An external online payment gateway is not connected in this release, so recording a payment does not itself charge a bank card or wallet.',
+  },
+  {
+    question: 'Is the self-hosted USV 360 Pro edition ready to install?',
+    answer: 'USV 360 Pro is a planned self-hosted edition. The current available platform is the online cloud edition; self-hosted deployment is not currently offered as a released installation.',
+  },
+  {
+    question: 'How are student and institution records protected?',
+    answer: 'The cloud database uses institution-scoped access rules and role-based permissions. Users should only see and change records allowed for their active institution membership and role.',
+  },
+]
+
 export function WelcomeScreen({ navigate }: ScreenProps) {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [showcaseTab, setShowcaseTab] = useState<ShowcaseKey>('students')
+  const [openFaq, setOpenFaq] = useState<number | null>(0)
   const closeMenu = () => setMobileOpen(false)
   const go = (screen: 'login' | 'setup') => { closeMenu(); navigate(screen) }
 
@@ -54,6 +151,8 @@ export function WelcomeScreen({ navigate }: ScreenProps) {
           <a className="edm-nav-link" href="#features" onClick={closeMenu}>Explore</a>
           <a className="edm-nav-link" href="#analytics" onClick={closeMenu}>Insights</a>
           <a className="edm-nav-link" href="#workflow" onClick={closeMenu}>How it works</a>
+          <a className="edm-nav-link" href="#showcase" onClick={closeMenu}>Product tour</a>
+          <a className="edm-nav-link" href="#faq" onClick={closeMenu}>FAQ</a>
         </nav>
         <div className="edm-header-actions"><button className="edm-login-link" onClick={() => go('login')}>Login</button><button className="edm-signup-button" onClick={() => go('setup')}>Sign up now <ArrowUpRight size={16}/></button></div>
       </header>
@@ -152,6 +251,53 @@ export function WelcomeScreen({ navigate }: ScreenProps) {
             <article className="edm-feature-card"><div className="edm-feature-top"><span className="edm-feature-icon"><Headphones/></span><small>05 / COMMUNICATION</small></div><h3>Keep every stakeholder informed</h3><p>Share announcements and keep parents, students and teams connected with institution updates.</p><div className="edm-feature-visual edm-message-visual"><div className="edm-message-bubble">New announcement published<span/></div><div className="edm-message-bubble message-alt">Update shared with your class<span/></div></div></article>
             <article className="edm-feature-card"><div className="edm-feature-top"><span className="edm-feature-icon"><BarChart3 size={21}/></span><small>06 / INSIGHT</small></div><h3>Useful reports & decision support</h3><p>Bring institution records into clearer views that help teams understand what needs attention.</p><div className="edm-feature-visual edm-report-visual"><div className="edm-report-axis"><i/><i/><i/><i/></div><div className="edm-report-bars"><i/><i/><i/><i/><i/><i/><i/><i/></div></div></article>
           </div>
+
+        </section>
+
+        <section className="edm-showcase-section edm-section" id="showcase" aria-labelledby="edm-showcase-heading">
+          <div className="edm-section-heading">
+            <div><span className="edm-section-kicker">EXPLORE THE WORKFLOWS</span><h2 id="edm-showcase-heading">Connected records.<br/><em>Clearer everyday work.</em></h2></div>
+            <p>Choose a workflow to see how the current platform groups related tasks into a dedicated workspace.</p>
+          </div>
+          <div className="edm-showcase-shell">
+            <div className="edm-showcase-tabs" role="tablist" aria-label="Product workflow showcase" onKeyDown={(event: ReactKeyboardEvent<HTMLDivElement>) => {
+              const keys: ShowcaseKey[] = ['students','teaching','finance','governance']
+              const tabs = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="tab"]'))
+              const index = tabs.indexOf(event.target as HTMLButtonElement)
+              let next = index
+              if (event.key === 'ArrowRight') next = (index + 1) % tabs.length
+              else if (event.key === 'ArrowLeft') next = (index - 1 + tabs.length) % tabs.length
+              else if (event.key === 'Home') next = 0
+              else if (event.key === 'End') next = tabs.length - 1
+              else return
+              event.preventDefault()
+              tabs[next]?.focus()
+              setShowcaseTab(keys[next])
+            }}>
+              {showcaseTabs.map(tab => <button key={tab.key} id={'edm-showcase-tab-' + tab.key} type="button" role="tab" aria-selected={showcaseTab === tab.key} aria-controls="edm-showcase-panel" tabIndex={showcaseTab === tab.key ? 0 : -1} className={showcaseTab === tab.key ? 'active' : ''} onClick={() => setShowcaseTab(tab.key)}>{tab.label}</button>)}
+            </div>
+            <div className="edm-showcase-panel" id="edm-showcase-panel" role="tabpanel" aria-labelledby={'edm-showcase-tab-' + showcaseTab}>
+              <div className="edm-showcase-copy">
+                <span className="edm-showcase-eyebrow">{showcasePanels[showcaseTab].eyebrow}</span>
+                <h3>{showcasePanels[showcaseTab].title}</h3>
+                <p>{showcasePanels[showcaseTab].description}</p>
+                <ol>{showcasePanels[showcaseTab].steps.map((step,index) => <li key={step}><span>{String(index + 1).padStart(2,'0')}</span>{step}</li>)}</ol>
+                <button type="button" className="edm-showcase-cta" onClick={() => go('setup')}>Create your institution <ArrowUpRight size={16}/></button>
+              </div>
+              <div className="edm-showcase-preview" aria-label={showcasePanels[showcaseTab].previewTitle}>
+                <div className="edm-showcase-preview-top"><span><i/><i/><i/></span><b>{showcasePanels[showcaseTab].previewTitle}</b><small>WORKSPACE PREVIEW</small></div>
+                <div className="edm-showcase-preview-body">
+                  <aside><span className="active"><Layers3 size={15}/></span><span><Users size={15}/></span><span><BookOpen size={15}/></span><span><CalendarCheck size={15}/></span></aside>
+                  <div className="edm-showcase-preview-content">
+                    <small>INSTITUTION WORKSPACE</small>
+                    <strong>{showcasePanels[showcaseTab].previewTitle}</strong>
+                    {showcasePanels[showcaseTab].previewRows.map((item,index) => <div className="edm-showcase-preview-row" key={item.label}><span className={'row-number row-number-' + index}>{String(index + 1).padStart(2,'0')}</span><span><b>{item.label}</b><small>{item.detail}</small></span><CheckCircle2 size={16}/></div>)}
+                    <div className="edm-showcase-preview-note"><ShieldCheck size={14}/> Role-scoped workspace · Illustrative preview</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </section>
 
         <section className="edm-solutions-section edm-section" id="solutions">
@@ -189,6 +335,24 @@ export function WelcomeScreen({ navigate }: ScreenProps) {
 
         
 
+
+        <section className="edm-faq-section edm-section" id="faq" aria-labelledby="edm-faq-heading">
+          <div className="edm-faq-layout">
+            <div className="edm-faq-intro">
+              <span className="edm-section-kicker">GOOD TO KNOW</span>
+              <h2 id="edm-faq-heading">Questions before<br/><em>you get started?</em></h2>
+              <p>Here are the practical details about the currently available cloud edition and its workflows.</p>
+              <button type="button" className="edm-showcase-cta" onClick={() => go('setup')}>Create your institution <ArrowUpRight size={16}/></button>
+            </div>
+            <div className="edm-faq-list">
+              {welcomeFaqs.map((item,index) => <article className={'edm-faq-item ' + (openFaq === index ? 'open' : '')} key={item.question}>
+                <h3><button type="button" aria-expanded={openFaq === index} aria-controls={'edm-faq-answer-' + index} onClick={() => setOpenFaq(current => current === index ? null : index)}><span>{item.question}</span><i>{openFaq === index ? '−' : '+'}</i></button></h3>
+                <div className="edm-faq-answer" id={'edm-faq-answer-' + index} hidden={openFaq !== index}><p>{item.answer}</p></div>
+              </article>)}
+            </div>
+          </div>
+        </section>
+
         <section className="edm-final-cta" id="get-started"><div className="edm-cta-glow"/><div><span className="edm-section-kicker">YOUR NEXT CHAPTER STARTS HERE</span><h2>Ready to transform<br/><em>your institution?</em></h2><p>Bring your people, processes and progress together with EduSphere 360.</p></div><div className="edm-cta-actions"><button className="edm-button edm-button-lime" onClick={() => go('setup')}>Get started today <ArrowUpRight size={18}/></button><button className="edm-cta-login" onClick={() => go('login')}>Already have an account? Login <ArrowRight size={15}/></button></div></section>
       </main>
 
@@ -204,7 +368,7 @@ export function WelcomeScreen({ navigate }: ScreenProps) {
           </div>
           <div className="edm-footer-col"><b>Platform</b><a href="#platform">About EduSphere</a><a href="#features">Features</a><a href="#solutions">Solutions</a><a href="#self-hosted">USV 360 Pro</a></div>
           <div className="edm-footer-col"><b>Explore</b><a href="#portals">User portals</a><a href="#why-choose-us">Why EduSphere</a><a href="#workflow">How it works</a><a href="#why-edusphere">Core capabilities</a></div>
-          <div className="edm-footer-col"><b>Get started</b><a href="#get-started">Create an institution</a><button type="button" onClick={() => go('login')}>Login to your account</button><a href="#top">Back to top</a></div>
+          <div className="edm-footer-col"><b>Get started</b><a href="#get-started">Create an institution</a><a href="#faq">Frequently asked questions</a><button type="button" onClick={() => go('login')}>Login to your account</button><a href="#top">Back to top</a></div>
         </div>
         <div className="edm-footer-bottom"><span>© {new Date().getFullYear()} EduSphere 360. All rights reserved.</span><span>Built for schools · colleges · universities</span><a href="#top">Back to top ↑</a></div>
       </footer>

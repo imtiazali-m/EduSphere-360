@@ -108,3 +108,34 @@
 @media(max-width:1100px){.staff-metric-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.staff-process-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:760px){.staff-workspace-heading{align-items:flex-start;flex-direction:column}.staff-heading-actions{width:100%;justify-content:flex-end}.staff-overview-grid{grid-template-columns:1fr}.staff-panel-wide{grid-column:auto}.staff-metric-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.staff-operation-links{grid-template-columns:repeat(2,minmax(0,1fr))}.staff-report-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.staff-document-form{grid-template-columns:repeat(2,minmax(0,1fr))}.staff-context-bar{align-items:flex-start;flex-wrap:wrap}.staff-context-bar label{width:100%;justify-content:space-between}.staff-context-bar select{max-width:65%}}
 @media(max-width:520px){.staff-workspace-heading h1{font-size:19px}.staff-window-nav button{min-height:31px;padding:0 8px;font-size:7px}.staff-panel{padding:11px}.staff-operation-links{grid-template-columns:1fr}.staff-process-grid{grid-template-columns:1fr}.staff-profile-grid{grid-template-columns:1fr}.staff-form-grid{grid-template-columns:1fr}.staff-field-wide{grid-column:auto}.staff-document-form{grid-template-columns:1fr}.staff-dialog-backdrop{padding:8px}.staff-dialog{padding:12px}.staff-metric-card{padding:9px}.staff-metric-card strong{font-size:17px}}
+
+/* Employee identity card workspace and print layout. */
+.staff-id-card-print{width:min(100%,520px);min-height:245px;overflow:hidden;border:1px solid #d9e3f0;border-radius:18px;background:linear-gradient(135deg,#ffffff 0%,#f0f5fb 100%);box-shadow:0 14px 35px rgba(34,63,96,.10);color:#203b59}
+.staff-id-card-brand{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 20px;background:#173d34;color:#fff}
+.staff-id-card-brand strong{display:block;font-size:17px;font-weight:800;line-height:1.2}
+.staff-id-card-brand small{display:block;margin-top:5px;color:#d2e1da;font-size:9px;font-weight:800;letter-spacing:1.5px}
+.staff-id-card-brand>span{display:grid;width:38px;height:38px;place-items:center;border:1px solid rgba(255,255,255,.5);border-radius:12px;font-size:10px;font-weight:900;letter-spacing:1px}
+.staff-id-card-body{display:flex;align-items:center;gap:20px;padding:22px 20px}
+.staff-id-card-avatar{display:grid;width:92px;height:112px;flex:0 0 92px;place-items:center;border:2px solid #d8e2ee;border-radius:12px;background:#eaf0f6;color:#315577;font-size:44px;font-weight:800}
+.staff-id-card-body>div:last-child{display:grid;gap:7px;min-width:0}
+.staff-id-card-body>div:last-child strong{color:#173d34;font-size:20px;line-height:1.2}
+.staff-id-card-body>div:last-child small{color:#526d89;font-size:11px;font-weight:650}
+.staff-id-card-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 20px;border-top:1px solid #e0e8f1;color:#72869e;font-size:9px}
+.staff-id-card-footer b{color:#315577;font-size:10px;letter-spacing:1px}
+.staff-id-card-note{max-width:540px;margin-top:12px;color:#73849a;font-size:12px;line-height:1.5}
+@media(max-width:580px){.staff-id-card-body{gap:12px;padding:16px}.staff-id-card-avatar{width:76px;height:96px;flex-basis:76px;font-size:34px}.staff-id-card-body>div:last-child strong{font-size:16px}}
+@media print{
+  .staff-id-card-print,.staff-id-card-print *{visibility:visible!important}
+  .staff-id-card-print{position:absolute;left:0;top:0;width:85.6mm;min-height:54mm;border:1px solid #b9c7d7;border-radius:3mm;box-shadow:none;break-inside:avoid;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+  .staff-id-card-brand{padding:4mm}
+  .staff-id-card-brand strong{font-size:12pt}
+  .staff-id-card-brand small{font-size:6pt}
+  .staff-id-card-brand>span{width:9mm;height:9mm;border-radius:2mm}
+  .staff-id-card-body{gap:4mm;padding:5mm 4mm}
+  .staff-id-card-avatar{width:23mm;height:29mm;flex-basis:23mm;border-radius:2mm;font-size:22pt}
+  .staff-id-card-body>div:last-child strong{font-size:12pt}
+  .staff-id-card-body>div:last-child small{font-size:6.5pt}
+  .staff-id-card-footer{padding:2mm 4mm;font-size:5.5pt}
+  .staff-id-card-note,.staff-workspace-heading,.staff-window-nav,.staff-context-bar{display:none!important}
+  @page{size:85.6mm 54mm;margin:0}
+}

@@ -1,15 +1,17 @@
 import { useEffect, useMemo, useState } from 'react'
+import type { ReactNode } from 'react'
 import {
   Activity, AlertCircle, BookOpen, CalendarCheck, CalendarDays,
-  Check, ChevronLeft, ChevronRight, ClipboardCheck, Edit3, Eye,
+  Check, ChevronLeft, ChevronRight, ClipboardCheck, Download, Edit3, Eye, MoreHorizontal,
   FileCheck2, FileText, FolderOpen, GraduationCap, HeartHandshake, History, ImagePlus,
-  LayoutDashboard, Plus, RefreshCw, Search, ShieldCheck, Trash2, Upload,
+  LayoutDashboard, Plus, Printer, RefreshCw, Search, ShieldCheck, Trash2, Upload,
   UserRound, Users, X,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { createRecord, deleteRecord, listAccounts, listFeePayments, listRecords, recordFeePayment, updateRecord } from '../lib/data'
 import { supabase } from '../lib/supabase'
 import { userFacingError } from '../lib/userErrors'
+import { downloadCsv } from '../lib/csv'
 import { netInvoiceAmount, outstandingInvoiceBalance } from '../lib/finance'
 import type { AppMode, FieldConfig, ModuleConfig, RecordRow } from '../lib/types'
 import '../styles/student-module.css'
@@ -21,7 +23,7 @@ import { operationalWorkspaceConfigs } from '../lib/operationalWorkspaceViews'
 interface Props { module: ModuleConfig; onToast: (message: string, error?: boolean) => void; initialWindow?: string; showWindowNavigation?: boolean }
 type StudentStatus = 'all' | 'active' | 'pending' | 'graduated' | 'inactive'
 type EmployeeStatus = 'all' | 'active' | 'on_leave' | 'inactive'
-type StudentWorkspaceTab = 'overview' | 'admissions' | 'directory' | 'profile' | 'classes' | 'guardians' | 'attendance' | 'results' | 'assignments' | 'timetable' | 'documents' | 'history'
+type StudentWorkspaceTab = 'overview' | 'admissions' | 'directory' | 'profile' | 'id-cards' | 'classes' | 'guardians' | 'attendance' | 'results' | 'assignments' | 'timetable' | 'documents' | 'history'
 const studentRelatedTables = ['attendance', 'exams', 'exam_results', 'assignments', 'assignment_submissions', 'timetable_entries', 'classes', 'academic_sessions', 'programs', 'guardian_students', 'parent_guardians', 'student_placements', 'student_documents', 'student_history'] as const
 
 function makeEmployeeNumber() {
@@ -230,6 +232,17 @@ function RecordForm({ module, initial, onCancel, onSave, saving, mode }: {
   </div>
 }
 
+function RowActionMenu({ label, children }: { label: string; children: ReactNode }) {
+  return <details className="ed360-row-action-menu">
+    <summary aria-label={label} title={label}><MoreHorizontal size={17}/><span>Actions</span></summary>
+    <div role="group" aria-label={label} onClick={event => {
+      if ((event.target as HTMLElement).closest('button')) {
+        event.currentTarget.closest('details')?.removeAttribute('open')
+      }
+    }}>{children}</div>
+  </details>
+}
+
 function StudentPhoto({ row }: { row: RecordRow }) {
   const [src, setSrc] = useState<string | null>(null)
   useEffect(() => {
@@ -415,6 +428,8 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
   const [historyTarget, setHistoryTarget] = useState<RecordRow | null>(null)
   const [viewing, setViewing] = useState<RecordRow | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
+  const [sortKey, setSortKey] = useState('')
+  const [sortDirection, setSortDirection] = useState<'asc'|'desc'>('asc')
   const pageSize = 10
   const [studentStatus, setStudentStatus] = useState<StudentStatus>('all')
   const [studentWorkspaceTab, setStudentWorkspaceTab] = useState<StudentWorkspaceTab>(() => (initialWindow as StudentWorkspaceTab | undefined) ?? 'overview')
@@ -435,7 +450,7 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
   const [documentVisibility, setDocumentVisibility] = useState('staff_only')
   const [documentNotes, setDocumentNotes] = useState('')
   const [employeeStatus, setEmployeeStatus] = useState<EmployeeStatus>('all')
-  const [operationalView, setOperationalView] = useState('')
+  const [operationalView, setOperationalView] = useState(initialWindow ?? '')
   const operationalWorkspace = operationalWorkspaceConfigs[module.key]
   const activeOperationalView = operationalWorkspace?.views.find(item => item.key === operationalView) ?? operationalWorkspace?.views[0]
   const canEdit = ['owner', 'admin'].includes(user!.role)
@@ -463,7 +478,7 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
       return null
     } finally { setLoading(false) }
   }
-  useEffect(() => { setCurrentPage(1); void load() }, [mode, user?.id, user?.institutionId, module.table])
+  useEffect(() => { setCurrentPage(1); setSortKey(''); setSortDirection('asc'); void load() }, [mode, user?.id, user?.institutionId, module.table])
 
   useEffect(() => {
     if (module.key !== 'students') return
@@ -487,11 +502,56 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
     return () => { active = false }
   }, [module.key, mode, user?.id, user?.institutionId, user?.role, user?.linkedStudentId])
 
+  const timetableConflictIds = useMemo(() => {
+    const conflicts = new Set<string>()
+    if (module.key !== 'timetable') return conflicts
+    const ordered = [...rows]
+    const overlaps = (startA: string, endA: string, startB: string, endB: string) => startA < endB && endA > startB
+    for (let i = 0; i < ordered.length; i += 1) {
+      const a = ordered[i]
+      const aStart = String(a.start_time ?? '')
+      const aEnd = String(a.end_time ?? '')
+      if (!aStart || !aEnd) continue
+      for (let j = i + 1; j < ordered.length; j += 1) {
+        const b = ordered[j]
+        if (String(a.weekday ?? '').toLowerCase() !== String(b.weekday ?? '').toLowerCase()) continue
+        const bStart = String(b.start_time ?? '')
+        const bEnd = String(b.end_time ?? '')
+        if (!bStart || !bEnd || !overlaps(aStart, aEnd, bStart, bEnd)) continue
+        const sharedClass = Boolean(String(a.class_name ?? '').trim()) && String(a.class_name).toLowerCase() === String(b.class_name ?? '').toLowerCase()
+        const sharedTeacher = Boolean(String(a.teacher_name ?? '').trim()) && String(a.teacher_name).toLowerCase() === String(b.teacher_name ?? '').toLowerCase()
+        const sharedRoom = Boolean(String(a.room ?? '').trim()) && String(a.room).toLowerCase() === String(b.room ?? '').toLowerCase()
+        if (sharedClass || sharedTeacher || sharedRoom) {
+          conflicts.add(a.id)
+          conflicts.add(b.id)
+        }
+      }
+    }
+    return conflicts
+  }, [rows, module.key])
+
   const filtered = useMemo(() => rows.filter(row =>
     module.columns.some(column => String(row[column.key] ?? '').toLowerCase().includes(search.toLowerCase()))
-    && (!activeOperationalView || activeOperationalView.matches(row))
-  ), [rows, search, module, activeOperationalView])
-  const studentFiltered = useMemo(() => filtered.filter(row => studentStatus === 'all' || String(row.status ?? 'active').toLowerCase() === studentStatus), [filtered, studentStatus])
+    && (!activeOperationalView || (module.key === 'timetable' && activeOperationalView.key === 'conflicts'
+      ? timetableConflictIds.has(row.id)
+      : activeOperationalView.matches(row)))
+  ), [rows, search, module, activeOperationalView, timetableConflictIds])
+  const orderedFiltered = useMemo(() => {
+    if (!sortKey) return filtered
+    return [...filtered].sort((left, right) => {
+      const a = left[sortKey]
+      const b = right[sortKey]
+      const aEmpty = a === null || a === undefined || a === ''
+      const bEmpty = b === null || b === undefined || b === ''
+      if (aEmpty || bEmpty) return aEmpty === bEmpty ? 0 : aEmpty ? 1 : -1
+      const aNumber = Number(a)
+      const bNumber = Number(b)
+      const numeric = String(a).trim() !== '' && String(b).trim() !== '' && Number.isFinite(aNumber) && Number.isFinite(bNumber)
+      const comparison = numeric ? aNumber - bNumber : String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' })
+      return sortDirection === 'asc' ? comparison : -comparison
+    })
+  }, [filtered, sortKey, sortDirection])
+  const studentFiltered = useMemo(() => orderedFiltered.filter(row => studentStatus === 'all' || String(row.status ?? 'active').toLowerCase() === studentStatus), [orderedFiltered, studentStatus])
   const studentCounts = useMemo(() => ({
     total: rows.length,
     active: rows.filter(row => String(row.status ?? 'active').toLowerCase() === 'active').length,
@@ -540,13 +600,23 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
     onLeave: rows.filter(row => String(row.employment_status ?? '').toLowerCase() === 'on_leave').length,
     departments: new Set(rows.map(row => String(row.department ?? '').trim()).filter(Boolean)).size,
   }), [rows])
-  const teacherFiltered = useMemo(() => filtered.filter(row => employeeStatus === 'all' || String(row.employment_status ?? 'active').toLowerCase() === employeeStatus), [filtered, employeeStatus])
+  const teacherFiltered = useMemo(() => orderedFiltered.filter(row => employeeStatus === 'all' || String(row.employment_status ?? 'active').toLowerCase() === employeeStatus), [orderedFiltered, employeeStatus])
   const studentPageCount = Math.max(1, Math.ceil(studentFiltered.length / pageSize))
   const teacherPageCount = Math.max(1, Math.ceil(teacherFiltered.length / pageSize))
   const filteredPageCount = Math.max(1, Math.ceil(filtered.length / pageSize))
   const studentPageRows = studentFiltered.slice((currentPage - 1) * pageSize, currentPage * pageSize)
   const teacherPageRows = teacherFiltered.slice((currentPage - 1) * pageSize, currentPage * pageSize)
-  const filteredPageRows = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize)
+  const filteredPageRows = orderedFiltered.slice((currentPage - 1) * pageSize, currentPage * pageSize)
+
+  function toggleSort(key: string) {
+    if (sortKey === key) setSortDirection(direction => direction === 'asc' ? 'desc' : 'asc')
+    else { setSortKey(key); setSortDirection('asc') }
+    setCurrentPage(1)
+  }
+
+  function sortMark(key: string) {
+    return sortKey === key ? (sortDirection === 'asc' ? '↑' : '↓') : '↕'
+  }
 
   async function save(values: Record<string, unknown>) {
     setSaving(true)
@@ -798,6 +868,7 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
       { key: 'admissions' as const, label: 'Admissions', icon: GraduationCap, count: studentCounts.pending },
       { key: 'directory' as const, label: 'Student Directory', icon: Users, count: studentCounts.total },
       { key: 'profile' as const, label: 'Student Profile', icon: UserRound },
+      { key: 'id-cards' as const, label: 'Student ID Cards', icon: Printer },
       { key: 'classes' as const, label: 'Class Placement', icon: BookOpen },
       { key: 'guardians' as const, label: 'Guardians', icon: HeartHandshake },
       { key: 'attendance' as const, label: 'Student Attendance', icon: CalendarCheck },
@@ -810,8 +881,8 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
     const ownerOrAdmin = ['owner', 'admin'].includes(user!.role)
     const visibleTabItems = tabItems.filter(item => {
       if (ownerOrAdmin) return true
-      if (user!.role === 'teacher') return ['overview', 'directory', 'profile', 'classes', 'attendance', 'results', 'assignments', 'timetable', 'history'].includes(item.key)
-      return ['overview', 'profile', 'classes', 'guardians', 'attendance', 'results', 'assignments', 'timetable', 'documents', 'history'].includes(item.key)
+      if (user!.role === 'teacher') return ['overview', 'directory', 'profile', 'id-cards', 'classes', 'attendance', 'results', 'assignments', 'timetable', 'history'].includes(item.key)
+      return ['overview', 'profile', 'id-cards', 'classes', 'guardians', 'attendance', 'results', 'assignments', 'timetable', 'documents', 'history'].includes(item.key)
     })
     const pendingRows = rows.filter(row => ['draft','submitted','under_review','documents_required','approved'].includes(String(row.application_status ?? 'submitted').toLowerCase()))
     const presentCount = studentAttendanceRows.filter(row => ['present', 'late'].includes(String(row.status ?? '').toLowerCase())).length
@@ -1173,17 +1244,20 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
         <div className="student-directory-heading"><div><h2>Student directory</h2><p>Institution-wide student register with search, status filters and profile actions.</p></div><span className="student-mode-tag cloud">Live records</span></div>
         <div className="student-directory-toolbar">
           <label className="student-search"><Search size={17}/><input aria-label="Search students" placeholder="Search name, admission number or class…" value={search} onChange={event => { setSearch(event.target.value); setCurrentPage(1) }}/>{search && <button type="button" onClick={() => { setSearch(''); setCurrentPage(1) }} aria-label="Clear search"><X size={15}/></button>}</label>
+          {ownerOrAdmin && <button className="student-refresh-button" type="button" onClick={() => downloadCsv('edusphere-students-'+localDateValue()+'.csv',studentFiltered.map(row=>({admission_no:row.admission_no,full_name:row.full_name,class_name:row.class_name,status:row.status})),[{key:'admission_no',label:'Admission ID'},{key:'full_name',label:'Student'},{key:'class_name',label:'Class / programme'},{key:'status',label:'Status'}])}><Download size={14}/> Export CSV</button>}
           <button className="student-refresh-button" type="button" onClick={() => void load()} disabled={loading}><RefreshCw size={15} className={loading ? 'spin' : ''}/> Refresh</button>
         </div>
         <div className="student-filter-row" role="group" aria-label="Filter students by status">
           {filters.map(filter => <button type="button" key={filter.key} className={studentStatus === filter.key ? 'active' : ''} onClick={() => { setStudentStatus(filter.key); setCurrentPage(1) }}>{filter.label}{filter.key === 'all' ? <span>{studentCounts.total}</span> : null}</button>)}
         </div>
-        {loading ? <div className="student-empty-state"><RefreshCw className="spin" size={22}/><strong>Loading students…</strong></div> : studentFiltered.length === 0 ? <div className="student-empty-state"><span className="student-empty-icon"><GraduationCap size={25}/></span><strong>{search ? 'No matching students' : studentStatus === 'all' ? 'No students registered yet' : 'No ' + studentStatus + ' students'}</strong><p>{search ? 'Try a different name, admission number or class.' : canEdit ? 'Add your first student to begin building the institution directory.' : 'Student records will appear here when an authorized administrator adds them.'}</p>{canCreate && !search && studentStatus === 'all' && <button className="button button-primary" onClick={() => { setEditing(null); setShowForm(true) }}><Plus size={16}/> Add first student</button>}</div> : <div className="student-table-wrap"><table className="student-table"><thead><tr><th>Admission ID</th><th>Student</th><th>Class / programme</th><th>Parent / guardian</th><th>Status</th><th className="action-column">Actions</th></tr></thead><tbody>{studentPageRows.map(row => <tr key={row.id}>
+        {loading ? <div className="student-empty-state"><RefreshCw className="spin" size={22}/><strong>Loading students…</strong></div> : studentFiltered.length === 0 ? <div className="student-empty-state"><span className="student-empty-icon"><GraduationCap size={25}/></span><strong>{search ? 'No matching students' : studentStatus === 'all' ? 'No students registered yet' : 'No ' + studentStatus + ' students'}</strong><p>{search ? 'Try a different name, admission number or class.' : canEdit ? 'Add your first student to begin building the institution directory.' : 'Student records will appear here when an authorized administrator adds them.'}</p>{canCreate && !search && studentStatus === 'all' && <button className="button button-primary" onClick={() => { setEditing(null); setShowForm(true) }}><Plus size={16}/> Add first student</button>}</div> : <div className="student-table-wrap"><table className="student-table"><thead><tr>
+          {([{key:'admission_no',label:'Admission ID'},{key:'full_name',label:'Student'},{key:'class_name',label:'Class / programme'},{key:'guardian_name',label:'Parent / guardian'},{key:'status',label:'Status'}] as const).map(column=><th key={column.key} aria-sort={sortKey===column.key?(sortDirection==='asc'?'ascending':'descending'):'none'}><button type="button" className="ed360-sort-header" onClick={()=>toggleSort(column.key)}>{column.label}<span aria-hidden="true">{sortMark(column.key)}</span></button></th>)}
+          <th className="action-column">Actions</th></tr></thead><tbody>{studentPageRows.map(row => <tr key={row.id}>
           <td><span className="student-admission-number">{String(row.admission_no ?? '—')}</span></td>
           <td><div className="student-person-cell"><StudentPhoto row={row}/><span><strong>{String(row.full_name ?? 'Unnamed student')}</strong><small>{String(row.email ?? 'No email provided')}</small></span></div></td>
           <td>{String(row.class_name ?? '—')}</td><td>{String(row.guardian_name ?? '—')}</td>
           <td><span className={'status-pill status-' + String(row.status ?? 'active').toLowerCase()}>{statusLabel(row.status)}</span></td>
-          <td className="row-actions ed360-student-actions"><button className="icon-button" onClick={() => { setSelectedStudentId(row.id); setStudentWorkspaceTab('profile') }} title="Open student profile"><Eye size={15}/></button>{canEdit && <button className="icon-button" onClick={() => { setEditing(row); setShowForm(true) }} title="Edit student"><Edit3 size={15}/></button>}{canDelete && <button className="icon-button danger-icon" onClick={() => void remove(row)} title="Delete student"><Trash2 size={15}/></button>}</td>
+          <td className="row-actions ed360-student-actions"><RowActionMenu label={'Student actions for '+String(row.full_name??'record')}><button type="button" onClick={() => { setSelectedStudentId(row.id); setStudentWorkspaceTab('profile') }}><Eye size={15}/> Open profile</button>{canEdit && <button type="button" onClick={() => { setEditing(row); setShowForm(true) }}><Edit3 size={15}/> Edit student</button>}{canDelete && <button type="button" className="danger-icon" onClick={() => void remove(row)}><Trash2 size={15}/> Delete student</button>}</RowActionMenu></td>
         </tr>)}</tbody></table></div>}
         <div className="student-directory-footer"><span>Found <strong>{studentFiltered.length}</strong> of <strong>{studentCounts.total}</strong> students</span><span>Actions follow your institution role permissions.</span></div>
         <WorkspacePagination page={currentPage} pageCount={studentPageCount} pageSize={pageSize} total={studentFiltered.length} onChange={setCurrentPage}/>
@@ -1208,6 +1282,15 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
         </> : <div className="ed360-student-empty"><strong>No student selected</strong><p>Register or select a student from the directory to open a profile.</p></div>}
       </section>}
 
+      {studentWorkspaceTab === 'id-cards' && <section className="ed360-student-panel ed360-student-full-panel ed360-id-card-workspace">
+        <header><div><span className="ed360-student-panel-icon"><Printer size={17}/></span><div><h2>Student identity card</h2><p>Print a card using the selected student's verified admission record. It does not create a new account or change admission data.</p></div></div>{selectedStudent&&<button type="button" className="button button-primary" onClick={() => window.print()}><Printer size={15}/> Print ID card</button>}</header>
+        {selectedStudent ? <div className="ed360-student-id-card">
+          <div className="ed360-student-id-card-brand"><div><strong>{user?.institutionName ?? 'EduSphere 360 Institution'}</strong><small>STUDENT IDENTITY CARD</small></div><span>EDU</span></div>
+          <div className="ed360-student-id-card-body"><StudentPhoto row={selectedStudent}/><div><strong>{String(selectedStudent.full_name ?? 'Student')}</strong><small>Admission No. {String(selectedStudent.admission_no ?? '—')}</small><small>Class / programme: {String(activeStudentClass?.name ?? selectedStudent.class_name ?? 'Not assigned')}</small><small>Academic session: {String(activeStudentSession?.name ?? 'Not assigned')}</small><small>Status: {statusLabel(selectedStudent.status)}</small></div></div>
+          <div className="ed360-student-id-card-footer"><span>Issued from institution student records</span><b>{String(selectedStudent.id).slice(0,8).toUpperCase()}</b></div>
+        </div> : <div className="ed360-student-empty"><strong>No student selected</strong><p>Select a student record before printing an ID card.</p></div>}
+        <p className="ed360-student-id-card-note">Check the student name, photograph and admission number before printing. The selected record remains the source of truth.</p>
+      </section>}
       {studentWorkspaceTab === 'classes' && <div className="ed360-student-overview-grid">
         <section className="ed360-student-panel">
           <header><div><span className="ed360-student-panel-icon"><BookOpen size={17}/></span><div><h2>Current class placement</h2><p>Placement is linked to a configured class and academic session.</p></div></div></header>
@@ -1381,12 +1464,14 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
         <div className="faculty-filter-row" role="group" aria-label="Filter faculty by employment status">
           {filters.map(filter => <button type="button" key={filter.key} className={employeeStatus === filter.key ? 'active' : ''} onClick={() => { setEmployeeStatus(filter.key); setCurrentPage(1) }}>{filter.label}{filter.key === 'all' ? <span>{teacherCounts.total}</span> : null}</button>)}
         </div>
-        {loading ? <div className="faculty-empty-state"><RefreshCw className="spin" size={22}/><strong>Loading faculty…</strong></div> : teacherFiltered.length === 0 ? <div className="faculty-empty-state"><span className="faculty-empty-icon"><Users size={25}/></span><strong>{search ? 'No matching faculty' : employeeStatus === 'all' ? 'No faculty registered yet' : `No ${employeeStatus.replace('_', ' ')} staff`}</strong><p>{search ? 'Try a different name, employee number, department or subject.' : canEdit ? 'Add your first faculty member to begin building the staff directory.' : 'Faculty records will appear here when an authorized administrator adds them.'}</p>{canEdit && !search && employeeStatus === 'all' && <button className="button button-primary" onClick={() => { setEditing(null); setShowForm(true) }}><Plus size={16}/> Add first faculty member</button>}</div> : <div className="faculty-table-wrap"><table className="faculty-table"><thead><tr><th>Employee ID</th><th>Faculty member</th><th>Department</th><th>Subject</th><th>Contact</th><th>Employment status</th><th className="action-column">Actions</th></tr></thead><tbody>{teacherPageRows.map(row => <tr key={row.id}>
+        {loading ? <div className="faculty-empty-state"><RefreshCw className="spin" size={22}/><strong>Loading faculty…</strong></div> : teacherFiltered.length === 0 ? <div className="faculty-empty-state"><span className="faculty-empty-icon"><Users size={25}/></span><strong>{search ? 'No matching faculty' : employeeStatus === 'all' ? 'No faculty registered yet' : `No ${employeeStatus.replace('_', ' ')} staff`}</strong><p>{search ? 'Try a different name, employee number, department or subject.' : canEdit ? 'Add your first faculty member to begin building the staff directory.' : 'Faculty records will appear here when an authorized administrator adds them.'}</p>{canEdit && !search && employeeStatus === 'all' && <button className="button button-primary" onClick={() => { setEditing(null); setShowForm(true) }}><Plus size={16}/> Add first faculty member</button>}</div> : <div className="faculty-table-wrap"><table className="faculty-table"><thead><tr>
+          {([{key:'employee_no',label:'Employee ID'},{key:'full_name',label:'Faculty member'},{key:'department',label:'Department'},{key:'subject',label:'Subject'},{key:'phone',label:'Contact'},{key:'employment_status',label:'Employment status'}] as const).map(column=><th key={column.key} aria-sort={sortKey===column.key?(sortDirection==='asc'?'ascending':'descending'):'none'}><button type="button" className="ed360-sort-header" onClick={()=>toggleSort(column.key)}>{column.label}<span aria-hidden="true">{sortMark(column.key)}</span></button></th>)}
+          <th className="action-column">Actions</th></tr></thead><tbody>{teacherPageRows.map(row => <tr key={row.id}>
           <td><span className="faculty-employee-number">{String(row.employee_no ?? '—')}</span></td>
           <td><div className="faculty-person-cell"><span className="faculty-avatar">{String(row.full_name ?? '?').trim().slice(0,1).toUpperCase()}</span><span><strong>{String(row.full_name ?? 'Unnamed employee')}</strong><small>{String(row.email ?? 'No email')}</small></span></div></td>
           <td>{String(row.department ?? '—')}</td><td>{String(row.subject ?? '—')}</td><td>{String(row.phone ?? '—')}</td>
           <td><span className={`status-pill status-${String(row.employment_status ?? 'active').toLowerCase()}`}>{String(row.employment_status ?? 'active').replace('_', ' ')}</span></td>
-          <td className="row-actions ed360-student-actions"><button className="icon-button" onClick={() => setViewing(row)} title="View faculty record"><Eye size={15}/></button>{canEdit && <button className="icon-button" onClick={() => { setEditing(row); setShowForm(true) }} title="Edit faculty"><Edit3 size={15}/></button>}{canDelete && <button className="icon-button danger-icon" onClick={() => void remove(row)} title="Delete faculty"><Trash2 size={15}/></button>}</td>
+          <td className="row-actions ed360-student-actions"><RowActionMenu label={'Employee actions for '+String(row.full_name??'record')}><button type="button" onClick={() => setViewing(row)}><Eye size={15}/> View employee</button>{canEdit && <button type="button" onClick={() => { setEditing(row); setShowForm(true) }}><Edit3 size={15}/> Edit employee</button>}{canDelete && <button type="button" className="danger-icon" onClick={() => void remove(row)}><Trash2 size={15}/> Delete employee</button>}</RowActionMenu></td>
         </tr>)}</tbody></table></div>}
         <div className="faculty-directory-footer"><span>Found <strong>{teacherFiltered.length}</strong> of <strong>{teacherCounts.total}</strong> faculty records</span><span>Staff records are restricted to authorized institution members.</span></div>
         <WorkspacePagination page={currentPage} pageCount={teacherPageCount} pageSize={pageSize} total={teacherFiltered.length} onChange={setCurrentPage}/>
@@ -1411,7 +1496,7 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
     </> : <div className="page-title-row"><div><div className="eyebrow">INSTITUTION WORKSPACE</div><h1>{module.title}</h1><p>{module.description}</p></div>{canCreate && <button className="button button-primary" onClick={() => { setEditing(null); setShowForm(true) }}><Plus size={17}/> Add {module.title.replace(/s$/, '').toLowerCase()}</button>}</div>}
     {(!operationalWorkspace || activeOperationalView?.key === operationalWorkspace.views[0]?.key) && <ModuleInsights module={module} rows={rows} loading={loading}/>}
     <div className="table-card"><div className="table-toolbar"><div className="table-count"><strong>{filtered.length}</strong> records <span>·</span> Live institutional database</div><div className="toolbar-actions"><div className="search-box"><Search size={16}/><input placeholder="Search records…" value={search} onChange={event => { setSearch(event.target.value); setCurrentPage(1) }}/></div><button className="icon-button" onClick={() => void load()} aria-label="Refresh records"><RefreshCw size={16}/></button></div></div>
-      {loading ? <div className="table-empty"><RefreshCw className="spin" size={21}/> Loading records…</div> : filtered.length === 0 ? <div className="table-empty"><div className="empty-icon"><AlertCircle size={22}/></div><strong>{search ? 'No matching records' : 'No records yet'}</strong><span>{search ? 'Try another search term.' : canEdit ? 'Add the first record to start using this module.' : 'Records will appear here when your institution adds them.'}</span></div> : <div className="table-scroll"><table><thead><tr>{module.columns.map(column => <th key={column.key}>{column.label}</th>)}<th className="action-column">Actions</th></tr></thead><tbody>{filteredPageRows.map(row => <tr key={row.id}>{module.columns.map(column => <td key={column.key}>{column.key === 'created_at' || column.key === 'due_date' || column.key === 'exam_date' ? niceDate(row[column.key]) : column.key === 'balance' && module.key === 'fees' ? outstandingInvoiceBalance(row).toLocaleString(undefined, { maximumFractionDigits: 2 }) : column.key === 'status' || column.key === 'result_status' ? <span className={`status-pill status-${String(row[column.key] ?? '').toLowerCase()}`}>{String(row[column.key] ?? '—').replace('_', ' ')}</span> : ['amount', 'paid_amount', 'balance', 'marks_obtained', 'total_marks'].includes(column.key) ? Number(row[column.key] ?? 0).toLocaleString(undefined, { maximumFractionDigits: 2 }) : String(row[column.key] ?? '—')}</td>)}<td className="row-actions ed360-student-actions"><button className="icon-button" onClick={() => setViewing(row)} title="View record"><Eye size={15}/></button>{module.key === 'fees' && <button type="button" className="button button-outline" onClick={() => setHistoryTarget(row)}>History</button>}{module.key === 'fees' && canCollectFeePayment && outstandingInvoiceBalance(row) > 0 && <button type="button" className="button button-primary" onClick={() => setPaymentTarget(row)}>Collect</button>}{canEdit && !(module.key === 'assignment_submissions' && user!.role === 'student' && ['graded', 'returned'].includes(String(row.status))) && <button className="icon-button" onClick={() => { setEditing(row); setShowForm(true) }} title="Edit"><Edit3 size={15}/></button>}{canDelete && !(module.key === 'fees' && Number(row.paid_amount ?? 0) > 0) && <button className="icon-button danger-icon" onClick={() => void remove(row)} title="Delete"><Trash2 size={15}/></button>}</td></tr>)}</tbody></table></div>}
+      {loading ? <div className="table-empty"><RefreshCw className="spin" size={21}/> Loading records…</div> : filtered.length === 0 ? <div className="table-empty"><div className="empty-icon"><AlertCircle size={22}/></div><strong>{search ? 'No matching records' : 'No records yet'}</strong><span>{search ? 'Try another search term.' : canEdit ? 'Add the first record to start using this module.' : 'Records will appear here when your institution adds them.'}</span></div> : <div className="table-scroll"><table><thead><tr>{module.columns.map(column => <th key={column.key} aria-sort={sortKey===column.key?(sortDirection==='asc'?'ascending':'descending'):'none'}><button type="button" className="ed360-sort-header" onClick={()=>toggleSort(column.key)}>{column.label}<span aria-hidden="true">{sortMark(column.key)}</span></button></th>)}<th className="action-column">Actions</th></tr></thead><tbody>{filteredPageRows.map(row => <tr key={row.id}>{module.columns.map(column => <td key={column.key}>{column.key === 'created_at' || column.key === 'due_date' || column.key === 'exam_date' ? niceDate(row[column.key]) : column.key === 'balance' && module.key === 'fees' ? outstandingInvoiceBalance(row).toLocaleString(undefined, { maximumFractionDigits: 2 }) : column.key === 'status' || column.key === 'result_status' ? <span className={`status-pill status-${String(row[column.key] ?? '').toLowerCase()}`}>{String(row[column.key] ?? '—').replace('_', ' ')}</span> : ['amount', 'paid_amount', 'balance', 'marks_obtained', 'total_marks'].includes(column.key) ? Number(row[column.key] ?? 0).toLocaleString(undefined, { maximumFractionDigits: 2 }) : String(row[column.key] ?? '—')}</td>)}<td className="row-actions ed360-student-actions"><RowActionMenu label={module.title+' actions'}><button type="button" onClick={() => setViewing(row)}><Eye size={15}/> View record</button>{module.key === 'fees' && <button type="button" onClick={() => setHistoryTarget(row)}>History</button>}{module.key === 'fees' && canCollectFeePayment && outstandingInvoiceBalance(row) > 0 && <button type="button" onClick={() => setPaymentTarget(row)}>Collect payment</button>}{canEdit && !(module.key === 'assignment_submissions' && user!.role === 'student' && ['graded', 'returned'].includes(String(row.status))) && <button type="button" onClick={() => { setEditing(row); setShowForm(true) }}><Edit3 size={15}/> Edit record</button>}{canDelete && !(module.key === 'fees' && Number(row.paid_amount ?? 0) > 0) && <button type="button" className="danger-icon" onClick={() => void remove(row)}><Trash2 size={15}/> Delete record</button>}</RowActionMenu></td></tr>)}</tbody></table></div>}
     </div>
     <WorkspacePagination page={currentPage} pageCount={filteredPageCount} pageSize={pageSize} total={filtered.length} onChange={setCurrentPage}/>
     {formDialog}{detailDialog}

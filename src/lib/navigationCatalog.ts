@@ -10,12 +10,12 @@ export const navigationCatalog:NavigationCatalogGroup[]=institutionalMenu.map(gr
 
 const roleItemAllow:Record<string,Partial<Record<string,string[]>>>={
   students:{
-    student:['Student Directory','Student Profiles','Enrollment','Class and Section Assignments','Student ID Cards','Student Performance Charts','Student Reports','Student Data Export'],
+    student:['Student Directory','Student Profiles','Enrollment','Class and Section Assignments','Student ID Cards','Student Performance Charts','Student Reports'],
     parent:['Student Profiles','Class and Section Assignments','Student ID Cards','Student Performance Charts','Student Reports'],
     teacher:['Student Directory','Student Profiles','Class and Section Assignments','Student Documentation','Student History','Student Performance Charts','Student Reports'],
   },
   employees:{
-    teacher:['Employee Profiles','Employee Attendance','Employee Leave Management','Employee Reports'],
+    teacher:['Employee Profiles','Employee Attendance','Employee Leave Management'],
   },
   fees:{
     student:['Fees Dashboard','Fee Invoices','Fee Receipts'],
@@ -59,7 +59,19 @@ const roleItemAllow:Record<string,Partial<Record<string,string[]>>>={
 
 function allowedItems(group:WorkspaceMenuGroup,role:WorkspaceMenuGroup['roles'][number]){
   const selected=roleItemAllow[group.key]?.[role]
-  return selected ? group.items.filter(item=>selected.includes(item.label)) : group.items
+  const roleFiltered = selected ? group.items.filter(item=>selected.includes(item.label)) : group.items
+  if (group.key === 'dashboard') {
+    const hidden: Partial<Record<WorkspaceMenuGroup['roles'][number], string[]>> = {
+      teacher: ['Financial Overview', 'Institutional Alerts'],
+      student: ['Employee Performance', 'Student Behaviour', 'Institutional Alerts', 'Pending Approvals', 'Tasks and Reminders'],
+      parent: ['Employee Performance', 'Student Behaviour', 'Institutional Alerts', 'Pending Approvals', 'Tasks and Reminders'],
+      accountant: ['Attendance Overview', 'Student Behaviour', 'Employee Performance', 'Institutional Alerts', 'Pending Approvals'],
+      exam_officer: ['Financial Overview', 'Employee Performance', 'Institutional Alerts', 'Pending Approvals'],
+    }
+    const excluded = new Set(hidden[role] ?? [])
+    return roleFiltered.filter(item => !excluded.has(item.label))
+  }
+  return roleFiltered
 }
 
 export function roleNavigationGroups(role:WorkspaceMenuGroup['roles'][number]){

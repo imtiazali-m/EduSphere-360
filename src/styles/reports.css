@@ -13,3 +13,23 @@
 .report-profile-grid dl { display: grid; grid-template-columns: 140px 1fr; gap: 8px 12px; margin: 0; }
 .report-profile-grid dt { color: #718096; font-size: .84rem; }
 .report-profile-grid dd { margin: 0; color: #17283e; font-weight: 600; word-break: break-word; }
+
+
+.report-sort-header{
+  display:inline-flex;align-items:center;gap:6px;max-width:100%;
+  padding:2px 0;border:0;color:inherit;background:transparent;
+  font:inherit;font-weight:inherit;text-align:left;white-space:nowrap;
+}
+.report-sort-header:hover{color:#245fae}
+.report-sort-header:focus-visible{outline:2px solid #7da8df;outline-offset:3px;border-radius:3px}
+.report-sort-header span{color:#8b9caf;font-size:10px;font-weight:900}
+.report-table-pagination{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:12px 2px 2px;color:#7c8ca0;font-size:10px;
+}
+.report-table-pagination>div{display:flex;align-items:center;gap:9px}
+.report-table-pagination>div>span{color:#8b99ac;font-size:9px}
+@media(max-width:620px){
+  .report-table-pagination{align-items:flex-start;flex-direction:column}
+  .report-table-pagination>div{width:100%;justify-content:space-between}
+}
