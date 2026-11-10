@@ -73,17 +73,16 @@ export function PayrollWorkspace({initialWindow,onToast}:Props){
     if(!silent){setLoading(true);setError('')}
     try{
       const employeeRows=await listRecords('cloud',user,'teachers') as Employee[]
-      const [profileResult,runResult,itemResult]=await Promise.all([
-        supabase.from('employee_salary_profiles').select('*').eq('institution_id',user.institutionId).order('effective_from',{ascending:false}).limit(1000),
-        supabase.from('payroll_runs').select('*').eq('institution_id',user.institutionId).order('period_start',{ascending:false}).limit(250),
-        supabase.from('payroll_items').select('*').eq('institution_id',user.institutionId).order('created_at',{ascending:false}).limit(2000),
+      const [profileRows,runRows,itemRows]=await Promise.all([
+        listRecords('cloud',user,'employee_salary_profiles') as Promise<SalaryProfile[]>,
+        listRecords('cloud',user,'payroll_runs') as Promise<PayrollRun[]>,
+        listRecords('cloud',user,'payroll_items') as Promise<PayrollItem[]>,
       ])
-      for(const result of [profileResult,runResult,itemResult])if(result.error)throw result.error
       setEmployees(employeeRows)
-      setProfiles((profileResult.data??[]) as SalaryProfile[])
-      setRuns((runResult.data??[]) as PayrollRun[])
-      setItems((itemResult.data??[]) as PayrollItem[])
-      if(!selectedRun&&runResult.data?.length)setSelectedRun(runResult.data[0].id)
+      setProfiles(profileRows)
+      setRuns(runRows)
+      setItems(itemRows)
+      if(!selectedRun&&runRows.length)setSelectedRun(runRows[0].id)
       if(!employeeId&&employeeRows.length)setEmployeeId(employeeRows[0].id)
     }catch(err){
       const message=userFacingError(err,'Payroll information could not be loaded. Check the institution permissions and refresh.')
