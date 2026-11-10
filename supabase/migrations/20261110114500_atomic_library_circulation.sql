@@ -31,14 +31,18 @@ begin
     raise exception 'The due date must be today or later';
   end if;
 
-  -- Lock the catalogue row so concurrent checkouts cannot exceed the copy count.
+  -- Serialize checkouts for this book without requiring staff to update the
+  -- admin-managed catalogue row. SELECT FOR UPDATE would also require an UPDATE
+  -- RLS policy on institutional_records, which intentionally excludes teachers.
+  perform pg_advisory_xact_lock(
+    hashtextextended(p_institution_id::text || ':' || p_book_record_id::text, 0)
+  );
   select * into v_book
   from public.institutional_records
   where id = p_book_record_id
     and institution_id = p_institution_id
     and module_key = 'library'
-    and record_type = 'book-registration'
-  for update;
+    and record_type = 'book-registration';
 
   if not found then raise exception 'The selected book is not registered in this institution library'; end if;
 
