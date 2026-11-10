@@ -105,7 +105,7 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
  const canAdmin=Boolean(user&&['owner','admin'].includes(user.role))
  const canWrite=Boolean(user&&(
   canAdmin||
-  (user.role==='teacher'&&['academic_setup','attendance','timetable','teaching','behaviour','communication','question_bank','examinations','tests','curriculum','visitors'].includes(group.dataModule))||
+  (user.role==='teacher'&&['academic_setup','attendance','timetable','teaching','behaviour','communication','question_bank','examinations','tests','curriculum'].includes(group.dataModule))||
   (user.role==='accountant'&&['finance','fees','receivables','payments','receipts','payroll','reconciliation','inventory'].includes(group.dataModule))||
   (user.role==='exam_officer'&&['question_bank','examinations','tests','reports'].includes(group.dataModule))
  ))
