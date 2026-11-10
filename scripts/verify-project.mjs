@@ -342,7 +342,8 @@ check('Operational modules expose distinct nested workspace windows and contextu
   assert.ok(reports.includes('Finance & Collections') && reports.includes('Attendance Analysis') && reports.includes('Examination Results'), 'Reports must have separate subject-specific windows')
   assert.ok(administration.includes('Department Structure') && administration.includes('Class Capacity Overview') && administration.includes('Session Configuration'), 'Administration workspaces must use structure-specific tabs')
   const styles = read('src/styles/operational-hierarchy.css')
-  assert.ok(styles.includes('zoom: 1.06') && styles.includes('.ed360-operations-window-nav') && styles.includes('.ed360-contextual-subwindow'), 'Readable UI scale and nested workspace styles are required')
+  assert.ok(!/zoom\s*:/.test(styles), 'The application must not use browser-level zoom for responsive scaling')
+  assert.ok(styles.includes('.ed360-operations-window-nav') && styles.includes('.ed360-contextual-subwindow'), 'Nested workspace hierarchy styles are required')
 })
 
 check('Attendance history is searchable and independently date-filterable', () => {
@@ -796,6 +797,24 @@ check('All TypeScript and TSX sources parse without syntax diagnostics', () => {
   }
   assert.deepEqual(diagnostics, [], diagnostics.join('\n'))
   console.log(`      Parsed ${sourceFiles.length} TypeScript/TSX files.`)
+})
+
+check('Unified design system is loaded last and removes global browser zoom', () => {
+  const main = read('src/main.tsx')
+  const design = read('src/styles/design-system.css')
+  const operational = read('src/styles/operational-hierarchy.css')
+  assert.ok(main.includes("import './styles/design-system.css'"), 'Unified design system stylesheet must be loaded')
+  assert.ok(main.indexOf("import './styles/design-system.css'") > main.indexOf("import './styles/institutional-premium.css'"), 'Unified design system must load after legacy component styles')
+  for (const token of ['--es-brand-950', '--es-brand-900', '--es-primary-600', '--es-teal-700', '--es-canvas', '--es-surface', '--es-success', '--es-warning', '--es-danger']) {
+    assert.ok(design.includes(token), 'Missing shared design token ' + token)
+  }
+  for (const selector of ['.pro-sidebar', '.pro-topbar', '.ed360-dashboard', '.ed360-metric-card', '.ed360-start-panel', '.ed360-module-page', '.ed360-workspace-record-card', '.edm-home', '.es-auth-page']) {
+    assert.ok(design.includes(selector), 'The shared design system is missing a cross-screen surface ' + selector)
+  }
+  assert.ok(!/#root\s*\{[^}]*zoom\s*:/.test(operational), 'Global root zoom must not be used')
+  assert.ok(!/zoom\s*:/.test(operational), 'Operational styles must not apply browser-level zoom')
+  assert.ok(read('docs/PHASE_1_DETAILED_AUDIT.md').includes('Phase 1 disposition'), 'Detailed Phase 1 audit document is missing')
+  assert.ok(read('docs/PHASE_2_DESIGN_SYSTEM.md').includes('Core colour tokens'), 'Phase 2 design specification is missing')
 })
 
 console.log('\nRole workspace counts:')
