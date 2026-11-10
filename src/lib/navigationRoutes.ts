@@ -8,16 +8,28 @@ const slug = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, '-').
 
 const linkedRoutes = new Set([
   'administration:campus-and-branch-management',
-  'library:book-issue-and-returns',
-  'inventory:stock-in',
-  'inventory:stock-out',
-  'inventory:stock-allocation',
-  'inventory:stock-adjustments',
-  'inventory:inventory-history',
-  'inventory:stock-reports',
-  'transport:student-transport-allocation',
+  'library:book-issue-and-returns','library:digital-library','library:book-management','library:book-catalogue','library:book-categories','library:book-registration','library:reading-records','library:reading-cards','library:student-reading-history','library:learning-materials','library:resource-downloads','library:library-reports',
+  'inventory:items-management','inventory:item-catalogue','inventory:item-categories','inventory:suppliers','inventory:purchase-records','inventory:stock-in','inventory:stock-out','inventory:stock-allocation','inventory:stock-adjustments','inventory:inventory-history','inventory:stock-reports',
+  'transport:vehicle-management','transport:drivers-management','transport:transport-routes','transport:route-stops','transport:student-transport-allocation','transport:transport-fees','transport:transport-assignments','transport:vehicle-maintenance','transport:transport-attendance','transport:transport-history','transport:transport-reports',
 ])
 
+const dashboardViews: Record<string, string> = {
+  'institutional-overview': 'overview',
+  'academic-overview': 'reports:academics',
+  'financial-overview': 'finance:fees:overview',
+  'attendance-overview': 'attendance:students',
+  'student-performance': 'exam_results:published',
+  'student-behaviour': 'operations:behaviour:register',
+  'employee-performance': 'employees:reports',
+  'statistics-and-kpi-cards': 'overview',
+  'charts-and-comparative-analytics': 'reports:overview',
+  'calendar-and-events': 'unavailable:dashboard:calendar-and-events',
+  'notification-centre': 'notifications',
+  'tasks-and-reminders': 'work_tasks:queue',
+  'pending-approvals': 'governance:approvals',
+  'recent-activities': 'governance:audit',
+  'institutional-alerts': 'governance:audit',
+}
 const studentViews: Record<string, string> = {
   'student-directory': 'directory',
   'new-admissions': 'admissions',
@@ -74,11 +86,15 @@ const attendanceViews: Record<string, string> = {
 const reportViews: Record<string, string> = {
   'reports-dashboard': 'overview',
   'student-reports': 'students',
+  'employee-reports': 'employees',
   'attendance-reports': 'attendance',
   'examination-reports': 'academics',
   'academic-reports': 'academics',
   'fee-reports': 'finance',
+  'payroll-reports': 'payroll',
   'financial-reports': 'finance',
+  'class-reports': 'academics',
+  'comparative-analytics': 'overview',
 }
 
 const financeSections: Record<string, string> = {
@@ -228,12 +244,33 @@ const institutionalOperationsItems: Record<string, Record<string,string>> = {
   },
 }
 
+const administrationGovernanceItems: Record<string,string> = {
+  'institute-profile':'profile','organizational-structure':'academic','policies-and-rules':'settings',
+  'administrative-audit':'audit','user-access-and-invitations':'accounts','role-and-permission-management':'accounts',
+  'institution-settings':'settings','branding-and-document-settings':'settings','security-and-access-history':'audit',
+}
+const institutionConfigurationItems: Record<string,string> = {
+  'institution-configuration':'settings','education-system-configuration':'settings','education-levels':'academic',
+  'grade-and-academic-level-configuration':'academic','institution-settings':'settings','campus-settings':'settings',
+  'academic-settings':'academic','general-system-settings':'settings','invitations-and-access':'accounts',
+  'user-management':'accounts','role-management':'accounts','user-permissions':'accounts','module-permissions':'accounts',
+  'approval-permissions':'approvals','security-configuration':'audit',
+}
 function institutionOperationsRoute(groupKey:string,itemKey:string):string|undefined {
   const section=institutionalOperationsItems[groupKey]?.[itemKey]
   return section ? `operations:${groupKey}:${section}` : undefined
 }
 
 function dedicatedRoute(groupKey: string, itemKey: string): string | undefined {
+  if (groupKey === 'dashboard') return dashboardViews[itemKey] ?? 'unavailable:dashboard:' + itemKey
+  if (groupKey === 'institution-config') {
+    const section = institutionConfigurationItems[itemKey]
+    return section ? 'governance:' + section : undefined
+  }
+  if (groupKey === 'administration' && administrationGovernanceItems[itemKey]) {
+    return 'governance:' + administrationGovernanceItems[itemKey]
+  }
+
   if (groupKey === 'students') {
     const view = studentViews[itemKey]
     return view ? `students:${view}` : undefined
@@ -246,24 +283,45 @@ function dedicatedRoute(groupKey: string, itemKey: string): string | undefined {
     const view = attendanceViews[itemKey]
     return view ? `attendance:${view}` : undefined
   }
-  if (groupKey === 'academic-sessions') return 'admin:academic_sessions'
-  if (groupKey === 'classes-sections') return 'admin:classes'
-  if (groupKey === 'subjects') return 'admin:subjects'
+  if (groupKey === 'academic-sessions') {
+    if (itemKey === 'session-wise-student-records') return 'students:directory'
+    if (itemKey === 'session-wise-examination-records') return 'exams:calendar'
+    if (itemKey === 'session-reports') return 'reports:academics'
+    return 'admin:academic_sessions'
+  }
+  if (groupKey === 'classes-sections') {
+    if (itemKey === 'student-class-assignment') return 'students:classes'
+    if (itemKey === 'class-promotion-history' || itemKey === 'transfer-history' || itemKey === 'class-history') return 'students:history'
+    if (itemKey === 'class-teachers') return 'employees:assignments'
+    return 'admin:classes'
+  }
+  if (groupKey === 'subjects') {
+    if (itemKey === 'subject-syllabus' || itemKey === 'subject-combinations') return 'operations:curriculum:units'
+    if (itemKey === 'subject-performance' || itemKey === 'subject-wise-reports') return 'reports:academics'
+    return 'admin:subjects'
+  }
   if (groupKey === 'teaching') {
-    if (['homework', 'create-assignment', 'assignment-design-and-management', 'pending-assignments', 'assignment-history', 'assignment-reports'].includes(itemKey)) {
-      const view = itemKey === 'homework' ? 'open' : itemKey === 'pending-assignments' ? 'upcoming' : 'board'
-      return `assignments:${view}`
+    if (['teaching-dashboard','homework','create-assignment','assignment-design-and-management','assignment-history','assignment-reports'].includes(itemKey)) {
+      const view = itemKey === 'homework' ? 'open' : 'board'
+      return 'assignments:' + view
     }
-    if (['student-submissions', 'teacher-review', 'pending-reviews', 'marks-and-feedback'].includes(itemKey)) {
-      const view = itemKey === 'pending-reviews' ? 'awaiting' : 'inbox'
-      return `assignment_submissions:${view}`
+    if (itemKey === 'homework-calendar' || itemKey === 'pending-assignments') return 'assignments:upcoming'
+    if (['student-submissions','teacher-review','pending-reviews','marks-and-feedback'].includes(itemKey)) {
+      const view = itemKey === 'pending-reviews' ? 'awaiting' : itemKey === 'marks-and-feedback' ? 'graded' : 'inbox'
+      return 'assignment_submissions:' + view
     }
+    if (itemKey === 'teaching-materials' || itemKey === 'lesson-plans') return 'operations:curriculum:units'
+    if (itemKey === 'downloadable-attachments') return 'files'
   }
   if (groupKey === 'examinations' || groupKey === 'class-tests') {
-    if (['marks-entry', 'report-cards', 'results-publication', 'result-analysis'].includes(itemKey)) {
-      return `exam_results:${itemKey === 'results-publication' ? 'published' : 'all'}`
+    if (['marks-entry','marks-verification','result-processing','report-cards','merit-lists','result-publishing','result-corrections','test-results','performance-analysis','student-wise-test-history'].includes(itemKey)) {
+      const view = ['report-cards','merit-lists','result-publishing','test-results','performance-analysis'].includes(itemKey) ? 'published'
+        : ['marks-verification','result-processing','result-corrections'].includes(itemKey) ? 'review' : 'all'
+      return 'exam_results:' + view
     }
-    return `exams:${itemKey === 'upcoming-examinations' ? 'upcoming' : itemKey === 'completed-examinations' ? 'completed' : 'calendar'}`
+    if (itemKey.includes('report')) return 'reports:academics'
+    if (['examination-progress','examination-history','class-test-dashboard','test-schedule','online-tests','written-tests','test-questions'].includes(itemKey)) return 'exams:calendar'
+    return 'exams:' + (itemKey.includes('upcoming') ? 'upcoming' : itemKey.includes('completed') ? 'completed' : 'calendar')
   }
   if (groupKey === 'fees' || groupKey === 'receivables' || groupKey === 'payments' || groupKey === 'receipts') {
     const view = itemKey.includes('overdue') ? 'overdue'
@@ -277,11 +335,19 @@ function dedicatedRoute(groupKey: string, itemKey: string): string | undefined {
     return `fees:${view}`
   }
   if (groupKey === 'timetable') {
+    if (['timetable-dashboard','master-timetable','class-timetable','teacher-timetable','room-timetable','period-timetable'].includes(itemKey)) return 'timetable:week'
+    if (itemKey.includes('availability')) return 'timetable:teachers'
+    if (itemKey.includes('substitution') || itemKey.includes('coverage')) return 'timetable:unassigned'
+    if (itemKey.includes('conflict')) return 'timetable:conflicts'
+    if (itemKey.includes('history')) return 'timetable:history'
     const day = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'].find(value => itemKey.includes(value))
-    return `timetable:${day ?? (itemKey.includes('conflict') ? 'unassigned' : 'week')}`
+    return 'timetable:' + (day ?? 'week')
   }
-  if (groupKey === 'communication' && ['communication-dashboard', 'notification-centre', 'announcements', 'institution-bulletin'].includes(itemKey)) {
-    return `announcements:${itemKey.includes('notification') ? 'staff' : 'bulletin'}`
+  if (groupKey === 'communication') {
+    if (itemKey === 'communication-dashboard' || itemKey === 'notification-centre') return 'notifications'
+    if (itemKey.includes('assignment')) return 'announcements:staff'
+    if (['whatsapp-integration','individual-messages','bulk-messages','class-wise-messaging','employee-notifications','message-templates','email-notifications','delivery-history','communication-logs','communication-reports'].includes(itemKey)) return 'unavailable:communication:' + itemKey
+    return 'announcements:bulletin'
   }
   if (groupKey === 'reports') {
     const view = reportViews[itemKey]
@@ -291,9 +357,8 @@ function dedicatedRoute(groupKey: string, itemKey: string): string | undefined {
     if (itemKey === 'designations') return 'employees:designations'
     const adminKey = itemKey === 'academic-structure-and-sections' ? 'classes'
       : itemKey === 'departments' ? 'departments'
-      : itemKey === 'system-configuration' || itemKey === 'academic-configuration' ? 'academic_sessions'
-      : undefined
-    return adminKey ? `admin:${adminKey}` : undefined
+      : itemKey === 'system-configuration' || itemKey === 'academic-configuration' ? 'academic_sessions' : undefined
+    return adminKey ? 'admin:' + adminKey : undefined
   }
   return undefined
 }
