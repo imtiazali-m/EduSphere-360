@@ -356,6 +356,26 @@ check('Student, faculty and operational record tables support accessible sorting
   assert.ok(styles.includes('.ed360-sort-header:focus-visible'), 'Sortable table headings need a visible keyboard focus indicator')
 })
 
+check('Finance and payroll registers support searchable sortable pagination', () => {
+  const finance = read('src/components/FinanceWorkspace.tsx')
+  const financeStyles = read('src/styles/finance-workspace.css')
+  for (const value of ['invoiceSortKey', 'paymentSortKey', 'sortedFinanceRows', 'financeSortHeader', 'pageControls', 'ordered.length', 'setInvoicePage(1)', 'setPaymentPage(1)']) {
+    assert.ok(finance.includes(value), 'Finance register interaction is missing: ' + value)
+  }
+  assert.ok(finance.includes("financeSortHeader('Balance','balance'"), 'Invoice balance must be sortable')
+  assert.ok(finance.includes("financeSortHeader('Invoice','invoice'"), 'Payment register must retain and sort its invoice context')
+  assert.ok(financeStyles.includes('.fin-sort-header:focus-visible') && financeStyles.includes('.fin-table-pagination'), 'Finance controls need accessible responsive styling')
+  const payroll = read('src/components/PayrollWorkspace.tsx')
+  const payrollStyles = read('src/styles/payroll-workspace.css')
+  for (const value of ['salarySearch', 'salaryPageRows', 'payslipPageRows', 'toggleSalarySort', 'togglePayslipSort', 'payrollSortHeader', 'payrollPageControls']) {
+    assert.ok(payroll.includes(value), 'Payroll register interaction is missing: ' + value)
+  }
+  assert.ok(payroll.includes('Search employees') && payroll.includes('Search payslips'), 'Payroll and payslip registers must be independently searchable')
+  assert.ok(payrollStyles.includes('.payroll-sort-header:focus-visible') && payrollStyles.includes('.payroll-table-pagination'), 'Payroll controls need accessible responsive styling')
+  const accounts = read('src/components/AccountsModule.tsx')
+  assert.ok(accounts.includes('sortedAccounts') && accounts.includes('toggleSort') && accounts.includes('aria-sort='), 'Account directory must provide accessible sorting')
+})
+
 check('Private file controls match institution storage permissions', () => {
   assert.equal(packageJson.scripts['test:file-access'], 'node scripts/test-file-access.mjs')
   const files = read('src/components/FilesModule.tsx')
