@@ -21,7 +21,7 @@ import { operationalWorkspaceConfigs } from '../lib/operationalWorkspaceViews'
 interface Props { module: ModuleConfig; onToast: (message: string, error?: boolean) => void; initialWindow?: string; showWindowNavigation?: boolean }
 type StudentStatus = 'all' | 'active' | 'pending' | 'graduated' | 'inactive'
 type EmployeeStatus = 'all' | 'active' | 'on_leave' | 'inactive'
-type StudentWorkspaceTab = 'overview' | 'admissions' | 'directory' | 'profile' | 'classes' | 'guardians' | 'attendance' | 'results' | 'assignments' | 'timetable' | 'documents' | 'history'
+type StudentWorkspaceTab = 'overview' | 'admissions' | 'directory' | 'profile' | 'id-cards' | 'classes' | 'guardians' | 'attendance' | 'results' | 'assignments' | 'timetable' | 'documents' | 'history'
 const studentRelatedTables = ['attendance', 'exams', 'exam_results', 'assignments', 'assignment_submissions', 'timetable_entries', 'classes', 'academic_sessions', 'programs', 'guardian_students', 'parent_guardians', 'student_placements', 'student_documents', 'student_history'] as const
 
 function makeEmployeeNumber() {
@@ -828,6 +828,7 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
       { key: 'admissions' as const, label: 'Admissions', icon: GraduationCap, count: studentCounts.pending },
       { key: 'directory' as const, label: 'Student Directory', icon: Users, count: studentCounts.total },
       { key: 'profile' as const, label: 'Student Profile', icon: UserRound },
+      { key: 'id-cards' as const, label: 'Student ID Cards', icon: Printer },
       { key: 'classes' as const, label: 'Class Placement', icon: BookOpen },
       { key: 'guardians' as const, label: 'Guardians', icon: HeartHandshake },
       { key: 'attendance' as const, label: 'Student Attendance', icon: CalendarCheck },
@@ -840,8 +841,8 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
     const ownerOrAdmin = ['owner', 'admin'].includes(user!.role)
     const visibleTabItems = tabItems.filter(item => {
       if (ownerOrAdmin) return true
-      if (user!.role === 'teacher') return ['overview', 'directory', 'profile', 'classes', 'attendance', 'results', 'assignments', 'timetable', 'history'].includes(item.key)
-      return ['overview', 'profile', 'classes', 'guardians', 'attendance', 'results', 'assignments', 'timetable', 'documents', 'history'].includes(item.key)
+      if (user!.role === 'teacher') return ['overview', 'directory', 'profile', 'id-cards', 'classes', 'attendance', 'results', 'assignments', 'timetable', 'history'].includes(item.key)
+      return ['overview', 'profile', 'id-cards', 'classes', 'guardians', 'attendance', 'results', 'assignments', 'timetable', 'documents', 'history'].includes(item.key)
     })
     const pendingRows = rows.filter(row => ['draft','submitted','under_review','documents_required','approved'].includes(String(row.application_status ?? 'submitted').toLowerCase()))
     const presentCount = studentAttendanceRows.filter(row => ['present', 'late'].includes(String(row.status ?? '').toLowerCase())).length
@@ -1238,6 +1239,15 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
         </> : <div className="ed360-student-empty"><strong>No student selected</strong><p>Register or select a student from the directory to open a profile.</p></div>}
       </section>}
 
+      {studentWorkspaceTab === 'id-cards' && <section className="ed360-student-panel ed360-student-full-panel ed360-id-card-workspace">
+        <header><div><span className="ed360-student-panel-icon"><Printer size={17}/></span><div><h2>Student identity card</h2><p>Print a card using the selected student's verified admission record. It does not create a new account or change admission data.</p></div></div>{selectedStudent&&<button type="button" className="button button-primary" onClick={() => window.print()}><Printer size={15}/> Print ID card</button>}</header>
+        {selectedStudent ? <div className="ed360-student-id-card">
+          <div className="ed360-student-id-card-brand"><div><strong>{user?.institutionName ?? 'EduSphere 360 Institution'}</strong><small>STUDENT IDENTITY CARD</small></div><span>EDU</span></div>
+          <div className="ed360-student-id-card-body"><StudentPhoto row={selectedStudent}/><div><strong>{String(selectedStudent.full_name ?? 'Student')}</strong><small>Admission No. {String(selectedStudent.admission_no ?? '—')}</small><small>Class / programme: {String(activeStudentClass?.name ?? selectedStudent.class_name ?? 'Not assigned')}</small><small>Academic session: {String(activeStudentSession?.name ?? 'Not assigned')}</small><small>Status: {statusLabel(selectedStudent.status)}</small></div></div>
+          <div className="ed360-student-id-card-footer"><span>Issued from institution student records</span><b>{String(selectedStudent.id).slice(0,8).toUpperCase()}</b></div>
+        </div> : <div className="ed360-student-empty"><strong>No student selected</strong><p>Select a student record before printing an ID card.</p></div>}
+        <p className="ed360-student-id-card-note">Check the student name, photograph and admission number before printing. The selected record remains the source of truth.</p>
+      </section>}
       {studentWorkspaceTab === 'classes' && <div className="ed360-student-overview-grid">
         <section className="ed360-student-panel">
           <header><div><span className="ed360-student-panel-icon"><BookOpen size={17}/></span><div><h2>Current class placement</h2><p>Placement is linked to a configured class and academic session.</p></div></div></header>
