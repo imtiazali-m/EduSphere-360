@@ -346,3 +346,36 @@
   .ed360-attendance-history-list>div{grid-template-columns:1fr auto}
   .ed360-attendance-history-list>div>small{grid-column:1 / -1}
 }
+
+
+/* Per-row action menus keep secondary operations together without removing
+   any role-authorised action from the underlying record workspace. */
+.ed360-row-action-menu{position:relative;display:inline-block;min-width:34px;text-align:left}
+.ed360-row-action-menu>summary{
+  width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;gap:5px;
+  padding:0 7px;border:1px solid #e0e7ef;border-radius:8px;
+  color:#52657a;background:#fff;cursor:pointer;list-style:none;
+}
+.ed360-row-action-menu>summary::-webkit-details-marker{display:none}
+.ed360-row-action-menu>summary::marker{content:''}
+.ed360-row-action-menu>summary span{font-size:9px;font-weight:750}
+.ed360-row-action-menu>summary:hover,
+.ed360-row-action-menu[open]>summary{border-color:#a9c4e2;color:#245eaa;background:#f5f9fe}
+.ed360-row-action-menu>div{
+  position:absolute;z-index:55;right:0;top:calc(100% + 5px);
+  min-width:158px;display:grid;gap:3px;padding:6px;
+  border:1px solid #e3e9f1;border-radius:10px;background:#fff;
+  box-shadow:0 12px 28px rgba(31,52,79,.16);
+}
+.ed360-row-action-menu>div>button{
+  width:100%;min-height:34px;display:flex;align-items:center;gap:8px;
+  padding:7px 9px;border:0;border-radius:7px;text-align:left;
+  color:#40546b;background:transparent;font-size:10px;font-weight:650;white-space:nowrap;
+}
+.ed360-row-action-menu>div>button:hover{background:#f1f6fb;color:#245eaa}
+.ed360-row-action-menu>div>button.danger-icon{color:#b64845}
+.ed360-row-action-menu>div>button.danger-icon:hover{background:#fff1ef;color:#a63e3b}
+.ed360-row-action-menu>summary:focus-visible,
+.ed360-row-action-menu>div>button:focus-visible{
+  outline:2px solid #7da8df;outline-offset:2px;
+}
