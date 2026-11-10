@@ -220,12 +220,12 @@ const institutionalOperationsItems: Record<string, Record<string,string>> = {
     'question-bank-dashboard':'pool','multiple-choice-questions':'pool','short-questions':'pool',
     'long-questions':'pool','subject-wise-questions':'pool','chapter-wise-questions':'pool',
     'difficulty-levels':'pool','question-categories':'pool','question-builder':'pool',
-    'question-paper-designer':'papers','marks-distribution':'papers','random-question-selection':'papers',
+    'question-paper-designer':'papers','paper-templates':'papers','marks-distribution':'papers','random-question-selection':'papers',
     'question-review':'pool','question-paper-download':'papers',
   },
   curriculum: {
     'curriculum-dashboard':'units','curriculum-map':'units','syllabus-management':'units',
-    'learning-outcomes':'units','lesson-plans':'units','subject-wise-curriculum':'coverage',
+    'learning-outcomes':'units','lesson-plans':'units','subject-wise-curriculum':'coverage','curriculum-reports':'coverage',
     'curriculum-coverage':'coverage',
   },
   behaviour: {
@@ -381,6 +381,11 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
   if (groupKey === 'ai' || groupKey === 'backup') {
     return 'unavailable:' + groupKey + ':' + itemKey
   }
+  if (groupKey === 'students' && itemKey === 'student-data-export' && role && !['owner','admin'].includes(role)) {
+    return 'unavailable:students:student-data-export'
+  }
+  if (groupKey === 'attendance' && itemKey === 'attendance-analytics') return 'reports:attendance'
+  if (groupKey === 'attendance' && itemKey === 'attendance-alerts') return 'unavailable:attendance:attendance-alerts'
   if (groupKey === 'reports' && ['custom-report-builder','scheduled-reports','report-templates','report-history'].includes(itemKey)) return 'unavailable:reports:' + itemKey
   if (groupKey === 'question-bank' && ['question-bank-import-and-export','question-paper-version-history'].includes(itemKey)) return 'unavailable:question-bank:' + itemKey
   if (groupKey === 'curriculum' && ['teaching-resources','learning-materials','resource-downloads','chapter-wise-learning-resources','learning-progress-tracking'].includes(itemKey)) return 'unavailable:curriculum:' + itemKey
