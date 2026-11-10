@@ -133,38 +133,35 @@ export function FinanceWorkspace({workspaceKey,initialWindow,onToast}:Props){
       const invoiceRows=await listRecords(mode,user!,'fee_invoices') as FinanceRow[]
       setInvoices(invoiceRows)
       if(!supabase)throw new Error('The cloud database is not configured.')
-      const paymentResult=await supabase.from('fee_payments').select('*').eq('institution_id',user!.institutionId).order('payment_date',{ascending:false}).limit(1000)
-      if(paymentResult.error)throw paymentResult.error
-      setPayments((paymentResult.data??[]) as FinanceRow[])
+      const paymentRows=await listRecords(mode,user!,'fee_payments') as FinanceRow[]
+      setPayments(paymentRows)
       if(financeRole){
-        const [studentRows,structureResult,itemResult,discountResult,applicationResult,refundResult,auditResult]=await Promise.all([
+        const [studentRows,structureRows,structureItemRows,discountRows,applicationRows,refundRows,auditRows]=await Promise.all([
           listRecords(mode,user!,'students') as Promise<FinanceRow[]>,
-          supabase.from('fee_structures').select('*').eq('institution_id',user!.institutionId).order('created_at',{ascending:false}).limit(500),
-          supabase.from('fee_structure_items').select('*').eq('institution_id',user!.institutionId).order('created_at',{ascending:false}).limit(1000),
-          supabase.from('fee_discounts').select('*').eq('institution_id',user!.institutionId).order('created_at',{ascending:false}).limit(500),
-          supabase.from('fee_discount_applications').select('*').eq('institution_id',user!.institutionId).order('created_at',{ascending:false}).limit(1000),
-          supabase.from('fee_refunds').select('*').eq('institution_id',user!.institutionId).order('created_at',{ascending:false}).limit(500),
-          supabase.from('fee_audit_logs').select('*').eq('institution_id',user!.institutionId).order('created_at',{ascending:false}).limit(500),
+          listRecords(mode,user!,'fee_structures') as Promise<FinanceRow[]>,
+          listRecords(mode,user!,'fee_structure_items') as Promise<FinanceRow[]>,
+          listRecords(mode,user!,'fee_discounts') as Promise<FinanceRow[]>,
+          listRecords(mode,user!,'fee_discount_applications') as Promise<FinanceRow[]>,
+          listRecords(mode,user!,'fee_refunds') as Promise<FinanceRow[]>,
+          listRecords(mode,user!,'fee_audit_logs') as Promise<FinanceRow[]>,
         ])
-        for(const result of [structureResult,itemResult,discountResult,applicationResult,refundResult,auditResult])if(result.error)throw result.error
         setStudents(studentRows)
-        setStructures((structureResult.data??[]) as FinanceRow[])
-        setStructureItems((itemResult.data??[]) as FinanceRow[])
-        setDiscounts((discountResult.data??[]) as FinanceRow[])
-        setDiscountApplications((applicationResult.data??[]) as FinanceRow[])
-        setRefunds((refundResult.data??[]) as FinanceRow[])
-        setFeeAudit((auditResult.data??[]) as FinanceRow[])
+        setStructures(structureRows)
+        setStructureItems(structureItemRows)
+        setDiscounts(discountRows)
+        setDiscountApplications(applicationRows)
+        setRefunds(refundRows)
+        setFeeAudit(auditRows)
       }
       if(['accounts-finance','reconciliation'].includes(groupKey)){
-        const [accountResult,journalResult,lineResult]=await Promise.all([
-          supabase.from('finance_accounts').select('*').eq('institution_id',user!.institutionId).order('account_code'),
-          supabase.from('finance_journals').select('*').eq('institution_id',user!.institutionId).order('journal_date',{ascending:false}).limit(500),
-          supabase.from('finance_journal_lines').select('*').eq('institution_id',user!.institutionId).order('created_at',{ascending:false}).limit(2000),
+        const [accountRows,journalRows,journalLineRows]=await Promise.all([
+          listRecords(mode,user!,'finance_accounts') as Promise<FinanceRow[]>,
+          listRecords(mode,user!,'finance_journals') as Promise<FinanceRow[]>,
+          listRecords(mode,user!,'finance_journal_lines') as Promise<FinanceRow[]>,
         ])
-        for(const result of [accountResult,journalResult,lineResult])if(result.error)throw result.error
-        setAccounts((accountResult.data??[]) as FinanceRow[])
-        setJournals((journalResult.data??[]) as FinanceRow[])
-        setJournalLines((lineResult.data??[]) as FinanceRow[])
+        setAccounts(accountRows)
+        setJournals(journalRows)
+        setJournalLines(journalLineRows)
       }
     }catch(err){
       const message=userFacingError(err,'Finance records could not be loaded. Check institution access and refresh.')
