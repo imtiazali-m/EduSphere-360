@@ -11,6 +11,7 @@ const linkedRoutes = new Set([
   'library:book-issue-and-returns','library:digital-library','library:book-management','library:book-catalogue','library:book-categories','library:book-registration','library:reading-records','library:reading-cards','library:student-reading-history','library:learning-materials','library:resource-downloads','library:library-reports',
   'inventory:items-management','inventory:item-catalogue','inventory:item-categories','inventory:suppliers','inventory:purchase-records','inventory:stock-in','inventory:stock-out','inventory:stock-allocation','inventory:stock-adjustments','inventory:inventory-history','inventory:stock-reports',
   'transport:vehicle-management','transport:drivers-management','transport:transport-routes','transport:route-stops','transport:student-transport-allocation','transport:transport-fees','transport:transport-assignments','transport:vehicle-maintenance','transport:transport-attendance','transport:transport-history','transport:transport-reports',
+
 ])
 
 const dashboardViews: Record<string, string> = {
@@ -351,6 +352,7 @@ function dedicatedRoute(groupKey: string, itemKey: string): string | undefined {
   }
   if (groupKey === 'reports') {
     const view = reportViews[itemKey]
+    if (view === 'employees') return 'employees:reports'
     return view ? `reports:${view}` : undefined
   }
   if (groupKey === 'administration') {
