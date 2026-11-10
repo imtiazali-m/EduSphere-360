@@ -3,13 +3,13 @@
 **Audit date:** 10 November 2026  
 **Repository:** `imtiazali-m/EduSphere-360`  
 **Branch:** `work/accelerated-12-phase-start-20261110`  
-**Source basis:** `institutionalCatalog.ts` and `navigationCatalog.ts`
+**Source basis:** `src/lib/institutionalCatalog.ts` and `src/lib/navigationCatalog.ts`
 
 ## What this inventory proves — and what it does not
 
-This appendix is generated from the menu definitions and source-level role item filters. It lists every catalogue destination and the roles allowed to see it in the navigation model. The inventory contains **33 top-level groups and 430 submenu entries**.
+This appendix is generated from the actual menu definitions, each group's declared role set, individual role item allow-lists, and dashboard role exclusions. It lists every catalogue destination and the roles allowed to see it in the current source navigation model. The inventory contains **33 top-level groups and 430 submenu entries**.
 
-A visible menu entry or a value in the route index is **not** evidence that its complete workflow is implemented, that its API is authorized, or that records persist. Items listed as **Explicitly unavailable** are deliberately routed to the unavailable-workspace experience in the inspected source map. The remaining items are marked **Workflow acceptance pending**; they require destination-by-destination resolver, permission, data-lifecycle and browser testing. Any additional unavailable fallback discovered during resolver execution must be added to the gap register rather than assumed to work.
+A visible menu entry or a value in the route index is **not** evidence that its complete workflow is implemented, that its API is authorized, or that records persist. Items listed as **Explicitly unavailable** are deliberately routed to the unavailable-workspace experience in the inspected resolver. Other items are marked **Workflow acceptance pending**; they require destination-by-destination resolver, permission, data-lifecycle and browser testing.
 
 ## Role labels
 
@@ -27,36 +27,36 @@ A visible menu entry or a value in the route index is **not** evidence that its 
 |---|---:|---:|
 | Owner | 33 | 430 |
 | Administrator | 33 | 430 |
-| Teacher / employee | 18 | 205 |
-| Student | 15 | 151 |
-| Parent / guardian | 15 | 144 |
-| Accountant | 12 | 137 |
-| Examination officer | 7 | 93 |
+| Teacher / employee | 18 | 203 |
+| Student | 15 | 146 |
+| Parent / guardian | 15 | 139 |
+| Accountant | 12 | 132 |
+| Examination officer | 7 | 89 |
 
 ## Full destination inventory
 
 ### 1. Dashboard (`dashboard`)
 
 **Role visibility:** Owner, Administrator, Teacher / employee, Student, Parent / guardian, Accountant, Examination officer  
-**Visible item counts:** Owner 15 · Administrator 15 · Teacher / employee 15 · Student 15 · Parent / guardian 15 · Accountant 15 · Examination officer 15
+**Visible item counts:** Owner 15 · Administrator 15 · Teacher / employee 13 · Student 10 · Parent / guardian 10 · Accountant 10 · Examination officer 11
 
 | # | Submenu destination | Visible roles | Source audit status |
 |---:|---|---|---|
 | 1 | Institutional Overview | Owner, Administrator, Teacher / employee, Student, Parent / guardian, Accountant, Examination officer | Workflow acceptance pending |
 | 2 | Academic Overview | Owner, Administrator, Teacher / employee, Student, Parent / guardian, Accountant, Examination officer | Workflow acceptance pending |
-| 3 | Financial Overview | Owner, Administrator, Teacher / employee, Student, Parent / guardian, Accountant, Examination officer | Workflow acceptance pending |
-| 4 | Attendance Overview | Owner, Administrator, Teacher / employee, Student, Parent / guardian, Accountant, Examination officer | Workflow acceptance pending |
+| 3 | Financial Overview | Owner, Administrator, Student, Parent / guardian, Accountant | Workflow acceptance pending |
+| 4 | Attendance Overview | Owner, Administrator, Teacher / employee, Student, Parent / guardian, Examination officer | Workflow acceptance pending |
 | 5 | Student Performance | Owner, Administrator, Teacher / employee, Student, Parent / guardian, Accountant, Examination officer | Workflow acceptance pending |
-| 6 | Student Behaviour | Owner, Administrator, Teacher / employee, Student, Parent / guardian, Accountant, Examination officer | Role-specific route guard; verify by role |
-| 7 | Employee Performance | Owner, Administrator, Teacher / employee, Student, Parent / guardian, Accountant, Examination officer | Explicitly unavailable |
+| 6 | Student Behaviour | Owner, Administrator, Teacher / employee, Examination officer | Role-specific route guard; verify by role |
+| 7 | Employee Performance | Owner, Administrator, Teacher / employee | Explicitly unavailable |
 | 8 | Statistics and KPI Cards | Owner, Administrator, Teacher / employee, Student, Parent / guardian, Accountant, Examination officer | Workflow acceptance pending |
 | 9 | Charts and Comparative Analytics | Owner, Administrator, Teacher / employee, Student, Parent / guardian, Accountant, Examination officer | Workflow acceptance pending |
 | 10 | Calendar and Events | Owner, Administrator, Teacher / employee, Student, Parent / guardian, Accountant, Examination officer | Explicitly unavailable |
 | 11 | Notification Centre | Owner, Administrator, Teacher / employee, Student, Parent / guardian, Accountant, Examination officer | Workflow acceptance pending |
-| 12 | Tasks and Reminders | Owner, Administrator, Teacher / employee, Student, Parent / guardian, Accountant, Examination officer | Workflow acceptance pending |
-| 13 | Pending Approvals | Owner, Administrator, Teacher / employee, Student, Parent / guardian, Accountant, Examination officer | Workflow acceptance pending |
+| 12 | Tasks and Reminders | Owner, Administrator, Teacher / employee, Accountant, Examination officer | Workflow acceptance pending |
+| 13 | Pending Approvals | Owner, Administrator, Teacher / employee | Workflow acceptance pending |
 | 14 | Recent Activities | Owner, Administrator, Teacher / employee, Student, Parent / guardian, Accountant, Examination officer | Workflow acceptance pending |
-| 15 | Institutional Alerts | Owner, Administrator, Teacher / employee, Student, Parent / guardian, Accountant, Examination officer | Workflow acceptance pending |
+| 15 | Institutional Alerts | Owner, Administrator | Workflow acceptance pending |
 
 ### 2. AI Intelligence (`ai`)
 
@@ -731,19 +731,18 @@ A visible menu entry or a value in the route index is **not** evidence that its 
 
 ## Route and acceptance notes
 
-1. The route resolver uses the composite `groupKey:itemSlug` as the authoritative route key to avoid same-label collisions between groups.
-2. The role filter is applied at the menu-group and, for selected groups, individual submenu levels. Dashboard menu items also have per-role hidden lists.
-3. The unavailable status list here reproduces the explicit unavailable route cases recorded in the Phase 1 gap review. A route that is not on this list is **not** thereby certified; it must pass resolver and workflow tests.
-4. Every visible menu entry still requires a direct-link authorization check and a complete lifecycle test against real, tenant-scoped Supabase records.
-5. Owner/Admin/Teacher/Student/Parent/Accountant/Examination Officer views must be checked independently. UI filtering is not a substitute for RLS.
+1. Composite `groupKey:itemSlug` is the authoritative route index key; this avoids collisions where menu groups reuse labels.
+2. Menu visibility applies a group's declared roles, individual role allow-lists in selected groups, and role-specific dashboard exclusions.
+3. Explicitly unavailable destinations are identified from resolver conditions. An item not labelled unavailable here is **not** certified as complete; it must pass an exact route-resolver test.
+4. Some role-specific route guards may further restrict a destination even where a menu item is visible. Direct-link and API tests are required for each role.
+5. Owner, Administrator, Teacher, Student, Parent, Accountant and Examination Officer views must be validated independently. UI filtering is not a substitute for RLS.
 
 ## Phase 1 acceptance checklist
 
 - [ ] Execute the exact resolver for every role-visible group/item pair and record the resulting route string.
-- [ ] Open every role-visible destination and identify dedicated, generic, linked, unavailable or broken-workspace dispatch.
+- [ ] Open every role-visible destination and identify dedicated, generic, linked, unavailable or broken workspace dispatch.
 - [ ] Verify each direct URL and API call with allowed and denied roles.
 - [ ] Confirm parent-to-student relationship scoping and prevent unrelated family access.
 - [ ] Confirm tenant isolation for all record operations, exports and private files.
 - [ ] Test create/read/update/delete or lifecycle-specific actions with refresh persistence.
 - [ ] Record the evidence and unresolved issue for each destination before any module is called production-ready.
-
