@@ -127,7 +127,11 @@ Read-only baseline recorded before the current design work:
 | Responsive and accessibility | Check desktop/tablet/mobile, keyboard navigation, focus visibility, labels, empty/loading/error states and readable data tables |
 | External integrations | Use test credentials and provider-confirmed delivery; never display “connected” based only on a saved configuration |
 
-## 7. Phase 1 disposition
+## 7. Complete role menu appendix
+
+The detailed destination appendix is recorded in `docs/PHASE_1_ROLE_MENU_INVENTORY.md`. It lists all 430 submenu labels, declared group roles, individual role allow-lists, dashboard role exclusions, and explicit unavailable route families. It computes source-level menu visibility for each role: Owner 430; Administrator 430; Teacher/employee 203; Student 146; Parent/guardian 139; Accountant 132; Examination Officer 89. These are navigation visibility counts, not counts of working features. Every route still needs exact resolver execution and workflow acceptance.
+
+## 8. Phase 1 disposition
 
 **Static source and route audit: documented.** The 33-group catalogue, seven-role filtering approach, route dispatch, explicit unavailable destinations, core workspace inventory and known cloud risks have been recorded.
 
