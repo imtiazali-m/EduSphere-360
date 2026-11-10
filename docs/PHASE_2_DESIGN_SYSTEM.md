@@ -110,5 +110,7 @@ Acceptance requires:
 
 - Static source review completed for the design cascade and application shell.
 - Unified CSS token layer and first pass are being added on the working branch.
-- Visual browser review and screenshot-based acceptance remain pending.
+- GitHub Actions run `42875451852` passed source verification, user-error, finance and private-file tests, the production Vite build, Cloudflare output validation and both build-artifact uploads.
+- Visual browser review and screenshot-based acceptance remain pending. The Vercel deployment-detail page requires sign-in, so an anonymous preview URL and visual Ready state could not be confirmed.
+- No Cloudflare production deployment was made.
 - No production Cloudflare deployment or Supabase change is included in Phase 2.
