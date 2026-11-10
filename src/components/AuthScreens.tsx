@@ -333,6 +333,24 @@ export function WelcomeScreen({ navigate }: ScreenProps) {
 
         
 
+
+        <section className="edm-faq-section edm-section" id="faq" aria-labelledby="edm-faq-heading">
+          <div className="edm-faq-layout">
+            <div className="edm-faq-intro">
+              <span className="edm-section-kicker">GOOD TO KNOW</span>
+              <h2 id="edm-faq-heading">Questions before<br/><em>you get started?</em></h2>
+              <p>Here are the practical details about the currently available cloud edition and its workflows.</p>
+              <button type="button" className="edm-showcase-cta" onClick={() => go('setup')}>Create your institution <ArrowUpRight size={16}/></button>
+            </div>
+            <div className="edm-faq-list">
+              {welcomeFaqs.map((item,index) => <article className={'edm-faq-item ' + (openFaq === index ? 'open' : '')} key={item.question}>
+                <h3><button type="button" aria-expanded={openFaq === index} aria-controls={'edm-faq-answer-' + index} onClick={() => setOpenFaq(current => current === index ? null : index)}><span>{item.question}</span><i>{openFaq === index ? '−' : '+'}</i></button></h3>
+                <div className="edm-faq-answer" id={'edm-faq-answer-' + index} hidden={openFaq !== index}><p>{item.answer}</p></div>
+              </article>)}
+            </div>
+          </div>
+        </section>
+
         <section className="edm-final-cta" id="get-started"><div className="edm-cta-glow"/><div><span className="edm-section-kicker">YOUR NEXT CHAPTER STARTS HERE</span><h2>Ready to transform<br/><em>your institution?</em></h2><p>Bring your people, processes and progress together with EduSphere 360.</p></div><div className="edm-cta-actions"><button className="edm-button edm-button-lime" onClick={() => go('setup')}>Get started today <ArrowUpRight size={18}/></button><button className="edm-cta-login" onClick={() => go('login')}>Already have an account? Login <ArrowRight size={15}/></button></div></section>
       </main>
 
