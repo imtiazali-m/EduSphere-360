@@ -14,3 +14,23 @@
 .gov-modal{width:min(560px,calc(100vw - 28px));max-height:90vh;overflow:auto;border-radius:18px}.gov-modal .modal-heading{display:flex;justify-content:space-between;gap:12px;margin-bottom:18px}.gov-modal .modal-heading h2{margin:5px 0;font-size:20px}.gov-modal .modal-heading p{margin:0;color:#7b897f;font-size:11px;line-height:1.5}.gov-modal .eyebrow{color:#7a927f;font-size:9px;font-weight:850;letter-spacing:1px}.gov-form{display:flex;flex-direction:column;gap:13px}.gov-form label{display:flex;flex-direction:column;gap:6px;color:#6c7a70;font-size:10px;font-weight:750}.gov-form .gov-check{flex-direction:row;align-items:center}.gov-form .gov-check input{width:16px;min-height:16px}.gov-modal .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:5px}
 @media(max-width:980px){.gov-stage{padding:20px 17px 32px}.gov-shortcuts{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:620px){.gov-stage{padding:16px 12px 26px;gap:13px}.gov-heading{align-items:flex-start;flex-direction:column}.gov-heading h1{font-size:26px}.gov-context{padding:15px;align-items:flex-start}.gov-panel{padding:14px}.gov-panel>header{flex-direction:column}.gov-profile-grid{grid-template-columns:1fr}.gov-shortcuts{grid-template-columns:1fr}.gov-footer{align-items:flex-start;flex-direction:column}.gov-timeline details>div{grid-template-columns:1fr}}
+
+
+.gov-sort-header{
+  display:inline-flex;align-items:center;gap:6px;max-width:100%;
+  padding:2px 0;border:0;color:inherit;background:transparent;
+  font:inherit;font-weight:inherit;text-align:left;white-space:nowrap;
+}
+.gov-sort-header:hover{color:#245fae}
+.gov-sort-header:focus-visible{outline:2px solid #7da8df;outline-offset:3px;border-radius:3px}
+.gov-sort-header span{color:#8a99ad;font-size:10px;font-weight:900}
+.gov-pagination{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:12px 2px 2px;color:#7c8ca0;font-size:10px;
+}
+.gov-pagination>div{display:flex;align-items:center;gap:9px}
+.gov-pagination>div>span{color:#8b99ac;font-size:9px}
+@media(max-width:620px){
+  .gov-pagination{align-items:flex-start;flex-direction:column}
+  .gov-pagination>div{width:100%;justify-content:space-between}
+}
