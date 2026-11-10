@@ -416,6 +416,8 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
   const [historyTarget, setHistoryTarget] = useState<RecordRow | null>(null)
   const [viewing, setViewing] = useState<RecordRow | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
+  const [sortKey, setSortKey] = useState('')
+  const [sortDirection, setSortDirection] = useState<'asc'|'desc'>('asc')
   const pageSize = 10
   const [studentStatus, setStudentStatus] = useState<StudentStatus>('all')
   const [studentWorkspaceTab, setStudentWorkspaceTab] = useState<StudentWorkspaceTab>(() => (initialWindow as StudentWorkspaceTab | undefined) ?? 'overview')
@@ -522,7 +524,22 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
       ? timetableConflictIds.has(row.id)
       : activeOperationalView.matches(row)))
   ), [rows, search, module, activeOperationalView, timetableConflictIds])
-  const studentFiltered = useMemo(() => filtered.filter(row => studentStatus === 'all' || String(row.status ?? 'active').toLowerCase() === studentStatus), [filtered, studentStatus])
+  const orderedFiltered = useMemo(() => {
+    if (!sortKey) return filtered
+    return [...filtered].sort((left, right) => {
+      const a = left[sortKey]
+      const b = right[sortKey]
+      const aEmpty = a === null || a === undefined || a === ''
+      const bEmpty = b === null || b === undefined || b === ''
+      if (aEmpty || bEmpty) return aEmpty === bEmpty ? 0 : aEmpty ? 1 : -1
+      const aNumber = Number(a)
+      const bNumber = Number(b)
+      const numeric = String(a).trim() !== '' && String(b).trim() !== '' && Number.isFinite(aNumber) && Number.isFinite(bNumber)
+      const comparison = numeric ? aNumber - bNumber : String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' })
+      return sortDirection === 'asc' ? comparison : -comparison
+    })
+  }, [filtered, sortKey, sortDirection])
+  const studentFiltered = useMemo(() => orderedFiltered.filter(row => studentStatus === 'all' || String(row.status ?? 'active').toLowerCase() === studentStatus), [orderedFiltered, studentStatus])
   const studentCounts = useMemo(() => ({
     total: rows.length,
     active: rows.filter(row => String(row.status ?? 'active').toLowerCase() === 'active').length,
@@ -571,13 +588,23 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
     onLeave: rows.filter(row => String(row.employment_status ?? '').toLowerCase() === 'on_leave').length,
     departments: new Set(rows.map(row => String(row.department ?? '').trim()).filter(Boolean)).size,
   }), [rows])
-  const teacherFiltered = useMemo(() => filtered.filter(row => employeeStatus === 'all' || String(row.employment_status ?? 'active').toLowerCase() === employeeStatus), [filtered, employeeStatus])
+  const teacherFiltered = useMemo(() => orderedFiltered.filter(row => employeeStatus === 'all' || String(row.employment_status ?? 'active').toLowerCase() === employeeStatus), [orderedFiltered, employeeStatus])
   const studentPageCount = Math.max(1, Math.ceil(studentFiltered.length / pageSize))
   const teacherPageCount = Math.max(1, Math.ceil(teacherFiltered.length / pageSize))
   const filteredPageCount = Math.max(1, Math.ceil(filtered.length / pageSize))
   const studentPageRows = studentFiltered.slice((currentPage - 1) * pageSize, currentPage * pageSize)
   const teacherPageRows = teacherFiltered.slice((currentPage - 1) * pageSize, currentPage * pageSize)
-  const filteredPageRows = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize)
+  const filteredPageRows = orderedFiltered.slice((currentPage - 1) * pageSize, currentPage * pageSize)
+
+  function toggleSort(key: string) {
+    if (sortKey === key) setSortDirection(direction => direction === 'asc' ? 'desc' : 'asc')
+    else { setSortKey(key); setSortDirection('asc') }
+    setCurrentPage(1)
+  }
+
+  function sortMark(key: string) {
+    return sortKey === key ? (sortDirection === 'asc' ? '↑' : '↓') : '↕'
+  }
 
   async function save(values: Record<string, unknown>) {
     setSaving(true)
