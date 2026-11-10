@@ -60,7 +60,7 @@ const employeeViews: Record<string, string> = {
   'workload-allocation': 'workload',
   'employee-documentation': 'documents',
   'employee-id-cards': 'id-cards',
-  'employee-id-cards': 'documents',
+  'employee-id-cards': 'id-cards',
   'employee-history': 'history',
   'employee-performance': 'reports',
   'employee-attendance': 'attendance',
