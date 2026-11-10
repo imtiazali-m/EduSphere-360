@@ -295,3 +295,15 @@
   .ed360-student-id-card-note,.ed360-student-panel header,.ed360-student-window-nav,.ed360-student-window-context,.ed360-student-data-note{display:none!important}
   @page{size:85.6mm 54mm;margin:0}
 }
+
+/* Keyboard-accessible sortable table headings shared by student, faculty
+   and operational record directories. */
+.ed360-sort-header{
+  display:inline-flex;align-items:center;gap:6px;max-width:100%;
+  padding:2px 0;border:0;color:inherit;background:transparent;
+  font:inherit;font-weight:inherit;text-align:left;white-space:nowrap;
+}
+.ed360-sort-header:hover{color:#245fb8}
+.ed360-sort-header:focus-visible{outline:2px solid #78a7ea;outline-offset:3px;border-radius:3px}
+.ed360-sort-header span{color:#8b9bb0;font-size:10px;font-weight:900}
+.ed360-sort-header:hover span{color:#286bd0}
