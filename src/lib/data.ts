@@ -140,13 +140,28 @@ export async function listRecords(mode: AppMode, user: AppUser, table: string): 
   requireInstitution(user)
 
   if (!supabase) throw new Error('Supabase is not configured.')
-  const { data, error } = await supabase
-    .from(table)
-    .select('*')
-    .eq('institution_id', user.institutionId)
-    .order('created_at', { ascending: false })
-  if (error) throw error
-  return filterRowsForRole(mode, user, table, (data ?? []) as RecordRow[])
+  const db = supabase
+  const rows: RecordRow[] = []
+  const pageSize = 500
+
+  // Supabase applies a maximum response window per request. Read every
+  // institution-scoped page before applying the existing role visibility
+  // filter, so older records never disappear from large registers or exports.
+  for (let from = 0; ; from += pageSize) {
+    const { data, error } = await db
+      .from(table)
+      .select('*')
+      .eq('institution_id', user.institutionId)
+      .order('created_at', { ascending: false })
+      .order('id', { ascending: true })
+      .range(from, from + pageSize - 1)
+    if (error) throw error
+    const page = (data ?? []) as RecordRow[]
+    rows.push(...page)
+    if (page.length < pageSize) break
+  }
+
+  return filterRowsForRole(mode, user, table, rows)
 }
 
 export async function createRecord(
