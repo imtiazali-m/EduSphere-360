@@ -813,6 +813,26 @@ check('Unified design system is loaded last and removes global browser zoom', ()
   }
   assert.ok(!/#root\s*\{[^}]*zoom\s*:/.test(operational), 'Global root zoom must not be used')
   assert.ok(!/zoom\s*:/.test(operational), 'Operational styles must not apply browser-level zoom')
+  const luminance = (hex) => {
+    const values = [1, 3, 5].map(index => {
+      const channel = parseInt(hex.slice(index, index + 2), 16) / 255
+      return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4
+    })
+    return 0.2126 * values[0] + 0.7152 * values[1] + 0.0722 * values[2]
+  }
+  const contrast = (left, right) => {
+    const a = luminance(left), b = luminance(right)
+    return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05)
+  }
+  for (const [foreground, background, label] of [
+    ['#172B43', '#F3F6FB', 'main ink on canvas'],
+    ['#5E7289', '#F3F6FB', 'muted text on canvas'],
+    ['#5E7289', '#FFFFFF', 'muted text on white'],
+    ['#FFFFFF', '#316FE0', 'white text on primary action'],
+    ['#FFFFFF', '#177B55', 'white text on success'],
+    ['#FFFFFF', '#9A6718', 'white text on warning'],
+    ['#FFFFFF', '#AD4541', 'white text on danger'],
+  ]) assert.ok(contrast(foreground, background) >= 4.5, label + ' must meet WCAG AA normal-text contrast')
   assert.ok(read('docs/PHASE_1_DETAILED_AUDIT.md').includes('Phase 1 disposition'), 'Detailed Phase 1 audit document is missing')
   const roleMenu = read('docs/PHASE_1_ROLE_MENU_INVENTORY.md')
   assert.ok(roleMenu.includes('430 submenu entries') && roleMenu.includes('Examination officer') && roleMenu.includes('| Owner | 33 | 430 |') && roleMenu.includes('| Teacher / employee | 18 | 203 |') && roleMenu.includes('| Student | 15 | 146 |') && roleMenu.includes('| Parent / guardian | 15 | 139 |') && roleMenu.includes('| Accountant | 12 | 132 |') && roleMenu.includes('| Examination officer | 7 | 89 |'), 'Complete role menu inventory must cover all submenu entries and all seven role totals')
