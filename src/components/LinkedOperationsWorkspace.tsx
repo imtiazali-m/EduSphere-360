@@ -175,24 +175,20 @@ export function LinkedOperationsWorkspace({workspaceKey,onToast,onNavigate}:Prop
   const activeCopies=loans.filter(row=>row.book_record_id===book.id&&row.status==='issued').length
   if(activeCopies>=totalCopies){onToast('All registered copies of this book are currently issued. Record a return or update the book catalogue before issuing another copy.',true);return}
   setSaving(true)
-  const {error}=await supabase.from('library_loans').insert({
-   institution_id:user.institutionId,book_record_id:book.id,student_id:student.id,
-   due_at:loanDue,status:'issued',fine_amount:0,notes:loanNotes.trim()||null,issued_by:user.id
+  const {error}=await supabase.rpc('issue_library_book',{
+   p_institution_id:user.institutionId,p_book_record_id:book.id,p_student_id:student.id,
+   p_due_at:loanDue,p_notes:loanNotes.trim()||null
   })
-  if(error){onToast(error.message,true);setSaving(false);return}
-  setShowLoanForm(false);setBookId('');setStudentId('');setLoanNotes('');onToast('Book issued. The copy count and duplicate-loan checks passed.');setSaving(false);await load()
+  if(error){onToast(userFacingError(error,'The book could not be issued. Check availability and try again.'),true);setSaving(false);return}
+  setShowLoanForm(false);setBookId('');setStudentId('');setLoanNotes('');onToast('Book issued. Availability was verified and reserved in one database transaction.');setSaving(false);await load()
  }
  async function returnBook(loan:Loan){
   if(!supabase||!user||!canLibrary)return
-  const book=books.find(row=>row.id===loan.book_record_id)
-  const dailyFine=Number(book?.payload?.fine_per_day??0)
-  const todayDate=new Date(today()+'T00:00:00')
-  const dueDate=new Date(loan.due_at+'T00:00:00')
-  const lateDays=Math.max(0,Math.round((todayDate.getTime()-dueDate.getTime())/86400000))
-  const fineAmount=Number.isFinite(dailyFine)&&dailyFine>0?lateDays*dailyFine:0
-  const {data,error}=await supabase.from('library_loans').update({status:'returned',returned_at:today(),received_by:user.id,fine_amount:fineAmount}).eq('institution_id',user.institutionId).eq('id',loan.id).eq('status','issued').select('id').maybeSingle()
-  if(error){onToast(error.message,true);return}
-  if(!data){onToast('This loan is no longer active. Refresh the circulation register.',true);await load();return}
+  const {data,error}=await supabase.rpc('return_library_book',{p_institution_id:user.institutionId,p_loan_id:loan.id})
+  if(error){onToast(userFacingError(error,'The book return could not be recorded. Refresh the circulation register.'),true);return}
+  const result=data as {late_days?:number;fine_amount?:number}
+  const lateDays=Number(result?.late_days??0)
+  const fineAmount=Number(result?.fine_amount??0)
   onToast(lateDays>0?'Book returned. '+lateDays+' overdue day(s); fine assessed: '+pkMoney(fineAmount)+'.':'Book return recorded. No overdue fine was due.');await load()
  }
  async function saveMovement(event:FormEvent){
