@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
   Activity, AlertCircle, BookOpen, CalendarCheck, CalendarDays,
-  Check, ChevronLeft, ChevronRight, ClipboardCheck, Edit3, Eye,
+  Check, ChevronLeft, ChevronRight, ClipboardCheck, Download, Edit3, Eye,
   FileCheck2, FileText, FolderOpen, GraduationCap, HeartHandshake, History, ImagePlus,
   LayoutDashboard, Plus, Printer, RefreshCw, Search, ShieldCheck, Trash2, Upload,
   UserRound, Users, X,
@@ -10,6 +10,7 @@ import { useAuth } from '../context/AuthContext'
 import { createRecord, deleteRecord, listAccounts, listFeePayments, listRecords, recordFeePayment, updateRecord } from '../lib/data'
 import { supabase } from '../lib/supabase'
 import { userFacingError } from '../lib/userErrors'
+import { downloadCsv } from '../lib/csv'
 import { netInvoiceAmount, outstandingInvoiceBalance } from '../lib/finance'
 import type { AppMode, FieldConfig, ModuleConfig, RecordRow } from '../lib/types'
 import '../styles/student-module.css'
@@ -1204,6 +1205,7 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
         <div className="student-directory-heading"><div><h2>Student directory</h2><p>Institution-wide student register with search, status filters and profile actions.</p></div><span className="student-mode-tag cloud">Live records</span></div>
         <div className="student-directory-toolbar">
           <label className="student-search"><Search size={17}/><input aria-label="Search students" placeholder="Search name, admission number or class…" value={search} onChange={event => { setSearch(event.target.value); setCurrentPage(1) }}/>{search && <button type="button" onClick={() => { setSearch(''); setCurrentPage(1) }} aria-label="Clear search"><X size={15}/></button>}</label>
+          {ownerOrAdmin && <button className="student-refresh-button" type="button" onClick={() => downloadCsv('edusphere-students-'+localDateValue()+'.csv',studentFiltered.map(row=>({admission_no:row.admission_no,full_name:row.full_name,class_name:row.class_name,status:row.status})),[{key:'admission_no',label:'Admission ID'},{key:'full_name',label:'Student'},{key:'class_name',label:'Class / programme'},{key:'status',label:'Status'}])}><Download size={14}/> Export CSV</button>}
           <button className="student-refresh-button" type="button" onClick={() => void load()} disabled={loading}><RefreshCw size={15} className={loading ? 'spin' : ''}/> Refresh</button>
         </div>
         <div className="student-filter-row" role="group" aria-label="Filter students by status">
