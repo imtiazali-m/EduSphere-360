@@ -57,8 +57,8 @@ Responsive styles and source-verification assertions were added alongside the co
 
 | Phase | Scope | Baseline status |
 |---|---|---|
-| 1 | Inspect source, existing website, reusable work and gaps | Initial source, public-site and cloud baseline inspected; full route-by-route and authenticated E2E audit still required |
-| 2 | Welcome page, public website and visual system | Existing content-rich public site found; approved visual/content review and refinements remain |
+| 1 | Inspect source, existing website, reusable work and gaps | Detailed static source, role-navigation and explicit route-gap audit documented in `docs/PHASE_1_DETAILED_AUDIT.md`; authenticated seven-role E2E remains pending |
+| 2 | Welcome page, public website and visual system | Mixed green/blue style cascade and root zoom identified; shared navy/sapphire token layer and first cross-screen styling pass added in `docs/PHASE_2_DESIGN_SYSTEM.md`; browser visual acceptance remains pending |
 | 3 | Login, registration, verification and onboarding | Screens render; real signup, email verification, login and role-provisioning E2E tests remain |
 | 4 | Dashboards, role menus and navigation | 33-group catalogue and seven roles exist; first-run role guidance added; route and permission audit remains |
 | 5 | Administration, institution settings and academic structure | Dedicated partial workspaces and cloud tables exist; full CRUD/relationship/approval audit remains |
@@ -87,3 +87,11 @@ Responsive styles and source-verification assertions were added alongside the co
 4. Do not bypass RLS, expose service-role keys or apply legacy migrations blindly.
 5. Keep source changes reviewable on the working branch until the relevant verification gates pass.
 6. Distinguish source checks, CI/build checks, authenticated workflow tests and production deployment evidence in every phase report.
+
+
+## 8. Expanded Phase 1 and Phase 2 work
+
+- Phase 1 now has a detailed static source/navigation audit, including the seven-role source model, composite route resolution, 33 catalogue groups, verifier-enforced 400+ destination floor, explicit unavailable route clusters, cloud/security baseline and module acceptance matrix. See `docs/PHASE_1_DETAILED_AUDIT.md`.
+- Phase 2 now has a written design specification and a shared token layer loaded after existing styles. The first implementation unifies the public welcome, authentication, dashboard and operational workspace palettes around midnight navy and sapphire, with teal used as a secondary accent and semantic state colours. See `docs/PHASE_2_DESIGN_SYSTEM.md`.
+- Global `#root` zoom was removed from `operational-hierarchy.css`; responsive sizing is now handled at layout breakpoints rather than browser-level scaling.
+- These source changes are isolated on the working branch. No production deployment or Supabase change was made. Visual browser review, screenshot acceptance and full role E2E remain release gates.
