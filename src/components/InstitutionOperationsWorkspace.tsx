@@ -434,7 +434,7 @@ export function InstitutionOperationsWorkspace({workspaceKey,initialWindow,onToa
     const pageCount=Math.max(1,Math.ceil(total/pageSize))
     const currentPage=Math.min(listPage,pageCount)
     return total>pageSize?<div className="iop-pagination">
-      <span>Showing <b>{(currentPage-1)*pageSize+1}–{{Math.min(currentPage*pageSize,total)}{'}'}</b> of <b>{total}</b></span>
+      <span>Showing <b>{(currentPage-1)*pageSize+1}–{Math.min(currentPage*pageSize,total)}</b> of <b>{total}</b></span>
       <div><button type="button" className="iop-button" disabled={currentPage<=1} onClick={()=>setListPage(currentPage-1)}>Previous</button><span>Page {currentPage} of {pageCount}</span><button type="button" className="iop-button" disabled={currentPage>=pageCount} onClick={()=>setListPage(currentPage+1)}>Next</button></div>
     </div>:null
   }
