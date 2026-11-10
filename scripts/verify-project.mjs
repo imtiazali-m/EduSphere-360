@@ -402,6 +402,16 @@ check('Student, employee and operational records expose accessible row action me
   assert.ok(styles.includes('.ed360-row-action-menu>summary:focus-visible') && styles.includes('.ed360-row-action-menu>div>button:focus-visible'), 'Row menus need visible keyboard focus')
 })
 
+check('Governance settings and approval queues support sorting and pagination', () => {
+  const governance = read('src/components/GovernanceWorkspace.tsx')
+  const styles = read('src/styles/governance-workspace.css')
+  for (const value of ['settingsSortKey', 'settingsSortDirection', 'orderedSettings', 'settingsPageRows', 'orderedApprovals', 'approvalPageRows', 'toggleSettingsSort', 'sortHeader', 'pageControls']) {
+    assert.ok(governance.includes(value), 'Governance list interaction is missing: ' + value)
+  }
+  assert.ok(governance.includes("onChange={e=>{setQuery(e.target.value);setSettingsPage(1);setApprovalPage(1)}}"), 'Governance search must reset both page positions')
+  assert.ok(styles.includes('.gov-sort-header:focus-visible') && styles.includes('.gov-pagination'), 'Governance controls need accessible responsive styles')
+})
+
 check('Private file controls match institution storage permissions', () => {
   assert.equal(packageJson.scripts['test:file-access'], 'node scripts/test-file-access.mjs')
   const files = read('src/components/FilesModule.tsx')
