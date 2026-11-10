@@ -151,6 +151,8 @@ export function WelcomeScreen({ navigate }: ScreenProps) {
           <a className="edm-nav-link" href="#features" onClick={closeMenu}>Explore</a>
           <a className="edm-nav-link" href="#analytics" onClick={closeMenu}>Insights</a>
           <a className="edm-nav-link" href="#workflow" onClick={closeMenu}>How it works</a>
+          <a className="edm-nav-link" href="#showcase" onClick={closeMenu}>Product tour</a>
+          <a className="edm-nav-link" href="#faq" onClick={closeMenu}>FAQ</a>
         </nav>
         <div className="edm-header-actions"><button className="edm-login-link" onClick={() => go('login')}>Login</button><button className="edm-signup-button" onClick={() => go('setup')}>Sign up now <ArrowUpRight size={16}/></button></div>
       </header>
@@ -366,7 +368,7 @@ export function WelcomeScreen({ navigate }: ScreenProps) {
           </div>
           <div className="edm-footer-col"><b>Platform</b><a href="#platform">About EduSphere</a><a href="#features">Features</a><a href="#solutions">Solutions</a><a href="#self-hosted">USV 360 Pro</a></div>
           <div className="edm-footer-col"><b>Explore</b><a href="#portals">User portals</a><a href="#why-choose-us">Why EduSphere</a><a href="#workflow">How it works</a><a href="#why-edusphere">Core capabilities</a></div>
-          <div className="edm-footer-col"><b>Get started</b><a href="#get-started">Create an institution</a><button type="button" onClick={() => go('login')}>Login to your account</button><a href="#top">Back to top</a></div>
+          <div className="edm-footer-col"><b>Get started</b><a href="#get-started">Create an institution</a><a href="#faq">Frequently asked questions</a><button type="button" onClick={() => go('login')}>Login to your account</button><a href="#top">Back to top</a></div>
         </div>
         <div className="edm-footer-bottom"><span>© {new Date().getFullYear()} EduSphere 360. All rights reserved.</span><span>Built for schools · colleges · universities</span><a href="#top">Back to top ↑</a></div>
       </footer>
