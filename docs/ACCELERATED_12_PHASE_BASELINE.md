@@ -92,7 +92,7 @@ Responsive styles and source-verification assertions were added alongside the co
 
 ## 8. Expanded Phase 1 and Phase 2 work
 
-- Phase 1 now has a detailed static source/navigation audit, including the seven-role source model, composite route resolution, 33 catalogue groups, verifier-enforced 400+ destination floor, explicit unavailable route clusters, cloud/security baseline and module acceptance matrix. See `docs/PHASE_1_DETAILED_AUDIT.md`.
+- Phase 1 now has a detailed static source/navigation audit, including the seven-role source model, composite route resolution, 33 catalogue groups, 430 individually listed destinations with role visibility, explicit unavailable route clusters, cloud/security baseline and module acceptance matrix. See `docs/PHASE_1_DETAILED_AUDIT.md` and `docs/PHASE_1_ROLE_MENU_INVENTORY.md`.
 - Phase 2 now has a written design specification and a shared token layer loaded after existing styles. The first implementation unifies the public welcome, authentication, dashboard and operational workspace palettes around midnight navy and sapphire, with teal used as a secondary accent and semantic state colours. See `docs/PHASE_2_DESIGN_SYSTEM.md`.
 - Global `#root` zoom was removed from `operational-hierarchy.css`; responsive sizing is now handled at layout breakpoints rather than browser-level scaling.
 - These source changes are isolated on the working branch. No production deployment or Supabase change was made. Visual browser review, screenshot acceptance and full role E2E remain release gates.
