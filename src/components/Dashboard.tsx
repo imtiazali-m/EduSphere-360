@@ -465,6 +465,8 @@ export function Dashboard({ onToast }: Props) {
   const activeTab = workspaceTabs.find(tab => tab.id === activeTabId) ?? workspaceTabs[0]
   const active = activeTab?.targetKey ?? 'overview'
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [isMobileNav, setIsMobileNav] = useState(() => window.matchMedia('(max-width: 820px)').matches)
   const [expandedGroups, setExpandedGroups] = useState<string[]>(['dashboard'])
   const [profileOpen, setProfileOpen] = useState(false)
   const [searchText, setSearchText] = useState('')
@@ -481,6 +483,14 @@ export function Dashboard({ onToast }: Props) {
     }))
     return items.filter(item => item.route && `${item.title} ${item.group}`.toLowerCase().includes(query)).slice(0, 8)
   }, [searchText, visibleGroups])
+
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 820px)')
+    const syncMobileNav = () => setIsMobileNav(media.matches)
+    syncMobileNav()
+    media.addEventListener('change', syncMobileNav)
+    return () => media.removeEventListener('change', syncMobileNav)
+  }, [])
 
   useEffect(() => {
     const onShortcut = (event: KeyboardEvent) => {
@@ -650,29 +660,37 @@ export function Dashboard({ onToast }: Props) {
     window.location.hash = '#/'
   }
 
-  return <div className={`pro-app-shell ${sidebarOpen ? 'navigation-open' : ''}`}>
-    <aside className={`pro-sidebar ${sidebarOpen ? 'is-open' : ''}`} aria-hidden={!sidebarOpen}>
-      <div className="pro-sidebar-brand"><div className="pro-sidebar-mark"><GraduationCap size={25}/></div><div><b>EduSphere <i>360</i></b><small>INSTITUTION MANAGEMENT</small></div><button className="pro-mobile-close" onClick={() => setSidebarOpen(false)} aria-label="Close navigation"><X size={21}/></button></div>
+  const compactSidebar = sidebarCollapsed && !isMobileNav
+  return <div className={`pro-app-shell ${sidebarOpen ? 'navigation-open' : ''} ${compactSidebar ? 'sidebar-collapsed' : ''}`}>
+    <aside className={`pro-sidebar ${sidebarOpen ? 'is-open' : ''} ${compactSidebar ? 'is-collapsed' : ''}`} aria-hidden={isMobileNav && !sidebarOpen}>
+      <div className="pro-sidebar-brand">
+        <div className="pro-sidebar-mark"><GraduationCap size={25}/></div>
+        <div className="pro-sidebar-brand-copy"><b>EduSphere <i>360</i></b><small>INSTITUTION MANAGEMENT</small></div>
+        <button type="button" className="pro-sidebar-collapse" onClick={() => setSidebarCollapsed(value => !value)} aria-label={compactSidebar ? 'Expand navigation' : 'Collapse navigation'} aria-pressed={compactSidebar} title={compactSidebar ? 'Expand navigation' : 'Collapse navigation'}>
+          {compactSidebar ? <ChevronRight size={18}/> : <ChevronLeft size={18}/>}
+        </button>
+        <button type="button" className="pro-mobile-close" onClick={() => setSidebarOpen(false)} aria-label="Close navigation"><X size={21}/></button>
+      </div>
       <div className="pro-institution-card"><span className="pro-institution-symbol"><Building2 size={20}/></span><span><b>{user?.institutionName}</b><small>{roleLabels[user!.role]}</small></span></div>
       <nav className="pro-navigation" aria-label="Institution workspace">
         {visibleGroups.map(group => {
           const GroupIcon = catalogIcons[group.icon] ?? LayoutDashboard
           const isExpanded = expandedGroups.includes(group.key)
           return <section className={`pro-nav-group ${isExpanded ? 'expanded' : ''}`} key={group.key}>
-            <button className={`pro-nav-group-head ${group.key === "dashboard" ? "pro-nav-dashboard-link" : ""}`} aria-expanded={isExpanded} onClick={() => toggleGroup(group.key)}><span className="pro-nav-group-icon"><GroupIcon size={19}/></span><span className="pro-nav-group-name">{group.label}</span><ChevronRight className="pro-nav-chevron" size={17}/></button>
+            <button className={`pro-nav-group-head ${group.key === "dashboard" ? "pro-nav-dashboard-link" : ""}`} aria-label={group.label} title={group.label} aria-expanded={isExpanded} onClick={() => toggleGroup(group.key)}><span className="pro-nav-group-icon"><GroupIcon size={19}/></span><span className="pro-nav-group-name">{group.label}</span><ChevronRight className="pro-nav-chevron" size={17}/></button>
             {isExpanded && <div className="pro-nav-children">{group.items.map(item => {
               const itemKey = item.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
               const route = getNavigationRoute(group.key, item, user!.role)
               const isActive = activeTab.groupKey === group.key && activeTab.itemKey === itemKey
               const ItemIcon = pageIcon(item, GroupIcon)
               const connected = Boolean(route && !route.startsWith('unavailable:'))
-              return <button key={item} className={`pro-nav-item ${isActive ? 'active' : ''}`} aria-current={isActive ? 'page' : undefined} onClick={() => navigateCatalogPage(group.key, item)}><span className="pro-nav-icon"><ItemIcon size={16}/></span><span className="pro-nav-title">{item}</span>{connected && <i className="pro-nav-connected" title="Connected workspace"/>}</button>
+              return <button key={item} className={`pro-nav-item ${isActive ? 'active' : ''}`} aria-label={item} title={item} aria-current={isActive ? 'page' : undefined} onClick={() => navigateCatalogPage(group.key, item)}><span className="pro-nav-icon"><ItemIcon size={16}/></span><span className="pro-nav-title">{item}</span>{connected && <i className="pro-nav-connected" title="Connected workspace"/>}</button>
             })}</div>}
           </section>
         })}
       </nav>
       <section className="pro-quick-access" aria-label="Session">
-        <button type="button" className="pro-nav-item pro-signout-item" onClick={() => void logout()}>
+        <button type="button" className="pro-nav-item pro-signout-item" aria-label="Sign out" title="Sign out" onClick={() => void logout()}>
           <span className="pro-nav-icon"><LogOut size={16}/></span><span className="pro-nav-title">Sign out</span>
         </button>
       </section>
