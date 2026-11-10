@@ -501,7 +501,14 @@ check('Module definitions and generic CRUD table allowlist remain valid', () => 
   }
   assert.ok(tables.length >= 15)
   assert.ok(tables.includes('fee_invoices'))
-  assert.ok(!tables.includes('fee_payments'), 'Fee payments must use the atomic payment RPC')
+  assert.ok(tables.includes('fee_payments'), 'The finance workspace needs institution-scoped receipt history')
+  const readOnlyBlock = dataSource.match(/const READ_ONLY_TABLES = new Set\(\[([\s\S]*?)\]\)/)
+  assert.ok(readOnlyBlock, 'READ_ONLY_TABLES was not found')
+  const readOnlyTables = [...readOnlyBlock[1].matchAll(/'([a-z_]+)'/g)].map(match => match[1])
+  for (const table of ['fee_payments','fee_payment_allocations','fee_audit_logs','employee_salary_profiles','payroll_runs','payroll_items']) {
+    assert.ok(readOnlyTables.includes(table), table + ' must be read-only to generic CRUD')
+  }
+  assert.ok(dataSource.includes("rpc('record_fee_payment'"), 'Payment creation must remain on its atomic RPC')
   for (const operation of ['createRecord', 'updateRecord', 'deleteRecord', 'recordFeePayment']) assert.ok(dataSource.includes(`export async function ${operation}`), `${operation} is missing`)
 })
 
@@ -534,7 +541,8 @@ check('Student Record is a complete permission-aware multi-window workspace', ()
   assert.ok(recordModule.includes("from('student-files')") && recordModule.includes('async function uploadStudentDocument'), 'Private student document upload is missing')
   assert.ok(recordModule.includes("studentHistoryRows.map(event") && recordModule.includes("'student_history'"), 'Student History must render database audit events')
   for (const trigger of ['attendance_student_history_audit', 'exam_results_student_history_audit', 'assignment_submissions_student_history_audit']) assert.ok(read('supabase/migrations/20261109094108_student_activity_history_events.sql').includes(trigger), `Student history trigger is missing: ${trigger}`)
-  assert.ok(dataSource.includes("const READ_ONLY_TABLES = new Set(['student_history'])"), 'Student audit history must be read-only to the client')
+  assert.ok(dataSource.includes("const READ_ONLY_TABLES = new Set(") && dataSource.includes("'student_history'"), 'Student audit history must be read-only to the client')
+  assert.ok([...dataSource.matchAll(/const READ_ONLY_TABLES = new Set\(\[([\s\S]*?)\]\)/)][0]?.[1].includes("'student_history'"), 'Student audit history must remain within the generic read-only table set')
   assert.ok(recordModule.includes("isStudent && field.name === 'status'") && recordModule.includes("? 'pending'"), 'New student admissions must start in Pending status')
   assert.ok(dataSource.includes("if (table === 'students')"), 'Student insertion must use its specific authorization-safe path')
   assert.ok(dataSource.includes("rpc('has_institution_role'") || dataSource.includes("rpc('has_institution_role',"), 'Student admission must verify existing owner/admin authorization')
