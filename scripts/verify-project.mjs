@@ -343,6 +343,19 @@ check('Operational modules expose distinct nested workspace windows and contextu
   assert.ok(styles.includes('zoom: 1.06') && styles.includes('.ed360-operations-window-nav') && styles.includes('.ed360-contextual-subwindow'), 'Readable UI scale and nested workspace styles are required')
 })
 
+check('Student, faculty and operational record tables support accessible sorting', () => {
+  const record = read('src/components/RecordModule.tsx')
+  const styles = read('src/styles/module-workspaces.css')
+  for (const value of ['sortKey', 'sortDirection', 'toggleSort', 'orderedFiltered', 'aria-sort=', 'ed360-sort-header']) {
+    assert.ok(record.includes(value), 'Sortable record table behaviour is missing: ' + value)
+  }
+  assert.ok(record.includes("setSortKey(''); setSortDirection('asc')"), 'Sort state must reset when switching record tables')
+  for (const value of ['Student', 'Faculty member', 'module.columns.map']) {
+    assert.ok(record.includes(value), 'A key record table is missing sortable columns: ' + value)
+  }
+  assert.ok(styles.includes('.ed360-sort-header:focus-visible'), 'Sortable table headings need a visible keyboard focus indicator')
+})
+
 check('Private file controls match institution storage permissions', () => {
   assert.equal(packageJson.scripts['test:file-access'], 'node scripts/test-file-access.mjs')
   const files = read('src/components/FilesModule.tsx')
