@@ -9,7 +9,7 @@ type Campus={id:string;name:string;campus_code?:string|null;address?:string|null
 type Book={id:string;title:string;reference_code?:string|null;quantity?:number|null;payload?:Record<string,unknown>}
 type Student={id:string;full_name:string;admission_no?:string|null;class_name?:string|null}
 type Item={id:string;title:string;reference_code?:string|null;quantity?:number|null;payload?:Record<string,unknown>}
-type RouteRecord={id:string;title:string;reference_code?:string|null;payload?:Record<string,unknown>}
+type RouteRecord={id:string;title:string;reference_code?:string|null;parent_record_id?:string|null;payload?:Record<string,unknown>}
 type Loan={id:string;book_record_id:string;student_id:string|null;issued_at:string;due_at:string;returned_at:string|null;status:string;fine_amount:number;notes?:string|null}
 type Movement={id:string;item_record_id:string;movement_type:string;quantity:number;unit_cost?:number|null;movement_date:string;reference_code?:string|null;notes?:string|null}
 type Allocation={id:string;student_id:string;route_record_id:string;stop_record_id?:string|null;vehicle_record_id?:string|null;effective_from:string;effective_to?:string|null;transport_fee:number;status:string;notes?:string|null}
@@ -112,7 +112,7 @@ export function LinkedOperationsWorkspace({workspaceKey,onToast,onNavigate}:Prop
     const [studentResult,routeResult,stopResult,vehicleResult,allocationResult]=await Promise.all([
      supabase.from('students').select('id,full_name,admission_no,class_name').eq('institution_id',user.institutionId).eq('status','active').order('full_name'),
      supabase.from('institutional_records').select('id,title,reference_code,payload').eq('institution_id',user.institutionId).eq('module_key','transport').eq('record_type','transport-routes').order('title'),
-     supabase.from('institutional_records').select('id,title,reference_code,payload').eq('institution_id',user.institutionId).eq('module_key','transport').eq('record_type','route-stops').order('title'),
+     supabase.from('institutional_records').select('id,title,reference_code,parent_record_id,payload').eq('institution_id',user.institutionId).eq('module_key','transport').eq('record_type','route-stops').order('title'),
      supabase.from('institutional_records').select('id,title,reference_code,payload').eq('institution_id',user.institutionId).eq('module_key','transport').eq('record_type','vehicle-management').order('title'),
      supabase.from('student_transport_allocations').select('*').eq('institution_id',user.institutionId).order('created_at',{ascending:false}).limit(500)
     ])
@@ -217,8 +217,13 @@ export function LinkedOperationsWorkspace({workspaceKey,onToast,onNavigate}:Prop
   const selectedStop=stops.find(row=>row.id===allocationStop)
   const selectedVehicle=vehicles.find(row=>row.id===allocationVehicle)
   if(!selectedRoute){onToast('Select a route registered by this institution.',true);return}
-  if(allocationStop&&(!selectedStop||String(selectedStop.payload?.route_record_id??selectedStop.payload?.route_id??'')!==allocationRoute)){
-   onToast('The selected stop is not linked to the selected route. Choose a stop from that route.',true);return
+  if(allocationStop&&!selectedStop){onToast('Select a stop registered by this institution.',true);return}
+  if(selectedStop){
+   const linkedRoute=String(selectedStop.parent_record_id??selectedStop.payload?.route_record_id??selectedStop.payload?.route_id??'')
+   const selectedRouteCode=String(selectedRoute.payload?.route_code??selectedRoute.reference_code??'').trim().toLowerCase()
+   const selectedStopRouteCode=String(selectedStop.payload?.route_code??'').trim().toLowerCase()
+   if(linkedRoute&&linkedRoute!==allocationRoute){onToast('The selected stop belongs to a different route.',true);return}
+   if(selectedStopRouteCode&&selectedRouteCode&&selectedStopRouteCode!==selectedRouteCode){onToast('The selected stop route code does not match the selected route.',true);return}
   }
   if(allocationVehicle&&!selectedVehicle){onToast('Select a vehicle registered by this institution.',true);return}
   const overlaps=(startA:string,endA:string|null|undefined,startB:string,endB:string|null|undefined)=>startA<=(endB||'9999-12-31')&&startB<=(endA||'9999-12-31')
@@ -227,7 +232,7 @@ export function LinkedOperationsWorkspace({workspaceKey,onToast,onNavigate}:Prop
   const fee=transportFee.trim()?Number(transportFee):0
   if(!Number.isFinite(fee)||fee<0){onToast('Transport fee must be a valid non-negative amount.',true);return}
   if(selectedVehicle){
-   const capacity=Number(selectedVehicle.payload?.capacity??selectedVehicle.payload?.seating_capacity??0)
+   const capacity=Number(selectedVehicle.payload?.seat_capacity??selectedVehicle.payload?.capacity??selectedVehicle.payload?.seating_capacity??0)
    const occupied=allocations.filter(row=>row.status==='active'&&row.vehicle_record_id===selectedVehicle.id&&overlaps(allocationFrom,allocationTo||null,row.effective_from,row.effective_to??null)).length
    if(Number.isFinite(capacity)&&capacity>0&&occupied>=capacity){onToast('The selected vehicle is at capacity for at least part of this allocation period.',true);return}
   }
