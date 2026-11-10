@@ -1,6 +1,6 @@
 # Migration history
 
-The twenty-five timestamped migration files in this folder match the remote migration history recorded by the linked Supabase project. Keep each 14-digit timestamp unchanged so local and remote migration histories remain aligned.
+The twenty-six timestamped migration files in this folder match the remote migration history recorded by the linked Supabase project. Keep each 14-digit timestamp unchanged so local and remote migration histories remain aligned.
 
 The current online application includes the reviewed schema changes for the existing live schema, Faculty & Employee Management, and Student Management operations (admission lifecycle, linked guardian contacts, class placements, private student documents and audit history for attendance, published results, assignment submissions, guardian policy consolidation and activity indexes). The Student Management and Faculty/Employee migrations have already been applied to the linked project; do not replay them manually.
 
@@ -33,3 +33,6 @@ The transport accountant read migration preserves the consolidated institution-s
 The academic, student-care and campus-operations migration adds institution-scoped question bank items, assessment papers and paper-question relationships; curriculum unit plans; confidential student behaviour events with explicit family visibility; student certificates with institution-unique numbers and verification codes; visitor entry records; facility assets; and maintenance requests. Every new table has row-level security enabled, explicit authenticated grants and institution-safe foreign keys where records relate to other institution data. Linked learners and guardians can read only published curriculum units, explicitly family-visible behaviour events, and issued certificates permitted by the student-link policy.
 
 Question-paper approval is a separate guarded database function. It requires an owner, administrator or exam officer, at least one question, published question-bank entries and a question-mark total matching the paper maximum. Draft question lines can be removed while the paper remains in draft.
+
+
+The institutional catalogue permission migration aligns the generic catalogue write policy with the role-specific UI: only owners and administrators can create or edit institution-wide library, transport and facilities master records. Teachers retain the dedicated library circulation workflow and teaching/academic operations; accountants retain inventory and finance access subject to their existing policies. Read access and portal visibility are unchanged.
