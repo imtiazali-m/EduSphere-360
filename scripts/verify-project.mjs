@@ -808,7 +808,7 @@ check('Unified design system is loaded last and removes global browser zoom', ()
   for (const token of ['--es-brand-950', '--es-brand-900', '--es-primary-600', '--es-teal-700', '--es-canvas', '--es-surface', '--es-success', '--es-warning', '--es-danger']) {
     assert.ok(design.includes(token), 'Missing shared design token ' + token)
   }
-  for (const selector of ['.pro-sidebar', '.pro-topbar', '.ed360-dashboard', '.ed360-metric-card', '.ed360-start-panel', '.ed360-module-page', '.ed360-workspace-record-card', '.edm-home', '.es-auth-page']) {
+  for (const selector of ['.pro-sidebar', '.pro-topbar', '.ed360-dashboard', '.ed360-metric-card', '.ed360-start-panel', '.ed360-module-page', '.ed360-workspace-record-card', '.edm-home', '.es-auth-page', '.fin-stage', '.payroll-stage', '.gov-stage', '.iop-stage']) {
     assert.ok(design.includes(selector), 'The shared design system is missing a cross-screen surface ' + selector)
   }
   assert.ok(!/#root\s*\{[^}]*zoom\s*:/.test(operational), 'Global root zoom must not be used')
