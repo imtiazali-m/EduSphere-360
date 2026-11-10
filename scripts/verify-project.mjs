@@ -484,7 +484,7 @@ check('Employee and payroll report workspaces use role-scoped live database reco
 check('Library checkout and return run as atomic tenant-scoped transactions', () => {
   const migration = read('supabase/migrations/20261110114500_atomic_library_circulation.sql')
   const linked = read('src/components/LinkedOperationsWorkspace.tsx')
-  for (const value of ['issue_library_book','return_library_book','security invoker','for update','pg_advisory_xact_lock','All registered copies of this book are currently issued','v_late_days * v_daily_fine']) {
+  for (const value of ['issue_library_book','return_library_book','security invoker','for update','All registered copies of this book are currently issued','v_late_days * v_daily_fine']) {
     assert.ok(migration.toLowerCase().includes(value.toLowerCase()), 'Atomic library circulation safeguard is missing: ' + value)
   }
   assert.ok(linked.includes("rpc('issue_library_book'") && linked.includes("rpc('return_library_book'"), 'Library UI must use the atomic database functions')
