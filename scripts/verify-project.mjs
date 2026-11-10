@@ -386,6 +386,20 @@ check('Finance and payroll registers support searchable sortable pagination', ()
   assert.ok(accounts.includes('sortedAccounts') && accounts.includes('toggleSort') && accounts.includes('aria-sort='), 'Account directory must provide accessible sorting')
 })
 
+check('Student, employee and operational records expose accessible row action menus', () => {
+  const record = read('src/components/RecordModule.tsx')
+  const styles = read('src/styles/module-workspaces.css')
+  assert.ok(record.includes('function RowActionMenu'), 'Reusable row action menu is missing')
+  assert.ok(record.includes('<RowActionMenu label={'), 'Record rows must expose contextual action menus')
+  for (const value of ['Open profile', 'View employee', 'View record', 'Delete record']) {
+    assert.ok(record.includes(value), 'A row action is missing: ' + value)
+  }
+  for (const value of ['aria-label={label}', 'role="group"', "removeAttribute('open')"]) {
+    assert.ok(record.includes(value), 'Row action menu accessibility/close behaviour is missing: ' + value)
+  }
+  assert.ok(styles.includes('.ed360-row-action-menu>summary:focus-visible') && styles.includes('.ed360-row-action-menu>div>button:focus-visible'), 'Row menus need visible keyboard focus')
+})
+
 check('Private file controls match institution storage permissions', () => {
   assert.equal(packageJson.scripts['test:file-access'], 'node scripts/test-file-access.mjs')
   const files = read('src/components/FilesModule.tsx')
