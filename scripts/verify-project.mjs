@@ -103,6 +103,10 @@ check('The full institutional menu maps every submenu to a working destination',
   assert.equal(getNavigationRoute('teaching', 'Homework'), 'assignments:open', 'Homework must open the open-coursework view')
   assert.equal(getNavigationRoute('attendance', 'Attendance Reports'), 'reports:attendance', 'Attendance report shortcut must open the correct report view')
   assert.equal(getNavigationRoute('students', 'Student Directory'), 'students:directory', 'Student Directory must open the student directory view')
+  assert.equal(getNavigationRoute('ai', 'AI Assistant'), 'unavailable:ai:ai-assistant', 'AI must not pretend to generate results before a model provider is configured')
+  assert.equal(getNavigationRoute('backup', 'Create Backup'), 'unavailable:backup:create-backup', 'Backup menu must not claim to create a backup without a platform backup service')
+  assert.equal(getNavigationRoute('communication', 'WhatsApp Integration'), 'unavailable:communication:whatsapp-integration', 'External messaging must remain unconnected until credentials and delivery tests exist')
+  assert.equal(getNavigationRoute('communication', 'Notification Centre'), 'notifications', 'In-app notifications remain a supported communication workflow')
   assert.equal(getNavigationRoute('employees', 'Employee Directory'), 'employees:directory', 'Employee Directory must open the staff directory window')
   assert.equal(getNavigationRoute('employees', 'Employee Reports'), 'employees:reports', 'Employee reports must open the staff report window')
   assert.equal(getNavigationRoute('dashboard', 'Institutional Overview', 'owner'), 'overview', 'Institutional overview must open the dashboard')
@@ -519,6 +523,8 @@ check('Institution-wide catalogues are admin-managed at both UI and RLS layers',
   }
   assert.ok(migration.includes("public.has_institution_role(institution_id, array['owner','admin'])"))
   assert.ok(teacherPolicy.includes("'academic_setup','attendance','timetable','teaching','behaviour'"))
+  const unavailable = read('src/components/WorkspaceUnavailable.tsx')
+  for (const phrase of ['model provider','Automated cloud backups','external messaging']) assert.ok(unavailable.includes(phrase), 'Unavailable integrations must explain the missing dependency: ' + phrase)
 })
 check('Teacher reporting routes expose only the teacher-permitted report datasets', () => {
   const reports = read('src/components/ReportsModule.tsx')
