@@ -381,12 +381,29 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
   if (groupKey === 'ai' || groupKey === 'backup') {
     return 'unavailable:' + groupKey + ':' + itemKey
   }
+  if (groupKey === 'reports' && ['custom-report-builder','scheduled-reports','report-templates','report-history'].includes(itemKey)) return 'unavailable:reports:' + itemKey
+  if (groupKey === 'question-bank' && ['question-bank-import-and-export','question-paper-version-history'].includes(itemKey)) return 'unavailable:question-bank:' + itemKey
+  if (groupKey === 'curriculum' && ['teaching-resources','learning-materials','resource-downloads','chapter-wise-learning-resources','learning-progress-tracking'].includes(itemKey)) return 'unavailable:curriculum:' + itemKey
+  if (groupKey === 'behaviour' && ['student-progress-history','behaviour-analytics','downloadable-behaviour-reports'].includes(itemKey)) return 'unavailable:behaviour:' + itemKey
+  if (groupKey === 'certificates' && ['experience-certificate','id-card-designer','certificate-templates','editable-document-templates','bulk-certificate-generation'].includes(itemKey)) return 'unavailable:certificates:' + itemKey
+  if (groupKey === 'library' && ['reading-records','reading-cards','student-reading-history'].includes(itemKey)) return 'unavailable:library:' + itemKey
+  if (groupKey === 'transport' && itemKey === 'transport-attendance') return 'unavailable:transport:transport-attendance'
+  if (groupKey === 'facilities' && ['room-reservations','facilities-reports'].includes(itemKey)) return 'unavailable:facilities:' + itemKey
+  if (groupKey === 'visitors' && ['visitor-approvals','visitor-notifications','visitor-reports'].includes(itemKey)) return 'unavailable:visitors:' + itemKey
+  if (groupKey === 'timetable' && ['teacher-availability','substitution-management','timetable-publishing','class-coverage','engaged-classes'].includes(itemKey)) return 'unavailable:timetable:' + itemKey
+  if (groupKey === 'examinations' && ['invigilation-management','automatic-checking'].includes(itemKey)) return 'unavailable:examinations:' + itemKey
+  if (groupKey === 'examinations' && itemKey === 'examination-rooms') return 'admin:rooms'
+  if (groupKey === 'class-tests' && ['online-tests','written-tests','test-questions'].includes(itemKey)) return 'unavailable:class-tests:' + itemKey
+  if (groupKey === 'fees' && itemKey === 'online-payments') return 'unavailable:fees:online-payments'
+  if (groupKey === 'payments' && itemKey === 'online-payment-records') return 'unavailable:payments:online-payment-records'
+  if (groupKey === 'receipts' && ['receipt-templates','receipt-numbering','bulk-receipt-generation'].includes(itemKey)) return 'unavailable:receipts:' + itemKey
+  if (groupKey === 'inventory' && itemKey === 'inventory-dashboard') return 'institutional:inventory:stock-reports'
+  if (groupKey === 'library' && itemKey === 'library-dashboard') return 'institutional:library:library-reports'
+  if (groupKey === 'transport' && (itemKey === 'transport-dashboard' || itemKey === 'transport-fees' || itemKey === 'transport-history')) return 'institutional:transport:transport-reports'
+  if (groupKey === 'facilities' && itemKey === 'facilities-dashboard') return 'operations:facilities:assets'
+  if (groupKey === 'reports' && itemKey === 'comparative-analytics') return 'reports:overview'
   if (groupKey === 'dashboard') {
-    if (itemKey === 'employee-performance') {
-      if (['owner','admin'].includes(actorRole)) return 'employees:reports'
-      if (actorRole === 'teacher') return 'employees:overview'
-      return 'unavailable:dashboard:employee-performance'
-    }
+    if (itemKey === 'employee-performance') return 'unavailable:dashboard:employee-performance'
     if (itemKey === 'student-behaviour') {
       return ['owner','admin','teacher'].includes(actorRole)
         ? 'operations:behaviour:register'
