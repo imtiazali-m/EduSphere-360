@@ -169,8 +169,9 @@ export function LinkedOperationsWorkspace({workspaceKey,onToast,onNavigate}:Prop
   if(!book||!student||!loanDue||loanDue<today()){onToast('Select a valid book and student, and enter a due date that is today or later.',true);return}
   const alreadyIssued=loans.some(row=>row.status==='issued'&&row.book_record_id===book.id&&row.student_id===student.id)
   if(alreadyIssued){onToast('This student already has this book checked out. Record the return before issuing it again.',true);return}
-  const configuredCopies=Number(book.payload?.total_copies??book.quantity??1)
-  const totalCopies=Number.isFinite(configuredCopies)&&configuredCopies>0?configuredCopies:1
+  const rawCopies=book.payload?.total_copies??book.quantity
+  const totalCopies=rawCopies===undefined||rawCopies===null||rawCopies===''?1:Number(rawCopies)
+  if(!Number.isFinite(totalCopies)||totalCopies<=0){onToast('This book has no valid available-copy count. Update its catalogue record before issuing it.',true);return}
   const activeCopies=loans.filter(row=>row.book_record_id===book.id&&row.status==='issued').length
   if(activeCopies>=totalCopies){onToast('All registered copies of this book are currently issued. Record a return or update the book catalogue before issuing another copy.',true);return}
   setSaving(true)
