@@ -37,6 +37,14 @@ export function PayrollWorkspace({initialWindow,onToast}:Props){
   const [items,setItems]=useState<PayrollItem[]>([])
   const [selectedRun,setSelectedRun]=useState('')
   const [search,setSearch]=useState('')
+  const [salarySearch,setSalarySearch]=useState('')
+  const [salarySortKey,setSalarySortKey]=useState('employee')
+  const [salarySortDirection,setSalarySortDirection]=useState<'asc'|'desc'>('asc')
+  const [salaryPage,setSalaryPage]=useState(1)
+  const [payslipSortKey,setPayslipSortKey]=useState('period')
+  const [payslipSortDirection,setPayslipSortDirection]=useState<'asc'|'desc'>('desc')
+  const [payslipPage,setPayslipPage]=useState(1)
+  const payrollPageSize=10
   const [salaryForm,setSalaryForm]=useState(false)
   const [employeeId,setEmployeeId]=useState('')
   const [baseSalary,setBaseSalary]=useState('')
@@ -93,8 +101,57 @@ export function PayrollWorkspace({initialWindow,onToast}:Props){
     return text.includes(search.trim().toLowerCase())
   }),[items,employees,runs,search])
 
+  const filteredProfiles=useMemo(()=>profiles.filter(profile=>{
+    const employee=employees.find(row=>row.id===profile.teacher_id)
+    return [employee?.full_name,employee?.employee_no,profile.status].some(value=>String(value??'').toLowerCase().includes(salarySearch.trim().toLowerCase()))
+  }),[profiles,employees,salarySearch])
+  const orderedProfiles=useMemo(()=>[...filteredProfiles].sort((a,b)=>{
+    const value=(profile:SalaryProfile):string|number=>{
+      const employee=employees.find(row=>row.id===profile.teacher_id)
+      if(salarySortKey==='employee')return employee?.full_name??''
+      if(salarySortKey==='employee_no')return employee?.employee_no??''
+      if(salarySortKey==='net_month')return moneyValue(profile.base_salary)+moneyValue(profile.monthly_allowances)-moneyValue(profile.monthly_deductions)
+      return profile[salarySortKey] as string|number??''
+    }
+    const left=value(a),right=value(b)
+    const comparison=typeof left==='number'&&typeof right==='number'?left-right:String(left).localeCompare(String(right),undefined,{numeric:true,sensitivity:'base'})
+    return salarySortDirection==='asc'?comparison:-comparison
+  }),[filteredProfiles,employees,salarySortKey,salarySortDirection])
+  const orderedPayslips=useMemo(()=>[...filteredItems].sort((a,b)=>{
+    const value=(item:PayrollItem):string|number=>{
+      const employee=employees.find(row=>row.id===item.teacher_id)
+      const run=runs.find(row=>row.id===item.payroll_run_id)
+      if(payslipSortKey==='employee')return employee?.full_name??''
+      if(payslipSortKey==='period')return run?.period_start??''
+      return item[payslipSortKey] as string|number??''
+    }
+    const left=value(a),right=value(b)
+    const comparison=typeof left==='number'&&typeof right==='number'?left-right:String(left).localeCompare(String(right),undefined,{numeric:true,sensitivity:'base'})
+    return payslipSortDirection==='asc'?comparison:-comparison
+  }),[filteredItems,employees,runs,payslipSortKey,payslipSortDirection])
+  const salaryPageCount=Math.max(1,Math.ceil(orderedProfiles.length/payrollPageSize))
+  const salaryCurrentPage=Math.min(salaryPage,salaryPageCount)
+  const salaryPageRows=orderedProfiles.slice((salaryCurrentPage-1)*payrollPageSize,salaryCurrentPage*payrollPageSize)
+  const payslipPageCount=Math.max(1,Math.ceil(orderedPayslips.length/payrollPageSize))
+  const payslipCurrentPage=Math.min(payslipPage,payslipPageCount)
+  const payslipPageRows=orderedPayslips.slice((payslipCurrentPage-1)*payrollPageSize,payslipCurrentPage*payrollPageSize)
 
-
+  function toggleSalarySort(key:string){
+    if(salarySortKey===key)setSalarySortDirection(direction=>direction==='asc'?'desc':'asc')
+    else{setSalarySortKey(key);setSalarySortDirection('asc')}
+    setSalaryPage(1)
+  }
+  function togglePayslipSort(key:string){
+    if(payslipSortKey===key)setPayslipSortDirection(direction=>direction==='asc'?'desc':'asc')
+    else{setPayslipSortKey(key);setPayslipSortDirection('asc')}
+    setPayslipPage(1)
+  }
+  function payrollSortHeader(label:string,key:string,current:string,direction:'asc'|'desc',onSort:()=>void){
+    return <th aria-sort={current===key?(direction==='asc'?'ascending':'descending'):'none'}><button type="button" className="payroll-sort-header" onClick={onSort}>{label}<span aria-hidden="true">{current===key?(direction==='asc'?'↑':'↓'):'↕'}</span></button></th>
+  }
+  function payrollPageControls(total:number,page:number,pageCount:number,setPage:(page:number)=>void){
+    return total>payrollPageSize?<div className="payroll-table-pagination"><span>Showing <b>{(page-1)*payrollPageSize+1}–{Math.min(page*payrollPageSize,total)}</b> of <b>{total}</b></span><div><button type="button" className="payroll-button" disabled={page<=1} onClick={()=>setPage(page-1)}>Previous</button><span>Page {page} of {pageCount}</span><button type="button" className="payroll-button" disabled={page>=pageCount} onClick={()=>setPage(page+1)}>Next</button></div></div>:null
+  }
 
   function openSalary(employee?:Employee){
     const chosen=employee??employees.find(row=>row.id===employeeId)??employees[0]
