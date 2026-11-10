@@ -103,6 +103,8 @@ check('The full institutional menu maps every submenu to a working destination',
   assert.equal(getNavigationRoute('teaching', 'Homework'), 'assignments:open', 'Homework must open the open-coursework view')
   assert.equal(getNavigationRoute('attendance', 'Attendance Reports'), 'reports:attendance', 'Attendance report shortcut must open the correct report view')
   assert.equal(getNavigationRoute('students', 'Student Directory'), 'students:directory', 'Student Directory must open the student directory view')
+  assert.equal(getNavigationRoute('students', 'Student ID Cards'), 'students:id-cards', 'Student ID Cards must open the print workspace')
+  assert.equal(getNavigationRoute('employees', 'Employee ID Cards'), 'employees:id-cards', 'Employee ID Cards must open the staff print workspace')
   assert.equal(getNavigationRoute('ai', 'AI Assistant'), 'unavailable:ai:ai-assistant', 'AI must not pretend to generate results before a model provider is configured')
   assert.equal(getNavigationRoute('backup', 'Create Backup'), 'unavailable:backup:create-backup', 'Backup menu must not claim to create a backup without a platform backup service')
   assert.equal(getNavigationRoute('communication', 'WhatsApp Integration'), 'unavailable:communication:whatsapp-integration', 'External messaging must remain unconnected until credentials and delivery tests exist')
@@ -472,6 +474,16 @@ check('Administration settings, approvals and audit are connected to governance 
   assert.ok(read('supabase/migrations/20261109151231_atomic_institution_setting_approval.sql').includes('decide_institution_setting_approval'))
 })
 
+check('Student and employee ID cards are printed from selected verified records', () => {
+  const students = read('src/components/RecordModule.tsx')
+  const staff = read('src/components/FacultyWorkspace.tsx')
+  const studentCss = read('src/styles/module-workspaces.css')
+  const staffCss = read('src/styles/faculty-workspace.css')
+  for (const feature of ["'id-cards'","Student identity card","selectedStudent.admission_no","activeStudentClass?.name","window.print()"]) assert.ok(students.includes(feature), 'Student ID card feature is missing: ' + feature)
+  for (const feature of ["'id-cards'","Employee identity card","selected.employee_no","departmentFor(selected.department_id)","window.print()"]) assert.ok(staff.includes(feature), 'Employee ID card feature is missing: ' + feature)
+  assert.ok(studentCss.includes('.ed360-student-id-card') && studentCss.includes('@page{size:85.6mm 54mm;margin:0}'), 'Student ID card print layout is missing')
+  assert.ok(staffCss.includes('.staff-id-card-print') && staffCss.includes('@page{size:85.6mm 54mm;margin:0}'), 'Employee ID card print layout is missing')
+})
 check('Timetable workspace exposes schedule resources and detects real conflicts', () => {
   const views = read('src/lib/operationalWorkspaceViews.ts')
   const record = read('src/components/RecordModule.tsx')
