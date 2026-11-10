@@ -86,6 +86,8 @@ check('The full institutional menu maps every submenu to a working destination',
     'transport:vehicle-management','transport:drivers-management','transport:transport-routes','transport:route-stops',
     'transport:student-transport-allocation','transport:transport-fees','transport:transport-assignments','transport:vehicle-maintenance',
     'transport:transport-attendance','transport:transport-history','transport:transport-reports',
+    'library:library-dashboard','inventory:inventory-dashboard',
+    'transport:transport-dashboard','transport:transport-fees','transport:transport-history',
   ])
   for (const group of navigationCatalog) {
     for (const page of group.items) {
@@ -529,11 +531,11 @@ check('Library checkout and return run as atomic tenant-scoped transactions', ()
   for (const value of ['issue_library_book','return_library_book','security invoker','pg_advisory_xact_lock','All registered copies of this book are currently issued','v_late_days * v_daily_fine']) {
     assert.ok(migration.toLowerCase().includes(value.toLowerCase()), 'Atomic library circulation safeguard is missing: ' + value)
   }
-  const bookRead = migration.slice(
-    migration.indexOf('select * into v_book'),
-    migration.indexOf('if not found then raise exception', migration.indexOf('select * into v_book')),
-  )
-  assert.ok(bookRead.includes('pg_advisory_xact_lock'), 'Library checkout must serialize per-book copies')
+  const advisoryLockStart = migration.indexOf('pg_advisory_xact_lock')
+  const bookReadStart = migration.indexOf('select * into v_book')
+  const bookReadEnd = migration.indexOf('if not found then raise exception', bookReadStart)
+  const bookRead = migration.slice(bookReadStart, bookReadEnd)
+  assert.ok(advisoryLockStart >= 0 && advisoryLockStart < bookReadStart, 'Library checkout must take its per-book advisory lock before reading the copy count')
   assert.ok(!bookRead.includes('for update'), 'Library checkout must not require UPDATE access to the admin-managed book catalogue')
   assert.ok(migration.includes('select * into v_loan') && migration.includes('for update'), 'Returning a library loan must lock its own loan record')
   assert.ok(linked.includes("rpc('issue_library_book'") && linked.includes("rpc('return_library_book'"), 'Library UI must use the atomic database functions')
