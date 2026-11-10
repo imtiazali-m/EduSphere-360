@@ -434,6 +434,18 @@ check('Institution operations lists are paginated without changing their domain 
   assert.ok(styles.includes('.iop-pagination') && styles.includes('.iop-global-pagination'), 'Operations pagination needs responsive styles')
 })
 
+check('Campus library inventory and transport registers support independent search and pagination', () => {
+  const linked = read('src/components/LinkedOperationsWorkspace.tsx')
+  const styles = read('src/styles/institutional-premium.css')
+  for (const value of ['visibleCampuses', 'visibleLoans', 'visibleStockRows', 'visibleMovements', 'visibleAllocations', 'visibleRouteRows', 'pageRows(visibleCampuses,campusPage)', 'pageRows(visibleLoans,libraryPage)', 'pageRows(visibleStockRows,inventoryPage)', 'pageRows(visibleMovements,movementPage)', 'pageRows(visibleAllocations,allocationPage)', 'pageRows(visibleRouteRows,routePage)']) {
+    assert.ok(linked.includes(value), 'Linked operations list feature is missing: ' + value)
+  }
+  for (const value of ['Search campuses', 'Search circulation', 'Search inventory', 'Search stock movements', 'Search route utilisation', 'Search transport allocations']) {
+    assert.ok(linked.includes(value), 'Linked operations search is missing: ' + value)
+  }
+  assert.ok(styles.includes('.ed360-linked-search:focus-within') && styles.includes('.ed360-linked-pagination'), 'Linked operations filters and page controls need responsive focus styling')
+})
+
 check('Private file controls match institution storage permissions', () => {
   assert.equal(packageJson.scripts['test:file-access'], 'node scripts/test-file-access.mjs')
   const files = read('src/components/FilesModule.tsx')
