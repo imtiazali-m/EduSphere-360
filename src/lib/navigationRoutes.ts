@@ -414,7 +414,7 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
 
   // A few older shortcuts pointed at a module root, losing the requested
   // report/employee/coursework sub-view. Prefer the typed sub-view in those groups.
-  if (['reports', 'teaching', 'employees', 'attendance', 'examinations', 'class-tests'].includes(groupKey)) {
+  if (['reports', 'teaching', 'employees', 'attendance', 'examinations', 'class-tests', 'communication'].includes(groupKey)) {
     const contextualRoute = dedicatedRoute(groupKey, itemKey)
     if (contextualRoute) return contextualRoute
   }
