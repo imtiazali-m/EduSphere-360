@@ -3,7 +3,7 @@ import {
   Activity, AlertCircle, BookOpen, CalendarCheck, CalendarDays,
   Check, ChevronLeft, ChevronRight, ClipboardCheck, Edit3, Eye,
   FileCheck2, FileText, FolderOpen, GraduationCap, HeartHandshake, History, ImagePlus,
-  LayoutDashboard, Plus, RefreshCw, Search, ShieldCheck, Trash2, Upload,
+  LayoutDashboard, Plus, Printer, RefreshCw, Search, ShieldCheck, Trash2, Upload,
   UserRound, Users, X,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
