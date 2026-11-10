@@ -106,9 +106,14 @@ export const operationalWorkspaceConfigs: Record<string, OperationalWorkspaceCon
     recordLabel: 'scheduled sessions',
     views: [
       view('week', 'Weekly Schedule', 'All timetable entries for the institution week.', () => true),
+      view('classes', 'Class Timetables', 'Sessions organised by their assigned class or section.', row => Boolean(String(row.class_name ?? '').trim())),
+      view('teachers', 'Teacher Timetables', 'Sessions with a teacher allocation, ready for workload and availability review.', row => Boolean(String(row.teacher_name ?? '').trim())),
+      view('rooms', 'Room Timetables', 'Sessions with a room allocation, ready for room availability review.', row => Boolean(String(row.room ?? '').trim())),
       ...['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map(day =>
         view(day.toLowerCase(), day, 'Sessions scheduled for ' + day + '.', row => String(row.weekday ?? '').toLowerCase() === day.toLowerCase())),
+      view('conflicts', 'Schedule Conflicts', 'Overlapping class, teacher or room bookings identified from the saved schedule.', () => true),
       view('unassigned', 'Allocation Gaps', 'Sessions where a teacher or room has not yet been specified.', row => !String(row.teacher_name ?? '').trim() || !String(row.room ?? '').trim()),
+      view('history', 'Timetable History', 'Saved schedule entries retained for review and audit.', row => Boolean(row.created_at)),
     ],
   },
   announcements: {
