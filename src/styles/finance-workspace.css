@@ -15,3 +15,24 @@
 .fin-bottom-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border:1px solid #e6ece5;border-radius:12px;background:#f9fbf8;color:#849086;font-size:10px}.fin-bottom-bar span{display:flex;align-items:center;gap:7px}
 @media(max-width:980px){.fin-stage{padding:20px 18px 32px}.fin-metric-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.fin-two-column{grid-template-columns:1fr}.fin-inline-form{grid-template-columns:1fr 1fr}.fin-line-edit{grid-template-columns:minmax(160px,1fr) 1fr 1fr 32px}}
 @media(max-width:600px){.fin-stage{padding:16px 12px 26px;gap:14px}.fin-page-heading{align-items:flex-start;flex-direction:column}.fin-page-heading h1{font-size:26px}.fin-context{align-items:flex-start;padding:16px}.fin-context>div:last-child{min-width:64px}.fin-context>div:last-child strong{font-size:22px}.fin-metric-grid{gap:8px}.fin-metric-grid article{padding:13px}.fin-metric-grid article strong{font-size:19px}.fin-panel{padding:15px}.fin-panel>header{flex-direction:column}.fin-form-row,.fin-inline-form{grid-template-columns:1fr}.fin-line-edit{grid-template-columns:1fr 1fr 1fr 32px}.fin-line-edit label:first-child{grid-column:1 / -1}.fin-balance-check{flex-wrap:wrap;justify-content:flex-start}.fin-bottom-bar{align-items:flex-start;flex-direction:column}}
+
+
+.fin-sort-header{
+  display:inline-flex;align-items:center;gap:6px;max-width:100%;
+  padding:2px 0;border:0;color:inherit;background:transparent;
+  font:inherit;font-weight:inherit;text-align:left;white-space:nowrap;
+}
+.fin-sort-header:hover{color:#255eab}
+.fin-sort-header:focus-visible{outline:2px solid #7ca9df;outline-offset:3px;border-radius:3px}
+.fin-sort-header span{color:#91a1b5;font-size:10px;font-weight:900}
+.fin-sort-header:hover span{color:#2b6fc0}
+.fin-table-pagination{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:12px 2px 2px;color:#7b8ba0;font-size:10px;
+}
+.fin-table-pagination>div{display:flex;align-items:center;gap:9px}
+.fin-table-pagination>div>span{font-size:9px;color:#8a99ac}
+@media(max-width:620px){
+  .fin-table-pagination{align-items:flex-start;flex-direction:column}
+  .fin-table-pagination>div{width:100%;justify-content:space-between}
+}
