@@ -35,7 +35,7 @@ This creates one recognisable identity across the public welcome website, owner 
 | Canvas | `#F3F6FB` | Application page background |
 | White | `#FFFFFF` | Cards and forms |
 | Ink | `#172B43` | Main readable text |
-| Muted | `#687B91` | Secondary text |
+| Muted | `#5E7289` | Secondary text |
 | Line | `#DFE7F0` | Borders and separators |
 | Success | `#177B55` | Saved/approved/completed state |
 | Warning | `#9A6718` | Pending/attention state |
@@ -43,7 +43,11 @@ This creates one recognisable identity across the public welcome website, owner 
 
 All tokens are centralised in `src/styles/design-system.css`. Component-specific variants should reference semantic tokens rather than inventing new hex colours.
 
-## 3. Typography and density
+## 3. Contrast and accessibility
+
+Core foreground/background combinations are checked in the project verifier using WCAG relative-luminance contrast ratios. The current token targets include main ink on the cool canvas, muted text on canvas and white, white text on the sapphire primary action, and white text on semantic success/warning/danger states. Small secondary labels use the darker muted token rather than pale grey. This automated check does not replace full component-level contrast testing for every legacy style.
+
+## 4. Typography and density
 
 - Use the existing system-font stack consistently; no new font download or runtime dependency.
 - Give every page one clear H1, section H2s, compact labels and comfortably readable body copy.
@@ -52,7 +56,7 @@ All tokens are centralised in `src/styles/design-system.css`. Component-specific
 - Use restrained shadows to separate surfaces, not to make every card appear to float.
 - Do not enlarge the entire page with browser zoom. Scale layouts and type within responsive breakpoints.
 
-## 4. Screen-by-screen system
+## 5. Screen-by-screen system
 
 ### Public welcome website
 - Align header, logo, buttons, links, section accents and product preview to navy/sapphire.
@@ -84,7 +88,7 @@ All tokens are centralised in `src/styles/design-system.css`. Component-specific
 - Preserve existing data validation, RLS, RPC and file-security logic.
 - Keep wide data tables scrollable within their own containers on mobile; do not shrink the entire page to make a wide table fit.
 
-## 5. Responsive design rules
+## 6. Responsive design rules
 
 - Desktop: fixed navigation rail, flexible workspace canvas and readable max-width content.
 - Tablet: preserve essential navigation and allow filter/toolbars to wrap without overlap.
@@ -93,7 +97,7 @@ All tokens are centralised in `src/styles/design-system.css`. Component-specific
 - Keep touch targets comfortably sized and maintain visible keyboard focus.
 - Respect `prefers-reduced-motion`.
 
-## 6. Phase 2 implementation and acceptance
+## 7. Phase 2 implementation and acceptance
 
 The first implementation slice adds the unified semantic token layer, imports it after the existing component styles, normalises major shared surfaces, and removes the old root-level zoom declarations. This is a foundation and a first visual pass, not a claim that every page has been visually approved.
 
@@ -106,7 +110,7 @@ Acceptance requires:
 6. No behaviour, access-control, route, Supabase or production data change is introduced by CSS-only work.
 7. A fresh build, source verifier, screenshots at representative widths, and manual visual review are completed before the design is accepted or deployed.
 
-## 7. Current state
+## 8. Current state
 
 - Static source review completed for the design cascade and application shell.
 - Unified CSS token layer and first pass are being added on the working branch.
