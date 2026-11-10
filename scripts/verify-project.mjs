@@ -718,6 +718,24 @@ check('Institution-wide catalogues are admin-managed at both UI and RLS layers',
   for (const phrase of ['model provider','Automated cloud backups','external messaging']) assert.ok(unavailable.includes(phrase), 'Unavailable integrations must explain the missing dependency: ' + phrase)
   for (const phrase of ['A safe batch-processing workflow','An employee appraisal workflow','configurable and scheduled report engine','transport-specific boarding']) assert.ok(unavailable.includes(phrase), 'Unsupported domain workflow must explain its dependency: ' + phrase)
 })
+check('Dashboard first-run guidance is role-specific and reports only saved-record signals', () => {
+  const dashboard = read('src/components/Dashboard.tsx')
+  const styles = read('src/styles/pro-dashboard.css')
+  assert.ok(dashboard.includes('ed360-start-panel'), 'Dashboard guidance panel is missing')
+  assert.ok(dashboard.includes('const workspaceGuide ='), 'Role-specific guidance configuration is missing')
+  for (const role of ['owner', 'teacher', 'student', 'parent', 'accountant']) {
+    assert.ok(dashboard.includes("user!.role === '" + role + "'"), 'Missing dashboard guidance for ' + role)
+  }
+  assert.ok(dashboard.includes('Your examination workbench'), 'Examination Officer guidance is missing')
+  assert.ok(dashboard.includes('hasRecords('), 'Guidance must derive states from loaded records')
+  assert.ok(dashboard.includes('Status is based on saved records visible to your signed-in role'), 'Guidance must explain its evidence boundary')
+  assert.ok(!dashboard.includes('sampleData') && !dashboard.includes('seededRecords'), 'Guidance must not use sample records')
+  for (const route of ['admin:academic_sessions','students:admissions','attendance:students','fees:ledger','reports:finance','exam_results:published']) {
+    assert.ok(dashboard.includes(route), 'Missing existing workspace action route: ' + route)
+  }
+  assert.ok(styles.includes('.ed360-start-panel') && styles.includes('@media(max-width:640px)'), 'Guidance must have responsive styling')
+})
+
 check('Teacher reporting routes expose only the teacher-permitted report datasets', () => {
   const reports = read('src/components/ReportsModule.tsx')
   assert.ok(reports.includes("const wantsPeople = ['owner', 'admin', 'teacher'].includes(role)"))
