@@ -64,19 +64,7 @@ export function LinkedOperationsWorkspace({workspaceKey,onToast,onNavigate}:Prop
  const [routeSearch,setRouteSearch]=useState('')
  const [routePage,setRoutePage]=useState(1)
  const pageSize=10
- const [campusSearch,setCampusSearch]=useState('')
- const [campusPage,setCampusPage]=useState(1)
- const [librarySearch,setLibrarySearch]=useState('')
- const [libraryPage,setLibraryPage]=useState(1)
- const [inventorySearch,setInventorySearch]=useState('')
- const [inventoryPage,setInventoryPage]=useState(1)
- const [movementSearch,setMovementSearch]=useState('')
- const [movementPage,setMovementPage]=useState(1)
- const [allocationSearch,setAllocationSearch]=useState('')
- const [allocationPage,setAllocationPage]=useState(1)
- const [routeSearch,setRouteSearch]=useState('')
- const [routePage,setRoutePage]=useState(1)
- const pageSize=10
+
  const [campuses,setCampuses]=useState<Campus[]>([])
  const [books,setBooks]=useState<Book[]>([])
  const [students,setStudents]=useState<Student[]>([])
