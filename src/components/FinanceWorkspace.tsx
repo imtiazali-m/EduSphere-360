@@ -358,21 +358,37 @@ export function FinanceWorkspace({workspaceKey,initialWindow,onToast}:Props){
 
   async function createJournal(event:FormEvent){
     event.preventDefault();if(!supabase||!financeRole)return
-    if(!journalNo.trim()||!journalDescription.trim()||lineDrafts.length<2||lineDrafts.some(line=>!line.account_id)){onToast('Enter a journal number, description and at least two account lines.',true);return}
-    if(Math.round(lineDebit*100)!==Math.round(lineCredit*100)||lineDebit<=0){onToast('Journal lines must balance: total debits must equal total credits.',true);return}
-    if(lineDrafts.some(line=>(number(line.debit)>0&&number(line.credit)>0)||(number(line.debit)<=0&&number(line.credit)<=0))){onToast('Each journal line must contain either a debit or a credit, not both.',true);return}
+    if(!journalNo.trim()||!journalDescription.trim()||lineDrafts.length<2||lineDrafts.some(line=>!line.account_id)){
+      onToast('Enter a journal number, description and at least two account lines.',true);return
+    }
+    if(Math.round(lineDebit*100)!==Math.round(lineCredit*100)||lineDebit<=0){
+      onToast('Journal lines must balance: total debits must equal total credits.',true);return
+    }
+    if(lineDrafts.some(line=>(number(line.debit)>0&&number(line.credit)>0)||(number(line.debit)<=0&&number(line.credit)<=0))){
+      onToast('Each journal line must contain either a debit or a credit, not both.',true);return
+    }
     setSaving(true)
-    const {data:header,error:headerError}=await supabase.from('finance_journals').insert({
-      institution_id:user!.institutionId,journal_no:journalNo.trim(),journal_date:journalDate,
-      description:journalDescription.trim(),reference:journalReference.trim()||null,status:'draft',created_by:user!.id
-    }).select('*').single()
-    if(headerError){onToast(userFacingError(headerError,'Journal header could not be created.'),true);setSaving(false);return}
-    const {error:linesError}=await supabase.from('finance_journal_lines').insert(lineDrafts.map(line=>({
-      institution_id:user!.institutionId,journal_id:header.id,account_id:line.account_id,
-      description:line.description.trim()||null,debit:Number(line.debit)||0,credit:Number(line.credit)||0
-    })))
-    if(linesError){onToast('Journal draft '+journalNo+' was created, but its lines could not be saved. Open the draft and correct the entries.',true)}
-    else{onToast('Balanced journal draft created. Post it after review.');setJournalForm(false);setJournalNo('');setJournalDescription('');setJournalReference('');setLineDrafts([{account_id:'',description:'',debit:'',credit:''},{account_id:'',description:'',debit:'',credit:''}])}
+    const {data:journalId,error:createError}=await supabase.rpc('create_finance_journal',{
+      p_institution_id:user!.institutionId,
+      p_journal_no:journalNo.trim(),
+      p_journal_date:journalDate,
+      p_description:journalDescription.trim(),
+      p_reference:journalReference.trim()||null,
+      p_lines:lineDrafts.map(line=>({
+        account_id:line.account_id,
+        description:line.description.trim()||null,
+        debit:Number(line.debit)||0,
+        credit:Number(line.credit)||0,
+      })),
+    })
+    if(createError){
+      onToast(userFacingError(createError,'The balanced journal could not be saved.'),true)
+    }else{
+      setJournalForm(false);setJournalNo('');setJournalDescription('');setJournalReference('')
+      setLineDrafts([{account_id:'',description:'',debit:'',credit:''},{account_id:'',description:'',debit:'',credit:''}])
+      setSelectedJournal(String(journalId))
+      onToast('Balanced journal draft and all line items saved atomically. Post it after review.')
+    }
     setSaving(false);await load(true)
   }
 
