@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useState, type FormEvent, type KeyboardEvent as ReactKeyboardEvent } from 'react'
 import {
   ArrowLeft, ArrowRight, ArrowUpRight, BarChart3, BookOpen, Building2,
   CalendarCheck, Check, CheckCircle2, ClipboardCheck,
@@ -32,8 +32,105 @@ function Brand() {
   </div>
 }
 
+
+type ShowcaseKey = 'students' | 'teaching' | 'finance' | 'governance'
+
+const showcaseTabs: { key: ShowcaseKey; label: string }[] = [
+  { key: 'students', label: 'Student journey' },
+  { key: 'teaching', label: 'Teaching & assessment' },
+  { key: 'finance', label: 'Finance operations' },
+  { key: 'governance', label: 'Administration' },
+]
+
+const showcasePanels: Record<ShowcaseKey, {
+  eyebrow: string
+  title: string
+  description: string
+  steps: string[]
+  previewTitle: string
+  previewRows: { label: string; detail: string }[]
+}> = {
+  students: {
+    eyebrow: 'PEOPLE / STUDENT LIFECYCLE',
+    title: 'From first admission to a complete learner record.',
+    description: 'Keep the admission queue, student directory, class placement, guardian links, documents and student history connected around the same learner record.',
+    steps: ['Review admission applications', 'Place learners in a class and session', 'Connect guardians and verified documents'],
+    previewTitle: 'Student record workspace',
+    previewRows: [
+      { label: 'Admissions', detail: 'Applications and decisions' },
+      { label: 'Class placement', detail: 'Class, section and session' },
+      { label: 'Family & documents', detail: 'Guardian links and private files' },
+    ],
+  },
+  teaching: {
+    eyebrow: 'ACADEMICS / TEACHING & ASSESSMENT',
+    title: 'Bring lesson work, assessment and results into one flow.',
+    description: 'Organise assignments and submissions, review student work, schedule examinations and publish results through the academic records your role can access.',
+    steps: ['Create and assign coursework', 'Review submissions and provide feedback', 'Schedule examinations and publish approved results'],
+    previewTitle: 'Teaching and assessment',
+    previewRows: [
+      { label: 'Coursework', detail: 'Open work and due dates' },
+      { label: 'Submission review', detail: 'Teacher feedback and marks' },
+      { label: 'Examinations', detail: 'Schedules and published results' },
+    ],
+  },
+  finance: {
+    eyebrow: 'FINANCE / FEES & ACCOUNTS',
+    title: 'See the fee obligation, payment history and ledger together.',
+    description: 'Build fee structures, issue invoices, record receipts, follow outstanding balances and maintain double-entry journal records with database-side posting validation.',
+    steps: ['Set fee schedules and discounts', 'Issue invoices and record payments', 'Reconcile receivables and post balanced journals'],
+    previewTitle: 'Finance workspace',
+    previewRows: [
+      { label: 'Fee structures', detail: 'Classes, sessions and components' },
+      { label: 'Invoices & receipts', detail: 'Balances and payment history' },
+      { label: 'Accounts & journals', detail: 'Double-entry financial records' },
+    ],
+  },
+  governance: {
+    eyebrow: 'ADMINISTRATION / INSTITUTION CONTROL',
+    title: 'Manage institutional settings with clear responsibility.',
+    description: 'Keep institution identity, academic structure, role-based access, setting approvals and operational audit records in focused administrative workspaces.',
+    steps: ['Maintain institution and academic settings', 'Provision accounts with role-specific access', 'Review approval requests and recorded changes'],
+    previewTitle: 'Administration workspace',
+    previewRows: [
+      { label: 'Institution settings', detail: 'Tenant-scoped configuration' },
+      { label: 'User access', detail: 'Accounts and role assignments' },
+      { label: 'Approvals & audit', detail: 'Decisions and change history' },
+    ],
+  },
+}
+
+const welcomeFaqs = [
+  {
+    question: 'Is EduSphere 360 currently an online or offline platform?',
+    answer: 'The current release is cloud-based and requires an internet connection. Offline/local operation is not available in this release.',
+  },
+  {
+    question: 'Which people can have their own workspace?',
+    answer: 'The platform has separate role access for institution owners, administrators, teachers, students, parents or guardians, accountants and examination officers. Menus and actions are shaped by each role.',
+  },
+  {
+    question: 'What can an institution owner do after registration?',
+    answer: 'The owner creates the institution workspace, manages institution-level settings and can provision administrator and other institution accounts. Administrators can then manage the day-to-day records permitted by their role.',
+  },
+  {
+    question: 'Can EduSphere 360 process payments through an external payment gateway?',
+    answer: 'The current finance workspace supports fee invoices and recording payment and receipt records. An external online payment gateway is not connected in this release, so recording a payment does not itself charge a bank card or wallet.',
+  },
+  {
+    question: 'Is the self-hosted USV 360 Pro edition ready to install?',
+    answer: 'USV 360 Pro is a planned self-hosted edition. The current available platform is the online cloud edition; self-hosted deployment is not currently offered as a released installation.',
+  },
+  {
+    question: 'How are student and institution records protected?',
+    answer: 'The cloud database uses institution-scoped access rules and role-based permissions. Users should only see and change records allowed for their active institution membership and role.',
+  },
+]
+
 export function WelcomeScreen({ navigate }: ScreenProps) {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [showcaseTab, setShowcaseTab] = useState<ShowcaseKey>('students')
+  const [openFaq, setOpenFaq] = useState<number | null>(0)
   const closeMenu = () => setMobileOpen(false)
   const go = (screen: 'login' | 'setup') => { closeMenu(); navigate(screen) }
 
