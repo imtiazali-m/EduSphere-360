@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState, type CSSProperties, type For
 import { BookOpen, Bus, MapPin, Package, Plus, RefreshCw, X } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
+import { userFacingError } from '../lib/userErrors'
 import { getWorkspaceGroup } from '../lib/institutionalCatalog'
 
 type Props={workspaceKey:string;onToast:(message:string,error?:boolean)=>void;onNavigate:(key:string)=>void}
