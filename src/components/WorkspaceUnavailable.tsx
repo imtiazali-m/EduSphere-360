@@ -18,7 +18,29 @@ export function WorkspaceUnavailable({ groupKey, itemKey, onNavigate }: Props) {
       ? 'Automated cloud backups and restore operations are platform-level services that are not connected to this project yet. No backup or restore is being created by this screen.'
       : groupKey === 'communication'
         ? 'The selected external messaging or delivery provider is not configured. Institution notices and the in-app notification centre remain separate supported features.'
-        : 'This destination is identified, but its dedicated production workflow is not connected yet.'
+        : groupKey === 'students' && itemKey === 'bulk-student-operations'
+          ? 'A safe batch-processing workflow is not connected yet. Student admissions and the individual student directory remain available; this destination will not perform unreviewed bulk edits.'
+          : groupKey === 'employees' && itemKey === 'employee-performance'
+            ? 'An employee appraisal workflow with objectives, review cycles, evidence and approvals is not connected yet. HR directory statistics are available separately and are not a performance rating.'
+            : groupKey === 'reports' && ['custom-report-builder','scheduled-reports','report-templates','report-history'].includes(itemKey)
+              ? 'The configurable and scheduled report engine is not connected yet. The built-in live finance, attendance, enrolment, employee and assessment reports remain available with CSV export where provided.'
+              : groupKey === 'class-tests' && ['online-tests','written-tests','test-questions'].includes(itemKey)
+                ? 'A separate class-test delivery and question workflow is not connected yet. The standard examination schedule and recorded examination results remain available.'
+                : groupKey === 'examinations' && itemKey === 'automatic-checking'
+                  ? 'Automated marking is not configured. Examination marks are entered and reviewed by authorised staff; this screen will not generate unverified grades.'
+                  : groupKey === 'timetable' && ['teacher-availability','substitution-management','timetable-publishing','class-coverage','engaged-classes'].includes(itemKey)
+                    ? 'The advanced availability, substitution and publishing workflow is not connected yet. Saved weekly timetables and detected class, teacher or room overlaps remain available.'
+                    : groupKey === 'library' && ['reading-records','reading-cards','student-reading-history'].includes(itemKey)
+                      ? 'A separate reading-progress and reading-card workflow is not connected yet. The book catalogue, circulation register, returns and recorded overdue fines remain available.'
+                      : groupKey === 'transport' && itemKey === 'transport-attendance'
+                        ? 'A transport-specific boarding and route attendance register is not connected yet. Student route and vehicle allocations and their recorded fees remain available.'
+                        : groupKey === 'facilities' && ['room-reservations','facilities-reports'].includes(itemKey)
+                          ? 'Room reservation scheduling and dedicated facility analytics are not connected yet. Room records and the facility maintenance queue remain available.'
+                          : groupKey === 'visitors' && ['visitor-approvals','visitor-notifications','visitor-reports'].includes(itemKey)
+                            ? 'Advanced visitor approvals, notifications and dedicated visitor analytics are not connected yet. Visitor registration, check-in, check-out and visit history remain available.'
+                            : groupKey === 'certificates' && ['experience-certificate','id-card-designer','certificate-templates','editable-document-templates','bulk-certificate-generation'].includes(itemKey)
+                              ? 'This document template or bulk generation workflow is not connected yet. Individual student certificates can be created, issued, printed and verified from the certificate register.'
+                              : 'This destination is identified, but its dedicated production workflow is not connected yet.'
   const alternative = groupKey === 'ai'
     ? 'Current institutional reports and dashboards use recorded database values. They do not claim to be AI-generated predictions.'
     : groupKey === 'backup'
