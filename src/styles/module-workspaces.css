@@ -307,3 +307,42 @@
 .ed360-sort-header:focus-visible{outline:2px solid #78a7ea;outline-offset:3px;border-radius:3px}
 .ed360-sort-header span{color:#8b9bb0;font-size:10px;font-weight:900}
 .ed360-sort-header:hover span{color:#286bd0}
+
+
+.ed360-attendance-history-controls{
+  display:flex;align-items:end;justify-content:flex-end;gap:10px;flex-wrap:wrap;
+}
+.ed360-attendance-history-controls label{
+  display:grid;gap:5px;min-width:145px;color:#718096;font-size:10px;font-weight:750;
+}
+.ed360-attendance-history-controls input,
+.ed360-attendance-history-controls select{
+  min-height:38px;padding:0 10px;border:1px solid #dce5ef;border-radius:8px;
+  color:#34465d;background:#fff;font:inherit;font-size:11px;
+}
+.ed360-attendance-history-controls button{
+  min-height:38px;display:inline-flex;align-items:center;gap:7px;padding:0 12px;
+  border:1px solid #dce5ef;border-radius:8px;color:#3e5c7b;background:#fff;
+  font-size:10px;font-weight:750;
+}
+.ed360-attendance-history-controls button:hover{border-color:#9bb6d2;background:#f5f9fd}
+.ed360-attendance-history-list>div{
+  display:grid;grid-template-columns:minmax(160px,1.1fr) minmax(65px,.3fr) minmax(120px,1fr);
+  align-items:center;gap:12px;
+}
+.ed360-attendance-history-list>div>span{min-width:0;display:grid;gap:3px}
+.ed360-attendance-history-list>div>span>b{overflow:hidden;color:#34465d;font-size:11px;text-overflow:ellipsis}
+.ed360-attendance-history-list>div>span>small{color:#8a98a9;font-size:9px}
+.attendance-history-status{
+  display:inline-flex;justify-content:center;min-width:62px;padding:5px 8px;
+  border-radius:7px;font-size:9px;font-weight:850;
+}
+.attendance-history-status.status-present{color:#16815b;background:#e9f7f0}
+.attendance-history-status.status-absent{color:#b54745;background:#fff0ef}
+.attendance-history-status.status-late{color:#a86c1d;background:#fff6e8}
+@media(max-width:720px){
+  .ed360-attendance-history-controls{justify-content:stretch}
+  .ed360-attendance-history-controls label{min-width:calc(50% - 6px);flex:1}
+  .ed360-attendance-history-list>div{grid-template-columns:1fr auto}
+  .ed360-attendance-history-list>div>small{grid-column:1 / -1}
+}
