@@ -249,6 +249,53 @@ export function WelcomeScreen({ navigate }: ScreenProps) {
             <article className="edm-feature-card"><div className="edm-feature-top"><span className="edm-feature-icon"><Headphones/></span><small>05 / COMMUNICATION</small></div><h3>Keep every stakeholder informed</h3><p>Share announcements and keep parents, students and teams connected with institution updates.</p><div className="edm-feature-visual edm-message-visual"><div className="edm-message-bubble">New announcement published<span/></div><div className="edm-message-bubble message-alt">Update shared with your class<span/></div></div></article>
             <article className="edm-feature-card"><div className="edm-feature-top"><span className="edm-feature-icon"><BarChart3 size={21}/></span><small>06 / INSIGHT</small></div><h3>Useful reports & decision support</h3><p>Bring institution records into clearer views that help teams understand what needs attention.</p><div className="edm-feature-visual edm-report-visual"><div className="edm-report-axis"><i/><i/><i/><i/></div><div className="edm-report-bars"><i/><i/><i/><i/><i/><i/><i/><i/></div></div></article>
           </div>
+
+        </section>
+
+        <section className="edm-showcase-section edm-section" id="showcase" aria-labelledby="edm-showcase-heading">
+          <div className="edm-section-heading">
+            <div><span className="edm-section-kicker">EXPLORE THE WORKFLOWS</span><h2 id="edm-showcase-heading">Connected records.<br/><em>Clearer everyday work.</em></h2></div>
+            <p>Choose a workflow to see how the current platform groups related tasks into a dedicated workspace.</p>
+          </div>
+          <div className="edm-showcase-shell">
+            <div className="edm-showcase-tabs" role="tablist" aria-label="Product workflow showcase" onKeyDown={(event: ReactKeyboardEvent<HTMLDivElement>) => {
+              const keys: ShowcaseKey[] = ['students','teaching','finance','governance']
+              const tabs = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="tab"]'))
+              const index = tabs.indexOf(event.target as HTMLButtonElement)
+              let next = index
+              if (event.key === 'ArrowRight') next = (index + 1) % tabs.length
+              else if (event.key === 'ArrowLeft') next = (index - 1 + tabs.length) % tabs.length
+              else if (event.key === 'Home') next = 0
+              else if (event.key === 'End') next = tabs.length - 1
+              else return
+              event.preventDefault()
+              tabs[next]?.focus()
+              setShowcaseTab(keys[next])
+            }}>
+              {showcaseTabs.map(tab => <button key={tab.key} id={'edm-showcase-tab-' + tab.key} type="button" role="tab" aria-selected={showcaseTab === tab.key} aria-controls="edm-showcase-panel" tabIndex={showcaseTab === tab.key ? 0 : -1} className={showcaseTab === tab.key ? 'active' : ''} onClick={() => setShowcaseTab(tab.key)}>{tab.label}</button>)}
+            </div>
+            <div className="edm-showcase-panel" id="edm-showcase-panel" role="tabpanel" aria-labelledby={'edm-showcase-tab-' + showcaseTab}>
+              <div className="edm-showcase-copy">
+                <span className="edm-showcase-eyebrow">{showcasePanels[showcaseTab].eyebrow}</span>
+                <h3>{showcasePanels[showcaseTab].title}</h3>
+                <p>{showcasePanels[showcaseTab].description}</p>
+                <ol>{showcasePanels[showcaseTab].steps.map((step,index) => <li key={step}><span>{String(index + 1).padStart(2,'0')}</span>{step}</li>)}</ol>
+                <button type="button" className="edm-showcase-cta" onClick={() => go('setup')}>Create your institution <ArrowUpRight size={16}/></button>
+              </div>
+              <div className="edm-showcase-preview" aria-label={showcasePanels[showcaseTab].previewTitle}>
+                <div className="edm-showcase-preview-top"><span><i/><i/><i/></span><b>{showcasePanels[showcaseTab].previewTitle}</b><small>WORKSPACE PREVIEW</small></div>
+                <div className="edm-showcase-preview-body">
+                  <aside><span className="active"><Layers3 size={15}/></span><span><Users size={15}/></span><span><BookOpen size={15}/></span><span><CalendarCheck size={15}/></span></aside>
+                  <div className="edm-showcase-preview-content">
+                    <small>INSTITUTION WORKSPACE</small>
+                    <strong>{showcasePanels[showcaseTab].previewTitle}</strong>
+                    {showcasePanels[showcaseTab].previewRows.map((item,index) => <div className="edm-showcase-preview-row" key={item.label}><span className={'row-number row-number-' + index}>{String(index + 1).padStart(2,'0')}</span><span><b>{item.label}</b><small>{item.detail}</small></span><CheckCircle2 size={16}/></div>)}
+                    <div className="edm-showcase-preview-note"><ShieldCheck size={14}/> Role-scoped workspace · Illustrative preview</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </section>
 
         <section className="edm-solutions-section edm-section" id="solutions">
