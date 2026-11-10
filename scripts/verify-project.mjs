@@ -730,10 +730,20 @@ check('Dashboard first-run guidance is role-specific and reports only saved-reco
   assert.ok(dashboard.includes('hasRecords('), 'Guidance must derive states from loaded records')
   assert.ok(dashboard.includes('Status is based on saved records visible to your signed-in role'), 'Guidance must explain its evidence boundary')
   assert.ok(!dashboard.includes('sampleData') && !dashboard.includes('seededRecords'), 'Guidance must not use sample records')
-  for (const route of ['admin:academic_sessions','students:admissions','attendance:students','fees:ledger','reports:finance','exam_results:published']) {
+  for (const route of ['admin:academic_sessions','students:admissions','attendance:students','finance:fees:invoices','reports:finance','exam_results:published']) {
     assert.ok(dashboard.includes(route), 'Missing existing workspace action route: ' + route)
   }
   assert.ok(styles.includes('.ed360-start-panel') && styles.includes('@media(max-width:640px)'), 'Guidance must have responsive styling')
+})
+
+check('Dashboard entry points resolve to the intended role-specific operational workspaces', () => {
+  assert.equal(getNavigationRoute('fees', 'Fee Invoices', 'owner'), 'finance:fees:invoices')
+  assert.equal(getNavigationRoute('fees', 'Payment Collection', 'accountant'), 'finance:fees:payments')
+  assert.equal(getNavigationRoute('receivables', 'Total Outstanding', 'accountant'), 'finance:receivables:receivables')
+  assert.equal(getNavigationRoute('question-bank', 'Question Bank Dashboard', 'exam_officer'), 'operations:question-bank:pool')
+  assert.equal(getNavigationRoute('students', 'Student Profiles', 'parent'), 'students:profile')
+  assert.equal(getNavigationRoute('teaching', 'Homework', 'teacher'), 'assignments:open')
+  assert.equal(getNavigationRoute('timetable', 'Timetable Dashboard', 'student'), 'timetable:week')
 })
 
 check('Teacher reporting routes expose only the teacher-permitted report datasets', () => {
