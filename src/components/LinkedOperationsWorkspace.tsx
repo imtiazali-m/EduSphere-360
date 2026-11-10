@@ -20,6 +20,23 @@ const today=()=>new Date().toLocaleDateString('en-CA')
 const pkMoney=(value:number)=>new Intl.NumberFormat('en-PK',{style:'currency',currency:'PKR',maximumFractionDigits:0}).format(Number(value)||0)
 const dateLabel=(value:string|null|undefined)=>value?new Date(value+'T00:00:00').toLocaleDateString():'—'
 const statusText=(value:string)=>value.replaceAll('_',' ').replace(/\b\w/g,char=>char.toUpperCase())
+type PageResult<T>={data:T[]|null;error:{message:string}|null}
+
+async function loadAllPages<T>(
+ fetchPage:(from:number,to:number)=>PromiseLike<PageResult<T>>,
+ pageSize=500
+):Promise<T[]>{
+ const all:T[]=[]
+ for(let from=0;;from+=pageSize){
+  const {data,error}=await fetchPage(from,from+pageSize-1)
+  if(error)throw error
+  const page=data??[]
+  all.push(...page)
+  if(page.length<pageSize)break
+ }
+ return all
+}
+
 const palette:Record<string,{accent:string;soft:string;ink:string}>={
  administration:{accent:'#667d98',soft:'#f0f3f7',ink:'#344a61'},
  library:{accent:'#5368c9',soft:'#eef0ff',ink:'#35458f'},
@@ -121,35 +138,33 @@ export function LinkedOperationsWorkspace({workspaceKey,onToast,onNavigate}:Prop
     if(error)throw error
     setCampuses((data??[]) as Campus[])
    }else if(isLibrary){
-    const [bookResult,studentResult,loanResult]=await Promise.all([
+    const [bookResult,studentResult,loanRows]=await Promise.all([
      supabase.from('institutional_records').select('id,title,reference_code,quantity,payload').eq('institution_id',user.institutionId).eq('module_key','library').eq('record_type','book-registration').order('title'),
      supabase.from('students').select('id,full_name,admission_no,class_name').eq('institution_id',user.institutionId).eq('status','active').order('full_name'),
-     supabase.from('library_loans').select('*').eq('institution_id',user.institutionId).order('issued_at',{ascending:false}).limit(500)
+     loadAllPages<Loan>((from,to)=>supabase.from('library_loans').select('*').eq('institution_id',user.institutionId).order('issued_at',{ascending:false}).range(from,to))
     ])
     if(bookResult.error)throw bookResult.error
     if(studentResult.error)throw studentResult.error
-    if(loanResult.error)throw loanResult.error
-    setBooks((bookResult.data??[]) as Book[]);setStudents((studentResult.data??[]) as Student[]);setLoans((loanResult.data??[]) as Loan[])
+    setBooks((bookResult.data??[]) as Book[]);setStudents((studentResult.data??[]) as Student[]);setLoans(loanRows)
    }else if(isInventory){
-    const [itemResult,movementResult]=await Promise.all([
+    const [itemResult,movementRows]=await Promise.all([
      supabase.from('institutional_records').select('id,title,reference_code,quantity,payload').eq('institution_id',user.institutionId).eq('module_key','inventory').in('record_type',['items-management','item-catalogue']).order('title'),
-     supabase.from('inventory_movements').select('*').eq('institution_id',user.institutionId).order('movement_date',{ascending:false}).limit(1000)
+     loadAllPages<Movement>((from,to)=>supabase.from('inventory_movements').select('*').eq('institution_id',user.institutionId).order('movement_date',{ascending:false}).range(from,to))
     ])
     if(itemResult.error)throw itemResult.error
-    if(movementResult.error)throw movementResult.error
-    setItems((itemResult.data??[]) as Item[]);setMovements((movementResult.data??[]) as Movement[])
+    setItems((itemResult.data??[]) as Item[]);setMovements(movementRows)
    }else if(isTransport){
-    const [studentResult,routeResult,stopResult,vehicleResult,allocationResult]=await Promise.all([
+    const [studentResult,routeResult,stopResult,vehicleResult,allocationRows]=await Promise.all([
      supabase.from('students').select('id,full_name,admission_no,class_name').eq('institution_id',user.institutionId).eq('status','active').order('full_name'),
      supabase.from('institutional_records').select('id,title,reference_code,payload').eq('institution_id',user.institutionId).eq('module_key','transport').eq('record_type','transport-routes').order('title'),
      supabase.from('institutional_records').select('id,title,reference_code,parent_record_id,payload').eq('institution_id',user.institutionId).eq('module_key','transport').eq('record_type','route-stops').order('title'),
      supabase.from('institutional_records').select('id,title,reference_code,payload').eq('institution_id',user.institutionId).eq('module_key','transport').eq('record_type','vehicle-management').order('title'),
-     supabase.from('student_transport_allocations').select('*').eq('institution_id',user.institutionId).order('created_at',{ascending:false}).limit(500)
+     loadAllPages<Allocation>((from,to)=>supabase.from('student_transport_allocations').select('*').eq('institution_id',user.institutionId).order('created_at',{ascending:false}).range(from,to))
     ])
-    for(const result of [studentResult,routeResult,stopResult,vehicleResult,allocationResult])if(result.error)throw result.error
+    for(const result of [studentResult,routeResult,stopResult,vehicleResult])if(result.error)throw result.error
     setStudents((studentResult.data??[]) as Student[]);setRoutes((routeResult.data??[]) as RouteRecord[])
     setStops((stopResult.data??[]) as RouteRecord[]);setVehicles((vehicleResult.data??[]) as RouteRecord[])
-    setAllocations((allocationResult.data??[]) as Allocation[])
+    setAllocations(allocationRows)
    }
   }catch(error){setLoadError(error instanceof Error?error.message:'The operation records could not be loaded.');}
   finally{setLoading(false)}
