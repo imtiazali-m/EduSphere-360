@@ -503,9 +503,6 @@ button { -webkit-tap-highlight-color: transparent; }
   --es-forest-deep: var(--es-brand-950);
   --es-mint: #dbe8ff;
   --es-lime: #a9c6ff;
-  --es-ink: var(--es-ink);
-  --es-muted: var(--es-muted);
-  --es-line: var(--es-line);
   color: var(--es-ink); background: var(--es-canvas); font-family: inherit;
 }
 .es-auth-visual {
