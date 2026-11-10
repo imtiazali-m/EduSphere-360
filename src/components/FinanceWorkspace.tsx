@@ -348,7 +348,7 @@ export function FinanceWorkspace({workspaceKey,initialWindow,onToast}:Props){
 
   function sortedFinanceRows(rows:FinanceRow[],key:string,direction:'asc'|'desc'){
     return [...rows].sort((left,right)=>{
-      const value=(row:FinanceRow):unknown => key==='balance'?outstandingInvoiceBalance(row):key==='net_amount'?netInvoiceAmount(row):row[key]
+      const value=(row:FinanceRow):unknown => key==='balance'?outstandingInvoiceBalance(row):key==='net_amount'?netInvoiceAmount(row):key==='invoice'?`${String(invoices.find(item=>item.id===row.invoice_id)?.invoice_no??'')} ${String(invoices.find(item=>item.id===row.invoice_id)?.student_name??'')}`:row[key]
       const a=value(left),b=value(right)
       const aEmpty=a===null||a===undefined||a===''
       const bEmpty=b===null||b===undefined||b===''
@@ -428,6 +428,7 @@ export function FinanceWorkspace({workspaceKey,initialWindow,onToast}:Props){
     return <>
       <div className="table-scroll"><table><thead><tr>
         {financeSortHeader('Receipt','receipt_no',paymentSortKey,paymentSortDirection,()=>sortPayments('receipt_no'))}
+        {financeSortHeader('Invoice','invoice',paymentSortKey,paymentSortDirection,()=>sortPayments('invoice'))}
         {financeSortHeader('Payment date','payment_date',paymentSortKey,paymentSortDirection,()=>sortPayments('payment_date'))}
         {financeSortHeader('Method','payment_method',paymentSortKey,paymentSortDirection,()=>sortPayments('payment_method'))}
         {financeSortHeader('Reference','payment_reference',paymentSortKey,paymentSortDirection,()=>sortPayments('payment_reference'))}
@@ -437,6 +438,7 @@ export function FinanceWorkspace({workspaceKey,initialWindow,onToast}:Props){
         const invoice=invoices.find(item=>item.id===row.invoice_id)
         return <tr key={row.id}>
           <td><b>{String(row.receipt_no??row.receipt_number??'—')}</b></td>
+          <td>{String(invoice?.invoice_no??'Invoice')}<small>{String(invoice?.student_name??'')}</small></td>
           <td>{dateLabel(row.payment_date)}</td>
           <td>{label(row.payment_method)}</td>
           <td>{String(row.payment_reference??row.transaction_reference??row.cheque_number??'—')}</td>
