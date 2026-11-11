@@ -197,6 +197,22 @@ export function WelcomeScreen({ navigate }: ScreenProps) {
           <div><strong>1</strong><span>Unified platform<br/>One consistent experience</span></div>
         </section>
 
+        <section className="edm-visual-showcase" aria-label="Campus and learning environments">
+          <div className="edm-visual-showcase-copy">
+            <span className="edm-section-kicker">BUILT AROUND REAL CAMPUS LIFE</span>
+            <h2>People, places and progress.<br/><em>Connected in one system.</em></h2>
+            <p>From the learning spaces where students collaborate to the campus teams that keep an institution running, EduSphere 360 brings daily work into a clearer shared experience.</p>
+          </div>
+          <figure className="edm-visual-photo edm-campus-photo-card">
+            <img src="https://images.pexels.com/photos/29326797/pexels-photo-29326797.jpeg?auto=compress&cs=tinysrgb&w=1200" alt="A modern university building surrounded by mature green trees" loading="lazy" decoding="async"/>
+            <figcaption><span>01 / CAMPUS</span><b>Spaces that bring education to life</b></figcaption>
+          </figure>
+          <figure className="edm-visual-photo edm-learning-photo-card">
+            <img src="https://images.pexels.com/photos/16420473/pexels-photo-16420473/free-photo-of-a-group-of-students-sitting-in-a-library-and-studying.jpeg?auto=compress&w=1260&h=750&dpr=1" alt="Students collaborating with laptops and books in a university library" loading="lazy" decoding="async"/>
+            <figcaption><span>02 / LEARNING</span><b>Collaboration, knowledge and achievement</b></figcaption>
+          </figure>
+        </section>
+
         <section className="edm-analytics-section edm-section" id="analytics">
           <div className="edm-analytics-heading">
             <div><span className="edm-section-kicker">VISUAL ANALYTICS</span><h2>See the whole picture.<br/><em>Act on what matters.</em></h2><p>Turn everyday institutional records into clear trends, comparisons and operational insight.</p></div>
