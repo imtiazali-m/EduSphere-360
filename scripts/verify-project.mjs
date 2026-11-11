@@ -874,11 +874,27 @@ check('Required database safeguards and Cloudflare redirects remain in the proje
     '20261111165108_stage9_exam_result_workflow_and_online_delivery.sql',
     '20261111170323_stage9_security_rubrics_and_policy_optimization.sql',
     '20261111170350_stage9_online_assessment_manual_review.sql',
-    '20261111170420_stage9_weight_scope_validation.sql']) {
+    '20261111170921_stage9_weight_scope_validation.sql',
+    '20261111161307_stage5_administration_profile_campus_and_access_controls.sql',
+    '20261111162254_stage_6_people_hr_and_payroll_controls.sql',
+    '20261111162922_20261111193000_academic_sessions_active_members_read.sql',
+    '20261111163125_stage7_attendance_leave_student_wellbeing.sql',
+    '20261111163838_stage7_rls_policy_tuning.sql',
+    '20261111164407_stage_6_employee_qualification_records.sql',
+    '20261111164932_stage7_sensitive_access_and_discipline_details.sql',
+    '20261111165921_stage8_academic_data_tables.sql',
+    '20261111170012_stage8_academic_access_policies.sql',
+    '20261111170040_stage8_academic_performance_indexes.sql',
+    '20261111170147_stage8_academic_relational_allocations.sql',
+    '20261111170233_stage7_branch_scope_and_guardian_message_access.sql',
+    '20261111170358_stage_6_employee_salary_components_own_read.sql',
+    '20261111170659_stage_6_employee_appraisal_acknowledgement.sql',
+    '20261111170722_stage8_timetable_session_and_student_submission_guards.sql'
+  ]) {
     assert.ok(migrations.includes(migration), `${migration} missing`)
   }
   const timestamped = migrations.filter(name => /^202611\d{8}_.+\.sql$/.test(name))
-  assert.equal(timestamped.length, 35, 'Expected thirty-five timestamped migrations including the Stage 9 assessment workflows')
+  assert.equal(timestamped.length, 50, 'Expected fifty timestamped migrations including the Stage 9 assessment workflows')
   assert.ok(read('supabase/migrations/README.md').includes('thirty-five timestamped migration files'))
   assert.equal(read('public/_redirects').trim(), '/* /index.html 200')
   const envExample = read('.env.example')
