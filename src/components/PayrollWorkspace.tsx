@@ -136,7 +136,7 @@ export function PayrollWorkspace({initialWindow,onToast}:Props){
     return [employee?.full_name,employee?.employee_no,profile.status].some(value=>String(value??'').toLowerCase().includes(salarySearch.trim().toLowerCase()))
   }),[profiles,employees,salarySearch])
   const profileRecurringTotals=(profileId:string,date=today())=>{
-    const effective=components.filter(component=>component.salary_profile_id===profileId&&component.status==='active'&&component.effective_from<=date&&(!component.effective_to||component.effective_to>=date))
+    const effective=components.filter(component=>component.salary_profile_id===profileId&&component.status==='active'&&String(component.effective_from??'')<=date&&(!component.effective_to||String(component.effective_to??'')>=date))
     return {
       allowances:effective.filter(component=>component.component_type==='allowance').reduce((sum,component)=>sum+Number(component.amount),0),
       deductions:effective.filter(component=>component.component_type==='deduction').reduce((sum,component)=>sum+Number(component.amount),0),
@@ -368,7 +368,7 @@ export function PayrollWorkspace({initialWindow,onToast}:Props){
         {payrollSortHeader('Effective','effective_from',salarySortKey,salarySortDirection,()=>toggleSalarySort('effective_from'))}
         {payrollSortHeader('Status','status',salarySortKey,salarySortDirection,()=>toggleSalarySort('status'))}
         {financeRole&&<th>Action</th>}
-      </tr></thead><tbody>{salaryPageRows.map(profile=>{const employee=employees.find(e=>e.id===profile.teacher_id);const effectiveComponents=components.filter(component=>component.salary_profile_id===profile.id&&component.status==='active'&&component.effective_from<=today()&&(!component.effective_to||component.effective_to>=today()));const componentAllowances=effectiveComponents.filter(component=>component.component_type==='allowance').reduce((sum,component)=>sum+Number(component.amount),0);const componentDeductions=effectiveComponents.filter(component=>component.component_type==='deduction').reduce((sum,component)=>sum+Number(component.amount),0);const totalAllowances=moneyValue(profile.monthly_allowances)+componentAllowances;const totalDeductions=moneyValue(profile.monthly_deductions)+componentDeductions;return <tr key={profile.id}>
+      </tr></thead><tbody>{salaryPageRows.map(profile=>{const employee=employees.find(e=>e.id===profile.teacher_id);const effectiveComponents=components.filter(component=>component.salary_profile_id===profile.id&&component.status==='active'&&String(component.effective_from??'')<=today()&&(!component.effective_to||String(component.effective_to??'')>=today()));const componentAllowances=effectiveComponents.filter(component=>component.component_type==='allowance').reduce((sum,component)=>sum+Number(component.amount),0);const componentDeductions=effectiveComponents.filter(component=>component.component_type==='deduction').reduce((sum,component)=>sum+Number(component.amount),0);const totalAllowances=moneyValue(profile.monthly_allowances)+componentAllowances;const totalDeductions=moneyValue(profile.monthly_deductions)+componentDeductions;return <tr key={profile.id}>
         <td><b>{String(employee?.full_name??'Employee')}</b></td><td>{String(employee?.employee_no??'—')}</td>
         <td>{cash(profile.base_salary)}</td><td>{cash(totalAllowances)}</td><td>{cash(totalDeductions)}</td>
         <td><strong>{cash(moneyValue(profile.base_salary)+totalAllowances-totalDeductions)}</strong></td>
