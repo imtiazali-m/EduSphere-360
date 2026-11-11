@@ -45,6 +45,7 @@
 }
 .ed360-display-settings-trigger:hover,
 .ed360-view-switch button:hover { color: var(--es-ink, #172b43); }
+.ed360-display-settings-panel[hidden] { display: none; }
 .ed360-display-settings-panel {
   position: absolute;
   z-index: 80;
@@ -212,8 +213,8 @@
 /* User-selected readable type scale. It never changes table data or available controls. */
 .pro-app-shell[data-font-size="large"] .pro-module-stage { font-size: 1.0625rem; }
 .pro-app-shell[data-font-size="largest"] .pro-module-stage { font-size: 1.125rem; }
-.pro-app-shell[data-font-size="large"] .pro-module-stage :is(p,small,label,th,td,button,input,select,textarea) { font-size: max(1em, 12px); }
-.pro-app-shell[data-font-size="largest"] .pro-module-stage :is(p,small,label,th,td,button,input,select,textarea) { font-size: max(1em, 13px); }
+.pro-app-shell[data-font-size="large"] .pro-window-panel :is(p,small,label,th,td,button,input,select,textarea) { font-size: max(13px, 1rem); }
+.pro-app-shell[data-font-size="largest"] .pro-window-panel :is(p,small,label,th,td,button,input,select,textarea) { font-size: max(14px, 1.0625rem); }
 
 /* The selected motion preference supplements the operating-system preference. */
 .pro-app-shell[data-reduced-motion="true"] *,
@@ -315,6 +316,10 @@
 .pro-app-shell[data-theme="dark"] .ed360-display-settings-heading { border-color: var(--es-line); }
 
 /* WCAG 2.2 AA minimum target size and focus visibility for the new controls. */
+.pro-app-shell[data-theme="dark"] .ed360-display-controls button:focus-visible,
+.pro-app-shell[data-theme="dark"] .ed360-display-settings-panel select:focus-visible,
+.pro-app-shell[data-theme="dark"] .ed360-display-settings-panel input:focus-visible { outline-color: #a9caff; }
+
 .pro-app-shell .ed360-display-controls button,
 .pro-app-shell .ed360-display-settings-panel select,
 .pro-app-shell .ed360-display-settings-panel input { min-height: 32px; }
