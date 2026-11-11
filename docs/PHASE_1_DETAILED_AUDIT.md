@@ -42,6 +42,15 @@ The repository release workflow now executes the actual TypeScript route resolve
 
 The exact-route audit also exposed legacy overrides that dropped the requested sub-view for dashboard shortcuts and Master Timetable. The resolver now returns the typed dashboard targets (academic report, finance overview, attendance, published results, comparative reports and task queue) and explicit timetable week/conflict/history windows before consulting old module-root overrides. Regression assertions cover those routes and role restrictions.
 
+A second source-level pass checks route-to-component dispatch in `Dashboard.tsx`: **all 1,569 routes map to a known component and none are unmapped**. The dispatcher matrix records 343 `WorkspaceUnavailable` routes, 60 `LinkedOperationsWorkspace` routes, 55 `InstitutionalWorkspace` routes, 235 `InstitutionOperationsWorkspace` routes, 223 `FinanceWorkspace` routes, 75 `ReportsModule` routes, 61 `AdministrationModule` routes, 59 `GovernanceWorkspace` routes, 56 `AttendanceWorkspace` routes, 40 `FacultyWorkspace` routes, 36 `PayrollWorkspace` routes, and the remaining role-visible routes routed to the appropriate generic record, overview, file or notification component.
+
+The 55 generic institutional routes are 18 distinct library, inventory and transport master-data destinations:
+- Library: Book Catalogue, Book Categories, Book Management, Book Registration, Digital Library, Learning Materials and Resource Downloads.
+- Inventory: Item Catalogue, Item Categories, Items Management, Purchase Records and Suppliers.
+- Transport: Drivers Management, Route Stops, Transport Assignments, Transport Routes, Vehicle Maintenance and Vehicle Management.
+
+These currently use institution-scoped `institutional_records` CRUD with group-specific field metadata in `InstitutionalWorkspace`. They are not treated as complete specialised lifecycle workflows; relationships, validation and any domain-specific transactional behaviour still need testing.
+
 A successful route audit remains source-level evidence only; it is not a browser, API authorization or backend transaction test. The generated artifact must be checked with the current run linked from PR #15.
 
 ## 4. Menu and route inventory
