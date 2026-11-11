@@ -381,7 +381,7 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
   const itemKey = slug(itemLabel)
   if (groupKey === 'people-hr') {
     const destinations: Record<string,string> = {
-      'students':'students:directory',
+      'students':role==='student'||role==='parent'?'students:profile':'students:directory',
       'admissions-enrollment':'peoplehr:admissions',
       'teachers':role==='teacher'?'employees:profile':'employees:directory-teaching',
       'faculty-staff':'employees:directory-staff',
