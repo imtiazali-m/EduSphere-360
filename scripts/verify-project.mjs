@@ -27,6 +27,7 @@ const requiredFiles = [
   'src/components/PayrollWorkspace.tsx', 'src/styles/payroll-workspace.css',
   'src/components/GovernanceWorkspace.tsx', 'src/styles/governance-workspace.css',
   'src/components/InstitutionOperationsWorkspace.tsx', 'src/styles/institution-operations.css',
+  'src/components/AcademicManagementWorkspace.tsx', 'src/styles/academic-management.css',
   'src/components/AuthScreens.tsx', 'src/components/AdministrationModule.tsx',
   'src/components/RecordModule.tsx', 'src/components/FacultyWorkspace.tsx', 'src/styles/faculty-workspace.css', 'src/components/ReportsModule.tsx', 'src/components/ProfileModule.tsx', 'src/context/AuthContext.tsx', 'src/lib/auth.ts',
   'src/lib/data.ts', 'src/lib/navigationAccess.ts', 'src/lib/userErrors.ts', 'scripts/test-user-errors.mjs',
@@ -65,14 +66,14 @@ const { modules, modulesForRole } = require(path.join(root, 'src/lib/modules.ts'
 const roles = ['owner', 'admin', 'teacher', 'student', 'parent', 'accountant', 'exam_officer']
 
 check('The full institutional menu maps every submenu to a working destination', () => {
-  assert.equal(navigationCatalog.length, 33, 'The complete institutional menu must contain 33 unique main workspaces')
+  assert.equal(navigationCatalog.length, 34, 'The complete institutional menu must contain 34 unique main workspaces')
   const groupKeys = new Set(navigationCatalog.map(group => group.key))
-  assert.equal(groupKeys.size, 33, 'Main workspace keys must be unique')
+  assert.equal(groupKeys.size, 34, 'Main workspace keys must be unique')
   for (const group of navigationCatalog) {
     assert.ok(group.items.length > 0, group.label + ' must have its own operational submenus')
     for (const page of group.items) assert.ok(navigationRoutes[page], 'No route is connected for ' + group.label + '/' + page)
   }
-  for (const required of ['curriculum','library','transport','inventory','facilities','visitors','institution-config','reconciliation','backup']) {
+  for (const required of ['academic-management','curriculum','library','transport','inventory','facilities','visitors','institution-config','reconciliation','backup']) {
     assert.ok(groupKeys.has(required), 'Missing expansion workspace: ' + required)
   }
   for (const required of ['attendance','students','employees','accounts-finance','fees','payments','receipts','payroll','examinations','class-tests','reports']) {
@@ -180,7 +181,7 @@ check('Sidebar workspaces follow the approved parent-section sequence for every 
     'dashboard',
     'administration','institution-config','academic-sessions','classes-sections','subjects','backup',
     'students','employees','attendance','behaviour','certificates',
-    'curriculum','timetable','teaching','question-bank','examinations','class-tests','library',
+    'academic-management','question-bank','examinations','class-tests','library',
     'accounts-finance','fees','receivables','payments','receipts','payroll','reconciliation',
     'communication',
     'transport','inventory','facilities','visitors',
@@ -216,7 +217,10 @@ check('All seven roles receive focused, permission-aware workspaces', () => {
     }
     for (const module of modulesForRole(role)) assert.ok(module.roles.includes(role), `${role} received an unauthorised module ${module.key}`)
   }
-  assert.ok(!roleNavigationGroups('teacher').some(group => ['administration','institution-config','academic-sessions','classes-sections','subjects'].includes(group.key)))
+  assert.ok(roleNavigationGroups('teacher').some(group => group.key === 'academic-management'), 'Teachers must receive the Stage 8 academic workspace')
+  assert.ok(roleNavigationGroups('student').some(group => group.key === 'academic-management'), 'Students must receive the Stage 8 academic workspace')
+  assert.ok(roleNavigationGroups('parent').some(group => group.key === 'academic-management'), 'Parents must receive the Stage 8 academic workspace')
+  assert.ok(!roleNavigationGroups('teacher').some(group => ['administration','institution-config','academic-sessions','classes-sections','subjects','curriculum','timetable','teaching'].includes(group.key)), 'Legacy academic groups must be consolidated, not duplicated')
   assert.ok(roleNavigationGroups('teacher').find(group => group.key === 'employees')?.items.includes('Employee Leave Management'))
   assert.ok(!roleNavigationGroups('student').some(group => ['administration','institution-config','employees','accounts-finance','payroll'].includes(group.key)))
   assert.ok(!roleNavigationGroups('parent').some(group => ['administration','institution-config','employees','accounts-finance','payroll'].includes(group.key)))
@@ -961,6 +965,28 @@ check('Unified design system is loaded last and removes global browser zoom', ()
   assert.ok(routeAudit.includes('### Owner (owner)') && routeAudit.includes('### Student (student)') && routeAudit.includes('### Examination officer (exam_officer)') && routeAudit.includes('Exact route matrix'), 'Exact route audit must list all seven role sections')
   assert.ok(routeAudit.includes('Explicitly unavailable') && routeAudit.includes('acceptance pending'), 'Exact route audit must distinguish unresolved workflows')
 })
+
+check('Stage 8 provides all 12 connected academic work areas', () => {
+  const academic = read('src/components/AcademicManagementWorkspace.tsx')
+  const academicStyles = read('src/styles/academic-management.css')
+  const dashboard = read('src/components/Dashboard.tsx')
+  const catalog = read('src/lib/institutionalCatalog.ts')
+  const routes = read('src/lib/navigationRoutes.ts')
+  for (const name of ['Academic Sessions','Classes & Sections','Subjects & Courses','Curriculum & Syllabus','Lesson Planning','Timetable','Homework & Assignments','Study Materials','Online Learning','Classwork & Classroom Activities','Academic Calendar','Learning Progress']) {
+    assert.ok(catalog.includes(name), 'Stage 8 navigation is missing ' + name)
+    assert.ok(academic.includes(name), 'Stage 8 workspace is missing ' + name)
+  }
+  for (const table of ['academic_sessions','academic_terms','classes','class_teacher_assignments','student_placements','subjects','teacher_assignments','curriculum_units','lesson_plans','timetable_entries','assignments','assignment_submissions','study_materials','learning_courses','learning_course_units','learning_course_progress','classroom_activities','classroom_activity_participants','academic_calendar_events','learning_progress','academic_preferences']) {
+    assert.ok(academic.includes("'" + table + "'") || academic.includes(table), 'Academic table is not connected: ' + table)
+  }
+  assert.ok(academic.includes('online_learning_enabled') && academic.includes('Disable online learning') && academic.includes('Enable online learning'), 'Online learning must remain optional and institution-controlled')
+  assert.ok(academic.includes('institution-files') && academic.includes('createSignedUrl'), 'Study materials must use private institution file storage')
+  assert.ok(academic.includes('class_id') && academic.includes('teacher_id') && academic.includes('room_id') && academic.includes('start_time') && academic.includes('end_time'), 'Timetable must use the class, teacher, room and period relationships')
+  assert.ok(routes.includes("return 'academic:'"), 'Academic menu destinations must route to the Stage 8 workspace')
+  assert.ok(dashboard.includes('<AcademicManagementWorkspace'), 'Dashboard must dispatch Stage 8 to its dedicated workspace')
+  assert.ok(academicStyles.includes('.ed360-academic-nav') && academicStyles.includes('.ed360-academic-table-wrap') && academicStyles.includes('.ed360-academic-modal'), 'Stage 8 tables, navigation and forms need a unified visual system')
+})
+
 
 check('Student admission is a dedicated, accessible workspace window', () => {
   const recordModule = read('src/components/RecordModule.tsx')

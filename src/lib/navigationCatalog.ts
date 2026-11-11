@@ -9,6 +9,12 @@ export const navigationCatalog:NavigationCatalogGroup[]=institutionalMenu.map(gr
 }))
 
 const roleItemAllow:Record<string,Partial<Record<string,string[]>>>={
+  'academic-management': {
+    student:['Academic Sessions','Classes & Sections','Subjects & Courses','Curriculum & Syllabus','Lesson Planning','Timetable','Homework & Assignments','Study Materials','Online Learning','Classwork & Classroom Activities','Academic Calendar','Learning Progress'],
+    parent:['Academic Sessions','Classes & Sections','Subjects & Courses','Curriculum & Syllabus','Lesson Planning','Timetable','Homework & Assignments','Study Materials','Online Learning','Classwork & Classroom Activities','Academic Calendar','Learning Progress'],
+    teacher:['Academic Sessions','Classes & Sections','Subjects & Courses','Curriculum & Syllabus','Lesson Planning','Timetable','Homework & Assignments','Study Materials','Online Learning','Classwork & Classroom Activities','Academic Calendar','Learning Progress'],
+    exam_officer:['Academic Sessions','Classes & Sections','Subjects & Courses','Timetable','Academic Calendar','Learning Progress'],
+  },
   examinations:{
     student:['Examination Timetable','Online Tests and Quizzes','Results and Result Approval','Report Cards'],
     parent:['Examination Timetable','Results and Result Approval','Report Cards'],
@@ -95,7 +101,7 @@ export const navigationSectionDefinitions:NavigationSectionDefinition[]=[
   {key:'overview',label:'Overview',groupKeys:['dashboard']},
   {key:'setup',label:'Institute Setup',groupKeys:['administration','institution-config','academic-sessions','classes-sections','subjects','backup']},
   {key:'people',label:'People & Admissions',groupKeys:['students','employees','attendance','behaviour','certificates']},
-  {key:'academics',label:'Academic Delivery',groupKeys:['curriculum','timetable','teaching','question-bank','examinations','class-tests','library']},
+  {key:'academics',label:'Academic Delivery',groupKeys:['academic-management','question-bank','examinations','class-tests','library']},
   {key:'finance',label:'Finance & Payroll',groupKeys:['accounts-finance','fees','receivables','payments','receipts','payroll','reconciliation']},
   {key:'communication',label:'Communication',groupKeys:['communication']},
   {key:'campus',label:'Campus Operations',groupKeys:['transport','inventory','facilities','visitors']},
@@ -107,7 +113,7 @@ const navigationGroupOrder=new Map<string,number>(
 
 export function roleNavigationGroups(role:WorkspaceMenuGroup['roles'][number],careAreas:ReadonlySet<string>=new Set()):RoleNavigationGroup[]{
   return institutionalMenu
-    .filter(group=>group.roles.includes(role))
+    .filter(group=>group.roles.includes(role) && !['academic-sessions','classes-sections','subjects','curriculum','timetable','teaching'].includes(group.key))
     .map(group=>({...group,items:allowedItems(group,role,careAreas).map(item=>item.label)}))
     .filter(group=>group.key==='dashboard'||group.items.length>0)
     .sort((left,right)=>(navigationGroupOrder.get(left.key)??Number.MAX_SAFE_INTEGER)-(navigationGroupOrder.get(right.key)??Number.MAX_SAFE_INTEGER))

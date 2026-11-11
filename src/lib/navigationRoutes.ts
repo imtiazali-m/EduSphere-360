@@ -385,6 +385,23 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
   const itemKey = slug(itemLabel)
   const compositeKey = `${groupKey}:${itemKey}`
   const actorRole = role ?? 'owner'
+  if (groupKey === 'academic-management') {
+    const academicWindows: Record<string,string> = {
+      'academic-sessions':'academic-sessions',
+      'classes-sections':'classes-sections',
+      'subjects-courses':'subjects-courses',
+      'curriculum-syllabus':'curriculum',
+      'lesson-planning':'lesson-planning',
+      'timetable':'timetable',
+      'homework-assignments':'homework-assignments',
+      'study-materials':'study-materials',
+      'online-learning':'online-learning',
+      'classwork-classroom-activities':'classroom-activities',
+      'academic-calendar':'academic-calendar',
+      'learning-progress':'learning-progress',
+    }
+    return 'academic:' + (academicWindows[itemKey] ?? 'academic-sessions')
+  }
   if (groupKey === 'ai' || groupKey === 'backup') {
     return 'unavailable:' + groupKey + ':' + itemKey
   }
