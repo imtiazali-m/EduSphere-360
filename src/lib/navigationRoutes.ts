@@ -378,6 +378,22 @@ function dedicatedRoute(groupKey: string, itemKey: string): string | undefined {
  * the generic institutional_records CRUD screen.
  */
 export function getNavigationRoute(groupKey: string, itemLabel: string, role?: string): string {
+  if (groupKey === 'people-hr') {
+    const destinations: Record<string,string> = {
+      'students':'students:directory',
+      'admissions-enrollment':'peoplehr:admissions',
+      'teachers':'employees:directory-teaching',
+      'faculty-staff':'employees:directory-staff',
+      'parents-guardians':'students:guardians',
+      'hr-recruitment':'peoplehr:recruitment',
+      'employee-contracts-documents':'peoplehr:contracts',
+      'employee-performance':'peoplehr:performance',
+      'payroll-salary-records':'payroll:overview',
+      'alumni':'peoplehr:alumni',
+    }
+    return destinations[itemKey] ?? 'unavailable:people-hr:' + itemKey
+  }
+
   const itemKey = slug(itemLabel)
   const compositeKey = `${groupKey}:${itemKey}`
   const actorRole = role ?? 'owner'
