@@ -1,4 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
+import { escapeIlikeLiteral, isVerifiedTeacherLink, resolveTeacherEmployee } from './provisioning-guards.mjs'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -27,6 +28,7 @@ Deno.serve(async (request) => {
   const caller = createClient(supabaseUrl, publishableKey, { global: { headers: { Authorization: authorization } }, auth: { autoRefreshToken: false, persistSession: false } })
   const admin = createClient(supabaseUrl, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } })
   let newUserId: string | null = null
+  let teacherRecordId: string | null = null
 
   try {
     const { data: callerData, error: callerError } = await caller.auth.getUser()
@@ -57,6 +59,30 @@ Deno.serve(async (request) => {
       if (!linkedStudent) return json({ error: 'The selected student does not belong to this institution.' }, 400)
     }
 
+    // Resolve the employee identity before creating an Auth user. A teacher
+    // login without its matching institution employee record is not valid.
+    if (role === 'teacher') {
+      const { data: teacherCandidates, error: teacherLookupError } = await admin.from('teachers')
+        .select('id,email,user_id')
+        .eq('institution_id', institutionId)
+        .ilike('email', escapeIlikeLiteral(email))
+        .limit(2)
+      if (teacherLookupError) throw teacherLookupError
+
+      const teacherResolution = resolveTeacherEmployee(teacherCandidates ?? [], email)
+      if (!teacherResolution.ok) {
+        const messages = {
+          invalid_email: 'Enter a valid email address for the teacher account. No account was created.',
+          employee_not_found: 'Register and save this employee in Faculty & Employee Management using the same email address before creating the teacher login. No account was created.',
+          employee_ambiguous: 'More than one employee record matches this email. Resolve the duplicate employee records before creating a teacher login. No account was created.',
+          employee_already_linked: 'This employee already has a linked login account. Review the existing account instead of creating another one.',
+          employee_invalid: 'The matching employee record is incomplete. Review the employee record before creating a teacher login.',
+        }
+        return json({ error: messages[teacherResolution.reason] ?? 'The employee identity could not be verified. No account was created.' }, 409)
+      }
+      teacherRecordId = teacherResolution.teacherId
+    }
+
     const { data: created, error: createError } = await admin.auth.admin.createUser({ email, password, email_confirm: true, user_metadata: { full_name: fullName } })
     if (createError) throw createError
     if (!created.user) throw new Error('Supabase did not return the new account.')
@@ -78,12 +104,31 @@ Deno.serve(async (request) => {
       if (error) throw error
     }
     if (role === 'teacher') {
-      await admin.from('teachers').update({ user_id: newUserId }).eq('institution_id', institutionId).ilike('email', email)
+      if (!teacherRecordId) throw new Error('The employee identity was not reserved for this teacher login.')
+      const { data: linkedEmployees, error: teacherLinkError } = await admin.from('teachers').update({ user_id: newUserId })
+        .eq('id', teacherRecordId)
+        .eq('institution_id', institutionId)
+        .is('user_id', null)
+        .select('id,user_id')
+      if (teacherLinkError) throw teacherLinkError
+      if (!isVerifiedTeacherLink(linkedEmployees, teacherRecordId, newUserId)) {
+        throw new Error('The employee record was linked by another request or changed during account creation. The new login will be rolled back; refresh the employee directory before trying again.')
+      }
     }
 
-    return json({ success: true, userId: newUserId, role, email })
+    return json({ success: true, userId: newUserId, role, email, employeeRecordId: teacherRecordId })
   } catch (error) {
-    if (newUserId) await admin.auth.admin.deleteUser(newUserId)
+    let cleanupFailed = false
+    if (newUserId) {
+      const { error: cleanupError } = await admin.auth.admin.deleteUser(newUserId)
+      cleanupFailed = Boolean(cleanupError)
+      if (cleanupError) console.error('create-user could not confirm account rollback:', cleanupError.message)
+    }
+    if (cleanupFailed) {
+      return json({
+        error: 'Account provisioning failed and automatic cleanup could not be confirmed. Ask an administrator to review the account before retrying.',
+      }, 500)
+    }
     return json({ error: error instanceof Error ? error.message : 'Account creation failed.' }, 400)
   }
 })

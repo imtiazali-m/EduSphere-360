@@ -31,6 +31,7 @@ const requiredFiles = [
   'src/components/RecordModule.tsx', 'src/components/FacultyWorkspace.tsx', 'src/styles/faculty-workspace.css', 'src/components/ReportsModule.tsx', 'src/components/ProfileModule.tsx', 'src/context/AuthContext.tsx', 'src/lib/auth.ts',
   'src/lib/data.ts', 'src/lib/navigationAccess.ts', 'src/lib/userErrors.ts', 'scripts/test-user-errors.mjs',
   'src/lib/finance.ts', 'scripts/test-finance.mjs', 'src/lib/fileAccess.ts', 'scripts/test-file-access.mjs',
+  'scripts/test-account-provisioning.mjs', 'supabase/functions/create-user/index.ts', 'supabase/functions/create-user/provisioning-guards.mjs', '.github/workflows/teacher-account-provisioning.yml', 'docs/TEACHER_ACCOUNT_LINK_INTEGRITY.md',
   'src/lib/navigationCatalog.ts', 'src/lib/navigationRoutes.ts', 'scripts/generate-navigation-route-audit.mjs', 'scripts/generate-route-view-audit.mjs', 'scripts/generate-responsive-source-audit.mjs', 'docs/PHASE_1_EXACT_ROUTE_AUDIT.md', 'docs/PHASE_1_ROUTE_VIEW_AUDIT.md', 'docs/PHASE_2_RESPONSIVE_SOURCE_AUDIT.md', 'src/components/NotificationCenter.tsx', 'src/styles/notification-center.css', 'public/_redirects',
   'supabase/migrations/20261109125937_announcement_read_receipts.sql',
   'supabase/migrations/20261109150048_finance_accounting_and_payroll_workflows.sql',
@@ -237,6 +238,32 @@ check('Dashboard matches the menu and keeps Quick Access at the sidebar bottom',
   for (const feature of ['sidebar-collapsed', 'width:72px', 'width:calc(100% - 72px)', 'pro-sidebar-brand-copy', 'pro-sidebar-collapse']) {
     assert.ok(sidebarCss.includes(feature), 'Compact sidebar styling is missing: ' + feature)
   }
+})
+
+check('Teacher account provisioning verifies and links one employee identity with rollback', () => {
+  const createUser = read('supabase/functions/create-user/index.ts')
+  const guards = read('supabase/functions/create-user/provisioning-guards.mjs')
+  const tests = read('scripts/test-account-provisioning.mjs')
+  const accountForm = read('src/components/AccountsModule.tsx')
+  assert.equal(packageJson.scripts['test:account-provisioning'], 'node scripts/test-account-provisioning.mjs')
+  for (const value of ['resolveTeacherEmployee', 'escapeIlikeLiteral', 'isVerifiedTeacherLink', ".is('user_id', null)", 'cleanupFailed', 'admin.auth.admin.deleteUser(newUserId)']) {
+    assert.ok(createUser.includes(value), 'Teacher provisioning safeguard is missing: ' + value)
+  }
+  for (const value of ['normalizeIdentityEmail', 'employee_ambiguous', 'employee_already_linked', 'isVerifiedTeacherLink']) {
+    assert.ok(guards.includes(value), 'Teacher identity helper is missing: ' + value)
+  }
+  for (const value of ['no employee record exists', 'ambiguous employee matches', 'already linked to a login', 'confirms only the exact employee']) {
+    assert.ok(tests.includes(value), 'Teacher provisioning regression test is missing: ' + value)
+  }
+  assert.ok(accountForm.includes('Teacher login creation verifies and links that employee record'), 'Account form does not explain the employee-first teacher login flow')
+})
+
+check('Cloudflare production deployment remains manual-only', () => {
+  const releaseWorkflow = read('.github/workflows/cloudflare-pages-release.yml')
+  const productionJob = releaseWorkflow.slice(releaseWorkflow.indexOf('  deploy-production:'))
+  assert.ok(productionJob.includes("github.event_name == 'workflow_dispatch'"), 'Production deployment must require workflow dispatch')
+  assert.ok(productionJob.includes('inputs.deploy_production == true'), 'Production deployment must require explicit approval')
+  assert.ok(!productionJob.includes("github.event_name == 'push'"), 'Production deployment must never run automatically on push')
 })
 
 const authScreens = read('src/components/AuthScreens.tsx')

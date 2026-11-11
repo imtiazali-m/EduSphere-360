@@ -15,7 +15,8 @@
     "audit:navigation": "node scripts/generate-navigation-route-audit.mjs",
     "audit:route-views": "node scripts/generate-route-view-audit.mjs",
     "audit:responsive": "node scripts/generate-responsive-source-audit.mjs",
-    "audit:modal-windows": "node scripts/audit-modal-windows.mjs"
+    "audit:modal-windows": "node scripts/audit-modal-windows.mjs",
+    "test:account-provisioning": "node scripts/test-account-provisioning.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.58.0",
