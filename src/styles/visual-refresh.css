@@ -1195,3 +1195,307 @@ button.button-primary:hover,.ed360-module-page .button-primary:hover{transform:t
   .pro-active-workspace-context>div>strong{font-size:12px}
   .pro-context-state{padding:5px 7px;font-size:8px}
 }
+
+
+/* Signed-in dashboard: make the campus image part of the everyday workspace. */
+.ed360-dashboard-heading{
+  background-image:
+    linear-gradient(100deg,rgba(8,24,48,.96) 0%,rgba(14,43,79,.92) 47%,rgba(18,58,103,.68) 100%),
+    url("https://images.pexels.com/photos/29326797/pexels-photo-29326797.jpeg?auto=compress&cs=tinysrgb&w=1600");
+  background-size:cover;background-position:center 46%;
+}
+.ed360-dashboard-heading::after{border-color:rgba(221,237,255,.21);box-shadow:0 0 0 28px rgba(221,237,255,.05),0 0 0 64px rgba(221,237,255,.025)}
+
+/* Core module insights: readable labels and consistent information density. */
+.ed360-module-insights{gap:15px;margin-bottom:18px}
+.ed360-module-insights-heading{align-items:center;gap:16px}
+.ed360-module-insights-heading>div>span{color:#6d83a0;font-size:9px;letter-spacing:1.35px}
+.ed360-module-insights-heading h2{color:#183a62;font-family:Manrope,sans-serif;font-size:19px;font-weight:850;letter-spacing:-.45px}
+.ed360-module-insights-heading p{color:#71849d;font-size:11px;line-height:1.6}
+.ed360-module-insights-heading>small{padding:7px 11px;border-color:#dce6f2;color:#607792;background:#fff;font-size:9px}
+.ed360-workspace-metrics{gap:13px}
+.ed360-workspace-metric{grid-template-columns:40px minmax(0,1fr);column-gap:12px;min-height:108px;padding:15px;border-radius:16px;box-shadow:var(--es-shadow-sm)}
+.ed360-workspace-metric>span{width:40px;height:40px;border-radius:12px}
+.ed360-workspace-metric small{color:#71839a;font-size:10px}
+.ed360-workspace-metric strong{color:#18395f;font-family:Manrope,sans-serif;font-size:25px;letter-spacing:-.7px}
+.ed360-workspace-metric em{color:#8797ab;font-size:9px}
+.ed360-workspace-insight-grid{gap:13px}
+.ed360-workspace-chart-card{padding:18px 19px;border-radius:17px;box-shadow:var(--es-shadow-sm)}
+.ed360-workspace-chart-card h3{color:#1e3c60;font-family:Manrope,sans-serif;font-size:14px;font-weight:850}
+.ed360-workspace-chart-card>div:first-child p{color:#7d8ea4;font-size:10px;line-height:1.6}
+.ed360-workspace-bar-list{gap:13px}
+.ed360-workspace-bar-row>div{color:#5b7089;font-size:10px}
+.ed360-workspace-bar-row>div b{color:#294969;font-size:10px}
+.ed360-workspace-bar-track{height:9px;background:#edf2f8}
+.ed360-workspace-donut{width:128px;height:128px;flex-basis:128px;filter:drop-shadow(0 8px 14px rgba(28,70,126,.12))}
+.ed360-workspace-donut:before{inset:19px}
+.ed360-workspace-donut b{color:#1b3d63;font-family:Manrope,sans-serif;font-size:24px}
+.ed360-workspace-donut small{color:#7c8da3;font-size:9px}
+.ed360-workspace-secondary-list{gap:10px}
+.ed360-workspace-secondary-list>div{gap:9px;color:#5b718b;font-size:10px}
+.ed360-workspace-empty{color:#8594a8;font-size:10px;line-height:1.6}
+.ed360-record-details{border:1px solid var(--es-line);border-radius:19px;box-shadow:var(--es-shadow-lg)}
+.ed360-record-details-grid{gap:11px}
+.ed360-record-detail{padding:12px 13px;border-color:#e3eaf3;border-radius:11px;background:#f8faff}
+.ed360-record-detail strong{color:#294967;font-size:12px}
+.ed360-record-detail small{color:#7e90a6;font-size:10px}
+
+/* Student workspace and directory */
+.students-page{padding-top:8px;display:grid;gap:18px}
+.students-page-heading{align-items:center;margin-bottom:4px}
+.students-page-heading h1{color:#17385e;font-family:Manrope,sans-serif;font-size:clamp(25px,2.3vw,31px);letter-spacing:-.8px}
+.students-page-heading p{color:#71839a;font-size:12px;line-height:1.7}
+.student-stats-grid{gap:14px;margin-bottom:0}
+.student-stat-card{min-height:126px;padding:17px;border-color:#e0e8f2;border-radius:16px;box-shadow:var(--es-shadow-sm);transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
+.student-stat-card:hover{transform:translateY(-3px);border-color:#c5d8f2;box-shadow:var(--es-shadow-md)}
+.student-stat-icon{width:40px;height:40px;border-radius:13px}
+.student-stat-label{color:#6f829a;font-size:10px;font-weight:750}
+.student-stat-card>strong{color:#18395f;font:850 27px Manrope,sans-serif}
+.student-stat-card>small{color:#8796a9;font-size:9px}
+.student-directory-card,.student-directory-card.student-directory-card{border-color:#dfe7f2;border-radius:17px;box-shadow:var(--es-shadow-sm)}
+.student-directory-heading{padding:19px 21px 15px}
+.student-directory-heading h2{color:#1e3d61;font-size:16px}
+.student-directory-heading p{color:#7d8ea3;font-size:10px;line-height:1.6}
+.student-mode-tag{padding:7px 10px;border-radius:999px;font-size:9px}
+.student-directory-toolbar{gap:11px;padding:0 21px 15px}
+.student-search{height:42px;padding-inline:12px;border-color:#dfe7f1;border-radius:11px;background:#f9fbff}
+.student-search input{color:#244361;font-size:12px}
+.student-refresh-button{height:40px;padding-inline:13px;border-color:#dce6f1;border-radius:10px;font-size:10px}
+.student-filter-row{gap:7px;padding:0 21px 14px}
+.student-filter-row button{padding:8px 11px;border-radius:9px;color:#637992;font-size:10px}
+.student-filter-row button.active{color:#245fd7;background:#eaf1ff}
+.student-filter-row button span{min-width:21px;height:21px;color:#245fd7;background:#fff;font-size:9px}
+.student-table-wrap,.student-table-wrap.student-table-wrap{border-radius:0 0 16px 16px}
+.student-table th{padding:13px 15px;color:#5e7390;background:#f3f6fb;font-size:9px;letter-spacing:.75px}
+.student-table td{padding:13px 15px;color:#405974;font-size:11px}
+.student-person-cell strong{color:#294865;font-size:11px}
+.student-person-cell small{color:#8292a6;font-size:9px}
+.student-avatar{width:39px;height:39px;border-radius:12px}
+.student-admission-number{font-size:10px}
+.student-directory-footer{padding:13px 21px;color:#8392a6;background:#f9fbfe;font-size:9px}
+.student-directory-footer strong{color:#405d7c}
+.student-empty-state{color:#71849c}
+.student-empty-state>strong{color:#294968;font-size:14px}
+.student-empty-state>p{color:#7d8fa5;font-size:10px}
+.student-record-modal .modal-heading{padding-bottom:18px}
+.student-modal-subtitle{color:#71849b;font-size:11px}
+.student-form-section-label{color:#627d9c;font-size:10px;letter-spacing:1.25px}
+.student-form-grid{gap:16px 20px}
+.student-field-help{color:#778ba3;font-size:10px}
+.student-photo-row{padding:16px;border-color:#dfe7f2;border-radius:15px;background:#f8faff}
+.student-photo-copy>strong{color:#294967;font-size:12px}
+.student-photo-copy p{color:#7a8da4;font-size:10px}
+.student-photo-button{padding:9px 13px;font-size:10px}
+.student-form-note{padding:12px 14px;border-color:#dce7f6;border-radius:11px;color:#617c9b;font-size:10px}
+
+/* Faculty directory and admission */
+.faculty-page-heading{align-items:center;margin-bottom:5px}
+.faculty-page-heading h1{color:#17385e;font-size:clamp(25px,2.2vw,30px);letter-spacing:-.8px}
+.faculty-page-heading p{color:#71839a;font-size:12px;line-height:1.65}
+.faculty-stats-grid{gap:14px;margin-bottom:0}
+.faculty-stat-card{padding:17px;border-color:#e0e8f2;border-radius:16px;box-shadow:var(--es-shadow-sm);transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
+.faculty-stat-card:hover{transform:translateY(-3px);border-color:#c5d8f2;box-shadow:var(--es-shadow-md)}
+.faculty-stat-icon{width:40px;height:40px;border-radius:13px}
+.faculty-stat-label{color:#6f829a;font-size:10px}
+.faculty-stat-card>strong{color:#18395f;font-size:27px}
+.faculty-stat-card>small{color:#8796a9;font-size:9px}
+.faculty-directory-card{border-color:#dfe7f2;border-radius:17px;box-shadow:var(--es-shadow-sm)}
+.faculty-directory-heading{padding:19px 21px 15px}
+.faculty-directory-heading h2{color:#1e3d61;font-size:16px}
+.faculty-directory-heading p{color:#7d8ea3;font-size:10px}
+.faculty-mode-tag{padding:7px 10px;font-size:9px}
+.faculty-directory-toolbar{gap:11px;padding:0 21px 15px}
+.faculty-search{min-height:42px;padding-inline:12px;border-color:#dfe7f1;border-radius:11px;background:#f9fbff}
+.faculty-search input{font-size:12px;color:#244361}
+.faculty-refresh-button{min-height:40px;padding:0 13px;border-radius:10px;font-size:10px}
+.faculty-filter-row{gap:7px;padding:0 21px 14px}
+.faculty-filter-row button{padding:8px 11px;border-radius:9px;font-size:10px}
+.faculty-filter-row button.active{border-color:#cfdef3;background:#edf4ff;color:#245fd7}
+.faculty-table-wrap{max-width:100%;overflow:auto;border-radius:0 0 16px 16px}
+.faculty-table th{padding:13px 15px;background:#f3f6fb;color:#5e7390;font-size:9px;letter-spacing:.75px}
+.faculty-table td{padding:13px 15px;color:#405974;font-size:11px}
+.faculty-person-cell strong{color:#294865;font-size:11px}
+.faculty-person-cell small{color:#8292a6;font-size:9px}
+.faculty-avatar{width:39px;height:39px;border-radius:12px}
+.faculty-employee-number{font-size:10px}
+.faculty-directory-footer{padding:13px 21px;color:#8392a6;font-size:9px}
+.faculty-directory-footer strong{color:#405d7c}
+.faculty-empty-state{color:#71849c;font-size:11px}
+.faculty-empty-state strong{color:#294968;font-size:14px}
+.faculty-empty-state p{color:#7d8fa5;font-size:10px}
+.faculty-modal-subtitle{font-size:11px;color:#71849b}
+.faculty-form-section-label{font-size:10px;letter-spacing:1.25px}
+.faculty-field-help{color:#778ba3;font-size:10px}
+.faculty-form-note{padding:12px 14px;border-color:#dce7f6;border-radius:11px;font-size:10px}
+
+/* Staff management: readable workbench navigation, record tables and dialogs */
+.staff-workspace{gap:18px;max-width:1600px;margin:0 auto;color:#253e5e}
+.staff-workspace-heading{align-items:center;gap:20px;padding:21px 23px;border:1px solid #dce6f2;border-radius:19px;background:radial-gradient(ellipse at 94% 4%,rgba(78,136,230,.1),transparent 34%),linear-gradient(115deg,#fff,#f6f9ff);box-shadow:var(--es-shadow-sm)}
+.staff-workspace-heading h1{color:#17385e;font-family:Manrope,sans-serif;font-size:clamp(24px,2.3vw,30px);font-weight:850;letter-spacing:-.7px}
+.staff-workspace-heading p{color:#71839a;font-size:12px;line-height:1.7}
+.staff-kicker{color:#2a68ca;font-size:9px;letter-spacing:1.3px}
+.staff-heading-actions{gap:9px}
+.staff-button{min-height:40px;padding:0 14px;border-radius:10px;font-size:10px}
+.staff-button-primary{border-color:#2564d2;background:linear-gradient(120deg,#3478f6,#245fd7);box-shadow:0 7px 16px rgba(52,120,246,.18)}
+.staff-button-outline{border-color:#dce6f1;color:#405a78;background:#fff}
+.staff-window-nav{gap:6px;padding:7px;border-color:#dfe7f2;border-radius:14px;background:#fff;box-shadow:var(--es-shadow-sm)}
+.staff-window-nav button{min-height:40px;padding:0 12px;border-radius:9px;color:#60758f;font-size:10px}
+.staff-window-nav button.active{background:linear-gradient(120deg,#3478f6,#245fd7);box-shadow:0 6px 15px rgba(42,101,207,.2)}
+.staff-context-bar{min-height:57px;gap:15px;padding:11px 14px;border-color:#dfe7f2;border-radius:13px;background:#f9fbff}
+.staff-context-bar>div span{color:#7b8da4;font-size:8px;letter-spacing:1.1px}
+.staff-context-bar>div strong{color:#214366;font-size:12px}
+.staff-context-bar label{gap:10px;color:#60758e;font-size:10px}
+.staff-context-bar select{height:38px;max-width:340px;padding:0 11px;border-color:#dce6f1;border-radius:9px;color:#294968;font-size:10px}
+.staff-loading{color:#6e829b;font-size:9px}
+.staff-metric-grid{gap:13px}
+.staff-metric-card{grid-template-columns:42px minmax(0,1fr);gap:4px 11px;min-height:95px;padding:15px;border-color:#dfe7f1;border-radius:15px;box-shadow:var(--es-shadow-sm)}
+.staff-metric-card>span{width:42px;height:42px;border-radius:13px;color:#2b6dd9;background:#eaf1ff}
+.staff-metric-card small{color:#6e8199;font-size:10px}
+.staff-metric-card strong{color:#193a60;font-family:Manrope,sans-serif;font-size:24px}
+.staff-overview-grid{gap:14px}
+.staff-panel,.staff-full-panel{padding:18px 19px;border-color:#dfe7f1;border-radius:16px;box-shadow:var(--es-shadow-sm)}
+.staff-full-panel{gap:15px}
+.staff-panel>header h2,.staff-full-panel>header h2{color:#1e3d61;font-family:Manrope,sans-serif;font-size:14px}
+.staff-panel>header p,.staff-full-panel>header p{color:#7d8fa5;font-size:10px;line-height:1.6}
+.staff-panel>header button{font-size:10px}
+.staff-summary-list{margin-top:14px}
+.staff-summary-list>div{padding:11px 2px;color:#60758e;font-size:11px}
+.staff-summary-list b{color:#244361;font-size:12px}
+.staff-profile-summary strong{color:#244565;font-size:16px}
+.staff-profile-summary>span,.staff-profile-summary small{color:#7f91a6;font-size:10px}
+.staff-status{padding:5px 8px;border-radius:7px;font-size:9px}
+.staff-operation-links{gap:10px}
+.staff-operation-links button{min-height:44px;gap:10px;padding:11px 12px;border-radius:11px;color:#435e7d;background:#fafcff;font-size:10px}
+.staff-process-grid{gap:11px}
+.staff-process-grid article{padding:14px;border-color:#e0e8f2;border-radius:12px;background:#fbfcff}
+.staff-process-grid b{color:#244361;font-size:11px}
+.staff-process-grid p{color:#71849b;font-size:10px;line-height:1.6}
+.staff-note{padding:12px 14px;border-radius:11px;color:#597493;font-size:10px}
+.staff-record-count{color:#71849c;font-size:10px}
+.staff-toolbar{gap:11px}
+.staff-toolbar label{min-height:41px;padding:0 12px;border-color:#dce6f1;border-radius:10px}
+.staff-toolbar input{font-size:11px}
+.staff-toolbar select{height:40px;padding:0 11px;border-color:#dce6f1;border-radius:10px;color:#355575;font-size:10px}
+.staff-table-wrap{border-color:#dfe7f1;border-radius:14px;box-shadow:var(--es-shadow-sm)}
+.staff-table{min-width:760px}
+.staff-table th{padding:13px 14px;background:#f3f6fb;color:#5f7490;font-size:9px;letter-spacing:.7px}
+.staff-table td{padding:13px 14px;color:#405974;font-size:10px}
+.staff-row-actions button{width:32px;height:32px;border-radius:8px}
+.staff-empty{min-height:150px;padding:22px;border-color:#d6e2f0;border-radius:13px;color:#71849c;font-size:10px}
+.staff-empty>span{width:41px;height:41px;border-radius:12px}
+.staff-empty strong{color:#294968;font-size:13px}
+.staff-empty p{color:#7d8fa5;font-size:10px;line-height:1.65}
+.staff-profile-grid{gap:12px}
+.staff-profile-grid article{padding:15px;border-color:#e0e8f2;border-radius:13px;background:#fbfcff}
+.staff-profile-grid article>span{color:#6e83a0;font-size:8px;letter-spacing:1px}
+.staff-profile-grid h3{color:#1d3e62;font-size:15px}
+.staff-profile-grid dl>div{padding:9px 0}
+.staff-profile-grid dt{color:#7c8fa5;font-size:10px}
+.staff-profile-grid dd{color:#2e4c6c;font-size:10px}
+.staff-document-form{gap:11px;padding:15px;border-color:#e0e8f2;border-radius:13px;background:#f8faff}
+.staff-document-form label{gap:6px;color:#60758e;font-size:10px}
+.staff-document-form input,.staff-document-form select{height:40px;padding:0 10px;border-color:#dce6f1;border-radius:9px;color:#2e4c6c;font-size:10px}
+.staff-dialog-backdrop{background:rgba(8,22,43,.58);backdrop-filter:blur(4px)}
+.staff-dialog{gap:17px;width:min(820px,100%);max-height:min(92dvh,900px);padding:22px;border-color:#dce6f1;border-radius:21px;box-shadow:0 28px 90px rgba(5,19,39,.3)}
+.staff-dialog>header h2{color:#193a60;font-family:Manrope,sans-serif;font-size:19px}
+.staff-dialog>header p{color:#74869c;font-size:10px;line-height:1.6}
+.staff-dialog>header button{width:36px;height:36px;border-radius:10px}
+.staff-form-grid{gap:14px}
+.staff-field{gap:6px;color:#536c88;font-size:10px}
+.staff-field>span{color:#526b86}
+.staff-field input,.staff-field select,.staff-field textarea{min-height:41px;padding:9px 11px;border-color:#dce6f1;border-radius:10px;color:#2c4b6b;font-size:11px}
+.staff-field textarea{min-height:90px}
+.staff-dialog>footer{gap:9px;padding-top:13px}
+.staff-id-card-print{border-radius:19px}
+@media(max-width:760px){
+  .staff-workspace-heading{padding:17px}
+  .staff-metric-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .staff-context-bar select{min-height:38px}
+}
+@media(max-width:520px){
+  .staff-workspace-heading h1{font-size:21px}
+  .staff-heading-actions{justify-content:stretch;flex-wrap:wrap}
+  .staff-heading-actions .staff-button{flex:1}
+  .staff-window-nav button{min-height:38px;padding:0 10px;font-size:9px}
+  .staff-panel,.staff-full-panel{padding:13px}
+  .staff-dialog{padding:14px}
+  .staff-metric-card{min-height:84px;padding:11px}
+  .staff-metric-card strong{font-size:20px}
+}
+
+/* Administration tables and setup cards */
+.admin-page{display:grid;gap:17px;max-width:1600px;margin:0 auto}
+.admin-heading{align-items:center;gap:18px;padding:20px 22px;border:1px solid #dce6f2;border-radius:18px;background:linear-gradient(110deg,#fff,#f5f8fe);box-shadow:var(--es-shadow-sm)}
+.admin-heading h1{color:#17385e;font-family:Manrope,sans-serif;font-size:clamp(24px,2.2vw,30px);font-weight:850;letter-spacing:-.7px}
+.admin-muted{color:#71839a;font-size:12px;line-height:1.65}
+.admin-actions{gap:9px}
+.admin-button{min-height:40px;padding:0 14px;border:1px solid #dce6f1;border-radius:10px;color:#405a78;background:#fff;font-size:10px;font-weight:800}
+.admin-button.primary{border-color:#2564d2;color:#fff;background:linear-gradient(120deg,#3478f6,#245fd7);box-shadow:0 7px 16px rgba(52,120,246,.17)}
+.admin-grid{gap:14px}
+.admin-card{padding:17px;border:1px solid #dfe7f2;border-radius:15px;background:#fff;box-shadow:var(--es-shadow-sm)}
+.admin-card h2{color:#1e3d61;font-family:Manrope,sans-serif;font-size:15px}
+.admin-field{gap:6px;color:#536d87;font-size:10px}
+.admin-field input,.admin-field select,.admin-field textarea{min-height:40px;border:1px solid #dce6f1;border-radius:10px;color:#294968;background:#fff;font-size:11px}
+.admin-list-head{gap:12px}
+.admin-search{min-height:40px;border:1px solid #dce6f1;border-radius:10px;background:#f9fbff}
+.admin-search input{font-size:11px}
+.admin-table-wrap{max-width:100%;overflow:auto;border:1px solid #dfe7f1;border-radius:14px;background:#fff;box-shadow:var(--es-shadow-sm)}
+.admin-table{width:100%;min-width:680px;border-collapse:collapse}
+.admin-table th{padding:13px 14px;border-bottom:1px solid #e4ebf4;color:#5f7490;background:#f3f6fb;font-size:9px;letter-spacing:.7px}
+.admin-table td{padding:13px 14px;border-bottom:1px solid #edf1f6;color:#405974;font-size:10px}
+.admin-table tbody tr:hover{background:#f7faff}
+.admin-empty{padding:35px 18px;border:1px dashed #d7e2ef;border-radius:13px;color:#7e8fa5;background:#f9fbff;text-align:center}
+@media(max-width:620px){.admin-heading{align-items:flex-start;flex-direction:column;padding:16px}.admin-actions{width:100%;flex-wrap:wrap}.admin-grid{grid-template-columns:1fr}}
+
+/* Attendance register: larger action targets and calmer data layout */
+.ed360-attendance-workspace{gap:18px}
+.ed360-attendance-hero{padding:21px 23px;border-radius:18px}
+.ed360-attendance-hero p{font-size:12px;line-height:1.65}
+.ed360-attendance-stats{gap:12px}
+.ed360-attendance-stats>article{min-height:94px;padding:14px;border:1px solid #e0e8f2;border-radius:15px;background:#fff;box-shadow:var(--es-shadow-sm)}
+.ed360-attendance-stats strong{color:#193a60;font-family:Manrope,sans-serif;font-size:24px}
+.ed360-attendance-stats small{color:#74869d;font-size:10px}
+.ed360-attendance-main-tabs{padding:6px;border-radius:14px}
+.ed360-attendance-main-tabs button{min-height:42px;padding:0 14px;font-size:10px}
+.ed360-attendance-filter-card{padding:16px;border:1px solid #dfe7f2;border-radius:15px;background:#fff;box-shadow:var(--es-shadow-sm)}
+.ed360-attendance-filter label{color:#60758e;font-size:10px;font-weight:750}
+.ed360-attendance-filter input,.ed360-attendance-filter select{min-height:40px;border:1px solid #dce6f1;border-radius:10px;color:#294968;font-size:11px}
+.ed360-attendance-search{min-height:40px;border:1px solid #dce6f1;border-radius:10px;background:#f9fbff}
+.ed360-attendance-search input{font-size:11px}
+.ed360-attendance-roster-meta{color:#71849c;font-size:10px}
+.ed360-attendance-bulk button{min-height:36px;border:1px solid #dce6f1;border-radius:9px;font-size:10px}
+.ed360-attendance-board{padding:17px;border:1px solid #dfe7f2;border-radius:16px;background:#fff;box-shadow:var(--es-shadow-sm)}
+.ed360-attendance-board-head h2{color:#1f3e62;font-family:Manrope,sans-serif;font-size:16px}
+.ed360-attendance-grid-table{overflow:auto;border:1px solid #e1e9f3;border-radius:11px}
+.attendance-grid-head,.attendance-grid-row{min-width:760px}
+.attendance-grid-head{background:#f3f6fb;color:#5f7490;font-size:9px}
+.attendance-grid-row{min-height:56px;border-top:1px solid #edf1f6;color:#405974;font-size:10px}
+.attendance-grid-row:hover{background:#f7faff}
+.attendance-grid-id{color:#315b91;font-size:10px}
+.ed360-attendance-note-input{min-height:38px;border:1px solid #dce6f1;border-radius:9px;font-size:10px}
+.ed360-attendance-history-controls{gap:12px}
+.ed360-attendance-history-controls label{gap:6px;color:#60758e;font-size:10px}
+.ed360-attendance-history-controls input,.ed360-attendance-history-controls select{min-height:40px;border-radius:10px;font-size:10px}
+.ed360-attendance-history-list>div>span>b{font-size:12px}
+.ed360-attendance-history-list>div>span>small{font-size:10px}
+@media(max-width:600px){.ed360-attendance-hero{padding:16px}.ed360-attendance-board{padding:11px}.ed360-attendance-main-tabs{overflow-x:auto}.ed360-attendance-main-tabs button{white-space:nowrap}}
+
+/* Consistent module-page controls and data tables on every role. */
+.ed360-module-page .page-title-row h1,.ed360-module-page .page-title-row h2{font-family:Manrope,sans-serif;font-weight:850;letter-spacing:-.6px}
+.ed360-module-page .table-scroll th{padding:13px 14px;font-size:9px;letter-spacing:.7px}
+.ed360-module-page .table-scroll td{padding:12px 14px;font-size:10px;line-height:1.5}
+.ed360-module-page .table-scroll tbody tr:hover{background:#f6f9ff}
+.ed360-module-page .table-scroll .button,.ed360-module-page .table-scroll button{min-height:32px;border-radius:8px}
+.ed360-module-page .button{min-height:39px;border-radius:10px;font-size:10px;font-weight:750}
+.ed360-module-page .field-label{gap:6px;color:#536b86;font-size:10px;font-weight:750}
+.ed360-module-page .input-control,.ed360-module-page .textarea-control{min-height:40px;border:1px solid #dce6f1;border-radius:10px;color:#294968;font-size:11px}
+@media(max-width:620px){
+  .ed360-module-page .page-title-row{align-items:flex-start;flex-direction:column;gap:12px}
+  .ed360-module-page .page-title-row h1{font-size:22px}
+  .ed360-module-insights-heading{align-items:flex-start;flex-direction:column}
+  .ed360-workspace-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .ed360-workspace-insight-grid{grid-template-columns:1fr}
+  .student-directory-heading,.faculty-directory-heading{gap:10px}
+  .student-directory-heading h2,.faculty-directory-heading h2{font-size:14px}
+  .staff-overview-grid{grid-template-columns:1fr}
+}
