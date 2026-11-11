@@ -357,10 +357,10 @@ export function PayrollWorkspace({initialWindow,onToast}:Props){
         {payrollSortHeader('Effective','effective_from',salarySortKey,salarySortDirection,()=>toggleSalarySort('effective_from'))}
         {payrollSortHeader('Status','status',salarySortKey,salarySortDirection,()=>toggleSalarySort('status'))}
         {financeRole&&<th>Action</th>}
-      </tr></thead><tbody>{salaryPageRows.map(profile=>{const employee=employees.find(e=>e.id===profile.teacher_id);return <tr key={profile.id}>
+      </tr></thead><tbody>{salaryPageRows.map(profile=>{const employee=employees.find(e=>e.id===profile.teacher_id);const effectiveComponents=components.filter(component=>component.salary_profile_id===profile.id&&component.status==='active'&&component.effective_from<=today()&&(!component.effective_to||component.effective_to>=today()));const componentAllowances=effectiveComponents.filter(component=>component.component_type==='allowance').reduce((sum,component)=>sum+Number(component.amount),0);const componentDeductions=effectiveComponents.filter(component=>component.component_type==='deduction').reduce((sum,component)=>sum+Number(component.amount),0);const totalAllowances=moneyValue(profile.monthly_allowances)+componentAllowances;const totalDeductions=moneyValue(profile.monthly_deductions)+componentDeductions;return <tr key={profile.id}>
         <td><b>{String(employee?.full_name??'Employee')}</b></td><td>{String(employee?.employee_no??'—')}</td>
-        <td>{cash(profile.base_salary)}</td><td>{cash(profile.monthly_allowances)}</td><td>{cash(profile.monthly_deductions)}</td>
-        <td><strong>{cash(moneyValue(profile.base_salary)+moneyValue(profile.monthly_allowances)-moneyValue(profile.monthly_deductions))}</strong></td>
+        <td>{cash(profile.base_salary)}</td><td>{cash(totalAllowances)}</td><td>{cash(totalDeductions)}</td>
+        <td><strong>{cash(moneyValue(profile.base_salary)+totalAllowances-totalDeductions)}</strong></td>
         <td>{fmtDate(profile.effective_from)}{profile.effective_to?' – '+fmtDate(profile.effective_to):''}</td><td><PayrollBadge value={profile.status}/></td>
         {financeRole&&<td>{profile.status==='active'&&<button className="payroll-button" onClick={()=>openSalary(employee)}>New version</button>}</td>}
       </tr>})}</tbody></table></div>{payrollPageControls(orderedProfiles.length,salaryCurrentPage,salaryPageCount,setSalaryPage)}</>:<div className="payroll-empty">{salarySearch?'No salary profiles match this search.':'No salary profiles have been configured yet.'}</div>}
