@@ -40,23 +40,21 @@ The catalogue declares role sets such as management, staff, academic, finance, f
 
 The release workflow executes the actual TypeScript route resolver for every submenu destination visible to each role. After the role-menu corrections, the latest successful audit evaluated **1,566 role/menu combinations** across 33 groups and 430 distinct submenu labels:
 
-| Role | Visible groups | Visible destinations | Explicitly unavailable | Linked institutional | Other workspace routes |
-|---|---:|---:|---:|---:|---:|
-| Owner | 33 | 430 | 87 | 34 | 309 |
-| Administrator | 33 | 430 | 87 | 34 | 309 |
-| Teacher / employee | 18 | 202 | 50 | 12 | 140 |
-| Student | 15 | 144 | 37 | 11 | 96 |
-| Parent / guardian | 15 | 139 | 35 | 9 | 95 |
-| Accountant | 12 | 132 | 20 | 15 | 97 |
-| Examination officer | 7 | 89 | 27 | 0 | 62 |
+| Role | Visible groups | Visible destinations |
+|---|---:|---:|
+| Owner | 33 | 430 |
+| Administrator | 33 | 430 |
+| Teacher / employee | 18 | 202 |
+| Student | 15 | 144 |
+| Parent / guardian | 15 | 139 |
+| Accountant | 12 | 132 |
+| Examination officer | 7 | 89 |
 
-The exact route audit reports **zero unexpected route families, zero non-intentional bare module roots and zero unmapped Dashboard dispatchers**.
+The generated audit reports **343 explicitly unavailable role-visible entries**, **115 linked institutional route evaluations** and **1,108 other workspace route evaluations**. It found **zero unexpected route families, zero non-intentional bare module roots and zero unmapped Dashboard dispatchers**. The role-specific unavailable/linked subtotals are not separately asserted here; only the generated aggregate counts are reported.
 
 The audit exposed old overrides that collapsed dashboard shortcuts and timetable pages to module roots. Dashboard links now preserve their typed academic report, finance overview, attendance, published results, comparison and task-queue sub-views. Timetable links now preserve class, teacher and room views as well as weekly, daily, conflict and history destinations before legacy overrides are consulted.
 
-The 115 role-visible institutional routes split into **60 specialist linked-workspace dispatches** and **55 generic institution-record dispatches**. The 55 generic entries represent 18 distinct Library, Inventory and Transport master-data destinations. They use institution-scoped `institutional_records` CRUD and group-specific fields, but are not certified as specialised transactional workflows.
-
-The Dashboard component dispatcher counts are: 343 `WorkspaceUnavailable`, 235 `InstitutionOperationsWorkspace`, 223 `FinanceWorkspace`, 75 `ReportsModule`, 72 generic result records, 61 `AdministrationModule`, 60 `LinkedOperationsWorkspace`, 59 `GovernanceWorkspace`, 58 generic examination records, 56 `AttendanceWorkspace`, 55 `InstitutionalWorkspace`, 54 student records, 40 `FacultyWorkspace`, 38 timetable records, 36 `PayrollWorkspace`, 34 assignment records, 21 `NotificationCenter`, 15 submission records, 14 `Overview`, 7 announcements, 5 work-task records and 5 file destinations.
+The 115 role-visible institutional route evaluations split into **60 specialist linked-workspace dispatches** and **55 generic institution-record dispatches**. The 55 generic entries represent 18 distinct Library, Inventory and Transport master-data destinations. They use institution-scoped `institutional_records` CRUD and group-specific fields, but are not certified as specialised transactional workflows.
 
 A successful source route audit does not prove the rendered page, API authorization, RLS, persistence or end-to-end business transaction; those remain browser and backend acceptance gates.
 
