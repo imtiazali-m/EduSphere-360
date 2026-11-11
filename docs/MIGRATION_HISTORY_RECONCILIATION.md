@@ -34,3 +34,7 @@ This is a Git repository metadata correction only. No Supabase migration was app
 ## Pull request
 
 This correction is proposed in PR #20. It must pass the project verifier and production build before merge.
+
+## Subsequent staged work-task identity migration
+
+After the migration-history reconciliation above, the repository staged `20261111140500_work_task_stable_assignee_identity.sql`. The linked Supabase project still reports 30 applied migration versions; this new source file is a pending 31st timestamped migration, not an applied database change. It introduces stable institution-scoped assignee identity for work tasks and explicit legacy email compatibility. Its deployment remains gated on SQL review, remote dry-run, approved schema deployment and authenticated role acceptance. Do not mark it applied or replay any historical migration as part of this source-only PR.
