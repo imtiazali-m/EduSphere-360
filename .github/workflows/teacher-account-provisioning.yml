@@ -1,0 +1,30 @@
+name: Teacher account provisioning guards
+
+on:
+  push:
+    paths:
+      - 'supabase/functions/create-user/**'
+      - 'scripts/test-account-provisioning.mjs'
+      - '.github/workflows/teacher-account-provisioning.yml'
+  pull_request:
+    paths:
+      - 'supabase/functions/create-user/**'
+      - 'scripts/test-account-provisioning.mjs'
+      - '.github/workflows/teacher-account-provisioning.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  test-provisioning-guards:
+    name: Test teacher identity linking safeguards
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: Run account provisioning guard tests
+        run: node scripts/test-account-provisioning.mjs
