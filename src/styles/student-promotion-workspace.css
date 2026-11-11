@@ -5,7 +5,7 @@
 .ed360-student-promotion-kicker{color:var(--es-blue-700,#315f9e);font-size:10px;font-weight:800;letter-spacing:1px}
 .ed360-student-promotion-mode{flex:0 0 auto;padding:7px 11px;border:1px solid #cbd9ee;border-radius:999px;background:#edf4ff;color:#315f9e;font-size:11px;font-weight:750;white-space:nowrap}
 .ed360-student-promotion-student{display:flex;align-items:center;gap:13px;min-width:0;padding:13px 16px;border:1px solid var(--es-border,#dce5f0);border-radius:14px;background:#fff}
-.ed360-student-promotion-student .ed360-student-photo{flex:0 0 44px;width:44px;height:44px}
+.ed360-student-promotion-student .student-avatar{flex:0 0 44px;width:44px;height:44px;border-radius:13px;overflow:hidden}.ed360-student-promotion-student .student-avatar img{width:100%;height:100%;object-fit:cover}
 .ed360-student-promotion-student>div{display:grid;gap:3px;min-width:0;flex:1}
 .ed360-student-promotion-student strong{color:var(--es-ink,#172b43);font-size:14px}
 .ed360-student-promotion-student span{overflow-wrap:anywhere;color:var(--es-muted,#64758d);font-size:12px}
