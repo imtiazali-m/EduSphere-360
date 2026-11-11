@@ -36,9 +36,9 @@ const TABLES_BY_ROLE: Record<AppRole, string[]> = {
     'finance_journal_lines', 'academic_sessions', 'work_tasks',
   ],
   teacher: [
-    'teachers', 'teacher_assignments', 'classes', 'subjects', 'timetable_entries',
-    'attendance', 'employee_attendance', 'assignments', 'assignment_submissions',
-    'exams', 'exam_results', 'work_tasks', 'announcements', 'academic_sessions',
+    'teachers', 'teacher_assignments', 'timetable_entries', 'attendance',
+    'assignments', 'assignment_submissions', 'exams', 'exam_results',
+    'work_tasks', 'announcements', 'academic_sessions',
   ],
   student: [
     'students', 'attendance', 'timetable_entries', 'assignments',
@@ -51,8 +51,8 @@ const TABLES_BY_ROLE: Record<AppRole, string[]> = {
     'fee_invoices', 'announcements', 'academic_sessions',
   ],
   exam_officer: [
-    'exams', 'exam_results', 'assignments', 'classes', 'subjects',
-    'workflow_approvals', 'announcements', 'academic_sessions',
+    'exams', 'exam_results', 'assignments', 'workflow_approvals',
+    'announcements', 'academic_sessions',
   ],
 }
 
@@ -296,12 +296,6 @@ export function RoleDashboard({ onNavigate }: Props) {
       return date && localDayKey(date) >= today && !['cancelled', 'completed'].includes(String(exam.status ?? '').toLowerCase())
     })
     .sort((a, b) => String(a.exam_date ?? '').localeCompare(String(b.exam_date ?? '')))
-  const upcomingAssignments = assignments
-    .filter(assignment => {
-      const due = recordDate(assignment, ['due_date'])
-      return due && localDayKey(due) >= today && !['closed', 'completed', 'cancelled'].includes(String(assignment.status ?? 'open').toLowerCase())
-    })
-    .sort((a, b) => String(a.due_date ?? '').localeCompare(String(b.due_date ?? '')))
   const publishedResults = results.filter(result => ['published', 'released'].includes(String(result.result_status ?? '').toLowerCase()))
   const performance = averageResult(publishedResults)
 
@@ -325,7 +319,7 @@ export function RoleDashboard({ onNavigate }: Props) {
       { label: 'Total students', value: knownCount('students'), hint: 'Institution learner records', icon: GraduationCap, tone: 'blue', route: 'students' },
       { label: 'Teachers & staff', value: knownCount('teachers'), hint: 'Institution team records', icon: Users, tone: 'green', route: 'teachers' },
       { label: 'Branches', value: knownCount('campuses'), hint: 'Registered campuses', icon: Building2, tone: 'violet', route: 'institutional:administration:campus-and-branch-management' },
-      { label: 'Today’s attendance', value: known('attendance') ? (todayAttendancePercent === null ? '—' : todayAttendancePercent + '%') : '—', hint: known('attendance', 'employee_attendance') ? (totalTodayAttendance ? formatCount(presentToday) + ' present of ' + formatCount(totalTodayAttendance) + ' student and staff records' : 'No attendance recorded today') : 'Attendance unavailable', icon: CalendarCheck, tone: 'teal', route: 'attendance:students' },
+      { label: 'Today’s attendance', value: known('attendance', 'employee_attendance') ? (todayAttendancePercent === null ? '—' : todayAttendancePercent + '%') : '—', hint: known('attendance', 'employee_attendance') ? (totalTodayAttendance ? formatCount(presentToday) + ' present of ' + formatCount(totalTodayAttendance) + ' student and staff records' : 'No attendance recorded today') : 'Attendance unavailable', icon: CalendarCheck, tone: 'teal', route: 'attendance:students' },
       { label: 'Collected today', value: known('fee_payments') ? formatMoney(collectedToday) : '—', hint: known('fee_payments') ? formatCount(todayPayments.length) + ' successful receipts' : 'Payment data unavailable', icon: Wallet, tone: 'amber', route: 'finance:fees:payments' },
       { label: 'Outstanding dues', value: known('fee_invoices') ? formatMoney(outstanding) : '—', hint: pendingDuesCaption, icon: ReceiptText, tone: 'rose', route: 'finance:receivables:receivables' },
     )
@@ -334,7 +328,7 @@ export function RoleDashboard({ onNavigate }: Props) {
       const date = recordDate(student, ['admission_date', 'created_at'])
       return date && date >= monthStart
     }).length
-    const activeStaff = teachers.filter(teacher => ['active', 'employed', 'on_leave'].includes(String(teacher.employment_status ?? 'active').toLowerCase())).length
+    const activeStaff = teachers.filter(teacher => ['active', 'employed', 'on_leave'].includes(String(teacher.employment_status ?? '').toLowerCase())).length
     const operationalAlerts = get('work_tasks').filter(task => {
       const due = recordDate(task, ['due_date'])
       const status = String(task.status ?? '').toLowerCase()
@@ -365,13 +359,17 @@ export function RoleDashboard({ onNavigate }: Props) {
     const teacher = teachers.find(row => row.user_id === user?.id)
     const assignmentsToTeacher = get('teacher_assignments').filter(item => item.teacher_id === teacher?.id && String(item.status ?? 'active').toLowerCase() === 'active')
     const classIds = new Set(assignmentsToTeacher.map(item => String(item.class_id ?? '')).filter(Boolean))
-    const assignedClassRows = get('classes').filter(classRow => classIds.has(String(classRow.id)))
-    const assignedClassNames = new Set(assignedClassRows.flatMap(item => [item.name, item.code].filter(Boolean).map(normalize)))
+    // Class directory rows are owner/admin-only. Use the teacher-name scope in
+    // the permitted timetable table rather than asking for inaccessible classes.
+    const assignedClassNames = new Set(
+      timetable
+        .filter(entry => normalize(entry.teacher_name) === normalize(user?.fullName))
+        .map(entry => normalize(entry.class_name))
+        .filter(Boolean),
+    )
     const todaySchedule = timetable.filter(entry =>
       normalize(entry.weekday) === todayWeekday(now)
-      && (assignedClassNames.size
-        ? assignedClassNames.has(normalize(entry.class_name)) || [...assignedClassNames].some(name => normalize(entry.class_name).includes(name))
-        : normalize(entry.teacher_name) === normalize(user?.fullName)),
+      && normalize(entry.teacher_name) === normalize(user?.fullName),
     )
     const assignedScope = (items: RecordRow[]) => assignedClassNames.size
       ? items.filter(item => assignedClassNames.has(normalize(item.class_name)) || [...assignedClassNames].some(name => normalize(item.class_name).includes(name)))
@@ -387,7 +385,7 @@ export function RoleDashboard({ onNavigate }: Props) {
     const scopedResults = results.filter(item => teacherExamIds.has(String(item.exam_id)))
     const teacherPerformance = averageResult(scopedResults)
     metrics.push(
-      { label: 'Assigned classes', value: known('teacher_assignments', 'classes', 'teachers') ? formatCount(classIds.size) : '—', hint: formatCount(assignedClassRows.length) + ' class records mapped', icon: School, tone: 'blue', route: 'institutional:employees:workload-allocation' },
+      { label: 'Assigned classes', value: known('teacher_assignments', 'teachers') ? formatCount(classIds.size) : '—', hint: assignedClassNames.size ? formatCount(assignedClassNames.size) + ' class names on your timetable' : (classIds.size ? 'Active teaching allocations' : 'No active class allocations'), icon: School, tone: 'blue', route: 'institutional:employees:workload-allocation' },
       { label: 'Today’s lessons', value: known('timetable_entries') ? formatCount(todaySchedule.length) : '—', hint: 'Periods on your timetable', icon: CalendarDays, tone: 'teal', route: 'timetable:week' },
       { label: 'Attendance tasks', value: known('attendance', 'timetable_entries') ? formatCount(attendanceTasks) : '—', hint: 'Scheduled classes without a register today', icon: CalendarCheck, tone: 'amber', route: 'attendance:students' },
       { label: 'Pending reviews', value: known('assignment_submissions') ? formatCount(pendingReviews.length) : '—', hint: 'Student submissions to review', icon: ClipboardList, tone: 'violet', route: 'assignments:submissions' },
@@ -605,9 +603,9 @@ export function RoleDashboard({ onNavigate }: Props) {
           </div> : <EmptyState loading={false} message="No attendance sessions are waiting for you today."/>}
         </Panel>
         <Panel title="Assigned classes" description="Classes connected to your active teaching assignments." icon={School}>
-          {!known('teachers', 'teacher_assignments', 'classes') ? <EmptyState loading={loading} message="Teaching assignment data is unavailable."/> : assignedClassRows.length ? <div className="rd-class-grid">
-            {assignedClassRows.map(classRow => <article key={classRow.id}><span><School size={15}/></span><strong>{textValue(classRow, ['name', 'code'], 'Assigned class')}</strong><small>{textValue(classRow, ['section', 'grade_level'], 'Teaching assignment')}</small></article>)}
-          </div> : <EmptyState loading={false} message="No active class assignments are linked to your teacher profile."/>}
+          {!known('teachers', 'teacher_assignments', 'timetable_entries') ? <EmptyState loading={loading} message="Teaching assignment data is unavailable."/> : assignedClassNames.size ? <div className="rd-class-grid">
+            {[...assignedClassNames].sort().map(className => <article key={className}><span><School size={15}/></span><strong>{className}</strong><small>Assigned timetable class</small></article>)}
+          </div> : classIds.size ? <EmptyState loading={false} message={formatCount(classIds.size) + ' active class allocations are linked to your account. Class names will appear here when they are present in your teaching timetable.'/> : <EmptyState loading={false} message="No active class assignments are linked to your teacher profile."/>}
         </Panel>
         <Panel title="Homework and reviews" description="Coursework deadlines and student submissions needing review." icon={BookOpenCheck} action={<button type="button" className="rd-text-action" onClick={() => onNavigate('assignments:submissions')}>Open submissions</button>}>
           {!known('assignments', 'assignment_submissions') ? <EmptyState loading={loading} message="Assignment data is unavailable."/> : pendingReviews.length ? <div className="rd-list">
@@ -615,7 +613,6 @@ export function RoleDashboard({ onNavigate }: Props) {
               <span className="rd-row-icon homework"><BookOpen size={15}/></span><span className="rd-row-copy"><strong>{textValue(item, ['assignment_title', 'student_name'], 'Student submission')}</strong><small>{textValue(item, ['student_name'], 'Submission')} · {textValue(item, ['status'], 'Submitted')}</small></span><time>{dateLabel(item.submitted_at ?? item.created_at)}</time>
             </button>)}
           </div> : <EmptyState loading={false} message="No student submissions are awaiting your review."/>}
-          {upcomingAssignments.length > 0 && <p className="rd-panel-footnote">{formatCount(upcomingAssignments.length)} upcoming assignment deadlines are available in your institution records.</p>}
         </Panel>
         <Panel title="Upcoming examinations" description="Assessments scheduled for your assigned classes." icon={ClipboardCheck}>
           <EventList items={teacherExams.filter(item => {
@@ -636,7 +633,6 @@ export function RoleDashboard({ onNavigate }: Props) {
       const pendingAssignments = assignments.filter(item => !['closed', 'completed', 'cancelled'].includes(String(item.status ?? 'open').toLowerCase()) && !submissions.some(submission => String(submission.assignment_id) === String(item.id)))
       const dayTimetable = timetable.filter(item => normalize(item.weekday) === todayWeekday(now))
       const nextTests = upcomingExams
-      const attendanceRate = attendance.length ? Math.round(attendance.filter(item => String(item.status ?? '').toLowerCase() === 'present').length / attendance.length * 100) : null
       const performanceRate = averageResult(results)
       return <div className="rd-grid rd-grid-wide">
         <Panel title="Today’s timetable" description={student ? 'Class ' + textValue(student, ['class_name'], 'not assigned') + ' · Today’s periods' : 'Your scheduled lessons.'} icon={CalendarDays} action={<button type="button" className="rd-text-action" onClick={() => onNavigate('timetable:week')}>Full timetable</button>}>
