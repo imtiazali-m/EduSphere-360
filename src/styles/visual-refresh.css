@@ -1499,3 +1499,8 @@ button.button-primary:hover,.ed360-module-page .button-primary:hover{transform:t
   .student-directory-heading h2,.faculty-directory-heading h2{font-size:14px}
   .staff-overview-grid{grid-template-columns:1fr}
 }
+
+.pro-nav-dashboard-link.is-current{border:1px solid rgba(173,205,255,.23);color:#fff;background:linear-gradient(105deg,rgba(52,120,246,.32),rgba(34,93,201,.2))}
+.pro-nav-dashboard-link.is-current .pro-nav-group-icon{color:#fff;background:rgba(74,139,248,.34)}
+.pro-nav-dashboard-link.is-current .pro-nav-group-name{color:#fff}
+.pro-app-shell.sidebar-collapsed .pro-nav-dashboard-link.is-current{background:rgba(52,120,246,.28)}
