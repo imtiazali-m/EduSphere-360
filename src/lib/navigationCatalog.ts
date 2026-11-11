@@ -102,7 +102,7 @@ export function roleNavigationGroups(role:WorkspaceMenuGroup['roles'][number]):R
 
 export function roleNavigationSections(role:WorkspaceMenuGroup['roles'][number]):RoleNavigationSection[]{
   const groups=roleNavigationGroups(role)
-  const groupByKey=new Map(groups.map(group=>[group.key,group]))
+  const groupByKey=new Map<string,RoleNavigationGroup>(groups.map(group=>[group.key,group] as const))
   const sections=navigationSectionDefinitions.flatMap(section=>{
     const sectionGroups=section.groupKeys.flatMap(key=>{
       const group=groupByKey.get(key)
