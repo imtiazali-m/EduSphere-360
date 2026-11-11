@@ -973,3 +973,36 @@ for (const [role, count] of Object.entries(roleCounts)) console.log(`  ${role.pa
 console.log(`\nConfigured data modules: ${modules.length}`)
 if (process.exitCode) process.exit(process.exitCode)
 console.log('\nProject verification passed. This checks source and configuration; it is not a live end-to-end Supabase test.')
+
+
+const landingPage = read('src/components/AuthScreens.tsx')
+const landingStyles = read('src/styles/welcome-completion.css')
+check('Public landing page includes the complete requested navigation and section architecture', () => {
+  for (const label of ['>Home</a>', '>Features</a>', '>Solutions</a>', '>About</a>', '>Contact</a>', '>Login</button>', '>Get Started']) {
+    assert.ok(landingPage.includes(label), 'Missing public navigation/action: ' + label)
+  }
+  for (const id of ['top','features','solutions','about','platform','analytics','institution-types','campus-services','security','testimonials','workflow','contact','faq','get-started']) {
+    assert.ok(landingPage.includes('id="' + id + '"'), 'Missing landing-page section anchor: #' + id)
+  }
+  for (const feature of ['Institution administration & access','Admissions & enrolment','Student & guardian records','Teachers, faculty & staff','Attendance & daily operations','Comprehensive academic management','Fees, payments & clear records']) {
+    assert.ok(landingPage.includes(feature), 'Missing required feature: ' + feature)
+  }
+  for (const service of ['Digital library','Transport management','Rooms & facilities','Inventory & supplies','Visitor management','Hostel & residence']) {
+    assert.ok(landingPage.includes(service), 'Missing campus service disclosure: ' + service)
+  }
+  for (const section of ['SECURITY & RELIABILITY','VERIFIED FEEDBACK','CONTACT & HELP','edm-faq-section']) {
+    assert.ok(landingPage.includes(section), 'Missing public information section: ' + section)
+  }
+  for (const chart of ['Enrollment trend','Attendance rate','Exam results & academic performance','Fee collection']) {
+    assert.ok(landingPage.includes(chart), 'Missing illustrative analytics: ' + chart)
+  }
+  const ids = new Set([...landingPage.matchAll(/\\bid="([^"]+)"/g)].map(match => match[1]))
+  for (const [, target] of landingPage.matchAll(/\\bhref="#([^"]+)"/g)) {
+    assert.ok(ids.has(target), 'Broken in-page link: #' + target)
+  }
+  assert.ok(landingPage.includes("go('login')"), 'Login actions must open the Stage 2 login route')
+  assert.ok(landingPage.includes("go('setup')"), 'Get Started actions must open institution onboarding')
+  assert.ok(landingPage.includes('There are no verified institution testimonials'), 'Testimonials must not be fabricated')
+  assert.ok(landingPage.includes('Official public support email and telephone details are not configured'), 'Missing public contact-channel disclosure')
+  assert.ok(landingStyles.includes('prefers-reduced-motion'), 'Scroll animations must respect reduced-motion preferences')
+})
