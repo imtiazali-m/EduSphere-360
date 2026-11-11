@@ -996,8 +996,9 @@ check('Public landing page includes the complete requested navigation and sectio
   for (const chart of ['Enrollment trend','Attendance rate','Exam results & academic performance','Fee collection']) {
     assert.ok(landingPage.includes(chart), 'Missing illustrative analytics: ' + chart)
   }
-  const ids = new Set([...landingPage.matchAll(/\\bid="([^"]+)"/g)].map(match => match[1]))
-  for (const [, target] of landingPage.matchAll(/\\bhref="#([^"]+)"/g)) {
+  const ids = new Set(landingPage.split('id="').slice(1).map(part => part.split('"')[0]))
+  for (const part of landingPage.split('href="#').slice(1)) {
+    const target = part.split('"')[0]
     assert.ok(ids.has(target), 'Broken in-page link: #' + target)
   }
   assert.ok(landingPage.includes("go('login')"), 'Login actions must open the Stage 2 login route')
