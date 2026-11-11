@@ -2,7 +2,7 @@
 
 **Audit date:** 10 November 2026  
 **Source repository:** `imtiazali-m/EduSphere-360`  
-**Baseline branch:** `main` at `323052767e1e00eb375b263d013727923dbeba32`  
+**Baseline branch:** `main` at `8635fdcd961189c850c3cf7810f66d32d3642f65`  
 **Working branch:** `work/accelerated-12-phase-start-20261110`  
 **Live public website inspected:** https://edusphere360.pages.dev/
 
@@ -57,7 +57,7 @@ Responsive styles and source-verification assertions were added alongside the co
 
 | Phase | Scope | Baseline status |
 |---|---|---|
-| 1 | Inspect source, existing website, reusable work and gaps | Detailed source audit, 430 catalogue submenu labels, 1,223 role-aware route evaluations and route-to-view checks; 0 route/dispatch/view mismatches; authenticated seven-role E2E remains pending |
+| 1 | Inspect source, existing website, reusable work and gaps | Detailed source audit, 430 catalogue submenu labels, 1,566 role-aware route evaluations and route-to-view checks; 0 route/dispatch/view mismatches; authenticated seven-role E2E remains pending |
 | 2 | Welcome page, public website and visual system | Shared navy/sapphire system spans public, auth, dashboard and specialist workspaces; core contrast checks and responsive source audit added; CI can publish an isolated PR preview; screenshot-based visual acceptance remains pending |
 | 3 | Login, registration, verification and onboarding | Screens render; real signup, email verification, login and role-provisioning E2E tests remain |
 | 4 | Dashboards, role menus and navigation | 33 groups, seven role allow-lists, exact component/sub-view routing and first-run role guidance are source-verified; authenticated direct-link/API permission tests remain |
@@ -92,7 +92,7 @@ Responsive styles and source-verification assertions were added alongside the co
 
 ## 8. Expanded Phase 1 and Phase 2 work
 
-- Phase 1 now has a detailed static source/navigation audit, seven-role inventory and composite route matrix. The full catalogue contains 33 groups and 430 distinct submenu labels, while the current role filter exposes 1,223 role/menu destinations: Owner 343, Administrator 343, Teacher 152, Student 107, Parent 104, Accountant 112 and Examination Officer 62. Route and component dispatch checks report zero unexpected route families, zero unintended bare roots and zero unmapped components. The route-to-view audit checks each requested sub-view against the actual receiving component and its role-specific tabs; 115 linked institutional destinations remain lifecycle-acceptance pending. See `docs/PHASE_1_DETAILED_AUDIT.md`, `docs/PHASE_1_ROLE_MENU_INVENTORY.md`, `docs/PHASE_1_EXACT_ROUTE_AUDIT.md` and `docs/PHASE_1_ROUTE_VIEW_AUDIT.md` in the review branch.
+- Phase 1 now has a detailed static source/navigation audit, seven-role inventory and composite route matrix. The full catalogue contains 33 groups and 430 distinct submenu labels, while the current role filter exposes 1,566 role/menu destinations: Owner 430, Administrator 430, Teacher 202, Student 144, Parent 139, Accountant 132 and Examination Officer 89. Route and component dispatch checks report zero unexpected route families, zero unintended bare roots and zero unmapped components. The route-to-view audit checks each requested sub-view against the actual receiving component and its role-specific tabs; 115 linked institutional destinations remain lifecycle-acceptance pending. See `docs/PHASE_1_DETAILED_AUDIT.md`, `docs/PHASE_1_ROLE_MENU_INVENTORY.md`, `docs/PHASE_1_EXACT_ROUTE_AUDIT.md` and `docs/PHASE_1_ROUTE_VIEW_AUDIT.md` in the review branch.
 - Phase 2 now has a written design specification and shared token layer loaded after existing styles. The visual pass includes public welcome, authentication, dashboard, module workspaces, finance, payroll, governance and campus operations, all aligned around midnight navy and sapphire, with teal secondary accents and semantic state colours. See `docs/PHASE_2_DESIGN_SYSTEM.md`.
 - Global `#root` zoom was removed from `operational-hierarchy.css`; responsive sizing is now handled at layout breakpoints rather than browser-level scaling.
 - Responsive CSS source coverage (13 static checks) is now checked in CI, and same-repository PRs have a separate Cloudflare preview deployment path. PR #15 preview: `https://pr-15-preview.edusphere360.pages.dev/`. Its read-only desktop smoke test passed; actual 1440/768/390 screenshots, mobile/tablet visual acceptance and full authenticated role E2E remain release gates. No production deployment or Supabase change was made.

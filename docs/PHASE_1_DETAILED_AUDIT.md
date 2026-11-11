@@ -38,19 +38,19 @@ The catalogue declares role sets such as management, staff, academic, finance, f
 
 ## 3. Exact role-aware route resolution
 
-The release workflow executes the actual TypeScript route resolver for every submenu destination visible to each role. The complete source catalogue still contains 33 groups and 430 distinct submenu labels; the runtime role filter exposes a subset. The latest source-generated audit evaluated **1,223 role/menu combinations** across the seven role-filtered menus:
+The release workflow executes the actual TypeScript route resolver for every submenu destination visible to each role. The complete source catalogue still contains 33 groups and 430 distinct submenu labels; the runtime role filter exposes a subset. The latest source-generated audit evaluated **1,566 role/menu combinations** across the seven role-filtered menus:
 
 | Role | Visible groups | Visible destinations |
 |---|---:|---:|
-| Owner | 31 | 343 |
-| Administrator | 31 | 343 |
-| Teacher / employee | 18 | 152 |
-| Student | 15 | 107 |
-| Parent / guardian | 15 | 104 |
-| Accountant | 12 | 112 |
-| Examination officer | 7 | 62 |
+| Owner | 33 | 430 |
+| Administrator | 33 | 430 |
+| Teacher / employee | 18 | 202 |
+| Student | 15 | 144 |
+| Parent / guardian | 15 | 139 |
+| Accountant | 12 | 132 |
+| Examination officer | 7 | 89 |
 
-The generated audit reports **343 explicitly unavailable role-visible entries**, **115 linked institutional route evaluations** and **1,108 other workspace route evaluations**. It found **zero unexpected route families, zero non-intentional bare module roots and zero unmapped Dashboard dispatchers**. The role-specific unavailable/linked subtotals are not separately asserted here; only the generated aggregate counts are reported.
+The exact route audit evaluates 1,566 role/menu destinations. The route-to-view audit separately classifies 1,108 supported views, 343 intentionally unavailable destinations and 115 lifecycle-pending destinations; these are route/view statuses, not role-menu totals. It found **zero unexpected route families, zero non-intentional bare module roots and zero unmapped Dashboard dispatchers**. The role-specific unavailable/linked subtotals are not separately asserted here; only the generated aggregate counts are reported.
 
 The audit exposed old overrides that collapsed dashboard shortcuts and timetable pages to module roots. Dashboard links now preserve their typed academic report, finance overview, attendance, published results, comparison and task-queue sub-views. Timetable links now preserve class, teacher and room views as well as weekly, daily, conflict and history destinations before legacy overrides are consulted.
 

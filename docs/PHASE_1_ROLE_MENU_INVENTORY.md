@@ -25,13 +25,13 @@ A visible menu entry or a value in the route index is **not** evidence that its 
 
 | Role | Visible menu groups | Visible submenu destinations |
 |---|---:|---:|
-| Owner | 31 | 343 |
-| Administrator | 31 | 343 |
-| Teacher / employee | 18 | 152 |
-| Student | 15 | 107 |
-| Parent / guardian | 15 | 104 |
-| Accountant | 12 | 112 |
-| Examination officer | 7 | 62 |
+| Owner | 33 | 430 |
+| Administrator | 33 | 430 |
+| Teacher / employee | 18 | 202 |
+| Student | 15 | 144 |
+| Parent / guardian | 15 | 139 |
+| Accountant | 12 | 132 |
+| Examination officer | 7 | 89 |
 
 ## Full destination inventory
 
