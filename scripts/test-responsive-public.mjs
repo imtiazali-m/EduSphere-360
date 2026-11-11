@@ -92,16 +92,42 @@ async function inspectViewport({ name, width, height }) {
       await page.locator('.edm-nav a[href="#platform"]').first().waitFor({ state: 'visible' })
     }
 
+    const roleCategories = {
+      owner: 'Owner / Admin',
+      admin: 'Owner / Admin',
+      teacher: 'Employee',
+      student: 'Student',
+      parent: 'Parent',
+      accountant: 'Employee',
+      exam_officer: 'Employee',
+    }
+    for (const [role, expectedCategory] of Object.entries(roleCategories)) {
+      await page.goto(`${baseUrl}/#/login/${role}`, { waitUntil: 'domcontentloaded' })
+      await page.locator('.es-auth-page').waitFor({ state: 'visible' })
+      await page.locator('.es-auth-form').first().waitFor({ state: 'visible' })
+      const selectedCategory = (await page.locator('.es-account-type button[aria-pressed="true"] b').innerText()).trim()
+      assert.equal(selectedCategory, expectedCategory, `${name}: ${role} login selected ${selectedCategory}, expected ${expectedCategory}`)
+      await assertNoHorizontalOverflow(page, `${name} ${role} login`)
+      await page.screenshot({
+        path: `${artifactDir}/${name}-${role}-login.png`,
+        fullPage: true,
+        animations: 'disabled',
+      })
+    }
+
     await page.goto(`${baseUrl}/#/login/owner`, { waitUntil: 'domcontentloaded' })
     await page.locator('.es-auth-page').waitFor({ state: 'visible' })
-    await page.locator('.es-auth-form').first().waitFor({ state: 'visible' })
-    await assertNoHorizontalOverflow(page, `${name} owner login`)
+    await page.getByRole('button', { name: 'Forgot your password?' }).click()
+    await page.getByRole('heading', { name: 'Reset your password' }).waitFor({ state: 'visible' })
+    await page.getByRole('button', { name: 'Send password-reset link' }).waitFor({ state: 'visible' })
+    await assertNoHorizontalOverflow(page, `${name} password reset`)
     await page.screenshot({
-      path: `${artifactDir}/${name}-owner-login.png`,
+      path: `${artifactDir}/${name}-password-reset.png`,
       fullPage: true,
       animations: 'disabled',
     })
-
+    await page.getByRole('button', { name: 'Back to login' }).click()
+    await page.getByRole('heading', { name: 'Welcome back' }).waitFor({ state: 'visible' })
     await page.goto(`${baseUrl}/#/setup`, { waitUntil: 'domcontentloaded' })
     await page.locator('.es-signup-form').waitFor({ state: 'visible' })
     await assertNoHorizontalOverflow(page, `${name} owner setup`)
