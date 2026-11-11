@@ -1173,3 +1173,25 @@ button.button-primary:hover,.ed360-module-page .button-primary:hover{transform:t
   .attendance-grid-head,.attendance-grid-row{min-width:700px}
   .ed360-attendance-board{padding:12px}
 }
+
+
+/* Explicit active-workspace context and predictable collapsed-sidebar disclosure */
+.pro-active-workspace-context{min-height:61px;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:9px clamp(16px,2.4vw,32px);border-bottom:1px solid #e1e9f3;background:linear-gradient(100deg,rgba(255,255,255,.97),rgba(246,249,255,.94))}
+.pro-active-workspace-context>div{min-width:0;display:grid;gap:2px}
+.pro-active-workspace-context>div>span{color:#8292a8;font-size:8px;font-weight:900;letter-spacing:1.35px}
+.pro-active-workspace-context>div>strong{overflow:hidden;color:#19385d;font-family:Manrope,sans-serif;font-size:14px;font-weight:850;letter-spacing:-.2px;text-overflow:ellipsis;white-space:nowrap}
+.pro-active-workspace-context>div>small{overflow:hidden;color:#7b8da4;font-size:9px;text-overflow:ellipsis;white-space:nowrap}
+.pro-context-state{display:inline-flex;align-items:center;gap:7px;flex:0 0 auto;padding:6px 10px;border:1px solid #d6ede2;border-radius:99px;color:#18785b;background:#f0faf5;font-size:9px;font-weight:800}
+.pro-context-state i{width:6px;height:6px;border-radius:50%;background:#1aa47b;box-shadow:0 0 0 3px rgba(26,164,123,.12)}
+.pro-app-shell.sidebar-collapsed .pro-sidebar .pro-nav-group-head{min-width:58px;min-height:48px}
+.pro-app-shell.sidebar-collapsed .pro-sidebar .pro-nav-group-head:focus-visible{outline:3px solid rgba(169,200,255,.75)!important;outline-offset:1px!important}
+.pro-app-shell.sidebar-collapsed .pro-sidebar .pro-navigation{scrollbar-width:thin}
+.pro-workspace-tab-main:focus-visible,.pro-workspace-tab-close:focus-visible,.pro-nav-group-head:focus-visible,.pro-nav-item:focus-visible{outline:3px solid rgba(124,173,255,.75)!important;outline-offset:1px!important}
+@media(max-width:820px){
+  .pro-active-workspace-context{min-height:56px;padding:8px 14px}
+}
+@media(max-width:600px){
+  .pro-active-workspace-context{gap:8px;padding:8px 12px}
+  .pro-active-workspace-context>div>strong{font-size:12px}
+  .pro-context-state{padding:5px 7px;font-size:8px}
+}
