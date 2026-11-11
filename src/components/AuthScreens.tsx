@@ -1,7 +1,8 @@
-import { useState, type FormEvent, type KeyboardEvent as ReactKeyboardEvent } from 'react'
+import { useEffect, useState, type FormEvent, type KeyboardEvent as ReactKeyboardEvent } from 'react'
 import {
-  ArrowLeft, ArrowRight, ArrowUpRight, BarChart3, BookOpen, Building2,
-  CalendarCheck, Check, CheckCircle2, ClipboardCheck,
+  ArrowLeft, ArrowRight, ArrowUpRight, BarChart3, BookOpen, Building2, Bus,
+  CalendarCheck, Check, CheckCircle2, ClipboardCheck, DoorOpen,
+  Package, UserCheck,
   GraduationCap, Headphones, HeartHandshake, Layers3, LockKeyhole,
   Eye, EyeOff, Mail, Menu, Monitor, Server, ShieldCheck, Sparkles,
   Users, Wallet, X, Zap,
@@ -11,6 +12,7 @@ import { userFacingError } from '../lib/userErrors'
 import { resendInstitutionOwnerVerification } from '../lib/auth'
 import type { AppRole } from '../lib/types'
 import '../styles/welcome-marketing.css'
+import '../styles/welcome-completion.css'
 import '../styles/auth-experience.css'
 
 interface ScreenProps { navigate: (screen: 'welcome' | 'login' | 'setup', role?: AppRole) => void }
@@ -131,8 +133,29 @@ export function WelcomeScreen({ navigate }: ScreenProps) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [showcaseTab, setShowcaseTab] = useState<ShowcaseKey>('students')
   const [openFaq, setOpenFaq] = useState<number | null>(0)
+  const [legalDocument, setLegalDocument] = useState<'terms' | 'privacy' | null>(null)
   const closeMenu = () => setMobileOpen(false)
   const go = (screen: 'login' | 'setup') => { closeMenu(); navigate(screen) }
+
+  useEffect(() => {
+    const sections = Array.from(document.querySelectorAll<HTMLElement>('.edm-home main > section, .edm-home .edm-footer'))
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (reduceMotion || !('IntersectionObserver' in window)) {
+      sections.forEach(section => section.classList.add('edm-scroll-reveal', 'is-visible'))
+      return
+    }
+    sections.forEach(section => section.classList.add('edm-scroll-reveal'))
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible')
+          observer.unobserve(entry.target)
+        }
+      })
+    }, { threshold: 0.08, rootMargin: '0px 0px -32px 0px' })
+    sections.forEach(section => observer.observe(section))
+    return () => observer.disconnect()
+  }, [])
 
   return (
     <div className="edm-home">
@@ -145,16 +168,13 @@ export function WelcomeScreen({ navigate }: ScreenProps) {
           {mobileOpen ? <X size={21}/> : <Menu size={21}/>}
         </button>
         <nav className={`edm-nav ${mobileOpen ? 'is-open' : ''}`} aria-label="Main navigation">
-          <a className="edm-nav-link" href="#platform" onClick={closeMenu}>Platform</a>
+          <a className="edm-nav-link" href="#top" onClick={closeMenu}>Home</a>
+          <a className="edm-nav-link" href="#features" onClick={closeMenu}>Features</a>
           <a className="edm-nav-link" href="#solutions" onClick={closeMenu}>Solutions</a>
-          <a className="edm-nav-link" href="#self-hosted" onClick={closeMenu}>USV 360 Pro</a>
-          <a className="edm-nav-link" href="#features" onClick={closeMenu}>Explore</a>
-          <a className="edm-nav-link" href="#analytics" onClick={closeMenu}>Insights</a>
-          <a className="edm-nav-link" href="#workflow" onClick={closeMenu}>How it works</a>
-          <a className="edm-nav-link" href="#showcase" onClick={closeMenu}>Product tour</a>
-          <a className="edm-nav-link" href="#faq" onClick={closeMenu}>FAQ</a>
+          <a className="edm-nav-link" href="#about" onClick={closeMenu}>About</a>
+          <a className="edm-nav-link" href="#contact" onClick={closeMenu}>Contact</a>
         </nav>
-        <div className="edm-header-actions"><button className="edm-login-link" onClick={() => go('login')}>Login</button><button className="edm-signup-button" onClick={() => go('setup')}>Sign up now <ArrowUpRight size={16}/></button></div>
+        <div className="edm-header-actions"><button className="edm-login-link" onClick={() => go('login')}>Login</button><button className="edm-signup-button" onClick={() => go('setup')}>Get Started <ArrowUpRight size={16}/></button></div>
       </header>
 
       <main id="top">
@@ -245,24 +265,28 @@ export function WelcomeScreen({ navigate }: ScreenProps) {
               <div className="edm-sample-pie-wrap"><div className="edm-sample-pie"><span>100%</span></div><div className="edm-sample-pie-legend"><span><i/>Primary</span><span><i/>Middle</span><span><i/>Secondary</span></div></div>
             </article>
             <article className="edm-analytics-card edm-analytics-comparison-card">
-              <div className="edm-analytics-card-head"><div><small>COMPARISON · SAMPLE</small><b>Academic performance</b></div><span>Term comparison</span></div>
+              <div className="edm-analytics-card-head"><div><small>RESULTS COMPARISON · SAMPLE</small><b>Exam results & academic performance</b></div><span>Term comparison</span></div>
               <div className="edm-sample-comparison"><div><span>Term 1</span><div><i style={{width:'68%'}}/></div><b>68</b></div><div><span>Term 2</span><div><i style={{width:'79%'}}/></div><b>79</b></div><div><span>Term 3</span><div><i style={{width:'86%'}}/></div><b>86</b></div></div>
               <p className="edm-sample-caption">Example only — actual charts use your institution's available records.</p>
             </article>
           </div>
         </section>
 
-        <section className="edm-intro-section edm-section" id="platform">
+        <section className="edm-intro-section edm-section" id="platform" aria-labelledby="edm-about-heading">
+          <span className="edm-anchor-target" id="about" />
           <div className="edm-section-side"><span className="edm-section-index">01 / PLATFORM</span><span className="edm-side-rule"/><span className="edm-section-side-note">A single place for your whole institution</span></div>
-          <div className="edm-intro-content"><div className="edm-section-kicker">MEET EDUSPHERE 360</div><h2>Less administration.<br/><em>More meaningful progress.</em></h2><p>EduSphere 360 is an education management platform designed to make institutional work simpler. From the first admission to daily teaching, finance and reporting, teams can manage their responsibilities through one consistent system.</p><div className="edm-intro-points"><span><CheckCircle2 size={17}/> One connected information system</span><span><CheckCircle2 size={17}/> Clear access for every user role</span><span><CheckCircle2 size={17}/> Configurable for different institution types</span></div></div>
+          <div className="edm-intro-content"><div className="edm-section-kicker">MEET EDUSPHERE 360</div><h2 id="edm-about-heading">Less administration.<br/><em>More meaningful progress.</em></h2><p>EduSphere 360 is an education management platform designed to make institutional work simpler. From the first admission to daily teaching, finance and reporting, teams can manage their responsibilities through one consistent system.</p><div className="edm-intro-points"><span><CheckCircle2 size={17}/> One connected information system</span><span><CheckCircle2 size={17}/> Clear access for every user role</span><span><CheckCircle2 size={17}/> Configurable for different institution types</span></div></div>
           <div className="edm-intro-visual"><img className="edm-intro-campus-photo" src="https://images.pexels.com/photos/16420473/pexels-photo-16420473/free-photo-of-a-group-of-students-sitting-in-a-library-and-studying.jpeg?auto=compress&w=1260&h=750&dpr=1" alt="Students collaborating with laptops and books in a university library" loading="lazy" decoding="async"/><div className="edm-campus-illustration"><div className="edm-campus-sun"/><div className="edm-campus-building"><div className="edm-building-roof"/><div className="edm-building-top"><span/><span/><span/></div><div className="edm-building-columns"><i/><i/><i/><i/></div><div className="edm-building-door"/></div><div className="edm-campus-ground"/><div className="edm-campus-tree tree-left"/><div className="edm-campus-tree tree-right"/><div className="edm-campus-path"/></div><div className="edm-visual-label"><span>ONE</span><b>One institution.<br/>Every moving part.</b></div></div>
         </section>
 
         <section className="edm-offer-section edm-section" id="features">
           <div className="edm-section-heading"><div><span className="edm-section-kicker">WHAT WE OFFER</span><h2>Everything your institution needs.<br/><em>Nothing scattered.</em></h2></div><p>Purpose-built tools for the people, processes and priorities that keep education moving.</p></div>
           <div className="edm-feature-grid">
-            <article className="edm-feature-card feature-large"><div className="edm-feature-top"><span className="edm-feature-icon"><Users size={21}/></span><small>01 / PEOPLE</small></div><h3>Multi-access user management</h3><p>Give owners, administrators, teachers, students, parents and finance teams the right tools for their responsibilities.</p><div className="edm-feature-visual edm-people-visual"><div className="edm-person person-one"><Users size={17}/></div><div className="edm-person person-two"><GraduationCap size={17}/></div><div className="edm-person person-three"><BookOpen size={17}/></div><div className="edm-person person-four"><Building2 size={17}/></div><div className="edm-role-lines"><i/><i/><i/><i/></div></div></article>
-            <article className="edm-feature-card"><div className="edm-feature-top"><span className="edm-feature-icon"><BookOpen size={21}/></span><small>02 / ACADEMICS</small></div><h3>Comprehensive academic management</h3><p>Organise classes, subjects, timetables, assignments, examinations and results.</p><div className="edm-feature-visual edm-calendar-visual"><div className="edm-calendar-head"><b>Academic planner</b><span>•••</span></div><div className="edm-calendar-grid">{Array.from({length:15},(_,i)=><i key={i} className={i===3||i===8||i===11?'marked':''}/>)}</div><small>Classes · Assessments · Results</small></div></article>
+            <article className="edm-feature-card feature-large"><div className="edm-feature-top"><span className="edm-feature-icon"><Users size={21}/></span><small>01 / ADMINISTRATION</small></div><h3>Institution administration & access</h3><p>Manage institutional settings, user permissions, approvals and responsibility-based access for owners and administrators.</p><div className="edm-feature-visual edm-people-visual"><div className="edm-person person-one"><Users size={17}/></div><div className="edm-person person-two"><GraduationCap size={17}/></div><div className="edm-person person-three"><BookOpen size={17}/></div><div className="edm-person person-four"><Building2 size={17}/></div><div className="edm-role-lines"><i/><i/><i/><i/></div></div></article>
+            <article className="edm-feature-card"><div className="edm-feature-top"><span className="edm-feature-icon"><UserCheck size={21}/></span><small>02 / ADMISSIONS</small></div><h3>Admissions & enrolment</h3><p>Manage applications, admission decisions, student intake and placement into the right class, programme and academic session.</p><div className="edm-feature-visual edm-admission-visual"><div><span>01</span><b>Application review</b><small>Applicant details & documents</small></div><div><span>02</span><b>Admission decision</b><small>Approval & enrolment status</small></div><div><span>03</span><b>Class placement</b><small>Session, class & section</small></div></div></article>
+            <article className="edm-feature-card"><div className="edm-feature-top"><span className="edm-feature-icon"><GraduationCap size={21}/></span><small>03 / STUDENTS</small></div><h3>Student & guardian records</h3><p>Maintain learner profiles, admission identifiers, class placement, guardian connections, documents and student history.</p><div className="edm-feature-visual edm-learner-visual"><div><GraduationCap size={20}/><b>Student profile</b><small>Identity · Class · Status</small></div><div><Users size={19}/><b>Family links</b><small>Parent & guardian access</small></div></div></article>
+            <article className="edm-feature-card"><div className="edm-feature-top"><span className="edm-feature-icon"><Users size={21}/></span><small>04 / TEACHERS</small></div><h3>Teachers, faculty & staff</h3><p>Manage employee profiles, department and subject allocations, faculty attendance, leave and approved staff workflows.</p><div className="edm-feature-visual edm-teacher-visual"><span><BookOpen size={18}/><b>Teaching assignments</b><small>Subjects & class allocation</small></span><span><CalendarCheck size={18}/><b>Faculty attendance</b><small>Daily records & leave</small></span></div></article>
+            <article className="edm-feature-card"><div className="edm-feature-top"><span className="edm-feature-icon"><BookOpen size={21}/></span><small>05 / ACADEMICS</small></div><h3>Comprehensive academic management</h3><p>Organise classes, subjects, timetables, assignments, examinations and results.</p><div className="edm-feature-visual edm-calendar-visual"><div className="edm-calendar-head"><b>Academic planner</b><span>•••</span></div><div className="edm-calendar-grid">{Array.from({length:15},(_,i)=><i key={i} className={i===3||i===8||i===11?'marked':''}/>)}</div><small>Classes · Assessments · Results</small></div></article>
             <article className="edm-feature-card"><div className="edm-feature-top"><span className="edm-feature-icon"><Wallet size={21}/></span><small>03 / FINANCE</small></div><h3>Fees, payments & clear records</h3><p>Manage fee structures, invoices, receipts, balances and payment history.</p><div className="edm-feature-visual edm-finance-visual"><div className="edm-finance-bar"><span/><span/><span/><span/><span/><span/><span/></div><div className="edm-finance-caption"><b>Fee collection overview</b><small>Invoices · Payments · Balances</small></div></div></article>
             <article className="edm-feature-card"><div className="edm-feature-top"><span className="edm-feature-icon"><CalendarCheck size={21}/></span><small>04 / OPERATIONS</small></div><h3>Attendance & daily operations</h3><p>Record student and faculty attendance and coordinate everyday institution activity.</p><div className="edm-feature-visual edm-attendance-visual"><div><i/><b>Present</b><small>Attendance register</small></div><div><i/><b>Late</b><small>Attendance register</small></div><div><i/><b>Absent</b><small>Attendance register</small></div></div></article>
             <article className="edm-feature-card"><div className="edm-feature-top"><span className="edm-feature-icon"><Headphones/></span><small>05 / COMMUNICATION</small></div><h3>Keep every stakeholder informed</h3><p>Share announcements and keep parents, students and teams connected with institution updates.</p><div className="edm-feature-visual edm-message-visual"><div className="edm-message-bubble">New announcement published<span/></div><div className="edm-message-bubble message-alt">Update shared with your class<span/></div></div></article>
@@ -317,13 +341,14 @@ export function WelcomeScreen({ navigate }: ScreenProps) {
           </div>
         </section>
 
-        <section className="edm-solutions-section edm-section" id="solutions">
+        <section className="edm-solutions-section edm-section" id="institution-types">
           <div className="edm-section-heading"><div><span className="edm-section-kicker">SOLUTIONS FOR EVERY CAMPUS</span><h2>One platform.<br/><em>Different institution needs.</em></h2></div><p>Start with the workflows that matter to your institution and build a connected operating model around them.</p></div>
           <div className="edm-solution-grid"><article className="edm-solution-card solution-school"><span className="edm-solution-number">01</span><span className="edm-solution-icon"><Building2 size={24}/></span><h3>Schools</h3><p>Admissions, classes, attendance, parent communication, fee collection and student progress.</p><a href="#get-started">Start with EduSphere 360 <ArrowUpRight size={16}/></a><div className="edm-solution-art school-art"><div/><div/><div/><i/></div></article><article className="edm-solution-card solution-college"><span className="edm-solution-number">02</span><span className="edm-solution-icon"><BookOpen size={24}/></span><h3>Colleges</h3><p>Departments, programmes, faculty, timetables, assessments, examinations and academic records.</p><a href="#get-started">Start with EduSphere 360 <ArrowUpRight size={16}/></a><div className="edm-solution-art college-art"><div/><div/><div/><i/></div></article><article className="edm-solution-card solution-university"><span className="edm-solution-number">03</span><span className="edm-solution-icon"><GraduationCap size={24}/></span><h3>Universities</h3><p>Multi-department coordination, academic sessions, student services and campus administration.</p><a href="#get-started">Start with EduSphere 360 <ArrowUpRight size={16}/></a><div className="edm-solution-art university-art"><div/><div/><div/><i/></div></article></div>
         </section>
 
-        <section className="edm-access-section edm-section" id="portals">
-          <div className="edm-section-heading"><div><span className="edm-section-kicker">MULTI-ACCESS BY DESIGN</span><h2>Every person has<br/><em>a place in the platform.</em></h2></div><p>Give each stakeholder a focused portal, with access shaped around their role and responsibilities.</p></div>
+        <section className="edm-access-section edm-section" id="solutions" aria-labelledby="edm-solutions-heading">
+          <span className="edm-anchor-target" id="portals" />
+          <div className="edm-section-heading"><div><span className="edm-section-kicker">ROLE-BASED SOLUTIONS</span><h2 id="edm-solutions-heading">The right workspace<br/><em>for every role.</em></h2></div><p>Owners, administrators, teachers, students and parents each receive focused access, with accountant and examination-officer workspaces available for specialist responsibilities.</p></div>
           <div className="edm-access-grid">{portals.map(({ role, title, description, icon: Icon }) => <button key={role} className="edm-access-card" onClick={() => navigate('login', role)}><span className="edm-access-icon"><Icon size={20}/></span><span className="edm-access-copy"><b>{title}</b><small>{description}</small></span><ArrowUpRight size={17}/></button>)}</div>
         </section>
 
@@ -352,6 +377,61 @@ export function WelcomeScreen({ navigate }: ScreenProps) {
 
         
 
+
+
+        <section className="edm-campus-services-section edm-section" id="campus-services" aria-labelledby="edm-campus-services-heading">
+          <div className="edm-section-heading">
+            <div><span className="edm-section-kicker">CAMPUS SERVICES</span><h2 id="edm-campus-services-heading">The services around<br/><em>the learning experience.</em></h2></div>
+            <p>Connect supported campus operations with the same institution records and role-based permissions. Availability depends on your institution's setup and enabled workflows.</p>
+          </div>
+          <div className="edm-campus-services-grid">
+            <article className="edm-campus-service-card"><span className="edm-campus-service-icon service-library"><BookOpen size={22}/></span><div><small>AVAILABLE WORKSPACE</small><h3>Digital library</h3><p>Manage the book catalogue, circulation, issue and return records, fines, learning resources and reading history.</p><a href="#features">Explore academic features <ArrowUpRight size={15}/></a></div></article>
+            <article className="edm-campus-service-card"><span className="edm-campus-service-icon service-transport"><Bus size={22}/></span><div><small>AVAILABLE WORKSPACE</small><h3>Transport management</h3><p>Coordinate vehicles, drivers, routes, stops, student allocations, transport attendance and maintenance records.</p><a href="#solutions">View role access <ArrowUpRight size={15}/></a></div></article>
+            <article className="edm-campus-service-card"><span className="edm-campus-service-icon service-facilities"><DoorOpen size={22}/></span><div><small>AVAILABLE WORKSPACE</small><h3>Rooms & facilities</h3><p>Track classrooms, laboratories, room availability, reservations, maintenance and facility history.</p><a href="#features">Explore platform features <ArrowUpRight size={15}/></a></div></article>
+            <article className="edm-campus-service-card"><span className="edm-campus-service-icon service-inventory"><Package size={22}/></span><div><small>AVAILABLE WORKSPACE</small><h3>Inventory & supplies</h3><p>Maintain item catalogues, suppliers, procurement, stock movement, allocation and inventory audit records.</p><a href="#features">Explore platform features <ArrowUpRight size={15}/></a></div></article>
+            <article className="edm-campus-service-card"><span className="edm-campus-service-icon service-visitors"><UserCheck size={22}/></span><div><small>AVAILABLE WORKSPACE</small><h3>Visitor management</h3><p>Record visitor details, approvals, passes, entry and exit activity, notifications and visit history.</p><a href="#contact">Get support <ArrowUpRight size={15}/></a></div></article>
+            <article className="edm-campus-service-card edm-campus-service-planned"><span className="edm-campus-service-icon service-hostel"><Building2 size={22}/></span><div><small>NOT AVAILABLE IN THIS RELEASE</small><h3>Hostel & residence</h3><p>Hostel room allocation, resident registers and accommodation billing are not currently available as a live workspace.</p><span className="edm-service-status">Future scope · Not yet enabled</span></div></article>
+          </div>
+        </section>
+
+        <section className="edm-security-section edm-section" id="security" aria-labelledby="edm-security-heading">
+          <div className="edm-section-heading">
+            <div><span className="edm-section-kicker">SECURITY & RELIABILITY</span><h2 id="edm-security-heading">Institution records deserve<br/><em>careful boundaries.</em></h2></div>
+            <p>EduSphere 360 uses role-aware access and institution-scoped data permissions. Security claims are kept to controls present in the current online release.</p>
+          </div>
+          <div className="edm-security-grid">
+            <article><span><ShieldCheck size={21}/></span><h3>Role-based permissions</h3><p>Owner, administrator, teacher, student, parent and specialist roles receive distinct views and permitted actions.</p></article>
+            <article><span><LockKeyhole size={21}/></span><h3>Institution-scoped records</h3><p>Database row-level security and active institution membership checks help keep each institution's data within its authorised workspace.</p></article>
+            <article><span><Server size={21}/></span><h3>Private file storage</h3><p>Student photographs and institution files are stored in a private storage bucket, with access checked against user permissions.</p></article>
+            <article><span><CheckCircle2 size={21}/></span><h3>Traceable operations</h3><p>Supported administration, approval and audit workflows keep important institutional actions reviewable by authorised users.</p></article>
+          </div>
+          <div className="edm-reliability-note"><span><Monitor size={18}/></span><div><b>Online-first service availability</b><p>The current release requires an internet connection and uses its configured cloud hosting and database providers. Offline mode, an uptime guarantee and independent security certifications are not claimed here. External messaging, payment gateways, device attendance feeds and backup-provider services require their own configuration before they can be treated as live integrations.</p></div></div>
+        </section>
+
+        <section className="edm-testimonials-section edm-section" id="testimonials" aria-labelledby="edm-testimonials-heading">
+          <div className="edm-section-heading">
+            <div><span className="edm-section-kicker">INSTITUTION VOICES</span><h2 id="edm-testimonials-heading">Trust should be earned.<br/><em>Not made up.</em></h2></div>
+            <p>We publish institution feedback only when it is genuine and shared with permission.</p>
+          </div>
+          <div className="edm-testimonial-empty">
+            <span><HeartHandshake size={27}/></span>
+            <div><small>VERIFIED FEEDBACK</small><h3>Institution stories are being gathered.</h3><p>There are no verified institution testimonials published on this website yet. We will add real feedback and approved case studies here when institutions choose to share them.</p></div>
+          </div>
+        </section>
+
+        <section className="edm-contact-section edm-section" id="contact" aria-labelledby="edm-contact-heading">
+          <div className="edm-contact-intro">
+            <span className="edm-section-kicker">CONTACT & HELP</span>
+            <h2 id="edm-contact-heading">A clearer next step<br/><em>starts with a conversation.</em></h2>
+            <p>Choose the route that matches your question. We do not display unverified email addresses or telephone numbers.</p>
+          </div>
+          <div className="edm-contact-grid">
+            <article><span><Building2 size={20}/></span><small>INSTITUTION ACCOUNT</small><h3>Access & record support</h3><p>For login access, student records, fees or staff permissions, contact your institution owner or administrator.</p><button type="button" onClick={() => go('login')}>Go to Login <ArrowUpRight size={15}/></button></article>
+            <article><span><GraduationCap size={20}/></span><small>NEW INSTITUTION</small><h3>Start your onboarding</h3><p>Create an owner account and register your institution to begin the setup journey.</p><button type="button" onClick={() => go('setup')}>Get Started <ArrowUpRight size={15}/></button></article>
+            <article><span><Headphones size={20}/></span><small>HELP & POLICIES</small><h3>Find practical answers</h3><p>Read the common questions and review the current in-product privacy and terms notices.</p><div><a href="#faq">Visit FAQs <ArrowUpRight size={15}/></a><button type="button" onClick={() => setLegalDocument('privacy')}>Privacy notice</button><button type="button" onClick={() => setLegalDocument('terms')}>Terms</button></div></article>
+          </div>
+          <p className="edm-contact-channel-note">Official public support email and telephone details are not configured in the current website content. Add verified contact channels before publishing them here.</p>
+        </section>
 
         <section className="edm-faq-section edm-section" id="faq" aria-labelledby="edm-faq-heading">
           <div className="edm-faq-layout">
@@ -383,12 +463,13 @@ export function WelcomeScreen({ navigate }: ScreenProps) {
             <p>One intelligent system for the people, learning and operations of your institution.</p>
             <div className="edm-footer-free"><Sparkles size={15}/> Online core platform</div>
           </div>
-          <div className="edm-footer-col"><b>Platform</b><a href="#platform">About EduSphere</a><a href="#features">Features</a><a href="#solutions">Solutions</a><a href="#self-hosted">USV 360 Pro</a></div>
-          <div className="edm-footer-col"><b>Explore</b><a href="#portals">User portals</a><a href="#why-choose-us">Why EduSphere</a><a href="#workflow">How it works</a><a href="#why-edusphere">Core capabilities</a></div>
-          <div className="edm-footer-col"><b>Get started</b><a href="#get-started">Create an institution</a><a href="#faq">Frequently asked questions</a><button type="button" onClick={() => go('login')}>Login to your account</button><a href="#top">Back to top</a></div>
+          <div className="edm-footer-col"><b>Platform</b><a href="#about">About EduSphere</a><a href="#features">Features</a><a href="#solutions">Role-based solutions</a><a href="#institution-types">Institution types</a><a href="#campus-services">Campus services</a></div>
+          <div className="edm-footer-col"><b>Explore</b><a href="#analytics">Analytics preview</a><a href="#workflow">How it works</a><a href="#security">Security & reliability</a><a href="#testimonials">Institution feedback</a><a href="#faq">FAQs & help</a></div>
+          <div className="edm-footer-col"><b>Get started</b><a href="#get-started">Create an institution</a><a href="#contact">Contact & help</a><button type="button" onClick={() => go('login')}>Login to your account</button><button type="button" onClick={() => setLegalDocument('privacy')}>Privacy notice</button><button type="button" onClick={() => setLegalDocument('terms')}>Terms & conditions</button><a href="#top">Back to top</a></div>
         </div>
         <div className="edm-footer-bottom"><span>© {new Date().getFullYear()} EduSphere 360. All rights reserved.</span><span>Built for schools · colleges · universities</span><a href="#top">Back to top ↑</a></div>
       </footer>
+      {legalDocument && <LegalNotice kind={legalDocument} onClose={() => setLegalDocument(null)} />}
     </div>
   )
 }
