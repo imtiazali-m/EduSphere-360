@@ -88,6 +88,13 @@ test('work-task form permits progress updates through stable identity, not mutab
   assert.ok(!component.includes("String(payload.assigned_to_email ?? '').toLowerCase() !== user!.email.toLowerCase()"))
 })
 
+test('task institution ownership cannot be changed in place', () => {
+  const sql = fs.readFileSync(path.join(root, 'supabase/migrations/20261111140500_work_task_stable_assignee_identity.sql'), 'utf8')
+  assert.match(sql, /IF TG_OP = 'UPDATE' AND NEW\.institution_id IS DISTINCT FROM OLD\.institution_id THEN/i)
+  assert.match(sql, /Institutional work tasks cannot be transferred between institutions/i)
+  assert.match(sql, /Create a new task in the destination institution/i)
+})
+
 test('SQL migration keeps identity and explicit legacy rules aligned with client filtering', () => {
   const sql = fs.readFileSync(path.join(root, 'supabase/migrations/20261111140500_work_task_stable_assignee_identity.sql'), 'utf8')
   assert.match(sql, /assigned_to_user_id uuid/i)
