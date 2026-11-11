@@ -7,7 +7,7 @@
 
 ## What this inventory proves — and what it does not
 
-This appendix describes the full source catalogue and the runtime role-filtered menus. The catalogue contains **33 top-level groups and 430 submenu entries**; the current role filter exposes only the subsets shown in the table below. A catalogue entry is not necessarily visible to every role, and catalogue size must not be confused with the live visible-destination count.
+This appendix distinguishes the **27 visible sidebar groups** from the **34 route-catalogue groups**. Four specialist setup catalogues (institution configuration, academic sessions, classes/sections and subjects) remain available as child destinations under the single **Administration parent menu**; they are not separate top-level sidebar menus. The full route catalogue retains the complete submenu inventory. The 12 academic work areas are presented inside the Academic Management parent workspace, while the 14 institutional setup work areas are presented inside the Administration parent workspace.
 
 A visible menu entry or a value in the route index is **not** evidence that its complete workflow is implemented, that its API is authorized, or that records persist. Items listed as **Explicitly unavailable** are deliberately routed to the unavailable-workspace experience in the inspected resolver. Other items are marked **Workflow acceptance pending**; they require destination-by-destination resolver, permission, data-lifecycle and browser testing.
 
@@ -23,15 +23,7 @@ A visible menu entry or a value in the route index is **not** evidence that its 
 
 ## Per-role menu size
 
-| Role | Visible menu groups | Visible submenu destinations |
-|---|---:|---:|
-| Owner | 31 | 343 |
-| Administrator | 31 | 343 |
-| Teacher / employee | 18 | 152 |
-| Student | 15 | 107 |
-| Parent / guardian | 15 | 104 |
-| Accountant | 12 | 112 |
-| Examination officer | 7 | 62 |
+Role-specific group and destination totals are generated from `roleNavigationGroups` and permission grants. They are verified against the current source in `scripts/verify-project.mjs`; this inventory does not hard-code historical totals.
 
 ## Full destination inventory
 
@@ -103,7 +95,9 @@ A visible menu entry or a value in the route index is **not** evidence that its 
 | 15 | Academic Configuration | Owner, Administrator | Workflow acceptance pending |
 | 16 | Security and Access History | Owner, Administrator | Workflow acceptance pending |
 
-### 4. Academic Sessions (`academic-sessions`)
+### Administration child register — Academic Sessions (`academic-sessions`)
+
+**Navigation:** Opened from Administration → Academic Structure & Sections; not a separate sidebar group.
 
 **Role visibility:** Owner, Administrator  
 **Visible item counts:** Owner 9 · Administrator 9
@@ -120,7 +114,9 @@ A visible menu entry or a value in the route index is **not** evidence that its 
 | 8 | Session History | Owner, Administrator | Workflow acceptance pending |
 | 9 | Session Reports | Owner, Administrator | Workflow acceptance pending |
 
-### 5. Classes and Sections (`classes-sections`)
+### Administration child register — Classes and Sections (`classes-sections`)
+
+**Navigation:** Opened from Administration → Academic Structure & Sections; not a separate sidebar group.
 
 **Role visibility:** Owner, Administrator  
 **Visible item counts:** Owner 10 · Administrator 10
@@ -138,7 +134,9 @@ A visible menu entry or a value in the route index is **not** evidence that its 
 | 9 | Transfer History | Owner, Administrator | Workflow acceptance pending |
 | 10 | Class History | Owner, Administrator | Workflow acceptance pending |
 
-### 6. Subjects (`subjects`)
+### Administration child register — Subjects (`subjects`)
+
+**Navigation:** Opened from Administration → Academic Structure & Sections; not a separate sidebar group.
 
 **Role visibility:** Owner, Administrator  
 **Visible item counts:** Owner 10 · Administrator 10
@@ -664,7 +662,9 @@ A visible menu entry or a value in the route index is **not** evidence that its 
 | 8 | Visitor Notifications | Owner, Administrator, Teacher / employee | Explicitly unavailable |
 | 9 | Visitor Reports | Owner, Administrator, Teacher / employee | Explicitly unavailable |
 
-### 31. Institutional Systems and Configuration (`institution-config`)
+### Administration child register — Institutional Systems and Configuration (`institution-config`)
+
+**Navigation:** Opened from the Administration workspace; not a separate sidebar group.
 
 **Role visibility:** Owner, Administrator  
 **Visible item counts:** Owner 15 · Administrator 15
