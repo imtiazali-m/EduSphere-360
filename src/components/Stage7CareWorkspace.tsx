@@ -15,6 +15,7 @@ type Student = { id:string; full_name:string; admission_no:string; class_name:st
 type Employee = { id:string; user_id?:string|null; full_name:string; employee_no:string; employee_type:string; department?:string|null; campus_id?:string|null }
 type CareGrant = { area:'discipline'|'counselling'|'health'; can_read:boolean; can_write:boolean }
 type LeaveRow = RecordRow & { person_type?:'student'|'employee' }
+type GuardianLink = { student_id:string; parent_user_id:string; relationship?:string|null }
 type AttendanceReportRow = RecordRow & {
   student_id?:string|null; student_name?:string|null; class_name?:string|null; attendance_date?:string
   status?:string; period_label?:string|null; arrival_time?:string|null; departure_time?:string|null
@@ -68,7 +69,7 @@ export function Stage7CareWorkspace({initialWindow='leave',onToast}:{initialWind
   const [eventFollowUpDate,setEventFollowUpDate]=useState('')
   const [parentMessage,setParentMessage]=useState('')
   const [sendParentMessage,setSendParentMessage]=useState(false)
-  const [guardianLinks,setGuardianLinks]=useState<RecordRow[]>([])
+  const [guardianLinks,setGuardianLinks]=useState<GuardianLink[]>([])
   const [careAccessRows,setCareAccessRows]=useState<RecordRow[]>([])
   const [grantUser,setGrantUser]=useState('')
   const [grantArea,setGrantArea]=useState<'discipline'|'counselling'|'health'>('discipline')
@@ -195,7 +196,7 @@ export function Stage7CareWorkspace({initialWindow='leave',onToast}:{initialWind
     if(events.error)throw events.error
     if(links.error&&canWrite('discipline'))throw links.error
     setCareEvents((events.data??[]) as RecordRow[])
-    setGuardianLinks((links.data??[]) as RecordRow[])
+    setGuardianLinks((links.data??[]) as GuardianLink[])
   },[user?.id,user?.institutionId,grants,isAdmin])
 
   const loadCounselling=useCallback(async()=>{
@@ -487,7 +488,7 @@ export function Stage7CareWorkspace({initialWindow='leave',onToast}:{initialWind
           const student=students.find(s=>s.id===row.student_id),employee=employees.find(e=>e.id===row.teacher_id)
           const applicant=row.person_type==='student'?student?.full_name??'Student':employee?.full_name??'Employee'
           const path=String(row.supporting_document_path??'')
-          return <tr key={row.id}><td><b>{applicant}</b><small>{row.person_type==='student'?student?.class_name??'Student':'Employee'}</small></td><td>{String(row.leave_type??'').replaceAll('_',' ')}</td><td>{String(row.start_date)} – {String(row.end_date)}</td><td>{String(row.day_count??'—')}</td><td><span className={'s7-status '+String(row.status)}>{String(row.status)}</span></td><td>{path&&<button className="s7-text-button" type="button" onClick={()=>void openPrivateDocument(path)}><FileText size={14}/> Open file</button>}{row.review_notes&&<small>{String(row.review_notes)}</small>}{isAdmin&&row.status==='pending'&&<div className="s7-review"><input aria-label="Review notes" value={reviewNotes[String(row.id)]??''} onChange={e=>setReviewNotes(v=>({...v,[String(row.id)]:e.target.value}))} placeholder="Review note"/><button type="button" onClick={()=>void reviewLeave(row,'approved')} disabled={saving}>Approve</button><button type="button" className="danger" onClick={()=>void reviewLeave(row,'rejected')} disabled={saving}>Reject</button></div>}</td></tr>
+          return <tr key={row.id}><td><b>{applicant}</b><small>{row.person_type==='student'?student?.class_name??'Student':'Employee'}</small></td><td>{String(row.leave_type??'').replaceAll('_',' ')}</td><td>{String(row.start_date)} – {String(row.end_date)}</td><td>{String(row.day_count??'—')}</td><td><span className={'s7-status '+String(row.status)}>{String(row.status)}</span></td><td>{path&&<button className="s7-text-button" type="button" onClick={()=>void openPrivateDocument(path)}><FileText size={14}/> Open file</button>}{Boolean(row.review_notes)&&<small>{String(row.review_notes)}</small>}{isAdmin&&row.status==='pending'&&<div className="s7-review"><input aria-label="Review notes" value={reviewNotes[String(row.id)]??''} onChange={e=>setReviewNotes(v=>({...v,[String(row.id)]:e.target.value}))} placeholder="Review note"/><button type="button" onClick={()=>void reviewLeave(row,'approved')} disabled={saving}>Approve</button><button type="button" className="danger" onClick={()=>void reviewLeave(row,'rejected')} disabled={saving}>Reject</button></div>}</td></tr>
         })}</tbody></table></div>}
       </section>
       <section className="s7-panel">
