@@ -74,9 +74,43 @@ function allowedItems(group:WorkspaceMenuGroup,role:WorkspaceMenuGroup['roles'][
   return roleFiltered
 }
 
-export function roleNavigationGroups(role:WorkspaceMenuGroup['roles'][number]){
+export interface NavigationSectionDefinition { key:string; label:string; groupKeys:string[] }
+export type RoleNavigationGroup = Omit<WorkspaceMenuGroup,'items'> & { items:string[] }
+export interface RoleNavigationSection { key:string; label:string; groups:RoleNavigationGroup[] }
+
+/** Parent headings are intentionally few; the expandable workspace groups beneath them
+ * retain their original route keys and permission declarations. */
+export const navigationSectionDefinitions:NavigationSectionDefinition[]=[
+  {key:'overview',label:'Overview',groupKeys:['dashboard']},
+  {key:'setup',label:'Institute Setup',groupKeys:['administration','institution-config','academic-sessions','classes-sections','subjects','backup']},
+  {key:'people',label:'People & Admissions',groupKeys:['students','employees','attendance','behaviour','certificates']},
+  {key:'academics',label:'Academic Delivery',groupKeys:['curriculum','timetable','teaching','question-bank','examinations','class-tests','library']},
+  {key:'finance',label:'Finance & Payroll',groupKeys:['accounts-finance','fees','receivables','payments','receipts','payroll','reconciliation']},
+  {key:'communication',label:'Communication',groupKeys:['communication']},
+  {key:'campus',label:'Campus Operations',groupKeys:['transport','inventory','facilities','visitors']},
+  {key:'intelligence',label:'Reports & Intelligence',groupKeys:['reports','ai']},
+]
+const navigationGroupOrder=new Map<string,number>(navigationSectionDefinitions.flatMap(section=>section.groupKeys).map((key,index):[string,number]=>[key,index]))
+
+export function roleNavigationGroups(role:WorkspaceMenuGroup['roles'][number]):RoleNavigationGroup[]{
   return institutionalMenu
     .filter(group=>group.roles.includes(role))
     .map(group=>({...group,items:allowedItems(group,role).map(item=>item.label)}))
     .filter(group=>group.key==='dashboard'||group.items.length>0)
+    .sort((left,right)=>(navigationGroupOrder.get(left.key)??Number.MAX_SAFE_INTEGER)-(navigationGroupOrder.get(right.key)??Number.MAX_SAFE_INTEGER))
+}
+
+export function roleNavigationSections(role:WorkspaceMenuGroup['roles'][number]):RoleNavigationSection[]{
+  const groups=roleNavigationGroups(role)
+  const groupByKey=new Map(groups.map(group=>[group.key,group]))
+  const sections=navigationSectionDefinitions.flatMap(section=>{
+    const sectionGroups=section.groupKeys.flatMap(key=>{
+      const group=groupByKey.get(key)
+      return group?[group]:[]
+    })
+    return sectionGroups.length?[{key:section.key,label:section.label,groups:sectionGroups}]:[]
+  })
+  const assigned=new Set(navigationSectionDefinitions.flatMap(section=>section.groupKeys))
+  const remaining=groups.filter(group=>!assigned.has(group.key))
+  return remaining.length?[...sections,{key:'other',label:'Other Workspaces',groups:remaining}]:sections
 }
