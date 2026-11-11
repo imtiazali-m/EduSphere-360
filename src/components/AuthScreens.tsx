@@ -171,6 +171,7 @@ export function WelcomeScreen({ navigate }: ScreenProps) {
             </div>
             <div className="edm-hero-art" aria-label="Illustrative EduSphere 360 product interface">
               <div className="edm-art-halo"/><div className="edm-art-orbit orbit-a"/><div className="edm-art-orbit orbit-b"/>
+              <img className="edm-hero-campus-photo" src="https://images.pexels.com/photos/29326797/pexels-photo-29326797.jpeg?auto=compress&cs=tinysrgb&w=1200" alt="Modern university building surrounded by mature trees" loading="lazy" decoding="async"/>
               <div className="edm-product-card">
                 <div className="edm-product-top"><div className="edm-product-brand"><span><GraduationCap size={16}/></span><b>EduSphere <i>360</i></b></div><div className="edm-window-dots"><i/><i/><i/></div></div>
                 <div className="edm-product-layout">
