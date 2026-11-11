@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { ArrowRight, CalendarDays, CheckCircle2, ClipboardList, FileText, Plus, RefreshCw, Search, ShieldCheck, Users, X } from 'lucide-react'
+import { ArrowRight, CalendarDays, ClipboardList, FileText, Plus, RefreshCw, Search, ShieldCheck, Users, X } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { userFacingError } from '../lib/userErrors'
@@ -305,7 +305,7 @@ export function PeopleHRWorkspace({initialWindow,onToast,onNavigate}:Props) {
     if(!isAdmin||!supabase||!user?.institutionId)return
     const admissionNo=makeId('ES')
     setSaving(true)
-    const {data:studentId,error}=await supabase.rpc('convert_admission_enquiry',{
+    const {error}=await supabase.rpc('convert_admission_enquiry',{
       p_institution_id:user.institutionId,p_enquiry_id:row.id,p_admission_no:admissionNo,
       p_full_name:String(row.student_name??''),p_email:null,p_class_name:String(row.class_applied_for??''),
     })
