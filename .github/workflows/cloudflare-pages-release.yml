@@ -58,6 +58,9 @@ jobs:
       - name: Test private file permissions
         run: npm run test:file-access
 
+      - name: Test teacher account provisioning guards
+        run: npm run test:account-provisioning
+
       - name: Build production website
         run: npm run build
 
@@ -175,10 +178,8 @@ jobs:
     if: >-
       ${{
         github.ref == format('refs/heads/{0}', vars.EDUSPHERE_PRODUCTION_BRANCH || 'main') &&
-        (
-          github.event_name == 'push' ||
-          (github.event_name == 'workflow_dispatch' && inputs.deploy_production == true)
-        )
+        github.event_name == 'workflow_dispatch' &&
+        inputs.deploy_production == true
       }}
     runs-on: ubuntu-latest
     environment: production
