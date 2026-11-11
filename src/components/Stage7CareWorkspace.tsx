@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import {
-  Activity, AlertTriangle, CalendarDays, Check, Clock3, Download, FileText,
-  HeartPulse, LockKeyhole, MessageSquare, Plus, RefreshCw, ShieldCheck, UserRound, X,
+  Activity, AlertTriangle, CalendarDays, Download, FileText,
+  HeartPulse, LockKeyhole, MessageSquare, RefreshCw, ShieldCheck,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
@@ -15,6 +15,12 @@ type Student = { id:string; full_name:string; admission_no:string; class_name:st
 type Employee = { id:string; user_id?:string|null; full_name:string; employee_no:string; employee_type:string; department?:string|null; campus_id?:string|null }
 type CareGrant = { area:'discipline'|'counselling'|'health'; can_read:boolean; can_write:boolean }
 type LeaveRow = RecordRow & { person_type?:'student'|'employee' }
+type AttendanceReportRow = RecordRow & {
+  student_id?:string|null; student_name?:string|null; class_name?:string|null; attendance_date?:string
+  status?:string; period_label?:string|null; arrival_time?:string|null; departure_time?:string|null
+  minutes_late?:number|null; early_departure_minutes?:number|null; notes?:string|null
+  teacher_id?:string|null; check_in_time?:string|null; check_out_time?:string|null
+}
 const today = () => new Date().toLocaleDateString('en-CA')
 const dayCount = (start:string,end:string) => Math.max(0,Math.round((Date.parse(end+'T00:00:00Z')-Date.parse(start+'T00:00:00Z'))/86400000)+1)
 const areaLabels:Record<string,string>={discipline:'Student Discipline',counselling:'Counselling & Wellbeing',health:'Health & Emergency'}
@@ -45,8 +51,8 @@ export function Stage7CareWorkspace({initialWindow='leave',onToast}:{initialWind
   const [reportFrom,setReportFrom]=useState(today().slice(0,8)+'01')
   const [reportTo,setReportTo]=useState(today())
   const [reportClass,setReportClass]=useState('')
-  const [studentAttendance,setStudentAttendance]=useState<RecordRow[]>([])
-  const [employeeAttendance,setEmployeeAttendance]=useState<RecordRow[]>([])
+  const [studentAttendance,setStudentAttendance]=useState<AttendanceReportRow[]>([])
+  const [employeeAttendance,setEmployeeAttendance]=useState<AttendanceReportRow[]>([])
   const [careEvents,setCareEvents]=useState<RecordRow[]>([])
   const [selectedStudent,setSelectedStudent]=useState('')
   const [eventType,setEventType]=useState('incident')
@@ -169,15 +175,15 @@ export function Stage7CareWorkspace({initialWindow='leave',onToast}:{initialWind
   const loadReports=useCallback(async()=>{
     if(!supabase||!user)return
     const [s,e]=await Promise.all([
-      supabase.from('attendance').select('id,student_id,student_name,class_name,attendance_date,status,period_label,arrival_time,departure_time,minutes_late,early_departure_minutes,notes')
+      supabase.from('attendance').select('id,institution_id,student_id,student_name,class_name,attendance_date,status,period_label,arrival_time,departure_time,minutes_late,early_departure_minutes,notes')
         .eq('institution_id',user.institutionId).gte('attendance_date',reportFrom).lte('attendance_date',reportTo).order('attendance_date',{ascending:false}).limit(5000),
-      supabase.from('employee_attendance').select('id,teacher_id,attendance_date,status,check_in_time,check_out_time,minutes_late,early_departure_minutes,notes')
+      supabase.from('employee_attendance').select('id,institution_id,teacher_id,attendance_date,status,check_in_time,check_out_time,minutes_late,early_departure_minutes,notes')
         .eq('institution_id',user.institutionId).gte('attendance_date',reportFrom).lte('attendance_date',reportTo).order('attendance_date',{ascending:false}).limit(5000),
     ])
     if(s.error)throw s.error
     if(e.error&&isAdmin)throw e.error
-    setStudentAttendance((s.data??[]) as RecordRow[])
-    setEmployeeAttendance((e.data??[]) as RecordRow[])
+    setStudentAttendance((s.data??[]) as AttendanceReportRow[])
+    setEmployeeAttendance((e.data??[]) as AttendanceReportRow[])
   },[user?.id,user?.institutionId,reportFrom,reportTo,isAdmin])
 
   const loadDiscipline=useCallback(async()=>{
