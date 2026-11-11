@@ -647,6 +647,9 @@ export function SetupScreen({ navigate }: ScreenProps) {
   const [fullName, setFullName] = useState('')
   const [institutionName, setInstitutionName] = useState('')
   const [institutionType, setInstitutionType] = useState<'school' | 'college' | 'university' | 'multi_institution'>('school')
+  const [country, setCountry] = useState('')
+  const [location, setLocation] = useState('')
+  const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -665,12 +668,15 @@ export function SetupScreen({ navigate }: ScreenProps) {
     setError('')
     if (!fullName.trim()) { setError('Enter your full name.'); return }
     if (!institutionName.trim()) { setError('Enter your institution name.'); return }
+    if (!country.trim()) { setError('Enter the country where your institution operates.'); return }
+    if (!location.trim()) { setError('Enter the city or location of your institution.'); return }
+    if (!isValidContactPhone(phone)) { setError('Enter a valid contact phone number with its country code.'); return }
     if (password.length < 10) { setError('Use a password with at least 10 characters.'); return }
     if (password !== confirmPassword) { setError('Your passwords do not match. Please check and try again.'); return }
     if (!acceptedTerms) { setError('Please accept the Terms and Conditions and Privacy Notice to continue.'); return }
     setBusy(true)
     try {
-      const result = await registerAdmin({ fullName: fullName.trim(), institutionName: institutionName.trim(), institutionType, email: email.trim().toLowerCase(), password })
+      const result = await registerAdmin({ fullName: fullName.trim(), institutionName: institutionName.trim(), institutionType, country: country.trim(), location: location.trim(), phone: normalizeContactPhone(phone), email: email.trim().toLowerCase(), password })
       if (result.verificationRequired) {
         setVerificationEmail(result.email)
         setResendMessage('')
@@ -724,7 +730,7 @@ export function SetupScreen({ navigate }: ScreenProps) {
             </button>
             <div className="es-verification-actions">
               <button type="button" onClick={() => { setVerificationEmail(''); setError(''); setResendMessage(''); setResendError('') }}>Use a different email</button>
-              <span>Already verified? <button type="button" onClick={() => navigate('login')}>Login</button></span>
+              <span>Already verified? <button type="button" onClick={() => navigate('access')}>Login</button></span>
             </div>
             <p className="es-verification-help">If you do not see the message, check your spam or junk folder. The link returns you to this website after confirmation.</p>
           </section>
@@ -734,21 +740,27 @@ export function SetupScreen({ navigate }: ScreenProps) {
             <div className="es-auth-form-heading">
               <span className="es-auth-overline">START WITH EDUSPHERE 360</span>
               <h2>Create your account</h2>
-              <p>Enter your details and institution information. Your account will become the first owner of this new institution after email verification.</p>
+              <p>Enter only the information needed to identify your institution and its first owner. Email verification is required before the owner workspace is activated.</p>
             </div>
             <form className="es-auth-form es-signup-form" onSubmit={submit}>
-              <label className="es-auth-field"><span>Your full name</span><div className="es-auth-input"><Users size={17}/><input type="text" autoComplete="name" maxLength={120} required value={fullName} onChange={event => setFullName(event.target.value)} placeholder="Enter your full name"/></div></label>
-              <label className="es-auth-field"><span>Institution name</span><div className="es-auth-input"><Building2 size={17}/><input type="text" maxLength={160} required value={institutionName} onChange={event => setInstitutionName(event.target.value)} placeholder="Enter your school, college or university name"/></div></label>
-              <label className="es-auth-field"><span>Institution type</span><select className="es-auth-select" required value={institutionType} onChange={event => setInstitutionType(event.target.value as typeof institutionType)}><option value="school">School</option><option value="college">College</option><option value="university">University</option><option value="multi_institution">Multi-institution group</option></select></label>
-              <label className="es-auth-field"><span>Email address</span><div className="es-auth-input"><Mail size={17}/><input type="email" autoComplete="email" required value={email} onChange={event => setEmail(event.target.value)} placeholder="you@institution.edu"/></div></label>
-              <label className="es-auth-field"><span>Choose password</span><div className="es-auth-input"><LockKeyhole size={17}/><input type={showPassword ? 'text' : 'password'} autoComplete="new-password" minLength={10} required value={password} onChange={event => setPassword(event.target.value)} placeholder="At least 10 characters"/><button type="button" className="es-password-toggle" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Hide password' : 'Show password'}>{showPassword ? <EyeOff size={17}/> : <Eye size={17}/>}</button></div></label>
-              <label className="es-auth-field"><span>Confirm password</span><div className="es-auth-input"><LockKeyhole size={17}/><input type={showPassword ? 'text' : 'password'} autoComplete="new-password" minLength={10} required value={confirmPassword} onChange={event => setConfirmPassword(event.target.value)} placeholder="Enter your password again"/></div></label>
+              <div className="es-signup-grid">
+                <label className="es-auth-field"><span>Your full name</span><div className="es-auth-input"><Users size={17}/><input type="text" autoComplete="name" maxLength={120} required value={fullName} onChange={event => setFullName(event.target.value)} placeholder="Enter your full name"/></div></label>
+                <label className="es-auth-field es-field-wide"><span>Institution name</span><div className="es-auth-input"><Building2 size={17}/><input type="text" maxLength={160} required value={institutionName} onChange={event => setInstitutionName(event.target.value)} placeholder="School, college or university name"/></div></label>
+                <label className="es-auth-field"><span>Institution type</span><select className="es-auth-select" required value={institutionType} onChange={event => setInstitutionType(event.target.value as typeof institutionType)}><option value="school">School</option><option value="college">College</option><option value="university">University</option><option value="multi_institution">Multi-institution group</option></select></label>
+                <label className="es-auth-field"><span>Country</span><div className="es-auth-input"><Globe2 size={17}/><input type="text" autoComplete="country-name" maxLength={100} required value={country} onChange={event => setCountry(event.target.value)} placeholder="Country"/></div></label>
+                <label className="es-auth-field"><span>City / location</span><div className="es-auth-input"><MapPin size={17}/><input type="text" autoComplete="address-level2" maxLength={140} required value={location} onChange={event => setLocation(event.target.value)} placeholder="City, region or campus location"/></div></label>
+                <label className="es-auth-field"><span>Owner email address</span><div className="es-auth-input"><Mail size={17}/><input type="email" autoComplete="email" required value={email} onChange={event => setEmail(event.target.value)} placeholder="you@institution.edu"/></div></label>
+                <label className="es-auth-field"><span>Owner contact phone</span><div className="es-auth-input"><Phone size={17}/><input type="tel" autoComplete="tel" inputMode="tel" maxLength={24} minLength={7} required value={phone} onChange={event => setPhone(event.target.value)} placeholder="+92 300 1234567"/></div></label>
+                <label className="es-auth-field"><span>Choose password</span><div className="es-auth-input"><LockKeyhole size={17}/><input type={showPassword ? 'text' : 'password'} autoComplete="new-password" minLength={10} required value={password} onChange={event => setPassword(event.target.value)} placeholder="At least 10 characters"/><button type="button" className="es-password-toggle" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Hide password' : 'Show password'}>{showPassword ? <EyeOff size={17}/> : <Eye size={17}/>}</button></div></label>
+                <label className="es-auth-field"><span>Confirm password</span><div className="es-auth-input"><LockKeyhole size={17}/><input type={showPassword ? 'text' : 'password'} autoComplete="new-password" minLength={10} required value={confirmPassword} onChange={event => setConfirmPassword(event.target.value)} placeholder="Enter your password again"/></div></label>
+              </div>
+              <p className="es-access-contact-note">Your phone is saved as the owner contact only. Email verification activates your owner account; SMS verification is not enabled in this release.</p>
               <label className="es-auth-check es-terms-check"><input type="checkbox" checked={acceptedTerms} onChange={event => setAcceptedTerms(event.target.checked)}/><span className="es-check-box"/><span className="es-terms-copy">I agree to the <button type="button" onClick={() => setLegalDocument('terms')}>Terms and Conditions</button> and <button type="button" onClick={() => setLegalDocument('privacy')}>Privacy Notice</button>.</span></label>
               {error && <div className="es-auth-error" role="alert">{error}</div>}
               <button className="es-auth-submit" type="submit" disabled={busy}>{busy ? 'Creating your account…' : 'Sign up'} <ArrowRight size={17}/></button>
             </form>
             <p className="es-signup-account-note">This sign-up starts a <strong>new institution workspace</strong>. Existing institutions create employee and student accounts from their own administration area.</p>
-            <div className="es-auth-inline-switch">Already have an account? <button type="button" onClick={() => navigate('login')}>Login</button></div>
+            <div className="es-auth-inline-switch">Already have an account? <button type="button" onClick={() => navigate('access')}>Login</button></div>
             <div className="es-auth-secure-note"><ShieldCheck size={15}/> Your account becomes the owner of its new institution workspace after email verification.</div>
           </section>
           )}
