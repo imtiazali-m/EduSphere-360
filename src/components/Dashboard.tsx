@@ -696,7 +696,10 @@ export function Dashboard({ onToast }: Props) {
       }
     }
 
-    const identity = options.groupKey && options.itemKey ? `${options.groupKey}:${options.itemKey}` : key
+    // A workspace window is identified by its canonical destination, not by the
+    // menu label that happened to open it. Aliases therefore focus the same
+    // window instead of creating two tabs that render the same or confusing view.
+    const identity = key
     const id = options.parentId ? `${options.parentId}::${identity}` : identity
     const nextTab: WorkspaceTab = {
       id, route: key, targetKey, targetWindow, title,
@@ -709,6 +712,9 @@ export function Dashboard({ onToast }: Props) {
         : [...current, nextTab]
     })
     setActiveTabId(id)
+    if (options.groupKey) {
+      setExpandedGroups(current => current.includes(options.groupKey!) ? current : [...current, options.groupKey!])
+    }
     setSidebarOpen(false)
     setSearchText('')
     setSearchOpen(false)
@@ -818,8 +824,8 @@ export function Dashboard({ onToast }: Props) {
         <div className="pro-workspace-tabs-label">OPEN WINDOWS</div>
         {workspaceTabs.map(tab => {
           const parentTab = tab.parentId ? workspaceTabs.find(parent => parent.id === tab.parentId) : undefined
-          return <div className={`pro-workspace-tab ${activeTabId === tab.id ? 'is-active' : ''} ${parentTab ? 'is-child' : ''}`} key={tab.id}>
-            <button type="button" className="pro-workspace-tab-main" aria-current={activeTabId === tab.id ? 'page' : undefined} onClick={() => setActiveTabId(tab.id)}>
+          return <div className={`pro-workspace-tab ${activeTabId === tab.id ? 'is-active' : ''} ${parentTab ? 'is-child' : ''}`} key={tab.id} data-workspace-route={tab.route}>
+            <button type="button" className="pro-workspace-tab-main" aria-label={`Open ${tab.title} workspace`} title={tab.title} aria-current={activeTabId === tab.id ? 'page' : undefined} onClick={() => setActiveTabId(tab.id)}>
               {parentTab ? <ChevronRight size={14}/> : tab.targetKey === 'overview' ? <LayoutDashboard size={15}/> : <FileText size={15}/>}
               <span>{tab.title}</span>
               {parentTab && <small title={`Opened from ${parentTab.title}`}>{parentTab.title}</small>}
