@@ -609,17 +609,17 @@ check('Module definitions and generic CRUD table allowlist remain valid', () => 
 check('Student Record is a complete permission-aware multi-window workspace', () => {
   const recordModule = read('src/components/RecordModule.tsx')
   const dataSource = read('src/lib/data.ts')
-  for (const label of ['Overview', 'Admissions', 'Student Directory', 'Student Profile', 'Class Placement', 'Promotion', 'Guardians', 'Student Attendance', 'Student Exam Results', 'Student Assignments', 'Student Timetable', 'Student Documentation', 'Student History']) {
+  for (const label of ['Overview', 'Admissions', 'Student Directory', 'Student Profile', 'Class Placement', 'Promotion', 'Guardians', 'Student Attendance', 'Student Exam Results', 'Student Assignments', 'Student Timetable', 'Student Documentation', 'Fee Records', 'Health & Emergency', 'Student History']) {
     assert.ok(recordModule.includes("label: '" + label + "'"), 'Student workspace window is missing: ' + label)
   }
   const studentWorkspaceStart = recordModule.indexOf("if (module.key === 'students') {", recordModule.indexOf('export function RecordModule'))
   const studentWorkspaceEnd = recordModule.indexOf("if (module.key === 'teachers') {", studentWorkspaceStart)
   const studentWorkspace = recordModule.slice(studentWorkspaceStart, studentWorkspaceEnd)
-  for (const table of ['attendance', 'exams', 'exam_results', 'assignments', 'assignment_submissions', 'timetable_entries', 'classes', 'academic_sessions', 'programs', 'guardian_students', 'parent_guardians', 'student_placements', 'student_documents', 'student_history']) {
+  for (const table of ['attendance', 'exams', 'exam_results', 'assignments', 'assignment_submissions', 'timetable_entries', 'classes', 'academic_sessions', 'programs', 'guardian_students', 'parent_guardians', 'student_placements', 'student_documents', 'fee_invoices', 'fee_payments', 'student_health_emergency', 'student_history']) {
     assert.ok(recordModule.includes("'" + table + "'"), 'Student workspace is missing related data source: ' + table)
   }
-  assert.ok(!studentWorkspace.includes("'fee_invoices'") && !studentWorkspace.includes("label: 'Fees & Payments'"), 'Fee management must remain exclusively in Finance, not Student Management')
-  assert.ok(recordModule.includes('studentRelatedTables.map'), 'Student related workspaces must load their linked records')
+  assert.ok(studentWorkspace.includes("studentWorkspaceTab === 'fees'") && studentWorkspace.includes("studentWorkspaceTab === 'health'"), 'Student profiles must expose linked fee history and restricted health information')
+  assert.ok(recordModule.includes('studentRelatedTables.filter') && recordModule.includes('visibleTables.map'), 'Student related workspaces must load linked records while excluding restricted health data for other roles')
   const dashboardSource = read('src/components/Dashboard.tsx')
   assert.ok(dashboardSource.includes('key={tab.id}') && dashboardSource.includes('initialWindow={tab.targetWindow}'), 'Student workspace destinations must open in their own persistent dashboard window')
   assert.ok(dashboardSource.includes("showWindowNavigation={tab.targetKey !== 'students'}"), 'Student sidebar tabs must not duplicate the internal student-window navigation')
@@ -655,7 +655,7 @@ check('Student Record is a complete permission-aware multi-window workspace', ()
 
 check('Faculty & Employee Management uses dedicated institution-scoped HR workspaces', () => {
   const faculty = read('src/components/FacultyWorkspace.tsx')
-  for (const label of ['Overview', 'Employee Registration', 'Employee Directory', 'Employee Profile', 'Departments', 'Designations', 'Teaching Assignments', 'Faculty Attendance', 'Leave Management', 'Workload & Timetable', 'Documents', 'Employment History', 'Staff Reports']) {
+  for (const label of ['Overview', 'Employee Registration', 'All Employees', 'Teachers', 'Faculty & Staff', 'Qualifications', 'Employee Profile', 'Departments', 'Designations', 'Teaching Assignments', 'Faculty Attendance', 'Leave Management', 'Workload & Timetable', 'Documents', 'Qualifications', 'Employment History', 'Staff Reports']) {
     assert.ok(faculty.includes("label:'" + label + "'") || faculty.includes("label: '" + label + "'"), 'Faculty workspace window is missing: ' + label)
   }
   for (const table of ['designations', 'teacher_assignments', 'employee_attendance', 'employee_leave_requests', 'staff_documents', 'employee_history']) {
@@ -942,13 +942,13 @@ check('Unified design system is loaded last and removes global browser zoom', ()
   assert.ok(roleMenu.includes('33 top-level groups and 430 submenu entries') && roleMenu.includes('Examination officer') && roleMenu.includes('| Owner | 31 | 343 |') && roleMenu.includes('| Administrator | 31 | 343 |') && roleMenu.includes('| Teacher / employee | 18 | 152 |') && roleMenu.includes('| Student | 15 | 107 |') && roleMenu.includes('| Parent / guardian | 15 | 104 |') && roleMenu.includes('| Accountant | 12 | 112 |') && roleMenu.includes('| Examination officer | 7 | 62 |'), 'Complete catalogue inventory and current role-filtered menu totals must cover all seven roles')
   assert.ok(read('docs/PHASE_2_DESIGN_SYSTEM.md').includes('Core colour tokens'), 'Phase 2 design specification is missing')
   const routeAudit = read('docs/PHASE_1_EXACT_ROUTE_AUDIT.md')
-  assert.ok(routeAudit.includes('Total resolver evaluations:** 1566.') && routeAudit.includes('Unexpected route families:** 0.'), 'Exact route audit must resolve each visible role/menu destination without unknown route families')
+  assert.ok(routeAudit.includes('Total resolver evaluations:** 1478.') && routeAudit.includes('Unexpected route families:** 0.'), 'Exact route audit must resolve each visible role/menu destination without unknown route families')
   assert.ok(routeAudit.includes('Bare module roots to review:** 0.') && routeAudit.includes('Unexpected route families:** 0.'), 'All role-visible destinations must retain explicit workspace or intentional root routes')
   assert.ok(routeAudit.includes('## Dispatcher coverage') && routeAudit.includes('Unmapped routes:** 0.') && routeAudit.includes('LinkedOperationsWorkspace') && routeAudit.includes('InstitutionalWorkspace') && routeAudit.includes('RecordModule'), 'Every role-visible route must map to a known Dashboard component')
   const responsiveAudit = read('docs/PHASE_2_RESPONSIVE_SOURCE_AUDIT.md')
   assert.ok(responsiveAudit.includes('13 responsive source checks passed') && responsiveAudit.includes('390×844') && responsiveAudit.includes('768×1024'), 'Responsive source coverage audit is missing or incomplete')
   const viewAudit = read('docs/PHASE_1_ROUTE_VIEW_AUDIT.md')
-  assert.ok(viewAudit.includes('Total evaluations:** 1566.') && viewAudit.includes('Compatibility issues:** 0.'), 'Every role-visible destination must request a supported component sub-view')
+  assert.ok(viewAudit.includes('Total evaluations:** 1478.') && viewAudit.includes('Compatibility issues:** 0.'), 'Every role-visible destination must request a supported component sub-view')
   assert.ok(viewAudit.includes('Hidden from role workspace tabs') === false, 'Role menus must not expose inaccessible internal workspace tabs')
   assert.ok(routeAudit.includes('Owner') && routeAudit.includes('| Student | 15 | 144 |') && routeAudit.includes('Examination officer') && routeAudit.includes('Exact route matrix'), 'Exact route audit must list all seven role sections')
   assert.ok(routeAudit.includes('Explicitly unavailable') && routeAudit.includes('acceptance pending'), 'Exact route audit must distinguish unresolved workflows')
