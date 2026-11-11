@@ -330,6 +330,81 @@ function Overview({ onNavigate }: { onNavigate: (key: string) => void }) {
       { label: 'Work Management', value: tasks.length, hint: 'Assigned tasks', icon: ClipboardList, route: 'work_tasks', tone: 'blue' },
     ].filter(item => available.some(module => module.key === item.route)).slice(0, 4)
 
+  // First-run guidance is derived only from institution records already loaded
+  // under the signed-in role and RLS policies. It never inserts sample data.
+  const hasRecords = (...tables: string[]) => tables.some(table => getRows(data, table).length > 0)
+  const workspaceGuide = user!.role === 'owner' || user!.role === 'admin'
+    ? {
+      heading: 'Build your institution workspace',
+      intro: 'A practical launch path for setting up academic structure, people and everyday operations.',
+      steps: [
+        { title: 'Set up academic structure', detail: 'Create the academic session, classes, departments and subjects your institution uses.', route: 'admin:academic_sessions', action: 'Open administration', icon: Building2, started: hasRecords('academic_sessions', 'classes', 'departments', 'subjects') },
+        { title: 'Register your learners', detail: 'Create admission records and connect each learner to the right class and family.', route: 'students:admissions', action: 'Open admissions', icon: GraduationCap, started: hasRecords('students') },
+        { title: 'Build your team', detail: 'Add faculty and staff profiles and organise responsibilities across departments.', route: 'teachers', action: 'Open staff', icon: Users, started: hasRecords('teachers') },
+        { title: 'Activate daily operations', detail: 'Start the attendance register and publish the first class timetable.', route: 'attendance:students', action: 'Open attendance', icon: CalendarCheck, started: hasRecords('attendance', 'timetable_entries') },
+        { title: 'Set up fee administration', detail: 'Create fee invoices and review received payments and outstanding balances.', route: 'finance:fees:invoices', action: 'Open fee ledger', icon: Wallet, started: hasRecords('fee_invoices') },
+        { title: 'Connect your community', detail: 'Publish an institution announcement for the relevant staff and families.', route: 'announcements', action: 'Open announcements', icon: Megaphone, started: hasRecords('announcements') },
+      ],
+    }
+    : user!.role === 'teacher'
+      ? {
+        heading: 'Your teaching workbench',
+        intro: 'Start with the daily teaching activities and follow the records available to your account.',
+        steps: [
+          { title: 'Review your learner list', detail: 'Open the permitted student directory and check your class records.', route: 'students:directory', action: 'View learners', icon: Users, started: hasRecords('students') },
+          { title: 'Record attendance', detail: 'Open the class register and record the attendance session.', route: 'attendance:students', action: 'Take attendance', icon: CalendarCheck, started: hasRecords('attendance') },
+          { title: 'Create or review coursework', detail: 'Manage homework, assignment deadlines and student submissions.', route: 'assignments:board', action: 'Open assignments', icon: BookOpen, started: hasRecords('assignments', 'assignment_submissions') },
+          { title: 'Prepare assessments', detail: 'Review examination schedules and available result records.', route: 'exams:calendar', action: 'View examinations', icon: ClipboardCheck, started: hasRecords('exams', 'exam_results') },
+        ],
+      }
+      : user!.role === 'student'
+        ? {
+          heading: 'Your learning hub',
+          intro: 'Keep track of the learning information currently available in your student account.',
+          steps: [
+            { title: 'Check your timetable', detail: 'Review class, subject, room and period information.', route: 'timetable:week', action: 'Open timetable', icon: CalendarDays, started: hasRecords('timetable_entries') },
+            { title: 'Review homework', detail: 'See coursework, instructions and upcoming submission deadlines.', route: 'assignments:open', action: 'Open homework', icon: BookOpen, started: hasRecords('assignments') },
+            { title: 'Follow your attendance', detail: 'Review the attendance entries visible to your account.', route: 'attendance:students', action: 'View attendance', icon: CalendarCheck, started: hasRecords('attendance') },
+            { title: 'View published results', detail: 'Check examination results released by your institution.', route: 'exam_results:published', action: 'View results', icon: Award, started: hasRecords('exam_results') },
+            { title: 'Check fee balance', detail: 'Review fee information currently available in your student account.', route: 'finance:fees:invoices', action: 'View fee balance', icon: Wallet, started: hasRecords('fee_invoices') },
+          ],
+        }
+        : user!.role === 'parent'
+          ? {
+            heading: 'Your family portal',
+            intro: 'Follow the information shared by your institution for your linked learner.',
+            steps: [
+              { title: 'Review your linked learner', detail: 'Open the learner profile and confirm the information shared with your account.', route: 'students:profile', action: 'Open learner profile', icon: UserRound, started: hasRecords('students') },
+              { title: 'Follow attendance', detail: 'Review attendance updates for the learner linked to your account.', route: 'attendance:students', action: 'View attendance', icon: CalendarCheck, started: hasRecords('attendance') },
+              { title: 'Keep up with learning', detail: 'Review homework and available academic activities.', route: 'assignments:open', action: 'View learning', icon: BookOpen, started: hasRecords('assignments') },
+              { title: 'Check academic progress', detail: 'Review examination results released by the institution.', route: 'exam_results:published', action: 'View results', icon: Award, started: hasRecords('exam_results') },
+              { title: 'Check fee information', detail: 'Review the fee invoices and balances shared for your linked learner.', route: 'finance:fees:invoices', action: 'View fee information', icon: Wallet, started: hasRecords('fee_invoices') },
+            ],
+          }
+          : user!.role === 'accountant'
+            ? {
+              heading: 'Your finance workbench',
+              intro: 'Work from the current institution fee and finance records available to your account.',
+              steps: [
+                { title: 'Review fee invoices', detail: 'Check invoice values, due dates and current balances.', route: 'finance:fees:invoices', action: 'Open invoices', icon: Wallet, started: hasRecords('fee_invoices') },
+                { title: 'Record collections', detail: 'Open an invoice and record a verified payment against its balance.', route: 'finance:fees:payments', action: 'Open collections', icon: Banknote, started: getRows(data, 'fee_invoices').some(row => Number(row.paid_amount ?? 0) > 0) },
+                { title: 'Follow outstanding dues', detail: 'Identify unpaid and partially paid invoices for follow-up.', route: 'finance:receivables:receivables', action: 'Review dues', icon: TrendingUp, started: getRows(data, 'fee_invoices').some(row => outstandingInvoiceBalance(row) > 0) },
+                { title: 'Review finance reports', detail: 'Use current institution records to review collection and balances.', route: 'reports:finance', action: 'Open reports', icon: FileText, started: hasRecords('fee_invoices') },
+              ],
+            }
+            : {
+              heading: 'Your examination workbench',
+              intro: 'Organise assessments and follow the result records available to your examination role.',
+              steps: [
+                { title: 'Build the question bank', detail: 'Review institution question pools and prepare examination paper drafts.', route: 'operations:question-bank:pool', action: 'Open question bank', icon: FileQuestion, started: hasRecords('exams') },
+                { title: 'Review the exam calendar', detail: 'Check planned and completed examination schedules.', route: 'exams:calendar', action: 'Open exam calendar', icon: CalendarDays, started: hasRecords('exams') },
+                { title: 'Enter and review marks', detail: 'Work with examination marks and result records.', route: 'exam_results:all', action: 'Open marks', icon: ClipboardCheck, started: hasRecords('exam_results') },
+                { title: 'Review published results', detail: 'Check the results currently released to authorised users.', route: 'exam_results:published', action: 'View published results', icon: Award, started: getRows(data, 'exam_results').some(row => row.result_status === 'published') },
+                { title: 'Review academic reports', detail: 'Use the available assessment records for academic reporting.', route: 'reports:academics', action: 'Open reports', icon: BarChart3, started: hasRecords('exam_results') },
+              ],
+            }
+  const guideStartedCount = workspaceGuide.steps.filter(step => step.started).length
+
   return <div className="ed360-dashboard">
     <header className="ed360-dashboard-heading">
       <div className="ed360-heading-title">
@@ -351,6 +426,33 @@ function Overview({ onNavigate }: { onNavigate: (key: string) => void }) {
         <span className="ed360-metric-copy"><small>{stat.label}</small><strong>{loading ? '—' : stat.value}</strong><em>{stat.hint}</em></span>
         <span className="ed360-metric-arrow"><ArrowRight size={16}/></span>
       </button>)}
+    </section>
+
+    <section className="ed360-start-panel" aria-labelledby="ed360-start-title">
+      <header className="ed360-start-heading">
+        <div>
+          <span className="ed360-start-kicker">A CLEAR NEXT STEP</span>
+          <h2 id="ed360-start-title">{workspaceGuide.heading}</h2>
+          <p>{workspaceGuide.intro}</p>
+        </div>
+        <div className="ed360-start-progress" aria-live="polite">
+          <strong>{loading ? '—' : guideStartedCount + '/' + workspaceGuide.steps.length}</strong>
+          <span>{loading ? 'Checking records' : 'areas with saved records'}</span>
+        </div>
+      </header>
+      <div className="ed360-start-grid">
+        {workspaceGuide.steps.map((step, index) => <article className={'ed360-start-card' + (step.started ? ' is-started' : '')} key={step.title}>
+          <div className="ed360-start-card-top">
+            <span className="ed360-start-number">{String(index + 1).padStart(2, '0')}</span>
+            <span className="ed360-start-icon"><step.icon size={19}/></span>
+            <span className={'ed360-start-status' + (step.started ? ' is-started' : '')}>{loading ? 'Checking' : step.started ? 'Records found' : 'Not started'}</span>
+          </div>
+          <h3>{step.title}</h3>
+          <p>{step.detail}</p>
+          <button type="button" onClick={() => onNavigate(step.route)}>{step.action}<ArrowRight size={14}/></button>
+        </article>)}
+      </div>
+      <p className="ed360-start-footnote">Status is based on saved records visible to your signed-in role. It does not certify that a complete business workflow has been configured.</p>
     </section>
 
     <div className="ed360-dashboard-row ed360-dashboard-row-primary">
@@ -463,15 +565,6 @@ export function Dashboard({ onToast }: Props) {
   const [workspaceTabs, setWorkspaceTabs] = useState<WorkspaceTab[]>([{ id: 'overview', route: 'overview', targetKey: 'overview', targetWindow: 'overview', title: 'Dashboard' }])
   const [activeTabId, setActiveTabId] = useState('overview')
   const activeTab = workspaceTabs.find(tab => tab.id === activeTabId) ?? workspaceTabs[0]
-  const activeNavigationTab = (() => {
-    let current = activeTab
-    while (current.parentId) {
-      const parent = workspaceTabs.find(tab => tab.id === current.parentId)
-      if (!parent) break
-      current = parent
-    }
-    return current
-  })()
   const active = activeTab?.targetKey ?? 'overview'
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
@@ -481,6 +574,13 @@ export function Dashboard({ onToast }: Props) {
   const [searchText, setSearchText] = useState('')
   const [searchOpen, setSearchOpen] = useState(false)
   const [unreadAnnouncementCount, setUnreadAnnouncementCount] = useState(0)
+
+  // Keep the sidebar context aligned when the user switches between open windows.
+  useEffect(() => {
+    if (!activeTab?.groupKey) return
+    setExpandedGroups(current => current.includes(activeTab.groupKey!) ? current : [...current, activeTab.groupKey!])
+  }, [activeTabId, activeTab?.groupKey])
+
   const available = useMemo(() => modulesForRole(user!.role), [user?.role])
   const visibleGroups = useMemo(() => roleNavigationGroups(user!.role), [user?.role])
   const searchResults = useMemo(() => {
@@ -502,12 +602,6 @@ export function Dashboard({ onToast }: Props) {
   }, [])
 
   useEffect(() => {
-    const groupKey = activeNavigationTab.groupKey
-    if (!groupKey) return
-    setExpandedGroups(current => current.includes(groupKey) ? current : [...current, groupKey])
-  }, [activeNavigationTab.groupKey])
-
-  useEffect(() => {
     const onShortcut = (event: KeyboardEvent) => {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault()
@@ -520,6 +614,27 @@ export function Dashboard({ onToast }: Props) {
     window.addEventListener('keydown', onShortcut)
     return () => window.removeEventListener('keydown', onShortcut)
   }, [])
+
+  useEffect(() => {
+    const container = document.querySelector<HTMLElement>('.pro-workspace-tabs')
+    if (!container) return
+    const selected = Array.from(container.querySelectorAll<HTMLElement>('[data-workspace-tab]'))
+      .find(element => element.dataset.workspaceTab === activeTabId)
+    if (!selected) return
+    const containerBounds = container.getBoundingClientRect()
+    const selectedBounds = selected.getBoundingClientRect()
+    const inset = 10
+    let nextLeft = container.scrollLeft
+    if (selectedBounds.left < containerBounds.left + inset) {
+      nextLeft -= containerBounds.left + inset - selectedBounds.left
+    } else if (selectedBounds.right > containerBounds.right - inset) {
+      nextLeft += selectedBounds.right - (containerBounds.right - inset)
+    }
+    if (Math.abs(nextLeft - container.scrollLeft) > 1) {
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      container.scrollTo({ left: Math.max(0, nextLeft), behavior: reduceMotion ? 'auto' : 'smooth' })
+    }
+  }, [activeTabId, workspaceTabs.length])
 
   useEffect(() => {
     let live = true
@@ -609,11 +724,14 @@ export function Dashboard({ onToast }: Props) {
       }
     }
 
-    const identity = options.groupKey && options.itemKey ? `${options.groupKey}:${options.itemKey}` : key
-    const id = options.parentId ? `${options.parentId}::${identity}` : identity
+    // A workspace window is identified by its canonical destination, not by the
+    // menu label that happened to open it. Aliases therefore focus the same
+    // window instead of creating two tabs that render the same or confusing view.
+    const id = key
+    const parentId = options.parentId && options.parentId !== id ? options.parentId : undefined
     const nextTab: WorkspaceTab = {
       id, route: key, targetKey, targetWindow, title,
-      parentId: options.parentId, groupKey: options.groupKey, itemKey: options.itemKey,
+      parentId, groupKey: options.groupKey, itemKey: options.itemKey,
     }
     setWorkspaceTabs(current => {
       const existing = current.some(tab => tab.id === id)
@@ -622,6 +740,9 @@ export function Dashboard({ onToast }: Props) {
         : [...current, nextTab]
     })
     setActiveTabId(id)
+    if (options.groupKey) {
+      setExpandedGroups(current => current.includes(options.groupKey!) ? current : [...current, options.groupKey!])
+    }
     setSidebarOpen(false)
     setSearchText('')
     setSearchOpen(false)
@@ -676,6 +797,9 @@ export function Dashboard({ onToast }: Props) {
   }
 
   const compactSidebar = sidebarCollapsed && !isMobileNav
+  const activeGroupLabel = activeTab?.groupKey
+    ? visibleGroups.find(group => group.key === activeTab.groupKey)?.label ?? 'Institution workspace'
+    : activeTab?.targetKey === 'overview' ? 'Overview' : 'Workspace'
   return <div className={`pro-app-shell ${sidebarOpen ? 'navigation-open' : ''} ${compactSidebar ? 'sidebar-collapsed' : ''}`}>
     <aside className={`pro-sidebar ${sidebarOpen ? 'is-open' : ''} ${compactSidebar ? 'is-collapsed' : ''}`} aria-hidden={isMobileNav && !sidebarOpen}>
       <div className="pro-sidebar-brand">
@@ -692,11 +816,18 @@ export function Dashboard({ onToast }: Props) {
           const GroupIcon = catalogIcons[group.icon] ?? LayoutDashboard
           const isExpanded = expandedGroups.includes(group.key)
           return <section className={`pro-nav-group ${isExpanded ? 'expanded' : ''}`} key={group.key}>
-            <button className={`pro-nav-group-head ${group.key === "dashboard" ? "pro-nav-dashboard-link" : ""}`} aria-label={group.label} title={group.label} aria-expanded={isExpanded} onClick={() => toggleGroup(group.key)}><span className="pro-nav-group-icon"><GroupIcon size={19}/></span><span className="pro-nav-group-name">{group.label}</span><ChevronRight className="pro-nav-chevron" size={17}/></button>
+            <button className={`pro-nav-group-head ${group.key === "dashboard" ? "pro-nav-dashboard-link" : ""}`} aria-label={group.label} title={group.label} aria-expanded={isExpanded} onClick={() => {
+              if (compactSidebar) {
+                setSidebarCollapsed(false)
+                setExpandedGroups(current => current.includes(group.key) ? current : [...current, group.key])
+              } else {
+                toggleGroup(group.key)
+              }
+            }}><span className="pro-nav-group-icon"><GroupIcon size={19}/></span><span className="pro-nav-group-name">{group.label}</span><ChevronRight className="pro-nav-chevron" size={17}/></button>
             {isExpanded && <div className="pro-nav-children">{group.items.map(item => {
               const itemKey = item.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
               const route = getNavigationRoute(group.key, item, user!.role)
-              const isActive = activeNavigationTab.groupKey === group.key && activeNavigationTab.itemKey === itemKey
+              const isActive = activeTab.route === route && (!activeTab.groupKey || activeTab.groupKey === group.key) && (!activeTab.itemKey || activeTab.itemKey === itemKey)
               const ItemIcon = pageIcon(item, GroupIcon)
               const connected = Boolean(route && !route.startsWith('unavailable:'))
               return <button key={item} className={`pro-nav-item ${isActive ? 'active' : ''}`} aria-label={item} title={item} aria-current={isActive ? 'page' : undefined} onClick={() => navigateCatalogPage(group.key, item)}><span className="pro-nav-icon"><ItemIcon size={16}/></span><span className="pro-nav-title">{item}</span>{connected && <i className="pro-nav-connected" title="Connected workspace"/>}</button>
@@ -731,8 +862,8 @@ export function Dashboard({ onToast }: Props) {
         <div className="pro-workspace-tabs-label">OPEN WINDOWS</div>
         {workspaceTabs.map(tab => {
           const parentTab = tab.parentId ? workspaceTabs.find(parent => parent.id === tab.parentId) : undefined
-          return <div className={`pro-workspace-tab ${activeTabId === tab.id ? 'is-active' : ''} ${parentTab ? 'is-child' : ''}`} key={tab.id}>
-            <button type="button" className="pro-workspace-tab-main" aria-current={activeTabId === tab.id ? 'page' : undefined} onClick={() => setActiveTabId(tab.id)}>
+          return <div className={`pro-workspace-tab ${activeTabId === tab.id ? 'is-active' : ''} ${parentTab ? 'is-child' : ''}`} key={tab.id} data-workspace-route={tab.route} data-workspace-tab={tab.id}>
+            <button type="button" className="pro-workspace-tab-main" aria-label={`Open ${tab.title} workspace`} title={tab.title} aria-current={activeTabId === tab.id ? 'page' : undefined} onClick={() => setActiveTabId(tab.id)}>
               {parentTab ? <ChevronRight size={14}/> : tab.targetKey === 'overview' ? <LayoutDashboard size={15}/> : <FileText size={15}/>}
               <span>{tab.title}</span>
               {parentTab && <small title={`Opened from ${parentTab.title}`}>{parentTab.title}</small>}
@@ -742,6 +873,10 @@ export function Dashboard({ onToast }: Props) {
         })}
         <span className="pro-workspace-tabs-help">Switch between open workspaces</span>
       </nav>
+      <div className="pro-active-workspace-context" aria-live="polite" aria-atomic="true" data-active-route={activeTab.route}>
+        <div><span>YOU ARE WORKING IN</span><strong>{activeTab.title}</strong><small>{activeGroupLabel} · {roleLabels[user!.role]}</small></div>
+        <span className="pro-context-state"><i/> Active workspace</span>
+      </div>
       <div className="pro-module-stage">
         <div className="pro-window-stack">
           {workspaceTabs.map(tab => {

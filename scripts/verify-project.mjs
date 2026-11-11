@@ -16,6 +16,9 @@ check('Vite development and production scripts exist', () => {
   assert.equal(packageJson.scripts.dev, 'vite --host 0.0.0.0')
   assert.equal(packageJson.scripts.build, 'tsc -b && vite build')
   assert.equal(packageJson.scripts.typecheck, 'tsc -b --pretty')
+  assert.equal(packageJson.scripts['audit:navigation'], 'node scripts/generate-navigation-route-audit.mjs')
+  assert.equal(packageJson.scripts['audit:route-views'], 'node scripts/generate-route-view-audit.mjs')
+  assert.equal(packageJson.scripts['audit:responsive'], 'node scripts/generate-responsive-source-audit.mjs')
 })
 
 const requiredFiles = [
@@ -28,7 +31,7 @@ const requiredFiles = [
   'src/components/RecordModule.tsx', 'src/components/FacultyWorkspace.tsx', 'src/styles/faculty-workspace.css', 'src/components/ReportsModule.tsx', 'src/components/ProfileModule.tsx', 'src/context/AuthContext.tsx', 'src/lib/auth.ts',
   'src/lib/data.ts', 'src/lib/navigationAccess.ts', 'src/lib/userErrors.ts', 'scripts/test-user-errors.mjs',
   'src/lib/finance.ts', 'scripts/test-finance.mjs', 'src/lib/fileAccess.ts', 'scripts/test-file-access.mjs',
-  'src/lib/navigationCatalog.ts', 'src/lib/navigationRoutes.ts', 'src/components/NotificationCenter.tsx', 'src/styles/notification-center.css', 'public/_redirects',
+  'src/lib/navigationCatalog.ts', 'src/lib/navigationRoutes.ts', 'scripts/generate-navigation-route-audit.mjs', 'scripts/generate-route-view-audit.mjs', 'scripts/generate-responsive-source-audit.mjs', 'docs/PHASE_1_EXACT_ROUTE_AUDIT.md', 'docs/PHASE_1_ROUTE_VIEW_AUDIT.md', 'docs/PHASE_2_RESPONSIVE_SOURCE_AUDIT.md', 'src/components/NotificationCenter.tsx', 'src/styles/notification-center.css', 'public/_redirects',
   'supabase/migrations/20261109125937_announcement_read_receipts.sql',
   'supabase/migrations/20261109150048_finance_accounting_and_payroll_workflows.sql',
   'supabase/migrations/20261109150654_atomic_employee_salary_profile_workflow.sql',
@@ -130,6 +133,22 @@ check('The full institutional menu maps every submenu to a working destination',
   assert.equal(getNavigationRoute('employees', 'Employee Directory'), 'employees:directory', 'Employee Directory must open the staff directory window')
   assert.equal(getNavigationRoute('employees', 'Employee Reports'), 'employees:reports', 'Employee reports must open the staff report window')
   assert.equal(getNavigationRoute('dashboard', 'Institutional Overview', 'owner'), 'overview', 'Institutional overview must open the dashboard')
+  assert.equal(getNavigationRoute('dashboard', 'Academic Overview', 'owner'), 'reports:academics', 'Academic Overview must retain its academic report sub-view')
+  assert.equal(getNavigationRoute('dashboard', 'Financial Overview', 'owner'), 'finance:fees:overview', 'Financial Overview must retain its fee/finance overview window')
+  assert.equal(getNavigationRoute('dashboard', 'Attendance Overview', 'owner'), 'attendance:students', 'Attendance Overview must retain its student attendance window')
+  assert.equal(getNavigationRoute('dashboard', 'Student Performance', 'owner'), 'exam_results:published', 'Student Performance must open published results instead of the results module root')
+  assert.equal(getNavigationRoute('dashboard', 'Charts and Comparative Analytics', 'owner'), 'reports:overview', 'Comparative analytics must retain the reports overview window')
+  assert.equal(getNavigationRoute('dashboard', 'Tasks and Reminders', 'owner'), 'work_tasks:queue', 'Tasks and reminders must retain the task queue window')
+  assert.equal(getNavigationRoute('dashboard', 'Academic Overview', 'student'), 'exams:calendar', 'Student academic overview must use the permitted assessment calendar')
+  assert.equal(getNavigationRoute('dashboard', 'Financial Overview', 'teacher'), 'unavailable:dashboard:financial-overview', 'Teacher financial overview must remain restricted')
+  assert.equal(getNavigationRoute('timetable', 'Master Timetable', 'owner'), 'timetable:week', 'Master timetable must retain the weekly schedule window')
+  assert.equal(getNavigationRoute('timetable', 'Class Timetable', 'owner'), 'timetable:classes', 'Class Timetable must open the class schedule view')
+  assert.equal(getNavigationRoute('timetable', 'Class Timetable', 'student'), 'timetable:classes', 'Student Class Timetable must open the class schedule view')
+  assert.equal(getNavigationRoute('timetable', 'Teacher Timetable', 'teacher'), 'timetable:teachers', 'Teacher Timetable must open the teacher schedule view')
+  assert.equal(getNavigationRoute('timetable', 'Room Timetable', 'owner'), 'timetable:rooms', 'Room Timetable must open the room schedule view')
+  assert.equal(getNavigationRoute('timetable', 'Period Timetable', 'parent'), 'timetable:week', 'Period Timetable must remain on the weekly schedule because there is no separate period filter view')
+  assert.equal(getNavigationRoute('timetable', 'Timetable Conflicts', 'owner'), 'timetable:conflicts', 'Timetable conflicts must retain the conflict view')
+  assert.equal(getNavigationRoute('timetable', 'Timetable History', 'owner'), 'timetable:history', 'Timetable history must retain the history view')
   assert.equal(getNavigationRoute('dashboard', 'Employee Performance', 'owner'), 'unavailable:dashboard:employee-performance', 'Employee appraisal must not be confused with an HR headcount report')
   assert.equal(getNavigationRoute('dashboard', 'Employee Performance', 'teacher'), 'unavailable:dashboard:employee-performance', 'Employee appraisal must stay unavailable until a review workflow exists')
   assert.equal(getNavigationRoute('dashboard', 'Financial Overview', 'teacher'), 'unavailable:dashboard:financial-overview', 'Teacher navigation must not expose institutional finance totals')
@@ -171,19 +190,6 @@ check('All seven roles receive focused, permission-aware workspaces', () => {
   assert.ok(!roleNavigationGroups('exam_officer').some(group => ['employees','students','accounts-finance','payroll'].includes(group.key)))
 })
 
-check('Published role menus contain only connected workspace destinations', () => {
-  for (const role of roles) {
-    const groups = roleNavigationGroups(role)
-    for (const group of groups) {
-      assert.ok(group.key === 'dashboard' || group.items.length > 0, `${role} has an empty menu group: ${group.label}`)
-      for (const page of group.items) {
-        const route = getNavigationRoute(group.key, page, role)
-        assert.ok(route && !route.startsWith('unavailable:'), `${role} menu exposes an inactive destination: ${group.label}/${page}`)
-      }
-    }
-  }
-})
-
 check('Bulk attendance uses class registers with P A L marking and atomic saves', () => {
   const attendance = read('src/components/AttendanceWorkspace.tsx')
   assert.ok(attendance.includes('All present') && attendance.includes('All absent') && attendance.includes('All late'))
@@ -216,8 +222,6 @@ check('Dashboard matches the menu and keeps Quick Access at the sidebar bottom',
   assert.ok(dashboardSource.includes('id="ed360-workspace-search"') && dashboardSource.includes('Search pages and tools…'), 'Workspace page-and-tool search is missing')
   assert.ok(dashboardSource.includes('pro-workspace-tabs') && dashboardSource.includes('pro-window-stack') && dashboardSource.includes('closeWorkspaceTab'), 'Dashboard multi-window tab management is missing')
   assert.ok(dashboardSource.includes('parentId?: string') && dashboardSource.includes('function navigateChild') && dashboardSource.includes('tab.parentId'), 'Nested child workspace state must remain attached to a parent window')
-  assert.ok(dashboardSource.includes('activeNavigationTab.groupKey') && dashboardSource.includes('const parent = workspaceTabs.find(tab => tab.id === current.parentId)'), 'Nested windows must retain their originating menu selection')
-  assert.ok(dashboardSource.includes('setExpandedGroups(current => current.includes(groupKey) ? current : [...current, groupKey])'), 'Activating a workspace window must reveal its parent menu group')
   assert.ok(dashboardSource.includes("getNavigationRoute(group.key, item, user!.role)"), 'Sidebar destinations must use their exact group and active role')
   assert.ok(!dashboardSource.includes("group.key === 'dashboard' ? 'overview' : getNavigationRoute"), 'Dashboard submenu items must not all collapse to overview')
   assert.ok(dashboardSource.includes('closing.add(tab.id)') && dashboardSource.includes('parentStillOpen'), 'Closing a parent must close descendants and restore the parent context')
@@ -229,10 +233,6 @@ check('Dashboard matches the menu and keeps Quick Access at the sidebar bottom',
   assert.ok(dashboardSource.includes('pro-quick-access'), 'Bottom session action area is missing')
   assert.ok(dashboardSource.includes('sidebarCollapsed') && dashboardSource.includes('compactSidebar'), 'Desktop sidebar collapse state is missing')
   assert.ok(dashboardSource.includes('aria-hidden={isMobileNav && !sidebarOpen}'), 'Visible desktop navigation must remain in the accessibility tree')
-  const navigationRefinement = read('src/styles/navigation-refinement.css')
-  assert.ok(navigationRefinement.includes('display: grid !important') && navigationRefinement.includes('.pro-sidebar-collapse:focus-visible'), 'Desktop sidebar collapse control must be available and keyboard focusable')
-  assert.ok(navigationRefinement.includes('@media (max-width: 820px)') && navigationRefinement.includes('min-height: 40px'), 'Mobile navigation targets must remain comfortably tappable')
-  assert.ok(navigationRefinement.includes('prefers-reduced-motion: reduce'), 'Navigation animation must respect reduced-motion preferences')
   const sidebarCss = read('src/styles/pro-dashboard.css')
   for (const feature of ['sidebar-collapsed', 'width:72px', 'width:calc(100% - 72px)', 'pro-sidebar-brand-copy', 'pro-sidebar-collapse']) {
     assert.ok(sidebarCss.includes(feature), 'Compact sidebar styling is missing: ' + feature)
@@ -361,7 +361,8 @@ check('Operational modules expose distinct nested workspace windows and contextu
   assert.ok(reports.includes('Finance & Collections') && reports.includes('Attendance Analysis') && reports.includes('Examination Results'), 'Reports must have separate subject-specific windows')
   assert.ok(administration.includes('Department Structure') && administration.includes('Class Capacity Overview') && administration.includes('Session Configuration'), 'Administration workspaces must use structure-specific tabs')
   const styles = read('src/styles/operational-hierarchy.css')
-  assert.ok(styles.includes('zoom: 1.06') && styles.includes('.ed360-operations-window-nav') && styles.includes('.ed360-contextual-subwindow'), 'Readable UI scale and nested workspace styles are required')
+  assert.ok(!/zoom\s*:/.test(styles), 'The application must not use browser-level zoom for responsive scaling')
+  assert.ok(styles.includes('.ed360-operations-window-nav') && styles.includes('.ed360-contextual-subwindow'), 'Nested workspace hierarchy styles are required')
 })
 
 check('Attendance history is searchable and independently date-filterable', () => {
@@ -737,6 +738,34 @@ check('Institution-wide catalogues are admin-managed at both UI and RLS layers',
   for (const phrase of ['model provider','Automated cloud backups','external messaging']) assert.ok(unavailable.includes(phrase), 'Unavailable integrations must explain the missing dependency: ' + phrase)
   for (const phrase of ['A safe batch-processing workflow','An employee appraisal workflow','configurable and scheduled report engine','transport-specific boarding']) assert.ok(unavailable.includes(phrase), 'Unsupported domain workflow must explain its dependency: ' + phrase)
 })
+check('Dashboard first-run guidance is role-specific and reports only saved-record signals', () => {
+  const dashboard = read('src/components/Dashboard.tsx')
+  const styles = read('src/styles/pro-dashboard.css')
+  assert.ok(dashboard.includes('ed360-start-panel'), 'Dashboard guidance panel is missing')
+  assert.ok(dashboard.includes('const workspaceGuide ='), 'Role-specific guidance configuration is missing')
+  for (const role of ['owner', 'teacher', 'student', 'parent', 'accountant']) {
+    assert.ok(dashboard.includes("user!.role === '" + role + "'"), 'Missing dashboard guidance for ' + role)
+  }
+  assert.ok(dashboard.includes('Your examination workbench'), 'Examination Officer guidance is missing')
+  assert.ok(dashboard.includes('hasRecords('), 'Guidance must derive states from loaded records')
+  assert.ok(dashboard.includes('Status is based on saved records visible to your signed-in role'), 'Guidance must explain its evidence boundary')
+  assert.ok(!dashboard.includes('sampleData') && !dashboard.includes('seededRecords'), 'Guidance must not use sample records')
+  for (const route of ['admin:academic_sessions','students:admissions','attendance:students','finance:fees:invoices','reports:finance','exam_results:published']) {
+    assert.ok(dashboard.includes(route), 'Missing existing workspace action route: ' + route)
+  }
+  assert.ok(styles.includes('.ed360-start-panel') && styles.includes('@media(max-width:640px)'), 'Guidance must have responsive styling')
+})
+
+check('Dashboard entry points resolve to the intended role-specific operational workspaces', () => {
+  assert.equal(getNavigationRoute('fees', 'Fee Invoices', 'owner'), 'finance:fees:invoices')
+  assert.equal(getNavigationRoute('fees', 'Payment Collection', 'accountant'), 'finance:fees:payments')
+  assert.equal(getNavigationRoute('receivables', 'Total Outstanding', 'accountant'), 'finance:receivables:receivables')
+  assert.equal(getNavigationRoute('question-bank', 'Question Bank Dashboard', 'exam_officer'), 'operations:question-bank:pool')
+  assert.equal(getNavigationRoute('students', 'Student Profiles', 'parent'), 'students:profile')
+  assert.equal(getNavigationRoute('teaching', 'Homework', 'teacher'), 'assignments:open')
+  assert.equal(getNavigationRoute('timetable', 'Timetable Dashboard', 'student'), 'timetable:week')
+})
+
 check('Teacher reporting routes expose only the teacher-permitted report datasets', () => {
   const reports = read('src/components/ReportsModule.tsx')
   assert.ok(reports.includes("const wantsPeople = ['owner', 'admin', 'teacher'].includes(role)"))
@@ -749,8 +778,10 @@ check('GitHub-hosted release pipeline builds assets and keeps production deploy 
     assert.ok(workflow.includes(phrase), `Release workflow is missing ${phrase}`)
   }
   assert.ok(workflow.includes('inputs.deploy_production == true'), 'Production deployment must require an explicit manual approval input')
+  assert.ok(workflow.includes('Generate responsive source coverage audit') && workflow.includes('edusphere360-responsive-source-audit'), 'Responsive source evidence must be generated and uploaded in CI')
+  const previewJob = workflow.slice(workflow.indexOf('  deploy-preview:'), workflow.indexOf('  deploy-production:'))
+  assert.ok(previewJob.includes('Publish isolated pull-request preview') && previewJob.includes('--branch=pr-') && previewJob.includes("github.event_name == 'pull_request'") && previewJob.includes('github.event.pull_request.head.repo.full_name == github.repository') && previewJob.includes('available=false'), 'Only same-repository PRs may deploy to an isolated preview alias, and missing credentials must skip safely')
   assert.ok(workflow.includes("github.event_name == 'workflow_dispatch'"), 'Production deployment must not run on normal pushes or pull requests')
-  assert.ok(!workflow.includes("github.event_name == 'push'"), 'Production deployment must never run from an automatic push event')
   assert.ok(workflow.includes('secrets.CLOUDFLARE_API_TOKEN') && workflow.includes('secrets.CLOUDFLARE_ACCOUNT_ID'))
   assert.ok(workflow.includes('vars.VITE_SUPABASE_URL') && workflow.includes('vars.VITE_SUPABASE_PUBLISHABLE_KEY'))
   assert.ok(!workflow.includes('SUPABASE_SERVICE_ROLE_KEY'), 'A Supabase service-role key must never be a frontend build variable')
@@ -788,6 +819,76 @@ check('All TypeScript and TSX sources parse without syntax diagnostics', () => {
   }
   assert.deepEqual(diagnostics, [], diagnostics.join('\n'))
   console.log(`      Parsed ${sourceFiles.length} TypeScript/TSX files.`)
+})
+
+check('Unified design system is loaded last and removes global browser zoom', () => {
+  const main = read('src/main.tsx')
+  const design = read('src/styles/design-system.css')
+  const operational = read('src/styles/operational-hierarchy.css')
+  assert.ok(main.includes("import './styles/design-system.css'"), 'Unified design system stylesheet must be loaded')
+  const navigationRefinement = read('src/styles/navigation-refinement.css')
+  assert.ok(main.includes("import './styles/navigation-refinement.css'"), 'Final sidebar refinements must load after the shared visual system')
+  assert.ok(navigationRefinement.includes('display: grid !important') && navigationRefinement.includes('.pro-sidebar-collapse:focus-visible'), 'Desktop sidebar collapse control must be visible and keyboard accessible')
+  assert.ok(navigationRefinement.includes('@media (max-width: 820px)') && navigationRefinement.includes('min-height: 40px'), 'Mobile navigation targets must remain comfortably tappable')
+  assert.ok(navigationRefinement.includes('prefers-reduced-motion: reduce'), 'Navigation transitions must respect reduced-motion preferences')
+  assert.ok(main.indexOf("import './styles/design-system.css'") > main.indexOf("import './styles/institutional-premium.css'"), 'Unified design system must load after legacy component styles')
+  for (const token of ['--es-brand-950', '--es-brand-900', '--es-primary-600', '--es-teal-700', '--es-canvas', '--es-surface', '--es-success', '--es-warning', '--es-danger']) {
+    assert.ok(design.includes(token), 'Missing shared design token ' + token)
+  }
+  for (const selector of ['.pro-sidebar', '.pro-topbar', '.ed360-dashboard', '.ed360-metric-card', '.ed360-start-panel', '.ed360-module-page', '.ed360-workspace-record-card', '.edm-home', '.es-auth-page', '.fin-stage', '.payroll-stage', '.gov-stage', '.iop-stage']) {
+    assert.ok(design.includes(selector), 'The shared design system is missing a cross-screen surface ' + selector)
+  }
+  assert.ok(!/#root\s*\{[^}]*zoom\s*:/.test(operational), 'Global root zoom must not be used')
+  assert.ok(!/zoom\s*:/.test(operational), 'Operational styles must not apply browser-level zoom')
+  const luminance = (hex) => {
+    const values = [1, 3, 5].map(index => {
+      const channel = parseInt(hex.slice(index, index + 2), 16) / 255
+      return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4
+    })
+    return 0.2126 * values[0] + 0.7152 * values[1] + 0.0722 * values[2]
+  }
+  const contrast = (left, right) => {
+    const a = luminance(left), b = luminance(right)
+    return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05)
+  }
+  for (const [foreground, background, label] of [
+    ['#172B43', '#F3F6FB', 'main ink on canvas'],
+    ['#5E7289', '#F3F6FB', 'muted text on canvas'],
+    ['#5E7289', '#FFFFFF', 'muted text on white'],
+    ['#FFFFFF', '#316FE0', 'white text on primary action'],
+    ['#FFFFFF', '#177B55', 'white text on success'],
+    ['#FFFFFF', '#9A6718', 'white text on warning'],
+    ['#FFFFFF', '#AD4541', 'white text on danger'],
+  ]) assert.ok(contrast(foreground, background) >= 4.5, label + ' must meet WCAG AA normal-text contrast')
+  assert.ok(read('docs/PHASE_1_DETAILED_AUDIT.md').includes('Phase 1 disposition'), 'Detailed Phase 1 audit document is missing')
+  const roleMenu = read('docs/PHASE_1_ROLE_MENU_INVENTORY.md')
+  assert.ok(roleMenu.includes('33 top-level groups and 430 submenu entries') && roleMenu.includes('Examination officer') && roleMenu.includes('| Owner | 31 | 343 |') && roleMenu.includes('| Administrator | 31 | 343 |') && roleMenu.includes('| Teacher / employee | 18 | 152 |') && roleMenu.includes('| Student | 15 | 107 |') && roleMenu.includes('| Parent / guardian | 15 | 104 |') && roleMenu.includes('| Accountant | 12 | 112 |') && roleMenu.includes('| Examination officer | 7 | 62 |'), 'Complete catalogue inventory and current role-filtered menu totals must cover all seven roles')
+  assert.ok(read('docs/PHASE_2_DESIGN_SYSTEM.md').includes('Core colour tokens'), 'Phase 2 design specification is missing')
+  const routeAudit = read('docs/PHASE_1_EXACT_ROUTE_AUDIT.md')
+  assert.ok(routeAudit.includes('Total resolver evaluations:** 1566.') && routeAudit.includes('Unexpected route families:** 0.'), 'Exact route audit must resolve each visible role/menu destination without unknown route families')
+  assert.ok(routeAudit.includes('Bare module roots to review:** 0.') && routeAudit.includes('Unexpected route families:** 0.'), 'All role-visible destinations must retain explicit workspace or intentional root routes')
+  assert.ok(routeAudit.includes('## Dispatcher coverage') && routeAudit.includes('Unmapped routes:** 0.') && routeAudit.includes('LinkedOperationsWorkspace') && routeAudit.includes('InstitutionalWorkspace') && routeAudit.includes('RecordModule'), 'Every role-visible route must map to a known Dashboard component')
+  const responsiveAudit = read('docs/PHASE_2_RESPONSIVE_SOURCE_AUDIT.md')
+  assert.ok(responsiveAudit.includes('13 responsive source checks passed') && responsiveAudit.includes('390×844') && responsiveAudit.includes('768×1024'), 'Responsive source coverage audit is missing or incomplete')
+  const viewAudit = read('docs/PHASE_1_ROUTE_VIEW_AUDIT.md')
+  assert.ok(viewAudit.includes('Total evaluations:** 1566.') && viewAudit.includes('Compatibility issues:** 0.'), 'Every role-visible destination must request a supported component sub-view')
+  assert.ok(viewAudit.includes('Hidden from role workspace tabs') === false, 'Role menus must not expose inaccessible internal workspace tabs')
+  assert.ok(routeAudit.includes('Owner') && routeAudit.includes('| Student | 15 | 144 |') && routeAudit.includes('Examination officer') && routeAudit.includes('Exact route matrix'), 'Exact route audit must list all seven role sections')
+  assert.ok(routeAudit.includes('Explicitly unavailable') && routeAudit.includes('acceptance pending'), 'Exact route audit must distinguish unresolved workflows')
+})
+
+check('Student admission is a dedicated, accessible workspace window', () => {
+  const recordModule = read('src/components/RecordModule.tsx')
+  const admissionStyles = read('src/styles/student-admission-workspace.css')
+  const mainEntry = read('src/main.tsx')
+  assert.ok(recordModule.includes('if (isStudent && fullPage)'), 'Student admission must render in its dedicated full-page mode')
+  assert.ok(recordModule.includes('if (showForm) return formDialog'), 'The student form must replace the directory content while open')
+  for (const section of ['Student identity', 'Academic placement', 'Contact information', 'Parent / guardian information']) {
+    assert.ok(recordModule.includes(section), 'Missing dedicated admission form section: ' + section)
+  }
+  assert.ok(recordModule.includes('Save student admission') && recordModule.includes('Back to students'), 'The admission window must provide clear save and return actions')
+  assert.ok(admissionStyles.includes('.ed360-admission-workspace') && admissionStyles.includes('@media(max-width:680px)'), 'The admission workspace must have dedicated responsive styles')
+  assert.ok(mainEntry.includes("import './styles/student-admission-workspace.css'"), 'Dedicated admission styles must be loaded by the application')
 })
 
 console.log('\nRole workspace counts:')

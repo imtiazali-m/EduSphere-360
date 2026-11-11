@@ -171,6 +171,7 @@ export function WelcomeScreen({ navigate }: ScreenProps) {
             </div>
             <div className="edm-hero-art" aria-label="Illustrative EduSphere 360 product interface">
               <div className="edm-art-halo"/><div className="edm-art-orbit orbit-a"/><div className="edm-art-orbit orbit-b"/>
+              <img className="edm-hero-campus-photo" src="https://images.pexels.com/photos/29326797/pexels-photo-29326797.jpeg?auto=compress&cs=tinysrgb&w=1200" alt="Modern university building surrounded by mature trees" loading="lazy" decoding="async"/>
               <div className="edm-product-card">
                 <div className="edm-product-top"><div className="edm-product-brand"><span><GraduationCap size={16}/></span><b>EduSphere <i>360</i></b></div><div className="edm-window-dots"><i/><i/><i/></div></div>
                 <div className="edm-product-layout">
@@ -194,6 +195,22 @@ export function WelcomeScreen({ navigate }: ScreenProps) {
           <div><strong>7</strong><span>Role types<br/>Access for every stakeholder</span></div>
           <div><strong>7</strong><span>Role-specific workspaces<br/>Access shaped by responsibility</span></div>
           <div><strong>1</strong><span>Unified platform<br/>One consistent experience</span></div>
+        </section>
+
+        <section className="edm-visual-showcase" aria-label="Campus and learning environments">
+          <div className="edm-visual-showcase-copy">
+            <span className="edm-section-kicker">BUILT AROUND REAL CAMPUS LIFE</span>
+            <h2>People, places and progress.<br/><em>Connected in one system.</em></h2>
+            <p>From the learning spaces where students collaborate to the campus teams that keep an institution running, EduSphere 360 brings daily work into a clearer shared experience.</p>
+          </div>
+          <figure className="edm-visual-photo edm-campus-photo-card">
+            <img src="https://images.pexels.com/photos/29326797/pexels-photo-29326797.jpeg?auto=compress&cs=tinysrgb&w=1200" alt="A modern university building surrounded by mature green trees" loading="lazy" decoding="async"/>
+            <figcaption><span>01 / CAMPUS</span><b>Spaces that bring education to life</b></figcaption>
+          </figure>
+          <figure className="edm-visual-photo edm-learning-photo-card">
+            <img src="https://images.pexels.com/photos/16420473/pexels-photo-16420473/free-photo-of-a-group-of-students-sitting-in-a-library-and-studying.jpeg?auto=compress&w=1260&h=750&dpr=1" alt="Students collaborating with laptops and books in a university library" loading="lazy" decoding="async"/>
+            <figcaption><span>02 / LEARNING</span><b>Collaboration, knowledge and achievement</b></figcaption>
+          </figure>
         </section>
 
         <section className="edm-analytics-section edm-section" id="analytics">
@@ -238,7 +255,7 @@ export function WelcomeScreen({ navigate }: ScreenProps) {
         <section className="edm-intro-section edm-section" id="platform">
           <div className="edm-section-side"><span className="edm-section-index">01 / PLATFORM</span><span className="edm-side-rule"/><span className="edm-section-side-note">A single place for your whole institution</span></div>
           <div className="edm-intro-content"><div className="edm-section-kicker">MEET EDUSPHERE 360</div><h2>Less administration.<br/><em>More meaningful progress.</em></h2><p>EduSphere 360 is an education management platform designed to make institutional work simpler. From the first admission to daily teaching, finance and reporting, teams can manage their responsibilities through one consistent system.</p><div className="edm-intro-points"><span><CheckCircle2 size={17}/> One connected information system</span><span><CheckCircle2 size={17}/> Clear access for every user role</span><span><CheckCircle2 size={17}/> Configurable for different institution types</span></div></div>
-          <div className="edm-intro-visual"><div className="edm-campus-illustration"><div className="edm-campus-sun"/><div className="edm-campus-building"><div className="edm-building-roof"/><div className="edm-building-top"><span/><span/><span/></div><div className="edm-building-columns"><i/><i/><i/><i/></div><div className="edm-building-door"/></div><div className="edm-campus-ground"/><div className="edm-campus-tree tree-left"/><div className="edm-campus-tree tree-right"/><div className="edm-campus-path"/></div><div className="edm-visual-label"><span>ONE</span><b>One institution.<br/>Every moving part.</b></div></div>
+          <div className="edm-intro-visual"><img className="edm-intro-campus-photo" src="https://images.pexels.com/photos/16420473/pexels-photo-16420473/free-photo-of-a-group-of-students-sitting-in-a-library-and-studying.jpeg?auto=compress&w=1260&h=750&dpr=1" alt="Students collaborating with laptops and books in a university library" loading="lazy" decoding="async"/><div className="edm-campus-illustration"><div className="edm-campus-sun"/><div className="edm-campus-building"><div className="edm-building-roof"/><div className="edm-building-top"><span/><span/><span/></div><div className="edm-building-columns"><i/><i/><i/><i/></div><div className="edm-building-door"/></div><div className="edm-campus-ground"/><div className="edm-campus-tree tree-left"/><div className="edm-campus-tree tree-right"/><div className="edm-campus-path"/></div><div className="edm-visual-label"><span>ONE</span><b>One institution.<br/>Every moving part.</b></div></div>
         </section>
 
         <section className="edm-offer-section edm-section" id="features">

@@ -340,7 +340,10 @@ function dedicatedRoute(groupKey: string, itemKey: string): string | undefined {
     return `fees:${view}`
   }
   if (groupKey === 'timetable') {
-    if (['timetable-dashboard','master-timetable','class-timetable','teacher-timetable','room-timetable','period-timetable'].includes(itemKey)) return 'timetable:week'
+    if (itemKey === 'class-timetable') return 'timetable:classes'
+    if (itemKey === 'teacher-timetable') return 'timetable:teachers'
+    if (itemKey === 'room-timetable') return 'timetable:rooms'
+    if (['timetable-dashboard','master-timetable','period-timetable'].includes(itemKey)) return 'timetable:week'
     if (itemKey.includes('availability')) return 'timetable:teachers'
     if (itemKey.includes('substitution') || itemKey.includes('coverage')) return 'timetable:unassigned'
     if (itemKey.includes('conflict')) return 'timetable:conflicts'
@@ -425,6 +428,25 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
     if (itemKey === 'tasks-and-reminders' && ['student','parent'].includes(actorRole)) return 'unavailable:dashboard:tasks-and-reminders'
     if (itemKey === 'academic-overview' && ['student','parent'].includes(actorRole)) return 'exams:calendar'
   }
+
+  // Resolve dashboard shortcuts before legacy module-root overrides so the
+  // requested report/finance/result sub-view is not lost.
+  if (groupKey === 'dashboard') {
+    return dashboardViews[itemKey] ?? 'unavailable:dashboard:' + itemKey
+  }
+
+  // Preserve the actual requested timetable window before any legacy
+  // module-root override can collapse class/teacher/room views into "week".
+  if (groupKey === 'timetable') {
+    if (itemKey === 'class-timetable') return 'timetable:classes'
+    if (itemKey === 'teacher-timetable') return 'timetable:teachers'
+    if (itemKey === 'room-timetable') return 'timetable:rooms'
+    if (itemKey === 'timetable-conflicts') return 'timetable:conflicts'
+    if (itemKey === 'timetable-history') return 'timetable:history'
+    const day = ['monday','tuesday','wednesday','thursday','friday','saturday'].find(value => itemKey.includes(value))
+    return 'timetable:' + (day ?? 'week')
+  }
+
   const override = existingRouteOverrides[compositeKey]
 
   const financeDestination = financeRoute(groupKey,itemKey)

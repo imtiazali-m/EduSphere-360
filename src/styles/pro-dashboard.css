@@ -664,3 +664,30 @@
 @media(max-width:820px){
   .pro-sidebar-collapse{display:none!important}
 }
+
+
+/* Role-aware first-run guidance: live record signals, never seeded demo metrics. */
+.ed360-start-panel{display:grid;gap:15px;padding:19px;border:1px solid #dce6f2;border-radius:15px;background:linear-gradient(135deg,#fff 0%,#f7faff 100%);box-shadow:0 7px 24px rgba(16,45,77,.045)}
+.ed360-start-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:18px}
+.ed360-start-heading>div:first-child{min-width:0}
+.ed360-start-kicker{display:inline-flex;align-items:center;gap:7px;color:#2f6fe4;font-size:8px;font-weight:900;letter-spacing:.17em;text-transform:uppercase}
+.ed360-start-heading h2{margin:6px 0 4px;color:#102d4d;font-size:18px;line-height:1.2;font-weight:850;letter-spacing:-.4px}
+.ed360-start-heading p{max-width:720px;margin:0;color:#70839b;font-size:10px;line-height:1.6}
+.ed360-start-progress{display:flex;flex:0 0 auto;flex-direction:column;align-items:flex-end;gap:3px;padding:8px 11px;border:1px solid #dce7f7;border-radius:10px;background:#fff}
+.ed360-start-progress strong{color:#102d4d;font-size:19px;line-height:1;font-weight:900;font-variant-numeric:tabular-nums}
+.ed360-start-progress span{color:#8193a9;font-size:8px;font-weight:650}
+.ed360-start-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.ed360-start-card{display:flex;min-width:0;min-height:156px;flex-direction:column;align-items:flex-start;padding:13px;border:1px solid #e5ebf3;border-radius:12px;background:#fff;transition:border-color .16s,transform .16s,box-shadow .16s}
+.ed360-start-card:hover{transform:translateY(-2px);border-color:#bfd3f4;box-shadow:0 9px 20px rgba(16,45,77,.065)}
+.ed360-start-card-top{display:flex;width:100%;align-items:center;gap:8px}
+.ed360-start-number{color:#9aabc0;font-size:9px;font-weight:850;font-variant-numeric:tabular-nums}
+.ed360-start-icon{display:grid;width:31px;height:31px;place-items:center;border-radius:9px;color:#2f6fe4;background:#edf4ff}
+.ed360-start-status{margin-left:auto;padding:5px 7px;border:1px solid #f0e4ca;border-radius:999px;color:#9a702b;background:#fff9ed;font-size:7px;font-weight:800;white-space:nowrap}
+.ed360-start-status.is-started{border-color:#d2eadc;color:#27764a;background:#eff9f2}
+.ed360-start-card h3{margin:10px 0 4px;color:#183655;font-size:11px;line-height:1.35;font-weight:850}
+.ed360-start-card p{margin:0 0 10px;color:#7a8da5;font-size:9px;line-height:1.55}
+.ed360-start-card button{display:inline-flex;align-items:center;gap:6px;margin-top:auto;padding:0;border:0;color:#2f6fe4;background:transparent;font-size:9px;font-weight:850;cursor:pointer}
+.ed360-start-card button:hover{color:#164da9}
+.ed360-start-footnote{margin:0;color:#8a9bb0;font-size:8px;line-height:1.5}
+@media(max-width:1180px){.ed360-start-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:640px){.ed360-start-panel{padding:14px}.ed360-start-heading{gap:10px}.ed360-start-heading h2{font-size:16px}.ed360-start-progress{padding:7px 8px}.ed360-start-progress strong{font-size:16px}.ed360-start-grid{grid-template-columns:minmax(0,1fr)}.ed360-start-card{min-height:0}}
