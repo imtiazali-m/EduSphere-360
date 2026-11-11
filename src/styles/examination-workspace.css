@@ -1,0 +1,103 @@
+/* Stage 9 — examination, assessment and results workspaces. Uses the shared EduSphere semantic tokens. */
+.ed360-assessment-workspace{max-width:1500px;margin:0 auto;padding-bottom:36px;color:var(--es-ink)}
+.ed360-assess-hero{display:flex;align-items:center;gap:16px;padding:20px 22px;margin:0 0 16px;border:1px solid var(--es-line);border-radius:var(--es-radius-lg);background:linear-gradient(120deg,#fff 0%,var(--es-primary-050) 100%);box-shadow:var(--es-shadow-sm)}
+.ed360-assess-hero-icon{width:48px;height:48px;flex:none;display:grid;place-items:center;color:#fff;background:linear-gradient(145deg,var(--es-primary-600),var(--es-primary-700));border-radius:14px}
+.ed360-assess-hero>div:nth-child(2){min-width:0;flex:1}
+.ed360-assess-hero>div:nth-child(2)>span,.ed360-assess-context>div>span,.ed360-assess-panel-head>div>span{display:block;color:var(--es-muted);font-size:9px;font-weight:800;letter-spacing:1.15px;text-transform:uppercase}
+.ed360-assess-hero h1{margin:3px 0 2px;color:var(--es-brand-950);font-size:clamp(19px,2vw,26px);letter-spacing:-.55px;line-height:1.2}
+.ed360-assess-hero p{margin:0;color:var(--es-muted);font-size:12px}
+.ed360-assess-live{display:flex;align-items:center;gap:8px;padding:7px 11px;border:1px solid #d3e9df;border-radius:99px;color:var(--es-success);background:#f2fbf6;font-size:10px;font-weight:750;white-space:nowrap}
+.ed360-assess-live i{width:7px;height:7px;border-radius:50%;background:#24a46e}
+.ed360-assess-tabs{display:flex;gap:5px;overflow-x:auto;padding:5px;margin-bottom:14px;border:1px solid var(--es-line);border-radius:13px;background:var(--es-surface);scrollbar-width:thin}
+.ed360-assess-tabs button{display:flex;align-items:center;justify-content:center;gap:7px;min-height:38px;padding:8px 11px;border:1px solid transparent;border-radius:9px;background:transparent;color:var(--es-muted);font-size:11px;font-weight:680;white-space:nowrap;cursor:pointer;transition:background .15s,border-color .15s,color .15s}
+.ed360-assess-tabs button:hover{color:var(--es-brand-800);background:var(--es-primary-050)}
+.ed360-assess-tabs button.active{border-color:#d7e4fb;color:var(--es-primary-700);background:var(--es-primary-100)}
+.ed360-assess-context{display:flex;align-items:center;justify-content:space-between;gap:15px;margin:0 0 12px;padding:14px 17px;border:1px solid var(--es-line);border-radius:var(--es-radius-md);background:var(--es-surface)}
+.ed360-assess-context h2{margin:2px 0;color:var(--es-brand-900);font-size:18px;letter-spacing:-.3px}
+.ed360-assess-context p{margin:0;color:var(--es-muted);font-size:11px}
+.ed360-assess-context>strong{min-width:72px;text-align:right;color:var(--es-brand-800);font-size:21px;font-variant-numeric:tabular-nums}
+.ed360-assess-context>strong small{display:block;color:var(--es-muted);font-size:9px;font-weight:600}
+.ed360-assess-toolbar{display:flex;align-items:center;gap:8px;margin:0 0 13px}
+.ed360-assess-toolbar>label{display:flex;align-items:center;gap:8px;flex:1;max-width:470px;min-height:38px;padding:0 11px;border:1px solid var(--es-line);border-radius:10px;background:var(--es-surface);color:var(--es-muted)}
+.ed360-assess-toolbar input{width:100%;min-width:0;border:0;outline:none;background:transparent;color:var(--es-ink);font-size:11px}
+.ed360-assess-toolbar>button{display:flex;align-items:center;gap:7px;min-height:38px;padding:7px 11px;border:1px solid var(--es-line);border-radius:9px;color:var(--es-brand-800);background:var(--es-surface);font-size:11px;font-weight:700;cursor:pointer}
+.ed360-assess-toolbar>button:hover{border-color:#b9ccef;background:var(--es-primary-050)}
+.ed360-assess-panel{padding:17px;border:1px solid var(--es-line);border-radius:var(--es-radius-lg);background:var(--es-surface);box-shadow:var(--es-shadow-sm)}
+.ed360-assess-panel-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:14px}
+.ed360-assess-panel-head h3{margin:2px 0;color:var(--es-brand-900);font-size:16px;letter-spacing:-.25px}
+.ed360-assess-panel-head p{margin:0;color:var(--es-muted);font-size:11px}
+.ed360-assess-table-wrap{width:100%;overflow:auto;border:1px solid var(--es-line);border-radius:11px}
+.ed360-assess-table-wrap table{width:100%;min-width:720px;border-collapse:separate;border-spacing:0;font-size:11px}
+.ed360-assess-table-wrap th{position:sticky;top:0;padding:10px 11px;color:#52677e;background:#f4f7fb;border-bottom:1px solid var(--es-line);text-align:left;font-size:9px;font-weight:800;letter-spacing:.45px;text-transform:uppercase;white-space:nowrap}
+.ed360-assess-table-wrap td{padding:10px 11px;border-bottom:1px solid var(--es-line-soft);color:var(--es-ink);vertical-align:middle}
+.ed360-assess-table-wrap tr:last-child td{border-bottom:0}
+.ed360-assess-table-wrap tbody tr:hover td{background:#f9fbff}
+.ed360-assess-table-wrap td strong{display:block;color:var(--es-brand-900);font-size:11px}
+.ed360-assess-table-wrap td small{display:block;margin-top:3px;color:var(--es-muted);font-size:9px}
+.ed360-assess-table-wrap .empty{padding:24px;text-align:center;color:var(--es-muted)}
+.ed360-assess-table-wrap input[type=text],.ed360-assess-table-wrap input[type=number]{max-width:100px;min-width:74px;height:31px;padding:5px 7px;border:1px solid var(--es-line);border-radius:7px;background:#fff;color:var(--es-ink);font-size:11px}
+.ed360-assess-table-wrap input[type=checkbox]{width:16px;height:16px;accent-color:var(--es-primary-600)}
+.ed360-assess-pill{display:inline-flex;align-items:center;min-height:22px;padding:3px 8px;border:1px solid var(--es-line);border-radius:99px;background:#f7f9fc;color:#536981;font-size:9px;font-weight:750;text-transform:capitalize;white-space:nowrap}
+.ed360-assess-pill.published{border-color:#cde8da;background:#eff9f3;color:#177b55}
+.ed360-assess-actions{display:flex;flex-wrap:wrap;gap:5px}
+.ed360-assess-actions button,.ed360-assess-link{padding:5px 7px;border:1px solid var(--es-line);border-radius:7px;color:var(--es-primary-700);background:#fff;font-size:10px;font-weight:700;cursor:pointer}
+.ed360-assess-actions button:hover,.ed360-assess-link:hover{border-color:#b9ccef;background:var(--es-primary-050)}
+.ed360-assess-link{border:0;background:transparent}
+.ed360-assess-link.danger{color:var(--es-danger)}
+.ed360-assess-form{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px;margin:0 0 16px;padding:15px;border:1px solid #dbe6f5;border-radius:12px;background:#f8faff}
+.ed360-assess-form>label{display:flex;flex-direction:column;gap:5px;color:var(--es-brand-800);font-size:10px;font-weight:740}
+.ed360-assess-form input:not([type=checkbox]),.ed360-assess-form select,.ed360-assess-form textarea,.ed360-assess-select-row select{width:100%;min-height:36px;padding:8px 9px;border:1px solid var(--es-line);border-radius:8px;background:#fff;color:var(--es-ink);font-size:11px;outline:none}
+.ed360-assess-form textarea{resize:vertical}
+.ed360-assess-form input:focus,.ed360-assess-form select:focus,.ed360-assess-form textarea:focus,.ed360-assess-select-row select:focus{border-color:#8fb2ef;box-shadow:0 0 0 3px rgba(49,111,224,.09)}
+.ed360-assess-form .wide{grid-column:1/-1}
+.ed360-assess-form-actions{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:8px;margin:13px 0 0}
+.ed360-assess-form .ed360-assess-form-actions{margin-top:2px}
+.ed360-assess-check{display:flex!important;flex-direction:row!important;align-items:center;gap:8px!important;min-height:32px}
+.ed360-assess-check input{width:16px;height:16px;accent-color:var(--es-primary-600)}
+.ed360-assess-import{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:0 0 13px;padding:10px;border:1px dashed #cbd9ed;border-radius:10px;background:#fafcff}
+.ed360-assess-import>span{flex:1;min-width:180px;color:var(--es-muted);font-size:9px}
+.ed360-assess-import input[type=file]{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+.ed360-assess-select-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 13px;padding:12px;border:1px solid var(--es-line);border-radius:10px;background:var(--es-surface-soft)}
+.ed360-assess-select-row>label{display:grid;grid-template-columns:140px minmax(180px,1fr);align-items:center;gap:8px;flex:1;color:var(--es-brand-800);font-size:10px;font-weight:740}
+.ed360-assess-select-row>div,.ed360-assess-select-row>strong{color:var(--es-brand-900);font-size:11px}
+.ed360-assess-select-row small{display:block;margin-top:3px;color:var(--es-muted);font-size:9px}
+.ed360-assess-mark-summary{display:flex;flex-wrap:wrap;gap:7px;margin:0 0 11px}
+.ed360-assess-mark-summary span{padding:6px 9px;border:1px solid var(--es-line);border-radius:8px;background:#f8fafd;color:var(--es-muted);font-size:10px;font-weight:650}
+.ed360-assess-workflow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:13px 0}
+.ed360-assess-workflow>div{display:flex;align-items:center;gap:7px;padding:9px;border:1px solid var(--es-line);border-radius:9px;background:#f8fafd;color:var(--es-muted);font-size:10px;font-weight:700}
+.ed360-assess-workflow b{width:24px;height:24px;display:grid;place-items:center;border-radius:50%;background:#e8eef7;color:#61758b}
+.ed360-assess-workflow .done{border-color:#cfe7db;background:#f1faf5;color:#177b55}
+.ed360-assess-workflow .done b{background:#d8f0e3;color:#177b55}
+.ed360-assess-grading-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:14px}
+.ed360-assess-grading-grid .ed360-assess-form{margin:0}
+.ed360-assess-question-picker{padding:11px;border:1px solid var(--es-line);border-radius:9px;background:#fff}
+.ed360-assess-question-picker>div{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;max-height:230px;overflow:auto;margin:8px 0}
+.ed360-assess-question-picker label{display:flex;align-items:flex-start;gap:7px;padding:7px;border:1px solid var(--es-line-soft);border-radius:7px;color:var(--es-muted);font-size:10px;font-weight:500}
+.ed360-assess-question-picker label input{width:15px;min-width:15px;height:15px;min-height:15px;padding:0}
+.ed360-assess-question-picker small{color:var(--es-muted);font-size:9px}
+.ed360-assess-subheading{margin:16px 0 8px;color:var(--es-brand-900);font-size:13px}
+.ed360-assess-submissions{margin-top:16px;padding-top:13px;border-top:1px solid var(--es-line)}
+.ed360-assess-submissions h3{margin:0 0 9px;color:var(--es-brand-900);font-size:13px}
+.ed360-assess-submissions article{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px;border-bottom:1px solid var(--es-line-soft)}
+.ed360-assess-submissions article p{margin:3px 0;color:var(--es-muted);font-size:10px}
+.ed360-assess-submissions article small{color:var(--es-muted);font-size:9px}
+.ed360-assess-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:12px 0}
+.ed360-assess-kpis article{padding:12px;border:1px solid var(--es-line);border-radius:10px;background:var(--es-surface-soft)}
+.ed360-assess-kpis span{display:block;color:var(--es-muted);font-size:9px;font-weight:750}
+.ed360-assess-kpis strong{display:block;margin-top:4px;color:var(--es-brand-900);font-size:22px;font-variant-numeric:tabular-nums}
+.ed360-assess-note{margin:8px 0 13px;color:var(--es-muted);font-size:9px}
+.ed360-assess-error{margin:8px 0;padding:11px;border:1px solid #f1d3d1;border-radius:9px;color:#93403b;background:#fff5f4;font-size:11px}
+.ed360-assess-empty{padding:28px;border:1px solid var(--es-line);border-radius:11px;background:var(--es-surface);color:var(--es-muted);text-align:center}
+.ed360-assess-test-dialog{width:min(850px,calc(100vw - 28px));max-height:min(88vh,900px);overflow:auto}
+.ed360-assess-timer{display:flex;align-items:center;gap:6px;padding:7px 11px;border:1px solid #cfe0fa;border-radius:99px;color:var(--es-primary-700);background:var(--es-primary-050);font-variant-numeric:tabular-nums;font-weight:800}
+.ed360-assess-timer.urgent{border-color:#f1d3d1;color:var(--es-danger);background:var(--es-danger-bg)}
+.ed360-assess-test-questions{display:grid;gap:10px;max-height:55vh;overflow:auto;padding:3px}
+.ed360-assess-test-questions article{padding:12px;border:1px solid var(--es-line);border-radius:10px;background:var(--es-surface-soft)}
+.ed360-assess-test-questions article>strong{display:block;margin-bottom:5px;color:var(--es-brand-900);font-size:12px}
+.ed360-assess-test-questions article>small{display:block;margin-bottom:9px;color:var(--es-muted);font-size:9px}
+.ed360-assess-test-questions label{display:flex;align-items:center;gap:8px;margin:7px 0;color:var(--es-ink);font-size:11px}
+.ed360-assess-test-questions input[type=radio]{accent-color:var(--es-primary-600)}
+.ed360-assess-test-questions textarea{width:100%;padding:9px;border:1px solid var(--es-line);border-radius:8px}
+@media(max-width:900px){.ed360-assess-tabs button{padding:8px 9px}.ed360-assess-form{grid-template-columns:repeat(2,minmax(0,1fr))}.ed360-assess-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:620px){.ed360-assess-hero{align-items:flex-start;padding:15px}.ed360-assess-live{display:none}.ed360-assess-tabs{margin-left:-2px;margin-right:-2px}.ed360-assess-tabs button{min-width:118px;justify-content:flex-start}.ed360-assess-context{align-items:flex-start;padding:12px}.ed360-assess-context>strong{font-size:18px}.ed360-assess-toolbar{flex-wrap:wrap}.ed360-assess-toolbar>label{max-width:none;flex-basis:100%}.ed360-assess-panel{padding:12px}.ed360-assess-panel-head{align-items:flex-start;flex-direction:column}.ed360-assess-form{grid-template-columns:1fr;padding:12px}.ed360-assess-form .wide{grid-column:auto}.ed360-assess-select-row{align-items:stretch;flex-direction:column}.ed360-assess-select-row>label{grid-template-columns:1fr}.ed360-assess-workflow{grid-template-columns:1fr 1fr}.ed360-assess-workflow>div:last-child{grid-column:1/-1}.ed360-assess-grading-grid{grid-template-columns:1fr}.ed360-assess-question-picker>div{grid-template-columns:1fr}.ed360-assess-submissions article{align-items:flex-start;flex-direction:column}.ed360-assess-kpis{grid-template-columns:1fr 1fr}.ed360-assess-table-wrap table{min-width:670px}}
+@media(prefers-reduced-motion:reduce){.ed360-assessment-workspace *{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
