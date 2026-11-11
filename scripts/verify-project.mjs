@@ -171,6 +171,19 @@ check('All seven roles receive focused, permission-aware workspaces', () => {
   assert.ok(!roleNavigationGroups('exam_officer').some(group => ['employees','students','accounts-finance','payroll'].includes(group.key)))
 })
 
+check('Published role menus contain only connected workspace destinations', () => {
+  for (const role of roles) {
+    const groups = roleNavigationGroups(role)
+    for (const group of groups) {
+      assert.ok(group.key === 'dashboard' || group.items.length > 0, `${role} has an empty menu group: ${group.label}`)
+      for (const page of group.items) {
+        const route = getNavigationRoute(group.key, page, role)
+        assert.ok(route && !route.startsWith('unavailable:'), `${role} menu exposes an inactive destination: ${group.label}/${page}`)
+      }
+    }
+  }
+})
+
 check('Bulk attendance uses class registers with P A L marking and atomic saves', () => {
   const attendance = read('src/components/AttendanceWorkspace.tsx')
   assert.ok(attendance.includes('All present') && attendance.includes('All absent') && attendance.includes('All late'))
@@ -203,6 +216,8 @@ check('Dashboard matches the menu and keeps Quick Access at the sidebar bottom',
   assert.ok(dashboardSource.includes('id="ed360-workspace-search"') && dashboardSource.includes('Search pages and tools…'), 'Workspace page-and-tool search is missing')
   assert.ok(dashboardSource.includes('pro-workspace-tabs') && dashboardSource.includes('pro-window-stack') && dashboardSource.includes('closeWorkspaceTab'), 'Dashboard multi-window tab management is missing')
   assert.ok(dashboardSource.includes('parentId?: string') && dashboardSource.includes('function navigateChild') && dashboardSource.includes('tab.parentId'), 'Nested child workspace state must remain attached to a parent window')
+  assert.ok(dashboardSource.includes('activeNavigationTab.groupKey') && dashboardSource.includes('const parent = workspaceTabs.find(tab => tab.id === current.parentId)'), 'Nested windows must retain their originating menu selection')
+  assert.ok(dashboardSource.includes('setExpandedGroups(current => current.includes(groupKey) ? current : [...current, groupKey])'), 'Activating a workspace window must reveal its parent menu group')
   assert.ok(dashboardSource.includes("getNavigationRoute(group.key, item, user!.role)"), 'Sidebar destinations must use their exact group and active role')
   assert.ok(!dashboardSource.includes("group.key === 'dashboard' ? 'overview' : getNavigationRoute"), 'Dashboard submenu items must not all collapse to overview')
   assert.ok(dashboardSource.includes('closing.add(tab.id)') && dashboardSource.includes('parentStillOpen'), 'Closing a parent must close descendants and restore the parent context')

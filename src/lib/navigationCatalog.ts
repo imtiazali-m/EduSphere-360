@@ -1,5 +1,6 @@
 import type { WorkspaceMenuGroup } from './institutionalCatalog'
 import { institutionalMenu } from './institutionalCatalog'
+import { getNavigationRoute } from './navigationRoutes'
 
 export interface NavigationCatalogGroup { key:string; label:string; icon:string; items:string[]; description?:string; theme?:string }
 
@@ -60,6 +61,8 @@ const roleItemAllow:Record<string,Partial<Record<string,string[]>>>={
 function allowedItems(group:WorkspaceMenuGroup,role:WorkspaceMenuGroup['roles'][number]){
   const selected=roleItemAllow[group.key]?.[role]
   const roleFiltered = selected ? group.items.filter(item=>selected.includes(item.label)) : group.items
+  // Planned features remain in the master catalogue, but never appear as live destinations.
+  const connectedItems = roleFiltered.filter(item => !getNavigationRoute(group.key, item.label, role).startsWith('unavailable:'))
   if (group.key === 'dashboard') {
     const hidden: Partial<Record<WorkspaceMenuGroup['roles'][number], string[]>> = {
       teacher: ['Financial Overview', 'Institutional Alerts'],
@@ -69,14 +72,25 @@ function allowedItems(group:WorkspaceMenuGroup,role:WorkspaceMenuGroup['roles'][
       exam_officer: ['Financial Overview', 'Employee Performance', 'Institutional Alerts', 'Pending Approvals'],
     }
     const excluded = new Set(hidden[role] ?? [])
-    return roleFiltered.filter(item => !excluded.has(item.label))
+    return connectedItems.filter(item => !excluded.has(item.label))
   }
-  return roleFiltered
+  return connectedItems
 }
 
+const navigationGroupOrder = [
+  'dashboard', 'students', 'employees',
+  'academic-sessions', 'classes-sections', 'subjects', 'attendance', 'timetable',
+  'teaching', 'curriculum', 'question-bank', 'examinations', 'class-tests',
+  'fees', 'receivables', 'payments', 'receipts', 'accounts-finance', 'payroll', 'reconciliation',
+  'communication', 'reports', 'certificates', 'library', 'transport', 'inventory', 'facilities', 'visitors',
+  'administration', 'institution-config',
+]
+
 export function roleNavigationGroups(role:WorkspaceMenuGroup['roles'][number]){
+  const order = new Map(navigationGroupOrder.map((key,index)=>[key,index]))
   return institutionalMenu
     .filter(group=>group.roles.includes(role))
     .map(group=>({...group,items:allowedItems(group,role).map(item=>item.label)}))
     .filter(group=>group.key==='dashboard'||group.items.length>0)
+    .sort((a,b)=>(order.get(a.key)??navigationGroupOrder.length)-(order.get(b.key)??navigationGroupOrder.length))
 }

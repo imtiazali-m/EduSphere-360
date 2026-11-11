@@ -463,6 +463,15 @@ export function Dashboard({ onToast }: Props) {
   const [workspaceTabs, setWorkspaceTabs] = useState<WorkspaceTab[]>([{ id: 'overview', route: 'overview', targetKey: 'overview', targetWindow: 'overview', title: 'Dashboard' }])
   const [activeTabId, setActiveTabId] = useState('overview')
   const activeTab = workspaceTabs.find(tab => tab.id === activeTabId) ?? workspaceTabs[0]
+  const activeNavigationTab = (() => {
+    let current = activeTab
+    while (current.parentId) {
+      const parent = workspaceTabs.find(tab => tab.id === current.parentId)
+      if (!parent) break
+      current = parent
+    }
+    return current
+  })()
   const active = activeTab?.targetKey ?? 'overview'
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
@@ -491,6 +500,12 @@ export function Dashboard({ onToast }: Props) {
     media.addEventListener('change', syncMobileNav)
     return () => media.removeEventListener('change', syncMobileNav)
   }, [])
+
+  useEffect(() => {
+    const groupKey = activeNavigationTab.groupKey
+    if (!groupKey) return
+    setExpandedGroups(current => current.includes(groupKey) ? current : [...current, groupKey])
+  }, [activeNavigationTab.groupKey])
 
   useEffect(() => {
     const onShortcut = (event: KeyboardEvent) => {
@@ -681,7 +696,7 @@ export function Dashboard({ onToast }: Props) {
             {isExpanded && <div className="pro-nav-children">{group.items.map(item => {
               const itemKey = item.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
               const route = getNavigationRoute(group.key, item, user!.role)
-              const isActive = activeTab.groupKey === group.key && activeTab.itemKey === itemKey
+              const isActive = activeNavigationTab.groupKey === group.key && activeNavigationTab.itemKey === itemKey
               const ItemIcon = pageIcon(item, GroupIcon)
               const connected = Boolean(route && !route.startsWith('unavailable:'))
               return <button key={item} className={`pro-nav-item ${isActive ? 'active' : ''}`} aria-label={item} title={item} aria-current={isActive ? 'page' : undefined} onClick={() => navigateCatalogPage(group.key, item)}><span className="pro-nav-icon"><ItemIcon size={16}/></span><span className="pro-nav-title">{item}</span>{connected && <i className="pro-nav-connected" title="Connected workspace"/>}</button>
