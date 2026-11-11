@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   Activity, ArrowRight, BookOpen, Building2, CalendarCheck, CalendarDays,
   ChevronDown, ChevronLeft, ChevronRight, ClipboardCheck, ClipboardList, DoorOpen, FileText,
@@ -590,6 +590,11 @@ export function Dashboard({ onToast }: Props) {
   const [unreadAnnouncementCount, setUnreadAnnouncementCount] = useState(0)
   const [displayPreferences, setDisplayPreferences] = useState<DashboardDisplayPreferences>(() => readDisplayPreferences(getDisplayPreferenceStorage()))
   const [displaySettingsOpen, setDisplaySettingsOpen] = useState(false)
+  const displaySettingsTriggerRef = useRef<HTMLButtonElement>(null)
+  const closeDisplaySettings = () => {
+    setDisplaySettingsOpen(false)
+    displaySettingsTriggerRef.current?.focus()
+  }
   const sidebarCollapsed = displayPreferences.sidebar === 'compact'
   const setSidebarCollapsed = (next: boolean | ((current: boolean) => boolean)) => {
     setDisplayPreferences(current => {
@@ -638,12 +643,13 @@ export function Dashboard({ onToast }: Props) {
         document.getElementById('ed360-workspace-search')?.focus()
       } else if (event.key === 'Escape') {
         setSearchOpen(false)
-        setDisplaySettingsOpen(false)
+        setSearchOpen(false)
+        if (displaySettingsOpen) closeDisplaySettings()
       }
     }
     window.addEventListener('keydown', onShortcut)
     return () => window.removeEventListener('keydown', onShortcut)
-  }, [])
+  }, [displaySettingsOpen])
 
   useEffect(() => {
     const container = document.querySelector<HTMLElement>('.pro-workspace-tabs')
@@ -894,16 +900,16 @@ export function Dashboard({ onToast }: Props) {
               <button type="button" aria-pressed={displayPreferences.viewMode === 'modern'} onClick={() => setDisplayPreferences(current => ({ ...current, viewMode: 'modern' }))}>Modern</button>
               <button type="button" aria-pressed={displayPreferences.viewMode === 'classic'} onClick={() => setDisplayPreferences(current => ({ ...current, viewMode: 'classic' }))}>Classic</button>
             </div>
-            <button type="button" className="ed360-display-settings-trigger" aria-expanded={displaySettingsOpen} aria-controls="ed360-display-settings" onClick={() => setDisplaySettingsOpen(open => !open)}>
+            <button ref={displaySettingsTriggerRef} type="button" className="ed360-display-settings-trigger" aria-expanded={displaySettingsOpen} aria-controls="ed360-display-settings" onClick={() => setDisplaySettingsOpen(open => !open)}>
               <Settings size={16}/><span>Display</span>
             </button>
-            {displaySettingsOpen && <section className="ed360-display-settings-panel" id="ed360-display-settings" aria-label="Display settings">
-              <div className="ed360-display-settings-heading"><div><strong>Display settings</strong><small>Saved on this device</small></div><button type="button" onClick={() => setDisplaySettingsOpen(false)} aria-label="Close display settings"><X size={16}/></button></div>
-              <label className="ed360-display-setting-row"><span><Sun size={15}/> Theme</span><select value={displayPreferences.theme} onChange={event => setDisplayPreferences(current => ({ ...current, theme: event.target.value as DashboardDisplayPreferences['theme'] }))} aria-label="Colour theme"><option value="light">Light</option><option value="dark">Dark</option></select></label>
+            <section className="ed360-display-settings-panel" id="ed360-display-settings" aria-label="Display settings" hidden={!displaySettingsOpen}>
+              <div className="ed360-display-settings-heading"><div><strong>Display settings</strong><small>Saved on this device</small></div><button type="button" onClick={closeDisplaySettings} aria-label="Close display settings"><X size={16}/></button></div>
+              <label className="ed360-display-setting-row"><span>{displayPreferences.theme === 'dark' ? <Moon size={15}/> : <Sun size={15}/>} Theme</span><select value={displayPreferences.theme} onChange={event => setDisplayPreferences(current => ({ ...current, theme: event.target.value as DashboardDisplayPreferences['theme'] }))} aria-label="Colour theme"><option value="light">Light</option><option value="dark">Dark</option></select></label>
               <label className="ed360-display-setting-row"><span><Type size={15}/> Text size</span><select value={displayPreferences.fontSize} onChange={event => setDisplayPreferences(current => ({ ...current, fontSize: event.target.value as DashboardFontSize }))} aria-label="Readable font size"><option value="standard">Standard</option><option value="large">Large</option><option value="largest">Extra large</option></select></label>
               <div className="ed360-display-setting-row"><span><Menu size={15}/> Sidebar</span><button type="button" className="ed360-preference-toggle" aria-pressed={displayPreferences.sidebar === 'compact'} onClick={() => setSidebarCollapsed(value => !value)}>{displayPreferences.sidebar === 'compact' ? 'Compact' : 'Expanded'}</button></div>
               <label className="ed360-display-motion"><input type="checkbox" checked={displayPreferences.reducedMotion} onChange={event => setDisplayPreferences(current => ({ ...current, reducedMotion: event.target.checked }))}/><span>Reduce motion</span></label>
-            </section>}
+            </section>
           </div>
           <div className="ed360-topbar-institution"><Building2 size={19}/><span><b>{user?.institutionName}</b><small><i className={'ed360-status-dot ' + (mode === 'cloud' ? 'is-cloud' : 'is-local')}/>{mode === 'cloud' ? 'Online' : 'Local workspace'}</small></span></div>
           <button type="button" className="pro-topbar-bell ed360-topbar-notice" aria-label={`Open notifications${unreadAnnouncementCount ? `, ${unreadAnnouncementCount} unread` : ''}`} title="Open notification centre" onClick={() => navigate('notifications')}><Bell size={18}/>{unreadAnnouncementCount > 0 && <span className="ed360-notification-count">{unreadAnnouncementCount > 99 ? '99+' : unreadAnnouncementCount}</span>}</button>
