@@ -643,7 +643,6 @@ export function Dashboard({ onToast }: Props) {
         document.getElementById('ed360-workspace-search')?.focus()
       } else if (event.key === 'Escape') {
         setSearchOpen(false)
-        setSearchOpen(false)
         if (displaySettingsOpen) closeDisplaySettings()
       }
     }
