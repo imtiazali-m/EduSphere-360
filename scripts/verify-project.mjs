@@ -234,6 +234,22 @@ check('Institutional workspace includes real record CRUD and office-compatible e
   for (const value of ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','application/vnd.openxmlformats-officedocument.wordprocessingml.document','window.print']) assert.ok(exporters.includes(value))
 })
 
+
+check('Institutional register, filters and forms are tailored by workspace domain', () => {
+  const workspace = read('src/components/InstitutionalWorkspace.tsx')
+  const styles = read('src/styles/institutional-premium.css')
+  for (const value of ['recordMetaColumnPlan','workspaceTableFieldOrder','workspaceRecordLabels','workspaceLayouts','data-workspace-group','data-workspace-theme','data-workspace-layout']) {
+    assert.ok(workspace.includes(value), 'Module-specific presentation mapping is missing: ' + value)
+  }
+  for (const value of ['showAmount','showQuantity','showDueDate','showPortalVisibility']) {
+    assert.ok(workspace.includes(value), 'Module-specific form visibility is missing: ' + value)
+  }
+  assert.ok(workspace.includes("['student','parent'].includes(user?.role??'')"), 'Family portals must not see internal approval columns')
+  for (const layout of ['academic','people','assessment','ledger','communication','resource','operations','governance','intelligence']) {
+    assert.ok(styles.includes(`[data-workspace-layout="${layout}"]`), 'Distinct workspace surface is missing: ' + layout)
+  }
+})
+
 const dashboardSource = read('src/components/Dashboard.tsx')
 check('Dashboard matches the menu and keeps Quick Access at the sidebar bottom', () => {
   for (const forbidden of ['CatalogWorkspace', '22-group, 122-section', 'WORKSPACE PAGES', 'MENU GROUPS', '⌘ K', '<kbd>/</kbd>', 'pro-sidebar-footer']) {
