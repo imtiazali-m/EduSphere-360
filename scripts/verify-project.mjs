@@ -23,7 +23,7 @@ check('Vite development and production scripts exist', () => {
 
 const requiredFiles = [
   'index.html', 'src/main.tsx', 'src/App.tsx', 'src/components/Dashboard.tsx', 'src/components/WorkspaceUnavailable.tsx',
-  'src/components/FinanceWorkspace.tsx', 'src/styles/finance-workspace.css',
+  'src/components/FinanceWorkspace.tsx', 'src/styles/finance-workspace.css', 'src/styles/navigation-refinement.css',
   'src/components/PayrollWorkspace.tsx', 'src/styles/payroll-workspace.css',
   'src/components/GovernanceWorkspace.tsx', 'src/styles/governance-workspace.css',
   'src/components/InstitutionOperationsWorkspace.tsx', 'src/styles/institution-operations.css',
@@ -826,6 +826,11 @@ check('Unified design system is loaded last and removes global browser zoom', ()
   const design = read('src/styles/design-system.css')
   const operational = read('src/styles/operational-hierarchy.css')
   assert.ok(main.includes("import './styles/design-system.css'"), 'Unified design system stylesheet must be loaded')
+  const navigationRefinement = read('src/styles/navigation-refinement.css')
+  assert.ok(main.includes("import './styles/navigation-refinement.css'"), 'Final sidebar refinements must load after the shared visual system')
+  assert.ok(navigationRefinement.includes('display: grid !important') && navigationRefinement.includes('.pro-sidebar-collapse:focus-visible'), 'Desktop sidebar collapse control must be visible and keyboard accessible')
+  assert.ok(navigationRefinement.includes('@media (max-width: 820px)') && navigationRefinement.includes('min-height: 40px'), 'Mobile navigation targets must remain comfortably tappable')
+  assert.ok(navigationRefinement.includes('prefers-reduced-motion: reduce'), 'Navigation transitions must respect reduced-motion preferences')
   assert.ok(main.indexOf("import './styles/design-system.css'") > main.indexOf("import './styles/institutional-premium.css'"), 'Unified design system must load after legacy component styles')
   for (const token of ['--es-brand-950', '--es-brand-900', '--es-primary-600', '--es-teal-700', '--es-canvas', '--es-surface', '--es-success', '--es-warning', '--es-danger']) {
     assert.ok(design.includes(token), 'Missing shared design token ' + token)
