@@ -1,0 +1,50 @@
+name: Workspace family privacy regression and build
+
+on:
+  push:
+    paths:
+      - 'src/components/InstitutionalWorkspace.tsx'
+      - 'src/lib/workspacePrivacy.js'
+      - 'src/lib/workspacePrivacy.d.ts'
+      - 'scripts/test-workspace-privacy.mjs'
+      - 'scripts/verify-project.mjs'
+      - 'package.json'
+      - '.github/workflows/workspace-family-privacy.yml'
+  pull_request:
+    paths:
+      - 'src/components/InstitutionalWorkspace.tsx'
+      - 'src/lib/workspacePrivacy.js'
+      - 'src/lib/workspacePrivacy.d.ts'
+      - 'scripts/test-workspace-privacy.mjs'
+      - 'scripts/verify-project.mjs'
+      - 'package.json'
+      - '.github/workflows/workspace-family-privacy.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify-workspace-privacy:
+    name: Verify role-scoped workspace exports and metrics
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Run workspace privacy regression tests
+        run: npm run test:workspace-privacy
+
+      - name: Verify complete project structure and permissions
+        run: npm run verify:project
+
+      - name: Build production assets
+        run: npm run build
