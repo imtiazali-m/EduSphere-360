@@ -318,14 +318,16 @@ function dedicatedRoute(groupKey: string, itemKey: string): string | undefined {
     if (itemKey === 'teaching-materials' || itemKey === 'lesson-plans') return 'operations:curriculum:units'
     if (itemKey === 'downloadable-attachments') return 'files'
   }
-  if (groupKey === 'examinations' || groupKey === 'class-tests') {
+  if (groupKey === 'examinations') {
+    return 'institutional:examinations:' + itemKey
+  }
+  if (groupKey === 'class-tests') {
     if (['marks-entry','marks-verification','result-processing','report-cards','merit-lists','result-publishing','result-corrections','test-results','performance-analysis','student-wise-test-history'].includes(itemKey)) {
       const view = ['report-cards','merit-lists','result-publishing','test-results','performance-analysis'].includes(itemKey) ? 'published'
         : ['marks-verification','result-processing','result-corrections'].includes(itemKey) ? 'review' : 'all'
       return 'exam_results:' + view
     }
     if (itemKey.includes('report')) return 'reports:academics'
-    if (['examination-progress','examination-history','class-test-dashboard','test-schedule','online-tests','written-tests','test-questions'].includes(itemKey)) return 'exams:calendar'
     return 'exams:' + (itemKey.includes('upcoming') ? 'upcoming' : itemKey.includes('completed') ? 'completed' : 'calendar')
   }
   if (groupKey === 'fees' || groupKey === 'receivables' || groupKey === 'payments' || groupKey === 'receipts') {
