@@ -22,7 +22,7 @@ check('Vite development and production scripts exist', () => {
 })
 
 const requiredFiles = [
-  'index.html', 'src/main.tsx', 'src/App.tsx', 'src/components/Dashboard.tsx', 'src/components/WorkspaceUnavailable.tsx',
+  'index.html', 'src/main.tsx', 'src/App.tsx', 'src/components/Dashboard.tsx', 'src/components/RoleDashboard.tsx', 'src/components/role-dashboard.css', 'src/components/WorkspaceUnavailable.tsx',
   'src/components/FinanceWorkspace.tsx', 'src/styles/finance-workspace.css', 'src/styles/student-promotion-workspace.css', 'src/styles/navigation-refinement.css',
   'src/components/PayrollWorkspace.tsx', 'src/styles/payroll-workspace.css',
   'src/components/GovernanceWorkspace.tsx', 'src/components/AdministrationStage5Workspace.tsx', 'src/components/PeopleHRWorkspace.tsx', 'src/components/EmployeeQualificationsPanel.tsx', 'src/styles/people-hr-workspace.css', 'src/styles/governance-workspace.css',
@@ -475,6 +475,19 @@ check('Student, faculty and operational record tables support accessible sorting
     assert.ok(record.includes(value), 'A key record table is missing sortable columns: ' + value)
   }
   assert.ok(styles.includes('.ed360-sort-header:focus-visible'), 'Sortable table headings need a visible keyboard focus indicator')
+})
+
+check('Role-specific dashboard landing pages use scoped live data', () => {
+  const roleDashboard = read('src/components/RoleDashboard.tsx')
+  const dashboard = read('src/components/Dashboard.tsx')
+  const data = read('src/lib/data.ts')
+  assert.ok(roleDashboard.includes('TABLES_BY_ROLE') && roleDashboard.includes('listRecords') && roleDashboard.includes('roleLabels'), 'Dashboard metrics must be loaded from role-scoped live records')
+  assert.ok(dashboard.includes('<RoleDashboard onNavigate={navigateChild}/>'), 'The signed-in overview must render the role-specific dashboard')
+  for (const role of roles) assert.ok(roleDashboard.includes(role), 'Role dashboard must provide a dataset for ' + role)
+  assert.ok(data.includes("'student_guardians'") && data.includes("'workflow_approvals'") && data.includes("'institutional_audit_events'"), 'Dashboard read-only datasets must be allowed through the data layer')
+  assert.ok(data.includes('linkedStudentIds') && data.includes('parentLinks'), 'Parent dashboards must support all linked children, not only one linkedStudentId')
+  assert.ok(data.includes("table === 'institutional_audit_events' ? 'occurred_at' : 'created_at'"), 'Audit activity must be ordered by its event timestamp')
+  for (const role of roles) assert.ok(!roleNavigationGroups(role).some(group => group.key === 'dashboard'), role + ' receives the dashboard as a landing page, not a redundant sidebar group')
 })
 
 check('PeopleHRWorkspace exposes recruitment, contracts, performance and alumni workflows', () => {
@@ -1008,7 +1021,7 @@ check('Unified design system is loaded last and removes global browser zoom', ()
   ]) assert.ok(contrast(foreground, background) >= 4.5, label + ' must meet WCAG AA normal-text contrast')
   assert.ok(read('docs/PHASE_1_DETAILED_AUDIT.md').includes('Phase 1 disposition'), 'Detailed Phase 1 audit document is missing')
   const roleMenu = read('docs/PHASE_1_ROLE_MENU_INVENTORY.md')
-  assert.ok(roleMenu.includes('25 visible sidebar groups') && roleMenu.includes('32 route-catalogue groups') && roleMenu.includes('Administration parent menu') && roleMenu.includes('Academic Management parent menu') && roleMenu.includes('People & HR parent menu'), 'Current visible sidebar and consolidated parent workspaces must be documented')
+  assert.ok(roleMenu.includes('24 visible sidebar groups') && roleMenu.includes('32 route-catalogue groups') && roleMenu.includes('Administration parent menu') && roleMenu.includes('Academic Management parent menu') && roleMenu.includes('People & HR parent menu'), 'Current visible sidebar and consolidated parent workspaces must be documented')
   assert.ok(read('docs/PHASE_2_DESIGN_SYSTEM.md').includes('Core colour tokens'), 'Phase 2 design specification is missing')
   const routeAudit = read('docs/PHASE_1_EXACT_ROUTE_AUDIT.md')
   assert.ok(/Unexpected route families:\*\* 0\./.test(routeAudit), 'Exact route audit must resolve each visible role/menu destination without unknown route families')

@@ -122,7 +122,7 @@ function checkView(role, route, dispatcher) {
     const supported = new Set(['academic-sessions','classes-sections','subjects-courses','curriculum','lesson-planning','timetable','homework-assignments','study-materials','online-learning','classroom-activities','academic-calendar','learning-progress'])
     return { component:'AcademicManagementWorkspace', view:targetWindow, status:supported.has(targetWindow) ? 'Supported' : 'Unsupported academic workspace' }
   }
-  if (targetKey === 'overview') return { component: 'Overview', view: 'overview', status: 'Supported' }
+  if (targetKey === 'overview') return { component: 'RoleDashboard', view: 'overview', status: 'Supported' }
   if (targetKey === 'notifications') return { component: 'NotificationCenter', view: 'notifications', status: 'Supported' }
   if (targetKey === 'accounts') return { component: 'AccountsModule', view: 'accounts', status: 'Supported' }
   if (targetKey === 'files') return { component: 'FilesModule', view: 'files', status: 'Supported' }
@@ -198,7 +198,7 @@ for (const [role, label] of roles) {
       const dispatcher = route.startsWith('unavailable:') ? 'WorkspaceUnavailable'
         : route.startsWith('institutional:') ? (linkedKeys.has(route.slice('institutional:'.length)) ? 'LinkedOperationsWorkspace' : 'InstitutionalWorkspace')
         : dashboard.targetKey === 'academic' ? 'AcademicManagementWorkspace'
-        : dashboard.targetKey === 'overview' ? 'Overview'
+        : dashboard.targetKey === 'overview' ? 'RoleDashboard'
         : dashboard.targetKey === 'notifications' ? 'NotificationCenter'
         : dashboard.targetKey === 'accounts' ? 'AccountsModule'
         : dashboard.targetKey === 'files' ? 'FilesModule'
