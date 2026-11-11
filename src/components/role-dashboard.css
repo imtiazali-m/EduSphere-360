@@ -78,7 +78,7 @@ button.rd-metric-card:hover{border-color:#b8cce2;transform:translateY(-1px);box-
 .rd-finance-chart{display:flex;align-items:stretch;justify-content:space-around;gap:9px;min-height:156px;padding:10px 4px 0;border-bottom:1px solid #edf1f5}
 .rd-finance-month{display:flex;flex:1;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px;min-width:0}
 .rd-finance-bars{display:flex;align-items:flex-end;justify-content:center;gap:4px;width:100%;height:126px;padding:0 5px}
-.rd-finance-bars span{display:block;width:min(22px,38%);min-height:2px;border-radius:4px 4px 0 0}
+.rd-finance-bars span{display:block;width:min(22px,38%);min-height:0;border-radius:4px 4px 0 0}
 .rd-finance-bars .collection{background:#3a9b78}.rd-finance-bars .expense{background:#d9a24b}
 .rd-finance-month small{padding-bottom:6px;color:#8496a9;font-size:9px}
 .rd-chart-legend{display:flex;align-items:center;gap:14px;color:#8294a7;font-size:9px}
