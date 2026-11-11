@@ -30,8 +30,8 @@ const checks = [
 let failed = 0
 console.log('EduSphere 360 — modal, window and workspace visual source audit')
 for (const [label, passed] of checks) {
-  console.log(\`\${passed ? 'PASS' : 'FAIL'}  \${label}\`)
+  console.log((passed ? 'PASS' : 'FAIL') + '  ' + label)
   if (!passed) failed++
 }
-console.log(\`\n\${checks.length - failed}/\${checks.length} checks passed\`)
+console.log('\n' + (checks.length - failed) + '/' + checks.length + ' checks passed')
 if (failed) process.exitCode = 1
