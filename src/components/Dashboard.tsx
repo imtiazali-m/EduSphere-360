@@ -574,6 +574,13 @@ export function Dashboard({ onToast }: Props) {
   const [searchText, setSearchText] = useState('')
   const [searchOpen, setSearchOpen] = useState(false)
   const [unreadAnnouncementCount, setUnreadAnnouncementCount] = useState(0)
+
+  // Keep the sidebar context aligned when the user switches between open windows.
+  useEffect(() => {
+    if (!activeTab?.groupKey) return
+    setExpandedGroups(current => current.includes(activeTab.groupKey!) ? current : [...current, activeTab.groupKey!])
+  }, [activeTabId, activeTab?.groupKey])
+
   const available = useMemo(() => modulesForRole(user!.role), [user?.role])
   const visibleGroups = useMemo(() => roleNavigationGroups(user!.role), [user?.role])
   const searchResults = useMemo(() => {
