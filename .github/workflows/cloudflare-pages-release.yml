@@ -175,18 +175,11 @@ jobs:
   deploy-production:
     name: Manually approved Cloudflare production deployment
     needs: verify-and-build
-    # Keep the usual manual dispatch gate. This unique marker is a one-time,
-    # explicit release signal for the requested production landing-page deployment.
     if: >-
       ${{
         github.ref == format('refs/heads/{0}', vars.EDUSPHERE_PRODUCTION_BRANCH || 'main') &&
-        (
-          (github.event_name == 'workflow_dispatch' && inputs.deploy_production == true) ||
-          (
-            github.event_name == 'push' &&
-            github.event.head_commit.message == 'Release EduSphere 360 production site [E360-PRODUCTION-RELEASE-20261111]'
-          )
-        )
+        github.event_name == 'workflow_dispatch' &&
+        inputs.deploy_production == true
       }}
     runs-on: ubuntu-latest
     environment: production
