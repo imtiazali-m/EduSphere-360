@@ -20,7 +20,7 @@ const files = {
   modules: read('src/styles/module-workspaces.css'),
 }
 const checks = [
-  ['Viewport', /<meta[^>]+name=["']viewport["']/.test(files.html) && /content=["']width=device-width, initial-scale=1\\.0["']/.test(files.html), 'The document must declare the device-width viewport.'],
+  ['Viewport', /<meta[^>]+name=["']viewport["']/.test(files.html) && /content=["']width=device-width, initial-scale=1\.0["']/.test(files.html), 'The document must declare the device-width viewport.'],
   ['Public welcome navigation', hasBreakpoint(files.welcome, 900) && hasBreakpoint(files.welcome, 620) && files.welcome.includes('.edm-nav.is-open') && files.welcome.includes('.edm-mobile-toggle'), 'Public navigation must collapse and expose its mobile menu below tablet widths.'],
   ['Public welcome layout', hasBreakpoint(files.welcome, 1120) && hasBreakpoint(files.welcome, 900) && hasBreakpoint(files.welcome, 620), 'Public sections must reflow at desktop, tablet and phone breakpoints.'],
   ['Authentication layout', hasBreakpoint(files.auth, 1050) && hasBreakpoint(files.auth, 760) && hasBreakpoint(files.auth, 420) && files.auth.includes('.es-auth-page,.es-auth-page-signup') && files.auth.includes('.es-signup-grid { grid-template-columns:1fr;'), 'Owner login/signup must collapse to a single column and form controls must remain single-column on phones.'],
