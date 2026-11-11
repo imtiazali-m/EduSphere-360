@@ -247,9 +247,19 @@ const institutionalOperationsItems: Record<string, Record<string,string>> = {
 }
 
 const administrationGovernanceItems: Record<string,string> = {
-  'institute-profile':'profile','organizational-structure':'academic','policies-and-rules':'settings',
-  'administrative-audit':'audit','user-access-and-invitations':'accounts','role-and-permission-management':'accounts',
-  'institution-settings':'settings','branding-and-document-settings':'settings','security-and-access-history':'audit',
+  'institute-profile':'profile',
+  'academic-structure-sections':'academic',
+  'departments-designations':'departments',
+  'organisational-structure':'organization',
+  'system-configuration':'system',
+  'approval-workflows':'approvals',
+  'policies-rules':'policies',
+  'administrative-audit':'audit',
+  'user-access-invitations':'accounts',
+  'role-permission-management':'permissions',
+  'institute-settings':'settings',
+  'branding-document-settings':'branding',
+  'security-access-history':'security',
 }
 const institutionConfigurationItems: Record<string,string> = {
   'institution-configuration':'settings','education-system-configuration':'settings','education-levels':'academic',

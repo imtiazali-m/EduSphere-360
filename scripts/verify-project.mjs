@@ -25,7 +25,7 @@ const requiredFiles = [
   'index.html', 'src/main.tsx', 'src/App.tsx', 'src/components/Dashboard.tsx', 'src/components/WorkspaceUnavailable.tsx',
   'src/components/FinanceWorkspace.tsx', 'src/styles/finance-workspace.css', 'src/styles/student-promotion-workspace.css', 'src/styles/navigation-refinement.css',
   'src/components/PayrollWorkspace.tsx', 'src/styles/payroll-workspace.css',
-  'src/components/GovernanceWorkspace.tsx', 'src/styles/governance-workspace.css',
+  'src/components/GovernanceWorkspace.tsx', 'src/components/AdministrationStage5Workspace.tsx', 'src/styles/governance-workspace.css',
   'src/components/InstitutionOperationsWorkspace.tsx', 'src/styles/institution-operations.css',
   'src/components/AuthScreens.tsx', 'src/components/AdministrationModule.tsx',
   'src/components/RecordModule.tsx', 'src/components/FacultyWorkspace.tsx', 'src/styles/faculty-workspace.css', 'src/components/ReportsModule.tsx', 'src/components/ProfileModule.tsx', 'src/context/AuthContext.tsx', 'src/lib/auth.ts',
@@ -61,25 +61,33 @@ require.extensions['.ts'] = (module, filename) => {
 const { navigationCatalog } = require(path.join(root, 'src/lib/navigationCatalog.ts'))
 const { navigationRoutes, getNavigationRoute } = require(path.join(root, 'src/lib/navigationRoutes.ts'))
 const { roleNavigationGroups, roleNavigationSections, navigationSectionDefinitions } = require(path.join(root, 'src/lib/navigationAccess.ts'))
+const { institutionalMenu } = require(path.join(root, 'src/lib/institutionalCatalog.ts'))
 const { modules, modulesForRole } = require(path.join(root, 'src/lib/modules.ts'))
 const roles = ['owner', 'admin', 'teacher', 'student', 'parent', 'accountant', 'exam_officer']
 
 check('The full institutional menu maps every submenu to a working destination', () => {
-  assert.equal(navigationCatalog.length, 33, 'The complete institutional menu must contain 33 unique main workspaces')
+  assert.equal(navigationCatalog.length, 29, 'The visible sidebar contains 29 main workspaces after Administration consolidation')
   const groupKeys = new Set(navigationCatalog.map(group => group.key))
   assert.equal(groupKeys.size, 33, 'Main workspace keys must be unique')
   for (const group of navigationCatalog) {
     assert.ok(group.items.length > 0, group.label + ' must have its own operational submenus')
     for (const page of group.items) assert.ok(navigationRoutes[page], 'No route is connected for ' + group.label + '/' + page)
   }
-  for (const required of ['curriculum','library','transport','inventory','facilities','visitors','institution-config','reconciliation','backup']) {
+  for (const required of ['curriculum','library','transport','inventory','facilities','visitors','reconciliation','backup']) {
     assert.ok(groupKeys.has(required), 'Missing expansion workspace: ' + required)
   }
   for (const required of ['attendance','students','employees','accounts-finance','fees','payments','receipts','payroll','examinations','class-tests','reports']) {
     assert.ok(groupKeys.has(required), 'Missing core institution workspace: ' + required)
   }
-  const menuDestinationCount = navigationCatalog.reduce((total, group) => total + group.items.length, 0)
+  const menuDestinationCount = institutionalMenu.reduce((total, group) => total + group.items.length, 0)
   assert.ok(menuDestinationCount >= 400, 'All specified submenu destinations should be present')
+  const administration = institutionalMenu.find(group => group.key === 'administration')
+  assert.deepEqual(administration?.items.map(item => item.label), [
+    'Institute Profile','Campus and Branch Management','Academic Structure & Sections','Departments & Designations',
+    'Organisational Structure','System Configuration','Approval Workflows','Policies & Rules','Administrative Audit',
+    'User Access & Invitations','Role & Permission Management','Institute Settings','Branding & Document Settings','Security & Access History',
+  ], 'Administration must contain exactly the 14 specified submenus in order')
+  assert.ok(!navigationCatalog.some(group => ['institution-config','academic-sessions','classes-sections','subjects'].includes(group.key)), 'Institution setup and academic structure must not remain separate top-level menus')
   const permittedLinkedRoutes = new Set([
     'administration:campus-and-branch-management',
     'library:digital-library','library:book-management','library:book-catalogue','library:book-categories',
@@ -174,20 +182,25 @@ check('The full institutional menu maps every submenu to a working destination',
 
 check('Sidebar workspaces follow the approved parent-section sequence for every role', () => {
   const expectedGroupOrder = [
-    'dashboard',
-    'administration','institution-config','academic-sessions','classes-sections','subjects','backup',
+    'dashboard','administration','backup',
     'students','employees','attendance','behaviour','certificates',
     'curriculum','timetable','teaching','question-bank','examinations','class-tests','library',
     'accounts-finance','fees','receivables','payments','receipts','payroll','reconciliation',
-    'communication',
-    'transport','inventory','facilities','visitors',
-    'reports','ai',
+    'communication','transport','inventory','facilities','visitors','reports','ai',
+  ]
+  const completeCatalogOrder = [
+    'dashboard','administration','institution-config','academic-sessions','classes-sections','subjects','backup',
+    'students','employees','attendance','behaviour','certificates',
+    'curriculum','timetable','teaching','question-bank','examinations','class-tests','library',
+    'accounts-finance','fees','receivables','payments','receipts','payroll','reconciliation',
+    'communication','transport','inventory','facilities','visitors','reports','ai',
   ]
   assert.deepEqual(navigationSectionDefinitions.map(section => section.key), [
     'overview','setup','people','academics','finance','communication','campus','intelligence',
   ])
   assert.deepEqual(navigationSectionDefinitions.flatMap(section => section.groupKeys), expectedGroupOrder)
   assert.deepEqual(navigationCatalog.map(group => group.key), expectedGroupOrder)
+  assert.deepEqual(institutionalMenu.map(group => group.key), completeCatalogOrder, 'Nested setup routes remain available from Administration child windows')
   for (const role of roles) {
     const groups = roleNavigationGroups(role)
     const sections = roleNavigationSections(role)

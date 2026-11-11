@@ -3,7 +3,9 @@ import { institutionalMenu } from './institutionalCatalog'
 
 export interface NavigationCatalogGroup { key:string; label:string; icon:string; items:string[]; description?:string; theme?:string }
 
-export const navigationCatalog:NavigationCatalogGroup[]=institutionalMenu.map(group=>({
+const nestedAdministrationGroups = new Set(['institution-config','academic-sessions','classes-sections','subjects'])
+
+export const navigationCatalog:NavigationCatalogGroup[]=institutionalMenu.filter(group=>!nestedAdministrationGroups.has(group.key)).map(group=>({
   key:group.key,label:group.label,icon:group.icon,description:group.description,theme:group.theme,
   items:group.items.map(item=>item.label),
 }))
@@ -80,7 +82,7 @@ export interface RoleNavigationSection { key:string; label:string; groups:RoleNa
 
 export const navigationSectionDefinitions:NavigationSectionDefinition[]=[
   {key:'overview',label:'Overview',groupKeys:['dashboard']},
-  {key:'setup',label:'Institute Setup',groupKeys:['administration','institution-config','academic-sessions','classes-sections','subjects','backup']},
+  {key:'setup',label:'Institute Setup',groupKeys:['administration','backup']},
   {key:'people',label:'People & Admissions',groupKeys:['students','employees','attendance','behaviour','certificates']},
   {key:'academics',label:'Academic Delivery',groupKeys:['curriculum','timetable','teaching','question-bank','examinations','class-tests','library']},
   {key:'finance',label:'Finance & Payroll',groupKeys:['accounts-finance','fees','receivables','payments','receipts','payroll','reconciliation']},
@@ -94,7 +96,7 @@ const navigationGroupOrder=new Map<string,number>(
 
 export function roleNavigationGroups(role:WorkspaceMenuGroup['roles'][number]):RoleNavigationGroup[]{
   return institutionalMenu
-    .filter(group=>group.roles.includes(role))
+    .filter(group=>!nestedAdministrationGroups.has(group.key)&&group.roles.includes(role))
     .map(group=>({...group,items:allowedItems(group,role).map(item=>item.label)}))
     .filter(group=>group.key==='dashboard'||group.items.length>0)
     .sort((left,right)=>(navigationGroupOrder.get(left.key)??Number.MAX_SAFE_INTEGER)-(navigationGroupOrder.get(right.key)??Number.MAX_SAFE_INTEGER))
