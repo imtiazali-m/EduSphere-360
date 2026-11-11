@@ -16,7 +16,8 @@
     "audit:route-views": "node scripts/generate-route-view-audit.mjs",
     "audit:responsive": "node scripts/generate-responsive-source-audit.mjs",
     "audit:modal-windows": "node scripts/audit-modal-windows.mjs",
-    "test:account-provisioning": "node scripts/test-account-provisioning.mjs"
+    "test:account-provisioning": "node scripts/test-account-provisioning.mjs",
+    "test:workspace-privacy": "node scripts/test-workspace-privacy.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.58.0",
