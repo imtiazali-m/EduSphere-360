@@ -105,6 +105,10 @@ async function inspectViewport({ name, width, height }) {
       await page.goto(`${baseUrl}/#/login/${role}`, { waitUntil: 'domcontentloaded' })
       await page.locator('.es-auth-page').waitFor({ state: 'visible' })
       await page.locator('.es-auth-form').first().waitFor({ state: 'visible' })
+      await page.waitForFunction(expected => {
+        const selected = document.querySelector('.es-account-type button[aria-pressed="true"] b')
+        return selected?.textContent?.trim() === expected
+      }, expectedCategory)
       const selectedCategory = (await page.locator('.es-account-type button[aria-pressed="true"] b').innerText()).trim()
       assert.equal(selectedCategory, expectedCategory, `${name}: ${role} login selected ${selectedCategory}, expected ${expectedCategory}`)
       await assertNoHorizontalOverflow(page, `${name} ${role} login`)
