@@ -65,9 +65,9 @@ const { modules, modulesForRole } = require(path.join(root, 'src/lib/modules.ts'
 const roles = ['owner', 'admin', 'teacher', 'student', 'parent', 'accountant', 'exam_officer']
 
 check('The full institutional menu maps every submenu to a working destination', () => {
-  assert.equal(navigationCatalog.length, 33, 'The complete institutional menu must contain 33 unique main workspaces')
+  assert.equal(navigationCatalog.length, 31, 'The complete institutional menu must contain 31 unique main workspaces')
   const groupKeys = new Set(navigationCatalog.map(group => group.key))
-  assert.equal(groupKeys.size, 33, 'Main workspace keys must be unique')
+  assert.equal(groupKeys.size, 31, 'Main workspace keys must be unique')
   for (const group of navigationCatalog) {
     assert.ok(group.items.length > 0, group.label + ' must have its own operational submenus')
     for (const page of group.items) assert.ok(navigationRoutes[page], 'No route is connected for ' + group.label + '/' + page)
@@ -75,11 +75,13 @@ check('The full institutional menu maps every submenu to a working destination',
   for (const required of ['curriculum','library','transport','inventory','facilities','visitors','institution-config','reconciliation','backup']) {
     assert.ok(groupKeys.has(required), 'Missing expansion workspace: ' + required)
   }
-  for (const required of ['attendance','students','employees','accounts-finance','fees','payments','receipts','payroll','examinations','class-tests','reports']) {
+  for (const required of ['attendance','people-hr','accounts-finance','fees','payments','receipts','examinations','class-tests','reports']) {
     assert.ok(groupKeys.has(required), 'Missing core institution workspace: ' + required)
   }
+  const peopleHR = navigationCatalog.find(group => group.key === 'people-hr')
+  assert.deepEqual(peopleHR?.items, ['Students','Admissions & Enrollment','Teachers','Faculty & Staff','Parents & Guardians','HR & Recruitment','Employee Contracts & Documents','Employee Performance','Payroll & Salary Records','Alumni'], 'People & HR must contain the ten approved Stage 6 destinations in order')
   const menuDestinationCount = navigationCatalog.reduce((total, group) => total + group.items.length, 0)
-  assert.ok(menuDestinationCount >= 400, 'All specified submenu destinations should be present')
+  assert.ok(menuDestinationCount >= 390, 'All specified submenu destinations should be present')
   const permittedLinkedRoutes = new Set([
     'administration:campus-and-branch-management',
     'library:digital-library','library:book-management','library:book-catalogue','library:book-categories',
@@ -176,9 +178,9 @@ check('Sidebar workspaces follow the approved parent-section sequence for every 
   const expectedGroupOrder = [
     'dashboard',
     'administration','institution-config','academic-sessions','classes-sections','subjects','backup',
-    'students','employees','attendance','behaviour','certificates',
+    'people-hr','attendance','behaviour','certificates',
     'curriculum','timetable','teaching','question-bank','examinations','class-tests','library',
-    'accounts-finance','fees','receivables','payments','receipts','payroll','reconciliation',
+    'accounts-finance','fees','receivables','payments','receipts','reconciliation',
     'communication',
     'transport','inventory','facilities','visitors',
     'reports','ai',
@@ -214,11 +216,16 @@ check('All seven roles receive focused, permission-aware workspaces', () => {
     for (const module of modulesForRole(role)) assert.ok(module.roles.includes(role), `${role} received an unauthorised module ${module.key}`)
   }
   assert.ok(!roleNavigationGroups('teacher').some(group => ['administration','institution-config','academic-sessions','classes-sections','subjects'].includes(group.key)))
-  assert.ok(roleNavigationGroups('teacher').find(group => group.key === 'employees')?.items.includes('Employee Leave Management'))
-  assert.ok(!roleNavigationGroups('student').some(group => ['administration','institution-config','employees','accounts-finance','payroll'].includes(group.key)))
+  assert.ok(roleNavigationGroups('teacher').find(group => group.key === 'attendance')?.items.includes('Leave Applications'))
+  assert.deepEqual(roleNavigationGroups('teacher').find(group => group.key === 'people-hr')?.items, ['Students','Teachers','Employee Performance'])
+  assert.deepEqual(roleNavigationGroups('student').find(group => group.key === 'people-hr')?.items, ['Students'])
+  assert.deepEqual(roleNavigationGroups('parent').find(group => group.key === 'people-hr')?.items, ['Students','Parents & Guardians'])
+  assert.deepEqual(roleNavigationGroups('accountant').find(group => group.key === 'people-hr')?.items, ['Payroll & Salary Records'])
+  assert.ok(!roleNavigationGroups('exam_officer').some(group => group.key === 'people-hr'))
+  assert.ok(!roleNavigationGroups('student').some(group => ['administration','institution-config','accounts-finance'].includes(group.key)))
   assert.ok(!roleNavigationGroups('parent').some(group => ['administration','institution-config','employees','accounts-finance','payroll'].includes(group.key)))
-  assert.ok(!roleNavigationGroups('accountant').some(group => ['employees','students','question-bank','examinations'].includes(group.key)))
-  assert.ok(!roleNavigationGroups('exam_officer').some(group => ['employees','students','accounts-finance','payroll'].includes(group.key)))
+  assert.ok(!roleNavigationGroups('accountant').some(group => ['question-bank','examinations'].includes(group.key)))
+  assert.ok(!roleNavigationGroups('exam_officer').some(group => ['accounts-finance','payroll'].includes(group.key)))
 })
 
 check('Bulk attendance uses class registers with P A L marking and atomic saves', () => {
@@ -866,12 +873,12 @@ check('GitHub-hosted release pipeline builds assets and keeps production deploy 
 
 check('Required database safeguards and Cloudflare redirects remain in the project', () => {
   const migrations = fs.readdirSync(path.join(root, 'supabase/migrations')).filter(name => name.endsWith('.sql')).sort()
-  for (const migration of ['001_initial_schema.sql', '017_public_institution_signup.sql', '018_assessment_metadata_and_result_visibility.sql', '019_phase_two_integrity_guards.sql', '020_fee_payment_date_validation.sql', '20261108053651_owner_signup_institution_details.sql', '20261109085154_faculty_employee_management.sql', '20261109092734_student_management_operations.sql', '20261109092920_student_management_scope_indexes_and_guardian_portal_read.sql', '20261109094108_student_activity_history_events.sql', '20261109094402_student_guardian_policy_consolidation_and_activity_indexes.sql', '20261109105804_institutional_platform_expansion.sql', '20261109110541_institution_attendance_bulk_register.sql', '20261109111818_institutional_policy_and_foreign_key_refinement.sql', '20261109113516_campus_scope_and_inventory_transaction_workflows.sql', '20261109113606_inventory_movement_row_count_safety_fix.sql', '20261109114108_transport_accountant_read_access.sql', '20261109125937_announcement_read_receipts.sql', '20261109130705_announcement_reads_index_and_fee_policy_cleanup.sql', '20261109150048_finance_accounting_and_payroll_workflows.sql', '20261109150654_atomic_employee_salary_profile_workflow.sql', '20261109150857_employee_own_payroll_run_read.sql', '20261109151231_atomic_institution_setting_approval.sql', '20261110082719_institutional_catalog_permissions.sql', '20261110082731_atomic_library_circulation.sql', '20261110082738_atomic_transport_allocations.sql', '20261110091600_fee_discount_approval_and_refund_processing.sql', '20261110092328_atomic_finance_journal_and_discount_limit_validation.sql']) {
+  for (const migration of ['001_initial_schema.sql', '017_public_institution_signup.sql', '018_assessment_metadata_and_result_visibility.sql', '019_phase_two_integrity_guards.sql', '020_fee_payment_date_validation.sql', '20261108053651_owner_signup_institution_details.sql', '20261109085154_faculty_employee_management.sql', '20261109092734_student_management_operations.sql', '20261109092920_student_management_scope_indexes_and_guardian_portal_read.sql', '20261109094108_student_activity_history_events.sql', '20261109094402_student_guardian_policy_consolidation_and_activity_indexes.sql', '20261109105804_institutional_platform_expansion.sql', '20261109110541_institution_attendance_bulk_register.sql', '20261109111818_institutional_policy_and_foreign_key_refinement.sql', '20261109113516_campus_scope_and_inventory_transaction_workflows.sql', '20261109113606_inventory_movement_row_count_safety_fix.sql', '20261109114108_transport_accountant_read_access.sql', '20261109125937_announcement_read_receipts.sql', '20261109130705_announcement_reads_index_and_fee_policy_cleanup.sql', '20261109150048_finance_accounting_and_payroll_workflows.sql', '20261109150654_atomic_employee_salary_profile_workflow.sql', '20261109150857_employee_own_payroll_run_read.sql', '20261109151231_atomic_institution_setting_approval.sql', '20261110082719_institutional_catalog_permissions.sql', '20261110082731_atomic_library_circulation.sql', '20261110082738_atomic_transport_allocations.sql', '20261110091600_fee_discount_approval_and_refund_processing.sql', '20261110092328_atomic_finance_journal_and_discount_limit_validation.sql', '20261111162254_stage_6_people_hr_and_payroll_controls.sql', '20261111164407_stage_6_employee_qualification_records.sql']) {
     assert.ok(migrations.includes(migration), `${migration} missing`)
   }
   const timestamped = migrations.filter(name => /^202611\d{8}_.+\.sql$/.test(name))
-  assert.equal(timestamped.length, 30, 'Expected thirty timestamped migrations including staged catalogue, library and transport refinements')
-  assert.ok(read('supabase/migrations/README.md').includes('thirty timestamped migration files'))
+  assert.equal(timestamped.length, 32, 'Expected thirty-two timestamped migrations including Stage 6 people and HR records')
+  assert.ok(read('supabase/migrations/README.md').includes('thirty-two timestamped migration files'))
   assert.equal(read('public/_redirects').trim(), '/* /index.html 200')
   const envExample = read('.env.example')
   const gitignore = read('.gitignore')
@@ -950,7 +957,7 @@ check('Unified design system is loaded last and removes global browser zoom', ()
   const viewAudit = read('docs/PHASE_1_ROUTE_VIEW_AUDIT.md')
   assert.ok(viewAudit.includes('Total evaluations:** 1478.') && viewAudit.includes('Compatibility issues:** 0.'), 'Every role-visible destination must request a supported component sub-view')
   assert.ok(viewAudit.includes('Hidden from role workspace tabs') === false, 'Role menus must not expose inaccessible internal workspace tabs')
-  assert.ok(routeAudit.includes('Owner') && routeAudit.includes('| Student | 15 | 144 |') && routeAudit.includes('Examination officer') && routeAudit.includes('Exact route matrix'), 'Exact route audit must list all seven role sections')
+  assert.ok(routeAudit.includes('Owner') && routeAudit.includes('| Student | 15 | 140 |') && routeAudit.includes('Examination officer') && routeAudit.includes('Exact route matrix'), 'Exact route audit must list all seven role sections')
   assert.ok(routeAudit.includes('Explicitly unavailable') && routeAudit.includes('acceptance pending'), 'Exact route audit must distinguish unresolved workflows')
 })
 
