@@ -965,7 +965,7 @@ check('Family-facing workspace exports and review metrics exclude internal appro
   assert.ok(workspace.includes('getWorkspaceReviewMetrics(rows,user?.role)'), 'Dashboard review metrics must use a role-aware projection')
   assert.ok(workspace.includes('pendingReviewCount!==null'), 'Pending review KPI must be hidden from non-admin roles')
   assert.ok(privacy.includes('reviewed_by') && privacy.includes('reviewed_at'), 'The privacy projection must remove review audit fields as well as approval status')
-  assert.ok(tests.includes('family dashboard metrics use public status only') && tests.includes('family exports omit approval and review audit fields'), 'Focused workspace privacy regressions are missing')
+  assert.ok(tests.includes('family dashboard metrics use public status only') && tests.includes('family exports omit every internal review field'), 'Focused workspace privacy regressions are missing')
 })
 
 check('Institutional review metadata is isolated behind owner/admin database authorization', () => {
