@@ -13,7 +13,7 @@ type Employee=RecordRow & {id:string;full_name?:string;employee_no?:string;emplo
 type SalaryProfile=RecordRow & {id:string;teacher_id:string;base_salary:number;monthly_allowances:number;monthly_deductions:number;effective_from:string;effective_to?:string|null;status:string}
 type PayrollRun=RecordRow & {id:string;period_start:string;period_end:string;pay_date?:string|null;status:string}
 type PayrollItem=RecordRow & {id:string;payroll_run_id:string;teacher_id:string;base_salary:number;allowances:number;deductions:number;advance_recovery:number;gross_pay:number;net_pay:number;payment_status:string}
-type SalaryComponent=RecordRow & {id:string;salary_profile_id:string;code:string;label:string;component_type:'allowance'|'deduction';amount:number;status:string}
+type SalaryComponent=RecordRow & {id:string;salary_profile_id:string;code:string;label:string;component_type:'allowance'|'deduction';amount:number;status:string;effective_from:string;effective_to:string|null}
 type PayrollAdjustment=RecordRow & {id:string;teacher_id:string;period_start:string;period_end:string;adjustment_type:string;amount:number;description:string;status:string}
 type Props={initialWindow?:string;onToast:(message:string,error?:boolean)=>void}
 
