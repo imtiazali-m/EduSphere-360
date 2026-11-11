@@ -61,6 +61,101 @@ const themes:Record<string,{accent:string;soft:string;ink:string}>={
  sky:{accent:'#3c91c7',soft:'#edf8ff',ink:'#245e83'},gold:{accent:'#ac8428',soft:'#fbf6e8',ink:'#77601f'},
  red:{accent:'#c65b57',soft:'#fff0ef',ink:'#8e3834'}
 }
+
+type RecordMetaKey='reference_code'|'status'|'approval_status'|'record_date'|'due_date'|'amount'|'quantity'
+const recordMetaLabels:Record<RecordMetaKey,string>={
+ reference_code:'Reference',status:'Status',approval_status:'Approval',record_date:'Date',
+ due_date:'Due date',amount:'Amount (PKR)',quantity:'Quantity'
+}
+const recordMetaColumnPlan:Record<string,RecordMetaKey[]>={
+ ai:['reference_code','status','approval_status','record_date'],
+ administration:['reference_code','status','approval_status','record_date'],
+ 'academic-sessions':['reference_code','status','record_date','due_date'],
+ 'classes-sections':['reference_code','status','quantity'],
+ subjects:['reference_code','status','record_date'],
+ students:['reference_code','status','record_date'],
+ employees:['reference_code','status','record_date'],
+ finance:['reference_code','status','approval_status','record_date','amount'],
+ fees:['reference_code','status','approval_status','due_date','amount'],
+ receivables:['reference_code','status','due_date','amount'],
+ payments:['reference_code','status','approval_status','record_date','amount'],
+ receipts:['reference_code','status','record_date','amount'],
+ payroll:['reference_code','status','approval_status','record_date','amount'],
+ attendance:['reference_code','status','record_date'],
+ timetable:['reference_code','status','record_date','due_date'],
+ teaching:['reference_code','status','due_date'],
+ behaviour:['reference_code','status','record_date'],
+ communication:['reference_code','status','due_date'],
+ question_bank:['reference_code','status','approval_status'],
+ examinations:['reference_code','status','record_date','due_date'],
+ tests:['reference_code','status','record_date','due_date'],
+ reports:['reference_code','status','record_date','due_date'],
+ certificates:['reference_code','status','record_date'],
+ curriculum:['reference_code','status','record_date'],
+ library:['reference_code','status','quantity'],
+ transport:['reference_code','status','quantity','amount'],
+ inventory:['reference_code','status','quantity','amount'],
+ facilities:['reference_code','status','quantity'],
+ visitors:['reference_code','status','record_date'],
+ institution_config:['reference_code','status','approval_status'],
+ reconciliation:['reference_code','status','approval_status','record_date','amount'],
+ backup:['reference_code','status','approval_status','record_date'],
+}
+const workspaceTableFieldOrder:Record<string,string[]>={
+ 'academic-sessions':['session_code','start_date','end_date','student_rollover_status'],
+ 'classes-sections':['grade_level','section','class_teacher','capacity'],
+ subjects:['subject_code','subject_category','grade_level','credit_hours'],
+ ai:['insight_type','source_dataset','confidence_percent','human_review'],
+ administration:['entity_code','contact_name','email','phone'],
+ academic_setup:['academic_level','academic_year','start_date','end_date'],
+ students:['student_reference','class_name','guardian_name','document_type'],
+ employees:['employee_number','employee_category','department','designation'],
+ finance:['account_code','account_category','transaction_type','debit'],
+ fees:['fee_category','fee_frequency','class_name','academic_session'],
+ receivables:['invoice_reference','student_reference','ageing_bucket','follow_up_date'],
+ payments:['payment_method','transaction_reference','verification_status','payment_date'],
+ receipts:['receipt_number','payment_reference','issued_to','issue_date'],
+ payroll:['employee_reference','salary_component','pay_period','base_salary'],
+ attendance:['register_period','marking_source','marking_status','device_reference'],
+ timetable:['weekday','period_label','start_time','end_time'],
+ teaching:['subject_name','class_name','chapter','submission_date'],
+ behaviour:['behaviour_type','severity','observed_date','action_taken'],
+ communication:['channel','audience','delivery_status','scheduled_at'],
+ question_bank:['question_type','subject_name','chapter','difficulty'],
+ examinations:['exam_type','class_name','subject_name','exam_date'],
+ tests:['test_format','subject_name','class_name','test_date'],
+ reports:['report_type','date_from','date_to','schedule_frequency'],
+ certificates:['certificate_type','certificate_number','recipient_name','issue_date'],
+ curriculum:['education_level','subject_name','chapter','coverage_status'],
+ library:['isbn','author','category','total_copies'],
+ transport:['registration_number','route_code','driver_name','seat_capacity'],
+ inventory:['sku','item_category','supplier','unit_cost'],
+ facilities:['room_number','facility_type','building','availability_status'],
+ visitors:['visitor_name','organization','host_name','entry_time'],
+ institution_config:['setting_category','setting_key','permission_scope','access_role'],
+ reconciliation:['account_name','statement_period','matched_total','variance'],
+ backup:['backup_type','backup_window','integrity_check','recovery_status'],
+}
+const workspaceRecordLabels:Record<string,string>={
+ 'academic-sessions':'Academic session','classes-sections':'Class / section',subjects:'Subject',
+ students:'Student',employees:'Employee',attendance:'Attendance register',behaviour:'Behaviour entry',
+ certificates:'Certificate',curriculum:'Learning resource',timetable:'Timetable entry',teaching:'Learning activity',
+ 'question-bank':'Question',examinations:'Examination',tests:'Class test',library:'Library item',
+ finance:'Ledger entry',fees:'Fee record',receivables:'Receivable',payments:'Payment',receipts:'Receipt',
+ payroll:'Payroll entry',reconciliation:'Reconciliation',communication:'Communication item',
+ transport:'Transport record',inventory:'Stock item',facilities:'Facility',visitors:'Visitor',
+ administration:'Institution record',institution_config:'Configuration item',backup:'Data job',ai:'Insight record',
+}
+const workspaceLayouts:Record<string,string>={
+ administration:'governance',institution_config:'governance',backup:'governance',
+ 'academic-sessions':'academic','classes-sections':'academic',academic_setup:'academic',subjects:'academic',
+ curriculum:'academic',timetable:'academic',teaching:'academic',question_bank:'assessment',examinations:'assessment',tests:'assessment',
+ students:'people',employees:'people',attendance:'people',behaviour:'people',certificates:'people',
+ finance:'ledger',fees:'ledger',receivables:'ledger',payments:'ledger',receipts:'ledger',payroll:'ledger',reconciliation:'ledger',
+ communication:'communication',library:'resource',transport:'operations',inventory:'operations',facilities:'operations',visitors:'operations',
+ ai:'intelligence',reports:'intelligence',
+}
+
 const displayDate=(value:unknown)=>typeof value==='string'&&value?new Date(value+'T00:00:00').toLocaleDateString():'—'
 const money=(value:unknown)=>value===null||value===undefined?'—':new Intl.NumberFormat('en-PK',{style:'currency',currency:'PKR',maximumFractionDigits:0}).format(Number(value)||0)
 const isOverview=(key:string,label:string)=>/dashboard|overview|intelligence|analytics/i.test(key+' '+label)
@@ -100,7 +195,17 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
  const [quantity,setQuantity]=useState('')
  const [payloadData,setPayloadData]=useState<Record<string,unknown>>({})
  const structuredFields=workspaceFields[group.key]??workspaceFields[group.dataModule]??[]
- const tableFields=structuredFields.slice(0,4)
+ const preferredFieldKeys=workspaceTableFieldOrder[group.key]??workspaceTableFieldOrder[group.dataModule]??structuredFields.map(field=>field.key)
+ const tableFields=preferredFieldKeys.flatMap(key=>{
+  const field=structuredFields.find(candidate=>candidate.key===key)
+  return field?[field]:[]
+ }).slice(0,4)
+ const metaColumnKeys=recordMetaColumnPlan[group.key]??recordMetaColumnPlan[group.dataModule]??['reference_code','status','record_date']
+ const tableMetaColumns=metaColumnKeys
+  .filter(key=>!(['student','parent'].includes(user?.role??'')&&key==='approval_status'))
+  .map(key=>({key,label:recordMetaLabels[key]}))
+ const recordLabel=workspaceRecordLabels[group.key]??workspaceRecordLabels[group.dataModule]??'Record'
+ const workspaceLayout=workspaceLayouts[group.key]??workspaceLayouts[group.dataModule]??'registry'
  const theme=themes[group.theme]||themes.blue
  const canAdmin=Boolean(user&&['owner','admin'].includes(user.role))
  const canWrite=Boolean(user&&(
@@ -206,7 +311,7 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
  function exportWord(){exportDocx(baseName+'.docx',group.label+' — '+item.label,exportRows as unknown as Record<string,unknown>[],columns)}
  function print(){try{printOfficeReport(group.label+' — '+item.label,exportRows as unknown as Record<string,unknown>[],columns,user?.institutionName??'EduSphere 360')}catch(error){onToast(error instanceof Error?error.message:'Print view could not be opened.',true)}}
 
- return <main className="page-content ed360-module-page ed360-institutional-workspace" style={{'--workspace-accent':theme.accent,'--workspace-soft':theme.soft,'--workspace-ink':theme.ink} as CSSProperties}>
+ return <main className="page-content ed360-module-page ed360-institutional-workspace" data-workspace-group={group.key} data-workspace-theme={group.theme} data-workspace-layout={workspaceLayout} style={{'--workspace-accent':theme.accent,'--workspace-soft':theme.soft,'--workspace-ink':theme.ink} as CSSProperties}>
   <header className="ed360-workspace-hero">
    <div className="ed360-workspace-hero-icon"><Activity size={21}/></div>
    <div className="ed360-workspace-hero-copy"><span>{group.label.toUpperCase()} / INSTITUTIONAL WORKSPACE</span><h1>{group.label}</h1><p>{group.description}</p></div>
@@ -248,8 +353,8 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
   <section className="table-card ed360-workspace-record-card">
    <div className="table-toolbar"><div className="table-count"><strong>{filtered.length.toLocaleString()}</strong> {item.label.toLowerCase()} <span>·</span> Institution scope</div><span className="ed360-table-refresh"><button type="button" onClick={()=>void load()}>Refresh records <ArrowUpRight size={13}/></button></span></div>
    {loading?<div className="ed360-workspace-empty">Loading institution records…</div>:filtered.length===0?<div className="ed360-workspace-empty"><strong>No records in this workspace yet</strong><span>Records will appear here after they are created or imported. No sample data is being shown.</span>{canWrite&&<button type="button" className="button button-primary" onClick={()=>resetForm()}><Plus size={15}/> Create first record</button>}</div>:
-   <div className="table-scroll"><table><thead><tr><th>Reference</th><th>Record</th><th>Status</th><th>Approval</th><th>Date</th><th>Due</th><th>Amount</th>{tableFields.map(field=><th key={field.key}>{field.label}</th>)}<th>Actions</th></tr></thead><tbody>
-    {filtered.map(row=><tr key={row.id}><td>{row.reference_code||'—'}</td><td><button className="ed360-record-open" type="button" onClick={()=>setDetail(row)}>{row.title}</button><small className="ed360-record-subtitle">{row.description||row.record_type.replaceAll('-',' ')}</small></td><td><span className={'ed360-state-pill state-'+row.status}>{row.status.replaceAll('_',' ')}</span></td><td>{row.approval_status.replaceAll('_',' ')}</td><td>{displayDate(row.record_date)}</td><td>{displayDate(row.due_date)}</td><td>{money(row.amount)}</td>{tableFields.map(field=><td key={field.key}>{String(row.payload?.[field.key]??'—')}</td>)}<td><div className="ed360-row-actions"><button type="button" onClick={()=>setDetail(row)}>Open</button>{canWrite&&<button type="button" onClick={()=>resetForm(row)}>Edit</button>}</div></td></tr>)}
+   <div className="table-scroll"><table aria-label={group.label+' '+item.label+' register'}><thead><tr><th scope="col">{recordLabel}</th>{tableMetaColumns.map(column=><th key={column.key} scope="col">{column.label}</th>)}{tableFields.map(field=><th key={field.key} scope="col">{field.label}</th>)}<th scope="col">Actions</th></tr></thead><tbody>
+    {filtered.map(row=><tr key={row.id}><td><button className="ed360-record-open" type="button" onClick={()=>setDetail(row)}>{row.title}</button><small className="ed360-record-subtitle">{row.description||row.record_type.replaceAll('-',' ')}</small></td>{tableMetaColumns.map(column=><td key={column.key} data-column={column.key}>{column.key==='reference_code'?row.reference_code||'—':column.key==='status'?<span className={'ed360-state-pill state-'+row.status}>{row.status.replaceAll('_',' ')}</span>:column.key==='approval_status'?row.approval_status.replaceAll('_',' '):column.key==='record_date'?displayDate(row.record_date):column.key==='due_date'?displayDate(row.due_date):column.key==='amount'?money(row.amount):row.quantity??'—'}</td>)}{tableFields.map(field=><td key={field.key} data-column={field.key}>{String(row.payload?.[field.key]??'—')}</td>)}<td><div className="ed360-row-actions"><button type="button" onClick={()=>setDetail(row)}>Open</button>{canWrite&&<button type="button" onClick={()=>resetForm(row)}>Edit</button>}</div></td></tr>)}
    </tbody></table></div>}
   </section>
   {showForm&&<div className="modal-backdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setShowForm(false)}}><section className="modal-card ed360-context-form" role="dialog" aria-modal="true" aria-labelledby="ed360-form-heading">
