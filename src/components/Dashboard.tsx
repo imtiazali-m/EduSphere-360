@@ -175,7 +175,6 @@ function Overview({ onNavigate }: { onNavigate: (key: string) => void }) {
   const [classScope, setClassScope] = useState('')
   const available = useMemo(() => modulesForRole(user!.role), [user?.role])
   const visibleGroups = useMemo(() => roleNavigationGroups(user!.role), [user?.role])
-  const visibleSections = useMemo(() => roleNavigationSections(user!.role), [user?.role])
 
   useEffect(() => {
     let live = true
@@ -594,6 +593,7 @@ export function Dashboard({ onToast }: Props) {
 
   const available = useMemo(() => modulesForRole(user!.role), [user?.role])
   const visibleGroups = useMemo(() => roleNavigationGroups(user!.role), [user?.role])
+  const visibleSections = useMemo(() => roleNavigationSections(user!.role), [user?.role])
   const searchResults = useMemo(() => {
     const query = searchText.trim().toLowerCase()
     if (!query) return []
