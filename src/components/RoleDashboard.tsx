@@ -28,17 +28,16 @@ const TABLES_BY_ROLE: Record<AppRole, string[]> = {
   admin: [
     'students', 'teachers', 'campuses', 'attendance', 'employee_attendance',
     'fee_invoices', 'fee_payments', 'exams', 'exam_results', 'workflow_approvals',
-    'announcements', 'institutional_audit_events', 'academic_sessions',
-    'work_tasks', 'employee_leave_requests',
+    'announcements', 'academic_sessions', 'work_tasks', 'employee_leave_requests',
   ],
   accountant: [
     'fee_invoices', 'fee_payments', 'finance_accounts', 'finance_journals',
-    'finance_journal_lines', 'academic_sessions', 'work_tasks',
+    'finance_journal_lines', 'academic_sessions',
   ],
   teacher: [
     'teachers', 'teacher_assignments', 'timetable_entries', 'attendance',
     'assignments', 'assignment_submissions', 'exams', 'exam_results',
-    'work_tasks', 'announcements', 'academic_sessions',
+    'announcements', 'academic_sessions',
   ],
   student: [
     'students', 'attendance', 'timetable_entries', 'assignments',
@@ -337,7 +336,7 @@ export function RoleDashboard({ onNavigate }: Props) {
     metrics.push(
       { label: 'Admissions this month', value: known('students') ? formatCount(admissionCount) : '—', hint: monthName, icon: GraduationCap, tone: 'blue', route: 'students:admissions' },
       { label: 'Active staff', value: known('teachers') ? formatCount(activeStaff) : '—', hint: known('teachers') ? formatCount(teachers.length) + ' total team records' : 'Staff data unavailable', icon: Users, tone: 'green', route: 'teachers' },
-      { label: 'Today’s attendance', value: known('attendance') ? (todayAttendancePercent === null ? '—' : todayAttendancePercent + '%') : '—', hint: known('attendance', 'employee_attendance') ? (totalTodayAttendance ? formatCount(presentToday) + ' present of ' + formatCount(totalTodayAttendance) + ' student and staff records' : 'No attendance recorded today') : 'Attendance unavailable', icon: CalendarCheck, tone: 'teal', route: 'attendance:students' },
+      { label: 'Today’s attendance', value: known('attendance', 'employee_attendance') ? (todayAttendancePercent === null ? '—' : todayAttendancePercent + '%') : '—', hint: known('attendance', 'employee_attendance') ? (totalTodayAttendance ? formatCount(presentToday) + ' present of ' + formatCount(totalTodayAttendance) + ' student and staff records' : 'No attendance recorded today') : 'Attendance unavailable', icon: CalendarCheck, tone: 'teal', route: 'attendance:students' },
       { label: 'Pending approvals', value: known('workflow_approvals') ? formatCount(pendingApprovals.length) : '—', hint: 'Requests awaiting a decision', icon: ShieldAlert, tone: 'rose', route: 'institutional:administration:approval-and-workflows' },
       { label: 'Operational alerts', value: known('work_tasks', 'employee_leave_requests') ? formatCount(operationalAlerts) : '—', hint: 'Overdue tasks and pending leave', icon: CircleAlert, tone: 'amber', route: 'work_tasks' },
     )
@@ -536,7 +535,7 @@ export function RoleDashboard({ onNavigate }: Props) {
       const overdue = invoices.filter(invoice => outstandingInvoiceBalance(invoice) > 0 && recordDay(invoice.due_date) && recordDay(invoice.due_date) < today)
       return <div className="rd-grid rd-grid-wide">
         <Panel title="Monthly financial summary" description="Successful fee receipts and posted expenses from the last six months." icon={TrendingUp} className="rd-finance-panel">
-          {!known('fee_payments', 'finance_accounts', 'finance_journals', 'finance_journal_lines') ? <EmptyState loading={loading} message="Financial trend data is unavailable."/> : <>
+          {!known('fee_payments', 'finance_accounts', 'finance_journals', 'finance_journal_lines') ? <EmptyState loading={loading} message="Financial trend data is unavailable."/> : collections.every(value => value === 0) && expenses.every(value => value === 0) ? <EmptyState loading={false} message="No successful fee receipts or posted expenses were recorded in the last six months."/> : <>
             <div className="rd-chart-legend"><span><i className="collection"/>Fee collections</span><span><i className="expense"/>Posted expenses</span></div>
             <FinanceBars months={months} collections={collections} expenses={expenses}/>
             <div className="rd-finance-totals"><span>Collected this month <strong>{formatMoney(collections[5] ?? 0)}</strong></span><span>Expenses this month <strong>{formatMoney(expenses[5] ?? 0)}</strong></span></div>
