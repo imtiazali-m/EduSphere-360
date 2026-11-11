@@ -44,6 +44,13 @@ test('explicitly flagged unlinked legacy tasks retain normalized email access', 
   }, user), true)
 })
 
+test('unmatched historical task rows do not gain automatic email access', () => {
+  const sql = fs.readFileSync(path.join(root, 'supabase/migrations/20261111140500_work_task_stable_assignee_identity.sql'), 'utf8')
+  assert.match(sql, /assigned_to_legacy_email_access boolean NOT NULL DEFAULT false/i)
+  assert.equal(sql.includes("UPDATE public.work_tasks\\nSET assigned_to_legacy_email_access = true"), false)
+  assert.match(sql, /Leave unmatched or ambiguous historical rows unassigned and inaccessible/i)
+})
+
 test('an unlinked task without the legacy access flag fails closed', () => {
   assert.equal(isWorkTaskVisibleToAssignee({
     ...task,
