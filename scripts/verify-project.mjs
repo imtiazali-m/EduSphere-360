@@ -16,6 +16,7 @@ check('Vite development and production scripts exist', () => {
   assert.equal(packageJson.scripts.dev, 'vite --host 0.0.0.0')
   assert.equal(packageJson.scripts.build, 'tsc -b && vite build')
   assert.equal(packageJson.scripts.typecheck, 'tsc -b --pretty')
+  assert.equal(packageJson.scripts['audit:navigation'], 'node scripts/generate-navigation-route-audit.mjs')
 })
 
 const requiredFiles = [
@@ -28,7 +29,7 @@ const requiredFiles = [
   'src/components/RecordModule.tsx', 'src/components/FacultyWorkspace.tsx', 'src/styles/faculty-workspace.css', 'src/components/ReportsModule.tsx', 'src/components/ProfileModule.tsx', 'src/context/AuthContext.tsx', 'src/lib/auth.ts',
   'src/lib/data.ts', 'src/lib/navigationAccess.ts', 'src/lib/userErrors.ts', 'scripts/test-user-errors.mjs',
   'src/lib/finance.ts', 'scripts/test-finance.mjs', 'src/lib/fileAccess.ts', 'scripts/test-file-access.mjs',
-  'src/lib/navigationCatalog.ts', 'src/lib/navigationRoutes.ts', 'src/components/NotificationCenter.tsx', 'src/styles/notification-center.css', 'public/_redirects',
+  'src/lib/navigationCatalog.ts', 'src/lib/navigationRoutes.ts', 'scripts/generate-navigation-route-audit.mjs', 'docs/PHASE_1_EXACT_ROUTE_AUDIT.md', 'src/components/NotificationCenter.tsx', 'src/styles/notification-center.css', 'public/_redirects',
   'supabase/migrations/20261109125937_announcement_read_receipts.sql',
   'supabase/migrations/20261109150048_finance_accounting_and_payroll_workflows.sql',
   'supabase/migrations/20261109150654_atomic_employee_salary_profile_workflow.sql',
@@ -837,6 +838,10 @@ check('Unified design system is loaded last and removes global browser zoom', ()
   const roleMenu = read('docs/PHASE_1_ROLE_MENU_INVENTORY.md')
   assert.ok(roleMenu.includes('430 submenu entries') && roleMenu.includes('Examination officer') && roleMenu.includes('| Owner | 33 | 430 |') && roleMenu.includes('| Teacher / employee | 18 | 203 |') && roleMenu.includes('| Student | 15 | 146 |') && roleMenu.includes('| Parent / guardian | 15 | 139 |') && roleMenu.includes('| Accountant | 12 | 132 |') && roleMenu.includes('| Examination officer | 7 | 89 |'), 'Complete role menu inventory must cover all submenu entries and all seven role totals')
   assert.ok(read('docs/PHASE_2_DESIGN_SYSTEM.md').includes('Core colour tokens'), 'Phase 2 design specification is missing')
+  const routeAudit = read('docs/PHASE_1_EXACT_ROUTE_AUDIT.md')
+  assert.ok(routeAudit.includes('1,569 exact role-aware route evaluations') || routeAudit.includes('1569 exact role-aware route evaluations'), 'Exact route audit must resolve each visible role/menu destination')
+  assert.ok(routeAudit.includes('Owner') && routeAudit.includes('Examination officer') && routeAudit.includes('Exact route matrix'), 'Exact route audit must list all seven role sections')
+  assert.ok(routeAudit.includes('Explicitly unavailable') && routeAudit.includes('acceptance pending'), 'Exact route audit must distinguish unresolved workflows')
 })
 
 console.log('\nRole workspace counts:')
