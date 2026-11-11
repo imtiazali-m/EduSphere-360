@@ -143,6 +143,12 @@ DECLARE
   v_identity_changed boolean := false;
   v_deleted_identity boolean := false;
 BEGIN
+  -- A task belongs to one institution for its lifetime. Cross-tenant transfers
+  -- must create a new destination task so its assignee is resolved in that tenant.
+  IF TG_OP = 'UPDATE' AND NEW.institution_id IS DISTINCT FROM OLD.institution_id THEN
+    RAISE EXCEPTION 'Institutional work tasks cannot be transferred between institutions. Create a new task in the destination institution.';
+  END IF;
+
   IF TG_OP = 'INSERT' THEN
     v_email_changed := true;
   ELSE
