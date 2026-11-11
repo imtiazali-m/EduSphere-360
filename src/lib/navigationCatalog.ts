@@ -12,7 +12,7 @@ const roleItemAllow:Record<string,Partial<Record<string,string[]>>>={
   students:{
     student:['Student Profiles','Class and Section Assignments','Student ID Cards','Student Performance Charts','Student Reports'],
     parent:['Student Profiles','Class and Section Assignments','Student ID Cards','Student Performance Charts','Student Reports'],
-    teacher:['Student Directory','Student Profiles','Class and Section Assignments','Student Documentation','Student History','Student Performance Charts','Student Reports'],
+    teacher:['Student Directory','Student Profiles','Class and Section Assignments','Student History','Student Performance Charts','Student Reports'],
   },
   employees:{
     teacher:['Employee Profiles','Employee Attendance','Employee Leave Management'],
