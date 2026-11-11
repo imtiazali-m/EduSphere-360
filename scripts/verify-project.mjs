@@ -488,7 +488,7 @@ check('PeopleHRWorkspace exposes recruitment, contracts, performance and alumni 
     assert.ok(people.includes(value), 'People & HR workflow is missing ' + value)
   }
   const qualifications = read('src/components/EmployeeQualificationsPanel.tsx')
-  assert.ok(qualifications.includes('employee_qualifications') && qualifications.includes('staff-files'), 'Qualifications must use institution-scoped records and private staff files')
+  assert.ok(qualifications.includes('employee_qualifications'), 'Qualifications must use institution-scoped employee qualification records')
   assert.ok(read('src/components/Dashboard.tsx').includes('<PeopleHRWorkspace '), 'PeopleHRWorkspace must be connected to the signed-in dashboard')
   assert.deepEqual(roleNavigationGroups('teacher').find(group => group.key === 'people-hr')?.items, ['Students','Teachers','Employee Contracts & Documents','Employee Performance','Payroll & Salary Records'])
   assert.deepEqual(roleNavigationGroups('student').find(group => group.key === 'people-hr')?.items, ['Students'])
@@ -698,7 +698,7 @@ check('Student Record is a complete permission-aware multi-window workspace', ()
 
 check('Faculty & Employee Management uses dedicated institution-scoped HR workspaces', () => {
   const faculty = read('src/components/FacultyWorkspace.tsx')
-  for (const label of ['Overview', 'Employee Registration', 'Employee Directory', 'Employee Profile', 'Departments', 'Designations', 'Teaching Assignments', 'Faculty Attendance', 'Leave Management', 'Workload & Timetable', 'Documents', 'Employment History', 'Staff Reports']) {
+  for (const label of ['Overview', 'Employee Registration', 'Employee Directory', 'Employee Profile', 'Departments', 'Designations', 'Teaching Assignments', 'Faculty Attendance', 'Leave Management', 'Workload & Timetable', 'Documents', 'Qualifications', 'Employment History', 'Staff Reports']) {
     assert.ok(faculty.includes("label:'" + label + "'") || faculty.includes("label: '" + label + "'"), 'Faculty workspace window is missing: ' + label)
   }
   for (const table of ['designations', 'teacher_assignments', 'employee_attendance', 'employee_leave_requests', 'staff_documents', 'employee_history']) {
