@@ -146,7 +146,7 @@ A separate backend-focused change now addresses the P1 teacher account-linking d
 - The Account Management form explains that the employee record must first be saved with the same email.
 - Added pure identity-guard regression coverage for normalization, ILIKE wildcard escaping, missing/ambiguous/already-linked employees and returned-row verification.
 - Dedicated guard workflow passed on the PR head. The main repository verifier and production Vite build also passed on the same PR head.
-- Production deployment was skipped. The live `create-user` Edge Function is not updated by this PR; authenticated disposable-account E2E and rollback verification remain mandatory before deploying it.
+- The dedicated guard tests and the full project verifier/production Vite build passed on the PR head. Production deployment was skipped. The live `create-user` Edge Function is not updated by this PR; authenticated disposable-account E2E and rollback verification remain mandatory before deploying it.
 
 This PR is independent of PR #15's visual refresh and PR #17's student-admission workspace. It must be reviewed/merged as a backend fix without changing the latter PRs' dependency order.
 
