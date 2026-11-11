@@ -53,7 +53,11 @@ These currently use institution-scoped `institutional_records` CRUD with group-s
 
 A successful route audit remains source-level evidence only; it is not a browser, API authorization or backend transaction test. The generated artifact must be checked with the current run linked from PR #15.
 
-## 4. Menu and route inventory
+## 4. Component sub-view compatibility
+
+The release workflow now checks each role-visible destination through the shell target calculation and validates its requested sub-view against the receiving component's actual view contract and role-specific internal tabs. It writes `docs/PHASE_1_ROUTE_VIEW_AUDIT.md` and uploads the `edusphere360-route-view-audit` artifact. This catches a menu that routes to a component but requests a tab that does not exist or is hidden from that role. This remains static source-level evidence; actual rendering, API authorization and persistence still require browser acceptance.
+
+## 5. Menu and route inventory
 
 The current institutional catalogue contains **33 top-level menu groups** and the project verifier enforces a catalogue of at least **400 submenu destinations**. The menu is intentionally broad, covering:
 
@@ -106,7 +110,7 @@ The current route map intentionally identifies unavailable destinations in the f
 
 The correct next action for each gap is to inspect its schema, existing functions, authorization model, provider dependencies and adjacent workflows; then either complete the workflow or keep the route explicitly unavailable. Do not create a visual-only screen that pretends an external integration or transaction has completed.
 
-## 5. Existing data modules and workspace coverage
+## 6. Existing data modules and workspace coverage
 
 The source includes configured generic data modules for core entities such as students, faculty/staff, attendance, examinations, exam results, fee invoices, assignments/submissions, timetable and announcements. Dedicated components exist for several high-value areas, including administration, student/faculty management, attendance, finance, payroll, governance, reports, notifications and selected campus operations.
 
@@ -118,7 +122,7 @@ The module audit must classify every destination with these separate states:
 - **Unavailable:** explicitly shown as not implemented/connected; do not describe as delivered.
 - **External dependency:** provider setup and verified delivery are required before an integration can be called active.
 
-## 6. Cloud, data and security baseline
+## 7. Cloud, data and security baseline
 
 Read-only baseline recorded before the current design work:
 
@@ -130,7 +134,7 @@ Read-only baseline recorded before the current design work:
 - A historical student insert/save attempt returned a Supabase 403 RLS error (`new row violates row-level security policy for table "students"`). Reproduce with a real authorized owner account and inspect the full policy path before changing it.
 - The latest project CI build and verifier passed on the working branch. Production Cloudflare deployment and seven-role authenticated browser E2E were not performed as part of that CI result.
 
-## 7. Required acceptance matrix before a module can be called complete
+## 8. Required acceptance matrix before a module can be called complete
 
 | Test family | Required evidence |
 |---|---|
@@ -144,11 +148,11 @@ Read-only baseline recorded before the current design work:
 | Responsive and accessibility | Check desktop/tablet/mobile, keyboard navigation, focus visibility, labels, empty/loading/error states and readable data tables |
 | External integrations | Use test credentials and provider-confirmed delivery; never display “connected” based only on a saved configuration |
 
-## 8. Complete role menu appendix
+## 9. Complete role menu appendix
 
 The detailed destination appendix is recorded in `docs/PHASE_1_ROLE_MENU_INVENTORY.md`. It lists all 430 submenu labels, declared group roles, individual role allow-lists, dashboard role exclusions, and explicit unavailable route families. It computes source-level menu visibility for each role: Owner 430; Administrator 430; Teacher/employee 203; Student 144; Parent/guardian 139; Accountant 132; Examination Officer 89. These are navigation visibility counts, not counts of working features. Every route still needs exact resolver execution and workflow acceptance.
 
-## 9. Phase 1 disposition
+## 10. Phase 1 disposition
 
 **Static source and route audit: documented.** The 33-group catalogue, seven-role filtering approach, route dispatch, explicit unavailable destinations, core workspace inventory and known cloud risks have been recorded.
 
