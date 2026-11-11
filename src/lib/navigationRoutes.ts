@@ -318,14 +318,16 @@ function dedicatedRoute(groupKey: string, itemKey: string): string | undefined {
     if (itemKey === 'teaching-materials' || itemKey === 'lesson-plans') return 'operations:curriculum:units'
     if (itemKey === 'downloadable-attachments') return 'files'
   }
-  if (groupKey === 'examinations' || groupKey === 'class-tests') {
+  if (groupKey === 'examinations') {
+    return 'institutional:examinations:' + itemKey
+  }
+  if (groupKey === 'class-tests') {
     if (['marks-entry','marks-verification','result-processing','report-cards','merit-lists','result-publishing','result-corrections','test-results','performance-analysis','student-wise-test-history'].includes(itemKey)) {
       const view = ['report-cards','merit-lists','result-publishing','test-results','performance-analysis'].includes(itemKey) ? 'published'
         : ['marks-verification','result-processing','result-corrections'].includes(itemKey) ? 'review' : 'all'
       return 'exam_results:' + view
     }
     if (itemKey.includes('report')) return 'reports:academics'
-    if (['examination-progress','examination-history','class-test-dashboard','test-schedule','online-tests','written-tests','test-questions'].includes(itemKey)) return 'exams:calendar'
     return 'exams:' + (itemKey.includes('upcoming') ? 'upcoming' : itemKey.includes('completed') ? 'completed' : 'calendar')
   }
   if (groupKey === 'fees' || groupKey === 'receivables' || groupKey === 'payments' || groupKey === 'receipts') {
@@ -400,6 +402,7 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
   if (groupKey === 'visitors' && ['visitor-approvals','visitor-notifications','visitor-reports'].includes(itemKey)) return 'unavailable:visitors:' + itemKey
   if (groupKey === 'timetable' && ['teacher-availability','substitution-management','timetable-publishing','class-coverage','engaged-classes'].includes(itemKey)) return 'unavailable:timetable:' + itemKey
   if (groupKey === 'examinations' && ['invigilation-management','automatic-checking'].includes(itemKey)) return 'unavailable:examinations:' + itemKey
+  if (groupKey === 'examinations' && ['examination-programs','examination-timetable','question-bank','online-tests-and-quizzes','marks-entry','grades-and-grading-system','results-and-result-approval','report-cards','examination-reports'].includes(itemKey)) return 'institutional:examinations:' + itemKey
   if (groupKey === 'examinations' && itemKey === 'examination-rooms') return 'admin:rooms'
   if (groupKey === 'class-tests' && ['online-tests','written-tests','test-questions'].includes(itemKey)) return 'unavailable:class-tests:' + itemKey
   if (groupKey === 'fees' && itemKey === 'online-payments') return 'unavailable:fees:online-payments'

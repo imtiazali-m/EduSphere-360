@@ -12,6 +12,7 @@ import './styles/design-system.css'
 import './styles/visual-refresh.css'
 import './styles/navigation-refinement.css'
 import './styles/student-admission-workspace.css'
+import './styles/examination-workspace.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

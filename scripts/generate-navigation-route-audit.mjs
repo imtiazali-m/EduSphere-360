@@ -67,7 +67,7 @@ for (const token of [
   '<AdministrationModule ', '<AccountsModule ', '<FilesModule ', '<ReportsModule ',
   '<FinanceWorkspace ', '<PayrollWorkspace ', '<GovernanceWorkspace ',
   '<InstitutionOperationsWorkspace ', '<LinkedOperationsWorkspace ',
-  '<InstitutionalWorkspace ', '<FacultyWorkspace ', '<RecordModule ',
+  '<InstitutionalWorkspace ', '<AssessmentWorkspace ', '<FacultyWorkspace ', '<RecordModule ',
 ]) {
   if (!dashboardSource.includes(token)) throw new Error('Dashboard dispatcher no longer contains ' + token)
 }
@@ -84,6 +84,7 @@ const resolveDispatcher = (route) => {
   if (route.startsWith('attendance:')) return 'AttendanceWorkspace'
   if (route.startsWith('institutional:')) {
     const key = route.slice('institutional:'.length)
+    if (key.startsWith('examinations:')) return 'AssessmentWorkspace'
     return linkedWorkspaceKeys.includes(key) ? 'LinkedOperationsWorkspace' : 'InstitutionalWorkspace'
   }
   if (route.startsWith('employees:')) return 'FacultyWorkspace'

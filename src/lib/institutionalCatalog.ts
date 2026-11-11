@@ -65,13 +65,13 @@ export const institutionalMenu:WorkspaceMenuGroup[]=[
  group('teaching','Teaching, Homework and Assignments','Lesson delivery, homework, coursework, submissions, grading, teacher review and student feedback.','BookOpenCheck','violet','teaching',family,[
   'Teaching Dashboard','Homework','Create Assignment','Assignment Design and Management','Student Submissions','Teacher Review','Marks and Feedback','Teaching Materials','Lesson Plans','Homework Calendar','Pending Assignments','Pending Reviews','Assignment History','Assignment Reports','Downloadable Attachments'
  ]),
- group('question-bank','Question Bank and Question Papers','Structured question pools, review, paper design, randomized selection, configurable templates and version history.','FileQuestion','indigo','question_bank',exams,[
+ group('question-bank','Question Bank and Question Papers','Legacy question-bank entry consolidated into the Stage 9 examination workspace.','FileQuestion','indigo','question_bank',[],[
   'Question Bank Dashboard','Multiple-Choice Questions','Short Questions','Long Questions','Subject-wise Questions','Chapter-wise Questions','Difficulty Levels','Question Categories','Question Builder','Question Paper Designer','Paper Templates','Marks Distribution','Random Question Selection','Question Review','Question Bank Import and Export','Question Paper Download','Question Paper Version History'
  ]),
- group('examinations','Examinations and Results','Assessment scheduling, rooms, invigilation, marks moderation, result processing and publication.','ClipboardCheck','blue','examinations',exams,[
-  'Examination Dashboard','Examination Progress','Examination Schedule','Examination Subjects','Examination Rooms','Invigilation Management','Marks Entry','Marks Verification','Grading System','Result Processing','Report Cards','Merit Lists','Result Publishing','Automatic Checking','Result Corrections','Examination History','Examination Reports'
+ group('examinations','Examinations, Assessments and Results','Formal examinations, classroom tests, question banks, online assessment, marks approval, report cards and analysis.','ClipboardCheck','blue','examinations',exams,[
+  'Examination Programs','Examination Timetable','Question Bank','Online Tests and Quizzes','Marks Entry','Grades and Grading System','Results and Result Approval','Report Cards','Examination Reports'
  ]),
- group('class-tests','Class Tests','Short-cycle assessment scheduling, online/written formats, marks and performance history.','ListChecks','violet','tests',exams,[
+ group('class-tests','Class Tests','Legacy class-test entry consolidated into the Stage 9 examination workspace.','ListChecks','violet','tests',[],[
   'Class Test Dashboard','Create Class Tests','Test Schedule','Online Tests','Written Tests','Test Questions','Marks Entry','Test Results','Performance Analysis','Test Reports','Student-wise Test History'
  ]),
  group('library','Digital Library','Catalogue, book inventory, member reading records, circulation, returns, fines and reports.','Library','indigo','library',family,[
