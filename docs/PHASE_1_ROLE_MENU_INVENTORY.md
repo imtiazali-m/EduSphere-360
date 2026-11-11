@@ -163,11 +163,11 @@ A visible menu entry or a value in the route index is **not** evidence that its 
 
 | # | Submenu destination | Visible roles | Source audit status |
 |---:|---|---|---|
-| 1 | Student Directory | Owner, Administrator, Teacher / employee, Student | Workflow acceptance pending |
+| 1 | Student Directory | Owner, Administrator, Teacher / employee | Workflow acceptance pending |
 | 2 | New Admissions | Owner, Administrator | Workflow acceptance pending |
 | 3 | Admission Applications | Owner, Administrator | Workflow acceptance pending |
 | 4 | Student Profiles | Owner, Administrator, Teacher / employee, Student, Parent / guardian | Workflow acceptance pending |
-| 5 | Enrollment | Owner, Administrator, Student | Workflow acceptance pending |
+| 5 | Enrollment | Owner, Administrator | Workflow acceptance pending |
 | 6 | Class and Section Assignments | Owner, Administrator, Teacher / employee, Student, Parent / guardian | Workflow acceptance pending |
 | 7 | Student Documentation | Owner, Administrator, Teacher / employee | Workflow acceptance pending |
 | 8 | Student ID Cards | Owner, Administrator, Student, Parent / guardian | Workflow acceptance pending |
