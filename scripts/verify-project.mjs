@@ -17,6 +17,7 @@ check('Vite development and production scripts exist', () => {
   assert.equal(packageJson.scripts.build, 'tsc -b && vite build')
   assert.equal(packageJson.scripts.typecheck, 'tsc -b --pretty')
   assert.equal(packageJson.scripts['audit:navigation'], 'node scripts/generate-navigation-route-audit.mjs')
+  assert.equal(packageJson.scripts['audit:route-views'], 'node scripts/generate-route-view-audit.mjs')
 })
 
 const requiredFiles = [
@@ -29,7 +30,7 @@ const requiredFiles = [
   'src/components/RecordModule.tsx', 'src/components/FacultyWorkspace.tsx', 'src/styles/faculty-workspace.css', 'src/components/ReportsModule.tsx', 'src/components/ProfileModule.tsx', 'src/context/AuthContext.tsx', 'src/lib/auth.ts',
   'src/lib/data.ts', 'src/lib/navigationAccess.ts', 'src/lib/userErrors.ts', 'scripts/test-user-errors.mjs',
   'src/lib/finance.ts', 'scripts/test-finance.mjs', 'src/lib/fileAccess.ts', 'scripts/test-file-access.mjs',
-  'src/lib/navigationCatalog.ts', 'src/lib/navigationRoutes.ts', 'scripts/generate-navigation-route-audit.mjs', 'docs/PHASE_1_EXACT_ROUTE_AUDIT.md', 'src/components/NotificationCenter.tsx', 'src/styles/notification-center.css', 'public/_redirects',
+  'src/lib/navigationCatalog.ts', 'src/lib/navigationRoutes.ts', 'scripts/generate-navigation-route-audit.mjs', 'scripts/generate-route-view-audit.mjs', 'docs/PHASE_1_EXACT_ROUTE_AUDIT.md', 'docs/PHASE_1_ROUTE_VIEW_AUDIT.md', 'src/components/NotificationCenter.tsx', 'src/styles/notification-center.css', 'public/_redirects',
   'supabase/migrations/20261109125937_announcement_read_receipts.sql',
   'supabase/migrations/20261109150048_finance_accounting_and_payroll_workflows.sql',
   'supabase/migrations/20261109150654_atomic_employee_salary_profile_workflow.sql',
@@ -858,6 +859,9 @@ check('Unified design system is loaded last and removes global browser zoom', ()
   assert.ok(routeAudit.includes('Total resolver evaluations:** 1567.') && routeAudit.includes('Unexpected route families:** 0.'), 'Exact route audit must resolve each visible role/menu destination without unknown route families')
   assert.ok(routeAudit.includes('Bare module roots to review:** 0.') && routeAudit.includes('Unexpected route families:** 0.'), 'All role-visible destinations must retain explicit workspace or intentional root routes')
   assert.ok(routeAudit.includes('## Dispatcher coverage') && routeAudit.includes('Unmapped routes:** 0.') && routeAudit.includes('LinkedOperationsWorkspace') && routeAudit.includes('WorkspaceUnavailable'), 'Every role-visible route must map to a known Dashboard component')
+  const viewAudit = read('docs/PHASE_1_ROUTE_VIEW_AUDIT.md')
+  assert.ok(viewAudit.includes('Total evaluations: 1567.') && viewAudit.includes('Compatibility issues:** 0.'), 'Every role-visible destination must request a supported component sub-view')
+  assert.ok(viewAudit.includes('Hidden from role workspace tabs') === false, 'Role menus must not expose inaccessible internal workspace tabs')
   assert.ok(routeAudit.includes('Owner') && routeAudit.includes('| Student | 15 | 144 |') && routeAudit.includes('Examination officer') && routeAudit.includes('Exact route matrix'), 'Exact route audit must list all seven role sections')
   assert.ok(routeAudit.includes('Explicitly unavailable') && routeAudit.includes('acceptance pending'), 'Exact route audit must distinguish unresolved workflows')
 })
