@@ -49,9 +49,60 @@ const classify = (route) => {
   return 'Workspace route resolved · acceptance pending'
 }
 
+const dashboardSource = fs.readFileSync(path.join(root, 'src/components/Dashboard.tsx'), 'utf8')
+const linkedWorkspaceKeys = [
+  'administration:campus-and-branch-management',
+  'library:book-issue-and-returns', 'library:library-reports',
+  'inventory:stock-in', 'inventory:stock-out', 'inventory:stock-allocation',
+  'inventory:stock-adjustments', 'inventory:inventory-history', 'inventory:stock-reports',
+  'transport:student-transport-allocation', 'transport:transport-reports',
+]
+for (const key of linkedWorkspaceKeys) {
+  if (!dashboardSource.includes("'" + key + "'")) {
+    throw new Error('Workspace dispatch allow-list is out of sync for ' + key)
+  }
+}
+for (const token of [
+  '<Overview ', '<NotificationCenter ', '<WorkspaceUnavailable ', '<AttendanceWorkspace ',
+  '<AdministrationModule ', '<AccountsModule ', '<FilesModule ', '<ReportsModule ',
+  '<FinanceWorkspace ', '<PayrollWorkspace ', '<GovernanceWorkspace ',
+  '<InstitutionOperationsWorkspace ', '<LinkedOperationsWorkspace ',
+  '<InstitutionalWorkspace ', '<FacultyWorkspace ', '<RecordModule ',
+]) {
+  if (!dashboardSource.includes(token)) throw new Error('Dashboard dispatcher no longer contains ' + token)
+}
+
+const resolveDispatcher = (route) => {
+  if (route === 'overview') return 'Overview'
+  if (route === 'notifications') return 'NotificationCenter'
+  if (route === 'accounts') return 'AccountsModule'
+  if (route === 'files') return 'FilesModule'
+  if (route === 'profile') return 'ProfileModule'
+  if (route === 'teachers') return 'FacultyWorkspace'
+  if (route.startsWith('unavailable:')) return 'WorkspaceUnavailable'
+  if (route.startsWith('students:')) return 'RecordModule · students'
+  if (route.startsWith('attendance:')) return 'AttendanceWorkspace'
+  if (route.startsWith('institutional:')) {
+    const key = route.slice('institutional:'.length)
+    return linkedWorkspaceKeys.includes(key) ? 'LinkedOperationsWorkspace' : 'InstitutionalWorkspace'
+  }
+  if (route.startsWith('employees:')) return 'FacultyWorkspace'
+  if (route.startsWith('reports:')) return 'ReportsModule'
+  if (route.startsWith('finance:')) return 'FinanceWorkspace'
+  if (route.startsWith('payroll:')) return 'PayrollWorkspace'
+  if (route.startsWith('governance:')) return 'GovernanceWorkspace'
+  if (route.startsWith('operations:')) return 'InstitutionOperationsWorkspace'
+  if (route.startsWith('admin:')) return 'AdministrationModule'
+  const moduleKey = route.split(':')[0]
+  if (route.split(':').length === 2 && [
+    'fees', 'exams', 'exam_results', 'assignments', 'assignment_submissions',
+    'timetable', 'announcements', 'work_tasks',
+  ].includes(moduleKey)) return 'RecordModule · ' + moduleKey
+  return 'Unmapped'
+}
 const rows = []
 const summaries = {}
-const totals = { groups: 0, destinations: 0, unavailable: 0, linked: 0, workspace: 0, root: 0, unexpected: 0 }
+const totals = { groups: 0, destinations: 0, unavailable: 0, linked: 0, workspace: 0, root: 0, unexpected: 0, unmapped: 0 }
 const groupTotals = new Map()
 
 for (const [role, roleLabel] of roles) {
@@ -67,6 +118,7 @@ for (const [role, roleLabel] of roles) {
       }
       const status = classify(route)
       const family = route.split(':')[0]
+      const dispatcher = resolveDispatcher(route)
       summary.destinations += 1
       totals.destinations += 1
       if (status === 'Explicitly unavailable') { summary.unavailable += 1; totals.unavailable += 1 }
@@ -74,7 +126,8 @@ for (const [role, roleLabel] of roles) {
       else if (status.startsWith('Unexpected')) { summary.unexpected += 1; totals.unexpected += 1 }
       else if (status.startsWith('Bare module root')) { summary.root += 1; totals.root += 1 }
       else { summary.workspace += 1; totals.workspace += 1 }
-      rows.push({ role, roleLabel, group: group.key, groupLabel: group.label, label, route, family, status })
+      if (dispatcher === 'Unmapped') totals.unmapped += 1
+      rows.push({ role, roleLabel, group: group.key, groupLabel: group.label, label, route, family, dispatcher, status })
     }
   }
   totals.groups = Math.max(totals.groups, groups.length)
@@ -102,17 +155,26 @@ for (const [role, label] of roles) {
   md.push(`| ${label} | ${s.groups} | ${s.destinations} | ${s.unavailable} | ${s.linked} | ${s.workspace} | ${s.root} | ${s.unexpected} |`)
 }
 md.push('')
-md.push(`**Total resolver evaluations:** ${totals.destinations}.  **Groups:** ${groupTotals.size}.  **Bare module roots to review:** ${totals.root}.  **Unexpected route families:** ${totals.unexpected}.`)
+md.push(`**Total resolver evaluations:** ${totals.destinations}.  **Groups:** ${groupTotals.size}.  **Bare module roots to review:** ${totals.root}.  **Unexpected route families:** ${totals.unexpected}.  **Unmapped dispatchers:** ${totals.unmapped}.`)
+md.push('')
+md.push('## Dispatcher coverage')
+md.push('')
+const dispatchCounts = rows.reduce((map, row) => map.set(row.dispatcher, (map.get(row.dispatcher) ?? 0) + 1), new Map())
+md.push('| Dashboard dispatcher / component | Role-visible routes |')
+md.push('|---|---:|')
+for (const [component, count] of [...dispatchCounts.entries()].sort((a, b) => b[1] - a[1])) md.push(`| ${component} | ${count} |`)
+md.push('')
+md.push(`**Unmapped routes:** ${totals.unmapped}. Every route is expected to match a known Dashboard dispatcher.`)
 md.push('')
 md.push('## Exact route matrix')
 for (const [role, roleLabel] of roles) {
   md.push('')
   md.push(`### ${roleLabel} (${role})`)
   md.push('')
-  md.push('| Menu group | Submenu destination | Exact resolver output | Route family | Source status |')
+  md.push('| Menu group | Submenu destination | Exact resolver output | Dashboard dispatcher | Source status |')
   md.push('|---|---|---|---|---|')
   for (const row of rows.filter(item => item.role === role)) {
-    md.push(`| ${row.groupLabel} (${row.group}) | ${row.label.replaceAll('|', '\\|')} | \`${row.route}\` | ${row.family} | ${row.status} |`)
+    md.push(`| ${row.groupLabel} (${row.group}) | ${row.label.replaceAll('|', '\\|')} | \`${row.route}\` | ${row.dispatcher} | ${row.status} |`)
   }
 }
 md.push('')
@@ -128,5 +190,5 @@ md.push('')
 
 const output = path.join(root, 'docs/PHASE_1_EXACT_ROUTE_AUDIT.md')
 fs.writeFileSync(output, md.join('\n'), 'utf8')
-console.log(`Generated ${path.relative(root, output)}: ${totals.destinations} exact role-aware route evaluations; ${totals.unavailable} unavailable; ${totals.linked} linked; ${totals.root} bare roots to review; ${totals.unexpected} unexpected.`)
-if (totals.unexpected > 0) process.exitCode = 1
+console.log(`Generated ${path.relative(root, output)}: ${totals.destinations} role-aware route evaluations; ${totals.unavailable} unavailable; ${totals.linked} linked; ${totals.root} bare roots; ${totals.unexpected} unexpected; ${totals.unmapped} unmapped dispatchers.`)
+if (totals.unexpected > 0 || totals.unmapped > 0) process.exitCode = 1
