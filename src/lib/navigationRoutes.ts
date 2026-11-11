@@ -435,12 +435,16 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
     return dashboardViews[itemKey] ?? 'unavailable:dashboard:' + itemKey
   }
 
-  // Timetable destinations should retain their intended window rather than
-  // falling back to the legacy bare "timetable" module route.
+  // Preserve the actual requested timetable window before any legacy
+  // module-root override can collapse class/teacher/room views into "week".
   if (groupKey === 'timetable') {
+    if (itemKey === 'class-timetable') return 'timetable:classes'
+    if (itemKey === 'teacher-timetable') return 'timetable:teachers'
+    if (itemKey === 'room-timetable') return 'timetable:rooms'
     if (itemKey === 'timetable-conflicts') return 'timetable:conflicts'
     if (itemKey === 'timetable-history') return 'timetable:history'
-    return 'timetable:week'
+    const day = ['monday','tuesday','wednesday','thursday','friday','saturday'].find(value => itemKey.includes(value))
+    return 'timetable:' + (day ?? 'week')
   }
 
   const override = existingRouteOverrides[compositeKey]
