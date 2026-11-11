@@ -47,7 +47,7 @@ const financeTabs = {
   reconciliation: new Set(['overview','reconciliation','journals','receivables']),
 }
 const payrollTabs = new Set(['overview','salary','runs','payslips'])
-const governanceTabs = new Set(['profile','settings','approvals','audit','academic','accounts'])
+const governanceTabs = new Set(['profile','settings','approvals','audit','academic','accounts','departments','organization','system','policies','permissions','branding','security'])
 const operationTabs = {
   'question-bank': new Set(['pool','papers']),
   curriculum: new Set(['units','coverage']),
