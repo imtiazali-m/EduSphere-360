@@ -24,8 +24,8 @@ import { operationalWorkspaceConfigs } from '../lib/operationalWorkspaceViews'
 interface Props { module: ModuleConfig; onToast: (message: string, error?: boolean) => void; initialWindow?: string; showWindowNavigation?: boolean }
 type StudentStatus = 'all' | 'active' | 'pending' | 'graduated' | 'inactive'
 type EmployeeStatus = 'all' | 'active' | 'on_leave' | 'inactive'
-type StudentWorkspaceTab = 'overview' | 'admissions' | 'directory' | 'profile' | 'id-cards' | 'classes' | 'promotion' | 'guardians' | 'attendance' | 'results' | 'assignments' | 'timetable' | 'documents' | 'health' | 'history'
-const studentRelatedTables = ['attendance', 'exams', 'exam_results', 'assignments', 'assignment_submissions', 'timetable_entries', 'classes', 'academic_sessions', 'programs', 'guardian_students', 'parent_guardians', 'student_placements', 'student_documents', 'student_health_emergency', 'student_history'] as const
+type StudentWorkspaceTab = 'overview' | 'admissions' | 'directory' | 'profile' | 'id-cards' | 'classes' | 'promotion' | 'guardians' | 'attendance' | 'results' | 'assignments' | 'timetable' | 'documents' | 'fees' | 'health' | 'history'
+const studentRelatedTables = ['attendance', 'exams', 'exam_results', 'assignments', 'assignment_submissions', 'timetable_entries', 'classes', 'academic_sessions', 'programs', 'guardian_students', 'parent_guardians', 'student_placements', 'student_documents', 'fee_invoices', 'fee_payments', 'student_health_emergency', 'student_history'] as const
 
 function makeEmployeeNumber() {
   const suffix = crypto.randomUUID().replace(/-/g, '').slice(0, 8).toUpperCase()
@@ -633,7 +633,8 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
     let active = true
     setStudentRelatedLoading(true)
     setStudentRelatedErrors([])
-    void Promise.all(studentRelatedTables.map(async table => {
+    const visibleTables = studentRelatedTables.filter(table => table !== 'student_health_emergency' || ['owner','admin'].includes(user!.role))
+    void Promise.all(visibleTables.map(async table => {
       try {
         const related = await listRecords(mode, user!, table)
         return { table, rows: related, error: '' }
@@ -733,6 +734,9 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
   const activeStudentClass = studentClassRows.find(row => row.id === activeStudentPlacement?.class_id) ?? null
   const activeStudentSession = (studentRelatedRows.academic_sessions ?? []).find(row => row.id === activeStudentClass?.academic_session_id) ?? null
   const studentDocumentRows = (studentRelatedRows.student_documents ?? []).filter(row => row.student_id === selectedStudent?.id)
+  const studentFeeInvoiceRows = (studentRelatedRows.fee_invoices ?? []).filter(row => row.student_id === selectedStudent?.id)
+  const studentFeeInvoiceIds = new Set(studentFeeInvoiceRows.map(row => row.id))
+  const studentFeePaymentRows = (studentRelatedRows.fee_payments ?? []).filter(row => studentFeeInvoiceIds.has(String(row.invoice_id)))
   const studentHistoryRows = (studentRelatedRows.student_history ?? []).filter(row => row.student_id === selectedStudent?.id).sort((a,b) => String(b.created_at ?? '').localeCompare(String(a.created_at ?? '')))
   const studentHealthRow = (studentRelatedRows.student_health_emergency ?? []).find(row => row.student_id === selectedStudent?.id) ?? null
   function openStudentHealth() {
@@ -1048,7 +1052,7 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
     const visibleTabItems = tabItems.filter(item => {
       if (ownerOrAdmin) return true
       if (user!.role === 'teacher') return ['overview', 'directory', 'profile', 'id-cards', 'classes', 'attendance', 'results', 'assignments', 'timetable', 'history'].includes(item.key)
-      return ['overview', 'profile', 'id-cards', 'classes', 'guardians', 'attendance', 'results', 'assignments', 'timetable', 'documents', 'history'].includes(item.key)
+      return ['overview', 'profile', 'id-cards', 'classes', 'guardians', 'attendance', 'results', 'assignments', 'timetable', 'documents', 'fees', 'history'].includes(item.key)
     })
     if (showForm) return formDialog
     const pendingRows = rows.filter(row => ['draft','submitted','under_review','documents_required','approved'].includes(String(row.application_status ?? 'submitted').toLowerCase()))
@@ -1647,6 +1651,20 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
             <td><div className="ed360-student-row-actions"><button type="button" onClick={() => void openStudentDocument(doc)}><Eye size={13}/> Open</button>{ownerOrAdmin && doc.verification_status !== 'verified' && <button type="button" onClick={() => void updateStudentDocumentStatus(doc,'verified')}>Verify</button>}{ownerOrAdmin && doc.verification_status !== 'rejected' && <button type="button" onClick={() => void updateStudentDocumentStatus(doc,'rejected')}>Reject</button>}{ownerOrAdmin && <button type="button" className="danger-icon" onClick={() => void removeStudentDocument(doc)}>Remove</button>}</div></td>
           </tr>)}</tbody></table></div> : <div className="ed360-student-empty"><span><FileCheck2 size={21}/></span><strong>No student documents registered</strong><p>Upload verified admission and identity documents here. Files are stored in a private bucket and are not placed in the general institution file area.</p></div>}
         </> : <div className="ed360-student-empty"><strong>No student selected</strong><p>Select a student to manage their document register.</p></div>}
+      </section>}
+      {studentWorkspaceTab === 'fees' && <section className="ed360-student-panel ed360-student-full-panel">
+        <header><div><span className="ed360-student-panel-icon amber"><Wallet size={17}/></span><div><h2>Student fee records</h2><p>Invoices, outstanding balances and receipts linked to this student’s institution account.</p></div></div><span className="ed360-student-record-count">{studentFeeInvoiceRows.length} invoices</span></header>
+        {selectedStudent ? <>
+          <div className="ed360-student-metric-grid">
+            <article><small>Invoiced</small><strong>{studentFeeInvoiceRows.reduce((sum,row)=>sum+Number(row.amount??0),0).toLocaleString(undefined,{maximumFractionDigits:2})}</strong></article>
+            <article><small>Paid</small><strong>{studentFeeInvoiceRows.reduce((sum,row)=>sum+Number(row.paid_amount??0),0).toLocaleString(undefined,{maximumFractionDigits:2})}</strong></article>
+            <article><small>Outstanding</small><strong>{studentFeeInvoiceRows.reduce((sum,row)=>sum+Number(row.balance??Math.max(0,Number(row.amount??0)-Number(row.paid_amount??0))),0).toLocaleString(undefined,{maximumFractionDigits:2})}</strong></article>
+          </div>
+          <div className="ed360-student-table-heading"><strong>Fee invoices</strong><span>{studentFeePaymentRows.length} linked receipts</span></div>
+          {renderTable(studentFeeInvoiceRows,[{key:'invoice_number',label:'Invoice'},{key:'fee_title',label:'Fee item'},{key:'academic_session',label:'Academic session'},{key:'amount',label:'Amount'},{key:'paid_amount',label:'Paid'},{key:'balance',label:'Balance'},{key:'due_date',label:'Due date'},{key:'status',label:'Status'}],'Fee invoices linked to this student will appear here.')}
+          <div className="ed360-student-table-heading"><strong>Payment receipts</strong><span>{studentFeePaymentRows.length} records</span></div>
+          {renderTable(studentFeePaymentRows,[{key:'receipt_number',label:'Receipt'},{key:'payment_date',label:'Payment date'},{key:'amount',label:'Amount'},{key:'payment_method',label:'Method'},{key:'status',label:'Status'},{key:'transaction_reference',label:'Reference'}],'Receipts for this student’s fee invoices will appear here.')}
+        </> : <div className="ed360-student-empty"><strong>No student selected</strong><p>Select a student to review their fee account.</p></div>}
       </section>}
       {studentWorkspaceTab === 'health' && ownerOrAdmin && <section className="ed360-student-panel ed360-student-full-panel">
         <header><div><span className="ed360-student-panel-icon"><ShieldCheck size={17}/></span><div><h2>Health & emergency information</h2><p>Confidential safeguarding and emergency details for authorised institution administrators only.</p></div></div><span className="ed360-student-record-count">Restricted record</span></header>
