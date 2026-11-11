@@ -66,6 +66,7 @@ const linkedKeys = new Set([
 ])
 
 function shellTarget(route) {
+  const academic = route.startsWith('academic:')
   const student = route.startsWith('students:')
   const attendance = route.startsWith('attendance:')
   const institutional = route.startsWith('institutional:')
@@ -78,7 +79,8 @@ function shellTarget(route) {
   const operations = route.startsWith('operations:')
   const parts = route.split(':')
   const moduleWindow = parts.length === 2 && ['fees','exams','exam_results','assignments','assignment_submissions','timetable','announcements','work_tasks'].includes(parts[0])
-  const targetKey = student ? 'students'
+  const targetKey = academic ? 'academic'
+    : student ? 'students'
     : attendance ? 'attendance'
     : institutional ? 'institutional'
     : unavailable ? 'unavailable'
@@ -90,7 +92,8 @@ function shellTarget(route) {
     : operations ? 'operations'
     : moduleWindow ? parts[0]
     : route
-  const targetWindow = student ? route.slice('students:'.length)
+  const targetWindow = academic ? route.slice('academic:'.length)
+    : student ? route.slice('students:'.length)
     : attendance ? route.slice('attendance:'.length)
     : institutional ? route.slice('institutional:'.length)
     : unavailable ? route.slice('unavailable:'.length)
@@ -108,6 +111,10 @@ function shellTarget(route) {
 function checkView(role, route, dispatcher) {
   const { targetKey, targetWindow, moduleWindow } = shellTarget(route)
   if (targetKey === 'unavailable') return { component: 'WorkspaceUnavailable', view: 'n/a', status: 'Expected unavailable state' }
+  if (targetKey === 'academic') {
+    const supported = new Set(['academic-sessions','classes-sections','subjects-courses','curriculum','lesson-planning','timetable','homework-assignments','study-materials','online-learning','classroom-activities','academic-calendar','learning-progress'])
+    return { component:'AcademicManagementWorkspace', view:targetWindow, status:supported.has(targetWindow) ? 'Supported' : 'Unsupported academic workspace' }
+  }
   if (targetKey === 'overview') return { component: 'Overview', view: 'overview', status: 'Supported' }
   if (targetKey === 'notifications') return { component: 'NotificationCenter', view: 'notifications', status: 'Supported' }
   if (targetKey === 'accounts') return { component: 'AccountsModule', view: 'accounts', status: 'Supported' }
@@ -175,6 +182,7 @@ for (const [role, label] of roles) {
       const dashboard = shellTarget(route)
       const dispatcher = route.startsWith('unavailable:') ? 'WorkspaceUnavailable'
         : route.startsWith('institutional:') ? (linkedKeys.has(route.slice('institutional:'.length)) ? 'LinkedOperationsWorkspace' : 'InstitutionalWorkspace')
+        : dashboard.targetKey === 'academic' ? 'AcademicManagementWorkspace'
         : dashboard.targetKey === 'overview' ? 'Overview'
         : dashboard.targetKey === 'notifications' ? 'NotificationCenter'
         : dashboard.targetKey === 'accounts' ? 'AccountsModule'
