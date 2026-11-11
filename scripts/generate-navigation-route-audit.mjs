@@ -63,7 +63,7 @@ for (const key of linkedWorkspaceKeys) {
   }
 }
 for (const token of [
-  '<Overview ', '<NotificationCenter ', '<WorkspaceUnavailable ', '<AttendanceWorkspace ',
+  '<RoleDashboard ', '<NotificationCenter ', '<WorkspaceUnavailable ', '<AttendanceWorkspace ',
   '<AdministrationModule ', '<AccountsModule ', '<FilesModule ', '<ReportsModule ',
   '<FinanceWorkspace ', '<PayrollWorkspace ', '<PeopleHRWorkspace ', '<GovernanceWorkspace ',
   '<InstitutionOperationsWorkspace ', '<LinkedOperationsWorkspace ',

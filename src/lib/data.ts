@@ -16,6 +16,7 @@ const ALLOWED_TABLES = new Set([
   'students',
   'parent_guardians',
   'guardian_students',
+  'student_guardians',
   'student_placements',
   'student_documents',
   'student_history',
@@ -50,6 +51,8 @@ const ALLOWED_TABLES = new Set([
   'assignments',
   'assignment_submissions',
   'work_tasks',
+  'workflow_approvals',
+  'institutional_audit_events',
   'institutional_records',
   'campuses',
   'announcements',
@@ -62,7 +65,7 @@ const ALLOWED_TABLES = new Set([
   'rooms',
 ])
 
-const READ_ONLY_TABLES = new Set(['student_history', 'fee_payments', 'fee_payment_allocations', 'fee_audit_logs', 'employee_salary_profiles', 'payroll_runs', 'payroll_items'])
+const READ_ONLY_TABLES = new Set(['student_history', 'fee_payments', 'fee_payment_allocations', 'fee_audit_logs', 'employee_salary_profiles', 'payroll_runs', 'payroll_items', 'student_guardians', 'workflow_approvals', 'institutional_audit_events'])
 const TABLES_WITHOUT_CREATED_BY = new Set(['parent_guardians', 'guardian_students', 'student_documents', 'student_health_emergency', 'fee_structure_items', 'fee_invoice_items', 'fee_discount_applications', 'fee_late_fees', 'fee_refunds', 'finance_journal_lines'])
 
 function checkTable(table: string) {
@@ -125,32 +128,61 @@ async function filterRowsForRole(
     return rows.filter((row) => row.audience === 'all' || row.audience === audience)
   }
 
-  if (!user.linkedStudentId) return []
-  if (table === 'students') return rows.filter((row) => row.id === user.linkedStudentId)
-  if (table === 'guardian_students') return rows.filter((row) => row.student_id === user.linkedStudentId)
+  // Student accounts resolve to their own profile. Parent accounts resolve
+  // every student_guardians link owned by the authenticated parent, with the
+  // legacy linkedStudentId retained as a compatibility fallback.
+  if (table === 'student_guardians') {
+    return user.role === 'parent'
+      ? rows.filter((row) => String(row.parent_user_id ?? '') === user.id)
+      : []
+  }
+
+  const linkedStudentIds = new Set<string>()
+  if (user.linkedStudentId) linkedStudentIds.add(user.linkedStudentId)
+  if (user.role === 'parent') {
+    const parentLinks = await listRecords(mode, user, 'student_guardians')
+    parentLinks.forEach((row) => {
+      if (row.parent_user_id === user.id && row.student_id) linkedStudentIds.add(String(row.student_id))
+    })
+  }
+  if (!linkedStudentIds.size) return []
+
+  if (table === 'students') {
+    return rows.filter((row) => linkedStudentIds.has(String(row.id)))
+  }
+
+  if (table === 'guardian_students') {
+    return rows.filter((row) => linkedStudentIds.has(String(row.student_id)))
+  }
+
   if (table === 'parent_guardians') {
     const links = await listRecords(mode, user, 'guardian_students')
-    const linkedIds = new Set(links.map(row => String(row.guardian_id ?? '')))
-    return rows.filter(row => linkedIds.has(row.id))
+    const linkedIds = new Set(links.map((row) => String(row.guardian_id ?? '')))
+    return rows.filter((row) => linkedIds.has(String(row.id)))
   }
 
   if (table === 'exam_results') {
-    return rows.filter((row) => row.student_id === user.linkedStudentId && row.result_status === 'published')
+    return rows.filter((row) => linkedStudentIds.has(String(row.student_id)) && row.result_status === 'published')
   }
 
-  if (table === 'assignment_submissions' || ['attendance', 'exam_results', 'fee_invoices'].includes(table)) {
-    return rows.filter((row) => row.student_id === user.linkedStudentId)
+  if (['assignment_submissions', 'attendance', 'fee_invoices'].includes(table)) {
+    return rows.filter((row) => linkedStudentIds.has(String(row.student_id)))
   }
 
   if (['exams', 'assignments', 'timetable_entries'].includes(table)) {
     const linkedStudents = await listRecords(mode, user, 'students')
-    const className = linkedStudents[0]?.class_name
-    return className ? rows.filter((row) => row.class_name === className) : []
+    const classNames = new Set(
+      linkedStudents
+        .map((row) => String(row.class_name ?? '').trim().toLowerCase())
+        .filter(Boolean),
+    )
+    return classNames.size
+      ? rows.filter((row) => classNames.has(String(row.class_name ?? '').trim().toLowerCase()))
+      : []
   }
 
   return rows
 }
-
 export async function listRecords(mode: AppMode, user: AppUser, table: string): Promise<RecordRow[]> {
   void mode
   checkTable(table)
@@ -169,7 +201,7 @@ export async function listRecords(mode: AppMode, user: AppUser, table: string): 
       .from(table)
       .select('*')
       .eq('institution_id', user.institutionId)
-      .order('created_at', { ascending: false })
+      .order(table === 'institutional_audit_events' ? 'occurred_at' : 'created_at', { ascending: false })
       .order('id', { ascending: true })
       .range(from, from + pageSize - 1)
     if (error) throw error

@@ -22,7 +22,7 @@ check('Vite development and production scripts exist', () => {
 })
 
 const requiredFiles = [
-  'index.html', 'src/main.tsx', 'src/App.tsx', 'src/components/Dashboard.tsx', 'src/components/WorkspaceUnavailable.tsx',
+  'index.html', 'src/main.tsx', 'src/App.tsx', 'src/components/Dashboard.tsx', 'src/components/RoleDashboard.tsx', 'src/components/role-dashboard.css', 'src/components/WorkspaceUnavailable.tsx',
   'src/components/FinanceWorkspace.tsx', 'src/styles/finance-workspace.css', 'src/styles/student-promotion-workspace.css', 'src/styles/navigation-refinement.css',
   'src/components/PayrollWorkspace.tsx', 'src/styles/payroll-workspace.css',
   'src/components/GovernanceWorkspace.tsx', 'src/components/AdministrationStage5Workspace.tsx', 'src/components/PeopleHRWorkspace.tsx', 'src/components/EmployeeQualificationsPanel.tsx', 'src/styles/people-hr-workspace.css', 'src/styles/governance-workspace.css',
@@ -477,6 +477,19 @@ check('Student, faculty and operational record tables support accessible sorting
   assert.ok(styles.includes('.ed360-sort-header:focus-visible'), 'Sortable table headings need a visible keyboard focus indicator')
 })
 
+check('Role-specific dashboard landing pages use scoped live data', () => {
+  const roleDashboard = read('src/components/RoleDashboard.tsx')
+  const dashboard = read('src/components/Dashboard.tsx')
+  const data = read('src/lib/data.ts')
+  assert.ok(roleDashboard.includes('TABLES_BY_ROLE') && roleDashboard.includes('listRecords') && roleDashboard.includes('roleLabels'), 'Dashboard metrics must be loaded from role-scoped live records')
+  assert.ok(dashboard.includes('<RoleDashboard onNavigate={navigateChild}/>'), 'The signed-in overview must render the role-specific dashboard')
+  for (const role of roles) assert.ok(roleDashboard.includes(role), 'Role dashboard must provide a dataset for ' + role)
+  assert.ok(data.includes("'student_guardians'") && data.includes("'workflow_approvals'") && data.includes("'institutional_audit_events'"), 'Dashboard read-only datasets must be allowed through the data layer')
+  assert.ok(data.includes('linkedStudentIds') && data.includes('parentLinks'), 'Parent dashboards must support all linked children, not only one linkedStudentId')
+  assert.ok(data.includes("table === 'institutional_audit_events' ? 'occurred_at' : 'created_at'"), 'Audit activity must be ordered by its event timestamp')
+  for (const role of roles) assert.ok(roleNavigationGroups(role).some(group => group.key === 'dashboard'), role + ' has no Dashboard entry')
+})
+
 check('PeopleHRWorkspace exposes recruitment, contracts, performance and alumni workflows', () => {
   for (const [label,route] of [
     ['Students','students:directory'],['Admissions & Enrollment','peoplehr:admissions'],['Teachers','employees:directory-teaching'],
@@ -612,7 +625,7 @@ check('Private file controls match institution storage permissions', () => {
 
 check('Shared record reader retrieves every institution-scoped database page before role filtering', () => {
   const data = read('src/lib/data.ts')
-  for (const value of ['const pageSize = 500', 'for (let from = 0; ; from += pageSize)', '.range(from, from + pageSize - 1)', ".order('created_at', { ascending: false })", ".order('id', { ascending: true })", 'return filterRowsForRole(mode, user, table, rows)']) {
+  for (const value of ['const pageSize = 500', 'for (let from = 0; ; from += pageSize)', '.range(from, from + pageSize - 1)', ".order(table === 'institutional_audit_events' ? 'occurred_at' : 'created_at', { ascending: false })", ".order('id', { ascending: true })", 'return filterRowsForRole(mode, user, table, rows)']) {
     assert.ok(data.includes(value), 'Shared data reader pagination is missing: ' + value)
   }
   const readerStart = data.indexOf('export async function listRecords')
@@ -1015,7 +1028,7 @@ check('Unified design system is loaded last and removes global browser zoom', ()
   assert.ok(routeAudit.includes('Bare module roots to review:** 0.') && routeAudit.includes('Unexpected route families:** 0.'), 'All role-visible destinations must retain explicit workspace or intentional root routes')
   assert.ok(routeAudit.includes('## Dispatcher coverage') && routeAudit.includes('Unmapped routes:** 0.') && routeAudit.includes('LinkedOperationsWorkspace') && routeAudit.includes('InstitutionalWorkspace') && routeAudit.includes('RecordModule'), 'Every role-visible route must map to a known Dashboard component')
   const responsiveAudit = read('docs/PHASE_2_RESPONSIVE_SOURCE_AUDIT.md')
-  assert.ok(responsiveAudit.includes('15 responsive source checks passed') && responsiveAudit.includes('390×844') && responsiveAudit.includes('768×1024'), 'Responsive source coverage audit is missing or incomplete')
+  assert.ok(responsiveAudit.includes('16 responsive source checks passed') && responsiveAudit.includes('390×844') && responsiveAudit.includes('768×1024'), 'Responsive source coverage audit is missing or incomplete')
   const viewAudit = read('docs/PHASE_1_ROUTE_VIEW_AUDIT.md')
   assert.ok(/Compatibility issues:\*\* 0\./.test(viewAudit), 'Every role-visible destination must request a supported component sub-view')
   assert.ok(viewAudit.includes('Hidden from role workspace tabs') === false, 'Role menus must not expose inaccessible internal workspace tabs')

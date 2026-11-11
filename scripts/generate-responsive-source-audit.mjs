@@ -20,6 +20,7 @@ const files = {
   modules: read('src/styles/module-workspaces.css'),
   academic: read('src/styles/academic-management.css'),
   peopleHr: read('src/styles/people-hr-workspace.css'),
+  roleDashboard: read('src/components/role-dashboard.css'),
 }
 const checks = [
   ['Viewport', /<meta[^>]+name=["']viewport["']/.test(files.html) && /content=["']width=device-width, initial-scale=1\.0["']/.test(files.html), 'The document must declare the device-width viewport.'],
@@ -37,6 +38,7 @@ const checks = [
   ['Generic module workspaces', [1080,760,720,580,540,520].every(width => hasBreakpoint(files.modules,width)), 'Generic record modules must include responsive breakpoints for tablet and phone widths.'],
   ['Stage 8 academic workspace', hasBreakpoint(files.academic,1100) && hasBreakpoint(files.academic,800) && hasBreakpoint(files.academic,540) && files.academic.includes('.ed360-academic-nav') && files.academic.includes('.ed360-academic-table-wrap') && files.academic.includes('.ed360-academic-modal'), 'Academic navigation, record tables and forms must adapt for desktop, tablet and phone layouts.'],
   ['People & HR workspace', hasBreakpoint(files.peopleHr,760) && hasBreakpoint(files.peopleHr,620) && hasBreakpoint(files.peopleHr,430) && files.peopleHr.includes('.people-hr-stage') && files.peopleHr.includes('overflow: auto'), 'People & HR tables and workflow panels must adapt to phone widths.'],
+  ['Role-specific dashboard', hasBreakpoint(files.roleDashboard,1120) && hasBreakpoint(files.roleDashboard,850) && hasBreakpoint(files.roleDashboard,520) && files.roleDashboard.includes('.ed360-role-dashboard') && files.roleDashboard.includes('min-width:0'), 'Role dashboard cards, activity lists and layouts must reflow across desktop, tablet and mobile widths.'],
 ]
 const failed = checks.filter(([,ok]) => !ok)
 if (failed.length) {
@@ -49,7 +51,7 @@ const md = [
   '',
   '**Generated:** by the repository release workflow.',
   '**Scope:** responsive CSS declarations and required mobile navigation/form layout hooks.',
-  '**Automated checks:** 15 responsive source checks passed.',
+  '**Automated checks:** 16 responsive source checks passed.',
   '',
   '## Evidence boundary',
   '',
@@ -70,6 +72,7 @@ const md = [
   '| Campus operations and institutional records | Pass | Tablet, 620px and 430px breakpoints |',
   '| Generic module workspaces | Pass | 1080px / 760px / 720px / 580px / 540px / 520px |',
   '| People & HR workspace | Pass | 760px / 620px / 430px; responsive workflow tables and mobile panel layout |',
+  '| Role-specific dashboard | Pass | 1120px / 850px / 520px; dashboard metrics and activity layout |',
   '',
   '## Target viewport coverage (source-level only)',
   '',
