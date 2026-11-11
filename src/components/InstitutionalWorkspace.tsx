@@ -273,6 +273,7 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
  function resetForm(row?:OperationalRow){
   setEditing(row??null);setTitle(row?.title??'');setReference(row?.reference_code??'');setDescription(row?.description??'')
   setStatus(row?.status??'draft');setApproval(row?.approval_status??'not_required');setVisibility(row?.visibility??(['library','curriculum','certificates','teaching','transport'].includes(group.key)?'student_portal':'staff_only'))
+  setReviewNotes(row?.review_notes??'')
   setRecordDate(row?.record_date??new Date().toISOString().slice(0,10));setDueDate(row?.due_date??'')
   setAmount(row?.amount===null||row?.amount===undefined?'':String(row.amount));setQuantity(row?.quantity===null||row?.quantity===undefined?'':String(row.quantity))
   setPayloadData(row?.payload??{});setShowForm(true)
@@ -325,6 +326,16 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
  }
  function openDetails(row:OperationalRow){
   setDetail(row);setReviewNotes(row.review_notes??'')
+ }
+ async function saveReviewNote(row:OperationalRow){
+  if(!supabase||!user||!canAdmin)return
+  const {data,error}=await supabase.from('institutional_record_reviews').upsert({
+   record_id:row.id,institution_id:user.institutionId,approval_status:row.approval_status??'not_required',review_notes:reviewNotes.trim()||null
+  },{onConflict:'record_id'}).select('record_id,approval_status,reviewed_by,reviewed_at,review_notes').single()
+  if(error){onToast(error.message,true);return}
+  const updated={...row,approval_status:data.approval_status,reviewed_by:data.reviewed_by,reviewed_at:data.reviewed_at,review_notes:data.review_notes}
+  setDetail(updated);setReviewNotes(data.review_notes??'')
+  onToast('Internal review note saved.');await load()
  }
  async function decide(row:OperationalRow,decision:'approved'|'rejected'){
   if(!supabase||!user||!canAdmin)return
@@ -412,6 +423,7 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
    <div className="ed360-record-details-grid"><div className="ed360-record-detail"><small>Status</small><b>{detail.status}</b></div><div className="ed360-record-detail"><small>Record date</small><b>{displayDate(detail.record_date)}</b></div><div className="ed360-record-detail"><small>Due date</small><b>{displayDate(detail.due_date)}</b></div><div className="ed360-record-detail"><small>Amount</small><b>{money(detail.amount)}</b></div><div className="ed360-record-detail"><small>Quantity</small><b>{detail.quantity??'—'}</b></div><div className="ed360-record-detail"><small>Created</small><b>{detail.created_at?new Date(detail.created_at).toLocaleString():'—'}</b></div></div>
    {Object.keys(detail.payload??{}).length>0&&<section className="ed360-payload-section"><h3>{item.label} details</h3><div className="ed360-record-details-grid">{Object.entries(detail.payload).map(([key,value])=><div className="ed360-record-detail" key={key}><small>{structuredFields.find(field=>field.key===key)?.label??key.replaceAll('_',' ')}</small><b>{typeof value==='boolean'?(value?'Yes':'No'):String(value??'—')}</b></div>)}</div></section>}
    <div className="modal-actions">
+    {canAdmin&&<button type="button" className="button button-outline" onClick={()=>void saveReviewNote(detail)}>Save review note</button>}
     {canAdmin&&detail.approval_status==='pending'&&<><button type="button" className="button button-outline" onClick={()=>void decide(detail,'rejected')}>Reject</button><button type="button" className="button button-primary" onClick={()=>void decide(detail,'approved')}><CheckCircle2 size={15}/> Approve</button></>}
     {canWrite&&<button type="button" className="button button-outline" onClick={()=>{const row=detail;setDetail(null);resetForm(row)}}>Edit record</button>}
     {canAdmin&&<button type="button" className="button button-danger" onClick={()=>void remove(detail)}>Delete</button>}
