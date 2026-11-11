@@ -9,6 +9,13 @@ export const navigationCatalog:NavigationCatalogGroup[]=institutionalMenu.map(gr
 }))
 
 const roleItemAllow:Record<string,Partial<Record<string,string[]>>>={
+  examinations:{
+    student:['Examination Timetable','Online Tests and Quizzes','Results and Result Approval','Report Cards'],
+    parent:['Examination Timetable','Results and Result Approval','Report Cards'],
+    teacher:['Examination Programs','Examination Timetable','Question Bank','Online Tests and Quizzes','Marks Entry','Results and Result Approval','Report Cards','Examination Reports'],
+    accountant:[],
+  },
+
   students:{
     student:['Student Profiles','Class and Section Assignments','Student ID Cards','Student Performance Charts','Student Reports'],
     parent:['Student Profiles','Class and Section Assignments','Student ID Cards','Student Performance Charts','Student Reports'],
