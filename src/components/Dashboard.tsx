@@ -17,6 +17,7 @@ import { userFacingError } from '../lib/userErrors'
 import { outstandingInvoiceBalance } from '../lib/finance'
 import type { AppRole, ModuleConfig, RecordRow } from '../lib/types'
 import { RecordModule } from './RecordModule'
+import { RoleDashboard } from './RoleDashboard'
 import { AccountsModule } from './AccountsModule'
 import { FilesModule } from './FilesModule'
 import AdministrationModule from './AdministrationModule'
@@ -902,7 +903,7 @@ export function Dashboard({ onToast }: Props) {
             const linkedWorkspaceKeys = ['administration:campus-and-branch-management','library:book-issue-and-returns','library:library-reports','inventory:stock-in','inventory:stock-out','inventory:stock-allocation','inventory:stock-adjustments','inventory:inventory-history','inventory:stock-reports','transport:student-transport-allocation','transport:transport-reports']
             return <section className="pro-window-panel" key={tab.id} hidden={activeTabId !== tab.id} aria-label={tab.title}>
               {tab.targetKey === 'notifications' ? <NotificationCenter onToast={onToast} onUnreadCountChange={setUnreadAnnouncementCount}/> :
-                tab.targetKey === 'overview' ? <Overview onNavigate={navigateChild}/> :
+                tab.targetKey === 'overview' ? <RoleDashboard onNavigate={navigateChild}/> :
                 tab.targetKey === 'institutional' && linkedWorkspaceKeys.includes(tab.targetWindow) ? <LinkedOperationsWorkspace workspaceKey={tab.targetWindow} onToast={onToast} onNavigate={navigateChild}/> :
                 tab.targetKey === 'institutional' ? <InstitutionalWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'unavailable' ? <WorkspaceUnavailable groupKey={tab.targetWindow.split(':')[0]} itemKey={tab.targetWindow.split(':').slice(1).join(':')} onNavigate={navigate}/> :
