@@ -83,6 +83,8 @@ jobs:
 
 
       - name: Test welcome, owner login and owner setup across viewport sizes
+        env:
+          PLAYWRIGHT_MODULE_PATH: /tmp/edusphere-playwright/node_modules/playwright
         run: npm run test:responsive:public
 
       - name: Upload responsive QA screenshots
