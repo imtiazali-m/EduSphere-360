@@ -10,7 +10,7 @@ export const navigationCatalog:NavigationCatalogGroup[]=institutionalMenu.map(gr
 
 const roleItemAllow:Record<string,Partial<Record<string,string[]>>>={
   students:{
-    student:['Student Directory','Student Profiles','Enrollment','Class and Section Assignments','Student ID Cards','Student Performance Charts','Student Reports'],
+    student:['Student Profiles','Class and Section Assignments','Student ID Cards','Student Performance Charts','Student Reports'],
     parent:['Student Profiles','Class and Section Assignments','Student ID Cards','Student Performance Charts','Student Reports'],
     teacher:['Student Directory','Student Profiles','Class and Section Assignments','Student Documentation','Student History','Student Performance Charts','Student Reports'],
   },
