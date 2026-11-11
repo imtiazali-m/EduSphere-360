@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
+import { createRequire } from 'node:module'
 import { mkdir } from 'node:fs/promises'
-import { chromium } from 'playwright'
+
+const require = createRequire(import.meta.url)
+const playwrightModule = process.env.PLAYWRIGHT_MODULE_PATH ?? 'playwright'
+const { chromium } = require(playwrightModule)
 
 const host = '127.0.0.1'
 const port = Number(process.env.EDUSPHERE_PREVIEW_PORT ?? 4173)
