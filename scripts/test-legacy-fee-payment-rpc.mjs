@@ -48,5 +48,6 @@ test('the compatibility wrapper does not grant authenticated direct table update
     'utf8',
   )
   assert.match(originalCompatibilityMigration, /REVOKE INSERT,UPDATE,DELETE ON public\.fee_payments FROM authenticated/i)
-  assert.match(sql, /This narrow SECURITY DEFINER wrapper preserves the old bank\/cheque metadata contract/i)
+  assert.ok(sql.includes('bank/cheque metadata contract'))
+  assert.doesNotMatch(sql, /GRANT\s+UPDATE\s+ON\s+public\.fee_payments/i)
 })
