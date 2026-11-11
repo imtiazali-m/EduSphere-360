@@ -466,7 +466,7 @@ export function WelcomeScreen({ navigate }: ScreenProps) {
             <div className="edm-footer-free"><Sparkles size={15}/> Online core platform</div>
           </div>
           <div className="edm-footer-col"><b>Platform</b><a href="#about">About EduSphere</a><a href="#features">Features</a><a href="#solutions">Role-based solutions</a><a href="#institution-types">Institution types</a><a href="#campus-services">Campus services</a></div>
-          <div className="edm-footer-col"><b>Explore</b><a href="#analytics">Analytics preview</a><a href="#workflow">How it works</a><a href="#security">Security & reliability</a><a href="#testimonials">Institution feedback</a><a href="#faq">FAQs & help</a></div>
+          <div className="edm-footer-col"><b>Explore</b><a href="#analytics">Analytics preview</a><a href="#workflow">How it works</a><a href="#security">Security & reliability</a><a href="#testimonials">Institution feedback</a><a href="#faq">Frequently asked questions</a></div>
           <div className="edm-footer-col"><b>Get started</b><a href="#get-started">Create an institution</a><a href="#contact">Contact & help</a><button type="button" onClick={() => go('login')}>Login to your account</button><button type="button" onClick={() => setLegalDocument('privacy')}>Privacy notice</button><button type="button" onClick={() => setLegalDocument('terms')}>Terms & conditions</button><a href="#top">Back to top</a></div>
         </div>
         <div className="edm-footer-bottom"><span>© {new Date().getFullYear()} EduSphere 360. All rights reserved.</span><span>Built for schools · colleges · universities</span><a href="#top">Back to top ↑</a></div>
