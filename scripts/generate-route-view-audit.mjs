@@ -255,4 +255,7 @@ md.push('')
 const output = path.join(root, 'docs/PHASE_1_ROUTE_VIEW_AUDIT.md')
 fs.writeFileSync(output, md.join('\n'), 'utf8')
 console.log(`Generated ${path.relative(root, output)}: ${totals.destinations} role-aware route-to-view evaluations; ${totals.supported} supported; ${totals.unavailable} unavailable; ${totals.pending} lifecycle pending; ${totals.issues} compatibility issues.`)
+for (const row of rows.filter(item => !['Supported','Expected unavailable state','Supported destination; lifecycle pending'].includes(item.status))) {
+  console.error(`VIEW ISSUE | ${row.role} | ${row.group}/${row.item} | ${row.route} | ${row.component} | ${row.view} | ${row.status}`)
+}
 if (totals.issues > 0) process.exitCode = 1
