@@ -12,6 +12,7 @@
     "test:user-errors": "node scripts/test-user-errors.mjs",
     "test:finance": "node scripts/test-finance.mjs",
     "test:file-access": "node scripts/test-file-access.mjs",
+    "test:responsive:public": "node scripts/test-responsive-public.mjs",
     "audit:navigation": "node scripts/generate-navigation-route-audit.mjs",
     "audit:route-views": "node scripts/generate-route-view-audit.mjs",
     "audit:responsive": "node scripts/generate-responsive-source-audit.mjs",
