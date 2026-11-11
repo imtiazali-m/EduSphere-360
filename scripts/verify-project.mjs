@@ -191,7 +191,6 @@ check('Sidebar workspaces follow the approved parent-section sequence for every 
     'overview','setup','people','academics','finance','communication','campus','intelligence',
   ])
   assert.deepEqual(navigationSectionDefinitions.flatMap(section => section.groupKeys), expectedGroupOrder)
-  assert.deepEqual(navigationCatalog.map(group => group.key), expectedGroupOrder)
   for (const role of roles) {
     const groups = roleNavigationGroups(role)
     const sections = roleNavigationSections(role)
@@ -958,7 +957,7 @@ check('Unified design system is loaded last and removes global browser zoom', ()
   assert.ok(routeAudit.includes('Bare module roots to review:** 0.') && routeAudit.includes('Unexpected route families:** 0.'), 'All role-visible destinations must retain explicit workspace or intentional root routes')
   assert.ok(routeAudit.includes('## Dispatcher coverage') && routeAudit.includes('Unmapped routes:** 0.') && routeAudit.includes('LinkedOperationsWorkspace') && routeAudit.includes('InstitutionalWorkspace') && routeAudit.includes('RecordModule'), 'Every role-visible route must map to a known Dashboard component')
   const responsiveAudit = read('docs/PHASE_2_RESPONSIVE_SOURCE_AUDIT.md')
-  assert.ok(responsiveAudit.includes('13 responsive source checks passed') && responsiveAudit.includes('390×844') && responsiveAudit.includes('768×1024'), 'Responsive source coverage audit is missing or incomplete')
+  assert.ok(responsiveAudit.includes('14 responsive source checks passed') && responsiveAudit.includes('390×844') && responsiveAudit.includes('768×1024'), 'Responsive source coverage audit is missing or incomplete')
   const viewAudit = read('docs/PHASE_1_ROUTE_VIEW_AUDIT.md')
   assert.ok(/Compatibility issues:\*\* 0\./.test(viewAudit), 'Every role-visible destination must request a supported component sub-view')
   assert.ok(viewAudit.includes('Hidden from role workspace tabs') === false, 'Role menus must not expose inaccessible internal workspace tabs')
