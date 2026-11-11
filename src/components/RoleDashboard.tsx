@@ -610,7 +610,7 @@ export function RoleDashboard({ onNavigate }: Props) {
         <Panel title="Assigned classes" description="Classes connected to your active teaching assignments." icon={School}>
           {!known('teachers', 'teacher_assignments', 'timetable_entries') ? <EmptyState loading={loading} message="Teaching assignment data is unavailable."/> : assignedClassNames.size ? <div className="rd-class-grid">
             {[...assignedClassNames].sort().map(className => <article key={className}><span><School size={15}/></span><strong>{className}</strong><small>Assigned timetable class</small></article>)}
-          </div> : classIds.size ? <EmptyState loading={false} message={formatCount(classIds.size) + ' active class allocations are linked to your account. Class names will appear here when they are present in your teaching timetable.'/> : <EmptyState loading={false} message="No active class assignments are linked to your teacher profile."/>}
+          </div> : classIds.size ? <EmptyState loading={false} message={formatCount(classIds.size) + ' active class allocations are linked to your account. Class names will appear here when they are present in your teaching timetable.'}/> : <EmptyState loading={false} message="No active class assignments are linked to your teacher profile."/>}
         </Panel>
         <Panel title="Homework and reviews" description="Coursework deadlines and student submissions needing review." icon={BookOpenCheck} action={<button type="button" className="rd-text-action" onClick={() => onNavigate('assignments:submissions')}>Open submissions</button>}>
           {!known('assignments', 'assignment_submissions') ? <EmptyState loading={loading} message="Assignment data is unavailable."/> : pendingReviews.length ? <div className="rd-list">

@@ -126,7 +126,7 @@ export function roleNavigationGroups(role:WorkspaceMenuGroup['roles'][number],ca
   return institutionalMenu
     .filter(group=>group.roles.includes(role) && !nestedAdministrationGroups.has(group.key) && !nestedAcademicGroups.has(group.key))
     .map(group=>({...group,items:allowedItems(group,role,careAreas).map(item=>item.label)}))
-    .filter(group=>group.key==='dashboard'||group.items.length>0)
+    .filter(group=>group.items.length>0)
     .sort((left,right)=>(navigationGroupOrder.get(left.key)??Number.MAX_SAFE_INTEGER)-(navigationGroupOrder.get(right.key)??Number.MAX_SAFE_INTEGER))
 }
 

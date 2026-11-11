@@ -625,7 +625,7 @@ check('Private file controls match institution storage permissions', () => {
 
 check('Shared record reader retrieves every institution-scoped database page before role filtering', () => {
   const data = read('src/lib/data.ts')
-  for (const value of ['const pageSize = 500', 'for (let from = 0; ; from += pageSize)', '.range(from, from + pageSize - 1)', ".order('created_at', { ascending: false })", ".order('id', { ascending: true })", 'return filterRowsForRole(mode, user, table, rows)']) {
+  for (const value of ['const pageSize = 500', 'for (let from = 0; ; from += pageSize)', '.range(from, from + pageSize - 1)', ".order(table === 'institutional_audit_events' ? 'occurred_at' : 'created_at', { ascending: false })", ".order('id', { ascending: true })", 'return filterRowsForRole(mode, user, table, rows)']) {
     assert.ok(data.includes(value), 'Shared data reader pagination is missing: ' + value)
   }
   const readerStart = data.indexOf('export async function listRecords')
