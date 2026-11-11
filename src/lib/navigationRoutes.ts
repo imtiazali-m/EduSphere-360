@@ -340,7 +340,10 @@ function dedicatedRoute(groupKey: string, itemKey: string): string | undefined {
     return `fees:${view}`
   }
   if (groupKey === 'timetable') {
-    if (['timetable-dashboard','master-timetable','class-timetable','teacher-timetable','room-timetable','period-timetable'].includes(itemKey)) return 'timetable:week'
+    if (itemKey === 'class-timetable') return 'timetable:classes'
+    if (itemKey === 'teacher-timetable') return 'timetable:teachers'
+    if (itemKey === 'room-timetable') return 'timetable:rooms'
+    if (['timetable-dashboard','master-timetable','period-timetable'].includes(itemKey)) return 'timetable:week'
     if (itemKey.includes('availability')) return 'timetable:teachers'
     if (itemKey.includes('substitution') || itemKey.includes('coverage')) return 'timetable:unassigned'
     if (itemKey.includes('conflict')) return 'timetable:conflicts'
