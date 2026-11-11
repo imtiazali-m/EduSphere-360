@@ -1,10 +1,12 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
+import type { ReactNode } from 'react'
 import {
-  Activity, Award, Banknote, BookOpen, CalendarCheck, CalendarDays, CheckCircle2,
+  Activity, Award, BookOpen, CalendarCheck, CalendarDays, CheckCircle2,
   ClipboardCheck, ClipboardList, Clock3, GraduationCap, Megaphone, MessageSquare,
   School, ShieldAlert, TrendingDown, TrendingUp, Users, Wallet, Building2, ReceiptText,
-  FileText, Bell, BookOpenCheck, CircleAlert,
+  FileText, BookOpenCheck, CircleAlert,
 } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { listRecords } from '../lib/data'
 import { outstandingInvoiceBalance } from '../lib/finance'
@@ -101,7 +103,7 @@ function dateLabel(value: unknown): string {
   const date = recordDate({ id: '', institution_id: '', value } as unknown as RecordRow, ['value'])
   return date ? date.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : 'Date not set'
 }
-const isToday = (row: RecordRow, keys: string[], today: string) => recordDay(keys.map(key => row[key]).find(value => typeof value === 'string')) === today
+const isToday = (row: RecordRow, keys: string[], today: string) => keys.some(key => recordDay(row[key]) === today)
 const isPaid = (row: RecordRow) => ['completed', 'paid', 'success', 'succeeded', 'settled'].includes(String(row.status ?? '').toLowerCase())
 const isPending = (row: RecordRow) => ['pending', 'submitted', 'in_review', 'awaiting_approval'].includes(String(row.status ?? row.approval_status ?? '').toLowerCase())
 const todayWeekday = (date: Date) => date.toLocaleDateString(undefined, { weekday: 'long' }).toLowerCase()
@@ -134,7 +136,7 @@ function currentMonthStart() {
 }
 
 function MetricCard({ icon: Icon, label, value, hint, tone, onClick }: {
-  icon: typeof GraduationCap; label: string; value: string; hint: string; tone: string; onClick?: () => void
+  icon: LucideIcon; label: string; value: string; hint: string; tone: string; onClick?: () => void
 }) {
   const content = <>
     <span className={'rd-metric-icon ' + tone}><Icon size={19}/></span>
@@ -146,7 +148,7 @@ function MetricCard({ icon: Icon, label, value, hint, tone, onClick }: {
     : <article className="rd-metric-card">{content}</article>
 }
 function Panel({ title, description, icon: Icon, action, children, className = '' }: {
-  title: string; description?: string; icon: typeof Activity; action?: React.ReactNode; children: React.ReactNode; className?: string
+  title: string; description?: string; icon: LucideIcon; action?: ReactNode; children: ReactNode; className?: string
 }) {
   return <section className={'rd-panel ' + className}>
     <header className="rd-panel-head">
@@ -218,8 +220,8 @@ function FinanceBars({ months, collections, expenses }: { months: Date[]; collec
   return <div className="rd-finance-chart">
     {months.map((month, index) => <div className="rd-finance-month" key={month.toISOString()}>
       <div className="rd-finance-bars">
-        <span className="collection" style={{ height: Math.max(2, collections[index] / maximum * 100) + '%' }} title={'Collection: ' + formatMoney(collections[index])}/>
-        <span className="expense" style={{ height: Math.max(2, expenses[index] / maximum * 100) + '%' }} title={'Expenses: ' + formatMoney(expenses[index])}/>
+        <span className="collection" style={{ height: (collections[index] > 0 ? Math.max(2, collections[index] / maximum * 100) : 0) + '%' }} title={'Collection: ' + formatMoney(collections[index])}/>
+        <span className="expense" style={{ height: (expenses[index] > 0 ? Math.max(2, expenses[index] / maximum * 100) : 0) + '%' }} title={'Expenses: ' + formatMoney(expenses[index])}/>
       </div>
       <small>{month.toLocaleDateString(undefined, { month: 'short' })}</small>
     </div>)}
@@ -263,7 +265,6 @@ export function RoleDashboard({ onNavigate }: Props) {
   const students = get('students')
   const teachers = get('teachers')
   const attendance = get('attendance')
-  const staffAttendance = get('employee_attendance')
   const invoices = get('fee_invoices')
   const payments = get('fee_payments').filter(isPaid)
   const exams = get('exams')
@@ -272,7 +273,6 @@ export function RoleDashboard({ onNavigate }: Props) {
   const submissions = get('assignment_submissions')
   const timetable = get('timetable_entries')
   const notices = get('announcements').slice().sort((a, b) => String(b.created_at ?? '').localeCompare(String(a.created_at ?? '')))
-  const sessions = get('academic_sessions')
   const current = activeSession(data)
   const currentSessionLabel = !known('academic_sessions') ? 'Session unavailable'
     : current ? textValue(current, ['session_name', 'name', 'code'], 'Active session')
@@ -281,8 +281,10 @@ export function RoleDashboard({ onNavigate }: Props) {
   const monthStart = currentMonthStart()
   const monthName = now.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })
   const todayAttendance = attendance.filter(row => isToday(row, ['attendance_date'], today))
-  const presentToday = todayAttendance.filter(row => String(row.status ?? '').toLowerCase() === 'present').length
-  const todayAttendancePercent = todayAttendance.length ? Math.round(presentToday / todayAttendance.length * 100) : null
+  const todayStaffAttendance = get('employee_attendance').filter(row => isToday(row, ['attendance_date'], today))
+  const totalTodayAttendance = todayAttendance.length + todayStaffAttendance.length
+  const presentToday = [...todayAttendance, ...todayStaffAttendance].filter(row => String(row.status ?? '').toLowerCase() === 'present').length
+  const todayAttendancePercent = totalTodayAttendance ? Math.round(presentToday / totalTodayAttendance * 100) : null
   const todayPayments = payments.filter(row => isToday(row, ['payment_date'], today))
   const collectedToday = todayPayments.reduce((sum, payment) => sum + numberValue(payment.amount), 0)
   const outstanding = unpaidTotal(invoices)
@@ -291,18 +293,17 @@ export function RoleDashboard({ onNavigate }: Props) {
   const upcomingExams = exams
     .filter(exam => {
       const date = recordDate(exam, ['exam_date'])
-      return date && localDayKey(date) >= today
+      return date && localDayKey(date) >= today && !['cancelled', 'completed'].includes(String(exam.status ?? '').toLowerCase())
     })
     .sort((a, b) => String(a.exam_date ?? '').localeCompare(String(b.exam_date ?? '')))
   const upcomingAssignments = assignments
     .filter(assignment => {
       const due = recordDate(assignment, ['due_date'])
-      return due && localDayKey(due) >= today
+      return due && localDayKey(due) >= today && !['closed', 'completed', 'cancelled'].includes(String(assignment.status ?? 'open').toLowerCase())
     })
     .sort((a, b) => String(a.due_date ?? '').localeCompare(String(b.due_date ?? '')))
-  const currentResults = results.filter(result => role !== 'student' && role !== 'parent' || result.result_status === 'published')
-  const performance = averageResult(currentResults)
-  const announcementsRoute = 'institutional:communication:communication-dashboard'
+  const publishedResults = results.filter(result => ['published', 'released'].includes(String(result.result_status ?? '').toLowerCase()))
+  const performance = averageResult(publishedResults)
 
   const headingByRole: Record<AppRole, { eyebrow: string; title: string; subtitle: string }> = {
     owner: { eyebrow: 'INSTITUTION COMMAND CENTRE', title: 'Institution overview', subtitle: 'A live view of institutional performance, financial position and the work that needs attention.' },
@@ -317,14 +318,14 @@ export function RoleDashboard({ onNavigate }: Props) {
   const heading = headingByRole[role]
   const sessionCaption = currentSessionLabel
   const pendingDuesCaption = known('fee_invoices') ? formatCount(outstandingCount) + ' invoices with a balance' : 'Invoice data unavailable'
-  const metrics: Array<{ label: string; value: string; hint: string; icon: typeof GraduationCap; tone: string; route?: string }> = []
+  const metrics: Array<{ label: string; value: string; hint: string; icon: LucideIcon; tone: string; route?: string }> = []
 
   if (role === 'owner') {
     metrics.push(
       { label: 'Total students', value: knownCount('students'), hint: 'Institution learner records', icon: GraduationCap, tone: 'blue', route: 'students' },
       { label: 'Teachers & staff', value: knownCount('teachers'), hint: 'Institution team records', icon: Users, tone: 'green', route: 'teachers' },
       { label: 'Branches', value: knownCount('campuses'), hint: 'Registered campuses', icon: Building2, tone: 'violet', route: 'institutional:administration:campus-and-branch-management' },
-      { label: 'Today’s attendance', value: known('attendance') ? (todayAttendancePercent === null ? '—' : todayAttendancePercent + '%') : '—', hint: known('attendance') ? (todayAttendance.length ? formatCount(presentToday) + ' present of ' + formatCount(todayAttendance.length) + ' records' : 'No attendance recorded today') : 'Attendance unavailable', icon: CalendarCheck, tone: 'teal', route: 'attendance:students' },
+      { label: 'Today’s attendance', value: known('attendance') ? (todayAttendancePercent === null ? '—' : todayAttendancePercent + '%') : '—', hint: known('attendance', 'employee_attendance') ? (totalTodayAttendance ? formatCount(presentToday) + ' present of ' + formatCount(totalTodayAttendance) + ' student and staff records' : 'No attendance recorded today') : 'Attendance unavailable', icon: CalendarCheck, tone: 'teal', route: 'attendance:students' },
       { label: 'Collected today', value: known('fee_payments') ? formatMoney(collectedToday) : '—', hint: known('fee_payments') ? formatCount(todayPayments.length) + ' successful receipts' : 'Payment data unavailable', icon: Wallet, tone: 'amber', route: 'finance:fees:payments' },
       { label: 'Outstanding dues', value: known('fee_invoices') ? formatMoney(outstanding) : '—', hint: pendingDuesCaption, icon: ReceiptText, tone: 'rose', route: 'finance:receivables:receivables' },
     )
@@ -342,13 +343,11 @@ export function RoleDashboard({ onNavigate }: Props) {
     metrics.push(
       { label: 'Admissions this month', value: known('students') ? formatCount(admissionCount) : '—', hint: monthName, icon: GraduationCap, tone: 'blue', route: 'students:admissions' },
       { label: 'Active staff', value: known('teachers') ? formatCount(activeStaff) : '—', hint: known('teachers') ? formatCount(teachers.length) + ' total team records' : 'Staff data unavailable', icon: Users, tone: 'green', route: 'teachers' },
-      { label: 'Today’s attendance', value: known('attendance') ? (todayAttendancePercent === null ? '—' : todayAttendancePercent + '%') : '—', hint: known('attendance') ? (todayAttendance.length ? formatCount(presentToday) + ' present of ' + formatCount(todayAttendance.length) : 'No attendance recorded today') : 'Attendance unavailable', icon: CalendarCheck, tone: 'teal', route: 'attendance:students' },
+      { label: 'Today’s attendance', value: known('attendance') ? (todayAttendancePercent === null ? '—' : todayAttendancePercent + '%') : '—', hint: known('attendance', 'employee_attendance') ? (totalTodayAttendance ? formatCount(presentToday) + ' present of ' + formatCount(totalTodayAttendance) + ' student and staff records' : 'No attendance recorded today') : 'Attendance unavailable', icon: CalendarCheck, tone: 'teal', route: 'attendance:students' },
       { label: 'Pending approvals', value: known('workflow_approvals') ? formatCount(pendingApprovals.length) : '—', hint: 'Requests awaiting a decision', icon: ShieldAlert, tone: 'rose', route: 'institutional:administration:approval-and-workflows' },
       { label: 'Operational alerts', value: known('work_tasks', 'employee_leave_requests') ? formatCount(operationalAlerts) : '—', hint: 'Overdue tasks and pending leave', icon: CircleAlert, tone: 'amber', route: 'work_tasks' },
     )
   } else if (role === 'accountant') {
-    const monthPayments = payments.filter(payment => sameMonth(payment.payment_date, now))
-    const monthCollection = monthPayments.reduce((sum, payment) => sum + numberValue(payment.amount), 0)
     const expensesByMonth = lastSixMonths().map(month => {
       const journalIds = new Set(get('finance_journals').filter(journal => String(journal.status ?? '').toLowerCase() === 'posted' && sameMonth(journal.journal_date, month)).map(journal => String(journal.id)))
       const expenseAccounts = new Set(get('finance_accounts').filter(account => ['expense', 'expenses'].includes(String(account.account_type ?? '').toLowerCase())).map(account => String(account.id)))
@@ -362,11 +361,10 @@ export function RoleDashboard({ onNavigate }: Props) {
       { label: 'Outstanding invoices', value: known('fee_invoices') ? formatCount(outstandingCount) : '—', hint: 'Unpaid and partially paid', icon: FileText, tone: 'amber', route: 'finance:fees:invoices' },
       { label: 'Expenses this month', value: known('finance_accounts', 'finance_journals', 'finance_journal_lines') ? formatMoney(currentExpenses) : '—', hint: monthName + ' · posted expense journals', icon: TrendingDown, tone: 'violet', route: 'finance:accounts:expenses' },
     )
-    void monthCollection
   } else if (role === 'teacher') {
     const teacher = teachers.find(row => row.user_id === user?.id)
     const assignmentsToTeacher = get('teacher_assignments').filter(item => item.teacher_id === teacher?.id && String(item.status ?? 'active').toLowerCase() === 'active')
-    const classIds = new Set(assignmentsToTeacher.map(item => String(item.class_id ?? '')))
+    const classIds = new Set(assignmentsToTeacher.map(item => String(item.class_id ?? '')).filter(Boolean))
     const assignedClassRows = get('classes').filter(classRow => classIds.has(String(classRow.id)))
     const assignedClassNames = new Set(assignedClassRows.flatMap(item => [item.name, item.code].filter(Boolean).map(normalize)))
     const todaySchedule = timetable.filter(entry =>
@@ -389,7 +387,7 @@ export function RoleDashboard({ onNavigate }: Props) {
     const scopedResults = results.filter(item => teacherExamIds.has(String(item.exam_id)))
     const teacherPerformance = averageResult(scopedResults)
     metrics.push(
-      { label: 'Assigned classes', value: known('teacher_assignments', 'classes', 'teachers') ? formatCount(assignmentsToTeacher.length) : '—', hint: formatCount(assignedClassRows.length) + ' class records mapped', icon: School, tone: 'blue', route: 'institutional:employees:workload-allocation' },
+      { label: 'Assigned classes', value: known('teacher_assignments', 'classes', 'teachers') ? formatCount(classIds.size) : '—', hint: formatCount(assignedClassRows.length) + ' class records mapped', icon: School, tone: 'blue', route: 'institutional:employees:workload-allocation' },
       { label: 'Today’s lessons', value: known('timetable_entries') ? formatCount(todaySchedule.length) : '—', hint: 'Periods on your timetable', icon: CalendarDays, tone: 'teal', route: 'timetable:week' },
       { label: 'Attendance tasks', value: known('attendance', 'timetable_entries') ? formatCount(attendanceTasks) : '—', hint: 'Scheduled classes without a register today', icon: CalendarCheck, tone: 'amber', route: 'attendance:students' },
       { label: 'Pending reviews', value: known('assignment_submissions') ? formatCount(pendingReviews.length) : '—', hint: 'Student submissions to review', icon: ClipboardList, tone: 'violet', route: 'assignments:submissions' },
@@ -398,7 +396,6 @@ export function RoleDashboard({ onNavigate }: Props) {
       }).length) : '—', hint: 'For your assigned classes', icon: ClipboardCheck, tone: 'rose', route: 'exams:calendar' },
     )
   } else if (role === 'student') {
-    const student = students.find(item => item.id === user?.linkedStudentId) ?? students[0]
     const ownAttendance = attendance
     const ownPending = assignments.filter(item => !submissions.some(submission => submission.assignment_id === item.id))
     const nextExams = upcomingExams
@@ -410,7 +407,6 @@ export function RoleDashboard({ onNavigate }: Props) {
       { label: 'Published results', value: known('exam_results') ? formatCount(resultCount) : '—', hint: 'Results released to you', icon: Award, tone: 'amber', route: 'exam_results:published' },
       { label: 'Fee balance', value: known('fee_invoices') ? formatMoney(unpaidTotal(invoices)) : '—', hint: known('fee_invoices') ? formatCount(invoices.length) + ' invoices' : 'Fee information unavailable', icon: Wallet, tone: 'rose', route: 'finance:fees:invoices' },
     )
-    void student
   } else if (role === 'parent') {
     const childIds = new Set(students.map(item => String(item.id)))
     const linkedChildren = students
@@ -442,7 +438,9 @@ export function RoleDashboard({ onNavigate }: Props) {
         const branchId = String(campus.id)
         const branchStudents = students.filter(item => String(item.campus_id ?? '') === branchId).length
         const branchStaff = teachers.filter(item => String(item.campus_id ?? '') === branchId).length
-        const branchAttendance = todayAttendance.filter(item => String(item.campus_id ?? '') === branchId)
+        const branchStudentAttendance = todayAttendance.filter(item => String(item.campus_id ?? '') === branchId)
+        const branchStaffAttendance = todayStaffAttendance.filter(item => String(item.campus_id ?? '') === branchId)
+        const branchAttendance = [...branchStudentAttendance, ...branchStaffAttendance]
         const branchPayments = todayPayments.filter(item => String(item.campus_id ?? '') === branchId)
         return { id: campus.id, name: textValue(campus, ['name', 'campus_code'], 'Campus'), students: branchStudents, staff: branchStaff, attendance: branchAttendance.length, present: branchAttendance.filter(item => String(item.status ?? '').toLowerCase() === 'present').length, collection: branchPayments.reduce((sum, item) => sum + numberValue(item.amount), 0) }
       })
@@ -483,7 +481,7 @@ export function RoleDashboard({ onNavigate }: Props) {
     })(),
     admin: (() => {
       const recentAdmissions = students.slice().sort((a, b) => String(b.admission_date ?? b.created_at ?? '').localeCompare(String(a.admission_date ?? a.created_at ?? ''))).slice(0, 4)
-      const activeStaff = teachers.filter(teacher => ['active', 'employed', 'on_leave'].includes(String(teacher.employment_status ?? 'active').toLowerCase()))
+      const activeStaff = teachers.filter(teacher => ['active', 'employed', 'on_leave'].includes(String(teacher.employment_status ?? '').toLowerCase()))
       const tasks = get('work_tasks').filter(task => !['completed', 'cancelled'].includes(String(task.status ?? '').toLowerCase()))
       const leaveRequests = get('employee_leave_requests').filter(isPending)
       return <div className="rd-grid rd-grid-wide">
@@ -501,6 +499,13 @@ export function RoleDashboard({ onNavigate }: Props) {
             <div><strong>{formatCount(activeStaff.length)}</strong><span>Active / on leave</span></div>
             <div><strong>{formatCount(teachers.length - activeStaff.length)}</strong><span>Other statuses</span></div>
             <div><strong>{formatCount(teachers.length)}</strong><span>Total records</span></div>
+          </div>}
+        </Panel>
+        <Panel title="Attendance summary" description="Student and employee registers recorded today." icon={CalendarCheck}>
+          {!known('attendance', 'employee_attendance') ? <EmptyState loading={loading} message="Attendance summary is unavailable."/> : <div className="rd-status-summary">
+            <div><strong>{formatCount(todayAttendance.length)}</strong><span>Student entries</span></div>
+            <div><strong>{formatCount(todayStaffAttendance.length)}</strong><span>Staff entries</span></div>
+            <div><strong>{formatCount(presentToday)}</strong><span>Present today</span></div>
           </div>}
         </Panel>
         <Panel title="Pending approvals" description="Requests requiring administrative review." icon={ShieldAlert} action={<button type="button" className="rd-text-action" onClick={() => onNavigate('institutional:administration:approval-and-workflows')}>Review queue</button>}>
@@ -628,7 +633,7 @@ export function RoleDashboard({ onNavigate }: Props) {
     })(),
     student: (() => {
       const student = students.find(item => item.id === user?.linkedStudentId) ?? students[0]
-      const pendingAssignments = assignments.filter(item => !submissions.some(submission => String(submission.assignment_id) === String(item.id)))
+      const pendingAssignments = assignments.filter(item => !['closed', 'completed', 'cancelled'].includes(String(item.status ?? 'open').toLowerCase()) && !submissions.some(submission => String(submission.assignment_id) === String(item.id)))
       const dayTimetable = timetable.filter(item => normalize(item.weekday) === todayWeekday(now))
       const nextTests = upcomingExams
       const attendanceRate = attendance.length ? Math.round(attendance.filter(item => String(item.status ?? '').toLowerCase() === 'present').length / attendance.length * 100) : null
@@ -683,7 +688,7 @@ export function RoleDashboard({ onNavigate }: Props) {
               const childId = String(child.id)
               const childRecords = attendanceForChild(childId)
               const rate = childRecords.length ? Math.round(childRecords.filter(item => String(item.status ?? '').toLowerCase() === 'present').length / childRecords.length * 100) : null
-              const childAssignments = assignmentsForChild(child)
+              const childAssignments = assignmentsForChild(child).filter(item => !['closed', 'completed', 'cancelled'].includes(String(item.status ?? 'open').toLowerCase()))
               const submittedIds = new Set(submissionsForChild(childId).map(item => String(item.assignment_id)))
               const outstandingForChild = duesForChild(childId)
               return <article className="rd-child-card" key={child.id}>
@@ -697,6 +702,9 @@ export function RoleDashboard({ onNavigate }: Props) {
               </article>
             })}
           </div> : <EmptyState loading={false} message="No children are linked to this parent login. Ask the institution to connect the learner accounts."/>}
+        </Panel>
+        <Panel title="Children’s timetable" description="Periods scheduled today for your linked children." icon={CalendarDays}>
+          <TimetableList items={timetable.filter(item => normalize(item.weekday) === todayWeekday(now))} loading={loading || !known('timetable_entries')}/>
         </Panel>
         <Panel title="Homework and learning" description="Open coursework across your linked children." icon={BookOpen}>
           {!known('assignments', 'assignment_submissions') ? <EmptyState loading={loading} message="Homework information is unavailable."/> : assignments.length ? <div className="rd-list">
