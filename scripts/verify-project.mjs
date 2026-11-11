@@ -69,7 +69,7 @@ const roles = ['owner', 'admin', 'teacher', 'student', 'parent', 'accountant', '
 check('The full institutional menu maps every submenu to a working destination', () => {
   assert.equal(navigationCatalog.length, 25, 'The visible sidebar contains 27 main workspaces after Administration and Academic Management consolidation')
   const groupKeys = new Set(navigationCatalog.map(group => group.key))
-  assert.equal(groupKeys.size, 27, 'Visible main workspace keys must be unique')
+  assert.equal(groupKeys.size, 25, 'Visible main workspace keys must be unique')
   for (const group of navigationCatalog) {
     assert.ok(group.items.length > 0, group.label + ' must have its own operational submenus')
     for (const page of group.items) assert.ok(navigationRoutes[page], 'No route is connected for ' + group.label + '/' + page)
@@ -229,7 +229,7 @@ check('All seven roles receive focused, permission-aware workspaces', () => {
   assert.ok(roleNavigationGroups('student').some(group => group.key === 'academic-management'), 'Students must receive the Stage 8 academic workspace')
   assert.ok(roleNavigationGroups('parent').some(group => group.key === 'academic-management'), 'Parents must receive the Stage 8 academic workspace')
   assert.ok(!roleNavigationGroups('teacher').some(group => ['administration','institution-config','academic-sessions','classes-sections','subjects','curriculum','timetable','teaching'].includes(group.key)), 'Legacy academic groups must be consolidated, not duplicated')
-  assert.ok(roleNavigationGroups('teacher').find(group => group.key === 'employees')?.items.includes('Employee Leave Management'))
+  assert.ok(roleNavigationGroups('teacher').find(group => group.key === 'people-hr')?.items.includes('Employee Contracts & Documents'))
   assert.ok(!roleNavigationGroups('student').some(group => ['administration','institution-config','employees','accounts-finance','payroll'].includes(group.key)))
   assert.ok(!roleNavigationGroups('parent').some(group => ['administration','institution-config','employees','accounts-finance','payroll'].includes(group.key)))
   assert.ok(!roleNavigationGroups('accountant').some(group => ['employees','students','question-bank','examinations'].includes(group.key)))
@@ -698,7 +698,7 @@ check('Student Record is a complete permission-aware multi-window workspace', ()
 
 check('Faculty & Employee Management uses dedicated institution-scoped HR workspaces', () => {
   const faculty = read('src/components/FacultyWorkspace.tsx')
-  for (const label of ['Overview', 'Employee Registration', 'Employee Directory', 'Employee Profile', 'Departments', 'Designations', 'Teaching Assignments', 'Faculty Attendance', 'Leave Management', 'Workload & Timetable', 'Documents', 'Qualifications', 'Employment History', 'Staff Reports']) {
+  for (const label of ['Overview', 'Employee Registration', 'All Employees', 'Employee Profile', 'Departments', 'Designations', 'Teaching Assignments', 'Faculty Attendance', 'Leave Management', 'Workload & Timetable', 'Documents', 'Qualifications', 'Employment History', 'Staff Reports']) {
     assert.ok(faculty.includes("label:'" + label + "'") || faculty.includes("label: '" + label + "'"), 'Faculty workspace window is missing: ' + label)
   }
   for (const table of ['designations', 'teacher_assignments', 'employee_attendance', 'employee_leave_requests', 'staff_documents', 'employee_history']) {
