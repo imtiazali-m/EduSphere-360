@@ -1046,6 +1046,8 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
       { key: 'assignments' as const, label: 'Student Assignments', icon: FileText },
       { key: 'timetable' as const, label: 'Student Timetable', icon: CalendarDays },
       { key: 'documents' as const, label: 'Student Documentation', icon: FolderOpen },
+      { key: 'fees' as const, label: 'Fee Records', icon: Wallet },
+      { key: 'health' as const, label: 'Health & Emergency', icon: ShieldCheck },
       { key: 'history' as const, label: 'Student History', icon: History },
     ]
     const ownerOrAdmin = ['owner', 'admin'].includes(user!.role)
