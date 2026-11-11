@@ -25,7 +25,7 @@ const requiredFiles = [
   'index.html', 'src/main.tsx', 'src/App.tsx', 'src/components/Dashboard.tsx', 'src/components/WorkspaceUnavailable.tsx',
   'src/components/FinanceWorkspace.tsx', 'src/styles/finance-workspace.css', 'src/styles/student-promotion-workspace.css', 'src/styles/navigation-refinement.css',
   'src/components/PayrollWorkspace.tsx', 'src/styles/payroll-workspace.css',
-  'src/components/GovernanceWorkspace.tsx', 'src/components/AdministrationStage5Workspace.tsx', 'src/styles/governance-workspace.css',
+  'src/components/GovernanceWorkspace.tsx', 'src/components/AdministrationStage5Workspace.tsx', 'src/components/PeopleHRWorkspace.tsx', 'src/components/EmployeeQualificationsPanel.tsx', 'src/styles/people-hr-workspace.css', 'src/styles/governance-workspace.css',
   'src/components/InstitutionOperationsWorkspace.tsx', 'src/styles/institution-operations.css',
   'src/components/AcademicManagementWorkspace.tsx', 'src/styles/academic-management.css',
   'src/components/AuthScreens.tsx', 'src/components/AdministrationModule.tsx',
@@ -67,7 +67,7 @@ const { modules, modulesForRole } = require(path.join(root, 'src/lib/modules.ts'
 const roles = ['owner', 'admin', 'teacher', 'student', 'parent', 'accountant', 'exam_officer']
 
 check('The full institutional menu maps every submenu to a working destination', () => {
-  assert.equal(navigationCatalog.length, 27, 'The visible sidebar contains 27 main workspaces after Administration and Academic Management consolidation')
+  assert.equal(navigationCatalog.length, 25, 'The visible sidebar contains 27 main workspaces after Administration and Academic Management consolidation')
   const groupKeys = new Set(navigationCatalog.map(group => group.key))
   assert.equal(groupKeys.size, 27, 'Visible main workspace keys must be unique')
   for (const group of navigationCatalog) {
@@ -80,13 +80,15 @@ check('The full institutional menu maps every submenu to a working destination',
   for (const required of ['academic-management','question-bank','library','transport','inventory','facilities','visitors','reconciliation','backup']) {
     assert.ok(groupKeys.has(required), 'Missing expansion workspace: ' + required)
   }
-  for (const required of ['attendance','students','employees','accounts-finance','fees','payments','receipts','payroll','examinations','class-tests','reports']) {
+  for (const required of ['attendance','people-hr','accounts-finance','fees','payments','receipts','examinations','class-tests','reports']) ]) {
     assert.ok(groupKeys.has(required), 'Missing core institution workspace: ' + required)
   }
-  assert.ok(institutionalMenu.length === 34, 'Full route catalogue must preserve all 34 source groups')
+  assert.ok(institutionalMenu.length === 32, 'Full route catalogue must preserve all 34 source groups')
   const menuDestinationCount = institutionalMenu.reduce((total, group) => total + group.items.length, 0)
-  assert.ok(menuDestinationCount >= 400, 'All specified submenu destinations should be present')
+  assert.ok(menuDestinationCount >= 390, 'All specified submenu destinations should be present')
   const administration = institutionalMenu.find(group => group.key === 'administration')
+  const peopleHR = institutionalMenu.find(group => group.key === 'people-hr')
+  assert.deepEqual(peopleHR?.items.map(item => item.label), ['Students','Admissions & Enrollment','Teachers','Faculty & Staff','Parents & Guardians','HR & Recruitment','Employee Contracts & Documents','Employee Performance','Payroll & Salary Records','Alumni'], 'People & HR must contain the ten approved Stage 6 destinations')
   assert.deepEqual(administration?.items.map(item => item.label), [
     'Institute Profile','Campus and Branch Management','Academic Structure & Sections','Departments & Designations',
     'Organisational Structure','System Configuration','Approval Workflows','Policies & Rules','Administrative Audit',
@@ -189,8 +191,8 @@ check('The full institutional menu maps every submenu to a working destination',
 
 
 check('Sidebar workspaces follow the approved parent-section sequence for every role', () => {
-  const expectedGroupOrder = ["dashboard","administration","backup","students","employees","attendance","behaviour","certificates","academic-management","question-bank","examinations","class-tests","library","accounts-finance","fees","receivables","payments","receipts","payroll","reconciliation","communication","transport","inventory","facilities","visitors","reports","ai"]
-  const completeCatalogOrder = ["dashboard","administration","institution-config","academic-sessions","classes-sections","subjects","backup","students","employees","attendance","behaviour","certificates","academic-management","curriculum","timetable","teaching","question-bank","examinations","class-tests","library","accounts-finance","fees","receivables","payments","receipts","payroll","reconciliation","communication","transport","inventory","facilities","visitors","reports","ai"]
+  const expectedGroupOrder = ["dashboard","administration","backup","people-hr","attendance","behaviour","certificates","academic-management","question-bank","examinations","class-tests","library","accounts-finance","fees","receivables","payments","receipts","reconciliation","communication","transport","inventory","facilities","visitors","reports","ai"]
+  const completeCatalogOrder = ["dashboard","administration","institution-config","academic-sessions","classes-sections","subjects","backup","people-hr","attendance","behaviour","certificates","academic-management","curriculum","timetable","teaching","question-bank","examinations","class-tests","library","accounts-finance","fees","receivables","payments","receipts","reconciliation","communication","transport","inventory","facilities","visitors","reports","ai"]
   assert.deepEqual(navigationSectionDefinitions.map(section => section.key), [
     'overview','setup','people','academics','finance','communication','campus','intelligence',
   ])
@@ -473,6 +475,26 @@ check('Student, faculty and operational record tables support accessible sorting
     assert.ok(record.includes(value), 'A key record table is missing sortable columns: ' + value)
   }
   assert.ok(styles.includes('.ed360-sort-header:focus-visible'), 'Sortable table headings need a visible keyboard focus indicator')
+})
+
+check('PeopleHRWorkspace exposes recruitment, contracts, performance and alumni workflows', () => {
+  for (const [label,route] of [
+    ['Students','students:directory'],['Admissions & Enrollment','peoplehr:admissions'],['Teachers','employees:directory-teaching'],
+    ['Faculty & Staff','employees:directory-staff'],['Parents & Guardians','students:guardians'],['HR & Recruitment','peoplehr:recruitment'],
+    ['Employee Contracts & Documents','peoplehr:contracts'],['Employee Performance','peoplehr:performance'],['Payroll & Salary Records','payroll:overview'],['Alumni','peoplehr:alumni'],
+  ]) assert.ok(route, label + ' must have a destination')
+  const people = read('src/components/PeopleHRWorkspace.tsx')
+  for (const value of ['hr_job_postings','hr_candidates','hr_interviews','admission_enquiries','employee_contracts','employee_appraisals','alumni_records','hire_hr_candidate','convert_admission_enquiry','acknowledge_employee_appraisal']) {
+    assert.ok(people.includes(value), 'People & HR workflow is missing ' + value)
+  }
+  const qualifications = read('src/components/EmployeeQualificationsPanel.tsx')
+  assert.ok(qualifications.includes('employee_qualifications') && qualifications.includes('staff-files'), 'Qualifications must use institution-scoped records and private staff files')
+  assert.ok(read('src/components/Dashboard.tsx').includes('<PeopleHRWorkspace '), 'PeopleHRWorkspace must be connected to the signed-in dashboard')
+  assert.deepEqual(roleNavigationGroups('teacher').find(group => group.key === 'people-hr')?.items, ['Students','Teachers','Employee Contracts & Documents','Employee Performance','Payroll & Salary Records'])
+  assert.deepEqual(roleNavigationGroups('student').find(group => group.key === 'people-hr')?.items, ['Students'])
+  assert.deepEqual(roleNavigationGroups('parent').find(group => group.key === 'people-hr')?.items, ['Students','Parents & Guardians'])
+  assert.deepEqual(roleNavigationGroups('accountant').find(group => group.key === 'people-hr')?.items, ['Payroll & Salary Records'])
+  assert.ok(!roleNavigationGroups('exam_officer').some(group => group.key === 'people-hr'))
 })
 
 check('Finance and payroll registers support searchable sortable pagination', () => {
@@ -981,14 +1003,14 @@ check('Unified design system is loaded last and removes global browser zoom', ()
   ]) assert.ok(contrast(foreground, background) >= 4.5, label + ' must meet WCAG AA normal-text contrast')
   assert.ok(read('docs/PHASE_1_DETAILED_AUDIT.md').includes('Phase 1 disposition'), 'Detailed Phase 1 audit document is missing')
   const roleMenu = read('docs/PHASE_1_ROLE_MENU_INVENTORY.md')
-  assert.ok(roleMenu.includes('27 visible sidebar groups') && roleMenu.includes('34 route-catalogue groups') && roleMenu.includes('Administration parent menu') && roleMenu.includes('Academic Management parent menu'), 'Current visible sidebar and consolidated parent workspaces must be documented')
+  assert.ok(roleMenu.includes('25 visible sidebar groups') && roleMenu.includes('32 route-catalogue groups') && roleMenu.includes('Administration parent menu') && roleMenu.includes('Academic Management parent menu') && roleMenu.includes('People & HR parent menu'), 'Current visible sidebar and consolidated parent workspaces must be documented')
   assert.ok(read('docs/PHASE_2_DESIGN_SYSTEM.md').includes('Core colour tokens'), 'Phase 2 design specification is missing')
   const routeAudit = read('docs/PHASE_1_EXACT_ROUTE_AUDIT.md')
   assert.ok(/Unexpected route families:\*\* 0\./.test(routeAudit), 'Exact route audit must resolve each visible role/menu destination without unknown route families')
   assert.ok(routeAudit.includes('Bare module roots to review:** 0.') && routeAudit.includes('Unexpected route families:** 0.'), 'All role-visible destinations must retain explicit workspace or intentional root routes')
   assert.ok(routeAudit.includes('## Dispatcher coverage') && routeAudit.includes('Unmapped routes:** 0.') && routeAudit.includes('LinkedOperationsWorkspace') && routeAudit.includes('InstitutionalWorkspace') && routeAudit.includes('RecordModule'), 'Every role-visible route must map to a known Dashboard component')
   const responsiveAudit = read('docs/PHASE_2_RESPONSIVE_SOURCE_AUDIT.md')
-  assert.ok(responsiveAudit.includes('14 responsive source checks passed') && responsiveAudit.includes('390×844') && responsiveAudit.includes('768×1024'), 'Responsive source coverage audit is missing or incomplete')
+  assert.ok(responsiveAudit.includes('15 responsive source checks passed') && responsiveAudit.includes('390×844') && responsiveAudit.includes('768×1024'), 'Responsive source coverage audit is missing or incomplete')
   const viewAudit = read('docs/PHASE_1_ROUTE_VIEW_AUDIT.md')
   assert.ok(/Compatibility issues:\*\* 0\./.test(viewAudit), 'Every role-visible destination must request a supported component sub-view')
   assert.ok(viewAudit.includes('Hidden from role workspace tabs') === false, 'Role menus must not expose inaccessible internal workspace tabs')

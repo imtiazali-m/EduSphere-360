@@ -393,6 +393,21 @@ function dedicatedRoute(groupKey: string, itemKey: string): string | undefined {
  */
 export function getNavigationRoute(groupKey: string, itemLabel: string, role?: string): string {
   const itemKey = slug(itemLabel)
+  if (groupKey === 'people-hr') {
+    const destinations: Record<string,string> = {
+      'students':role==='student'||role==='parent'?'students:profile':'students:directory',
+      'admissions-enrollment':'peoplehr:admissions',
+      'teachers':role==='teacher'?'employees:profile':'employees:directory-teaching',
+      'faculty-staff':'employees:directory-staff',
+      'parents-guardians':'students:guardians',
+      'hr-recruitment':'peoplehr:recruitment',
+      'employee-contracts-documents':'peoplehr:contracts',
+      'employee-performance':'peoplehr:performance',
+      'payroll-salary-records':'payroll:overview',
+      'alumni':'peoplehr:alumni',
+    }
+    return destinations[itemKey] ?? 'unavailable:people-hr:' + itemKey
+  }
   const compositeKey = `${groupKey}:${itemKey}`
   const actorRole = role ?? 'owner'
   if (groupKey === 'academic-management') {

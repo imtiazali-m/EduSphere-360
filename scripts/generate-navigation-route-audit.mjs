@@ -41,7 +41,7 @@ const classify = (route) => {
   const known = new Set([
     'admin', 'assignments', 'assignment_submissions', 'attendance', 'announcements',
     'employees', 'exam_results', 'exams', 'fees', 'finance', 'files', 'governance',
-    'academic', 'care', 'notifications', 'operations', 'overview', 'payroll', 'reports', 'students',
+    'academic', 'care', 'peoplehr', 'notifications', 'operations', 'overview', 'payroll', 'reports', 'students',
     'timetable', 'work_tasks',
   ])
   if (!known.has(workspace)) return 'Unexpected route family · investigate'
@@ -65,7 +65,7 @@ for (const key of linkedWorkspaceKeys) {
 for (const token of [
   '<Overview ', '<NotificationCenter ', '<WorkspaceUnavailable ', '<AttendanceWorkspace ',
   '<AdministrationModule ', '<AccountsModule ', '<FilesModule ', '<ReportsModule ',
-  '<FinanceWorkspace ', '<PayrollWorkspace ', '<GovernanceWorkspace ',
+  '<FinanceWorkspace ', '<PayrollWorkspace ', '<PeopleHRWorkspace ', '<GovernanceWorkspace ',
   '<InstitutionOperationsWorkspace ', '<LinkedOperationsWorkspace ',
   '<InstitutionalWorkspace ', '<AssessmentWorkspace ', '<AcademicManagementWorkspace ', '<FacultyWorkspace ', '<RecordModule ',
 ]) {
@@ -93,6 +93,7 @@ const resolveDispatcher = (route) => {
   if (route.startsWith('reports:')) return 'ReportsModule'
   if (route.startsWith('finance:')) return 'FinanceWorkspace'
   if (route.startsWith('payroll:')) return 'PayrollWorkspace'
+  if (route.startsWith('peoplehr:')) return 'PeopleHRWorkspace'
   if (route.startsWith('governance:')) return 'GovernanceWorkspace'
   if (route.startsWith('operations:')) return 'InstitutionOperationsWorkspace'
   if (route.startsWith('admin:')) return 'AdministrationModule'
