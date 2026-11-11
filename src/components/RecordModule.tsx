@@ -42,11 +42,12 @@ function makeAdmissionNumber() {
  * Shared modal behavior for record windows. The top-most dialog owns Escape,
  * Tab focus and page-scroll locking; closing it returns focus to its opener.
  */
-function useModalControls(onClose: () => void) {
+function useModalControls(onClose: () => void, enabled = true) {
   const closeRef = useRef(onClose)
   closeRef.current = onClose
 
   useEffect(() => {
+    if (!enabled) return
     const previousOverflow = document.body.style.overflow
     const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null
     const backdrops = Array.from(document.querySelectorAll<HTMLElement>('.modal-backdrop'))
@@ -93,15 +94,15 @@ function useModalControls(onClose: () => void) {
       document.body.style.overflow = previousOverflow
       previouslyFocused?.focus()
     }
-  }, [])
+  }, [enabled])
 }
 
-function RecordForm({ module, initial, onCancel, onSave, saving, mode }: {
+function RecordForm({ module, initial, onCancel, onSave, saving, mode, fullPage = false }: {
   module: ModuleConfig; initial?: RecordRow | null; onCancel: () => void
-  onSave: (values: Record<string, unknown>) => void; saving: boolean; mode: AppMode
+  onSave: (values: Record<string, unknown>) => void; saving: boolean; mode: AppMode; fullPage?: boolean
 }) {
   const { user } = useAuth()
-  useModalControls(onCancel)
+  useModalControls(onCancel, !fullPage)
   const isStudent = module.key === 'students'
   const isTeacher = module.key === 'teachers'
   const lockTaskAssignee = module.key === 'work_tasks' && !['owner', 'admin'].includes(user!.role)
@@ -213,6 +214,87 @@ function RecordForm({ module, initial, onCancel, onSave, saving, mode }: {
       return
     }
     setPhotoFile(file)
+  }
+
+  const renderStudentField = (field: FieldConfig) => {
+    const isAutoStudentId = field.name === 'admission_no'
+    return <label key={field.name} className="ed360-admission-field">
+      <span>{field.label}{field.required && <b aria-hidden="true"> *</b>}</span>
+      {field.name === 'class_name' ? <>
+        <input className="input-control" list="ed360-admission-class-options" required={field.required} value={values[field.name] ?? ''} onChange={event => update(field, event.target.value)} placeholder="Choose or enter class / programme"/>
+        <datalist id="ed360-admission-class-options">{(dynamicOptions.student_class ?? []).map(option => <option key={option.value} value={option.value}/>)}</datalist>
+        <small>Choose a configured class or enter the class / programme name.</small>
+      </> : isAutoStudentId ? <div className="ed360-admission-generated-id">
+        <input className="input-control" value={values[field.name] ?? ''} readOnly required aria-label="Automatically generated student admission ID"/>
+        <button type="button" className="button button-outline" onClick={() => update(field, makeAdmissionNumber())}>Regenerate ID</button>
+      </div> : field.type === 'select' ? <select className="input-control" required={field.required} value={values[field.name] ?? ''} onChange={event => update(field, event.target.value)}>
+        <option value="">Select status…</option>
+        {(field.options ?? []).map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
+      </select> : field.type === 'textarea' ? <textarea className="input-control textarea-control" required={field.required} value={values[field.name] ?? ''} onChange={event => update(field, event.target.value)} placeholder={field.placeholder ?? ''}/> :
+        <input className="input-control" type={field.type ?? 'text'} readOnly={field.readOnly} required={field.required} value={values[field.name] ?? ''} onChange={event => update(field, event.target.value)} placeholder={field.placeholder ?? ''}/>}
+      {isAutoStudentId && <small>Generated reference number; the database creates its own internal record ID.</small>}
+    </label>
+  }
+
+  if (isStudent && fullPage) {
+    const fieldGroups = [
+      { key: 'identity', title: 'Student identity', description: 'The learner’s name and unique admission reference.', names: ['full_name', 'admission_no'] },
+      { key: 'academic', title: 'Academic placement', description: 'The class or programme and current registration status.', names: ['class_name', 'status'] },
+      { key: 'contact', title: 'Contact information', description: 'The learner’s contact details and date of birth.', names: ['email', 'date_of_birth'] },
+      { key: 'guardian', title: 'Parent / guardian information', description: 'The primary family contact connected to this learner.', names: ['guardian_name', 'guardian_email'] },
+    ]
+    const renderedFields = new Set(fieldGroups.flatMap(group => group.names))
+    const remainingFields = module.fields.filter(field => !renderedFields.has(field.name))
+    return <section className="ed360-admission-workspace" aria-labelledby="ed360-admission-page-title">
+      <div className="ed360-admission-breadcrumb"><span>Students</span><ChevronRight size={14}/><span>Admissions</span><ChevronRight size={14}/><strong>{initial ? 'Edit student' : 'New admission'}</strong></div>
+      <header className="ed360-admission-page-heading">
+        <div className="ed360-admission-heading-copy">
+          <span className="ed360-admission-kicker">STUDENT MANAGEMENT / ADMISSIONS</span>
+          <h1 id="ed360-admission-page-title">{initial ? 'Edit student record' : 'New student admission'}</h1>
+          <p>Complete the learner’s information in the sections below. Required fields are marked clearly.</p>
+        </div>
+        <button type="button" className="button button-outline" onClick={onCancel}><ChevronLeft size={16}/> Back to students</button>
+      </header>
+      {dynamicOptionsError && <div className="ed360-admission-alert" role="alert"><AlertCircle size={17}/>{dynamicOptionsError}</div>}
+      <form className="ed360-admission-form" onSubmit={event => { event.preventDefault(); onSave({ ...values, __photoFile: photoFile }) }}>
+        <section className="ed360-admission-section ed360-admission-identity">
+          <header><div><span className="ed360-admission-section-number">01</span><div><h2>Student identity</h2><p>The primary details that identify the learner in your institution.</p></div></div></header>
+          <div className="ed360-admission-identity-body">
+            <aside className="ed360-admission-photo-card">
+              <div className="ed360-admission-photo-preview">{photoPreview ? <img src={photoPreview} alt="Student photo preview"/> : <GraduationCap size={30}/>}</div>
+              <strong>Student photograph</strong>
+              <p>Use a clear JPG, PNG or WebP image, up to 5 MB.</p>
+              <label className="button button-outline">
+                <ImagePlus size={15}/>{photoFile ? 'Change photograph' : 'Choose photograph'}
+                <input type="file" accept="image/jpeg,image/png,image/webp" onChange={event => selectPhoto(event.target.files?.[0])}/>
+              </label>
+              {photoError && <small className="ed360-admission-error" role="alert">{photoError}</small>}
+              {photoFile && <small className="ed360-admission-file-name">{photoFile.name}</small>}
+            </aside>
+            <div className="ed360-admission-field-grid">
+              {fieldGroups[0].names.map(name => module.fields.find(field => field.name === name)).filter((field): field is FieldConfig => Boolean(field)).map(renderStudentField)}
+            </div>
+          </div>
+        </section>
+        <div className="ed360-admission-two-column">
+          {fieldGroups.slice(1).map((group,index) => {
+            const groupFields = group.names.map(name => module.fields.find(field => field.name === name)).filter((field): field is FieldConfig => Boolean(field))
+            return groupFields.length ? <section key={group.key} className="ed360-admission-section">
+              <header><div><span className="ed360-admission-section-number">{String(index + 2).padStart(2,'0')}</span><div><h2>{group.title}</h2><p>{group.description}</p></div></div></header>
+              <div className="ed360-admission-field-grid">{groupFields.map(renderStudentField)}</div>
+            </section> : null
+          })}
+        </div>
+        {remainingFields.length > 0 && <section className="ed360-admission-section">
+          <header><div><span className="ed360-admission-section-number">05</span><div><h2>Additional information</h2><p>Other fields configured for this student record.</p></div></div></header>
+          <div className="ed360-admission-field-grid">{remainingFields.map(renderStudentField)}</div>
+        </section>}
+        <div className="ed360-admission-footer">
+          <p><ShieldCheck size={16}/> Your changes are submitted to the institution’s secure student records when you save.</p>
+          <div><button type="button" className="button button-quiet" onClick={onCancel}>Cancel</button><button type="submit" className="button button-primary" disabled={saving}>{saving ? 'Saving admission…' : initial ? 'Save student changes' : 'Save student admission'} <Check size={16}/></button></div>
+        </div>
+      </form>
+    </section>
   }
 
   return <div className="modal-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) onCancel() }}>
@@ -917,7 +999,7 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
     } catch (error) { onToast(userFacingError(error, 'Could not delete this record. Refresh and try again.'), true) }
   }
 
-  const formDialog = showForm ? <RecordForm module={module} initial={editing} saving={saving} mode={mode} onCancel={() => { setShowForm(false); setEditing(null) }} onSave={values => void save(values)}/> : null
+  const formDialog = showForm ? <RecordForm module={module} initial={editing} saving={saving} mode={mode} fullPage={module.key === 'students'} onCancel={() => { setShowForm(false); setEditing(null) }} onSave={values => void save(values)}/> : null
   const detailDialog = viewing ? <RecordDetailsDialog module={module} row={viewing} onClose={() => setViewing(null)}/> : null
 
   if (module.key === 'students') {
@@ -946,6 +1028,7 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
       if (user!.role === 'teacher') return ['overview', 'directory', 'profile', 'id-cards', 'classes', 'attendance', 'results', 'assignments', 'timetable', 'history'].includes(item.key)
       return ['overview', 'profile', 'id-cards', 'classes', 'guardians', 'attendance', 'results', 'assignments', 'timetable', 'documents', 'history'].includes(item.key)
     })
+    if (showForm) return formDialog
     const pendingRows = rows.filter(row => ['draft','submitted','under_review','documents_required','approved'].includes(String(row.application_status ?? 'submitted').toLowerCase()))
     const presentCount = studentAttendanceRows.filter(row => ['present', 'late'].includes(String(row.status ?? '').toLowerCase())).length
     const absentCount = studentAttendanceRows.filter(row => String(row.status ?? '').toLowerCase() === 'absent').length
