@@ -107,7 +107,7 @@ check('The full institutional menu maps every submenu to a working destination',
   assert.equal(getNavigationRoute('reports', 'Student Reports'), 'reports:students', 'Student reports must open the student report window')
   assert.equal(getNavigationRoute('reports', 'Attendance Reports'), 'reports:attendance', 'Attendance reports must open the attendance report window')
   assert.equal(getNavigationRoute('teaching', 'Homework'), 'assignments:open', 'Homework must open the open-coursework view')
-  assert.equal(getNavigationRoute('attendance', 'Attendance Reports'), 'reports:attendance', 'Attendance report shortcut must open the correct report view')
+  assert.equal(getNavigationRoute('attendance', 'Attendance Reports'), 'care:reports', 'Stage 7 attendance reports must open the dedicated care/report workspace')
   assert.equal(getNavigationRoute('students', 'Student Directory'), 'students:directory', 'Student Directory must open the student directory view')
   assert.equal(getNavigationRoute('students', 'Bulk Student Operations'), 'unavailable:students:bulk-student-operations', 'Bulk student operations must not imply a batch edit workflow')
   assert.equal(getNavigationRoute('students', 'Student Data Export', 'student'), 'unavailable:students:student-data-export', 'Student accounts must not receive institution-wide data export access')
@@ -224,7 +224,7 @@ check('All seven roles receive focused, permission-aware workspaces', () => {
 check('Bulk attendance uses class registers with P A L marking and atomic saves', () => {
   const attendance = read('src/components/AttendanceWorkspace.tsx')
   assert.ok(attendance.includes('All present') && attendance.includes('All absent') && attendance.includes('All late'))
-  assert.ok(attendance.includes('save_institution_attendance_register') && attendance.includes('Save whole register'))
+  assert.ok(attendance.includes('save_student_attendance_register') && attendance.includes('save_employee_attendance_register') && attendance.includes('Save whole register'), 'Student and employee registers must use their validated atomic save RPCs')
   assert.ok(attendance.includes('not_configured') && attendance.includes('provider feed'), 'Automatic attendance must not pretend that a device is connected')
 })
 check('Institutional workspace includes real record CRUD and office-compatible exports', () => {
@@ -263,7 +263,7 @@ check('Dashboard matches the menu and keeps Quick Access at the sidebar bottom',
   assert.ok(quickStart > navEnd, 'Quick Access must be outside the scrollable navigation at the sidebar bottom')
   assert.ok(!dashboardSource.includes('pro-menu-overview') && !dashboardSource.includes('Menu overview'), 'Dashboard must not repeat the sidebar menu')
   assert.ok(dashboardSource.includes('roleNavigationGroups(user!.role)'), 'Sidebar navigation must follow role permissions')
-  assert.ok(dashboardSource.includes('roleNavigationSections(user!.role)') && dashboardSource.includes('pro-nav-section-label'), 'Sidebar must render parent sections without flattening role-specific groups')
+  assert.ok(dashboardSource.includes('roleNavigationSections(user!.role,stage7CareAreas)') && dashboardSource.includes('pro-nav-section-label'), 'Sidebar must render parent sections while applying per-user Stage 7 care grants')
   assert.ok(dashboardSource.includes('ed360-dashboard'), 'Approved first-image dashboard layout is missing')
   assert.ok(dashboardSource.includes('ed360-metric-grid') && dashboardSource.includes('ed360-line-chart') && dashboardSource.includes('ed360-module-panel'), 'Dashboard statistics, academic chart or module overview is missing')
   assert.ok(dashboardSource.includes('ed360-recent-panel') && dashboardSource.includes('ed360-events-panel') && dashboardSource.includes('ed360-quick-stats-panel'), 'Dashboard activity, events or quick statistics panel is missing')
