@@ -131,7 +131,7 @@ async function inspectViewport({ name, width, height }) {
       animations: 'disabled',
     })
     await page.getByRole('button', { name: 'Back to login' }).click()
-    await page.getByRole('heading', { name: 'Welcome back' }).waitFor({ state: 'visible' })
+    await page.getByRole('heading', { name: 'Welcome back', exact: true }).waitFor({ state: 'visible' })
     await page.goto(`${baseUrl}/#/setup`, { waitUntil: 'domcontentloaded' })
     await page.locator('.es-signup-form').waitFor({ state: 'visible' })
     await assertNoHorizontalOverflow(page, `${name} owner setup`)
