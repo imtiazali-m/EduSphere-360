@@ -15,6 +15,7 @@ import { downloadCsv } from '../lib/csv'
 import { netInvoiceAmount, outstandingInvoiceBalance } from '../lib/finance'
 import type { AppMode, FieldConfig, ModuleConfig, RecordRow } from '../lib/types'
 import '../styles/student-module.css'
+import '../styles/student-promotion-workspace.css'
 import '../styles/faculty-module.css'
 import '../styles/module-workspaces.css'
 import { ModuleInsights } from './ModuleInsights'
@@ -23,7 +24,7 @@ import { operationalWorkspaceConfigs } from '../lib/operationalWorkspaceViews'
 interface Props { module: ModuleConfig; onToast: (message: string, error?: boolean) => void; initialWindow?: string; showWindowNavigation?: boolean }
 type StudentStatus = 'all' | 'active' | 'pending' | 'graduated' | 'inactive'
 type EmployeeStatus = 'all' | 'active' | 'on_leave' | 'inactive'
-type StudentWorkspaceTab = 'overview' | 'admissions' | 'directory' | 'profile' | 'id-cards' | 'classes' | 'guardians' | 'attendance' | 'results' | 'assignments' | 'timetable' | 'documents' | 'history'
+type StudentWorkspaceTab = 'overview' | 'admissions' | 'directory' | 'profile' | 'id-cards' | 'classes' | 'promotion' | 'guardians' | 'attendance' | 'results' | 'assignments' | 'timetable' | 'documents' | 'history'
 const studentRelatedTables = ['attendance', 'exams', 'exam_results', 'assignments', 'assignment_submissions', 'timetable_entries', 'classes', 'academic_sessions', 'programs', 'guardian_students', 'parent_guardians', 'student_placements', 'student_documents', 'student_history'] as const
 
 function makeEmployeeNumber() {
@@ -525,6 +526,7 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
   const [placementClassId, setPlacementClassId] = useState('')
   const [placementEffectiveFrom, setPlacementEffectiveFrom] = useState(localDateValue())
   const [placementReason, setPlacementReason] = useState('')
+  const [placementSaving, setPlacementSaving] = useState(false)
   const [documentFile, setDocumentFile] = useState<File | null>(null)
   const [documentTitle, setDocumentTitle] = useState('')
   const [documentType, setDocumentType] = useState('other')
@@ -951,6 +953,7 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
       { key: 'profile' as const, label: 'Student Profile', icon: UserRound },
       { key: 'id-cards' as const, label: 'Student ID Cards', icon: Printer },
       { key: 'classes' as const, label: 'Class Placement', icon: BookOpen },
+      { key: 'promotion' as const, label: 'Promotion', icon: GraduationCap },
       { key: 'guardians' as const, label: 'Guardians', icon: HeartHandshake },
       { key: 'attendance' as const, label: 'Student Attendance', icon: CalendarCheck },
       { key: 'results' as const, label: 'Student Exam Results', icon: ClipboardCheck },
@@ -1107,31 +1110,45 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
     }
 
     async function saveStudentPlacement() {
-      if (!ownerOrAdmin || !selectedStudent) return
+      if (!ownerOrAdmin || !selectedStudent || placementSaving) return
       const selectedClass = studentClassRows.find(row => row.id === placementClassId)
       if (!selectedClass) {
-        onToast('Select a configured class or programme before saving placement.', true)
+        onToast('Select a configured class or programme before saving the promotion.', true)
         return
       }
       if (!placementEffectiveFrom) {
-        onToast('Choose the placement effective date.', true)
+        onToast('Choose the effective date for this promotion.', true)
         return
       }
+      if (selectedClass.id === activeStudentPlacement?.class_id) {
+        onToast('Choose a different destination class. The student is already placed in this class.', true)
+        return
+      }
+      const currentEffectiveFrom = String(activeStudentPlacement?.effective_from ?? '')
+      if (currentEffectiveFrom && placementEffectiveFrom < currentEffectiveFrom) {
+        onToast('The new placement date cannot be earlier than the current placement start date.', true)
+        return
+      }
+      setPlacementSaving(true)
       try {
         await createRecord(mode, user!, 'student_placements', {
           student_id: selectedStudent.id,
           class_id: selectedClass.id,
           effective_from: placementEffectiveFrom,
           status: 'active',
-          placement_reason: placementReason.trim() || null,
+          placement_reason: placementReason.trim() || (activeStudentPlacement ? 'Promotion / class transfer' : 'Initial class placement'),
         })
         await load({ silent: true })
         await refreshStudentTables('student_placements', 'student_history')
         setPlacementClassId('')
         setPlacementReason('')
-        onToast('Student placement saved. The previous active placement was closed automatically.')
+        onToast(activeStudentPlacement
+          ? 'Promotion saved. The previous active placement was closed and the student profile now reflects the new class.'
+          : 'Initial class placement saved. The student profile now reflects the selected class.')
       } catch (error) {
-        onToast(userFacingError(error, 'The student placement could not be saved.'), true)
+        onToast(userFacingError(error, 'The student promotion could not be saved.'), true)
+      } finally {
+        setPlacementSaving(false)
       }
     }
 
@@ -1385,21 +1402,9 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
               <div><dt>Placement start</dt><dd>{activeStudentPlacement ? niceDate(activeStudentPlacement.effective_from) : 'No active placement record'}</dd></div>
             </dl>
           </> : <div className="ed360-student-empty"><strong>No student selected</strong><p>Select a student to review class placement.</p></div>}
-          {ownerOrAdmin && selectedStudent && <div className="ed360-student-placement-editor">
-            <div className="ed360-student-table-heading"><strong>Assign or transfer class</strong><span>Creates a dated placement record</span></div>
-            <label className="field-label student-field"><span>Configured class / programme</span>
-              <select className="input-control" value={placementClassId} onChange={event => setPlacementClassId(event.target.value)} disabled={!studentClassRows.length}>
-                <option value="">Select a class</option>
-                {studentClassRows.map(classRow => {
-                  const session = (studentRelatedRows.academic_sessions ?? []).find(row => row.id === classRow.academic_session_id)
-                  return <option key={classRow.id} value={classRow.id}>{String(classRow.name ?? classRow.code ?? 'Class')} {classRow.section ? '· ' + String(classRow.section) : ''}{session?.name ? ' · ' + String(session.name) : ''}</option>
-                })}
-              </select>
-            </label>
-            <label className="field-label student-field"><span>Effective from</span><input className="input-control" type="date" value={placementEffectiveFrom} onChange={event => setPlacementEffectiveFrom(event.target.value)}/></label>
-            <label className="field-label student-field"><span>Reason / transfer note</span><textarea className="input-control textarea-control" value={placementReason} onChange={event => setPlacementReason(event.target.value)} rows={2} placeholder="New admission, promotion, transfer or correction…"/></label>
-            <button type="button" className="button button-primary" onClick={() => void saveStudentPlacement()} disabled={!placementClassId || !studentClassRows.length}><Check size={15}/> Save placement</button>
-            {!studentClassRows.length && <p className="ed360-student-limitation-note">No classes are configured yet. Create the class, programme and academic session first in Institute Administration; this window will then use those real records.</p>}
+          {ownerOrAdmin && selectedStudent && <div className="ed360-student-promotion-callout">
+            <div><strong>Promotion is managed in its own workspace</strong><p>Review the student's current placement, choose the next class or programme, set an effective date and preserve the placement history.</p></div>
+            <button type="button" className="button button-primary" onClick={() => setStudentWorkspaceTab('promotion')}><GraduationCap size={15}/> Open promotion workspace <ChevronRight size={14}/></button>
           </div>}
         </section>
         <section className="ed360-student-panel">
@@ -1416,6 +1421,56 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
           })}</tbody></table></div> : <div className="ed360-student-empty"><strong>No placement history recorded</strong><p>Assign a configured class above to start the student's placement history.</p></div>}
         </section>
       </div>}
+      {studentWorkspaceTab === 'promotion' && <section className="ed360-student-promotion-workspace">
+        {ownerOrAdmin ? selectedStudent ? <>
+          <header className="ed360-student-promotion-heading">
+            <div><span className="ed360-student-promotion-kicker">STUDENT LIFECYCLE / ACADEMIC PROGRESSION</span><h2>Promotion workspace</h2><p>Move one student into a new class or programme while retaining a dated placement history.</p></div>
+            <span className="ed360-student-promotion-mode">{activeStudentPlacement ? 'Promotion / transfer' : 'Initial placement'}</span>
+          </header>
+          <div className="ed360-student-promotion-student">
+            <StudentPhoto row={selectedStudent}/>
+            <div><strong>{String(selectedStudent.full_name ?? 'Student')}</strong><span>{String(selectedStudent.admission_no ?? 'No admission ID')} · {String(selectedStudent.status ?? 'active').replaceAll('_',' ')}</span></div>
+            <button type="button" className="button button-outline" onClick={() => setStudentWorkspaceTab('profile')}><UserRound size={14}/> View profile</button>
+          </div>
+          <div className="ed360-student-promotion-route">
+            <article className="ed360-student-promotion-stage">
+              <span className="ed360-student-promotion-stage-label">CURRENT PLACEMENT</span>
+              <strong>{String(activeStudentClass?.name ?? selectedStudent.class_name ?? 'Not assigned')}</strong>
+              <p>{activeStudentClass ? [activeStudentClass.section, activeStudentSession?.name].filter(Boolean).map(String).join(' · ') : activeStudentPlacement ? 'Placement record is linked; class details are unavailable.' : 'No active placement record is available for this student.'}</p>
+              {activeStudentPlacement && <small>Started {niceDate(activeStudentPlacement.effective_from)}</small>}
+            </article>
+            <div className="ed360-student-promotion-arrow" aria-hidden="true"><ChevronRight size={22}/></div>
+            <article className="ed360-student-promotion-stage destination">
+              <span className="ed360-student-promotion-stage-label">DESTINATION</span>
+              <strong>{String(studentClassRows.find(row => row.id === placementClassId)?.name ?? 'Choose destination')}</strong>
+              <p>{(() => { const target = studentClassRows.find(row => row.id === placementClassId); const session = studentRelatedRows.academic_sessions?.find(row => row.id === target?.academic_session_id); return target ? [target.section, session?.name].filter(Boolean).map(String).join(' · ') || 'Configured class / programme' : 'Select a configured class below.' })()}</p>
+              <small>{placementEffectiveFrom ? 'Effective ' + niceDate(placementEffectiveFrom) : 'Effective date not selected'}</small>
+            </article>
+          </div>
+          <form className="ed360-student-promotion-form" onSubmit={event => { event.preventDefault(); void saveStudentPlacement() }}>
+            <div className="ed360-student-promotion-form-heading"><div><span>01</span><div><strong>Choose the destination</strong><p>Select a configured class and academic session.</p></div></div></div>
+            <div className="ed360-student-promotion-fields">
+              <label className="field-label student-field"><span>New class / programme *</span>
+                <select className="input-control" value={placementClassId} onChange={event => setPlacementClassId(event.target.value)} required disabled={!studentClassRows.length}>
+                  <option value="">Select destination class</option>
+                  {studentClassRows.filter(classRow => classRow.id !== activeStudentPlacement?.class_id).map(classRow => {
+                    const session = (studentRelatedRows.academic_sessions ?? []).find(row => row.id === classRow.academic_session_id)
+                    return <option key={classRow.id} value={classRow.id}>{String(classRow.name ?? classRow.code ?? 'Class')} {classRow.section ? '· ' + String(classRow.section) : ''}{session?.name ? ' · ' + String(session.name) : ''}</option>
+                  })}
+                </select>
+                {!studentClassRows.length && <small>Create a class and academic session in Institute Administration before promoting this student.</small>}
+              </label>
+              <label className="field-label student-field"><span>Effective from *</span><input className="input-control" type="date" value={placementEffectiveFrom} onChange={event => setPlacementEffectiveFrom(event.target.value)} required min={String(activeStudentPlacement?.effective_from ?? '')}/></label>
+              <label className="field-label student-field full-field"><span>Promotion note</span><textarea className="input-control textarea-control" rows={3} value={placementReason} onChange={event => setPlacementReason(event.target.value)} placeholder="e.g. Promoted at the end of academic session 2026–27."/></label>
+            </div>
+            <div className="ed360-student-promotion-integrity"><ShieldCheck size={17}/><p>Saving creates a new dated placement, closes the previous active placement and updates the student's class on their profile. Previous placement history remains available.</p></div>
+            <footer className="ed360-student-promotion-footer">
+              <button type="button" className="button button-outline" onClick={() => { setPlacementClassId(''); setPlacementReason(''); setStudentWorkspaceTab('classes') }}>Cancel</button>
+              <button type="submit" className="button button-primary" disabled={!placementClassId || !placementEffectiveFrom || placementSaving || studentRelatedLoading || !studentClassRows.length}>{placementSaving ? 'Saving promotion…' : activeStudentPlacement ? 'Confirm promotion' : 'Save initial placement'}</button>
+            </footer>
+          </form>
+        </> : <div className="ed360-student-promotion-empty"><strong>No student selected</strong><p>Select a student from the Student Directory before opening the promotion workspace.</p><button type="button" className="button button-outline" onClick={() => setStudentWorkspaceTab('directory')}>Open student directory</button></div> : <div className="ed360-student-promotion-empty" role="alert"><strong>Access restricted</strong><p>Only institution owners and administrators can change student class placements.</p></div>}
+      </section>}
       {studentWorkspaceTab === 'guardians' && <section className="ed360-student-panel ed360-student-full-panel">
         <header><div><span className="ed360-student-panel-icon violet"><HeartHandshake size={17}/></span><div><h2>Guardian relationships</h2><p>Manage family contacts and their links to the selected student. Parent login accounts remain a separate access relationship.</p></div></div><span className="ed360-student-record-count">{studentGuardianRows.length} linked contacts</span></header>
         {selectedStudent ? <>
