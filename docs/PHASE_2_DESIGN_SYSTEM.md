@@ -111,7 +111,13 @@ Acceptance requires:
 6. No behaviour, access-control, route, Supabase or production data change is introduced by CSS-only work.
 7. A fresh build, source verifier, screenshots at representative widths, and manual visual review are completed before the design is accepted or deployed.
 
-## 8. Current state
+## 8. Responsive coverage and preview workflow
+
+The source styles include dedicated breakpoints for the public welcome page (1120/900/620px), owner login/signup (1050/760/420px), signed-in dashboard (820/600/380px), and the specialist and generic module workspaces. The CI workflow now generates `docs/PHASE_2_RESPONSIVE_SOURCE_AUDIT.md` and uploads it as `edusphere360-responsive-source-audit`. It checks the viewport meta, required breakpoints, mobile navigation hooks, signup form collapse, dashboard drawer and reduced-motion support. It is explicitly a static source audit, not pixel-based visual acceptance.
+
+For same-repository pull requests, the workflow now has a separate Cloudflare Pages preview job. It deploys the verified `dist/` artifact to branch alias `pr-{number}-preview`, never to the production branch. It skips cleanly when Cloudflare preview credentials are not configured. The existing production deployment remains behind its production-branch and manual-approval guard.
+
+## 9. Current state
 
 - Static source review completed for the design cascade and application shell.
 - Unified CSS token layer and first pass are being added on the working branch.
