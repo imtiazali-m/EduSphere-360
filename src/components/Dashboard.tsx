@@ -940,7 +940,7 @@ export function Dashboard({ onToast }: Props) {
                 tab.targetKey === 'profile' ? <ProfileModule/> :
                 tab.targetKey === 'teachers' ? <FacultyWorkspace onToast={onToast} onNavigate={navigateChild} initialWindow={tab.targetWindow}/> :
                 tabModule ? <RecordModule module={tabModule as ModuleConfig} onToast={onToast} initialWindow={tab.targetWindow} showWindowNavigation={tab.targetKey !== 'students'}/> :
-                <Overview onNavigate={navigate}/>}
+                <Overview onNavigate={navigate} careAreas={stage7CareAreas}/>}
             </section>
           })}
         </div>
