@@ -34,6 +34,10 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
   const [settings,setSettings]=useState<Setting[]>([]),[approvals,setApprovals]=useState<Approval[]>([]),[audit,setAudit]=useState<Audit[]>([]),[policies,setPolicies]=useState<Policy[]>([])
   const [departments,setDepartments]=useState<Department[]>([]),[designations,setDesignations]=useState<Designation[]>([]),[teachers,setTeachers]=useState<Teacher[]>([]),[members,setMembers]=useState<Member[]>([])
   const [search,setSearch]=useState('')
+  const [settingsSortKey,setSettingsSortKey]=useState<'category'|'setting_key'|'is_public'>('category')
+  const [settingsSortDirection,setSettingsSortDirection]=useState<'asc'|'desc'>('asc')
+  const [settingsPage,setSettingsPage]=useState(1),[approvalPage,setApprovalPage]=useState(1)
+  const pageSize=10
   const [policyForm,setPolicyForm]=useState(false),[policyEditing,setPolicyEditing]=useState<Policy|null>(null)
   const [policyTitle,setPolicyTitle]=useState(''),[policyCode,setPolicyCode]=useState(''),[policyCategory,setPolicyCategory]=useState('general'),[policyDescription,setPolicyDescription]=useState(''),[policyStatus,setPolicyStatus]=useState('draft'),[policyEffectiveDate,setPolicyEffectiveDate]=useState('')
   const [settingForm,setSettingForm]=useState(false),[settingEditing,setSettingEditing]=useState<Setting|null>(null),[settingCategory,setSettingCategory]=useState('general'),[settingKey,setSettingKey]=useState(''),[settingValue,setSettingValue]=useState('{}'),[settingPublic,setSettingPublic]=useState(false)
@@ -79,9 +83,34 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
   const filteredAudit=useMemo(()=>audit.filter(row=>[row.action,row.module_key,row.record_type,row.actor_id,row.record_id].join(' ').toLowerCase().includes(search.trim().toLowerCase())),[audit,search])
   const filteredMembers=useMemo(()=>members.filter(row=>[row.full_name,row.email,row.role,row.status].join(' ').toLowerCase().includes(search.trim().toLowerCase())),[members,search])
   const visibleSettings=useMemo(()=>settings.filter(row=>section==='system'?row.category==='system':section==='branding'?['branding','documents'].includes(row.category):section==='settings'?!['system','branding','documents'].includes(row.category):true).filter(row=>[row.category,row.setting_key,JSON.stringify(row.setting_value)].join(' ').toLowerCase().includes(search.trim().toLowerCase())),[settings,section,search])
+  const orderedSettings=useMemo(()=>[...visibleSettings].sort((a,b)=>{
+    const left=settingsSortKey==='is_public'?String(a.is_public):String(a[settingsSortKey]??'')
+    const right=settingsSortKey==='is_public'?String(b.is_public):String(b[settingsSortKey]??'')
+    const comparison=left.localeCompare(right,undefined,{numeric:true,sensitivity:'base'})
+    return settingsSortDirection==='asc'?comparison:-comparison
+  }),[visibleSettings,settingsSortKey,settingsSortDirection])
+  const settingsPageCount=Math.max(1,Math.ceil(orderedSettings.length/pageSize))
+  const settingsCurrentPage=Math.min(settingsPage,settingsPageCount)
+  const settingsPageRows=orderedSettings.slice((settingsCurrentPage-1)*pageSize,settingsCurrentPage*pageSize)
+  const orderedApprovals=useMemo(()=>approvals.filter(row=>[row.workflow_key,row.target_type,row.status,JSON.stringify(row.payload)].join(' ').toLowerCase().includes(search.trim().toLowerCase())).sort((a,b)=>String(b.requested_at??'').localeCompare(String(a.requested_at??''))),[approvals,search])
+  const approvalsPageCount=Math.max(1,Math.ceil(orderedApprovals.length/pageSize))
+  const approvalsCurrentPage=Math.min(approvalPage,approvalsPageCount)
+  const approvalPageRows=orderedApprovals.slice((approvalsCurrentPage-1)*pageSize,approvalPage*pageSize)
   const pendingApprovals=approvals.filter(row=>row.status==='pending').length
   const primaryColor=String(settings.find(row=>row.category==='branding'&&row.setting_key==='primary_color')?.setting_value??'#205b43')
   const accentColor=String(settings.find(row=>row.category==='branding'&&row.setting_key==='accent_color')?.setting_value??'#9bc85b')
+
+  function toggleSettingsSort(key:'category'|'setting_key'|'is_public'){
+    if(settingsSortKey===key)setSettingsSortDirection(direction=>direction==='asc'?'desc':'asc')
+    else{setSettingsSortKey(key);setSettingsSortDirection('asc')}
+    setSettingsPage(1)
+  }
+  function sortHeader(labelText:string,key:'category'|'setting_key'|'is_public'){
+    return <th aria-sort={settingsSortKey===key?(settingsSortDirection==='asc'?'ascending':'descending'):'none'}><button type="button" className="gov-sort-header" onClick={()=>toggleSettingsSort(key)}>{labelText}<span aria-hidden="true">{settingsSortKey===key?(settingsSortDirection==='asc'?'↑':'↓'):'↕'}</span></button></th>
+  }
+  function pageControls(total:number,page:number,pageCount:number,onPage:(next:number)=>void){
+    return total>pageSize?<div className="gov-pagination"><span>Showing <b>{(page-1)*pageSize+1}–{Math.min(page*pageSize,total)}</b> of <b>{total}</b></span><div><button type="button" className="gov-button" disabled={page<=1} onClick={()=>onPage(page-1)}>Previous</button><span>Page {page} of {pageCount}</span><button type="button" className="gov-button" disabled={page>=pageCount} onClick={()=>onPage(page+1)}>Next</button></div></div>:null
+  }
 
   function openSetting(row?:Setting,category?:string){
     setSettingEditing(row??null);setSettingCategory(category??row?.category??(section==='system'?'system':section==='branding'?'branding':'general'))
@@ -182,7 +211,7 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
   }
 
   function renderSettingRows(rows:Setting[],empty:string){
-    return rows.length?<div className="gov-table-wrap"><table className="ed360-admin-table"><thead><tr><th>Category</th><th>Key</th><th>Value</th><th>Visibility</th><th>Actions</th></tr></thead><tbody>{rows.map(row=><tr key={row.id}><td>{label(row.category)}</td><td><b>{row.setting_key}</b></td><td><code>{JSON.stringify(row.setting_value)}</code></td><td>{row.is_public?'Public':'Private'}</td><td><div className="gov-row-actions"><button className="gov-button" onClick={()=>openSetting(row)}>Edit</button><button className="gov-button danger" onClick={()=>void removeSetting(row)}>Delete</button></div></td></tr>)}</tbody></table></div>:<div className="gov-empty">{empty}</div>
+    return rows.length?<div className="gov-table-wrap"><table className="ed360-admin-table"><thead><tr>{sortHeader('Category','category')}{sortHeader('Key','setting_key')}<th>Value</th>{sortHeader('Visibility','is_public')}<th>Actions</th></tr></thead><tbody>{rows.map(row=><tr key={row.id}><td>{label(row.category)}</td><td><b>{row.setting_key}</b></td><td><code>{JSON.stringify(row.setting_value)}</code></td><td>{row.is_public?'Public':'Private'}</td><td><div className="gov-row-actions"><button className="gov-button" onClick={()=>openSetting(row)}>Edit</button><button className="gov-button danger" onClick={()=>void removeSetting(row)}>Delete</button></div></td></tr>)}</tbody></table></div>:<div className="gov-empty">{empty}</div>
   }
   function renderProfile(){
     return <div className="ed360-admin-profile">
@@ -237,16 +266,18 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
       {section==='branding'&&<section className="gov-panel"><header><div><h2>Brand preview</h2><p>Stored branding defaults. Private logo is managed in Institute Profile.</p></div><Palette size={20}/></header><div className="ed360-admin-brand-preview"><span className="ed360-admin-brand-swatch" style={{background:primaryColor}}/><span><b>{institution?.name??'Institution'}</b><small style={{display:'block',color:'#859287',fontSize:10}}>Primary brand colour · {primaryColor}</small></span><span className="ed360-admin-brand-swatch" style={{background:accentColor}}/><small>Accent · {accentColor}</small></div></section>}
       <section className="gov-panel"><header><div><h2>{heading}</h2><p>{description}</p></div><div className="gov-row-actions">{section==='branding'?<><button className="gov-button primary" onClick={()=>openSetting(undefined,'branding')}><Plus size={14}/> Add brand setting</button><button className="gov-button" onClick={()=>openSetting(undefined,'documents')}><FileText size={14}/> Add document setting</button></>:<button className="gov-button primary" onClick={()=>openSetting(undefined,section==='system'?'system':'general')}><Plus size={14}/> Add setting</button>}</div></header>
         {section==='branding'&&<p className="gov-note">Store colour tokens and document header/footer defaults as institution-scoped settings. Generated receipts and certificates must consume these keys before their appearance changes.</p>}
-        <label className="ed360-admin-search"><Search size={14}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search category, key or value…"/></label>
-        {renderSettingRows(visibleSettings,section==='system'?'No system-level settings have been saved.':section==='branding'?'No branding or document settings have been saved.':'No institution settings have been saved.')}
+        <label className="ed360-admin-search"><Search size={14}/><input value={search} onChange={e=>{setSearch(e.target.value);setSettingsPage(1);setApprovalPage(1)}} placeholder="Search category, key or value…"/></label>
+        {renderSettingRows(settingsPageRows,section==='system'?'No system-level settings have been saved.':section==='branding'?'No branding or document settings have been saved.':'No institution settings have been saved.')}
+        {pageControls(orderedSettings.length,settingsCurrentPage,settingsPageCount,setSettingsPage)}
       </section>
     </div>
   }
   function renderApprovals(){
-    const rows=approvals.filter(row=>[row.workflow_key,row.target_type,row.status,JSON.stringify(row.payload)].join(' ').toLowerCase().includes(search.trim().toLowerCase()))
+    const rows=orderedApprovals
     return <section className="gov-panel"><header><div><h2>Approval queue</h2><p>Requests, responsible approvers, decisions and history. Setting changes are applied by the database approval function.</p></div><div className="gov-header-actions"><span className="gov-pending">{pendingApprovals} pending</span><button className="gov-button primary" onClick={()=>setApprovalForm(true)}><Plus size={14}/> Request setting change</button></div></header>
-      <label className="ed360-admin-search"><Search size={14}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search workflow, status or target…"/></label>
-      {rows.length?<div className="gov-approval-list">{rows.map(row=><article key={row.id}><div className="gov-approval-heading"><div><small>{label(row.workflow_key)}</small><strong>{label(row.target_type)}</strong></div><span className={'gov-status '+row.status}>{label(row.status)}</span></div><dl><div><dt>Requested</dt><dd>{dateLabel(row.requested_at)}</dd></div><div><dt>Requester</dt><dd>{String(row.requested_by??'Institution member')}</dd></div><div><dt>Target</dt><dd className="gov-mono">{String(row.target_id)}</dd></div></dl>{row.workflow_key==='institution_setting_change'&&<div className="gov-payload"><b>{String(row.payload.category??'general')} / {String(row.payload.setting_key??'setting')}</b><pre>{JSON.stringify(row.payload.setting_value??{},null,2)}</pre></div>}{row.decision_notes&&<p className="gov-decision-note">{row.decision_notes}</p>}{admin&&row.status==='pending'&&<div className="gov-row-actions"><button className="gov-button primary" disabled={saving} onClick={()=>void decideApproval(row,'approved')}><CheckCircle2 size={13}/> Approve and apply</button><button className="gov-button danger" disabled={saving} onClick={()=>void decideApproval(row,'rejected')}>Reject</button></div>}</article>)}</div>:<div className="gov-empty">No approval requests match this view.</div>}
+      <label className="ed360-admin-search"><Search size={14}/><input value={search} onChange={e=>{setSearch(e.target.value);setSettingsPage(1);setApprovalPage(1)}} placeholder="Search workflow, status or target…"/></label>
+      {rows.length?<div className="gov-approval-list">{approvalPageRows.map(row=><article key={row.id}><div className="gov-approval-heading"><div><small>{label(row.workflow_key)}</small><strong>{label(row.target_type)}</strong></div><span className={'gov-status '+row.status}>{label(row.status)}</span></div><dl><div><dt>Requested</dt><dd>{dateLabel(row.requested_at)}</dd></div><div><dt>Requester</dt><dd>{String(row.requested_by??'Institution member')}</dd></div><div><dt>Target</dt><dd className="gov-mono">{String(row.target_id)}</dd></div></dl>{row.workflow_key==='institution_setting_change'&&<div className="gov-payload"><b>{String(row.payload.category??'general')} / {String(row.payload.setting_key??'setting')}</b><pre>{JSON.stringify(row.payload.setting_value??{},null,2)}</pre></div>}{row.decision_notes&&<p className="gov-decision-note">{row.decision_notes}</p>}{admin&&row.status==='pending'&&<div className="gov-row-actions"><button className="gov-button primary" disabled={saving} onClick={()=>void decideApproval(row,'approved')}><CheckCircle2 size={13}/> Approve and apply</button><button className="gov-button danger" disabled={saving} onClick={()=>void decideApproval(row,'rejected')}>Reject</button></div>}</article>)}</div>:<div className="gov-empty">No approval requests match this view.</div>}
+      {pageControls(orderedApprovals.length,approvalsCurrentPage,approvalsPageCount,setApprovalPage)}
     </section>
   }
   function renderPolicies(){

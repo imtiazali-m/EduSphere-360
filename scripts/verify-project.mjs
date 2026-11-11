@@ -68,7 +68,7 @@ const roles = ['owner', 'admin', 'teacher', 'student', 'parent', 'accountant', '
 check('The full institutional menu maps every submenu to a working destination', () => {
   assert.equal(navigationCatalog.length, 29, 'The visible sidebar contains 29 main workspaces after Administration consolidation')
   const groupKeys = new Set(navigationCatalog.map(group => group.key))
-  assert.equal(groupKeys.size, 33, 'Main workspace keys must be unique')
+  assert.equal(groupKeys.size, 29, 'Visible main workspace keys must be unique')
   for (const group of navigationCatalog) {
     assert.ok(group.items.length > 0, group.label + ' must have its own operational submenus')
     for (const page of group.items) assert.ok(navigationRoutes[page], 'No route is connected for ' + group.label + '/' + page)
@@ -510,7 +510,7 @@ check('Student, employee and operational records expose accessible row action me
 })
 
 check('Governance settings and approval queues support sorting and pagination', () => {
-  const governance = read('src/components/GovernanceWorkspace.tsx')
+  const governance = read('src/components/AdministrationStage5Workspace.tsx')
   const styles = read('src/styles/governance-workspace.css')
   for (const value of ['settingsSortKey', 'settingsSortDirection', 'orderedSettings', 'settingsPageRows', 'orderedApprovals', 'approvalPageRows', 'toggleSettingsSort', 'sortHeader', 'pageControls']) {
     assert.ok(governance.includes(value), 'Governance list interaction is missing: ' + value)
