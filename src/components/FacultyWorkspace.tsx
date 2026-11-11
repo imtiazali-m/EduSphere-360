@@ -14,7 +14,7 @@ import type { RecordRow } from '../lib/types'
 import '../styles/faculty-workspace.css'
 
 interface Props { onToast: (message: string, error?: boolean) => void; onNavigate: (key: string) => void; initialWindow?: string }
-type Tab = 'overview'|'registration'|'directory'|'directory-teaching'|'directory-staff'|'profile'|'id-cards'|'departments'|'designations'|'assignments'|'attendance'|'leave'|'workload'|'documents'|'history'|'reports'
+type Tab = 'overview'|'registration'|'directory'|'directory-teaching'|'directory-staff'|'profile'|'id-cards'|'departments'|'designations'|'assignments'|'attendance'|'leave'|'workload'|'documents'|'qualifications'|'history'|'reports'
 type Kind = 'employee'|'designation'|'assignment'|'attendance'|'leave'|'leaveReview'
 type Dialog = { kind: Kind; row: RecordRow|null; values: Record<string,string> }
 type Account = { id: string; fullName: string; email: string; role: string }
@@ -34,6 +34,7 @@ const adminTabs: {key:Tab;label:string;icon:typeof Users}[] = [
   {key:'leave',label:'Leave Management',icon:CalendarDays},
   {key:'workload',label:'Workload & Timetable',icon:Clock3},
   {key:'documents',label:'Documents',icon:FileText},
+  {key:'qualifications',label:'Qualifications',icon:FileCheck2},
   {key:'history',label:'Employment History',icon:History},
   {key:'reports',label:'Staff Reports',icon:Download},
 ]
@@ -46,6 +47,7 @@ const staffTabs = [
   {key:'leave',label:'My Leave Requests',icon:CalendarDays},
   {key:'workload',label:'My Workload & Timetable',icon:Clock3},
   {key:'documents',label:'My Documents',icon:FileText},
+  {key:'qualifications',label:'My Qualifications',icon:FileCheck2},
   {key:'history',label:'My Employment History',icon:History},
 ] as {key:Tab;label:string;icon:typeof Users}[]
 
@@ -269,6 +271,7 @@ export function FacultyWorkspace({onToast,onNavigate,initialWindow}:Props) {
 
     {tab==='workload'&&<section className="staff-panel staff-full-panel"><header><div><h2>{admin?'Workload & timetable':'My workload & timetable'}</h2><p>Teaching allocations show expected periods; actual class slots remain in Academic Management.</p></div><button type="button" className="staff-button staff-button-outline" onClick={()=>onNavigate('timetable')}>Open Academic Timetable <CalendarDays size={14}/></button></header>{table((admin?assignments:ownAssignmentRows).map(r=>({...r,subject_label:subjects.find(s=>s.id===r.subject_id)?.name??'—',class_label:classes.find(c=>c.id===r.class_id)?.name??'—',session_label:sessions.find(s=>s.id===r.academic_session_id)?.session_name??'—'})),[{key:'subject_label',label:'Subject'},{key:'class_label',label:'Class'},{key:'session_label',label:'Session'},{key:'weekly_periods',label:'Expected periods / week'},{key:'status',label:'Status'}],'Teaching allocations define workload for each session.')}<h3 className="staff-subheading">Timetable entries</h3>{table((admin?timetable:timetable.filter(r=>String(r.teacher_name??'').toLowerCase()===String(selected?.full_name??'').toLowerCase())),[{key:'weekday',label:'Day'},{key:'start_time',label:'Start'},{key:'end_time',label:'End'},{key:'class_name',label:'Class'},{key:'subject',label:'Subject'},{key:'room',label:'Room'}],'No timetable entries are currently linked to this employee.')}</section>}
 
+    {tab==='qualifications'&&<EmployeeQualificationsPanel employeeId={selected?.id??''} institutionId={user!.institutionId} canManage={admin} onToast={onToast}/>}
     {tab==='documents'&&<section className="staff-panel staff-full-panel"><header><div><h2>{admin?'Confidential staff documents':'My confidential documents'}</h2><p>Stored in the separate private staff-files bucket, not the general institution file store.</p></div></header>{selected&&(admin||selected.user_id===user!.id)&&<form className="staff-document-form" onSubmit={uploadDocument}><label>Document type<select value={docType} onChange={e=>setDocType(e.target.value)}>{documentTypes.map(d=><option key={d.value} value={d.value}>{d.label}</option>)}</select></label><label>Title<input value={docTitle} onChange={e=>setDocTitle(e.target.value)} placeholder="Employment contract, qualification certificate…" required/></label><label>Expiry date<input type="date" value={docExpiry} onChange={e=>setDocExpiry(e.target.value)}/></label><label>File<input type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.doc,.docx,.xls,.xlsx" onChange={e=>setDocFile(e.target.files?.[0]??null)} required/></label><label>Notes<input value={docNotes} onChange={e=>setDocNotes(e.target.value)} placeholder="Optional notes"/></label><button className="staff-button staff-button-primary" type="submit" disabled={!docFile||uploading}>{uploading?'Uploading…':'Upload confidential document'}</button></form>}{table((admin?documents:ownDocuments).map(r=>({...r,employee_label:employees.find(e=>e.id===r.teacher_id)?.full_name??'—'})),[{key:'employee_label',label:'Employee'},{key:'document_type',label:'Type'},{key:'title',label:'Title'},{key:'file_name',label:'File'},{key:'expiry_date',label:'Expiry'},{key:'created_at',label:'Uploaded'}],'No confidential staff documents have been uploaded.',row=><><button type="button" title="Open secure document" onClick={()=>void viewDocument(row)}><Eye size={14}/></button>{admin&&<button type="button" className="staff-action-danger" title="Delete document" onClick={()=>void deleteDocument(row)}><Trash2 size={14}/></button>}</>)}</section>}
 
     {tab==='history'&&<section className="staff-panel staff-full-panel"><header><div><h2>{admin?'Employment history':'My employment history'}</h2><p>Database-audited employee registration and employment profile changes.</p></div></header>{table((admin?history:ownHistory).map(r=>({...r,employee_label:employees.find(e=>e.id===r.teacher_id)?.full_name??'Employee record',event_label:r.event_type==='employee_registered'?'Employee registered':'Employment profile updated'})),[{key:'employee_label',label:'Employee'},{key:'event_label',label:'Event'},{key:'effective_date',label:'Effective date'},{key:'created_at',label:'Recorded at'}],'Employment history is created by database audit triggers after registration and profile changes.')}</section>}
