@@ -688,3 +688,22 @@ button.button-primary:hover,.ed360-module-page .button-primary:hover{transform:t
 .edm-product-card{z-index:2}
 .edm-float-card{position:absolute;z-index:3}
 .es-auth-visual{background-image:linear-gradient(145deg,rgba(8,24,49,.73),rgba(18,57,103,.76)),url("https://images.pexels.com/photos/29326797/pexels-photo-29326797.jpeg?auto=compress&cs=tinysrgb&w=1200")}
+
+
+/* Dedicated photo showcase: prominent photography, never hidden behind UI artwork */
+.edm-visual-showcase{display:grid;grid-template-columns:minmax(230px,.9fr) repeat(2,minmax(260px,1fr));align-items:stretch;gap:17px;padding:clamp(24px,4vw,52px) clamp(20px,6vw,90px);background:linear-gradient(180deg,#fff,#f4f7fc)}
+.edm-visual-showcase-copy{align-self:center;padding:8px 10px 8px 0}
+.edm-visual-showcase-copy h2{margin:12px 0;color:#17385d;font-family:Manrope,sans-serif;font-size:clamp(23px,2.5vw,32px);font-weight:850;line-height:1.14;letter-spacing:-.05em}
+.edm-visual-showcase-copy h2 em{color:#3478f6}
+.edm-visual-showcase-copy p{max-width:400px;color:#71839b;font-size:11px;line-height:1.75}
+.edm-visual-photo{position:relative;isolation:isolate;min-width:0;min-height:250px;overflow:hidden;margin:0;border:1px solid #dce6f2;border-radius:21px;background:#d9e5f1;box-shadow:0 12px 30px rgba(18,45,79,.1)}
+.edm-visual-photo img{position:absolute;z-index:0;inset:0;display:block;width:100%;height:100%;object-fit:cover;object-position:center;transition:transform .55s cubic-bezier(.2,.7,.25,1)}
+.edm-campus-photo-card img{object-position:center 46%}
+.edm-learning-photo-card img{object-position:center 48%}
+.edm-visual-photo::after{content:"";position:absolute;z-index:1;inset:0;background:linear-gradient(180deg,rgba(8,24,49,0) 30%,rgba(8,24,49,.83) 100%)}
+.edm-visual-photo figcaption{position:absolute;z-index:2;right:17px;bottom:17px;left:17px;display:grid;gap:7px;color:#fff}
+.edm-visual-photo figcaption span{width:max-content;padding:5px 8px;border:1px solid rgba(221,236,255,.34);border-radius:99px;color:#d8e7fb;background:rgba(13,39,74,.38);font-size:8px;font-weight:900;letter-spacing:1px;backdrop-filter:blur(8px)}
+.edm-visual-photo figcaption b{font-family:Manrope,sans-serif;font-size:15px;font-weight:850;line-height:1.25;letter-spacing:-.2px}
+@media(hover:hover){.edm-visual-photo:hover img{transform:scale(1.045)}}
+@media(max-width:980px){.edm-visual-showcase{grid-template-columns:1fr 1fr}.edm-visual-showcase-copy{grid-column:span 2;max-width:650px}.edm-visual-photo{min-height:230px}}
+@media(max-width:620px){.edm-visual-showcase{grid-template-columns:1fr;padding:35px 18px;gap:13px}.edm-visual-showcase-copy{grid-column:auto}.edm-visual-photo{min-height:220px}}
