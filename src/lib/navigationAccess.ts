@@ -1,1 +1,1 @@
-export { roleNavigationGroups } from './navigationCatalog'
+export { roleNavigationGroups, roleNavigationSections, navigationSectionDefinitions } from './navigationCatalog'
