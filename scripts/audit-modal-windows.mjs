@@ -29,6 +29,7 @@ const checks = [
   ['workspace windows use one canonical tab identity per destination', dashboard.includes('const id = key') && dashboard.includes('const parentId = options.parentId && options.parentId !== id ? options.parentId : undefined')],
   ['opening a workspace cannot make a window its own parent', dashboard.includes('options.parentId !== id')],
   ['active menu state follows the selected destination, including child navigation', dashboard.includes('activeTab.route === route')],
+  ['active menu state follows the parent workspace context for nested child windows', dashboard.includes('const activeNavigationTab = (() =>') && dashboard.includes('activeNavigationTab.groupKey === group.key')],
   ['collapsed sidebar disclosure expands before showing the selected submenu', dashboard.includes('if (compactSidebar) {') && dashboard.includes('setExpandedGroups(current => current.includes(group.key) ? current : [...current, group.key])')],
   ['selected window context is announced and labelled in the workspace frame', dashboard.includes('className="pro-active-workspace-context"') && dashboard.includes('aria-live="polite"') && dashboard.includes('data-active-route={activeTab.route}')],
   ['open workspace windows keep inactive content hidden and expose active context', dashboard.includes('className="pro-window-panel"') && dashboard.includes('hidden={activeTabId !== tab.id}') && dashboard.includes('aria-label={tab.title}')],
