@@ -47,8 +47,8 @@ export const institutionalMenu:WorkspaceMenuGroup[]=[
  group('employees','Employees and Faculty','Teaching and non-teaching employee records, workload, leave, attendance and performance.','Users','emerald','employees',staff,[
   'Employee Directory','Add Employee','Teacher Records','Non-Teaching Staff','Employee Profiles','Department Allocation','Designations','Workload Allocation','Employee Documentation','Employee ID Cards','Employee History','Employee Performance','Employee Attendance','Employee Leave Management','Employee Reports'
  ]),
- group('attendance','Attendance Management','Bulk class and staff registers, exception follow-up, leave, corrections and device-assisted attendance.','CalendarCheck','rose','attendance',staff.concat(['student','parent']),[
-  'Attendance Dashboard','Student Attendance','Daily Attendance','Period-wise Attendance','Class-wise Attendance','Bulk Student Attendance','Faculty and Staff Attendance','Bulk Staff Attendance','Attendance Corrections','Leave Applications','Late Arrival','Early Departure','Attendance Calendar','Attendance Reports','Attendance History','Attendance Analytics','Attendance Alerts'
+ group('attendance','Attendance, Leave & Student Wellbeing','Daily attendance registers, leave decisions, reporting and restricted student-care records.','CalendarCheck','rose','attendance',staff.concat(['student','parent']),[
+  'Student Attendance','Teacher Attendance','Staff Attendance','Leave Management','Attendance Reports','Student Discipline','Student Counselling & Wellbeing','Health & Emergency Records'
  ]),
  group('behaviour','Behaviour and Skills','Positive recognition, safeguarding-aware behaviour logs, incidents, skills and competency tracking.','HeartHandshake','pink','behaviour',staff.concat(['student','parent']),[
   'Behaviour Dashboard','Behaviour Records','Positive Behaviour','Disciplinary Incidents','Rewards and Recognition','Warnings','Student Skills','Co-curricular Activities','Competency Tracking','Student Progress History','Behaviour Analytics','Downloadable Behaviour Reports'
