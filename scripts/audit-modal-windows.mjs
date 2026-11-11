@@ -7,6 +7,7 @@ const record = read('src/components/RecordModule.tsx')
 const finance = read('src/components/FinanceWorkspace.tsx')
 const refresh = read('src/styles/visual-refresh.css')
 const main = read('src/main.tsx')
+const dashboard = read('src/components/Dashboard.tsx')
 
 const checks = [
   ['final visual layer loads after legacy styles', main.indexOf("import './styles/visual-refresh.css'") > main.indexOf("import './styles/design-system.css'")],
@@ -25,6 +26,13 @@ const checks = [
   ['finance, governance, campus operations, payroll and reports have final design rules', ['.fin-stage','.gov-stage','.iop-stage','.payroll-stage','.report-stage'].every(selector => refresh.includes(selector))],
   ['notification centre has final card and filter styles', refresh.includes('.ed360-notification-page') && refresh.includes('.ed360-notification-card')],
   ['responsive breakpoints and reduced-motion preferences remain defined', refresh.includes('@media(max-width:680px)') && refresh.includes('@media(prefers-reduced-motion:reduce)')],
+  ['workspace windows use one canonical tab identity per destination', dashboard.includes('const id = key') && dashboard.includes('const parentId = options.parentId && options.parentId !== id ? options.parentId : undefined')],
+  ['opening a workspace cannot make a window its own parent', dashboard.includes('options.parentId !== id')],
+  ['active menu state follows the selected destination, including child navigation', dashboard.includes('activeTab.route === route')],
+  ['collapsed sidebar disclosure expands before showing the selected submenu', dashboard.includes('if (compactSidebar) setSidebarCollapsed(false); toggleGroup(group.key)')],
+  ['selected window context is announced and labelled in the workspace frame', dashboard.includes('className="pro-active-workspace-context"') && dashboard.includes('aria-live="polite"') && dashboard.includes('data-active-route={activeTab.route}')],
+  ['open workspace windows keep inactive content hidden and expose active context', dashboard.includes('className="pro-window-panel"') && dashboard.includes('hidden={activeTabId !== tab.id}') && dashboard.includes('aria-label={tab.title}')],
+  ['active workspace context receives final desktop and mobile presentation', refresh.includes('.pro-active-workspace-context') && refresh.includes('.pro-context-state') && refresh.includes('@media(max-width:600px)')],
 ]
 
 let failed = 0
