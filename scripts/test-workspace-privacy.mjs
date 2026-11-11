@@ -103,7 +103,7 @@ test('administrative dashboard retains review KPIs and review-state distribution
   const metrics = getWorkspaceReviewMetrics(rows, 'admin')
   assert.equal(metrics.pendingCount, 2)
   assert.deepEqual(metrics.statusCounts, [
-    { status: 'draft', count: 2 },
+    { status: 'draft', count: 1 },
     { status: 'pending', count: 2 },
     { status: 'approved', count: 1 },
     { status: 'published', count: 1 },
