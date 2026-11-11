@@ -57,14 +57,14 @@ Responsive styles and source-verification assertions were added alongside the co
 
 | Phase | Scope | Baseline status |
 |---|---|---|
-| 1 | Inspect source, existing website, reusable work and gaps | Detailed static source, 430-entry role inventory and exact 1,569 role-aware route matrix generated in CI; zero unexpected route families and zero unintended bare roots; authenticated seven-role E2E remains pending |
+| 1 | Inspect source, existing website, reusable work and gaps | Detailed source audit, 430 distinct menu labels, 1,566 role-aware route evaluations, 1,566 component sub-view checks; 0 route/dispatch/view mismatches; authenticated seven-role E2E remains pending |
 | 2 | Welcome page, public website and visual system | Shared navy/sapphire system now spans public, auth, dashboard, specialist finance/payroll/governance/operations areas; root zoom removed and core contrast checks added; screenshot-based visual acceptance remains pending |
 | 3 | Login, registration, verification and onboarding | Screens render; real signup, email verification, login and role-provisioning E2E tests remain |
-| 4 | Dashboards, role menus and navigation | 33-group catalogue and seven roles exist; first-run role guidance added; route and permission audit remains |
+| 4 | Dashboards, role menus and navigation | 33 groups, seven role allow-lists, exact component/sub-view routing and first-run role guidance are source-verified; authenticated direct-link/API permission tests remain |
 | 5 | Administration, institution settings and academic structure | Dedicated partial workspaces and cloud tables exist; full CRUD/relationship/approval audit remains |
-| 6 | Students, parents, employees and faculty | Student/faculty modules and supporting records exist; complete role-linked lifecycle testing remains |
+| 6 | Students, parents, employees and faculty | Student, parent and teacher menu entries are aligned with their actual internal tabs; admissions/directory/document tabs no longer appear where the role view hides them; relationship and lifecycle E2E remain |
 | 7 | Attendance, timetable, teaching, homework and curriculum | Dedicated attendance/timetable/assignment areas and curriculum schema exist; full workflow and role tests remain |
-| 8 | Fees, accounts, payments, receipts and payroll | Dedicated finance and payroll workspaces, tables and atomic RPCs exist; full transaction/reconciliation E2E remains |
+| 8 | Fees, accounts, payments, receipts and payroll | Finance route views now include the reconciliation and partial-payment tabs used by the menus; dedicated workspaces and atomic RPCs remain subject to full transaction/reconciliation E2E |
 | 9 | Transport, inventory, facilities, visitors and campus operations | Cloud schemas and selected workspaces exist; destination-by-destination CRUD, permissions and reports remain |
 | 10 | Exams, question bank, results, reports and certificates | Exam/result and question-paper capabilities exist in part; paper approval, result lifecycle and certificates need end-to-end verification |
 | 11 | AI, communication, WhatsApp and digital library | In-app notifications/library foundations exist; AI and external delivery providers must remain clearly unconfigured until connected |
@@ -72,7 +72,7 @@ Responsive styles and source-verification assertions were added alongside the co
 
 ## 6. Release evidence and limits
 
-- GitHub Actions run `42979056696` completed successfully on the working branch: exact role-aware route audit generation, source verifier, user-error tests, finance tests, private-file tests, production Vite build, Cloudflare output validation, route-audit artifact upload and both production build-artifact uploads passed. The separate production deployment job was skipped by the production-branch/manual-approval guard.
+- GitHub Actions run `42982974444` completed successfully on the working branch: exact route audit, component sub-view compatibility audit, source verifier, user-error tests, finance tests, private-file tests, production Vite build, Cloudflare output validation and all four artifacts passed. The separate production deployment job was skipped by the production-branch/manual-approval guard.
 - The latest working-branch Vercel status context also reports `success`; its deployment-detail URL redirects to Vercel login, so an anonymous browser preview URL was not confirmed. Neither check alone proves complete authenticated acceptance testing.
 - The repository contains a Cloudflare Pages release workflow that installs the lockfile, generates/uploads the exact route matrix, runs the project verifier and focused test suites, builds `dist/`, packages a Direct Upload ZIP and keeps production deployment behind a manual workflow input.
 - No Cloudflare production deployment was made during this work.
