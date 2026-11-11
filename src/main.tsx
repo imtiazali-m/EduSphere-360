@@ -20,3 +20,4 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     </AuthProvider>
   </React.StrictMode>,
 )
+import './styles/dashboard-display-settings.css'
