@@ -32,7 +32,7 @@ const requiredFiles = [
   'src/lib/data.ts', 'src/lib/navigationAccess.ts', 'src/lib/userErrors.ts', 'scripts/test-user-errors.mjs',
   'src/lib/finance.ts', 'scripts/test-finance.mjs', 'src/lib/fileAccess.ts', 'scripts/test-file-access.mjs',
   'scripts/test-account-provisioning.mjs', 'supabase/functions/create-user/index.ts', 'supabase/functions/create-user/provisioning-guards.mjs', '.github/workflows/teacher-account-provisioning.yml', 'docs/TEACHER_ACCOUNT_LINK_INTEGRITY.md',
-  'src/lib/navigationCatalog.ts', 'src/lib/navigationRoutes.ts', 'scripts/generate-navigation-route-audit.mjs', 'scripts/generate-route-view-audit.mjs', 'scripts/generate-responsive-source-audit.mjs', 'docs/PHASE_1_EXACT_ROUTE_AUDIT.md', 'docs/PHASE_1_ROUTE_VIEW_AUDIT.md', 'docs/PHASE_2_RESPONSIVE_SOURCE_AUDIT.md', 'src/components/NotificationCenter.tsx', 'src/styles/notification-center.css', 'public/_redirects',
+  'src/lib/navigationCatalog.ts', 'src/lib/navigationRoutes.ts', 'scripts/generate-navigation-route-audit.mjs', 'scripts/generate-route-view-audit.mjs', 'scripts/generate-responsive-source-audit.mjs', 'docs/PHASE_1_EXACT_ROUTE_AUDIT.md', 'docs/PHASE_1_ROUTE_VIEW_AUDIT.md', 'docs/PHASE_2_RESPONSIVE_SOURCE_AUDIT.md', 'src/components/NotificationCenter.tsx', 'src/styles/notification-center.css', 'public/_redirects', 'scripts/test-responsive-public.mjs',
   'supabase/migrations/20261109125937_announcement_read_receipts.sql',
   'supabase/migrations/20261109150048_finance_accounting_and_payroll_workflows.sql',
   'supabase/migrations/20261109150654_atomic_employee_salary_profile_workflow.sql',
