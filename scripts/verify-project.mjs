@@ -29,7 +29,7 @@ const requiredFiles = [
   'src/components/InstitutionOperationsWorkspace.tsx', 'src/styles/institution-operations.css',
   'src/components/AuthScreens.tsx', 'src/components/AdministrationModule.tsx',
   'src/components/RecordModule.tsx', 'src/components/FacultyWorkspace.tsx', 'src/styles/faculty-workspace.css', 'src/components/ReportsModule.tsx', 'src/components/ProfileModule.tsx', 'src/context/AuthContext.tsx', 'src/lib/auth.ts',
-  'src/lib/data.ts', 'src/lib/navigationAccess.ts', 'src/lib/userErrors.ts', 'scripts/test-user-errors.mjs',
+  'src/lib/data.ts', 'src/lib/workTaskAccess.js', 'src/lib/workTaskAccess.d.ts', 'scripts/test-work-task-identity.mjs', 'docs/WORK_TASK_STABLE_IDENTITY.md', 'supabase/migrations/20261111140500_work_task_stable_assignee_identity.sql', '.github/workflows/work-task-identity.yml', 'src/lib/navigationAccess.ts', 'src/lib/userErrors.ts', 'scripts/test-user-errors.mjs',
   'src/lib/finance.ts', 'scripts/test-finance.mjs', 'src/lib/fileAccess.ts', 'scripts/test-file-access.mjs',
   'scripts/test-account-provisioning.mjs', 'supabase/functions/create-user/index.ts', 'supabase/functions/create-user/provisioning-guards.mjs', '.github/workflows/teacher-account-provisioning.yml', 'docs/TEACHER_ACCOUNT_LINK_INTEGRITY.md',
   'src/lib/navigationCatalog.ts', 'src/lib/navigationRoutes.ts', 'scripts/generate-navigation-route-audit.mjs', 'scripts/generate-route-view-audit.mjs', 'scripts/generate-responsive-source-audit.mjs', 'docs/PHASE_1_EXACT_ROUTE_AUDIT.md', 'docs/PHASE_1_ROUTE_VIEW_AUDIT.md', 'docs/PHASE_2_RESPONSIVE_SOURCE_AUDIT.md', 'src/components/NotificationCenter.tsx', 'src/styles/notification-center.css', 'public/_redirects',
@@ -802,6 +802,21 @@ check('Teacher reporting routes expose only the teacher-permitted report dataset
   assert.ok(reports.includes("const wantsResults = ['owner', 'admin', 'teacher', 'exam_officer'].includes(role)"))
 })
  
+check('Work-task assignment access uses stable tenant-scoped Auth identity', () => {
+  const helper = read('src/lib/workTaskAccess.js')
+  const data = read('src/lib/data.ts')
+  const migration = read('supabase/migrations/20261111140500_work_task_stable_assignee_identity.sql')
+  const tests = read('scripts/test-work-task-identity.mjs')
+  assert.ok(data.includes("import { isWorkTaskVisibleToAssignee } from './workTaskAccess.js'"))
+  assert.ok(data.includes('rows.filter((row) => isWorkTaskVisibleToAssignee(row, user))'))
+  assert.ok(helper.includes('assigned_to_user_id') && helper.includes('assigned_to_legacy_email_access'))
+  assert.ok(migration.includes('REFERENCES auth.users(id)') && migration.includes('ON DELETE SET NULL'))
+  assert.ok(migration.includes('assigned_to_user_id = (SELECT auth.uid())'))
+  assert.ok(migration.includes('assigned_to_legacy_email_access IS TRUE'))
+  assert.ok(migration.includes("SET search_path = ''"))
+  assert.ok(tests.includes("stable identity continues to match after the employee email changes"))
+})
+
 check('GitHub-hosted release pipeline builds assets and keeps production deploy manual', () => {
   const workflow = read('.github/workflows/cloudflare-pages-release.yml')
   for (const phrase of ['workflow_dispatch', 'npm ci --no-audit --no-fund', 'npm run verify:project', 'npm run test:user-errors', 'npm run test:finance', 'npm run test:file-access', 'npm run build', 'edusphere360-cloudflare-direct-upload.zip', 'cloudflare/wrangler-action@v4']) {
@@ -819,12 +834,12 @@ check('GitHub-hosted release pipeline builds assets and keeps production deploy 
 
 check('Required database safeguards and Cloudflare redirects remain in the project', () => {
   const migrations = fs.readdirSync(path.join(root, 'supabase/migrations')).filter(name => name.endsWith('.sql')).sort()
-  for (const migration of ['001_initial_schema.sql', '017_public_institution_signup.sql', '018_assessment_metadata_and_result_visibility.sql', '019_phase_two_integrity_guards.sql', '020_fee_payment_date_validation.sql', '20261108053651_owner_signup_institution_details.sql', '20261109085154_faculty_employee_management.sql', '20261109092734_student_management_operations.sql', '20261109092920_student_management_scope_indexes_and_guardian_portal_read.sql', '20261109094108_student_activity_history_events.sql', '20261109094402_student_guardian_policy_consolidation_and_activity_indexes.sql', '20261109105804_institutional_platform_expansion.sql', '20261109110541_institution_attendance_bulk_register.sql', '20261109111818_institutional_policy_and_foreign_key_refinement.sql', '20261109113516_campus_scope_and_inventory_transaction_workflows.sql', '20261109113606_inventory_movement_row_count_safety_fix.sql', '20261109114108_transport_accountant_read_access.sql', '20261109125937_announcement_read_receipts.sql', '20261109130705_announcement_reads_index_and_fee_policy_cleanup.sql', '20261109150048_finance_accounting_and_payroll_workflows.sql', '20261109150654_atomic_employee_salary_profile_workflow.sql', '20261109150857_employee_own_payroll_run_read.sql', '20261109151231_atomic_institution_setting_approval.sql', '20261110082719_institutional_catalog_permissions.sql', '20261110082731_atomic_library_circulation.sql', '20261110082738_atomic_transport_allocations.sql', '20261110091600_fee_discount_approval_and_refund_processing.sql', '20261110092328_atomic_finance_journal_and_discount_limit_validation.sql']) {
+  for (const migration of ['001_initial_schema.sql', '017_public_institution_signup.sql', '018_assessment_metadata_and_result_visibility.sql', '019_phase_two_integrity_guards.sql', '020_fee_payment_date_validation.sql', '20261108053651_owner_signup_institution_details.sql', '20261109085154_faculty_employee_management.sql', '20261109092734_student_management_operations.sql', '20261109092920_student_management_scope_indexes_and_guardian_portal_read.sql', '20261109094108_student_activity_history_events.sql', '20261109094402_student_guardian_policy_consolidation_and_activity_indexes.sql', '20261109105804_institutional_platform_expansion.sql', '20261109110541_institution_attendance_bulk_register.sql', '20261109111818_institutional_policy_and_foreign_key_refinement.sql', '20261109113516_campus_scope_and_inventory_transaction_workflows.sql', '20261109113606_inventory_movement_row_count_safety_fix.sql', '20261109114108_transport_accountant_read_access.sql', '20261109125937_announcement_read_receipts.sql', '20261109130705_announcement_reads_index_and_fee_policy_cleanup.sql', '20261109150048_finance_accounting_and_payroll_workflows.sql', '20261109150654_atomic_employee_salary_profile_workflow.sql', '20261109150857_employee_own_payroll_run_read.sql', '20261109151231_atomic_institution_setting_approval.sql', '20261110082719_institutional_catalog_permissions.sql', '20261110082731_atomic_library_circulation.sql', '20261110082738_atomic_transport_allocations.sql', '20261110091600_fee_discount_approval_and_refund_processing.sql', '20261110092328_atomic_finance_journal_and_discount_limit_validation.sql', '20261111140500_work_task_stable_assignee_identity.sql']) {
     assert.ok(migrations.includes(migration), `${migration} missing`)
   }
   const timestamped = migrations.filter(name => /^202611\d{8}_.+\.sql$/.test(name))
-  assert.equal(timestamped.length, 30, 'Expected thirty timestamped migrations including staged catalogue, library and transport refinements')
-  assert.ok(read('supabase/migrations/README.md').includes('thirty timestamped migration files'))
+  assert.equal(timestamped.length, 31, 'Expected thirty applied timestamped migrations plus one staged stable task-identity migration')
+  assert.ok(read('supabase/migrations/README.md').includes('31 timestamped migration files'))
   assert.equal(read('public/_redirects').trim(), '/* /index.html 200')
   const envExample = read('.env.example')
   const gitignore = read('.gitignore')
