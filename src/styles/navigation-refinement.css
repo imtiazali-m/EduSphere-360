@@ -99,3 +99,31 @@
   .pro-sidebar .pro-nav-item,
   .pro-workspace-tab { transition: none !important; }
 }
+
+/* Parent-level navigation sections make the operational sequence scannable.
+   Workspace group keys and destinations remain unchanged. */
+.pro-sidebar .pro-nav-section {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.pro-sidebar .pro-nav-section + .pro-nav-section {
+  margin-top: 8px;
+  padding-top: 7px;
+  border-top: 1px solid rgba(221, 234, 249, .075);
+}
+.pro-sidebar .pro-nav-section-label {
+  padding: 5px 13px 4px;
+  color: rgba(207, 222, 242, .54);
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: .12em;
+  line-height: 1.25;
+  text-transform: uppercase;
+}
+.pro-sidebar.is-collapsed .pro-nav-section-label {
+  display: none;
+}
+@media (max-width: 820px) {
+  .pro-sidebar .pro-nav-section-label { padding-top: 8px; }
+}
