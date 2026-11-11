@@ -515,7 +515,7 @@ check('Governance settings and approval queues support sorting and pagination', 
   for (const value of ['settingsSortKey', 'settingsSortDirection', 'orderedSettings', 'settingsPageRows', 'orderedApprovals', 'approvalPageRows', 'toggleSettingsSort', 'sortHeader', 'pageControls']) {
     assert.ok(governance.includes(value), 'Governance list interaction is missing: ' + value)
   }
-  assert.ok(governance.includes("onChange={e=>{setQuery(e.target.value);setSettingsPage(1);setApprovalPage(1)}}"), 'Governance search must reset both page positions')
+  assert.ok(governance.includes("onChange={e=>{setSearch(e.target.value);setSettingsPage(1);setApprovalPage(1)}}"), 'Administration search must reset both page positions')
   assert.ok(styles.includes('.gov-sort-header:focus-visible') && styles.includes('.gov-pagination'), 'Governance controls need accessible responsive styles')
 })
 
@@ -752,14 +752,14 @@ check('Question bank and paper designer use tenant-safe records and guarded appr
 
 check('Administration settings, approvals and audit are connected to governance tables', () => {
   assert.equal(getNavigationRoute('administration', 'Institute Profile'), 'governance:profile')
-  assert.equal(getNavigationRoute('administration', 'Institution Settings'), 'governance:settings')
-  assert.equal(getNavigationRoute('administration', 'Approval and Workflows'), 'governance:approvals')
+  assert.equal(getNavigationRoute('administration', 'Institute Settings'), 'governance:settings')
+  assert.equal(getNavigationRoute('administration', 'Approval Workflows'), 'governance:approvals')
   assert.equal(getNavigationRoute('administration', 'Administrative Audit'), 'governance:audit')
-  const governance = read('src/components/GovernanceWorkspace.tsx')
+  const governance = read('src/components/AdministrationStage5Workspace.tsx')
   for (const value of ['institution_settings', 'workflow_approvals', 'institutional_audit_events', 'decide_institution_setting_approval']) {
     assert.ok(governance.includes(value), 'Governance workspace is missing ' + value)
   }
-  assert.ok(governance.includes('Read only') && governance.includes('does not grant direct client updates'), 'Institution profile must not offer an unsupported edit action')
+  assert.ok(governance.includes('Update Profile') && governance.includes("supabase.from('institutions').update(values)"), 'Institution profile must use the existing owner/admin update path')
   assert.ok(read('supabase/migrations/20261109151231_atomic_institution_setting_approval.sql').includes('decide_institution_setting_approval'))
 })
 
@@ -960,16 +960,16 @@ check('Unified design system is loaded last and removes global browser zoom', ()
   ]) assert.ok(contrast(foreground, background) >= 4.5, label + ' must meet WCAG AA normal-text contrast')
   assert.ok(read('docs/PHASE_1_DETAILED_AUDIT.md').includes('Phase 1 disposition'), 'Detailed Phase 1 audit document is missing')
   const roleMenu = read('docs/PHASE_1_ROLE_MENU_INVENTORY.md')
-  assert.ok(roleMenu.includes('33 top-level groups and 430 submenu entries') && roleMenu.includes('Examination officer') && roleMenu.includes('| Owner | 31 | 343 |') && roleMenu.includes('| Administrator | 31 | 343 |') && roleMenu.includes('| Teacher / employee | 18 | 152 |') && roleMenu.includes('| Student | 15 | 107 |') && roleMenu.includes('| Parent / guardian | 15 | 104 |') && roleMenu.includes('| Accountant | 12 | 112 |') && roleMenu.includes('| Examination officer | 7 | 62 |'), 'Complete catalogue inventory and current role-filtered menu totals must cover all seven roles')
+  assert.ok(roleMenu.includes('29 visible sidebar groups') && roleMenu.includes('33 route-catalogue groups') && roleMenu.includes('Administration parent menu') && roleMenu.includes('Examination officer') && roleMenu.includes('| Owner | 29 | 384 |') && roleMenu.includes('| Administrator | 29 | 384 |') && roleMenu.includes('| Teacher / employee | 18 | 202 |') && roleMenu.includes('| Student | 15 | 144 |') && roleMenu.includes('| Parent / guardian | 15 | 139 |') && roleMenu.includes('| Accountant | 12 | 132 |') && roleMenu.includes('| Examination officer | 7 | 89 |'), 'Role inventory must document the consolidated Administration menu and all seven role-specific destination totals')
   assert.ok(read('docs/PHASE_2_DESIGN_SYSTEM.md').includes('Core colour tokens'), 'Phase 2 design specification is missing')
   const routeAudit = read('docs/PHASE_1_EXACT_ROUTE_AUDIT.md')
-  assert.ok(routeAudit.includes('Total resolver evaluations:** 1566.') && routeAudit.includes('Unexpected route families:** 0.'), 'Exact route audit must resolve each visible role/menu destination without unknown route families')
+  assert.ok(routeAudit.includes('Total resolver evaluations:** 1474.') && routeAudit.includes('Unexpected route families:** 0.'), 'Exact route audit must resolve each visible role/menu destination without unknown route families')
   assert.ok(routeAudit.includes('Bare module roots to review:** 0.') && routeAudit.includes('Unexpected route families:** 0.'), 'All role-visible destinations must retain explicit workspace or intentional root routes')
   assert.ok(routeAudit.includes('## Dispatcher coverage') && routeAudit.includes('Unmapped routes:** 0.') && routeAudit.includes('LinkedOperationsWorkspace') && routeAudit.includes('InstitutionalWorkspace') && routeAudit.includes('RecordModule'), 'Every role-visible route must map to a known Dashboard component')
   const responsiveAudit = read('docs/PHASE_2_RESPONSIVE_SOURCE_AUDIT.md')
   assert.ok(responsiveAudit.includes('13 responsive source checks passed') && responsiveAudit.includes('390×844') && responsiveAudit.includes('768×1024'), 'Responsive source coverage audit is missing or incomplete')
   const viewAudit = read('docs/PHASE_1_ROUTE_VIEW_AUDIT.md')
-  assert.ok(viewAudit.includes('Total evaluations:** 1566.') && viewAudit.includes('Compatibility issues:** 0.'), 'Every role-visible destination must request a supported component sub-view')
+  assert.ok(viewAudit.includes('Total evaluations:** 1474.') && viewAudit.includes('Compatibility issues:** 0.'), 'Every role-visible destination must request a supported component sub-view')
   assert.ok(viewAudit.includes('Hidden from role workspace tabs') === false, 'Role menus must not expose inaccessible internal workspace tabs')
   assert.ok(routeAudit.includes('Owner') && routeAudit.includes('| Student | 15 | 144 |') && routeAudit.includes('Examination officer') && routeAudit.includes('Exact route matrix'), 'Exact route audit must list all seven role sections')
   assert.ok(routeAudit.includes('Explicitly unavailable') && routeAudit.includes('acceptance pending'), 'Exact route audit must distinguish unresolved workflows')
