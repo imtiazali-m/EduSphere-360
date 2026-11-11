@@ -12,6 +12,7 @@ import './styles/design-system.css'
 import './styles/visual-refresh.css'
 import './styles/navigation-refinement.css'
 import './styles/student-admission-workspace.css'
+import './styles/dashboard-display-settings.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
@@ -20,4 +21,3 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     </AuthProvider>
   </React.StrictMode>,
 )
-import './styles/dashboard-display-settings.css'
