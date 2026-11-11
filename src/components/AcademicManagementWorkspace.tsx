@@ -11,7 +11,7 @@ import type { AppRole } from '../lib/types'
 import '../styles/academic-management.css'
 
 type RowData = Record<string, any>
-type OptionSource = 'sessions' | 'classes' | 'subjects' | 'teachers' | 'rooms' | 'students' | 'assignments' | 'courses' | 'courseUnits' | 'curriculum'
+type OptionSource = 'sessions' | 'classes' | 'subjects' | 'teachers' | 'rooms' | 'students' | 'assignments' | 'courses' | 'courseUnits' | 'curriculum' | 'programs' | 'activities'
 type FieldSpec = {
   key: string
   label: string
@@ -94,7 +94,7 @@ const academicSections: AcademicSection[] = [
         fields: [
           f('name','Class / programme name','text',true),f('code','Class code'),f('grade_level','Grade / academic level'),
           f('section','Section'),f('academic_session_id','Academic session','select',false,'sessions'),
-          f('program_id','Programme','select',false,undefined),f('capacity','Class capacity','number'),
+          f('program_id','Programme','select',false,'programs'),f('capacity','Class capacity','number'),
           f('description','Description','textarea'),f('is_active','Active class','boolean'),
         ],
         columns: [c('name','Class'),c('section','Section'),c('grade_level','Grade'),c('academic_session_id','Session','sessions'),c('capacity','Capacity'),c('is_active','Active')],
@@ -363,7 +363,7 @@ const academicSections: AcademicSection[] = [
 const sourceTables: Record<OptionSource, string> = {
   sessions: 'academic_sessions', classes: 'classes', subjects: 'subjects', teachers: 'teachers',
   rooms: 'rooms', students: 'students', assignments: 'assignments', courses: 'learning_courses',
-  courseUnits: 'learning_course_units', curriculum: 'curriculum_units',
+  courseUnits: 'learning_course_units', curriculum: 'curriculum_units', programs: 'programs', activities: 'classroom_activities',
 }
 const displayName = (row: RowData): string => {
   const name = row.name ?? row.session_name ?? row.title ?? row.full_name ?? row.term_name ?? row.subject_code ?? row.employee_no ?? row.code ?? row.id
@@ -399,7 +399,7 @@ export function AcademicManagementWorkspace({ initialWindow = 'academic-sessions
   const activeMode = useMemo(() => section.modes.find(item => item.key === modeKey) ?? section.modes[0], [section, modeKey])
   const canCreate = Boolean(user && activeMode.writeRoles.includes(user.role))
   const isStudent = user?.role === 'student'
-  const visibleFields = activeMode.fields.filter(field => !(field.staffOnly && (user?.role === 'student' || user?.role === 'parent')) && !(field.studentOnly && user?.role === 'parent'))
+  const visibleFields = activeMode.fields.filter(field => !(field.staffOnly && (user?.role === 'student' || user?.role === 'parent')) && !(field.studentOnly && user?.role === 'parent') && !(isStudent && activeMode.table === 'assignment_submissions' && field.key === 'status'))
   const isOnlineLearning = section.key === 'online-learning'
 
   async function fetchTable(table: string): Promise<RowData[]> {
