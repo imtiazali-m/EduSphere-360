@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent, ReactNode } from 'react'
 import {
   Activity, ArrowUpRight, BriefcaseBusiness, CalendarCheck, CalendarDays,
-  Check, Clock3, Download, Edit3, Eye, FileText, GraduationCap, History, Printer,
+  Check, Clock3, Download, Edit3, Eye, FileCheck2, FileText, GraduationCap, History, Printer,
   Plus, RefreshCw, Search, ShieldCheck, Trash2, UserRound, Users, X,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
