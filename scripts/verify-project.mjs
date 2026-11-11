@@ -149,7 +149,7 @@ check('The full institutional menu maps every submenu to a working destination',
   assert.equal(getNavigationRoute('backup', 'Create Backup'), 'unavailable:backup:create-backup', 'Backup menu must not claim to create a backup without a platform backup service')
   assert.equal(getNavigationRoute('communication', 'WhatsApp Integration'), 'unavailable:communication:whatsapp-integration', 'External messaging must remain unconnected until credentials and delivery tests exist')
   assert.equal(getNavigationRoute('communication', 'Notification Centre'), 'notifications', 'In-app notifications remain a supported communication workflow')
-  assert.equal(getNavigationRoute('employees', 'Employee Directory'), 'employees:directory', 'Employee Directory must open the staff directory window')
+  assert.equal(getNavigationRoute('employees', 'All Employees'), 'employees:directory', 'Employee Directory must open the staff directory window')
   assert.equal(getNavigationRoute('employees', 'Employee Reports'), 'employees:reports', 'Employee reports must open the staff report window')
   assert.equal(getNavigationRoute('dashboard', 'Institutional Overview', 'owner'), 'overview', 'Institutional overview must open the dashboard')
   assert.equal(getNavigationRoute('dashboard', 'Academic Overview', 'owner'), 'reports:academics', 'Academic Overview must retain its academic report sub-view')
@@ -652,17 +652,17 @@ check('Module definitions and generic CRUD table allowlist remain valid', () => 
 check('Student Record is a complete permission-aware multi-window workspace', () => {
   const recordModule = read('src/components/RecordModule.tsx')
   const dataSource = read('src/lib/data.ts')
-  for (const label of ['Overview', 'Admissions', 'Student Directory', 'Student Profile', 'Class Placement', 'Promotion', 'Guardians', 'Student Attendance', 'Student Exam Results', 'Student Assignments', 'Student Timetable', 'Student Documentation', 'Student History']) {
+  for (const label of ['Overview', 'Admissions', 'Student Directory', 'Student Profile', 'Class Placement', 'Promotion', 'Guardians', 'Student Attendance', 'Student Exam Results', 'Student Assignments', 'Student Timetable', 'Student Documentation', 'Fee Records', 'Health & Emergency', 'Student History']) {
     assert.ok(recordModule.includes("label: '" + label + "'"), 'Student workspace window is missing: ' + label)
   }
   const studentWorkspaceStart = recordModule.indexOf("if (module.key === 'students') {", recordModule.indexOf('export function RecordModule'))
   const studentWorkspaceEnd = recordModule.indexOf("if (module.key === 'teachers') {", studentWorkspaceStart)
   const studentWorkspace = recordModule.slice(studentWorkspaceStart, studentWorkspaceEnd)
-  for (const table of ['attendance', 'exams', 'exam_results', 'assignments', 'assignment_submissions', 'timetable_entries', 'classes', 'academic_sessions', 'programs', 'guardian_students', 'parent_guardians', 'student_placements', 'student_documents', 'student_history']) {
+  for (const table of ['attendance', 'exams', 'exam_results', 'assignments', 'assignment_submissions', 'timetable_entries', 'classes', 'academic_sessions', 'programs', 'guardian_students', 'parent_guardians', 'student_placements', 'student_documents', 'fee_invoices', 'fee_payments', 'student_health_emergency', 'student_history']) {
     assert.ok(recordModule.includes("'" + table + "'"), 'Student workspace is missing related data source: ' + table)
   }
-  assert.ok(!studentWorkspace.includes("'fee_invoices'") && !studentWorkspace.includes("label: 'Fees & Payments'"), 'Fee management must remain exclusively in Finance, not Student Management')
-  assert.ok(recordModule.includes('studentRelatedTables.map'), 'Student related workspaces must load their linked records')
+  assert.ok(studentWorkspace.includes("studentWorkspaceTab === 'fees'") && studentWorkspace.includes("studentWorkspaceTab === 'health'"), 'Student profiles must expose linked fee history and restricted health information')
+  assert.ok(recordModule.includes('studentRelatedTables.filter') && recordModule.includes('visibleTables.map'), 'Student related workspaces must load linked records while excluding restricted health data for other roles')
   const dashboardSource = read('src/components/Dashboard.tsx')
   assert.ok(dashboardSource.includes('key={tab.id}') && dashboardSource.includes('initialWindow={tab.targetWindow}'), 'Student workspace destinations must open in their own persistent dashboard window')
   assert.ok(dashboardSource.includes("showWindowNavigation={tab.targetKey !== 'students'}"), 'Student sidebar tabs must not duplicate the internal student-window navigation')
