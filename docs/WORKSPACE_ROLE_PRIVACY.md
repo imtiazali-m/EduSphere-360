@@ -10,7 +10,7 @@ The staged migration `20261111160000_institutional_record_review_isolation.sql` 
 - Existing review metadata is copied before the original columns are dropped.
 - Row-level security and explicit grants allow authenticated access only when the active membership is an owner or administrator; anonymous access is revoked.
 - A database trigger stamps reviewer identity/time on approval or rejection and prevents clients from changing those audit fields independently.
-- Review insert/update events are written into the existing administrator-readable institutional audit stream.
+- Review insert/update/delete events are written into the existing administrator-readable institutional audit stream. The review row retains the record's institution, module and record type so a cascading delete can still write a complete audit event after the operational row has been removed.
 - The `save_institutional_record_with_review` RPC checks the authenticated user and active owner/admin membership, then saves the operational record and its review state in one transaction.
 - The workspace reads the base record through an explicit safe-column projection. It requests the separate review relation only for owners/administrators. Non-admin writes never send review columns to the operational table.
 
