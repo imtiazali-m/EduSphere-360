@@ -10,6 +10,7 @@ import './styles/operational-hierarchy.css'
 import './styles/institutional-premium.css'
 import './styles/design-system.css'
 import './styles/visual-refresh.css'
+import './styles/student-admission-workspace.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
