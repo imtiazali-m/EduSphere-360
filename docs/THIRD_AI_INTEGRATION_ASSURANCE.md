@@ -45,6 +45,17 @@ The repository has one open pull request at the time of this audit:
 - At the last live check, newer runs for commit `91aaed671d464beaf17f9b7ece28c1bd0529b84e` were still in progress. Recheck the latest branch head and CI before accepting PR #15.
 - Do not infer a production release from a successful build or PR-preview deployment.
 
+## Parallel-work integration update — 11 November 2026, 14:39 PKT
+
+The initial repository snapshot above predates the dedicated admission sub-PR opened by the other workstream. Current PR graph:
+
+- [PR #15](https://github.com/imtiazali-m/EduSphere-360/pull/15) remains the presentation/navigation baseline, targeting `main`. Its current branch head at this follow-up check is `9881b1ef38edd695492ba72eacb6c770b0187156`. The latest verified build and isolated preview on this branch passed at this head; the production deployment job was skipped.
+- [PR #17](https://github.com/imtiazali-m/EduSphere-360/pull/17) adds the dedicated student admission workspace. It deliberately targets PR #15's working branch, not `main`, and is therefore dependent on the visual/navigation baseline. Its three application/source changes are limited to `RecordModule.tsx`, `main.tsx` and `student-admission-workspace.css`; the fourth change adds a source-verifier assertion. Its exact head `be3bbaa63b9293d12b5b7446f2f656aecd0af510` passed the full GitHub Actions source verification, focused tests, Vite production build, artifact creation and isolated PR preview. Production deployment was skipped.
+- PR #17's own description correctly states that authenticated admission save and photo persistence E2E remain untested. The diff retains the existing cloud save and storage path; it does not repair or certify the historic live admission-save issue.
+- [PR #18](https://github.com/imtiazali-m/EduSphere-360/pull/18) is this assurance report, opened as a draft against `main`. It changes documentation only.
+
+**Recommended merge order:** review and merge PR #15 into `main` first, then retarget/rebase PR #17 onto the updated `main`, rerun the complete CI and preview checks, and only then review the student admission change for merge. Do not merge PR #17's current dependent base directly into `main` without that integration step.
+
 ## Priority engineering findings
 
 ### P1 — Teacher account provisioning can create an unlinked account
