@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import {
-  Activity, AlertCircle, ArrowUpRight, BookOpen, BookOpenCheck, CalendarDays, CheckCircle2,
-  ChevronRight, ClipboardList, Clock3, Download, ExternalLink, FileText, GraduationCap,
+  Activity, AlertCircle, BookOpen, BookOpenCheck, CalendarDays, CheckCircle2,
+  ChevronRight, ClipboardList, Clock3, Download, ExternalLink, GraduationCap,
   Layers3, Library, LockKeyhole, Pencil, Plus, Printer, RefreshCw, Search, ShieldCheck,
   Trash2, Upload, Users, Video, X,
 } from 'lucide-react'
@@ -45,8 +45,6 @@ type AcademicSection = {
 }
 
 const admins: AppRole[] = ['owner', 'admin']
-const staff: AppRole[] = ['owner', 'admin', 'teacher']
-const family: AppRole[] = ['owner', 'admin', 'teacher', 'student', 'parent', 'exam_officer']
 const manager: AppRole[] = ['owner', 'admin', 'teacher']
 const f = (key: string, label: string, type: FieldSpec['type'] = 'text', required = false, source?: OptionSource, options?: { label: string; value: string }[], extra: Partial<FieldSpec> = {}): FieldSpec => ({
   key, label, type, required, source, options, ...extra,
@@ -701,7 +699,7 @@ export function AcademicManagementWorkspace({ initialWindow = 'academic-sessions
     return labelValue(value,column.source)
   }
 
-  const canEditRow = (row: RowData) => canCreate && !(isStudent && activeMode.table !== 'assignment_submissions' && activeMode.table !== 'learning_course_progress')
+  const canEditRow = () => canCreate && !(isStudent && activeMode.table !== 'assignment_submissions' && activeMode.table !== 'learning_course_progress')
   const totalActive = rows.filter(row => ['active','open','published','planned','in_progress'].includes(String(row.status ?? row.progress_status ?? '')) || row.is_active === true).length
   const completed = rows.filter(row => ['completed','graded'].includes(String(row.status ?? row.progress_status ?? ''))).length
   const needsSupport = rows.filter(row => row.intervention_required === true || row.progress_status === 'needs_support').length
@@ -778,7 +776,7 @@ export function AcademicManagementWorkspace({ initialWindow = 'academic-sessions
                     <span title={String(row[column.key] ?? '')}>{displayCell(row,column)}</span>}</td>)}
                   <td className="ed360-academic-row-actions">
                     {activeMode.table === 'study_materials' && (row.storage_path || row.external_url) ? <button type="button" aria-label="Open learning resource" title="Open resource" onClick={() => void openMaterial(row)}><ExternalLink size={15}/></button> : null}
-                    {canEditRow(row) ? <button type="button" aria-label="Edit record" title="Edit record" onClick={() => openEdit(row)}><Pencil size={15}/></button> : null}
+                    {canEditRow() ? <button type="button" aria-label="Edit record" title="Edit record" onClick={() => openEdit(row)}><Pencil size={15}/></button> : null}
                     {canCreate && admins.includes(user?.role as AppRole) ? <button type="button" className="danger" aria-label="Delete record" title="Delete record" onClick={() => void deleteRecord(row)}><Trash2 size={15}/></button> : null}
                   </td>
                 </tr>)}
