@@ -333,7 +333,7 @@ export function PayrollWorkspace({initialWindow,onToast}:Props){
     ])
   }
 
-  const tabs:Tab[]=financeRole?['overview','salary','components','adjustments','runs','payslips']:['overview','payslips']
+  const tabs:Tab[]=financeRole?['overview','salary','components','adjustments','runs','payslips']:user?.role==='teacher'?['overview','salary','payslips']:['overview','payslips']
   const activeSalaryTotal=activeProfiles.reduce((sum,p)=>sum+moneyValue(p.base_salary)+moneyValue(p.monthly_allowances)-moneyValue(p.monthly_deductions),0)
   const pendingApproval=runs.filter(run=>['draft','review'].includes(run.status)).length
 
