@@ -17,7 +17,7 @@ permissions:
 jobs:
   verify-and-build:
     name: Verify source and build production assets
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
       VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
@@ -61,10 +61,11 @@ jobs:
       - name: Test teacher account provisioning guards
         run: npm run test:account-provisioning
 
-      - name: Install Chromium for responsive browser checks
+      - name: Install isolated Playwright browser tooling
         run: |
-          npm install --no-save --no-package-lock playwright@1.56.1
-          npx playwright install --with-deps chromium
+          mkdir -p /tmp/edusphere-playwright
+          npm install --prefix /tmp/edusphere-playwright --no-save --no-package-lock playwright@1.56.1
+          /tmp/edusphere-playwright/node_modules/.bin/playwright install --with-deps chromium
 
       - name: Build production website
         run: npm run build
