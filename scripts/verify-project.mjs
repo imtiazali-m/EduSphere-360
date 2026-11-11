@@ -984,6 +984,8 @@ check('Institutional review metadata is isolated behind owner/admin database aut
     'insert into public.institutional_record_reviews',
     'save_institutional_record_with_review',
     'private.audit_institutional_record_review',
+    'after insert or update or delete on public.institutional_record_reviews',
+    'v_module_key := old.module_key',
     'drop column approval_status',
     'drop column reviewed_by',
     'drop column reviewed_at',
