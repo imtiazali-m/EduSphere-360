@@ -1,18 +1,30 @@
 # Institutional workspace approval-data visibility
 
-Internal approval state is administrative workflow metadata. Owner and administrator accounts may see approval state, reviewer identity and review timestamps in the institutional workspace. Other roles must not receive these fields through the workspace presentation, exports or review metrics.
+Approval state, reviewer identity, review timestamps and internal review notes are administrative workflow metadata. Only institution owners and administrators may read or change these values. Teachers, accountants, examination officers, students and parents must not receive them through direct Data API queries, workspace presentation, exports or review metrics.
 
-The frontend policy helper in `src/lib/workspacePrivacy.js` is a defense-in-depth presentation rule. It scopes table columns, CSV/XLSX/DOCX/print projections and dashboard metrics by role. It does **not** replace database authorization.
+## Database design
 
-## Database release gate
+The staged migration `20261111160000_institutional_record_review_isolation.sql` moves `approval_status`, `reviewed_by`, `reviewed_at` and `review_notes` from `institutional_records` into `institutional_record_reviews`.
 
-The linked project's existing `institutional_records` SELECT policy allows student and parent memberships to read selected portal-visible rows. The current generic workspace query uses `select('*')`, while the linked project grants `SELECT` on the review metadata columns to `authenticated`. Row-level security filters rows, not columns. Therefore a family-role user with access to a permitted row may still request internal approval fields directly through the Data API unless the database/API contract is changed.
+- The new relation is linked by a composite `(record_id, institution_id)` foreign key with cascade deletion, preserving tenant alignment.
+- Existing review metadata is copied before the original columns are dropped.
+- Row-level security and explicit grants allow authenticated access only when the active membership is an owner or administrator; anonymous access is revoked.
+- A database trigger stamps reviewer identity/time on approval or rejection and prevents clients from changing those audit fields independently.
+- Review insert/update events are written into the existing administrator-readable institutional audit stream.
+- The `save_institutional_record_with_review` RPC checks the authenticated user and active owner/admin membership, then saves the operational record and its review state in one transaction.
+- The workspace reads the base record through an explicit safe-column projection. It requests the separate review relation only for owners/administrators. Non-admin writes never send review columns to the operational table.
 
-Do not describe this UI helper as complete confidentiality protection. Before production release, design and test a database-side safe projection or column-privilege/API change that:
-- preserves current tenant, portal visibility and linked-student constraints;
-- keeps owner/admin review access;
-- prevents student/parent direct Data API reads of approval/reviewer metadata;
-- updates every client call site that reads or writes `institutional_records`;
-- is verified with authenticated owner, admin, teacher, student and parent identities.
+The frontend helper in `src/lib/workspacePrivacy.js` remains defense in depth for CSV/XLSX/DOCX/print projections and dashboard metrics. It strips `approval_status`, `reviewed_by`, `reviewed_at` and `review_notes` from non-admin export rows, including nested payloads.
 
-No schema, RLS, grants, Auth users or production data are changed by this source-only change.
+## Release status and acceptance
+
+This change is **source-only and staged**. It does not apply the migration, change live RLS/grants, create Auth users, change production data or deploy Cloudflare.
+
+Before production promotion:
+1. Review the migration and run a Supabase remote dry-run after the other staged migrations are reconciled.
+2. Apply the migration only once, after approval; do not replay legacy numbered migrations.
+3. Use disposable authenticated owner, admin, teacher, accountant, examination-officer, student and parent identities to verify: admin review read/write, non-admin direct SELECT denial on the review table, absence of review columns on `institutional_records`, portal-visible record reads, cross-institution denial, approval/rejection timestamps and audit events, parent/student portal behaviour, and record deletion cascade.
+4. Verify the save RPC rejects anonymous users, non-admins and cross-institution IDs, and that a failed review upsert rolls the record save back.
+5. Run database security advisors and the full project / browser regression workflows.
+
+Do not describe frontend column hiding or an un-applied migration as live confidentiality protection.
