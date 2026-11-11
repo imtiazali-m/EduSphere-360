@@ -80,7 +80,7 @@ check('The full institutional menu maps every submenu to a working destination',
   for (const required of ['academic-management','question-bank','library','transport','inventory','facilities','visitors','reconciliation','backup']) {
     assert.ok(groupKeys.has(required), 'Missing expansion workspace: ' + required)
   }
-  for (const required of ['attendance','people-hr','accounts-finance','fees','payments','receipts','examinations','class-tests','reports']) ]) {
+  for (const required of ['attendance','people-hr','accounts-finance','fees','payments','receipts','examinations','class-tests','reports']) {
     assert.ok(groupKeys.has(required), 'Missing core institution workspace: ' + required)
   }
   assert.ok(institutionalMenu.length === 32, 'Full route catalogue must preserve all 34 source groups')
