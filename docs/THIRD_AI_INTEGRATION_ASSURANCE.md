@@ -191,3 +191,37 @@ The migration version mismatch is now isolated in [PR #20](https://github.com/im
 5. Stabilize employee work-task identity with a safe backfill and compatible RLS transition.
 6. Update the archived QA/rebuild reports so they no longer describe the current live schema as 36 tables/six migrations or state that the GitHub build workflow has never run.
 7. Plan offline support as a separately scoped, threat-modelled milestone.
+
+
+## Parallel-work integration checkpoint — 11 November 2026
+
+This checkpoint supersedes the earlier PR #15/#17 sequencing notes above. The repository and workflow graph have advanced; use the live PRs below as the current integration set.
+
+| PR | Scope | Exact source/CI status at this checkpoint | Integration dependency |
+|---|---|---|---|
+| [#38](https://github.com/imtiazali-m/EduSphere-360/pull/38) | Role-aware approval metadata in dashboard metrics and exports | Open draft; source verifier and focused privacy workflow passed. It is a presentation/export safeguard, not database/API confidentiality by itself. | Must remain intact as the UI defense-in-depth layer beneath #41. |
+| [#39](https://github.com/imtiazali-m/EduSphere-360/pull/39) | Public onboarding Chromium QA at desktop/tablet/mobile and login-route state correction | Open draft; full release workflow passed. No sign-in, Auth creation, reset email or business-record writes are exercised. | Independent current-main change; can be integrated separately. |
+| [#40](https://github.com/imtiazali-m/EduSphere-360/pull/40) | Stable tenant-scoped work-task identity plus legacy fee-payment RPC compatibility | Open draft; full build/verifier and both focused regression workflows passed. Contains two staged migrations (20261111140500, 20261111150000). | Integrate its shared migration ledger before retargeting #41. |
+| [#41](https://github.com/imtiazali-m/EduSphere-360/pull/41) | Database/API isolation for institutional record approval metadata | Open draft stacked on #38; focused privacy workflow and complete project build/verifier passed at head 75849bd099ff0a645b3d01a579cc44bcd937c80f. Adds staged migration 20261111160000; it has not been applied. | Merge #38 first. After #40 is integrated, rebase/retarget #41 onto the final main and reconcile one 33-file migration ledger (30 already applied + 3 staged). |
+
+### Integration review evidence
+
+- The linked Supabase project remains at 30 applied timestamped migration versions. No migration in #40 or #41 has been applied, replayed or marked applied.
+- Read-only inspection of the public.work_tasks table returned zero rows in this project at the review time. The #40 backfill remains deliberately conservative for environments that do contain historical tasks.
+- The existing six-argument fee payment function has the expected date-aware TABLE result, tenant finance authorization and invoice-locking/balance validation. The #40 legacy seven-argument wrapper delegates to that function, returns the same UUID contract, and writes optional bank/cheque metadata only to the payment ID returned for the same invoice. Authenticated users still have no direct table UPDATE grant.
+- institutional_records has portal-visible row policies and authenticated column SELECT grants. Because row-level security does not hide columns, #38's export/UI filtering was insufficient by itself. #41 moves approval_status, reviewed_by, reviewed_at and review_notes into a separate owner/admin-only RLS relation, copies existing values before dropping the old columns, and keeps review actions auditable, including cascading deletion.
+- The new review-isolation branch uses an explicit safe-column query for operational records and queries review metadata only for owner/admin. The RPC enforces active owner/admin membership and commits the operational save and review status in one transaction.
+- The current browser automation in #39 is public/onboarding-only. It is not authenticated role acceptance, live Cloudflare smoke testing, student save/photo persistence or fee/attendance/exam lifecycle E2E.
+
+### Remaining release blockers (do not mark complete from menu coverage)
+
+1. **Authenticated seven-role acceptance:** run disposable owner, admin, teacher, student, parent, accountant and exam-officer identities against the exact integrated schema; verify allowed and denied direct Data API actions and cross-institution boundaries.
+2. **Student admission:** create, update, photo upload, refresh/re-login persistence, guardian linkage and denied cross-tenant access need authenticated browser proof. A source build alone is not that proof.
+3. **Teacher provisioning:** source guards must be deployed to the Supabase Edge Function only after a disposable end-to-end account/employee-link and rollback test. Do not assume repository source means the live function has been updated.
+4. **Finance and assessment:** verify invoice creation, partial/full payment, receipts, overpayment/future-date/non-finance denial, exam setup, result publication and family visibility with real test identities.
+5. **Security operations:** leaked-password protection remains an Auth-setting follow-up; review SECURITY DEFINER functions individually. Do not use mass revocation or blanket index changes.
+6. **Provider-dependent modules:** email/WhatsApp/SMS delivery, online payment providers, QR/RFID/biometric devices and actual backup/restore require configured credentials/provider connectivity and operational verification. A screen or configuration record is not an integration.
+7. **Product boundary:** the currently selected release baseline is online-only. Offline persistence/synchronization is not implemented and must not be advertised until it has a separate conflict, security, storage and sync design with tests.
+8. **Release certification:** after PR reconciliation and approved migration apply, rerun the exact clean build, authenticated browser/negative authorization matrix, responsive and keyboard checks, inspect the Cloudflare artifact, obtain a separate production deployment approval, smoke-test the production URL and record a rollback target.
+
+**Current third-engineer delivery:** review and test coordination are active; PR #41 is implemented and CI-green but remains a draft child PR. No live Supabase DDL, Auth-user mutation, Edge Function deployment or Cloudflare production deployment was performed by this checkpoint.
