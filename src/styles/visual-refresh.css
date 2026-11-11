@@ -1007,3 +1007,169 @@ button.button-primary:hover,.ed360-module-page .button-primary:hover{transform:t
 @media(prefers-reduced-motion:reduce){
   .student-table tbody tr,.faculty-table tbody tr,.ed360-student-panel,.student-directory-card,.faculty-directory-card{transition:none!important}
 }
+
+
+/* Specialist workspaces: governance, campus operations, payroll and reports */
+.gov-stage,.iop-stage,.payroll-stage,.report-stage{width:min(100%,1680px);margin:0 auto;color:var(--es-ink)}
+.gov-heading,.iop-heading,.payroll-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 0 16px;padding:21px 23px;border:1px solid #d9e4f2;border-radius:19px;background:radial-gradient(ellipse at 94% 4%,rgba(78,136,230,.12),transparent 33%),linear-gradient(120deg,#fff,#f5f8fe);box-shadow:var(--es-shadow-sm)}
+.gov-heading h1,.iop-heading h1,.payroll-heading h1{margin:5px 0 6px;color:#17395f;font-family:Manrope,sans-serif;font-size:clamp(23px,2.4vw,30px);font-weight:850;letter-spacing:-.7px}
+.gov-heading p,.iop-heading p,.payroll-heading p{margin:0;color:#74869c;font-size:11px;line-height:1.65}
+.gov-live,.iop-live,.payroll-cloud{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border:1px solid #d4ebdf;border-radius:999px;color:#147653;background:#eff9f3;font-size:9px;font-weight:850;white-space:nowrap}
+.gov-nav,.iop-nav,.payroll-nav{display:flex;gap:6px;max-width:100%;overflow-x:auto;margin:0 0 13px;padding:7px;border:1px solid #dfe7f1;border-radius:14px;background:#fff;box-shadow:var(--es-shadow-sm);scrollbar-width:thin}
+.gov-nav button,.iop-nav button,.payroll-nav button{min-height:39px;display:flex;align-items:center;gap:7px;flex:0 0 auto;padding:0 12px;border:1px solid transparent;border-radius:10px;color:#687c96;background:#f5f8fd;font-size:10px;font-weight:800;white-space:nowrap;transition:all .16s ease}
+.gov-nav button:hover,.iop-nav button:hover,.payroll-nav button:hover{border-color:#cbdaf0;color:#2865c5;background:#eff5ff}
+.gov-nav button.active,.iop-nav button.active,.payroll-nav button.active{border-color:#2d6fdf;color:#fff;background:linear-gradient(120deg,#3478f6,#245fd7);box-shadow:0 5px 14px rgba(44,105,216,.2)}
+.gov-context,.iop-context,.payroll-context{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:0 0 15px;padding:13px 16px;border:1px solid #dce7f4;border-left:4px solid #3478f6;border-radius:13px;background:linear-gradient(110deg,#f2f7ff,#fff)}
+.gov-context h2,.iop-context h2,.payroll-context h2{margin:0;color:#23486d;font-family:Manrope,sans-serif;font-size:14px;font-weight:850}
+.gov-context p,.iop-context p,.payroll-context p{margin:4px 0 0;color:#788ba2;font-size:10px;line-height:1.6}
+.gov-panel,.iop-panel,.payroll-panel{min-width:0;padding:17px;border:1px solid #e0e8f2;border-radius:17px;background:#fff;box-shadow:var(--es-shadow-sm)}
+.gov-panel h2,.gov-panel h3,.iop-panel h2,.iop-panel h3,.payroll-panel h2,.payroll-panel h3{color:#234665;font-family:Manrope,sans-serif;font-size:13px;font-weight:850}
+.gov-panel p,.iop-panel p,.payroll-panel p{color:#7b8da2;font-size:9px;line-height:1.65}
+.gov-panel,.iop-panel,.payroll-panel,.report-section{transition:border-color .18s ease,box-shadow .18s ease}
+.gov-panel:hover,.iop-panel:hover,.payroll-panel:hover,.report-section:hover{border-color:#d0deef;box-shadow:0 9px 25px rgba(19,44,77,.07)}
+.gov-readonly,.gov-note,.iop-meta,.iop-footer,.payroll-note{border:1px solid #e0e8f2;border-radius:11px;color:#72869f;background:#f7f9fd;font-size:9px;line-height:1.6}
+.gov-pending,.gov-decision-note,.iop-verification,.payroll-warning{border:1px solid #f0e2c8;border-radius:11px;color:#986417;background:#fff8ec;font-size:9px;line-height:1.6}
+.gov-approval-list,.gov-timeline,.iop-record-list,.payroll-runs-list{display:grid;gap:9px}
+.gov-approval-list>article,.gov-timeline>article,.iop-record-list>article,.payroll-run-card{min-width:0;padding:13px;border:1px solid #e3eaf3;border-radius:13px;background:#fff;box-shadow:0 3px 10px rgba(19,44,77,.035)}
+.gov-approval-list>article:hover,.iop-record-list>article:hover,.payroll-run-card:hover{border-color:#cbdaf0;box-shadow:var(--es-shadow-sm)}
+.gov-approval-heading,.iop-record-heading,.payroll-run-summary{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.gov-approval-heading b,.iop-record-heading b,.payroll-run-summary b{color:#2b4a6b;font-size:10px;font-weight:850}
+.gov-approval-heading small,.iop-record-heading small,.payroll-run-summary small{color:#8795a8;font-size:8px}
+.gov-payload,.iop-paper-detail{overflow:auto;padding:12px;border:1px solid #e2eaf4;border-radius:11px;background:#f8faff}
+.gov-payload pre,.iop-paper-detail pre{max-width:100%;overflow:auto;color:#506984;font-size:8px}
+.gov-mono,.iop-mono{color:#47658a;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:9px}
+.gov-search,.iop-search,.payroll-search{min-height:40px;display:flex;align-items:center;gap:8px;padding:0 11px;border:1px solid #dce5f0;border-radius:10px;color:#7890aa;background:#f9fbff}
+.gov-search:focus-within,.iop-search:focus-within,.payroll-search:focus-within{border-color:#82a9ed;background:#fff;box-shadow:0 0 0 4px rgba(52,120,246,.09)}
+.gov-search input,.iop-search input,.payroll-search input{min-width:0;width:100%;border:0;outline:0;color:#234261;background:transparent;font-size:10px}
+.gov-table-wrap,.iop-table-wrap,.payroll-table-wrap{max-width:100%;overflow:auto;border:1px solid #e1e9f3;border-radius:13px;background:#fff;scrollbar-width:thin;scrollbar-color:#c6d5e8 transparent}
+.gov-table-wrap table,.iop-table-wrap table,.payroll-table-wrap table{width:100%;min-width:760px;border-collapse:separate;border-spacing:0}
+.gov-table-wrap th,.iop-table-wrap th,.payroll-table-wrap th{position:sticky;top:0;padding:11px 12px;border-bottom:1px solid #dfe8f2;color:#61758f;background:#f3f7fc;font-size:9px;font-weight:900;text-align:left;white-space:nowrap}
+.gov-table-wrap td,.iop-table-wrap td,.payroll-table-wrap td{padding:11px 12px;border-bottom:1px solid #edf1f6;color:#445d79;background:#fff;font-size:10px;vertical-align:middle}
+.gov-table-wrap tbody tr:hover td,.iop-table-wrap tbody tr:hover td,.payroll-table-wrap tbody tr:hover td{background:#f8faff}
+.gov-button,.iop-button,.payroll-button{min-height:35px;padding:0 11px;border:1px solid #dce5f0;border-radius:9px;color:#506b8d;background:#fff;font-size:10px;font-weight:800;transition:all .16s ease}
+.gov-button:hover,.iop-button:hover,.payroll-button:hover{border-color:#b8cdef;color:#245fd7;background:#f3f7ff}
+.gov-button.primary,.iop-button.primary,.payroll-button.primary{border-color:#2867d8;color:#fff;background:linear-gradient(120deg,#3478f6,#245fd7);box-shadow:0 6px 14px rgba(44,105,216,.18)}
+.gov-row-actions,.iop-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.gov-status,.iop-status,.payroll-status{display:inline-flex;align-items:center;padding:5px 8px;border:1px solid #e2eaf3;border-radius:999px;color:#627a94;background:#f5f8fc;font-size:8px;font-weight:850;white-space:nowrap}
+.gov-status.approved,.iop-status.published,.iop-status.approved,.iop-status.completed,.iop-status.checked_out,.iop-status.issued,.iop-status.resolved,.payroll-status.approved,.payroll-status.paid{border-color:#d5ebdf;color:#147653;background:#eff9f3}
+.gov-status.pending,.iop-status.review,.iop-status.in_progress,.iop-status.follow_up,.iop-status.expected,.payroll-status.review,.payroll-status.unpaid,.payroll-status.pending,.payroll-status.held{border-color:#f0e2c9;color:#976619;background:#fff8ed}
+.gov-status.rejected,.iop-status.revoked,.iop-status.denied,.iop-status.cancelled,.iop-priority.urgent,.payroll-status.cancelled{border-color:#f0dce1;color:#ad485b;background:#fff3f5}
+.iop-kpis,.payroll-metric-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px}
+.iop-kpis>div,.payroll-metric-grid>div,.payroll-metric-grid>article{min-width:0;padding:13px;border:1px solid #e1e9f3;border-radius:14px;background:linear-gradient(145deg,#fff,#f7faff);box-shadow:0 3px 10px rgba(19,44,77,.035)}
+.iop-kpis small,.payroll-metric-grid small{color:#7c8ea5;font-size:9px;font-weight:800}
+.iop-kpis strong,.payroll-metric-grid strong{display:block;margin-top:5px;color:#1e4169;font-family:Manrope,sans-serif;font-size:22px;font-weight:850}
+.iop-kpis span,.payroll-metric-grid span{color:#8c9aab;font-size:8px}
+.iop-search-grid,.payroll-split,.gov-profile-grid{gap:13px}
+.iop-field,.gov-form,.payroll-form{display:grid;gap:7px;color:#3f5977;font-size:10px;font-weight:800}
+.iop-field input,.iop-field select,.iop-field textarea,.gov-form input,.gov-form select,.gov-form textarea,.payroll-form input,.payroll-form select,.payroll-form textarea{width:100%;min-height:40px;padding:9px 10px;border:1px solid #d9e3ef;border-radius:10px;color:#24415f;background:#fff;font-size:10px;font-weight:500}
+.iop-field input:focus,.iop-field select:focus,.iop-field textarea:focus,.gov-form input:focus,.gov-form select:focus,.gov-form textarea:focus,.payroll-form input:focus,.payroll-form select:focus,.payroll-form textarea:focus{border-color:#82a9ed;outline:0;box-shadow:0 0 0 4px rgba(52,120,246,.09)}
+.gov-form,.iop-form,.payroll-form{padding:14px;border:1px solid #e1e9f3;border-radius:14px;background:#f9fbff}
+.iop-form-grid,.payroll-form-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.iop-empty,.gov-empty,.payroll-empty,.report-empty{min-height:145px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:22px;border:1px dashed #d6e1ef;border-radius:14px;color:#8493a6;background:#f9fbff;text-align:center}
+.gov-error,.iop-error,.payroll-error,.report-error{padding:10px 12px;border:1px solid #efd4d9;border-radius:11px;color:#a33c51;background:#fff3f5;font-size:9px;line-height:1.6}
+.payroll-flow{gap:10px}
+.payroll-flow>div{border:1px solid #e2eaf3;border-radius:11px;background:#f9fbff}
+.payroll-run-card{border:1px solid #e1e9f3;border-radius:14px;background:#fff;transition:all .16s ease}
+.payroll-run-card.selected{border-color:#96b7ee;background:#f3f7ff;box-shadow:inset 0 0 0 1px #d4e3fb}
+.payroll-header-total{color:#1f4169;font-family:Manrope,sans-serif;font-size:18px;font-weight:850}
+.payroll-form-net{border:1px solid #d5ebdf;border-radius:11px;color:#147653;background:#eff9f3}
+.payroll-loading{border:1px dashed #dbe5f1;border-radius:13px;color:#8291a5;background:#f9fbff}
+.gov-pagination,.payroll-table-pagination,.iop-pagination,.iop-global-pagination{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:13px;color:#8292a6;font-size:9px}
+.gov-pagination button,.payroll-table-pagination button,.iop-pagination button,.iop-global-pagination button{min-width:30px;height:30px;border:1px solid #e0e8f2;border-radius:8px;color:#607894;background:#fff;font-size:9px;font-weight:800}
+.gov-pagination button.active,.payroll-table-pagination button.active,.iop-pagination button.active,.iop-global-pagination button.active{border-color:#2d6fdf;color:#fff;background:#2d6fdf}
+
+/* Reports workspace */
+.report-stage{display:grid;gap:14px}
+.report-stage>.page-title-row,.report-stage>.ed360-operations-heading{margin-bottom:0}
+.report-section{min-width:0;padding:17px;border:1px solid #e0e8f2;border-radius:17px;background:#fff;box-shadow:var(--es-shadow-sm)}
+.report-section h2,.report-section h3{color:#244665;font-family:Manrope,sans-serif;font-size:14px;font-weight:850}
+.report-section p{color:#7b8da2;font-size:10px;line-height:1.65}
+.report-stats{gap:11px}
+.report-stat{padding:14px;border:1px solid #e1e9f3;border-radius:14px;background:linear-gradient(145deg,#fff,#f7faff);box-shadow:0 3px 10px rgba(19,44,77,.035)}
+.report-stat strong{color:#1e4169;font-family:Manrope,sans-serif;font-size:24px;font-weight:850}
+.report-stat small{color:#7e90a6;font-size:9px;font-weight:800}
+.report-stage .table-scroll{max-width:100%;overflow:auto;border:1px solid #e1e9f3;border-radius:13px;background:#fff}
+.report-stage .table-scroll table{width:100%;min-width:680px;border-collapse:separate;border-spacing:0}
+.report-stage .table-scroll th{position:sticky;top:0;padding:11px 12px;border-bottom:1px solid #dfe8f2;color:#61758f;background:#f3f7fc;font-size:9px;font-weight:900;text-align:left;white-space:nowrap}
+.report-stage .table-scroll td{padding:10px 12px;border-bottom:1px solid #edf1f6;color:#445d79;background:#fff;font-size:10px}
+
+/* Attendance register: distinct present/absent/late actions, readable dense roster */
+.ed360-attendance-workspace{display:grid;gap:15px}
+.ed360-attendance-hero{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:20px 22px;border:1px solid #d9e4f2;border-radius:19px;background:radial-gradient(ellipse at 93% 3%,rgba(70,139,224,.12),transparent 32%),linear-gradient(120deg,#fff,#f5f8fe);box-shadow:var(--es-shadow-sm)}
+.ed360-attendance-hero h1{color:#17395f;font-family:Manrope,sans-serif;font-size:clamp(22px,2.3vw,29px);font-weight:850;letter-spacing:-.7px}
+.ed360-attendance-hero p{color:#74869c;font-size:11px;line-height:1.65}
+.ed360-attendance-icon{width:48px;height:48px;border-radius:14px;color:#2869d8;background:#eaf1ff}
+.ed360-attendance-stats{gap:10px}
+.ed360-attendance-stats>div{padding:13px;border:1px solid #e1e9f3;border-radius:14px;background:#fff;box-shadow:var(--es-shadow-sm)}
+.ed360-attendance-stats strong{color:#20446e;font-family:Manrope,sans-serif;font-size:22px;font-weight:850}
+.ed360-attendance-main-tabs{display:flex;gap:6px;max-width:100%;overflow-x:auto;padding:7px;border:1px solid #dfe7f1;border-radius:14px;background:#fff;box-shadow:var(--es-shadow-sm)}
+.ed360-attendance-main-tabs button{min-height:39px;flex:0 0 auto;padding:0 12px;border:1px solid transparent;border-radius:10px;color:#687c96;background:#f5f8fd;font-size:10px;font-weight:800;white-space:nowrap}
+.ed360-attendance-main-tabs button.active{border-color:#2d6fdf;color:#fff;background:#2d6fdf;box-shadow:0 5px 13px rgba(45,111,223,.18)}
+.ed360-attendance-filter-card,.ed360-attendance-board{padding:16px;border:1px solid #e0e8f2;border-radius:16px;background:#fff;box-shadow:var(--es-shadow-sm)}
+.ed360-attendance-filter{display:grid;gap:6px;color:#657b96;font-size:9px;font-weight:850}
+.ed360-attendance-filter input,.ed360-attendance-filter select,.ed360-attendance-note-input,.attendance-note-input{min-height:38px;border:1px solid #d9e3ef;border-radius:9px;color:#24415f;background:#fff;font-size:10px}
+.ed360-attendance-search{min-height:40px;border:1px solid #dce5f0;border-radius:10px;background:#f9fbff}
+.ed360-attendance-board-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:12px;border-bottom:1px solid #e9eef5}
+.ed360-attendance-board-head h2{color:#234665;font-family:Manrope,sans-serif;font-size:13px;font-weight:850}
+.ed360-attendance-counts{display:flex;gap:6px;flex-wrap:wrap}
+.ed360-attendance-counts>span{padding:5px 8px;border:1px solid #e1e9f2;border-radius:99px;color:#657b95;background:#f7f9fd;font-size:8px;font-weight:850}
+.ed360-attendance-counts .count-p{border-color:#d4ebdf;color:#147653;background:#eff9f3}
+.ed360-attendance-counts .count-a{border-color:#f0dce1;color:#ad485b;background:#fff3f5}
+.ed360-attendance-counts .count-l{border-color:#f0e2c9;color:#976619;background:#fff8ed}
+.ed360-attendance-grid-table{min-width:0;overflow:auto;border:1px solid #e1e9f3;border-radius:12px}
+.attendance-grid-head,.attendance-grid-row{min-width:740px}
+.attendance-grid-head{color:#61758f;background:#f3f7fc;font-size:9px;font-weight:900}
+.attendance-grid-row{border-top:1px solid #edf1f6;background:#fff}
+.attendance-grid-row:hover{background:#f8faff}
+.attendance-grid-id{color:#294968;font-size:10px;font-weight:800}
+.attendance-mark-options{display:flex;gap:5px;flex-wrap:wrap}
+.attendance-mark-button{min-width:35px;min-height:31px;border:1px solid #e0e8f2;border-radius:8px;color:#6b8099;background:#fff;font-size:9px;font-weight:850}
+.attendance-mark-button.mark-p{border-color:#cde8d9;color:#147653;background:#eff9f3}
+.attendance-mark-button.mark-a{border-color:#efd8de;color:#ac4859;background:#fff3f5}
+.attendance-mark-button.mark-l{border-color:#efdfc5;color:#986417;background:#fff8ec}
+.ed360-attendance-board-footer,.ed360-attendance-method-note{padding:10px 12px;border:1px solid #e2eaf4;border-radius:10px;color:#7a8ca3;background:#f8faff;font-size:9px;line-height:1.6}
+
+/* Notification centre */
+.ed360-notification-page{display:grid;gap:15px;width:min(100%,1500px);margin:0 auto}
+.ed360-notification-hero{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px 22px;border:1px solid #d9e4f2;border-radius:19px;background:radial-gradient(ellipse at 94% 3%,rgba(82,139,232,.12),transparent 32%),linear-gradient(120deg,#fff,#f5f8fe);box-shadow:var(--es-shadow-sm)}
+.ed360-notification-hero h1{color:#17395f;font-family:Manrope,sans-serif;font-size:clamp(22px,2.3vw,29px);font-weight:850}
+.ed360-notification-hero p{color:#74869c;font-size:11px;line-height:1.65}
+.ed360-notification-hero-icon{width:47px;height:47px;border:1px solid #dce8fa;border-radius:14px;color:#2869d8;background:#eaf1ff}
+.ed360-notification-kpis{gap:10px}
+.ed360-notification-kpis>div{padding:13px;border:1px solid #e1e9f3;border-radius:14px;background:#fff;box-shadow:var(--es-shadow-sm)}
+.ed360-notification-kpis strong{color:#1e4169;font-family:Manrope,sans-serif;font-size:22px;font-weight:850}
+.ed360-notification-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px;border:1px solid #e0e8f2;border-radius:14px;background:#fff;box-shadow:var(--es-shadow-sm)}
+.ed360-notification-filter{min-height:34px;padding:0 10px;border:1px solid #e0e8f2;border-radius:9px;color:#677d98;background:#f7f9fd;font-size:9px;font-weight:800}
+.ed360-notification-search{min-height:38px;border:1px solid #dce5f0;border-radius:10px;background:#f9fbff}
+.ed360-notification-list{display:grid;gap:9px}
+.ed360-notification-card{display:flex;align-items:flex-start;gap:12px;padding:14px;border:1px solid #e0e8f2;border-radius:15px;background:#fff;box-shadow:var(--es-shadow-sm);transition:all .16s ease}
+.ed360-notification-card:hover{border-color:#cbdaf0;box-shadow:var(--es-shadow-md);transform:translateY(-2px)}
+.ed360-notification-card.is-unread{border-left:4px solid #3478f6;background:linear-gradient(100deg,#f5f8ff,#fff 58%)}
+.ed360-notification-card-icon{width:38px;height:38px;flex:0 0 38px;border-radius:12px;color:#2a68d5;background:#eaf1ff}
+.ed360-notification-card-copy{min-width:0;flex:1}
+.ed360-notification-card-copy strong{color:#274767;font-size:11px;font-weight:850}
+.ed360-notification-card-copy p{margin:4px 0;color:#74879f;font-size:10px;line-height:1.65}
+.ed360-notification-card-meta{color:#8a98a9;font-size:8px}
+.ed360-notification-audience{padding:4px 7px;border:1px solid #e1eaf5;border-radius:99px;color:#627a98;background:#f6f9fd;font-size:8px;font-weight:800}
+.ed360-notification-card-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.ed360-notification-card-actions button{min-height:30px;padding:0 8px;border:1px solid #e0e8f2;border-radius:8px;color:#4d6d92;background:#fff;font-size:9px;font-weight:800}
+.ed360-notification-card-actions button:hover{border-color:#b8cdef;color:#245fd7;background:#f3f7ff}
+.ed360-notification-dot{width:7px;height:7px;border-radius:50%;background:#3478f6;box-shadow:0 0 0 4px rgba(52,120,246,.12)}
+
+@media(max-width:900px){
+  .iop-kpis,.payroll-metric-grid,.ed360-attendance-stats,.ed360-notification-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .gov-profile-grid{grid-template-columns:1fr}
+}
+@media(max-width:680px){
+  .gov-heading,.iop-heading,.payroll-heading,.ed360-attendance-hero,.ed360-notification-hero{align-items:flex-start;flex-direction:column;padding:16px}
+  .gov-context,.iop-context,.payroll-context{align-items:flex-start;flex-direction:column}
+  .iop-kpis,.payroll-metric-grid,.ed360-attendance-stats,.ed360-notification-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .iop-form-grid,.payroll-form-row{grid-template-columns:1fr}
+  .gov-table-wrap,.iop-table-wrap,.payroll-table-wrap{margin-inline:-1px}
+  .ed360-notification-toolbar{align-items:stretch;flex-direction:column}
+  .ed360-notification-search{width:100%}
+  .ed360-notification-card{flex-wrap:wrap}
+  .ed360-notification-card-actions{width:100%;padding-left:49px}
+  .attendance-grid-head,.attendance-grid-row{min-width:700px}
+  .ed360-attendance-board{padding:12px}
+}
