@@ -43,6 +43,9 @@ jobs:
       - name: Generate responsive source coverage audit
         run: npm run audit:responsive
 
+      - name: Audit modal keyboard behavior and specialist workspace visual coverage
+        run: npm run audit:modal-windows
+
       - name: Verify project structure, navigation and security guards
         run: npm run verify:project
 
