@@ -36,7 +36,11 @@ The audit covers the repository architecture, public screens, authentication ent
 
 The catalogue declares role sets such as management, staff, academic, finance, family and examinations. `roleNavigationGroups(role)` filters groups and applies further role-specific item allow-lists. This proves source-level menu filtering only. It does **not** replace database RLS or prove a user cannot call an unauthorized API directly.
 
-## 3. Menu and route inventory
+## 3. Exact role-aware route resolution
+
+The repository release workflow now executes the actual TypeScript route resolver for every menu destination returned by each role's source filter. It generates `docs/PHASE_1_EXACT_ROUTE_AUDIT.md` and uploads the document as the `edusphere360-exact-route-audit` GitHub Actions artifact. The audit reports exact route strings by role, explicit unavailable destinations, linked institutional workspaces, resolved workspace routes and any unexpected route family. A successful route audit is still source-level evidence only; it is not a browser or backend authorization test.
+
+## 4. Menu and route inventory
 
 The current institutional catalogue contains **33 top-level menu groups** and the project verifier enforces a catalogue of at least **400 submenu destinations**. The menu is intentionally broad, covering:
 
@@ -89,7 +93,7 @@ The current route map intentionally identifies unavailable destinations in the f
 
 The correct next action for each gap is to inspect its schema, existing functions, authorization model, provider dependencies and adjacent workflows; then either complete the workflow or keep the route explicitly unavailable. Do not create a visual-only screen that pretends an external integration or transaction has completed.
 
-## 4. Existing data modules and workspace coverage
+## 5. Existing data modules and workspace coverage
 
 The source includes configured generic data modules for core entities such as students, faculty/staff, attendance, examinations, exam results, fee invoices, assignments/submissions, timetable and announcements. Dedicated components exist for several high-value areas, including administration, student/faculty management, attendance, finance, payroll, governance, reports, notifications and selected campus operations.
 
@@ -101,7 +105,7 @@ The module audit must classify every destination with these separate states:
 - **Unavailable:** explicitly shown as not implemented/connected; do not describe as delivered.
 - **External dependency:** provider setup and verified delivery are required before an integration can be called active.
 
-## 5. Cloud, data and security baseline
+## 6. Cloud, data and security baseline
 
 Read-only baseline recorded before the current design work:
 
@@ -113,7 +117,7 @@ Read-only baseline recorded before the current design work:
 - A historical student insert/save attempt returned a Supabase 403 RLS error (`new row violates row-level security policy for table "students"`). Reproduce with a real authorized owner account and inspect the full policy path before changing it.
 - The latest project CI build and verifier passed on the working branch. Production Cloudflare deployment and seven-role authenticated browser E2E were not performed as part of that CI result.
 
-## 6. Required acceptance matrix before a module can be called complete
+## 7. Required acceptance matrix before a module can be called complete
 
 | Test family | Required evidence |
 |---|---|
@@ -127,11 +131,11 @@ Read-only baseline recorded before the current design work:
 | Responsive and accessibility | Check desktop/tablet/mobile, keyboard navigation, focus visibility, labels, empty/loading/error states and readable data tables |
 | External integrations | Use test credentials and provider-confirmed delivery; never display “connected” based only on a saved configuration |
 
-## 7. Complete role menu appendix
+## 8. Complete role menu appendix
 
 The detailed destination appendix is recorded in `docs/PHASE_1_ROLE_MENU_INVENTORY.md`. It lists all 430 submenu labels, declared group roles, individual role allow-lists, dashboard role exclusions, and explicit unavailable route families. It computes source-level menu visibility for each role: Owner 430; Administrator 430; Teacher/employee 203; Student 146; Parent/guardian 139; Accountant 132; Examination Officer 89. These are navigation visibility counts, not counts of working features. Every route still needs exact resolver execution and workflow acceptance.
 
-## 8. Phase 1 disposition
+## 9. Phase 1 disposition
 
 **Static source and route audit: documented.** The 33-group catalogue, seven-role filtering approach, route dispatch, explicit unavailable destinations, core workspace inventory and known cloud risks have been recorded.
 
