@@ -31,6 +31,7 @@ import { NotificationCenter } from './NotificationCenter'
 import { WorkspaceUnavailable } from './WorkspaceUnavailable'
 import { FinanceWorkspace } from './FinanceWorkspace'
 import { PayrollWorkspace } from './PayrollWorkspace'
+import { PeopleHRWorkspace } from './PeopleHRWorkspace'
 import { GovernanceWorkspace } from './GovernanceWorkspace'
 import { InstitutionOperationsWorkspace } from './InstitutionOperationsWorkspace'
 import { supabase } from '../lib/supabase'
@@ -678,6 +679,7 @@ export function Dashboard({ onToast }: Props) {
     const reportsWindowRoute = key.startsWith('reports:')
     const financeWindowRoute = key.startsWith('finance:')
     const payrollWindowRoute = key.startsWith('payroll:')
+    const peopleHRWindowRoute = key.startsWith('peoplehr:')
     const governanceWindowRoute = key.startsWith('governance:')
     const operationsWindowRoute = key.startsWith('operations:')
     const routeParts = key.split(':')
@@ -689,6 +691,7 @@ export function Dashboard({ onToast }: Props) {
       : employeeWindowRoute ? 'teachers'
       : reportsWindowRoute ? 'reports'
       : financeWindowRoute ? 'finance'
+      : peopleHRWindowRoute ? 'peoplehr'
       : payrollWindowRoute ? 'payroll'
       : governanceWindowRoute ? 'governance'
       : operationsWindowRoute ? 'operations'
@@ -701,6 +704,7 @@ export function Dashboard({ onToast }: Props) {
       : employeeWindowRoute ? key.slice('employees:'.length)
       : reportsWindowRoute ? key.slice('reports:'.length)
       : financeWindowRoute ? key.slice('finance:'.length)
+      : peopleHRWindowRoute ? key.slice('peoplehr:'.length)
       : payrollWindowRoute ? key.slice('payroll:'.length)
       : governanceWindowRoute ? key.slice('governance:'.length)
       : operationsWindowRoute ? key.slice('operations:'.length)
@@ -717,6 +721,7 @@ export function Dashboard({ onToast }: Props) {
       else if (targetKey === 'reports') title = 'Reports'
       else if (targetKey === 'finance') title = 'Finance & Payments'
       else if (targetKey === 'payroll') title = 'Salary and Payroll'
+      else if (targetKey === 'peoplehr') title = 'People Management & Human Resources'
       else if (targetKey === 'governance') title = 'Institution Governance'
       else if (targetKey === 'operations') title = 'Institution Operations'
       else if (targetKey.startsWith('admin:')) {
@@ -913,6 +918,7 @@ export function Dashboard({ onToast }: Props) {
                 tab.targetKey === 'reports' ? <ReportsModule onToast={onToast} initialWindow={tab.targetWindow}/> :
                 tab.targetKey === 'finance' ? <FinanceWorkspace workspaceKey={tab.targetWindow} initialWindow={tab.targetWindow.split(':')[1]} onToast={onToast}/> :
                 tab.targetKey === 'payroll' ? <PayrollWorkspace initialWindow={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'peoplehr' ? <PeopleHRWorkspace initialWindow={tab.targetWindow} onToast={onToast} onNavigate={navigateChild}/> :
                 tab.targetKey === 'governance' ? <GovernanceWorkspace initialWindow={tab.targetWindow} onToast={onToast} onNavigate={navigateChild}/> :
                 tab.targetKey === 'operations' ? <InstitutionOperationsWorkspace workspaceKey={tab.targetWindow} initialWindow={tab.targetWindow.split(':')[1]} onToast={onToast}/> :
                 tab.targetKey === 'profile' ? <ProfileModule/> :
