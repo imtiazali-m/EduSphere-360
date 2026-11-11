@@ -26,16 +26,16 @@ const roles = [
   ['exam_officer', 'Examination officer'],
 ]
 
-const studentTabs = new Set(['overview','admissions','directory','profile','id-cards','classes','guardians','attendance','results','assignments','timetable','documents','history'])
+const studentTabs = new Set(['overview','admissions','directory','profile','id-cards','classes','guardians','attendance','results','assignments','timetable','documents','fees','health','history'])
 const studentVisibleTabs = {
   owner: studentTabs,
   admin: studentTabs,
   teacher: new Set(['overview','directory','profile','id-cards','classes','attendance','results','assignments','timetable','history']),
-  student: new Set(['overview','profile','id-cards','classes','guardians','attendance','results','assignments','timetable','documents','history']),
-  parent: new Set(['overview','profile','id-cards','classes','guardians','attendance','results','assignments','timetable','documents','history']),
+  student: new Set(['overview','profile','id-cards','classes','guardians','attendance','results','assignments','timetable','documents','fees','history']),
+  parent: new Set(['overview','profile','id-cards','classes','guardians','attendance','results','assignments','timetable','documents','fees','history']),
 }
-const facultyTabs = new Set(['overview','registration','directory','profile','id-cards','departments','designations','assignments','attendance','leave','workload','documents','history','reports'])
-const facultyStaffTabs = new Set(['overview','profile','id-cards','assignments','attendance','leave','workload','documents','history'])
+const facultyTabs = new Set(['overview','registration','directory','directory-teaching','directory-staff','profile','id-cards','departments','designations','assignments','attendance','leave','workload','documents','qualifications','history','reports'])
+const facultyStaffTabs = new Set(['overview','profile','id-cards','assignments','attendance','leave','workload','documents','qualifications','history'])
 const attendanceWindows = new Set(['students','staff','history','devices'])
 const reportTabs = new Set(['overview','finance','attendance','academics','students','employees','payroll'])
 const financeTabs = {
