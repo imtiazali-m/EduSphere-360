@@ -8,7 +8,7 @@ import '../styles/people-hr-workspace.css'
 
 type WindowKey = 'admissions' | 'recruitment' | 'contracts' | 'performance' | 'alumni'
 type RecruitTab = 'vacancies' | 'candidates' | 'interviews'
-type Field = { name: string; label: string; type?: 'text'|'email'|'tel'|'date'|'number'|'textarea'|'select'|'checkbox'; required?: boolean; options?: {value:string;label:string}[]; help?: string }
+type Field = { name: string; label: string; type?: 'text'|'email'|'tel'|'date'|'datetime-local'|'number'|'textarea'|'select'|'checkbox'; required?: boolean; options?: {value:string;label:string}[]; help?: string }
 type Props = { initialWindow?: string; onToast: (message:string,error?:boolean)=>void; onNavigate:(route:string)=>void }
 
 const dateToday = () => new Date().toISOString().slice(0,10)
@@ -80,7 +80,7 @@ export function PeopleHRWorkspace({initialWindow,onToast,onNavigate}:Props) {
   }
   useEffect(()=>{void load()},[user?.id,user?.institutionId,user?.role,loadTables])
 
-  const config = useMemo(() => {
+  const config = useMemo<{table:string;heading:string;description:string;columns:[string,string][];fields:Field[]}>(() => {
     if(windowKey==='admissions') return {
       table:'admission_enquiries',heading:'Enquiry register',description:'Capture a prospective learner and guardian before creating a formal student application.',
       columns:[['enquiry_no','Enquiry ID'],['student_name','Prospective student'],['class_applied_for','Class / programme'],['guardian_name','Guardian'],['guardian_phone','Phone'],['follow_up_date','Follow-up'],['status','Stage']],
@@ -144,7 +144,7 @@ export function PeopleHRWorkspace({initialWindow,onToast,onNavigate}:Props) {
       columns:[['candidate_id','Candidate'],['scheduled_at','Date and time'],['interview_type','Round'],['mode','Mode'],['interviewer_name','Interviewer'],['status','Status'],['score','Score']],
       fields:[
         {name:'candidate_id',label:'Candidate',type:'select',required:true,options:candidates.filter(row=>!['rejected','withdrawn'].includes(String(row.stage))).map(row=>({value:String(row.id),label:String(row.full_name)+' · '+String(row.email)}))},
-        {name:'scheduled_at',label:'Interview date and time',type:'date',required:true},
+        {name:'scheduled_at',label:'Interview date and time',type:'datetime-local',required:true},
         {name:'interview_type',label:'Interview round',options:[{value:'screening',label:'Screening'},{value:'first_round',label:'First round'},{value:'technical',label:'Technical'},{value:'final',label:'Final'},{value:'other',label:'Other'}]},
         {name:'mode',label:'Interview mode',options:[{value:'in_person',label:'In person'},{value:'video',label:'Video call'},{value:'phone',label:'Phone'}]},
         {name:'location_or_link',label:'Location or meeting link'},
@@ -286,7 +286,7 @@ export function PeopleHRWorkspace({initialWindow,onToast,onNavigate}:Props) {
   async function updateStatus(row:RecordRow,field:string,value:string) {
     if(!isAdmin||!supabase||!user?.institutionId)return
     setSaving(true)
-    const {error}=await supabase.from(config.table).update({[field]:value,updated_at:new Date().toISOString()}).eq('id',row.id).eq('institution_id',user.institutionId)
+    const {error}=await supabase.from(config.table).update({[field]:value,updated_at:new Date().toISOString(),...(windowKey==='performance'&&value==='acknowledged'?{acknowledged_at:new Date().toISOString()}:{})}).eq('id',row.id).eq('institution_id',user.institutionId)
     if(error)onToast(userFacingError(error,'The stage could not be updated.'),true)
     else {onToast('Workflow stage updated.');await load(true)}
     setSaving(false)
