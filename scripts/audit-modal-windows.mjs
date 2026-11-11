@@ -32,6 +32,7 @@ const checks = [
   ['collapsed sidebar disclosure expands before showing the selected submenu', dashboard.includes('if (compactSidebar) {') && dashboard.includes('setExpandedGroups(current => current.includes(group.key) ? current : [...current, group.key])')],
   ['selected window context is announced and labelled in the workspace frame', dashboard.includes('className="pro-active-workspace-context"') && dashboard.includes('aria-live="polite"') && dashboard.includes('data-active-route={activeTab.route}')],
   ['open workspace windows keep inactive content hidden and expose active context', dashboard.includes('className="pro-window-panel"') && dashboard.includes('hidden={activeTabId !== tab.id}') && dashboard.includes('aria-label={tab.title}')],
+  ['selected workspace tab automatically scrolls into the visible tab strip', dashboard.includes("querySelector<HTMLElement>('.pro-workspace-tabs')") && dashboard.includes("container.querySelectorAll<HTMLElement>('[data-workspace-tab]')") && dashboard.includes('container.scrollTo({ left: Math.max(0, nextLeft)')],
   ['active workspace context receives final desktop and mobile presentation', refresh.includes('.pro-active-workspace-context') && refresh.includes('.pro-context-state') && refresh.includes('@media(max-width:600px)')],
 ]
 
