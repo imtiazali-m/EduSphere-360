@@ -90,7 +90,7 @@ export const navigationSectionDefinitions:NavigationSectionDefinition[]=[
   {key:'campus',label:'Campus Operations',groupKeys:['transport','inventory','facilities','visitors']},
   {key:'intelligence',label:'Reports & Intelligence',groupKeys:['reports','ai']},
 ]
-const navigationGroupOrder=new Map(navigationSectionDefinitions.flatMap(section=>section.groupKeys).map((key,index)=>[key,index]))
+const navigationGroupOrder=new Map<string,number>(navigationSectionDefinitions.flatMap(section=>section.groupKeys).map((key,index):[string,number]=>[key,index]))
 
 export function roleNavigationGroups(role:WorkspaceMenuGroup['roles'][number]):RoleNavigationGroup[]{
   return institutionalMenu
