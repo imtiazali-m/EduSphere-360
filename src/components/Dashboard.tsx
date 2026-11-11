@@ -33,6 +33,7 @@ import { FinanceWorkspace } from './FinanceWorkspace'
 import { PayrollWorkspace } from './PayrollWorkspace'
 import { GovernanceWorkspace } from './GovernanceWorkspace'
 import { InstitutionOperationsWorkspace } from './InstitutionOperationsWorkspace'
+import { AcademicManagementWorkspace } from './AcademicManagementWorkspace'
 import { supabase } from '../lib/supabase'
 
 interface Props { onToast: (message: string, error?: boolean) => void }
@@ -670,6 +671,7 @@ export function Dashboard({ onToast }: Props) {
   }, [user?.id, user?.institutionId, active, mode])
 
   function navigate(key: string, options: { parentId?: string; title?: string; groupKey?: string; itemKey?: string } = {}) {
+    const academicWindowRoute = key.startsWith('academic:')
     const studentWindowRoute = key.startsWith('students:')
     const attendanceWindowRoute = key.startsWith('attendance:')
     const institutionalWindowRoute = key.startsWith('institutional:')
@@ -682,7 +684,8 @@ export function Dashboard({ onToast }: Props) {
     const operationsWindowRoute = key.startsWith('operations:')
     const routeParts = key.split(':')
     const moduleWindowRoute = routeParts.length === 2 && ['fees', 'exams', 'exam_results', 'assignments', 'assignment_submissions', 'timetable', 'announcements', 'work_tasks'].includes(routeParts[0])
-    const targetKey = studentWindowRoute ? 'students'
+    const targetKey = academicWindowRoute ? 'academic'
+      : studentWindowRoute ? 'students'
       : attendanceWindowRoute ? 'attendance'
       : institutionalWindowRoute ? 'institutional'
       : unavailableWindowRoute ? 'unavailable'
@@ -694,7 +697,8 @@ export function Dashboard({ onToast }: Props) {
       : operationsWindowRoute ? 'operations'
       : moduleWindowRoute ? routeParts[0]
       : key
-    const targetWindow = studentWindowRoute ? key.slice('students:'.length)
+    const targetWindow = academicWindowRoute ? key.slice('academic:'.length)
+      : studentWindowRoute ? key.slice('students:'.length)
       : attendanceWindowRoute ? key.slice('attendance:'.length)
       : institutionalWindowRoute ? key.slice('institutional:'.length)
       : unavailableWindowRoute ? key.slice('unavailable:'.length)
@@ -901,7 +905,8 @@ export function Dashboard({ onToast }: Props) {
             const tabAdminKey = tab.targetKey.startsWith('admin:') ? tab.targetKey.slice(6) : undefined
             const linkedWorkspaceKeys = ['administration:campus-and-branch-management','library:book-issue-and-returns','library:library-reports','inventory:stock-in','inventory:stock-out','inventory:stock-allocation','inventory:stock-adjustments','inventory:inventory-history','inventory:stock-reports','transport:student-transport-allocation','transport:transport-reports']
             return <section className="pro-window-panel" key={tab.id} hidden={activeTabId !== tab.id} aria-label={tab.title}>
-              {tab.targetKey === 'notifications' ? <NotificationCenter onToast={onToast} onUnreadCountChange={setUnreadAnnouncementCount}/> :
+              {tab.targetKey === 'academic' ? <AcademicManagementWorkspace initialWindow={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'notifications' ? <NotificationCenter onToast={onToast} onUnreadCountChange={setUnreadAnnouncementCount}/> :
                 tab.targetKey === 'overview' ? <Overview onNavigate={navigateChild}/> :
                 tab.targetKey === 'institutional' && linkedWorkspaceKeys.includes(tab.targetWindow) ? <LinkedOperationsWorkspace workspaceKey={tab.targetWindow} onToast={onToast} onNavigate={navigateChild}/> :
                 tab.targetKey === 'institutional' ? <InstitutionalWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
