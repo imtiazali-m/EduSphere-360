@@ -4,6 +4,8 @@ begin;
 create table public.institutional_record_reviews (
   record_id uuid primary key,
   institution_id uuid not null references public.institutions(id) on delete cascade,
+  module_key text not null,
+  record_type text not null,
   approval_status text not null default 'not_required'
     check (approval_status in ('not_required','draft','pending','approved','rejected','withdrawn')),
   reviewed_by uuid references auth.users(id) on delete set null,
@@ -39,12 +41,14 @@ create policy institutional_record_reviews_owner_admin_delete
 
 -- Preserve every historical review value before removing the old columns.
 insert into public.institutional_record_reviews (
-  record_id, institution_id, approval_status, reviewed_by, reviewed_at, review_notes, created_at, updated_at
+  record_id, institution_id, module_key, record_type, approval_status, reviewed_by, reviewed_at, review_notes, created_at, updated_at
 )
-select id, institution_id, approval_status, reviewed_by, reviewed_at, review_notes, created_at, updated_at
+select id, institution_id, module_key, record_type, approval_status, reviewed_by, reviewed_at, review_notes, created_at, updated_at
 from public.institutional_records
 on conflict (record_id) do update set
   institution_id = excluded.institution_id,
+  module_key = excluded.module_key,
+  record_type = excluded.record_type,
   approval_status = excluded.approval_status,
   reviewed_by = excluded.reviewed_by,
   reviewed_at = excluded.reviewed_at,
@@ -58,6 +62,14 @@ language plpgsql
 set search_path = ''
 as $function$
 begin
+  select r.module_key, r.record_type
+    into new.module_key, new.record_type
+  from public.institutional_records r
+  where r.id = new.record_id and r.institution_id = new.institution_id;
+  if not found then
+    raise exception 'The reviewed institutional record does not exist in this institution' using errcode = '23503';
+  end if;
+
   if tg_op = 'INSERT' then
     if new.approval_status in ('approved','rejected') then
       new.reviewed_by := (select auth.uid());
@@ -97,34 +109,43 @@ security definer
 set search_path = ''
 as $function$
 declare
+  v_institution_id uuid;
+  v_record_id uuid;
   v_module_key text;
   v_record_type text;
+  v_old jsonb;
+  v_new jsonb;
 begin
-  select r.module_key, r.record_type
-    into v_module_key, v_record_type
-  from public.institutional_records r
-  where r.id = new.record_id and r.institution_id = new.institution_id;
-
-  if not found then
-    raise exception 'The reviewed institutional record no longer exists' using errcode = '23503';
+  if tg_op = 'DELETE' then
+    v_institution_id := old.institution_id;
+    v_record_id := old.record_id;
+    v_module_key := old.module_key;
+    v_record_type := old.record_type;
+    v_old := to_jsonb(old);
+    v_new := null;
+  else
+    v_institution_id := new.institution_id;
+    v_record_id := new.record_id;
+    v_module_key := new.module_key;
+    v_record_type := new.record_type;
+    v_old := case when tg_op = 'UPDATE' then to_jsonb(old) else null end;
+    v_new := to_jsonb(new);
   end if;
 
   insert into public.institutional_audit_events (
     institution_id, record_id, module_key, record_type, action,
     old_values, new_values, actor_id
   ) values (
-    new.institution_id, new.record_id, v_module_key, v_record_type,
-    lower(tg_op),
-    case when tg_op = 'UPDATE' then to_jsonb(old) else null end,
-    to_jsonb(new),
-    (select auth.uid())
+    v_institution_id, v_record_id, v_module_key, v_record_type,
+    lower(tg_op), v_old, v_new, (select auth.uid())
   );
+  if tg_op = 'DELETE' then return old; end if;
   return new;
 end;
 $function$;
 revoke all on function private.audit_institutional_record_review() from public, anon, authenticated;
 create trigger institutional_record_reviews_audit
-  after insert or update on public.institutional_record_reviews
+  after insert or update or delete on public.institutional_record_reviews
   for each row execute function private.audit_institutional_record_review();
 
 -- Owner/admin record saves and review state are committed atomically.
