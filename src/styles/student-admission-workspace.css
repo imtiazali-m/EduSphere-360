@@ -1,0 +1,44 @@
+/* Dedicated Student Admission workspace — a full page within the signed-in app shell. */
+.ed360-admission-workspace{width:100%;max-width:1240px;min-width:0;margin:0 auto;padding:clamp(18px,2.2vw,30px) clamp(16px,2.4vw,34px) 42px;color:var(--es-ink,#172b43)}
+.ed360-admission-breadcrumb{display:flex;align-items:center;gap:8px;margin:0 0 18px;color:var(--es-muted,#64758d);font-size:12px;font-weight:600}
+.ed360-admission-breadcrumb svg{color:#99a8ba}.ed360-admission-breadcrumb strong{color:var(--es-brand-900,#102b49);font-weight:750}
+.ed360-admission-page-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin:0 0 24px}
+.ed360-admission-heading-copy{min-width:0}.ed360-admission-kicker{color:var(--es-primary-700,#2459c7);font-size:10px;font-weight:850;letter-spacing:1.15px}
+.ed360-admission-heading-copy h1{margin:7px 0 6px;color:var(--es-brand-900,#102b49);font-size:clamp(25px,3vw,32px);line-height:1.16;font-weight:850;letter-spacing:-.8px}
+.ed360-admission-heading-copy p{max-width:690px;margin:0;color:var(--es-muted,#64758d);font-size:14px;line-height:1.65}
+.ed360-admission-page-heading>button{min-height:42px;flex:0 0 auto}
+.ed360-admission-alert{display:flex;align-items:flex-start;gap:10px;margin:0 0 18px;padding:13px 15px;border:1px solid #f0d5d2;border-radius:11px;color:#963f38;background:#fff8f7;font-size:13px;line-height:1.5}
+.ed360-admission-alert svg{flex:0 0 auto}.ed360-admission-form{display:grid;gap:16px}
+.ed360-admission-section{min-width:0;padding:clamp(17px,2vw,23px);border:1px solid var(--es-line,#dce5f0);border-radius:16px;background:var(--es-surface,#fff);box-shadow:var(--es-shadow-sm,0 3px 12px rgba(17,37,67,.055))}
+.ed360-admission-section>header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 0 20px}
+.ed360-admission-section>header>div{display:flex;align-items:center;gap:12px;min-width:0}
+.ed360-admission-section-number{width:36px;height:36px;display:grid;place-items:center;flex:0 0 36px;border-radius:11px;color:var(--es-primary-700,#2459c7);background:var(--es-primary-100,#eaf1ff);font-size:12px;font-weight:850}
+.ed360-admission-section h2{margin:0;color:var(--es-brand-900,#102b49);font-size:17px;line-height:1.3;font-weight:800;letter-spacing:-.25px}
+.ed360-admission-section header p{margin:4px 0 0;color:var(--es-muted,#64758d);font-size:12px;line-height:1.5}
+.ed360-admission-identity-body{display:grid;grid-template-columns:224px minmax(0,1fr);align-items:start;gap:22px}
+.ed360-admission-photo-card{display:flex;flex-direction:column;align-items:flex-start;gap:9px;min-width:0;padding:17px;border:1px solid #e3eaf3;border-radius:13px;background:#f8faff}
+.ed360-admission-photo-preview{width:104px;height:116px;display:grid;place-items:center;overflow:hidden;border:1px dashed #b7c9e2;border-radius:12px;color:#6688b6;background:#edf3fc}
+.ed360-admission-photo-preview img{width:100%;height:100%;object-fit:cover}
+.ed360-admission-photo-card>strong{color:var(--es-brand-900,#102b49);font-size:13px;font-weight:800}
+.ed360-admission-photo-card>p{margin:0;color:var(--es-muted,#64758d);font-size:12px;line-height:1.55}
+.ed360-admission-photo-card>label{position:relative;overflow:hidden;min-height:38px;font-size:12px}
+.ed360-admission-photo-card input[type=file]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.ed360-admission-error{color:#ad4541;font-size:12px}.ed360-admission-file-name{max-width:100%;overflow-wrap:anywhere;color:var(--es-muted,#64758d);font-size:12px}
+.ed360-admission-field-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;gap:17px 20px;min-width:0}
+.ed360-admission-field{display:grid;gap:7px;min-width:0;color:var(--es-ink,#172b43)}
+.ed360-admission-field>span{color:#334c69;font-size:13px;font-weight:750}.ed360-admission-field>span b{color:#bc5148}
+.ed360-admission-field .input-control{width:100%;min-width:0;min-height:44px;padding:10px 12px;border:1px solid #d6e0ed;border-radius:10px;color:var(--es-ink,#172b43);background:#fff;font-size:14px;line-height:1.4;transition:border-color .16s ease,box-shadow .16s ease}
+.ed360-admission-field .input-control:focus{border-color:#7ba5ee;outline:none;box-shadow:0 0 0 3px rgba(49,111,224,.12)}
+.ed360-admission-field>small{color:#71839a;font-size:11px;line-height:1.5}
+.ed360-admission-generated-id{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
+.ed360-admission-generated-id .input-control{color:#315f9e;background:#f4f7fc;font-weight:800;letter-spacing:.3px}
+.ed360-admission-generated-id .button{min-height:44px;padding:0 12px;white-space:nowrap;font-size:12px}
+.ed360-admission-two-column{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;gap:16px}
+.ed360-admission-footer{position:sticky;bottom:0;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:18px;margin:0;padding:15px 18px;border:1px solid #dce5f0;border-radius:14px;background:rgba(255,255,255,.96);box-shadow:0 -5px 24px rgba(17,37,67,.06);backdrop-filter:blur(12px)}
+.ed360-admission-footer>p{display:flex;align-items:center;gap:8px;margin:0;color:var(--es-muted,#64758d);font-size:12px;line-height:1.45}
+.ed360-admission-footer>p svg{flex:0 0 auto;color:var(--es-teal-700,#147d80)}
+.ed360-admission-footer>div{display:flex;align-items:center;gap:9px;flex:0 0 auto}
+.ed360-admission-footer .button{min-height:42px;padding:0 15px;font-size:13px}
+@media(max-width:900px){.ed360-admission-identity-body{grid-template-columns:190px minmax(0,1fr);gap:16px}.ed360-admission-two-column{grid-template-columns:1fr}}
+@media(max-width:680px){.ed360-admission-page-heading{align-items:flex-start;flex-direction:column}.ed360-admission-page-heading>button{width:100%;justify-content:center}.ed360-admission-identity-body{grid-template-columns:1fr}.ed360-admission-photo-card{display:grid;grid-template-columns:88px minmax(0,1fr);align-items:center}.ed360-admission-photo-preview{width:80px;height:92px;grid-row:span 4}.ed360-admission-photo-card>label{width:max-content}.ed360-admission-field-grid{grid-template-columns:1fr;gap:15px}.ed360-admission-footer{position:static;align-items:stretch;flex-direction:column}.ed360-admission-footer>div{display:grid;grid-template-columns:1fr 1.5fr}.ed360-admission-footer .button{justify-content:center;white-space:normal}}
+@media(prefers-reduced-motion:reduce){.ed360-admission-field .input-control{transition:none}}
