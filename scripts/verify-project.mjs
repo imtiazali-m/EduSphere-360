@@ -178,7 +178,7 @@ check('Sidebar workspaces follow the approved parent-section sequence for every 
     'dashboard',
     'administration','institution-config','academic-sessions','classes-sections','subjects','backup',
     'students','employees','attendance','behaviour','certificates',
-    'curriculum','timetable','teaching','question-bank','examinations','class-tests','library',
+    'academic-management','question-bank','examinations','class-tests','library',
     'accounts-finance','fees','receivables','payments','receipts','payroll','reconciliation',
     'communication',
     'transport','inventory','facilities','visitors',
@@ -946,7 +946,7 @@ check('Unified design system is loaded last and removes global browser zoom', ()
   assert.ok(roleMenu.includes('33 top-level groups and 430 submenu entries') && roleMenu.includes('Examination officer') && roleMenu.includes('| Owner | 31 | 343 |') && roleMenu.includes('| Administrator | 31 | 343 |') && roleMenu.includes('| Teacher / employee | 18 | 152 |') && roleMenu.includes('| Student | 15 | 107 |') && roleMenu.includes('| Parent / guardian | 15 | 104 |') && roleMenu.includes('| Accountant | 12 | 112 |') && roleMenu.includes('| Examination officer | 7 | 62 |'), 'Complete catalogue inventory and current role-filtered menu totals must cover all seven roles')
   assert.ok(read('docs/PHASE_2_DESIGN_SYSTEM.md').includes('Core colour tokens'), 'Phase 2 design specification is missing')
   const routeAudit = read('docs/PHASE_1_EXACT_ROUTE_AUDIT.md')
-  assert.ok(/Total resolver evaluations:\\*\\* \\d+\\./.test(routeAudit) && routeAudit.includes('Unexpected route families:** 0.'), 'Exact route audit must resolve each visible role/menu destination without unknown route families')
+  assert.ok(/Total resolver evaluations:\*\* \d+\./.test(routeAudit) && routeAudit.includes('Unexpected route families:** 0.'), 'Exact route audit must resolve each visible role/menu destination without unknown route families')
   assert.ok(routeAudit.includes('Bare module roots to review:** 0.') && routeAudit.includes('Unexpected route families:** 0.'), 'All role-visible destinations must retain explicit workspace or intentional root routes')
   assert.ok(routeAudit.includes('## Dispatcher coverage') && routeAudit.includes('Unmapped routes:** 0.') && routeAudit.includes('LinkedOperationsWorkspace') && routeAudit.includes('InstitutionalWorkspace') && routeAudit.includes('RecordModule'), 'Every role-visible route must map to a known Dashboard component')
   const responsiveAudit = read('docs/PHASE_2_RESPONSIVE_SOURCE_AUDIT.md')
