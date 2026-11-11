@@ -236,7 +236,7 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
    }
    const {data,error}=await query.order('created_at',{ascending:false}).limit(500)
    if(error)throw error
-   const records=(data??[]) as OperationalRow[]
+   const records=(data??[]) as unknown as OperationalRow[]
    if(canAdmin&&records.length){
     const {data:reviews,error:reviewError}=await supabase.from('institutional_record_reviews').select('record_id,approval_status,reviewed_by,reviewed_at,review_notes').eq('institution_id',user.institutionId).in('record_id',records.map(row=>row.id))
     if(reviewError)throw reviewError
