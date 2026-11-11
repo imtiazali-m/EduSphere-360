@@ -1,36 +1,39 @@
 # Supabase migration history reconciliation — 11 November 2026
 
-## Finding
+## Applied baseline
 
-The connected Supabase project records 30 applied timestamped migrations. The repository also contains 30 timestamped migration files, but one employee migration had a mismatching local version prefix:
+The connected Supabase project currently records 30 applied timestamped migration versions. The repository contains those 30 aligned migration files plus two separately reviewed migrations staged for the next approved database release:
 
-- Remote applied version: `20261109085154` — `faculty_employee_management`.
-- Previous repository filename: `20261109083133_faculty_employee_management.sql`.
+| Version | Migration | Status |
+|---|---|---|
+| `20261111140500` | `work_task_stable_assignee_identity` | Staged; not applied |
+| `20261111150000` | `harden_legacy_fee_payment_rpc` | Staged; not applied |
 
-The migration's original integration commit states that the faculty/employee workspace was integrated using the already-applied institution-scoped migration, rather than replaying it.
+The older numbered SQL files are preserved as legacy project material. Do not execute them blindly against the existing database. Reconcile remote history before every schema deployment.
 
-## Source-only correction
+## Previously corrected version mismatch
 
-The migration file was renamed to:
+The remote applied version `20261109085154` is `faculty_employee_management`. The previous repository filename `20261109083133_faculty_employee_management.sql` was renamed to `20261109085154_faculty_employee_management.sql`. The SQL body was copied byte-for-byte; no historical SQL, schema object, policy, function or database record was changed.
 
-    supabase/migrations/20261109085154_faculty_employee_management.sql
+## Release ledger
 
-The SQL body was copied byte-for-byte; no SQL statement, schema object, policy, function or database record was changed. The project verifier's three references were updated to the corrected filename.
+- Local timestamped migration source files: **32**.
+- Remote applied migration versions observed during the read-only check: **30**.
+- Staged migration versions awaiting review: **2**.
+- All 30 applied remote versions have matching local migration filename prefixes.
+- The two staged files are deliberately not present in remote applied history; do not use `db push` or manually mark them applied until SQL review, remote dry-run, release plan and authenticated acceptance tests are approved.
+- After both migrations are eventually approved and deployed, re-read the remote migration history and verify 32/32 version parity. Stop if the dry-run proposes replaying any historical migration.
 
-## Verification
+## Staged migration release gates
 
-- The local migration directory has 30 timestamped migration files.
-- The linked Supabase project reports 30 applied migration versions.
-- Every remote migration version now has a matching local filename prefix.
-- No local timestamped migration prefix remains unapplied remotely.
-- The legacy numbered migrations remain preserved and must not be replayed blindly.
+### Stable work-task assignee identity
 
-Several older remote migration display names differ from their local filename suffixes, but their version prefixes match. This reconciliation intentionally changes only the one incorrect version prefix; it does not rename historical migrations whose version identifiers already match.
+The task migration introduces a tenant-scoped Auth user UUID, explicit handling for reviewed legacy email assignments, fail-closed ambiguous/unmatched backfill, and an immutable institution owner guard. Cross-institution transfer must be modelled as a new task in the destination institution. Review the trigger, RLS policies, backfill counts and task assignment behaviour before deployment.
 
-## Release safety
+### Legacy fee-payment RPC compatibility
 
-This is a Git repository metadata correction only. No Supabase migration was applied, repaired, marked as applied, reverted or replayed. Before any future database deployment, inspect the current remote migration list and run a remote dry-run. If it proposes any of the historical migrations as new, stop and reconcile the history instead of applying them.
+The legacy seven-argument payment overload delegates to the stricter six-argument payment workflow, retains optional bank/cheque metadata on the exact returned payment row and does not broaden authenticated table update grants. Test legacy named-argument compatibility and strict validation using disposable invoices before deployment.
 
-## Pull request
+## Safety
 
-This correction is proposed in PR #20. It must pass the project verifier and production build before merge.
+This is a source-only integration. No migration was applied, repaired, marked as applied, reverted or replayed. Before deployment, inspect the current remote migration history, perform a remote dry-run and review the SQL diff. If any historical migration is proposed as new, stop and reconcile instead of applying.
