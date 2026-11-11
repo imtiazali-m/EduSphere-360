@@ -425,6 +425,21 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
     if (itemKey === 'tasks-and-reminders' && ['student','parent'].includes(actorRole)) return 'unavailable:dashboard:tasks-and-reminders'
     if (itemKey === 'academic-overview' && ['student','parent'].includes(actorRole)) return 'exams:calendar'
   }
+
+  // Resolve dashboard shortcuts before legacy module-root overrides so the
+  // requested report/finance/result sub-view is not lost.
+  if (groupKey === 'dashboard') {
+    return dashboardViews[itemKey] ?? 'unavailable:dashboard:' + itemKey
+  }
+
+  // Timetable destinations should retain their intended window rather than
+  // falling back to the legacy bare "timetable" module route.
+  if (groupKey === 'timetable') {
+    if (itemKey === 'timetable-conflicts') return 'timetable:conflicts'
+    if (itemKey === 'timetable-history') return 'timetable:history'
+    return 'timetable:week'
+  }
+
   const override = existingRouteOverrides[compositeKey]
 
   const financeDestination = financeRoute(groupKey,itemKey)
