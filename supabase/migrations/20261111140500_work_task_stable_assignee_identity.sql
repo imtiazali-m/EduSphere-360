@@ -50,10 +50,9 @@ WHERE wt.institution_id = matched.institution_id
   AND lower(btrim(wt.assigned_to_email)) = matched.email_key
   AND wt.assigned_to_user_id IS NULL;
 
-UPDATE public.work_tasks
-SET assigned_to_legacy_email_access = true
-WHERE assigned_to_user_id IS NULL
-  AND assigned_to_legacy_email_access = false;
+-- Leave unmatched or ambiguous historical rows unassigned and inaccessible
+-- to staff by default. An administrator must explicitly review and reassign
+-- those records; never infer legacy access solely from a mutable email.
 
 DO $$
 BEGIN
