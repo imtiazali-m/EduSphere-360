@@ -816,9 +816,12 @@ export function Dashboard({ onToast }: Props) {
           const GroupIcon = catalogIcons[group.icon] ?? LayoutDashboard
           const isExpanded = expandedGroups.includes(group.key)
           return <section className={`pro-nav-group ${isExpanded ? 'expanded' : ''}`} key={group.key}>
-            <button className={`pro-nav-group-head ${group.key === "dashboard" ? "pro-nav-dashboard-link" : ""}`} aria-label={group.label} title={group.label} aria-expanded={isExpanded} onClick={() => {
-              if (compactSidebar) {
-                setSidebarCollapsed(false)
+            <button className={`pro-nav-group-head ${group.key === "dashboard" ? "pro-nav-dashboard-link" : ""} ${group.key === 'dashboard' && activeTab.route === 'overview' ? 'is-current' : ''}`} aria-label={group.label} title={group.label} aria-current={group.key === 'dashboard' && activeTab.route === 'overview' ? 'page' : undefined} aria-expanded={isExpanded} onClick={() => {
+              if (compactSidebar) setSidebarCollapsed(false)
+              if (group.key === 'dashboard') {
+                setExpandedGroups(current => current.includes(group.key) ? current : [...current, group.key])
+                navigate('overview', { groupKey: 'dashboard', itemKey: 'institutional-overview', title: 'Dashboard' })
+              } else if (compactSidebar) {
                 setExpandedGroups(current => current.includes(group.key) ? current : [...current, group.key])
               } else {
                 toggleGroup(group.key)
