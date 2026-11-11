@@ -1,6 +1,6 @@
 # Migration history
 
-The thirty timestamped migration files in this folder match the remote migration history recorded by the linked Supabase project. Keep each 14-digit timestamp unchanged so local and remote migration histories remain aligned.
+This branch contains 31 timestamped migration files: 30 versions currently recorded in the linked Supabase project and one staged migration (`20261111160000_institutional_record_review_isolation.sql`). The staged migration is not applied. Preserve all 14-digit version prefixes and reconcile concurrently staged PR migrations before deployment; never replay versions already present in remote history.
 
 The current online application includes the reviewed schema changes for the existing live schema, Faculty & Employee Management, and Student Management operations (admission lifecycle, linked guardian contacts, class placements, private student documents and audit history for attendance, published results, assignment submissions, guardian policy consolidation and activity indexes). The Student Management and Faculty/Employee migrations have already been applied to the linked project; do not replay them manually.
 
