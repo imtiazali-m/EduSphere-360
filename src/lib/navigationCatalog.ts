@@ -9,6 +9,13 @@ export const navigationCatalog:NavigationCatalogGroup[]=institutionalMenu.map(gr
 }))
 
 const roleItemAllow:Record<string,Partial<Record<string,string[]>>>={
+  'people-hr':{
+    teacher:['Students','Teachers','Employee Performance'],
+    student:['Students'],
+    parent:['Students','Parents & Guardians'],
+    accountant:['Payroll & Salary Records'],
+    exam_officer:[],
+  },
   students:{
     student:['Student Profiles','Class and Section Assignments','Student ID Cards','Student Performance Charts','Student Reports'],
     parent:['Student Profiles','Class and Section Assignments','Student ID Cards','Student Performance Charts','Student Reports'],
@@ -81,9 +88,9 @@ export interface RoleNavigationSection { key:string; label:string; groups:RoleNa
 export const navigationSectionDefinitions:NavigationSectionDefinition[]=[
   {key:'overview',label:'Overview',groupKeys:['dashboard']},
   {key:'setup',label:'Institute Setup',groupKeys:['administration','institution-config','academic-sessions','classes-sections','subjects','backup']},
-  {key:'people',label:'People & Admissions',groupKeys:['students','employees','attendance','behaviour','certificates']},
+  {key:'people',label:'People & Human Resources',groupKeys:['people-hr','attendance','behaviour','certificates']},
   {key:'academics',label:'Academic Delivery',groupKeys:['curriculum','timetable','teaching','question-bank','examinations','class-tests','library']},
-  {key:'finance',label:'Finance & Payroll',groupKeys:['accounts-finance','fees','receivables','payments','receipts','payroll','reconciliation']},
+  {key:'finance',label:'Finance & Payroll',groupKeys:['accounts-finance','fees','receivables','payments','receipts','reconciliation']},
   {key:'communication',label:'Communication',groupKeys:['communication']},
   {key:'campus',label:'Campus Operations',groupKeys:['transport','inventory','facilities','visitors']},
   {key:'intelligence',label:'Reports & Intelligence',groupKeys:['reports','ai']},
