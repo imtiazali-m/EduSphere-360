@@ -66,13 +66,13 @@ The live schema has a unique index on `(institution_id, lower(btrim(email)) )`, 
 
 **Remediation:** Make the provisioning contract explicit. Before creating the Auth identity, require exactly one eligible employee record for the institution/email, or provide a deliberate workflow that creates the employee record and login together. Verify the update returned the expected teacher ID. If linking fails, roll back the newly created Auth user/profile/membership. Add tests for no matching employee, one matching employee, duplicate/ineligible records and rollback. Do not deploy this fix until it passes a Deno function test and a live test using a disposable account.
 
-### P1 — Migration version mismatch requires reconciliation
+### P1 — Migration version mismatch reconciled in source
 
-**Evidence:** The live migration history contains version `20261109085154` with name `faculty_employee_management`. The repository contains `20261109083133_faculty_employee_management.sql`. The other 29 timestamped version identifiers align. Several earlier remote labels also differ from repository file suffixes, while their version identifiers still align.
+**Original evidence:** The live migration history contained version `20261109085154` with name `faculty_employee_management`, while the repository filename used prefix `20261109083133`. The other 29 timestamped version prefixes already aligned.
 
-**Risk:** A future `db push`, migration pull or new migration could report drift, reapply or omit work, or obscure the actual migration lineage if operators rely on the filename instead of the recorded remote version.
+**Remediation proposed:** [PR #20 — Align faculty migration filename with applied Supabase version](https://github.com/imtiazali-m/EduSphere-360/pull/20) copies the migration SQL byte-for-byte to `20261109085154_faculty_employee_management.sql`, removes the stale filename and updates all three verifier references. A post-change comparison reports 30 local and 30 remote versions, with no local-only or remote-only versions.
 
-**Remediation:** Preserve the production database and migration files. Confirm the original migration contents and remote history, reconcile the version identifier in a reviewed source-only migration-history repair, then run a remote dry-run and compare the resulting schema diff. Do not rename, replay or mark migrations applied without checking their actual SQL effects. Never replay the 11 legacy numbered migrations blindly.
+**Status:** <badge>Source correction proposed; CI/PR review pending</badge>. No database migration, SQL statement, live schema or migration-history row was changed. Do not run database push/replay as part of this filename-only correction. Keep the 11 legacy numbered migrations out of replay.
 
 ### P2 — Work task ownership is based on email text, not a stable identity
 
@@ -149,6 +149,10 @@ A separate backend-focused change now addresses the P1 teacher account-linking d
 - Production deployment was skipped. The live `create-user` Edge Function is not updated by this PR; authenticated disposable-account E2E and rollback verification remain mandatory before deploying it.
 
 This PR is independent of PR #15's visual refresh and PR #17's student-admission workspace. It must be reviewed/merged as a backend fix without changing the latter PRs' dependency order.
+
+## Migration ledger update — 11 November 2026
+
+The migration version mismatch is now isolated in [PR #20](https://github.com/imtiazali-m/EduSphere-360/pull/20). The faculty migration SQL body is unchanged; only its timestamped filename prefix and verifier references changed. The local/remote version comparison now reports 30/30 with no version gaps. Supabase remained read-only. PR #20 must pass source verification and build before merge.
 
 ## Integration rules for all parallel workstreams
 
