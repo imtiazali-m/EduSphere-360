@@ -19,6 +19,7 @@ check('Vite development and production scripts exist', () => {
   assert.equal(packageJson.scripts['audit:navigation'], 'node scripts/generate-navigation-route-audit.mjs')
   assert.equal(packageJson.scripts['audit:route-views'], 'node scripts/generate-route-view-audit.mjs')
   assert.equal(packageJson.scripts['audit:responsive'], 'node scripts/generate-responsive-source-audit.mjs')
+  assert.equal(packageJson.scripts['test:responsive:public'], 'node scripts/test-responsive-public.mjs')
 })
 
 const requiredFiles = [
@@ -32,7 +33,7 @@ const requiredFiles = [
   'src/lib/data.ts', 'src/lib/navigationAccess.ts', 'src/lib/userErrors.ts', 'scripts/test-user-errors.mjs',
   'src/lib/finance.ts', 'scripts/test-finance.mjs', 'src/lib/fileAccess.ts', 'scripts/test-file-access.mjs',
   'scripts/test-account-provisioning.mjs', 'supabase/functions/create-user/index.ts', 'supabase/functions/create-user/provisioning-guards.mjs', '.github/workflows/teacher-account-provisioning.yml', 'docs/TEACHER_ACCOUNT_LINK_INTEGRITY.md',
-  'src/lib/navigationCatalog.ts', 'src/lib/navigationRoutes.ts', 'scripts/generate-navigation-route-audit.mjs', 'scripts/generate-route-view-audit.mjs', 'scripts/generate-responsive-source-audit.mjs', 'docs/PHASE_1_EXACT_ROUTE_AUDIT.md', 'docs/PHASE_1_ROUTE_VIEW_AUDIT.md', 'docs/PHASE_2_RESPONSIVE_SOURCE_AUDIT.md', 'src/components/NotificationCenter.tsx', 'src/styles/notification-center.css', 'public/_redirects',
+  'src/lib/navigationCatalog.ts', 'src/lib/navigationRoutes.ts', 'scripts/generate-navigation-route-audit.mjs', 'scripts/generate-route-view-audit.mjs', 'scripts/generate-responsive-source-audit.mjs', 'docs/PHASE_1_EXACT_ROUTE_AUDIT.md', 'docs/PHASE_1_ROUTE_VIEW_AUDIT.md', 'docs/PHASE_2_RESPONSIVE_SOURCE_AUDIT.md', 'src/components/NotificationCenter.tsx', 'src/styles/notification-center.css', 'public/_redirects', 'scripts/test-responsive-public.mjs', 'docs/PUBLIC_RESPONSIVE_QA.md',
   'supabase/migrations/20261109125937_announcement_read_receipts.sql',
   'supabase/migrations/20261109150048_finance_accounting_and_payroll_workflows.sql',
   'supabase/migrations/20261109150654_atomic_employee_salary_profile_workflow.sql',
@@ -350,6 +351,14 @@ check('Login separates owner/admin, employee, student and parent role checks', (
   assert.ok(authSource.includes('institutions(name,institution_type)'), 'Signed-in profile must load institution type')
   assert.ok(read('src/components/Dashboard.tsx').includes('Institution type:'), 'Profile menu must show institution type')
   assert.ok(authContext.includes("['teacher', 'accountant', 'exam_officer'].includes(signedIn.role)"))
+})
+
+check('Role-specific login route changes reset the selected account category', () => {
+  const auth = read('src/components/AuthScreens.tsx')
+  const browserTest = read('scripts/test-responsive-public.mjs')
+  assert.ok(auth.includes('useEffect(() => { setAccountType(initialAccountType) }, [initialAccountType])'), 'Login account type must follow a changed role-route prop')
+  assert.ok(browserTest.includes('await page.waitForFunction(expected =>'), 'Browser QA must wait for the selected role category before asserting')
+  assert.ok(browserTest.includes("name: 'Welcome back', exact: true"), 'Browser heading selection must uniquely target the login heading')
 })
 
 check('Self-service password recovery sends email and completes the authenticated reset flow', () => {
