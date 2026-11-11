@@ -214,7 +214,10 @@ check('All seven roles receive focused, permission-aware workspaces', () => {
     }
     for (const module of modulesForRole(role)) assert.ok(module.roles.includes(role), `${role} received an unauthorised module ${module.key}`)
   }
-  assert.ok(!roleNavigationGroups('teacher').some(group => ['administration','institution-config','academic-sessions','classes-sections','subjects'].includes(group.key)))
+  assert.ok(roleNavigationGroups('teacher').some(group => group.key === 'academic-management'), 'Teachers must receive the Stage 8 academic workspace')
+  assert.ok(roleNavigationGroups('student').some(group => group.key === 'academic-management'), 'Students must receive the Stage 8 academic workspace')
+  assert.ok(roleNavigationGroups('parent').some(group => group.key === 'academic-management'), 'Parents must receive the Stage 8 academic workspace')
+  assert.ok(!roleNavigationGroups('teacher').some(group => ['administration','institution-config','academic-sessions','classes-sections','subjects','curriculum','timetable','teaching'].includes(group.key)), 'Legacy academic groups must be consolidated, not duplicated')
   assert.ok(roleNavigationGroups('teacher').find(group => group.key === 'employees')?.items.includes('Employee Leave Management'))
   assert.ok(!roleNavigationGroups('student').some(group => ['administration','institution-config','employees','accounts-finance','payroll'].includes(group.key)))
   assert.ok(!roleNavigationGroups('parent').some(group => ['administration','institution-config','employees','accounts-finance','payroll'].includes(group.key)))
@@ -947,12 +950,33 @@ check('Unified design system is loaded last and removes global browser zoom', ()
   assert.ok(routeAudit.includes('Bare module roots to review:** 0.') && routeAudit.includes('Unexpected route families:** 0.'), 'All role-visible destinations must retain explicit workspace or intentional root routes')
   assert.ok(routeAudit.includes('## Dispatcher coverage') && routeAudit.includes('Unmapped routes:** 0.') && routeAudit.includes('LinkedOperationsWorkspace') && routeAudit.includes('InstitutionalWorkspace') && routeAudit.includes('RecordModule'), 'Every role-visible route must map to a known Dashboard component')
   const responsiveAudit = read('docs/PHASE_2_RESPONSIVE_SOURCE_AUDIT.md')
-  assert.ok(responsiveAudit.includes('13 responsive source checks passed') && responsiveAudit.includes('390×844') && responsiveAudit.includes('768×1024'), 'Responsive source coverage audit is missing or incomplete')
+  assert.ok(responsiveAudit.includes('14 responsive source checks passed') && responsiveAudit.includes('390×844') && responsiveAudit.includes('768×1024'), 'Responsive source coverage audit is missing or incomplete')
   const viewAudit = read('docs/PHASE_1_ROUTE_VIEW_AUDIT.md')
   assert.ok(/Total evaluations:\\*\\* \\d+\\./.test(viewAudit) && viewAudit.includes('Compatibility issues:** 0.'), 'Every role-visible destination must request a supported component sub-view')
   assert.ok(viewAudit.includes('Hidden from role workspace tabs') === false, 'Role menus must not expose inaccessible internal workspace tabs')
   assert.ok(routeAudit.includes('Owner') && routeAudit.includes('| Student |') && routeAudit.includes('| Owner |') && routeAudit.includes('| Administrator |') && routeAudit.includes('Examination officer') && routeAudit.includes('Exact route matrix'), 'Exact route audit must list all seven role sections')
   assert.ok(routeAudit.includes('Explicitly unavailable') && routeAudit.includes('acceptance pending'), 'Exact route audit must distinguish unresolved workflows')
+})
+
+check('Stage 8 provides all 12 connected academic work areas', () => {
+  const academic = read('src/components/AcademicManagementWorkspace.tsx')
+  const academicStyles = read('src/styles/academic-management.css')
+  const dashboard = read('src/components/Dashboard.tsx')
+  const catalog = read('src/lib/institutionalCatalog.ts')
+  const routes = read('src/lib/navigationRoutes.ts')
+  for (const name of ['Academic Sessions','Classes & Sections','Subjects & Courses','Curriculum & Syllabus','Lesson Planning','Timetable','Homework & Assignments','Study Materials','Online Learning','Classwork & Classroom Activities','Academic Calendar','Learning Progress']) {
+    assert.ok(catalog.includes(name), 'Stage 8 navigation is missing ' + name)
+    assert.ok(academic.includes(name), 'Stage 8 workspace is missing ' + name)
+  }
+  for (const table of ['academic_sessions','academic_terms','classes','class_teacher_assignments','student_placements','subjects','teacher_assignments','curriculum_units','lesson_plans','timetable_entries','assignments','assignment_submissions','study_materials','learning_courses','learning_course_units','learning_course_progress','classroom_activities','classroom_activity_participants','academic_calendar_events','learning_progress','academic_preferences']) {
+    assert.ok(academic.includes("'" + table + "'") || academic.includes(table), 'Academic table is not connected: ' + table)
+  }
+  assert.ok(academic.includes('online_learning_enabled') && academic.includes('Disable online learning') && academic.includes('Enable online learning'), 'Online learning must remain optional and institution-controlled')
+  assert.ok(academic.includes('institution-files') && academic.includes('createSignedUrl'), 'Study materials must use private institution file storage')
+  assert.ok(academic.includes('class_id') && academic.includes('teacher_id') && academic.includes('room_id') && academic.includes('start_time') && academic.includes('end_time'), 'Timetable must use the class, teacher, room and period relationships')
+  assert.ok(routes.includes("return 'academic:'"), 'Academic menu destinations must route to the Stage 8 workspace')
+  assert.ok(dashboard.includes('<AcademicManagementWorkspace'), 'Dashboard must dispatch Stage 8 to its dedicated workspace')
+  assert.ok(academicStyles.includes('.ed360-academic-nav') && academicStyles.includes('.ed360-academic-table-wrap') && academicStyles.includes('.ed360-academic-modal'), 'Stage 8 tables, navigation and forms need a unified visual system')
 })
 
 check('Student admission is a dedicated, accessible workspace window', () => {
