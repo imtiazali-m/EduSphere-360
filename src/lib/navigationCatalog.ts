@@ -12,6 +12,13 @@ export const navigationCatalog:NavigationCatalogGroup[]=institutionalMenu.filter
 }))
 
 const roleItemAllow:Record<string,Partial<Record<string,string[]>>>={
+  'people-hr':{
+    teacher:['Students','Teachers','Employee Contracts & Documents','Employee Performance','Payroll & Salary Records'],
+    student:['Students'],
+    parent:['Students','Parents & Guardians'],
+    accountant:['Payroll & Salary Records'],
+    exam_officer:[],
+  },
   'academic-management': {
     student:['Academic Sessions','Classes & Sections','Subjects & Courses','Curriculum & Syllabus','Lesson Planning','Timetable','Homework & Assignments','Study Materials','Online Learning','Classwork & Classroom Activities','Academic Calendar','Learning Progress'],
     parent:['Academic Sessions','Classes & Sections','Subjects & Courses','Curriculum & Syllabus','Lesson Planning','Timetable','Homework & Assignments','Study Materials','Online Learning','Classwork & Classroom Activities','Academic Calendar','Learning Progress'],
@@ -103,9 +110,9 @@ export interface RoleNavigationSection { key:string; label:string; groups:RoleNa
 export const navigationSectionDefinitions:NavigationSectionDefinition[]=[
   {key:'overview',label:'Overview',groupKeys:['dashboard']},
   {key:'setup',label:'Institute Setup',groupKeys:['administration','backup']},
-  {key:'people',label:'People & Admissions',groupKeys:['students','employees','attendance','behaviour','certificates']},
+  {key:'people',label:'People & Human Resources',groupKeys:['people-hr','attendance','behaviour','certificates']},
   {key:'academics',label:'Academic Delivery',groupKeys:['academic-management','question-bank','examinations','class-tests','library']},
-  {key:'finance',label:'Finance & Payroll',groupKeys:['accounts-finance','fees','receivables','payments','receipts','payroll','reconciliation']},
+  {key:'finance',label:'Finance & Payroll',groupKeys:['accounts-finance','fees','receivables','payments','receipts','reconciliation']},
   {key:'communication',label:'Communication',groupKeys:['communication']},
   {key:'campus',label:'Campus Operations',groupKeys:['transport','inventory','facilities','visitors']},
   {key:'intelligence',label:'Reports & Intelligence',groupKeys:['reports','ai']},

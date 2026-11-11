@@ -25,7 +25,7 @@ const requiredFiles = [
   'index.html', 'src/main.tsx', 'src/App.tsx', 'src/components/Dashboard.tsx', 'src/components/WorkspaceUnavailable.tsx',
   'src/components/FinanceWorkspace.tsx', 'src/styles/finance-workspace.css', 'src/styles/student-promotion-workspace.css', 'src/styles/navigation-refinement.css',
   'src/components/PayrollWorkspace.tsx', 'src/styles/payroll-workspace.css',
-  'src/components/GovernanceWorkspace.tsx', 'src/components/AdministrationStage5Workspace.tsx', 'src/styles/governance-workspace.css',
+  'src/components/GovernanceWorkspace.tsx', 'src/components/AdministrationStage5Workspace.tsx', 'src/components/PeopleHRWorkspace.tsx', 'src/components/EmployeeQualificationsPanel.tsx', 'src/styles/people-hr-workspace.css', 'src/styles/governance-workspace.css',
   'src/components/InstitutionOperationsWorkspace.tsx', 'src/styles/institution-operations.css',
   'src/components/AcademicManagementWorkspace.tsx', 'src/styles/academic-management.css',
   'src/components/AuthScreens.tsx', 'src/components/AdministrationModule.tsx',
@@ -67,9 +67,9 @@ const { modules, modulesForRole } = require(path.join(root, 'src/lib/modules.ts'
 const roles = ['owner', 'admin', 'teacher', 'student', 'parent', 'accountant', 'exam_officer']
 
 check('The full institutional menu maps every submenu to a working destination', () => {
-  assert.equal(navigationCatalog.length, 27, 'The visible sidebar contains 27 main workspaces after Administration and Academic Management consolidation')
+  assert.equal(navigationCatalog.length, 25, 'The visible sidebar contains 27 main workspaces after Administration and Academic Management consolidation')
   const groupKeys = new Set(navigationCatalog.map(group => group.key))
-  assert.equal(groupKeys.size, 27, 'Visible main workspace keys must be unique')
+  assert.equal(groupKeys.size, 25, 'Visible main workspace keys must be unique')
   for (const group of navigationCatalog) {
     assert.ok(group.items.length > 0, group.label + ' must have its own operational submenus')
     for (const page of group.items) assert.ok(navigationRoutes[page], 'No route is connected for ' + group.label + '/' + page)
@@ -80,13 +80,15 @@ check('The full institutional menu maps every submenu to a working destination',
   for (const required of ['academic-management','question-bank','library','transport','inventory','facilities','visitors','reconciliation','backup']) {
     assert.ok(groupKeys.has(required), 'Missing expansion workspace: ' + required)
   }
-  for (const required of ['attendance','students','employees','accounts-finance','fees','payments','receipts','payroll','examinations','class-tests','reports']) {
+  for (const required of ['attendance','people-hr','accounts-finance','fees','payments','receipts','examinations','class-tests','reports']) {
     assert.ok(groupKeys.has(required), 'Missing core institution workspace: ' + required)
   }
-  assert.ok(institutionalMenu.length === 34, 'Full route catalogue must preserve all 34 source groups')
+  assert.ok(institutionalMenu.length === 32, 'Full route catalogue must preserve all 34 source groups')
   const menuDestinationCount = institutionalMenu.reduce((total, group) => total + group.items.length, 0)
-  assert.ok(menuDestinationCount >= 400, 'All specified submenu destinations should be present')
+  assert.ok(menuDestinationCount >= 390, 'All specified submenu destinations should be present')
   const administration = institutionalMenu.find(group => group.key === 'administration')
+  const peopleHR = institutionalMenu.find(group => group.key === 'people-hr')
+  assert.deepEqual(peopleHR?.items.map(item => item.label), ['Students','Admissions & Enrollment','Teachers','Faculty & Staff','Parents & Guardians','HR & Recruitment','Employee Contracts & Documents','Employee Performance','Payroll & Salary Records','Alumni'], 'People & HR must contain the ten approved Stage 6 destinations')
   assert.deepEqual(administration?.items.map(item => item.label), [
     'Institute Profile','Campus and Branch Management','Academic Structure & Sections','Departments & Designations',
     'Organisational Structure','System Configuration','Approval Workflows','Policies & Rules','Administrative Audit',
@@ -147,8 +149,8 @@ check('The full institutional menu maps every submenu to a working destination',
   assert.equal(getNavigationRoute('backup', 'Create Backup'), 'unavailable:backup:create-backup', 'Backup menu must not claim to create a backup without a platform backup service')
   assert.equal(getNavigationRoute('communication', 'WhatsApp Integration'), 'unavailable:communication:whatsapp-integration', 'External messaging must remain unconnected until credentials and delivery tests exist')
   assert.equal(getNavigationRoute('communication', 'Notification Centre'), 'notifications', 'In-app notifications remain a supported communication workflow')
-  assert.equal(getNavigationRoute('employees', 'Employee Directory'), 'employees:directory', 'Employee Directory must open the staff directory window')
-  assert.equal(getNavigationRoute('employees', 'Employee Reports'), 'employees:reports', 'Employee reports must open the staff report window')
+  assert.equal(getNavigationRoute('people-hr', 'Teachers'), 'employees:directory-teaching', 'Teachers must open the teaching directory window')
+  assert.equal(getNavigationRoute('people-hr', 'Faculty & Staff'), 'employees:directory-staff', 'Faculty & Staff must open the staff directory window')
   assert.equal(getNavigationRoute('dashboard', 'Institutional Overview', 'owner'), 'overview', 'Institutional overview must open the dashboard')
   assert.equal(getNavigationRoute('dashboard', 'Academic Overview', 'owner'), 'reports:academics', 'Academic Overview must retain its academic report sub-view')
   assert.equal(getNavigationRoute('dashboard', 'Financial Overview', 'owner'), 'finance:fees:overview', 'Financial Overview must retain its fee/finance overview window')
@@ -183,14 +185,14 @@ check('The full institutional menu maps every submenu to a working destination',
       assert.ok(groupKeys.has(groupKey), page + ' points to an unknown institutional workspace')
     }
   }
-  assert.ok(navigationRoutes['Student Directory']?.startsWith('students:'), 'Student Directory must open the student workspace')
+  assert.equal(getNavigationRoute('people-hr', 'Students', 'owner'), 'students:directory', 'Student Directory must open the student workspace')
   assert.equal(navigationRoutes['fees:fee-invoices'], 'finance:fees:invoices', 'Fee invoices must open the dedicated Finance & Payments workspace')
 })
 
 
 check('Sidebar workspaces follow the approved parent-section sequence for every role', () => {
-  const expectedGroupOrder = ["dashboard","administration","backup","students","employees","attendance","behaviour","certificates","academic-management","question-bank","examinations","class-tests","library","accounts-finance","fees","receivables","payments","receipts","payroll","reconciliation","communication","transport","inventory","facilities","visitors","reports","ai"]
-  const completeCatalogOrder = ["dashboard","administration","institution-config","academic-sessions","classes-sections","subjects","backup","students","employees","attendance","behaviour","certificates","academic-management","curriculum","timetable","teaching","question-bank","examinations","class-tests","library","accounts-finance","fees","receivables","payments","receipts","payroll","reconciliation","communication","transport","inventory","facilities","visitors","reports","ai"]
+  const expectedGroupOrder = ["dashboard","administration","backup","people-hr","attendance","behaviour","certificates","academic-management","question-bank","examinations","class-tests","library","accounts-finance","fees","receivables","payments","receipts","reconciliation","communication","transport","inventory","facilities","visitors","reports","ai"]
+  const completeCatalogOrder = ["dashboard","administration","institution-config","academic-sessions","classes-sections","subjects","backup","people-hr","attendance","behaviour","certificates","academic-management","curriculum","timetable","teaching","question-bank","examinations","class-tests","library","accounts-finance","fees","receivables","payments","receipts","reconciliation","communication","transport","inventory","facilities","visitors","reports","ai"]
   assert.deepEqual(navigationSectionDefinitions.map(section => section.key), [
     'overview','setup','people','academics','finance','communication','campus','intelligence',
   ])
@@ -227,7 +229,7 @@ check('All seven roles receive focused, permission-aware workspaces', () => {
   assert.ok(roleNavigationGroups('student').some(group => group.key === 'academic-management'), 'Students must receive the Stage 8 academic workspace')
   assert.ok(roleNavigationGroups('parent').some(group => group.key === 'academic-management'), 'Parents must receive the Stage 8 academic workspace')
   assert.ok(!roleNavigationGroups('teacher').some(group => ['administration','institution-config','academic-sessions','classes-sections','subjects','curriculum','timetable','teaching'].includes(group.key)), 'Legacy academic groups must be consolidated, not duplicated')
-  assert.ok(roleNavigationGroups('teacher').find(group => group.key === 'employees')?.items.includes('Employee Leave Management'))
+  assert.ok(roleNavigationGroups('teacher').find(group => group.key === 'people-hr')?.items.includes('Employee Contracts & Documents'))
   assert.ok(!roleNavigationGroups('student').some(group => ['administration','institution-config','employees','accounts-finance','payroll'].includes(group.key)))
   assert.ok(!roleNavigationGroups('parent').some(group => ['administration','institution-config','employees','accounts-finance','payroll'].includes(group.key)))
   assert.ok(!roleNavigationGroups('accountant').some(group => ['employees','students','question-bank','examinations'].includes(group.key)))
@@ -475,6 +477,26 @@ check('Student, faculty and operational record tables support accessible sorting
   assert.ok(styles.includes('.ed360-sort-header:focus-visible'), 'Sortable table headings need a visible keyboard focus indicator')
 })
 
+check('PeopleHRWorkspace exposes recruitment, contracts, performance and alumni workflows', () => {
+  for (const [label,route] of [
+    ['Students','students:directory'],['Admissions & Enrollment','peoplehr:admissions'],['Teachers','employees:directory-teaching'],
+    ['Faculty & Staff','employees:directory-staff'],['Parents & Guardians','students:guardians'],['HR & Recruitment','peoplehr:recruitment'],
+    ['Employee Contracts & Documents','peoplehr:contracts'],['Employee Performance','peoplehr:performance'],['Payroll & Salary Records','payroll:overview'],['Alumni','peoplehr:alumni'],
+  ]) assert.equal(getNavigationRoute('people-hr',label,'owner'),route,label+' must resolve to its operational destination')
+  const people = read('src/components/PeopleHRWorkspace.tsx')
+  for (const value of ['hr_job_postings','hr_candidates','hr_interviews','admission_enquiries','employee_contracts','employee_appraisals','alumni_records','hire_hr_candidate','convert_admission_enquiry','acknowledge_employee_appraisal']) {
+    assert.ok(people.includes(value), 'People & HR workflow is missing ' + value)
+  }
+  const qualifications = read('src/components/EmployeeQualificationsPanel.tsx')
+  assert.ok(qualifications.includes('employee_qualifications'), 'Qualifications must use institution-scoped employee qualification records')
+  assert.ok(read('src/components/Dashboard.tsx').includes('<PeopleHRWorkspace '), 'PeopleHRWorkspace must be connected to the signed-in dashboard')
+  assert.deepEqual(roleNavigationGroups('teacher').find(group => group.key === 'people-hr')?.items, ['Students','Teachers','Employee Contracts & Documents','Employee Performance','Payroll & Salary Records'])
+  assert.deepEqual(roleNavigationGroups('student').find(group => group.key === 'people-hr')?.items, ['Students'])
+  assert.deepEqual(roleNavigationGroups('parent').find(group => group.key === 'people-hr')?.items, ['Students','Parents & Guardians'])
+  assert.deepEqual(roleNavigationGroups('accountant').find(group => group.key === 'people-hr')?.items, ['Payroll & Salary Records'])
+  assert.ok(!roleNavigationGroups('exam_officer').some(group => group.key === 'people-hr'))
+})
+
 check('Finance and payroll registers support searchable sortable pagination', () => {
   const finance = read('src/components/FinanceWorkspace.tsx')
   const financeStyles = read('src/styles/finance-workspace.css')
@@ -630,17 +652,17 @@ check('Module definitions and generic CRUD table allowlist remain valid', () => 
 check('Student Record is a complete permission-aware multi-window workspace', () => {
   const recordModule = read('src/components/RecordModule.tsx')
   const dataSource = read('src/lib/data.ts')
-  for (const label of ['Overview', 'Admissions', 'Student Directory', 'Student Profile', 'Class Placement', 'Promotion', 'Guardians', 'Student Attendance', 'Student Exam Results', 'Student Assignments', 'Student Timetable', 'Student Documentation', 'Student History']) {
+  for (const label of ['Overview', 'Admissions', 'Student Directory', 'Student Profile', 'Class Placement', 'Promotion', 'Guardians', 'Student Attendance', 'Student Exam Results', 'Student Assignments', 'Student Timetable', 'Student Documentation', 'Fee Records', 'Health & Emergency', 'Student History']) {
     assert.ok(recordModule.includes("label: '" + label + "'"), 'Student workspace window is missing: ' + label)
   }
   const studentWorkspaceStart = recordModule.indexOf("if (module.key === 'students') {", recordModule.indexOf('export function RecordModule'))
   const studentWorkspaceEnd = recordModule.indexOf("if (module.key === 'teachers') {", studentWorkspaceStart)
   const studentWorkspace = recordModule.slice(studentWorkspaceStart, studentWorkspaceEnd)
-  for (const table of ['attendance', 'exams', 'exam_results', 'assignments', 'assignment_submissions', 'timetable_entries', 'classes', 'academic_sessions', 'programs', 'guardian_students', 'parent_guardians', 'student_placements', 'student_documents', 'student_history']) {
+  for (const table of ['attendance', 'exams', 'exam_results', 'assignments', 'assignment_submissions', 'timetable_entries', 'classes', 'academic_sessions', 'programs', 'guardian_students', 'parent_guardians', 'student_placements', 'student_documents', 'fee_invoices', 'fee_payments', 'student_health_emergency', 'student_history']) {
     assert.ok(recordModule.includes("'" + table + "'"), 'Student workspace is missing related data source: ' + table)
   }
-  assert.ok(!studentWorkspace.includes("'fee_invoices'") && !studentWorkspace.includes("label: 'Fees & Payments'"), 'Fee management must remain exclusively in Finance, not Student Management')
-  assert.ok(recordModule.includes('studentRelatedTables.map'), 'Student related workspaces must load their linked records')
+  assert.ok(studentWorkspace.includes("studentWorkspaceTab === 'fees'") && studentWorkspace.includes("studentWorkspaceTab === 'health'"), 'Student profiles must expose linked fee history and restricted health information')
+  assert.ok(recordModule.includes('studentRelatedTables.filter') && recordModule.includes('visibleTables.map'), 'Student related workspaces must load linked records while excluding restricted health data for other roles')
   const dashboardSource = read('src/components/Dashboard.tsx')
   assert.ok(dashboardSource.includes('key={tab.id}') && dashboardSource.includes('initialWindow={tab.targetWindow}'), 'Student workspace destinations must open in their own persistent dashboard window')
   assert.ok(dashboardSource.includes("showWindowNavigation={tab.targetKey !== 'students'}"), 'Student sidebar tabs must not duplicate the internal student-window navigation')
@@ -676,7 +698,7 @@ check('Student Record is a complete permission-aware multi-window workspace', ()
 
 check('Faculty & Employee Management uses dedicated institution-scoped HR workspaces', () => {
   const faculty = read('src/components/FacultyWorkspace.tsx')
-  for (const label of ['Overview', 'Employee Registration', 'Employee Directory', 'Employee Profile', 'Departments', 'Designations', 'Teaching Assignments', 'Faculty Attendance', 'Leave Management', 'Workload & Timetable', 'Documents', 'Employment History', 'Staff Reports']) {
+  for (const label of ['Overview', 'Employee Registration', 'All Employees', 'Employee Profile', 'Departments', 'Designations', 'Teaching Assignments', 'Faculty Attendance', 'Leave Management', 'Workload & Timetable', 'Documents', 'Qualifications', 'Employment History', 'Staff Reports']) {
     assert.ok(faculty.includes("label:'" + label + "'") || faculty.includes("label: '" + label + "'"), 'Faculty workspace window is missing: ' + label)
   }
   for (const table of ['designations', 'teacher_assignments', 'employee_attendance', 'employee_leave_requests', 'staff_documents', 'employee_history']) {
@@ -685,6 +707,7 @@ check('Faculty & Employee Management uses dedicated institution-scoped HR worksp
   }
   assert.ok(faculty.includes("from('staff-files')"), 'Confidential documents must use the dedicated private staff-files bucket')
   assert.ok(faculty.includes('createSignedUrl'), 'Staff documents must be retrieved with signed URLs')
+  assert.ok(faculty.includes('EmployeeQualificationsPanel') && read('src/components/EmployeeQualificationsPanel.tsx').includes('employee_qualifications'), 'Faculty workspace must expose institution-scoped qualification records')
   const dashboard = read('src/components/Dashboard.tsx')
   assert.ok(dashboard.includes('<FacultyWorkspace onToast={onToast} onNavigate={navigateChild} initialWindow={tab.targetWindow}/>'), 'Existing dashboard must route Faculty & Staff into their selected nested workspace')
   const migration = read('supabase/migrations/20261109085154_faculty_employee_management.sql')
@@ -720,6 +743,10 @@ check('Payroll routes use database salary, approval and payment workflows', () =
   for (const value of ['employee_salary_profiles', 'generate_payroll_run', 'approve_payroll_run', 'mark_payroll_run_paid', 'save_employee_salary_profile']) {
     assert.ok(payroll.includes(value), 'Payroll workflow is missing ' + value)
   }
+  for (const value of ['employee_salary_components','payroll_adjustments','create_payroll_adjustment','review_payroll_adjustment']) assert.ok(payroll.includes(value), 'Payroll component and adjustment workflow is missing: '+value)
+  const stage6Salary = read('supabase/migrations/20261111170358_stage_6_employee_salary_components_own_read.sql')
+  assert.ok(stage6Salary.includes('employee_salary_components'))
+  assert.ok(read('supabase/migrations/20261111170659_stage_6_employee_appraisal_acknowledgement.sql').includes('acknowledge_employee_appraisal'))
   const migration = read('supabase/migrations/20261109150048_finance_accounting_and_payroll_workflows.sql')
   for (const value of ['enable row level security', 'finance_journal_lines_one_side', 'post_finance_journal', 'generate_payroll_run', 'approve_payroll_run', 'mark_payroll_run_paid', 'revoke all on function']) {
     assert.ok(migration.includes(value), 'Finance/payroll database safeguard is missing: ' + value)
@@ -981,14 +1008,14 @@ check('Unified design system is loaded last and removes global browser zoom', ()
   ]) assert.ok(contrast(foreground, background) >= 4.5, label + ' must meet WCAG AA normal-text contrast')
   assert.ok(read('docs/PHASE_1_DETAILED_AUDIT.md').includes('Phase 1 disposition'), 'Detailed Phase 1 audit document is missing')
   const roleMenu = read('docs/PHASE_1_ROLE_MENU_INVENTORY.md')
-  assert.ok(roleMenu.includes('27 visible sidebar groups') && roleMenu.includes('34 route-catalogue groups') && roleMenu.includes('Administration parent menu') && roleMenu.includes('Academic Management parent menu'), 'Current visible sidebar and consolidated parent workspaces must be documented')
+  assert.ok(roleMenu.includes('25 visible sidebar groups') && roleMenu.includes('32 route-catalogue groups') && roleMenu.includes('Administration parent menu') && roleMenu.includes('Academic Management parent menu') && roleMenu.includes('People & HR parent menu'), 'Current visible sidebar and consolidated parent workspaces must be documented')
   assert.ok(read('docs/PHASE_2_DESIGN_SYSTEM.md').includes('Core colour tokens'), 'Phase 2 design specification is missing')
   const routeAudit = read('docs/PHASE_1_EXACT_ROUTE_AUDIT.md')
   assert.ok(/Unexpected route families:\*\* 0\./.test(routeAudit), 'Exact route audit must resolve each visible role/menu destination without unknown route families')
   assert.ok(routeAudit.includes('Bare module roots to review:** 0.') && routeAudit.includes('Unexpected route families:** 0.'), 'All role-visible destinations must retain explicit workspace or intentional root routes')
   assert.ok(routeAudit.includes('## Dispatcher coverage') && routeAudit.includes('Unmapped routes:** 0.') && routeAudit.includes('LinkedOperationsWorkspace') && routeAudit.includes('InstitutionalWorkspace') && routeAudit.includes('RecordModule'), 'Every role-visible route must map to a known Dashboard component')
   const responsiveAudit = read('docs/PHASE_2_RESPONSIVE_SOURCE_AUDIT.md')
-  assert.ok(responsiveAudit.includes('14 responsive source checks passed') && responsiveAudit.includes('390×844') && responsiveAudit.includes('768×1024'), 'Responsive source coverage audit is missing or incomplete')
+  assert.ok(responsiveAudit.includes('15 responsive source checks passed') && responsiveAudit.includes('390×844') && responsiveAudit.includes('768×1024'), 'Responsive source coverage audit is missing or incomplete')
   const viewAudit = read('docs/PHASE_1_ROUTE_VIEW_AUDIT.md')
   assert.ok(/Compatibility issues:\*\* 0\./.test(viewAudit), 'Every role-visible destination must request a supported component sub-view')
   assert.ok(viewAudit.includes('Hidden from role workspace tabs') === false, 'Role menus must not expose inaccessible internal workspace tabs')

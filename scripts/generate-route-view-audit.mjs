@@ -26,16 +26,16 @@ const roles = [
   ['exam_officer', 'Examination officer'],
 ]
 
-const studentTabs = new Set(['overview','admissions','directory','profile','id-cards','classes','guardians','attendance','results','assignments','timetable','documents','history'])
+const studentTabs = new Set(['overview','admissions','directory','profile','id-cards','classes','guardians','attendance','results','assignments','timetable','documents','fees','health','history'])
 const studentVisibleTabs = {
   owner: studentTabs,
   admin: studentTabs,
   teacher: new Set(['overview','directory','profile','id-cards','classes','attendance','results','assignments','timetable','history']),
-  student: new Set(['overview','profile','id-cards','classes','guardians','attendance','results','assignments','timetable','documents','history']),
-  parent: new Set(['overview','profile','id-cards','classes','guardians','attendance','results','assignments','timetable','documents','history']),
+  student: new Set(['overview','profile','id-cards','classes','guardians','attendance','results','assignments','timetable','documents','fees','health','history']),
+  parent: new Set(['overview','profile','id-cards','classes','guardians','attendance','results','assignments','timetable','documents','fees','health','history']),
 }
-const facultyTabs = new Set(['overview','registration','directory','profile','id-cards','departments','designations','assignments','attendance','leave','workload','documents','history','reports'])
-const facultyStaffTabs = new Set(['overview','profile','id-cards','assignments','attendance','leave','workload','documents','history'])
+const facultyTabs = new Set(['overview','registration','directory','directory-teaching','directory-staff','profile','id-cards','departments','designations','assignments','attendance','leave','workload','documents','qualifications','history','reports'])
+const facultyStaffTabs = new Set(['overview','profile','id-cards','assignments','attendance','leave','workload','documents','qualifications','history'])
 const attendanceWindows = new Set(['students','teachers','staff','history','devices'])
 const reportTabs = new Set(['overview','finance','attendance','academics','students','employees','payroll'])
 const financeTabs = {
@@ -46,7 +46,8 @@ const financeTabs = {
   receipts: new Set(['overview','receipts','payments']),
   reconciliation: new Set(['overview','reconciliation','journals','receivables']),
 }
-const payrollTabs = new Set(['overview','salary','runs','payslips'])
+const payrollTabs = new Set(['overview','salary','components','adjustments','runs','payslips'])
+const peopleHRTabs = new Set(['admissions','recruitment','contracts','performance','alumni'])
 const governanceTabs = new Set(['profile','settings','approvals','audit','academic','accounts','departments','organization','system','policies','permissions','branding','security'])
 const operationTabs = {
   'question-bank': new Set(['pool','papers']),
@@ -76,6 +77,7 @@ function shellTarget(route) {
   const reports = route.startsWith('reports:')
   const finance = route.startsWith('finance:')
   const payroll = route.startsWith('payroll:')
+  const peopleHR = route.startsWith('peoplehr:')
   const governance = route.startsWith('governance:')
   const operations = route.startsWith('operations:')
   const parts = route.split(':')
@@ -90,6 +92,7 @@ function shellTarget(route) {
     : reports ? 'reports'
     : finance ? 'finance'
     : payroll ? 'payroll'
+    : peopleHR ? 'peoplehr'
     : governance ? 'governance'
     : operations ? 'operations'
     : moduleWindow ? parts[0]
@@ -104,6 +107,7 @@ function shellTarget(route) {
     : reports ? route.slice('reports:'.length)
     : finance ? route.slice('finance:'.length)
     : payroll ? route.slice('payroll:'.length)
+    : peopleHR ? route.slice('peoplehr:'.length)
     : governance ? route.slice('governance:'.length)
     : operations ? route.slice('operations:'.length)
     : moduleWindow ? parts[1]
@@ -145,6 +149,10 @@ function checkView(role, route, dispatcher) {
     const [group, view] = targetWindow.split(':')
     const supported = financeTabs[group]
     return { component: 'FinanceWorkspace', view: group + ':' + view, status: supported?.has(view) ? 'Supported' : 'Unsupported finance view' }
+  }
+  if (targetKey === 'peoplehr') {
+    const permitted = ['owner','admin'].includes(role) ? peopleHRTabs : role === 'teacher' ? new Set(['contracts','performance']) : new Set()
+    return { component:'PeopleHRWorkspace', view:targetWindow, status:permitted.has(targetWindow) ? 'Supported' : 'Hidden from role workspace tabs' }
   }
   if (targetKey === 'payroll') {
     return { component: 'PayrollWorkspace', view: targetWindow, status: payrollTabs.has(targetWindow) ? 'Supported' : 'Unsupported payroll view' }
@@ -202,6 +210,7 @@ for (const [role, label] of roles) {
         : dashboard.targetKey === 'reports' ? 'ReportsModule'
         : dashboard.targetKey === 'finance' ? 'FinanceWorkspace'
         : dashboard.targetKey === 'payroll' ? 'PayrollWorkspace'
+        : dashboard.targetKey === 'peoplehr' ? 'PeopleHRWorkspace'
         : dashboard.targetKey === 'governance' ? 'GovernanceWorkspace'
         : dashboard.targetKey === 'operations' ? 'InstitutionOperationsWorkspace'
         : dashboard.targetKey.startsWith('admin:') ? 'AdministrationModule'

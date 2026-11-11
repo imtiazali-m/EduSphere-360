@@ -7,7 +7,7 @@
 
 ## What this inventory proves — and what it does not
 
-This appendix distinguishes the **27 visible sidebar groups** from the **34 route-catalogue groups**. Four specialist setup catalogues (institution configuration, academic sessions, classes/sections and subjects) remain available as child destinations under the single **Administration parent menu**; they are not separate top-level sidebar menus. The full route catalogue retains the complete submenu inventory. The 12 academic work areas are presented under the Academic Management parent menu, while the 14 institutional setup work areas are presented under the Administration parent menu.
+This appendix distinguishes the **25 visible sidebar groups** from the **32 route-catalogue groups**. Four specialist setup catalogues (institution configuration, academic sessions, classes/sections and subjects) remain available as child destinations under the single **Administration parent menu**; they are not separate top-level sidebar menus. The full route catalogue retains the complete submenu inventory. The 12 academic work areas are presented under the Academic Management parent menu, the 14 institutional setup work areas under the Administration parent menu, and the 10 learner/employee lifecycle destinations under the People & HR parent menu.
 
 A visible menu entry or a value in the route index is **not** evidence that its complete workflow is implemented, that its API is authorized, or that records persist. Items listed as **Explicitly unavailable** are deliberately routed to the unavailable-workspace experience in the inspected resolver. Other items are marked **Workflow acceptance pending**; they require destination-by-destination resolver, permission, data-lifecycle and browser testing.
 
@@ -24,6 +24,10 @@ A visible menu entry or a value in the route index is **not** evidence that its 
 ## Per-role menu size
 
 Role-specific group and destination totals are generated from `roleNavigationGroups` and permission grants. They are verified against the current source in `scripts/verify-project.mjs`; this inventory does not hard-code historical totals.
+
+## People & Human Resources parent menu
+
+The People & HR parent menu contains ten destinations: Students; Admissions & Enrollment; Teachers; Faculty & Staff; Parents & Guardians; HR & Recruitment; Employee Contracts & Documents; Employee Performance; Payroll & Salary Records; and Alumni. Visibility is filtered by the signed-in role.
 
 ## Full destination inventory
 
