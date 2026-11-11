@@ -1,6 +1,6 @@
 # Migration history
 
-The thirty timestamped migration files in this folder match the remote migration history recorded by the linked Supabase project. Keep each 14-digit timestamp unchanged so local and remote migration histories remain aligned.
+The thirty-two timestamped migration files currently versioned in this repository include the two additive Stage 6 People & HR migrations. Keep each 14-digit timestamp unchanged. The linked Supabase project also has previously applied migrations that are not all present in this repository; reconcile that pre-existing source/history gap before using a fresh-database replay or automated migration push.
 
 The current online application includes the reviewed schema changes for the existing live schema, Faculty & Employee Management, and Student Management operations (admission lifecycle, linked guardian contacts, class placements, private student documents and audit history for attendance, published results, assignment submissions, guardian policy consolidation and activity indexes). The Student Management and Faculty/Employee migrations have already been applied to the linked project; do not replay them manually.
 
@@ -42,3 +42,6 @@ The atomic library circulation migration adds invoker-security issue and return 
 
 
 The atomic transport allocation migration adds database-side creation and end-allocation functions. It validates institution-scoped active students and registered route/stop/vehicle records, locks the student to serialize overlapping allocation checks, locks the vehicle for seat-capacity checks, and records lifecycle changes with the authenticated administrator. The UI calls these functions rather than issuing direct inserts or status updates.
+
+
+Stage 6 — People Management & Human Resources adds admission enquiry conversion, recruitment vacancies/candidates/interviews, employee contracts, appraisal history, alumni, confidential student health/emergency information, effective-dated salary components, approved payroll adjustments, and employee qualification verification. The linked Supabase project has these migrations applied. Admission conversion creates a student application; the existing Student Admissions window remains responsible for document review, approval, placement, fee-plan assignment and completion of enrolment. Payroll adjustments are pending until an owner/admin approves them; the payroll run snapshots the effective salary profile, recurring salary components and approved adjustments for its exact period. Taxability metadata is recorded, but statutory tax calculation remains dependent on jurisdiction-specific payroll rules.
