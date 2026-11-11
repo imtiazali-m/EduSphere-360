@@ -185,12 +185,12 @@ function RecordForm({ module, initial, onCancel, onSave, saving, mode, fullPage 
     ]
     const renderedFields = new Set(fieldGroups.flatMap(group => group.names))
     const remainingFields = module.fields.filter(field => !renderedFields.has(field.name))
-    return <main className="ed360-admission-workspace">
+    return <section className="ed360-admission-workspace" aria-labelledby="ed360-admission-page-title">
       <div className="ed360-admission-breadcrumb"><span>Students</span><ChevronRight size={14}/><span>Admissions</span><ChevronRight size={14}/><strong>{initial ? 'Edit student' : 'New admission'}</strong></div>
       <header className="ed360-admission-page-heading">
         <div className="ed360-admission-heading-copy">
           <span className="ed360-admission-kicker">STUDENT MANAGEMENT / ADMISSIONS</span>
-          <h1>{initial ? 'Edit student record' : 'New student admission'}</h1>
+          <h1 id="ed360-admission-page-title">{initial ? 'Edit student record' : 'New student admission'}</h1>
           <p>Complete the learner’s information in the sections below. Required fields are marked clearly.</p>
         </div>
         <button type="button" className="button button-outline" onClick={onCancel}><ChevronLeft size={16}/> Back to students</button>
@@ -234,7 +234,7 @@ function RecordForm({ module, initial, onCancel, onSave, saving, mode, fullPage 
           <div><button type="button" className="button button-quiet" onClick={onCancel}>Cancel</button><button type="submit" className="button button-primary" disabled={saving}>{saving ? 'Saving admission…' : initial ? 'Save student changes' : 'Save student admission'} <Check size={16}/></button></div>
         </div>
       </form>
-    </main>
+    </section>
   }
 
   return <div className="modal-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) onCancel() }}>
