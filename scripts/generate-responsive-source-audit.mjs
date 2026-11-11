@@ -36,7 +36,7 @@ const checks = [
   ['Institutional workspace', [1000,720,700,650,620,430].some(width => hasBreakpoint(files.institutional,width)) && hasBreakpoint(files.institutional,430), 'Institutional records must have both tablet and narrow-phone adjustments.'],
   ['Generic module workspaces', [1080,760,720,580,540,520].every(width => hasBreakpoint(files.modules,width)), 'Generic record modules must include responsive breakpoints for tablet and phone widths.'],
   ['Stage 8 academic workspace', hasBreakpoint(files.academic,1100) && hasBreakpoint(files.academic,800) && hasBreakpoint(files.academic,540) && files.academic.includes('.ed360-academic-nav') && files.academic.includes('.ed360-academic-table-wrap') && files.academic.includes('.ed360-academic-modal'), 'Academic navigation, record tables and forms must adapt for desktop, tablet and phone layouts.'],
-  ['People & HR workspace', hasBreakpoint(files.peopleHr,980) && hasBreakpoint(files.peopleHr,620) && files.peopleHr.includes('overflow-x:auto'), 'People & HR tables and workflow panels must adapt to phone widths.'],
+  ['People & HR workspace', hasBreakpoint(files.peopleHr,760) && hasBreakpoint(files.peopleHr,620) && hasBreakpoint(files.peopleHr,430) && files.peopleHr.includes('.people-hr-stage') && files.peopleHr.includes('overflow: auto'), 'People & HR tables and workflow panels must adapt to phone widths.'],
 ]
 const failed = checks.filter(([,ok]) => !ok)
 if (failed.length) {

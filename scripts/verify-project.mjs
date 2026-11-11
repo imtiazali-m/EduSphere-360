@@ -482,7 +482,7 @@ check('PeopleHRWorkspace exposes recruitment, contracts, performance and alumni 
     ['Students','students:directory'],['Admissions & Enrollment','peoplehr:admissions'],['Teachers','employees:directory-teaching'],
     ['Faculty & Staff','employees:directory-staff'],['Parents & Guardians','students:guardians'],['HR & Recruitment','peoplehr:recruitment'],
     ['Employee Contracts & Documents','peoplehr:contracts'],['Employee Performance','peoplehr:performance'],['Payroll & Salary Records','payroll:overview'],['Alumni','peoplehr:alumni'],
-  ]) assert.ok(route, label + ' must have a destination')
+  ]) assert.equal(getNavigationRoute('people-hr',label,'owner'),route,label+' must resolve to its operational destination')
   const people = read('src/components/PeopleHRWorkspace.tsx')
   for (const value of ['hr_job_postings','hr_candidates','hr_interviews','admission_enquiries','employee_contracts','employee_appraisals','alumni_records','hire_hr_candidate','convert_admission_enquiry','acknowledge_employee_appraisal']) {
     assert.ok(people.includes(value), 'People & HR workflow is missing ' + value)
@@ -707,6 +707,7 @@ check('Faculty & Employee Management uses dedicated institution-scoped HR worksp
   }
   assert.ok(faculty.includes("from('staff-files')"), 'Confidential documents must use the dedicated private staff-files bucket')
   assert.ok(faculty.includes('createSignedUrl'), 'Staff documents must be retrieved with signed URLs')
+  assert.ok(faculty.includes('EmployeeQualificationsPanel') && read('src/components/EmployeeQualificationsPanel.tsx').includes('employee_qualifications'), 'Faculty workspace must expose institution-scoped qualification records')
   const dashboard = read('src/components/Dashboard.tsx')
   assert.ok(dashboard.includes('<FacultyWorkspace onToast={onToast} onNavigate={navigateChild} initialWindow={tab.targetWindow}/>'), 'Existing dashboard must route Faculty & Staff into their selected nested workspace')
   const migration = read('supabase/migrations/20261109085154_faculty_employee_management.sql')
@@ -742,6 +743,10 @@ check('Payroll routes use database salary, approval and payment workflows', () =
   for (const value of ['employee_salary_profiles', 'generate_payroll_run', 'approve_payroll_run', 'mark_payroll_run_paid', 'save_employee_salary_profile']) {
     assert.ok(payroll.includes(value), 'Payroll workflow is missing ' + value)
   }
+  for (const value of ['employee_salary_components','payroll_adjustments','create_payroll_adjustment','review_payroll_adjustment']) assert.ok(payroll.includes(value), 'Payroll component and adjustment workflow is missing: '+value)
+  const stage6Salary = read('supabase/migrations/20261111170358_stage_6_employee_salary_components_own_read.sql')
+  assert.ok(stage6Salary.includes('employee_salary_components'))
+  assert.ok(read('supabase/migrations/20261111170659_stage_6_employee_appraisal_acknowledgement.sql').includes('acknowledge_employee_appraisal'))
   const migration = read('supabase/migrations/20261109150048_finance_accounting_and_payroll_workflows.sql')
   for (const value of ['enable row level security', 'finance_journal_lines_one_side', 'post_finance_journal', 'generate_payroll_run', 'approve_payroll_run', 'mark_payroll_run_paid', 'revoke all on function']) {
     assert.ok(migration.includes(value), 'Finance/payroll database safeguard is missing: ' + value)
