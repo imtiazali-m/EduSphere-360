@@ -795,7 +795,14 @@ export function Dashboard({ onToast }: Props) {
           const GroupIcon = catalogIcons[group.icon] ?? LayoutDashboard
           const isExpanded = expandedGroups.includes(group.key)
           return <section className={`pro-nav-group ${isExpanded ? 'expanded' : ''}`} key={group.key}>
-            <button className={`pro-nav-group-head ${group.key === "dashboard" ? "pro-nav-dashboard-link" : ""}`} aria-label={group.label} title={group.label} aria-expanded={isExpanded} onClick={() => { if (compactSidebar) setSidebarCollapsed(false); toggleGroup(group.key) }}><span className="pro-nav-group-icon"><GroupIcon size={19}/></span><span className="pro-nav-group-name">{group.label}</span><ChevronRight className="pro-nav-chevron" size={17}/></button>
+            <button className={`pro-nav-group-head ${group.key === "dashboard" ? "pro-nav-dashboard-link" : ""}`} aria-label={group.label} title={group.label} aria-expanded={isExpanded} onClick={() => {
+              if (compactSidebar) {
+                setSidebarCollapsed(false)
+                setExpandedGroups(current => current.includes(group.key) ? current : [...current, group.key])
+              } else {
+                toggleGroup(group.key)
+              }
+            }}><span className="pro-nav-group-icon"><GroupIcon size={19}/></span><span className="pro-nav-group-name">{group.label}</span><ChevronRight className="pro-nav-chevron" size={17}/></button>
             {isExpanded && <div className="pro-nav-children">{group.items.map(item => {
               const itemKey = item.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
               const route = getNavigationRoute(group.key, item, user!.role)
