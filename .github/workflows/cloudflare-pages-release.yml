@@ -37,6 +37,9 @@ jobs:
       - name: Generate exact role-aware route audit
         run: npm run audit:navigation
 
+      - name: Generate role-aware route-to-view compatibility audit
+        run: npm run audit:route-views
+
       - name: Verify project structure, navigation and security guards
         run: npm run verify:project
 
@@ -71,6 +74,14 @@ jobs:
           zip -q -r ../edusphere360-cloudflare-direct-upload.zip .
           cd ..
           test -s edusphere360-cloudflare-direct-upload.zip
+
+      - name: Upload route-to-view compatibility audit
+        uses: actions/upload-artifact@v7
+        with:
+          name: edusphere360-route-view-audit
+          path: docs/PHASE_1_ROUTE_VIEW_AUDIT.md
+          if-no-files-found: error
+          retention-days: 14
 
       - name: Upload exact role-aware route audit
         uses: actions/upload-artifact@v7
