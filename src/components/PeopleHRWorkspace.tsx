@@ -191,7 +191,7 @@ export function PeopleHRWorkspace({initialWindow,onToast,onNavigate}:Props) {
         {name:'development_plan',label:'Professional development plan',type:'textarea'},
         {name:'reviewer_summary',label:'Reviewer summary',type:'textarea'},
         {name:'next_review_date',label:'Next review date',type:'date'},
-        {name:'status',label:'Review status',options:[{value:'draft',label:'Draft'},{value:'submitted',label:'Submitted'},{value:'reviewed',label:'Reviewed'},{value:'acknowledged',label:'Acknowledged by employee'}]},
+        {name:'status',label:'Review status',options:[{value:'draft',label:'Draft'},{value:'submitted',label:'Submitted'},{value:'reviewed',label:'Reviewed'}]},
       ] as Field[],
     }
     return {
@@ -220,14 +220,15 @@ export function PeopleHRWorkspace({initialWindow,onToast,onNavigate}:Props) {
     : windowKey==='contracts' ? contracts
     : windowKey==='performance' ? appraisals
     : alumni
-  const filteredRows=useMemo(()=>currentRows.filter(row=>config.columns.some(([key])=>{
+  const tableColumns: [string,string][] = windowKey==='performance'&&!isAdmin ? [...config.columns,['employee_response','Your response']] : config.columns
+  const filteredRows=useMemo(()=>currentRows.filter(row=>tableColumns.some(([key])=>{
     const value=row[key]
     const employee=employees.find(item=>item.id===row.teacher_id)
     const student=students.find(item=>item.id===row.student_id)
     const candidate=candidates.find(item=>item.id===row.candidate_id)
     const job=vacancies.find(item=>item.id===row.job_posting_id)
     return [value,employee?.full_name,student?.full_name,candidate?.full_name,job?.title].some(v=>String(v??'').toLowerCase().includes(query.trim().toLowerCase()))
-  })),[currentRows,config.columns,query,employees,students,candidates,vacancies])
+  })),[currentRows,tableColumns,query,employees,students,candidates,vacancies])
 
   function displayValue(row:RecordRow,key:string) {
     if(key==='teacher_id') return textValue(employees.find(item=>item.id===row.teacher_id)?.full_name)
@@ -235,6 +236,7 @@ export function PeopleHRWorkspace({initialWindow,onToast,onNavigate}:Props) {
     if(key==='candidate_id') return textValue(candidates.find(item=>item.id===row.candidate_id)?.full_name)
     if(key==='job_posting_id') return textValue(vacancies.find(item=>item.id===row.job_posting_id)?.title)
     if(key==='staff_document_id') return textValue(documents.find(item=>item.id===row.staff_document_id)?.title??documents.find(item=>item.id===row.staff_document_id)?.file_name)
+    if(key==='employee_response') return textValue(row.employee_response)
     if(key.includes('date')||key.endsWith('_at')) return dateLabel(row[key])
     if(typeof row[key]==='boolean') return row[key]?'Yes':'No'
     return textValue(row[key]).replaceAll('_',' ')
@@ -294,10 +296,22 @@ export function PeopleHRWorkspace({initialWindow,onToast,onNavigate}:Props) {
     if(!isAdmin||!supabase||!user?.institutionId)return
     setSaving(true)
     const patch:Record<string,unknown>={[field]:value,updated_at:new Date().toISOString()}
-    if(windowKey==='performance'&&value==='acknowledged')patch.acknowledged_at=new Date().toISOString()
     const {error}=await supabase.from(config.table).update(patch).eq('id',row.id).eq('institution_id',user.institutionId)
     if(error)onToast(userFacingError(error,'The stage could not be updated.'),true)
     else {onToast('Workflow stage updated.');await load(true)}
+    setSaving(false)
+  }
+
+  async function acknowledgeAppraisal(row:RecordRow) {
+    if(!canViewOwnEmployeeRecords||isAdmin||!supabase||!user?.institutionId||row.status!=='reviewed')return
+    const response=window.prompt('Optional response to your performance review. Leave blank to acknowledge without a comment.','')
+    if(response===null)return
+    setSaving(true)
+    const {error}=await supabase.rpc('acknowledge_employee_appraisal',{
+      p_institution_id:user.institutionId,p_appraisal_id:row.id,p_response:response.trim()||null,
+    })
+    if(error)onToast(userFacingError(error,'The performance review could not be acknowledged.'),true)
+    else{onToast('Performance review acknowledged and your response saved.');await load(true)}
     setSaving(false)
   }
 
@@ -365,12 +379,14 @@ export function PeopleHRWorkspace({initialWindow,onToast,onNavigate}:Props) {
     </section>}
     {windowKey==='recruitment'&&<nav className="people-hr-secondary-nav" aria-label="Recruitment workflow">{recruitTabs.map(item=><button type="button" className={recruitTab===item.key?'active':''} key={item.key} onClick={()=>{setRecruitTab(item.key);setQuery('')}}>{item.label}{item.key==='vacancies'?' · '+vacancies.length:item.key==='candidates'?' · '+candidates.length:' · '+interviews.length}</button>)}</nav>}
     {windowKey==='contracts'&&<div className="people-hr-inline-note"><ShieldCheck size={16}/> Signed contract metadata is restricted to the employee and authorised administrators. Private contract files are managed in the existing staff document vault.</div>}
-    {windowKey==='performance'&&canViewOwnEmployeeRecords&&!isAdmin&&<div className="people-hr-inline-note"><ShieldCheck size={16}/> Only acknowledged appraisals linked to your own employee account are visible here.</div>}
+    {windowKey==='performance'&&canViewOwnEmployeeRecords&&!isAdmin&&<div className="people-hr-inline-note"><ShieldCheck size={16}/> Only your own reviewed appraisals are shown. Acknowledge a review and optionally record your response.</div>}
 
     <section className="staff-panel people-hr-data-panel">
       <header><div><h2>{config.heading}</h2><p>{config.description}</p></div><div className="people-hr-header-actions">{windowKey==='contracts'&&<button type="button" className="staff-button staff-button-outline" onClick={()=>onNavigate('employees:documents')}><FileText size={14}/> Open private document vault</button>}{isAdmin&&<button type="button" className="staff-button staff-button-primary" onClick={()=>openForm()}><Plus size={15}/> {windowKey==='admissions'?'New enquiry':windowKey==='recruitment'?'New '+(recruitTab==='vacancies'?'vacancy':recruitTab==='candidates'?'candidate':'interview'):windowKey==='contracts'?'New contract':windowKey==='performance'?'New review':'Register graduate'}</button>}</div></header>
       <div className="people-hr-toolbar"><label><Search size={16}/><input value={query} onChange={event=>setQuery(event.target.value)} placeholder="Search this register…"/></label><span>{filteredRows.length} records</span></div>
-      {loading?<div className="staff-empty"><RefreshCw size={18}/> Loading institution records…</div>:filteredRows.length===0?<div className="staff-empty"><span><Users size={22}/></span><strong>No records in this register yet</strong><p>{config.description}</p></div>:<div className="staff-table-wrap people-hr-table-wrap"><table className="staff-table"><thead><tr>{config.columns.map(([key,label])=><th key={key}>{label}</th>)}{isAdmin&&<th>Workflow / Actions</th>}</tr></thead><tbody>{filteredRows.map(row=><tr key={row.id}>{config.columns.map(([key])=><td key={key}>{key==='status'||key==='stage'?<span className={'staff-status staff-status-'+String(row[key]??'draft')}>{title(row[key])}</span>:displayValue(row,key)}</td>)}{isAdmin&&<td className="people-hr-row-actions">
+      {loading?<div className="staff-empty"><RefreshCw size={18}/> Loading institution records…</div>:filteredRows.length===0?<div className="staff-empty"><span><Users size={22}/></span><strong>No records in this register yet</strong><p>{config.description}</p></div>:<div className="staff-table-wrap people-hr-table-wrap"><table className="staff-table"><thead><tr>{tableColumns.map(([key,label])=><th key={key}>{label}</th>)}{(isAdmin||(windowKey==='performance'&&canViewOwnEmployeeRecords))&&<th>Workflow / Actions</th>}</tr></thead><tbody>{filteredRows.map(row=><tr key={row.id}>{tableColumns.map(([key])=><td key={key}>{key==='status'||key==='stage'?<span className={'staff-status staff-status-'+String(row[key]??'draft')}>{title(row[key])}</span>:displayValue(row,key)}</td>)}{(isAdmin||(windowKey==='performance'&&canViewOwnEmployeeRecords))&&<td className="people-hr-row-actions">
+        {!isAdmin&&windowKey==='performance'&&row.status==='reviewed'&&<button type="button" className="staff-button staff-button-primary" disabled={saving} onClick={()=>void acknowledgeAppraisal(row)}>Acknowledge review</button>}
+        {!isAdmin&&windowKey==='performance'&&row.status==='acknowledged'&&<span className="staff-status staff-status-acknowledged">Acknowledged</span>}
         {statusField&&<select aria-label={'Update '+String(row.id)+' workflow stage'} value={String(row[statusField]??statusOptions[0])} disabled={saving||['converted','hired'].includes(String(row.status??row.stage))} onChange={event=>void updateStatus(row,statusField,event.target.value)}>{statusOptions.map(option=><option key={option} value={option}>{title(option)}</option>)}</select>}
         {windowKey==='admissions'&&row.status!=='converted'&&row.status!=='not_interested'&&<button type="button" className="staff-button staff-button-primary" disabled={saving} onClick={()=>void convertEnquiry(row)}>Convert to application</button>}
         {windowKey==='recruitment'&&recruitTab==='candidates'&&row.stage!=='hired'&&row.stage!=='rejected'&&row.stage!=='withdrawn'&&<button type="button" className="staff-button staff-button-primary" disabled={saving||!row.job_posting_id} onClick={()=>void hireCandidate(row)}>Hire</button>}
