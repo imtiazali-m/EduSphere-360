@@ -5,7 +5,7 @@ import {
   Check, ChevronLeft, ChevronRight, ClipboardCheck, Download, Edit3, Eye, MoreHorizontal,
   FileCheck2, FileText, FolderOpen, GraduationCap, HeartHandshake, History, ImagePlus,
   LayoutDashboard, Plus, Printer, RefreshCw, Search, ShieldCheck, Trash2, Upload,
-  UserRound, Users, X,
+  UserRound, Users, Wallet, X,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { createRecord, deleteRecord, listAccounts, listFeePayments, listRecords, recordFeePayment, updateRecord } from '../lib/data'
@@ -1063,9 +1063,9 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
     const renderTable = (dataRows: RecordRow[], columns: { key: string; label: string }[], emptyMessage: string) => dataRows.length === 0
       ? <div className="ed360-student-empty"><span><FolderOpen size={21}/></span><strong>No records to display</strong><p>{emptyMessage}</p></div>
       : <div className="ed360-student-table-wrap"><table className="ed360-student-table"><thead><tr>{columns.map(column => <th key={column.key}>{column.label}</th>)}</tr></thead><tbody>{dataRows.map(row => <tr key={row.id}>{columns.map(column => {
-        const raw = row[column.key]
+        const raw = column.key === 'invoice_number' ? (row.invoice_number ?? row.invoice_no) : column.key === 'receipt_number' ? (row.receipt_number ?? row.receipt_no) : row[column.key]
         const value = raw === null || raw === undefined || raw === '' ? '—'
-          : ['attendance_date', 'due_date', 'exam_date', 'submitted_at', 'created_at', 'invoice_date', 'effective_from', 'effective_to', 'issue_date', 'expiry_date', 'application_submitted_at', 'application_reviewed_at'].includes(column.key) ? niceDate(raw)
+          : ['attendance_date', 'due_date', 'exam_date', 'submitted_at', 'created_at', 'invoice_date', 'payment_date', 'effective_from', 'effective_to', 'issue_date', 'expiry_date', 'application_submitted_at', 'application_reviewed_at'].includes(column.key) ? niceDate(raw)
           : ['amount', 'paid_amount', 'marks_obtained', 'total_marks', 'balance'].includes(column.key) ? Number(raw).toLocaleString(undefined, { maximumFractionDigits: 2 })
           : String(raw).replaceAll('_', ' ')
         return <td key={column.key}>{['status', 'result_status', 'application_status', 'verification_status'].includes(column.key) ? <span className={'status-pill status-' + String(raw ?? '').toLowerCase()}>{value}</span> : value}</td>
