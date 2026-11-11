@@ -34,6 +34,9 @@ jobs:
       - name: Install locked dependencies
         run: npm ci --no-audit --no-fund
 
+      - name: Generate exact role-aware route audit
+        run: npm run audit:navigation
+
       - name: Verify project structure, navigation and security guards
         run: npm run verify:project
 
@@ -68,6 +71,14 @@ jobs:
           zip -q -r ../edusphere360-cloudflare-direct-upload.zip .
           cd ..
           test -s edusphere360-cloudflare-direct-upload.zip
+
+      - name: Upload exact role-aware route audit
+        uses: actions/upload-artifact@v7
+        with:
+          name: edusphere360-exact-route-audit
+          path: docs/PHASE_1_EXACT_ROUTE_AUDIT.md
+          if-no-files-found: error
+          retention-days: 14
 
       - name: Upload production dist folder
         uses: actions/upload-artifact@v7
