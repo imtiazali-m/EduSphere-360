@@ -616,6 +616,27 @@ export function Dashboard({ onToast }: Props) {
   }, [])
 
   useEffect(() => {
+    const container = document.querySelector<HTMLElement>('.pro-workspace-tabs')
+    if (!container) return
+    const selected = Array.from(container.querySelectorAll<HTMLElement>('[data-workspace-tab]'))
+      .find(element => element.dataset.workspaceTab === activeTabId)
+    if (!selected) return
+    const containerBounds = container.getBoundingClientRect()
+    const selectedBounds = selected.getBoundingClientRect()
+    const inset = 10
+    let nextLeft = container.scrollLeft
+    if (selectedBounds.left < containerBounds.left + inset) {
+      nextLeft -= containerBounds.left + inset - selectedBounds.left
+    } else if (selectedBounds.right > containerBounds.right - inset) {
+      nextLeft += selectedBounds.right - (containerBounds.right - inset)
+    }
+    if (Math.abs(nextLeft - container.scrollLeft) > 1) {
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      container.scrollTo({ left: Math.max(0, nextLeft), behavior: reduceMotion ? 'auto' : 'smooth' })
+    }
+  }, [activeTabId, workspaceTabs.length])
+
+  useEffect(() => {
     let live = true
     async function loadUnreadCount() {
       if (!supabase || !user) { if (live) setUnreadAnnouncementCount(0); return }
@@ -841,7 +862,7 @@ export function Dashboard({ onToast }: Props) {
         <div className="pro-workspace-tabs-label">OPEN WINDOWS</div>
         {workspaceTabs.map(tab => {
           const parentTab = tab.parentId ? workspaceTabs.find(parent => parent.id === tab.parentId) : undefined
-          return <div className={`pro-workspace-tab ${activeTabId === tab.id ? 'is-active' : ''} ${parentTab ? 'is-child' : ''}`} key={tab.id} data-workspace-route={tab.route}>
+          return <div className={`pro-workspace-tab ${activeTabId === tab.id ? 'is-active' : ''} ${parentTab ? 'is-child' : ''}`} key={tab.id} data-workspace-route={tab.route} data-workspace-tab={tab.id}>
             <button type="button" className="pro-workspace-tab-main" aria-label={`Open ${tab.title} workspace`} title={tab.title} aria-current={activeTabId === tab.id ? 'page' : undefined} onClick={() => setActiveTabId(tab.id)}>
               {parentTab ? <ChevronRight size={14}/> : tab.targetKey === 'overview' ? <LayoutDashboard size={15}/> : <FileText size={15}/>}
               <span>{tab.title}</span>
