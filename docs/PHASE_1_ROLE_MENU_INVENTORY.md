@@ -7,7 +7,7 @@
 
 ## What this inventory proves — and what it does not
 
-This appendix describes the full source catalogue and the runtime role-filtered menus. The catalogue contains **33 top-level groups and 430 submenu entries**; the current role filter exposes only the subsets shown in the table below. A catalogue entry is not necessarily visible to every role, and catalogue size must not be confused with the live visible-destination count.
+This appendix describes the full source catalogue and the runtime role-filtered menus. The catalogue contains **31 top-level groups and 398 submenu entries**; the current role filter exposes only the subsets shown in the table below. A catalogue entry is not necessarily visible to every role, and catalogue size must not be confused with the live visible-destination count.
 
 A visible menu entry or a value in the route index is **not** evidence that its complete workflow is implemented, that its API is authorized, or that records persist. Items listed as **Explicitly unavailable** are deliberately routed to the unavailable-workspace experience in the inspected resolver. Other items are marked **Workflow acceptance pending**; they require destination-by-destination resolver, permission, data-lifecycle and browser testing.
 
@@ -25,13 +25,13 @@ A visible menu entry or a value in the route index is **not** evidence that its 
 
 | Role | Visible menu groups | Visible submenu destinations |
 |---|---:|---:|
-| Owner | 31 | 343 |
-| Administrator | 31 | 343 |
-| Teacher / employee | 18 | 152 |
-| Student | 15 | 107 |
-| Parent / guardian | 15 | 104 |
-| Accountant | 12 | 112 |
-| Examination officer | 7 | 62 |
+| Owner | 31 | 398 |
+| Administrator | 31 | 398 |
+| Teacher / employee | 17 | 196 |
+| Student | 15 | 140 |
+| Parent / guardian | 15 | 136 |
+| Accountant | 12 | 121 |
+| Examination officer | 7 | 89 |
 
 ## Full destination inventory
 
