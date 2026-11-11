@@ -15,7 +15,7 @@ The staged migration adds `assigned_to_user_id`, referencing `auth.users(id)`, a
 - A task with a linked user UUID never falls back to email. If that Auth user is deleted, the foreign key clears the UUID but the compatibility flag remains false; an administrator must reassign the task before another account can own it.
 - Non-admin staff can still update permitted progress fields, but cannot reassign, alter task definitions or change the identity fields.
 
-The migration uses the existing institution role helper and preserves the existing task status/progress invariants. It replaces only the task SELECT/UPDATE assignment predicates and the existing assignment guard function. The existing email index remains for legacy rows; a partial tenant/user/status index supports stable identity lookups.
+The migration uses the existing institution role helper and preserves the existing task status/progress invariants. It replaces only the task SELECT/UPDATE assignment predicates and the existing assignment guard function. The record workspace's staff edit guard now checks the selected row's stable identity (or explicit legacy compatibility) instead of comparing a mutable email snapshot. The existing email index remains for legacy rows; a partial tenant/user/status index supports stable identity lookups.
 
 ## Live-data assessment
 
