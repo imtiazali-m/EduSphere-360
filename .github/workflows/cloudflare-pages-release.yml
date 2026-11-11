@@ -61,6 +61,12 @@ jobs:
       - name: Test teacher account provisioning guards
         run: npm run test:account-provisioning
 
+      - name: Test stable work-task assignment identity
+        run: node scripts/test-work-task-identity.mjs
+
+      - name: Test legacy fee-payment RPC compatibility
+        run: node scripts/test-legacy-fee-payment-rpc.mjs
+
       - name: Build production website
         run: npm run build
 
