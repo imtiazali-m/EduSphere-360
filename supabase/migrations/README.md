@@ -1,6 +1,6 @@
 # Migration history
 
-The thirty timestamped migration files in this folder match the remote migration history recorded by the linked Supabase project. Keep each 14-digit timestamp unchanged so local and remote migration histories remain aligned.
+This folder contains 32 timestamped migration files: 30 versions are recorded as applied by the linked Supabase project, while two migrations are staged for review (stable work-task identity and legacy fee-payment RPC compatibility). Keep each 14-digit timestamp unchanged so the applied local and remote migration histories remain aligned. The two staged migrations are not applied to the connected project.
 
 The current online application includes the reviewed schema changes for the existing live schema, Faculty & Employee Management, and Student Management operations (admission lifecycle, linked guardian contacts, class placements, private student documents and audit history for attendance, published results, assignment submissions, guardian policy consolidation and activity indexes). The Student Management and Faculty/Employee migrations have already been applied to the linked project; do not replay them manually.
 
@@ -42,3 +42,7 @@ The atomic library circulation migration adds invoker-security issue and return 
 
 
 The atomic transport allocation migration adds database-side creation and end-allocation functions. It validates institution-scoped active students and registered route/stop/vehicle records, locks the student to serialize overlapping allocation checks, locks the vehicle for seat-capacity checks, and records lifecycle changes with the authenticated administrator. The UI calls these functions rather than issuing direct inserts or status updates.
+
+The staged work-task identity migration adds a tenant-scoped Auth user UUID for assigned staff and an explicit legacy-email access flag. Unmatched or ambiguous historical tasks remain unlinked with legacy access disabled, and task institution ownership is immutable; transfers must create a new task in the destination institution. This migration remains staged for SQL review and an approved remote dry-run.
+
+The staged legacy fee-payment RPC migration preserves the seven-argument compatibility signature but delegates payment creation to the stricter date-aware six-argument operation. It attaches bank/cheque metadata only to the exact returned payment row and does not grant authenticated users direct UPDATE access to fee_payments. This migration also remains staged for SQL review and an approved remote dry-run.
