@@ -932,7 +932,7 @@ export function Dashboard({ onToast }: Props) {
             const linkedWorkspaceKeys = ['administration:campus-and-branch-management','library:book-issue-and-returns','library:library-reports','inventory:stock-in','inventory:stock-out','inventory:stock-allocation','inventory:stock-adjustments','inventory:inventory-history','inventory:stock-reports','transport:student-transport-allocation','transport:transport-reports']
             return <section className="pro-window-panel" key={tab.id} hidden={activeTabId !== tab.id} aria-label={tab.title}>
               {tab.targetKey === 'notifications' ? <NotificationCenter onToast={onToast} onUnreadCountChange={setUnreadAnnouncementCount}/> :
-                tab.targetKey === 'overview' ? <Overview onNavigate={navigateChild} careAreas={stage7CareAreas}/> :
+                tab.targetKey === 'overview' ? <RoleDashboard onNavigate={navigateChild}/> :
                 tab.targetKey === 'institutional' && tab.targetWindow.startsWith('examinations:') ? <AssessmentWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'institutional' && linkedWorkspaceKeys.includes(tab.targetWindow) ? <LinkedOperationsWorkspace workspaceKey={tab.targetWindow} onToast={onToast} onNavigate={navigateChild}/> :
                 tab.targetKey === 'institutional' ? <InstitutionalWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
