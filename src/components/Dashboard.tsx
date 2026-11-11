@@ -565,6 +565,15 @@ export function Dashboard({ onToast }: Props) {
   const [workspaceTabs, setWorkspaceTabs] = useState<WorkspaceTab[]>([{ id: 'overview', route: 'overview', targetKey: 'overview', targetWindow: 'overview', title: 'Dashboard' }])
   const [activeTabId, setActiveTabId] = useState('overview')
   const activeTab = workspaceTabs.find(tab => tab.id === activeTabId) ?? workspaceTabs[0]
+  const activeNavigationTab = (() => {
+    let current = activeTab
+    while (current.parentId) {
+      const parent = workspaceTabs.find(tab => tab.id === current.parentId)
+      if (!parent) break
+      current = parent
+    }
+    return current
+  })()
   const active = activeTab?.targetKey ?? 'overview'
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
@@ -575,11 +584,12 @@ export function Dashboard({ onToast }: Props) {
   const [searchOpen, setSearchOpen] = useState(false)
   const [unreadAnnouncementCount, setUnreadAnnouncementCount] = useState(0)
 
-  // Keep the sidebar context aligned when the user switches between open windows.
+  // Keep the sidebar context aligned with the parent workspace for nested windows.
   useEffect(() => {
-    if (!activeTab?.groupKey) return
-    setExpandedGroups(current => current.includes(activeTab.groupKey!) ? current : [...current, activeTab.groupKey!])
-  }, [activeTabId, activeTab?.groupKey])
+    const groupKey = activeNavigationTab.groupKey
+    if (!groupKey) return
+    setExpandedGroups(current => current.includes(groupKey) ? current : [...current, groupKey])
+  }, [activeNavigationTab.groupKey])
 
   const available = useMemo(() => modulesForRole(user!.role), [user?.role])
   const visibleGroups = useMemo(() => roleNavigationGroups(user!.role), [user?.role])
@@ -797,9 +807,9 @@ export function Dashboard({ onToast }: Props) {
   }
 
   const compactSidebar = sidebarCollapsed && !isMobileNav
-  const activeGroupLabel = activeTab?.groupKey
-    ? visibleGroups.find(group => group.key === activeTab.groupKey)?.label ?? 'Institution workspace'
-    : activeTab?.targetKey === 'overview' ? 'Overview' : 'Workspace'
+  const activeGroupLabel = activeNavigationTab.groupKey
+    ? visibleGroups.find(group => group.key === activeNavigationTab.groupKey)?.label ?? 'Institution workspace'
+    : activeNavigationTab.targetKey === 'overview' ? 'Overview' : 'Workspace'
   return <div className={`pro-app-shell ${sidebarOpen ? 'navigation-open' : ''} ${compactSidebar ? 'sidebar-collapsed' : ''}`}>
     <aside className={`pro-sidebar ${sidebarOpen ? 'is-open' : ''} ${compactSidebar ? 'is-collapsed' : ''}`} aria-hidden={isMobileNav && !sidebarOpen}>
       <div className="pro-sidebar-brand">
@@ -816,9 +826,12 @@ export function Dashboard({ onToast }: Props) {
           const GroupIcon = catalogIcons[group.icon] ?? LayoutDashboard
           const isExpanded = expandedGroups.includes(group.key)
           return <section className={`pro-nav-group ${isExpanded ? 'expanded' : ''}`} key={group.key}>
-            <button className={`pro-nav-group-head ${group.key === "dashboard" ? "pro-nav-dashboard-link" : ""}`} aria-label={group.label} title={group.label} aria-expanded={isExpanded} onClick={() => {
-              if (compactSidebar) {
-                setSidebarCollapsed(false)
+            <button className={`pro-nav-group-head ${group.key === "dashboard" ? "pro-nav-dashboard-link" : ""} ${group.key === 'dashboard' && activeTab.route === 'overview' ? 'is-current' : ''}`} aria-label={group.label} title={group.label} aria-current={group.key === 'dashboard' && activeTab.route === 'overview' ? 'page' : undefined} aria-expanded={isExpanded} onClick={() => {
+              if (compactSidebar) setSidebarCollapsed(false)
+              if (group.key === 'dashboard') {
+                setExpandedGroups(current => current.includes(group.key) ? current : [...current, group.key])
+                navigate('overview', { groupKey: 'dashboard', itemKey: 'institutional-overview', title: 'Dashboard' })
+              } else if (compactSidebar) {
                 setExpandedGroups(current => current.includes(group.key) ? current : [...current, group.key])
               } else {
                 toggleGroup(group.key)
@@ -827,7 +840,7 @@ export function Dashboard({ onToast }: Props) {
             {isExpanded && <div className="pro-nav-children">{group.items.map(item => {
               const itemKey = item.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
               const route = getNavigationRoute(group.key, item, user!.role)
-              const isActive = activeTab.route === route && (!activeTab.groupKey || activeTab.groupKey === group.key) && (!activeTab.itemKey || activeTab.itemKey === itemKey)
+              const isActive = activeTab.route === route || (activeNavigationTab.groupKey === group.key && activeNavigationTab.itemKey === itemKey)
               const ItemIcon = pageIcon(item, GroupIcon)
               const connected = Boolean(route && !route.startsWith('unavailable:'))
               return <button key={item} className={`pro-nav-item ${isActive ? 'active' : ''}`} aria-label={item} title={item} aria-current={isActive ? 'page' : undefined} onClick={() => navigateCatalogPage(group.key, item)}><span className="pro-nav-icon"><ItemIcon size={16}/></span><span className="pro-nav-title">{item}</span>{connected && <i className="pro-nav-connected" title="Connected workspace"/>}</button>

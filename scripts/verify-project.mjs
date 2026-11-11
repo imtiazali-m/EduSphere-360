@@ -40,7 +40,7 @@ const requiredFiles = [
   'supabase/migrations/20261109153658_academic_studentcare_and_campus_operations.sql',
   'supabase/migrations/20261109155028_question_paper_approval_and_line_removal.sql',
   'docs/EDUSPHERE_360_BENCHMARK_AND_GAP_REVIEW.md',
-  '.env.example', 'package-lock.json', 'src/lib/types.ts', 'supabase/migrations/20261108053651_owner_signup_institution_details.sql', 'supabase/migrations/20261109085154_faculty_employee_management.sql', 'supabase/migrations/20261109092734_student_management_operations.sql', 'supabase/migrations/20261109092920_student_management_scope_indexes_and_guardian_portal_read.sql',
+  '.env.example', 'package-lock.json', 'src/lib/types.ts', 'supabase/migrations/20261108053651_owner_signup_institution_details.sql', 'supabase/migrations/20261109083133_faculty_employee_management.sql', 'supabase/migrations/20261109092734_student_management_operations.sql', 'supabase/migrations/20261109092920_student_management_scope_indexes_and_guardian_portal_read.sql',
   '.github/workflows/cloudflare-pages-release.yml', 'docs/FINAL_REBUILD_STAGE.md', 'docs/NAVIGATION_RECONCILIATION.md',
 ]
 check('Integrated frontend, authentication, modules and deployment files exist', () => {
@@ -535,7 +535,7 @@ check('Module definitions and generic CRUD table allowlist remain valid', () => 
 check('Student Record is a complete permission-aware multi-window workspace', () => {
   const recordModule = read('src/components/RecordModule.tsx')
   const dataSource = read('src/lib/data.ts')
-  for (const label of ['Overview', 'Admissions', 'Student Directory', 'Student Profile', 'Class Placement', 'Guardians', 'Student Attendance', 'Student Exam Results', 'Student Assignments', 'Student Timetable', 'Student Documentation', 'Student History']) {
+  for (const label of ['Overview', 'Admissions', 'Student Directory', 'Student Profile', 'Class Placement', 'Promotion', 'Guardians', 'Student Attendance', 'Student Exam Results', 'Student Assignments', 'Student Timetable', 'Student Documentation', 'Student History']) {
     assert.ok(recordModule.includes("label: '" + label + "'"), 'Student workspace window is missing: ' + label)
   }
   const studentWorkspaceStart = recordModule.indexOf("if (module.key === 'students') {", recordModule.indexOf('export function RecordModule'))
@@ -558,6 +558,8 @@ check('Student Record is a complete permission-aware multi-window workspace', ()
   assert.ok(recordModule.includes("application_status: nextStatus"), 'Admission status transitions are not persisted')
   assert.ok(recordModule.includes('async function saveGuardianContact') && recordModule.includes("'guardian_students'"), 'Guardian contacts must be linked to students')
   assert.ok(recordModule.includes('async function saveStudentPlacement') && recordModule.includes("'student_placements'"), 'Class placement must use linked class records')
+  assert.ok(recordModule.includes("studentWorkspaceTab === 'promotion'") && recordModule.includes('ed360-student-promotion-workspace'), 'Student promotion must have its own dedicated workspace')
+  assert.ok(recordModule.includes("setStudentWorkspaceTab('promotion')") && recordModule.includes('placementSaving'), 'Promotion navigation and save state must be connected')
   assert.ok(recordModule.includes("from('student-files')") && recordModule.includes('async function uploadStudentDocument'), 'Private student document upload is missing')
   assert.ok(recordModule.includes("studentHistoryRows.map(event") && recordModule.includes("'student_history'"), 'Student History must render database audit events')
   for (const trigger of ['attendance_student_history_audit', 'exam_results_student_history_audit', 'assignment_submissions_student_history_audit']) assert.ok(read('supabase/migrations/20261109094108_student_activity_history_events.sql').includes(trigger), `Student history trigger is missing: ${trigger}`)
@@ -589,7 +591,7 @@ check('Faculty & Employee Management uses dedicated institution-scoped HR worksp
   assert.ok(faculty.includes('createSignedUrl'), 'Staff documents must be retrieved with signed URLs')
   const dashboard = read('src/components/Dashboard.tsx')
   assert.ok(dashboard.includes('<FacultyWorkspace onToast={onToast} onNavigate={navigateChild} initialWindow={tab.targetWindow}/>'), 'Existing dashboard must route Faculty & Staff into their selected nested workspace')
-  const migration = read('supabase/migrations/20261109085154_faculty_employee_management.sql')
+  const migration = read('supabase/migrations/20261109083133_faculty_employee_management.sql')
   for (const required of ['enable row level security', 'teacher_assignments', 'employee_attendance', 'employee_leave_requests', 'staff_documents', 'employee_history', 'staff-files', 'teachers_owner_admin_or_self_read', 'audit_teacher_history']) {
     assert.ok(migration.includes(required), 'Faculty management migration is missing: ' + required)
   }
@@ -782,6 +784,7 @@ check('GitHub-hosted release pipeline builds assets and keeps production deploy 
   const previewJob = workflow.slice(workflow.indexOf('  deploy-preview:'), workflow.indexOf('  deploy-production:'))
   assert.ok(previewJob.includes('Publish isolated pull-request preview') && previewJob.includes('--branch=pr-') && previewJob.includes("github.event_name == 'pull_request'") && previewJob.includes('github.event.pull_request.head.repo.full_name == github.repository') && previewJob.includes('available=false'), 'Only same-repository PRs may deploy to an isolated preview alias, and missing credentials must skip safely')
   assert.ok(workflow.includes("github.event_name == 'workflow_dispatch'"), 'Production deployment must not run on normal pushes or pull requests')
+  assert.ok(!workflow.includes("github.event_name == 'push'"), 'Production deployment must never run from an automatic push event')
   assert.ok(workflow.includes('secrets.CLOUDFLARE_API_TOKEN') && workflow.includes('secrets.CLOUDFLARE_ACCOUNT_ID'))
   assert.ok(workflow.includes('vars.VITE_SUPABASE_URL') && workflow.includes('vars.VITE_SUPABASE_PUBLISHABLE_KEY'))
   assert.ok(!workflow.includes('SUPABASE_SERVICE_ROLE_KEY'), 'A Supabase service-role key must never be a frontend build variable')
@@ -789,7 +792,7 @@ check('GitHub-hosted release pipeline builds assets and keeps production deploy 
 
 check('Required database safeguards and Cloudflare redirects remain in the project', () => {
   const migrations = fs.readdirSync(path.join(root, 'supabase/migrations')).filter(name => name.endsWith('.sql')).sort()
-  for (const migration of ['001_initial_schema.sql', '017_public_institution_signup.sql', '018_assessment_metadata_and_result_visibility.sql', '019_phase_two_integrity_guards.sql', '020_fee_payment_date_validation.sql', '20261108053651_owner_signup_institution_details.sql', '20261109085154_faculty_employee_management.sql', '20261109092734_student_management_operations.sql', '20261109092920_student_management_scope_indexes_and_guardian_portal_read.sql', '20261109094108_student_activity_history_events.sql', '20261109094402_student_guardian_policy_consolidation_and_activity_indexes.sql', '20261109105804_institutional_platform_expansion.sql', '20261109110541_institution_attendance_bulk_register.sql', '20261109111818_institutional_policy_and_foreign_key_refinement.sql', '20261109113516_campus_scope_and_inventory_transaction_workflows.sql', '20261109113606_inventory_movement_row_count_safety_fix.sql', '20261109114108_transport_accountant_read_access.sql', '20261109125937_announcement_read_receipts.sql', '20261109130705_announcement_reads_index_and_fee_policy_cleanup.sql', '20261109150048_finance_accounting_and_payroll_workflows.sql', '20261109150654_atomic_employee_salary_profile_workflow.sql', '20261109150857_employee_own_payroll_run_read.sql', '20261109151231_atomic_institution_setting_approval.sql', '20261110082719_institutional_catalog_permissions.sql', '20261110082731_atomic_library_circulation.sql', '20261110082738_atomic_transport_allocations.sql', '20261110091600_fee_discount_approval_and_refund_processing.sql', '20261110092328_atomic_finance_journal_and_discount_limit_validation.sql']) {
+  for (const migration of ['001_initial_schema.sql', '017_public_institution_signup.sql', '018_assessment_metadata_and_result_visibility.sql', '019_phase_two_integrity_guards.sql', '020_fee_payment_date_validation.sql', '20261108053651_owner_signup_institution_details.sql', '20261109083133_faculty_employee_management.sql', '20261109092734_student_management_operations.sql', '20261109092920_student_management_scope_indexes_and_guardian_portal_read.sql', '20261109094108_student_activity_history_events.sql', '20261109094402_student_guardian_policy_consolidation_and_activity_indexes.sql', '20261109105804_institutional_platform_expansion.sql', '20261109110541_institution_attendance_bulk_register.sql', '20261109111818_institutional_policy_and_foreign_key_refinement.sql', '20261109113516_campus_scope_and_inventory_transaction_workflows.sql', '20261109113606_inventory_movement_row_count_safety_fix.sql', '20261109114108_transport_accountant_read_access.sql', '20261109125937_announcement_read_receipts.sql', '20261109130705_announcement_reads_index_and_fee_policy_cleanup.sql', '20261109150048_finance_accounting_and_payroll_workflows.sql', '20261109150654_atomic_employee_salary_profile_workflow.sql', '20261109150857_employee_own_payroll_run_read.sql', '20261109151231_atomic_institution_setting_approval.sql', '20261110082719_institutional_catalog_permissions.sql', '20261110082731_atomic_library_circulation.sql', '20261110082738_atomic_transport_allocations.sql', '20261110091600_fee_discount_approval_and_refund_processing.sql', '20261110092328_atomic_finance_journal_and_discount_limit_validation.sql']) {
     assert.ok(migrations.includes(migration), `${migration} missing`)
   }
   const timestamped = migrations.filter(name => /^202611\d{8}_.+\.sql$/.test(name))
@@ -862,7 +865,7 @@ check('Unified design system is loaded last and removes global browser zoom', ()
   ]) assert.ok(contrast(foreground, background) >= 4.5, label + ' must meet WCAG AA normal-text contrast')
   assert.ok(read('docs/PHASE_1_DETAILED_AUDIT.md').includes('Phase 1 disposition'), 'Detailed Phase 1 audit document is missing')
   const roleMenu = read('docs/PHASE_1_ROLE_MENU_INVENTORY.md')
-  assert.ok(roleMenu.includes('33 top-level groups and 430 submenu entries') && roleMenu.includes('Examination officer') && roleMenu.includes('| Owner | 31 | 343 |') && roleMenu.includes('| Administrator | 31 | 343 |') && roleMenu.includes('| Teacher / employee | 18 | 152 |') && roleMenu.includes('| Student | 15 | 107 |') && roleMenu.includes('| Parent / guardian | 15 | 104 |') && roleMenu.includes('| Accountant | 12 | 112 |') && roleMenu.includes('| Examination officer | 7 | 62 |'), 'Complete catalogue inventory and current role-filtered menu totals must cover all seven roles')
+  assert.ok(roleMenu.includes('33 top-level groups and 430 submenu entries') && roleMenu.includes('Examination officer') && roleMenu.includes('| Owner | 33 | 430 |') && roleMenu.includes('| Administrator | 33 | 430 |') && roleMenu.includes('| Teacher / employee | 18 | 202 |') && roleMenu.includes('| Student | 15 | 144 |') && roleMenu.includes('| Parent / guardian | 15 | 139 |') && roleMenu.includes('| Accountant | 12 | 132 |') && roleMenu.includes('| Examination officer | 7 | 89 |'), 'Complete catalogue inventory and current role-filtered menu totals must cover all seven roles')
   assert.ok(read('docs/PHASE_2_DESIGN_SYSTEM.md').includes('Core colour tokens'), 'Phase 2 design specification is missing')
   const routeAudit = read('docs/PHASE_1_EXACT_ROUTE_AUDIT.md')
   assert.ok(routeAudit.includes('Total resolver evaluations:** 1566.') && routeAudit.includes('Unexpected route families:** 0.'), 'Exact route audit must resolve each visible role/menu destination without unknown route families')
