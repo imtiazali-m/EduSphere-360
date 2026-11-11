@@ -137,7 +137,7 @@ function checkView(role, route, dispatcher) {
     return { component: 'FinanceWorkspace', view: group + ':' + view, status: supported?.has(view) ? 'Supported' : 'Unsupported finance view' }
   }
   if (targetKey === 'peoplehr') {
-    const permitted = ['owner','admin'].includes(role) ? peopleHRTabs : role === 'teacher' ? new Set(['performance']) : new Set()
+    const permitted = ['owner','admin'].includes(role) ? peopleHRTabs : role === 'teacher' ? new Set(['contracts','performance']) : new Set()
     return { component:'PeopleHRWorkspace', view:targetWindow, status:permitted.has(targetWindow) ? 'Supported' : 'Hidden from role workspace tabs' }
   }
   if (targetKey === 'payroll') {
