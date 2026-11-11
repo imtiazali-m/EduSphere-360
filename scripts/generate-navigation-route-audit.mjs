@@ -41,7 +41,7 @@ const classify = (route) => {
   const known = new Set([
     'admin', 'assignments', 'assignment_submissions', 'attendance', 'announcements',
     'employees', 'exam_results', 'exams', 'fees', 'finance', 'files', 'governance',
-    'notifications', 'operations', 'overview', 'payroll', 'reports', 'students',
+    'care', 'notifications', 'operations', 'overview', 'payroll', 'reports', 'students',
     'timetable', 'work_tasks',
   ])
   if (!known.has(workspace)) return 'Unexpected route family · investigate'
@@ -82,6 +82,7 @@ const resolveDispatcher = (route) => {
   if (route.startsWith('unavailable:')) return 'WorkspaceUnavailable'
   if (route.startsWith('students:')) return 'RecordModule · students'
   if (route.startsWith('attendance:')) return 'AttendanceWorkspace'
+  if (route.startsWith('care:')) return 'Stage7CareWorkspace'
   if (route.startsWith('institutional:')) {
     const key = route.slice('institutional:'.length)
     return linkedWorkspaceKeys.includes(key) ? 'LinkedOperationsWorkspace' : 'InstitutionalWorkspace'
