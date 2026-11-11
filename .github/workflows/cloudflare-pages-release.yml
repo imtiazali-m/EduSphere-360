@@ -17,7 +17,7 @@ permissions:
 jobs:
   verify-and-build:
     name: Verify source and build production assets
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
       VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
@@ -61,6 +61,13 @@ jobs:
       - name: Test teacher account provisioning guards
         run: npm run test:account-provisioning
 
+      - name: Install isolated Playwright tooling and verify runner Chrome
+        run: |
+          mkdir -p /tmp/edusphere-playwright
+          npm install --prefix /tmp/edusphere-playwright --no-save --no-package-lock playwright@1.56.1
+          google-chrome --version
+          test -x /usr/bin/google-chrome
+
       - name: Build production website
         run: npm run build
 
@@ -74,6 +81,20 @@ jobs:
           if find dist -type f -name '*.map' -print -quit | grep -q .; then
             echo "Source maps found in dist. Review before publication."
           fi
+
+      - name: Test welcome, role-specific login and owner setup across viewport sizes
+        env:
+          PLAYWRIGHT_MODULE_PATH: /tmp/edusphere-playwright/node_modules/playwright
+        run: npm run test:responsive:public
+
+      - name: Upload responsive QA screenshots
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: edusphere-responsive-qa
+          path: artifacts/responsive-public/
+          if-no-files-found: warn
+          retention-days: 14
 
       - name: Create Direct Upload ZIP with site files at archive root
         shell: bash
