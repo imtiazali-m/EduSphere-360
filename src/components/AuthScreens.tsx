@@ -173,6 +173,8 @@ export function WelcomeScreen({ navigate }: ScreenProps) {
           <a className="edm-nav-link" href="#solutions" onClick={closeMenu}>Solutions</a>
           <a className="edm-nav-link" href="#about" onClick={closeMenu}>About</a>
           <a className="edm-nav-link" href="#contact" onClick={closeMenu}>Contact</a>
+          <a className="edm-nav-link" href="#showcase" onClick={closeMenu}>Product tour</a>
+          <a className="edm-nav-link" href="#faq" onClick={closeMenu}>FAQ</a>
         </nav>
         <div className="edm-header-actions"><button className="edm-login-link" onClick={() => go('login')}>Login</button><button className="edm-signup-button" onClick={() => go('setup')}>Get Started <ArrowUpRight size={16}/></button></div>
       </header>
