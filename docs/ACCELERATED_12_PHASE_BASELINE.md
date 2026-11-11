@@ -57,8 +57,8 @@ Responsive styles and source-verification assertions were added alongside the co
 
 | Phase | Scope | Baseline status |
 |---|---|---|
-| 1 | Inspect source, existing website, reusable work and gaps | Detailed static source, role-navigation and explicit route-gap audit documented in `docs/PHASE_1_DETAILED_AUDIT.md`; authenticated seven-role E2E remains pending |
-| 2 | Welcome page, public website and visual system | Mixed green/blue style cascade and root zoom identified; shared navy/sapphire token layer and first cross-screen styling pass added in `docs/PHASE_2_DESIGN_SYSTEM.md`; browser visual acceptance remains pending |
+| 1 | Inspect source, existing website, reusable work and gaps | Detailed static source, 430-entry role inventory and exact 1,569 role-aware route matrix generated in CI; zero unexpected route families and zero unintended bare roots; authenticated seven-role E2E remains pending |
+| 2 | Welcome page, public website and visual system | Shared navy/sapphire system now spans public, auth, dashboard, specialist finance/payroll/governance/operations areas; root zoom removed and core contrast checks added; screenshot-based visual acceptance remains pending |
 | 3 | Login, registration, verification and onboarding | Screens render; real signup, email verification, login and role-provisioning E2E tests remain |
 | 4 | Dashboards, role menus and navigation | 33-group catalogue and seven roles exist; first-run role guidance added; route and permission audit remains |
 | 5 | Administration, institution settings and academic structure | Dedicated partial workspaces and cloud tables exist; full CRUD/relationship/approval audit remains |
@@ -72,9 +72,9 @@ Responsive styles and source-verification assertions were added alongside the co
 
 ## 6. Release evidence and limits
 
-- GitHub Actions run `42875451852` completed successfully on the working branch: source verifier, user-error tests, finance tests, private-file tests, production Vite build, Cloudflare output validation and both artifact uploads passed. The separate production deployment job was skipped by the production-branch/manual-approval guard.
+- GitHub Actions run `42979056696` completed successfully on the working branch: exact role-aware route audit generation, source verifier, user-error tests, finance tests, private-file tests, production Vite build, Cloudflare output validation, route-audit artifact upload and both production build-artifact uploads passed. The separate production deployment job was skipped by the production-branch/manual-approval guard.
 - The latest working-branch Vercel status context also reports `success`; its deployment-detail URL redirects to Vercel login, so an anonymous browser preview URL was not confirmed. Neither check alone proves complete authenticated acceptance testing.
-- The repository contains a Cloudflare Pages release workflow that installs the lockfile, runs the project verifier and focused test suites, builds `dist/`, packages a Direct Upload ZIP and keeps production deployment behind a manual workflow input.
+- The repository contains a Cloudflare Pages release workflow that installs the lockfile, generates/uploads the exact route matrix, runs the project verifier and focused test suites, builds `dist/`, packages a Direct Upload ZIP and keeps production deployment behind a manual workflow input.
 - No Cloudflare production deployment was made during this work.
 - No authenticated browser E2E test was run against all seven roles during this work.
 - No live student insert, payment, payroll run, file upload, certificate issue, cross-institution denial or provider-delivery test was made during this work.
@@ -92,7 +92,7 @@ Responsive styles and source-verification assertions were added alongside the co
 
 ## 8. Expanded Phase 1 and Phase 2 work
 
-- Phase 1 now has a detailed static source/navigation audit, including the seven-role source model, composite route resolution, 33 catalogue groups, 430 individually listed destinations with role visibility, explicit unavailable route clusters, cloud/security baseline and module acceptance matrix. See `docs/PHASE_1_DETAILED_AUDIT.md` and `docs/PHASE_1_ROLE_MENU_INVENTORY.md`.
-- Phase 2 now has a written design specification and a shared token layer loaded after existing styles. The first implementation unifies the public welcome, authentication, dashboard and operational workspace palettes around midnight navy and sapphire, with teal used as a secondary accent and semantic state colours. See `docs/PHASE_2_DESIGN_SYSTEM.md`.
+- Phase 1 now has a detailed static source/navigation audit, seven-role inventory, composite route matrix, 33 groups, 430 distinct submenu labels, and 1,569 role/menu resolver evaluations. Latest results: 343 unavailable role-visible entries, 115 linked institutional routes, 1,111 other workspace routes, 0 unexpected families and 0 bare module roots. See `docs/PHASE_1_DETAILED_AUDIT.md`, `docs/PHASE_1_ROLE_MENU_INVENTORY.md` and the `edusphere360-exact-route-audit` artifact in [run 42979056696](https://github.com/imtiazali-m/EduSphere-360/actions/runs/42979056696).
+- Phase 2 now has a written design specification and shared token layer loaded after existing styles. The visual pass includes public welcome, authentication, dashboard, module workspaces, finance, payroll, governance and campus operations, all aligned around midnight navy and sapphire, with teal secondary accents and semantic state colours. See `docs/PHASE_2_DESIGN_SYSTEM.md`.
 - Global `#root` zoom was removed from `operational-hierarchy.css`; responsive sizing is now handled at layout breakpoints rather than browser-level scaling.
 - These source changes are isolated on the working branch. No production deployment or Supabase change was made. Visual browser review, screenshot acceptance and full role E2E remain release gates.
