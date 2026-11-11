@@ -150,7 +150,7 @@ Read-only baseline recorded before the current design work:
 
 ## 9. Complete role menu appendix
 
-The detailed destination appendix is recorded in `docs/PHASE_1_ROLE_MENU_INVENTORY.md`. It lists all 430 submenu labels, declared group roles, individual role allow-lists, dashboard role exclusions, and explicit unavailable route families. It computes source-level menu visibility for each role: Owner 430; Administrator 430; Teacher/employee 203; Student 144; Parent/guardian 139; Accountant 132; Examination Officer 89. These are navigation visibility counts, not counts of working features. Every route still needs exact resolver execution and workflow acceptance.
+The detailed destination appendix is recorded in `docs/PHASE_1_ROLE_MENU_INVENTORY.md`. It lists all 430 submenu labels, declared group roles, individual role allow-lists, dashboard role exclusions, and explicit unavailable route families. It computes source-level menu visibility for each role: Owner 430; Administrator 430; Teacher/employee 202; Student 144; Parent/guardian 139; Accountant 132; Examination Officer 89. These are navigation visibility counts, not counts of working features. Every route still needs exact resolver execution and workflow acceptance.
 
 ## 10. Phase 1 disposition
 
