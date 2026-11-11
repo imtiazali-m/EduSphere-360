@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase'
 import { getWorkspaceGroup, getWorkspaceItem, institutionalMenu } from '../lib/institutionalCatalog'
 import { exportDocx, exportXlsx, printOfficeReport, type OfficeColumn } from '../lib/officeExport'
 import { downloadCsv } from '../lib/csv'
+import { canViewInternalApproval, getWorkspaceExportColumns, getWorkspaceExportRows, getWorkspaceReviewMetrics } from '../lib/workspacePrivacy.js'
 import type { RecordRow } from '../lib/types'
 
 type OperationalRow = RecordRow & {
@@ -200,14 +201,14 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
   const field=structuredFields.find(candidate=>candidate.key===key)
   return field?[field]:[]
  }).slice(0,4)
+ const canAdmin=Boolean(user&&['owner','admin'].includes(user.role))
  const metaColumnKeys:RecordMetaKey[]=recordMetaColumnPlan[group.key]??recordMetaColumnPlan[group.dataModule]??['reference_code','status','record_date']
  const tableMetaColumns=metaColumnKeys
-  .filter(key=>!(['student','parent'].includes(user?.role??'')&&key==='approval_status'))
+  .filter(key=>canViewInternalApproval(user?.role)||key!=='approval_status')
   .map(key=>({key,label:recordMetaLabels[key]}))
  const recordLabel=workspaceRecordLabels[group.key]??workspaceRecordLabels[group.dataModule]??'Record'
  const workspaceLayout=workspaceLayouts[group.key]??workspaceLayouts[group.dataModule]??'registry'
  const theme=themes[group.theme]||themes.blue
- const canAdmin=Boolean(user&&['owner','admin'].includes(user.role))
  const canWrite=Boolean(user&&(
   canAdmin||
   (user.role==='teacher'&&['academic_setup','attendance','timetable','teaching','behaviour','communication','question_bank','examinations','tests','curriculum'].includes(group.dataModule))||
@@ -255,10 +256,11 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
   return rows.filter(row=>!q||[row.title,row.reference_code,row.status,row.description,row.record_type].some(value=>String(value??'').toLowerCase().includes(q)))
  },[rows,search])
  const dashboard= isOverview(item.key,item.label)
- const pending=rows.filter(row=>['pending','draft'].includes(row.approval_status)).length
+ const reviewMetrics=useMemo(()=>getWorkspaceReviewMetrics(rows,user?.role),[rows,user?.role])
+ const pendingReviewCount=reviewMetrics.pendingCount
  const overdue=rows.filter(row=>row.due_date&&row.due_date<new Date().toISOString().slice(0,10)&&!['completed','cancelled','closed','approved'].includes(row.status)).length
  const totalAmount=rows.reduce((sum,row)=>sum+Number(row.amount??0),0)
- const statusCounts=useMemo(()=>['draft','pending','in_progress','approved','published','completed','cancelled'].map(s=>({status:s,count:rows.filter(r=>r.status===s||r.approval_status===s).length})).filter(x=>x.count>0),[rows])
+ const statusCounts=reviewMetrics.statusCounts
 
  function resetForm(row?:OperationalRow){
   setEditing(row??null);setTitle(row?.title??'');setReference(row?.reference_code??'');setDescription(row?.description??'')
@@ -309,8 +311,8 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
  }
 
  const baseName=(group.label+'-'+item.label).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'')
- const columns=[...exportColumns,...structuredFields.map(field=>({key:field.key,label:field.label}))]
- const exportRows=filtered.map(row=>({...row,...row.payload}))
+ const columns=getWorkspaceExportColumns(user?.role,[...exportColumns,...structuredFields.map(field=>({key:field.key,label:field.label}))])
+ const exportRows=getWorkspaceExportRows(user?.role,filtered.map(row=>({...row,...row.payload}) as Record<string,unknown>))
  function exportCsv(){downloadCsv(baseName+'.csv',exportRows as unknown as Record<string,unknown>[],columns)}
  function exportExcel(){exportXlsx(baseName+'.xlsx',group.label+' — '+item.label,exportRows as unknown as Record<string,unknown>[],columns)}
  function exportWord(){exportDocx(baseName+'.docx',group.label+' — '+item.label,exportRows as unknown as Record<string,unknown>[],columns)}
@@ -347,7 +349,7 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
   {group.key==='backup'&&<div className="ed360-workspace-integration-note"><b>Platform backup / restore connection required</b><span>Requests can be tracked here, but a backup or restore is only complete when Supabase or the configured storage provider confirms the operation.</span></div>}
   {dashboard&&<section className="ed360-workspace-kpis">
    <article><span>Total records</span><strong>{loading?'—':rows.length.toLocaleString()}</strong><small>From this institution’s records</small></article>
-   <article><span>Pending review</span><strong>{loading?'—':pending.toLocaleString()}</strong><small>Draft and pending approvals</small></article>
+   {pendingReviewCount!==null&&<article><span>Pending review</span><strong>{loading?'—':pendingReviewCount.toLocaleString()}</strong><small>Draft and pending approvals</small></article>}
    <article><span>Overdue items</span><strong>{loading?'—':overdue.toLocaleString()}</strong><small>Past due date, not closed</small></article>
    <article><span>Recorded value</span><strong>{loading?'—':money(totalAmount)}</strong><small>Only where records have a numeric amount</small></article>
   </section>}
