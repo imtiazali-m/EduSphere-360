@@ -33,7 +33,7 @@ const recruitTabs:{key:RecruitTab;label:string}[] = [
 export function PeopleHRWorkspace({initialWindow,onToast,onNavigate}:Props) {
   const {user}=useAuth()
   const isAdmin = user?.role==='owner'||user?.role==='admin'
-  const canViewOwnReview = user?.role==='teacher'
+  const canViewOwnEmployeeRecords = user?.role==='teacher'
   const [windowKey,setWindowKey]=useState<WindowKey>(() => (['admissions','recruitment','contracts','performance','alumni'].includes(initialWindow??'') ? initialWindow as WindowKey : 'admissions'))
   const [recruitTab,setRecruitTab]=useState<RecruitTab>('vacancies')
   const [data,setData]=useState<Record<string,RecordRow[]>>({})
@@ -336,8 +336,8 @@ export function PeopleHRWorkspace({initialWindow,onToast,onNavigate}:Props) {
       : []
   const totalEnrolledApplications=students.filter(row=>['submitted','under_review','documents_required','approved'].includes(String(row.application_status))).length
 
-  if(!isAdmin&&!canViewOwnReview) return <main className="page-content people-hr-workspace"><section className="staff-panel"><h2>Access restricted</h2><p>People and HR administration records are available only to the institution owner and authorised administrators.</p></section></main>
-  if(canViewOwnReview&&windowKey!=='performance') return <main className="page-content people-hr-workspace"><section className="staff-panel"><h2>Access restricted</h2><p>Your employee role does not include institution-wide People and HR records.</p></section></main>
+  if(!isAdmin&&!canViewOwnEmployeeRecords) return <main className="page-content people-hr-workspace"><section className="staff-panel"><h2>Access restricted</h2><p>People and HR administration records are available only to the institution owner and authorised administrators.</p></section></main>
+  if(canViewOwnEmployeeRecords&&!['contracts','performance'].includes(windowKey)) return <main className="page-content people-hr-workspace"><section className="staff-panel"><h2>Access restricted</h2><p>Your employee role does not include institution-wide People and HR records.</p></section></main>
 
   return <main className="page-content people-hr-workspace">
     <header className="staff-workspace-heading">
@@ -345,8 +345,8 @@ export function PeopleHRWorkspace({initialWindow,onToast,onNavigate}:Props) {
       <button type="button" className="staff-button staff-button-outline" onClick={()=>void load()} disabled={loading}><RefreshCw size={15}/> Refresh</button>
     </header>
 
-    {isAdmin&&<nav className="people-hr-subnav" aria-label="People management workspaces">
-      {(['admissions','recruitment','contracts','performance','alumni'] as WindowKey[]).map(key=><button type="button" key={key} className={windowKey===key?'active':''} onClick={()=>{setWindowKey(key);setQuery('')}}>{key==='admissions'?<Users size={15}/>:key==='recruitment'?<ClipboardList size={15}/>:key==='contracts'?<FileText size={15}/>:key==='performance'?<ShieldCheck size={15}/>:<CalendarDays size={15}/>}<span>{viewLabels[key]}</span></button>)}
+    {(isAdmin||canViewOwnEmployeeRecords)&&<nav className="people-hr-subnav" aria-label="People management workspaces">
+      {(isAdmin?(['admissions','recruitment','contracts','performance','alumni'] as WindowKey[]):(['contracts','performance'] as WindowKey[])).map(key=><button type="button" key={key} className={windowKey===key?'active':''} onClick={()=>{setWindowKey(key);setQuery('')}}>{key==='admissions'?<Users size={15}/>:key==='recruitment'?<ClipboardList size={15}/>:key==='contracts'?<FileText size={15}/>:key==='performance'?<ShieldCheck size={15}/>:<CalendarDays size={15}/>}<span>{viewLabels[key]}</span></button>)}
     </nav>}
 
     {windowKey==='admissions'&&<section className="people-hr-metric-row">
@@ -356,7 +356,7 @@ export function PeopleHRWorkspace({initialWindow,onToast,onNavigate}:Props) {
     </section>}
     {windowKey==='recruitment'&&<nav className="people-hr-secondary-nav" aria-label="Recruitment workflow">{recruitTabs.map(item=><button type="button" className={recruitTab===item.key?'active':''} key={item.key} onClick={()=>{setRecruitTab(item.key);setQuery('')}}>{item.label}{item.key==='vacancies'?' · '+vacancies.length:item.key==='candidates'?' · '+candidates.length:' · '+interviews.length}</button>)}</nav>}
     {windowKey==='contracts'&&<div className="people-hr-inline-note"><ShieldCheck size={16}/> Signed contract metadata is restricted to the employee and authorised administrators. Private contract files are managed in the existing staff document vault.</div>}
-    {windowKey==='performance'&&canViewOwnReview&&<div className="people-hr-inline-note"><ShieldCheck size={16}/> Only acknowledged appraisals linked to your own employee account are visible here.</div>}
+    {windowKey==='performance'&&canViewOwnEmployeeRecords&&!isAdmin&&<div className="people-hr-inline-note"><ShieldCheck size={16}/> Only acknowledged appraisals linked to your own employee account are visible here.</div>}
 
     <section className="staff-panel people-hr-data-panel">
       <header><div><h2>{config.heading}</h2><p>{config.description}</p></div><div className="people-hr-header-actions">{windowKey==='contracts'&&<button type="button" className="staff-button staff-button-outline" onClick={()=>onNavigate('employees:documents')}><FileText size={14}/> Open private document vault</button>}{isAdmin&&<button type="button" className="staff-button staff-button-primary" onClick={()=>openForm()}><Plus size={15}/> {windowKey==='admissions'?'New enquiry':windowKey==='recruitment'?'New '+(recruitTab==='vacancies'?'vacancy':recruitTab==='candidates'?'candidate':'interview'):windowKey==='contracts'?'New contract':windowKey==='performance'?'New review':'Register graduate'}</button>}</div></header>
