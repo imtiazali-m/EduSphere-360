@@ -68,6 +68,9 @@ const employeeViews: Record<string, string> = {
 }
 
 const attendanceViews: Record<string, string> = {
+  'student-attendance': 'students',
+  'teacher-attendance': 'teachers',
+  'staff-attendance': 'staff',
   'attendance-dashboard': 'students',
   'student-attendance': 'students',
   'daily-attendance': 'students',
@@ -386,6 +389,19 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
   }
   if (groupKey === 'students' && itemKey === 'student-data-export' && role && !['owner','admin'].includes(role)) {
     return 'unavailable:students:student-data-export'
+  }
+  if(groupKey==='attendance'){
+    const stage7Routes:Record<string,string>={
+      'student-attendance':'attendance:students',
+      'teacher-attendance':'attendance:teachers',
+      'staff-attendance':'attendance:staff',
+      'leave-management':'care:leave',
+      'attendance-reports':'care:reports',
+      'student-discipline':'care:discipline',
+      'student-counselling-wellbeing':'care:counselling',
+      'health-emergency-records':'care:health',
+    }
+    if(stage7Routes[itemKey])return stage7Routes[itemKey]
   }
   if (groupKey === 'attendance' && itemKey === 'attendance-analytics') return 'reports:attendance'
   if (groupKey === 'attendance' && itemKey === 'attendance-alerts') return 'unavailable:attendance:attendance-alerts'

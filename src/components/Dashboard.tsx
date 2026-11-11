@@ -26,6 +26,7 @@ import { FacultyWorkspace } from './FacultyWorkspace'
 import { institutionalMenu } from '../lib/institutionalCatalog'
 import { InstitutionalWorkspace } from './InstitutionalWorkspace'
 import { AttendanceWorkspace } from './AttendanceWorkspace'
+import { Stage7CareWorkspace } from './Stage7CareWorkspace'
 import { LinkedOperationsWorkspace } from './LinkedOperationsWorkspace'
 import { NotificationCenter } from './NotificationCenter'
 import { WorkspaceUnavailable } from './WorkspaceUnavailable'
@@ -174,7 +175,7 @@ function Overview({ onNavigate }: { onNavigate: (key: string) => void }) {
   const [sessionScope, setSessionScope] = useState('')
   const [classScope, setClassScope] = useState('')
   const available = useMemo(() => modulesForRole(user!.role), [user?.role])
-  const visibleGroups = useMemo(() => roleNavigationGroups(user!.role), [user?.role])
+  const visibleGroups = useMemo(() => roleNavigationGroups(user!.role,stage7CareAreas), [user?.role,stage7CareAreas])
 
   useEffect(() => {
     let live = true
@@ -583,6 +584,20 @@ export function Dashboard({ onToast }: Props) {
   const [searchText, setSearchText] = useState('')
   const [searchOpen, setSearchOpen] = useState(false)
   const [unreadAnnouncementCount, setUnreadAnnouncementCount] = useState(0)
+  const [stage7CareAreas,setStage7CareAreas] = useState<Set<string>>(()=>new Set())
+  useEffect(()=>{
+    let live=true
+    if(!supabase||!user||user.role!=='teacher'){
+      setStage7CareAreas(new Set())
+      return
+    }
+    void supabase.from('student_care_access').select('area,can_read')
+      .eq('institution_id',user.institutionId).eq('user_id',user.id)
+      .then(({data,error})=>{
+        if(live&&!error)setStage7CareAreas(new Set((data??[]).filter(row=>row.can_read).map(row=>row.area)))
+      })
+    return ()=>{live=false}
+  },[user?.id,user?.institutionId,user?.role])
 
   // Keep the sidebar context aligned with the parent workspace for nested windows.
   useEffect(() => {
@@ -593,7 +608,7 @@ export function Dashboard({ onToast }: Props) {
 
   const available = useMemo(() => modulesForRole(user!.role), [user?.role])
   const visibleGroups = useMemo(() => roleNavigationGroups(user!.role), [user?.role])
-  const visibleSections = useMemo(() => roleNavigationSections(user!.role), [user?.role])
+  const visibleSections = useMemo(() => roleNavigationSections(user!.role,stage7CareAreas), [user?.role,stage7CareAreas])
   const searchResults = useMemo(() => {
     const query = searchText.trim().toLowerCase()
     if (!query) return []
@@ -672,6 +687,7 @@ export function Dashboard({ onToast }: Props) {
   function navigate(key: string, options: { parentId?: string; title?: string; groupKey?: string; itemKey?: string } = {}) {
     const studentWindowRoute = key.startsWith('students:')
     const attendanceWindowRoute = key.startsWith('attendance:')
+    const careWindowRoute = key.startsWith('care:')
     const institutionalWindowRoute = key.startsWith('institutional:')
     const unavailableWindowRoute = key.startsWith('unavailable:')
     const employeeWindowRoute = key.startsWith('employees:')
@@ -684,6 +700,7 @@ export function Dashboard({ onToast }: Props) {
     const moduleWindowRoute = routeParts.length === 2 && ['fees', 'exams', 'exam_results', 'assignments', 'assignment_submissions', 'timetable', 'announcements', 'work_tasks'].includes(routeParts[0])
     const targetKey = studentWindowRoute ? 'students'
       : attendanceWindowRoute ? 'attendance'
+      : careWindowRoute ? 'care'
       : institutionalWindowRoute ? 'institutional'
       : unavailableWindowRoute ? 'unavailable'
       : employeeWindowRoute ? 'teachers'
@@ -696,6 +713,7 @@ export function Dashboard({ onToast }: Props) {
       : key
     const targetWindow = studentWindowRoute ? key.slice('students:'.length)
       : attendanceWindowRoute ? key.slice('attendance:'.length)
+      : careWindowRoute ? key.slice('care:'.length)
       : institutionalWindowRoute ? key.slice('institutional:'.length)
       : unavailableWindowRoute ? key.slice('unavailable:'.length)
       : employeeWindowRoute ? key.slice('employees:'.length)
@@ -714,6 +732,7 @@ export function Dashboard({ onToast }: Props) {
       else if (targetKey === 'institutional') title = 'Institutional Workspace'
       else if (targetKey === 'unavailable') title = 'Workspace not connected'
       else if (targetKey === 'attendance') title = 'Attendance Management'
+      else if (targetKey === 'care') title = 'Stage 7 · Student Care & Wellbeing'
       else if (targetKey === 'reports') title = 'Reports'
       else if (targetKey === 'finance') title = 'Finance & Payments'
       else if (targetKey === 'payroll') title = 'Salary and Payroll'
@@ -907,6 +926,7 @@ export function Dashboard({ onToast }: Props) {
                 tab.targetKey === 'institutional' ? <InstitutionalWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'unavailable' ? <WorkspaceUnavailable groupKey={tab.targetWindow.split(':')[0]} itemKey={tab.targetWindow.split(':').slice(1).join(':')} onNavigate={navigate}/> :
                 tab.targetKey === 'attendance' ? <AttendanceWorkspace initialWindow={tab.targetWindow || 'students'} onToast={onToast}/> :
+                tab.targetKey === 'care' ? <Stage7CareWorkspace initialWindow={tab.targetWindow} onToast={onToast}/> :
                 tabAdminKey ? <AdministrationModule initialKey={tabAdminKey as 'departments' | 'programs' | 'classes' | 'academic_sessions' | 'subjects' | 'rooms'}/> :
                 tab.targetKey === 'accounts' ? <AccountsModule onToast={onToast}/> :
                 tab.targetKey === 'files' ? <FilesModule onToast={onToast}/> :

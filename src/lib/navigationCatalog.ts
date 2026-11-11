@@ -22,8 +22,9 @@ const roleItemAllow:Record<string,Partial<Record<string,string[]>>>={
     parent:['Fees Dashboard','Fee Invoices','Payment Collection','Fee Receipts','Outstanding Dues'],
   },
   attendance:{
-    student:['Attendance Dashboard','Student Attendance','Daily Attendance','Period-wise Attendance','Attendance Calendar','Attendance History','Attendance Reports'],
-    parent:['Attendance Dashboard','Student Attendance','Daily Attendance','Attendance Calendar','Attendance History','Attendance Reports'],
+    student:['Student Attendance','Leave Management','Student Counselling & Wellbeing','Health & Emergency Records'],
+    parent:['Student Attendance','Leave Management','Student Counselling & Wellbeing','Health & Emergency Records'],
+    teacher:['Student Attendance','Teacher Attendance','Leave Management','Attendance Reports'],
   },
   timetable:{
     student:['Timetable Dashboard','Class Timetable','Period Timetable','Timetable History'],
@@ -57,9 +58,14 @@ const roleItemAllow:Record<string,Partial<Record<string,string[]>>>={
   }
 }
 
-function allowedItems(group:WorkspaceMenuGroup,role:WorkspaceMenuGroup['roles'][number]){
+function allowedItems(group:WorkspaceMenuGroup,role:WorkspaceMenuGroup['roles'][number],careAreas:ReadonlySet<string>=new Set()){
   const selected=roleItemAllow[group.key]?.[role]
-  const roleFiltered = selected ? group.items.filter(item=>selected.includes(item.label)) : group.items
+  let roleFiltered = selected ? group.items.filter(item=>selected.includes(item.label)) : group.items
+  if(group.key==='attendance'&&role==='teacher'){
+    const grantLabels:Record<string,string>={discipline:'Student Discipline',counselling:'Student Counselling & Wellbeing',health:'Health & Emergency Records'}
+    const visible=new Set(roleFiltered.map(item=>item.label))
+    roleFiltered=[...roleFiltered,...group.items.filter(item=>Object.entries(grantLabels).some(([area,label])=>label===item.label&&careAreas.has(area)&&!visible.has(label)))]
+  }
   if (group.key === 'dashboard') {
     const hidden: Partial<Record<WorkspaceMenuGroup['roles'][number], string[]>> = {
       teacher: ['Financial Overview', 'Institutional Alerts'],
@@ -92,16 +98,16 @@ const navigationGroupOrder=new Map<string,number>(
   navigationSectionDefinitions.flatMap(section=>section.groupKeys).map((key,index)=>[key,index] as const)
 )
 
-export function roleNavigationGroups(role:WorkspaceMenuGroup['roles'][number]):RoleNavigationGroup[]{
+export function roleNavigationGroups(role:WorkspaceMenuGroup['roles'][number],careAreas:ReadonlySet<string>=new Set()):RoleNavigationGroup[]{
   return institutionalMenu
     .filter(group=>group.roles.includes(role))
-    .map(group=>({...group,items:allowedItems(group,role).map(item=>item.label)}))
+    .map(group=>({...group,items:allowedItems(group,role,careAreas).map(item=>item.label)}))
     .filter(group=>group.key==='dashboard'||group.items.length>0)
     .sort((left,right)=>(navigationGroupOrder.get(left.key)??Number.MAX_SAFE_INTEGER)-(navigationGroupOrder.get(right.key)??Number.MAX_SAFE_INTEGER))
 }
 
-export function roleNavigationSections(role:WorkspaceMenuGroup['roles'][number]):RoleNavigationSection[]{
-  const groups=roleNavigationGroups(role)
+export function roleNavigationSections(role:WorkspaceMenuGroup['roles'][number],careAreas:ReadonlySet<string>=new Set()):RoleNavigationSection[]{
+  const groups=roleNavigationGroups(role,careAreas)
   const groupByKey=new Map<string,RoleNavigationGroup>(groups.map(group=>[group.key,group] as const))
   const sections=navigationSectionDefinitions.flatMap(section=>{
     const sectionGroups=section.groupKeys.flatMap(key=>{
