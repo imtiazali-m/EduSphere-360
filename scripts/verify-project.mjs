@@ -185,7 +185,7 @@ check('The full institutional menu maps every submenu to a working destination',
       assert.ok(groupKeys.has(groupKey), page + ' points to an unknown institutional workspace')
     }
   }
-  assert.ok(navigationRoutes['Student Directory']?.startsWith('students:'), 'Student Directory must open the student workspace')
+  assert.equal(getNavigationRoute('people-hr', 'Students', 'owner'), 'students:directory', 'Student Directory must open the student workspace')
   assert.equal(navigationRoutes['fees:fee-invoices'], 'finance:fees:invoices', 'Fee invoices must open the dedicated Finance & Payments workspace')
 })
 
