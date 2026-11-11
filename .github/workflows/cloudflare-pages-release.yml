@@ -61,6 +61,11 @@ jobs:
       - name: Test teacher account provisioning guards
         run: npm run test:account-provisioning
 
+      - name: Install Chromium for responsive browser checks
+        run: |
+          npm install --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+
       - name: Build production website
         run: npm run build
 
@@ -74,6 +79,19 @@ jobs:
           if find dist -type f -name '*.map' -print -quit | grep -q .; then
             echo "Source maps found in dist. Review before publication."
           fi
+
+
+      - name: Test welcome, owner login and owner setup across viewport sizes
+        run: npm run test:responsive:public
+
+      - name: Upload responsive QA screenshots
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: edusphere-responsive-qa
+          path: artifacts/responsive-public/
+          if-no-files-found: warn
+          retention-days: 14
 
       - name: Create Direct Upload ZIP with site files at archive root
         shell: bash
