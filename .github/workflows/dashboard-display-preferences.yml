@@ -43,6 +43,14 @@ jobs:
         run: npm ci --no-audit --no-fund
       - name: Test device-local display preference storage and validation
         run: npm run test:display-preferences
+      - name: Generate exact role-aware route audit
+        run: npm run audit:navigation
+      - name: Generate role-aware route-to-view compatibility audit
+        run: npm run audit:route-views
+      - name: Generate responsive source coverage audit
+        run: npm run audit:responsive
+      - name: Audit modal keyboard behavior and specialist workspace visual coverage
+        run: npm run audit:modal-windows
       - name: Verify route, permission and workspace invariants
         run: npm run verify:project
       - name: Type-check application
