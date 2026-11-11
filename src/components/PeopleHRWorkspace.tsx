@@ -286,7 +286,9 @@ export function PeopleHRWorkspace({initialWindow,onToast,onNavigate}:Props) {
   async function updateStatus(row:RecordRow,field:string,value:string) {
     if(!isAdmin||!supabase||!user?.institutionId)return
     setSaving(true)
-    const {error}=await supabase.from(config.table).update({[field]:value,updated_at:new Date().toISOString(),...(windowKey==='performance'&&value==='acknowledged'?{acknowledged_at:new Date().toISOString()}:{})}).eq('id',row.id).eq('institution_id',user.institutionId)
+    const patch:Record<string,unknown>={[field]:value,updated_at:new Date().toISOString()}
+    if(windowKey==='performance'&&value==='acknowledged')patch.acknowledged_at=new Date().toISOString()
+    const {error}=await supabase.from(config.table).update(patch).eq('id',row.id).eq('institution_id',user.institutionId)
     if(error)onToast(userFacingError(error,'The stage could not be updated.'),true)
     else {onToast('Workflow stage updated.');await load(true)}
     setSaving(false)
