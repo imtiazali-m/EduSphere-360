@@ -38,7 +38,11 @@ The catalogue declares role sets such as management, staff, academic, finance, f
 
 ## 3. Exact role-aware route resolution
 
-The repository release workflow now executes the actual TypeScript route resolver for every menu destination returned by each role's source filter. It generates `docs/PHASE_1_EXACT_ROUTE_AUDIT.md` and uploads the document as the `edusphere360-exact-route-audit` GitHub Actions artifact. The audit reports exact route strings by role, explicit unavailable destinations, linked institutional workspaces, resolved workspace routes and any unexpected route family. A successful route audit is still source-level evidence only; it is not a browser or backend authorization test.
+The repository release workflow now executes the actual TypeScript route resolver for every menu destination returned by each role's source filter. It generates `docs/PHASE_1_EXACT_ROUTE_AUDIT.md` and uploads the document as the `edusphere360-exact-route-audit` GitHub Actions artifact. The latest successful audit evaluated **1,569 role/menu combinations**: Owner 430, Administrator 430, Teacher 203, Student 146, Parent 139, Accountant 132 and Examination Officer 89. Of these role-visible evaluations, 343 resolve to explicitly unavailable states, 115 route into linked institutional workspaces, and 1,111 resolve to other application workspaces. It found **zero unexpected route families and zero non-intentional bare module roots**.
+
+The exact-route audit also exposed legacy overrides that dropped the requested sub-view for dashboard shortcuts and Master Timetable. The resolver now returns the typed dashboard targets (academic report, finance overview, attendance, published results, comparative reports and task queue) and explicit timetable week/conflict/history windows before consulting old module-root overrides. Regression assertions cover those routes and role restrictions.
+
+A successful route audit remains source-level evidence only; it is not a browser, API authorization or backend transaction test. The generated artifact must be checked with the current run linked from PR #15.
 
 ## 4. Menu and route inventory
 
