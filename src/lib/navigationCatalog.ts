@@ -60,6 +60,7 @@ const roleItemAllow:Record<string,Partial<Record<string,string[]>>>={
 function allowedItems(group:WorkspaceMenuGroup,role:WorkspaceMenuGroup['roles'][number]){
   const selected=roleItemAllow[group.key]?.[role]
   const roleFiltered = selected ? group.items.filter(item=>selected.includes(item.label)) : group.items
+  if (group.key === 'dashboard') return []
   if (group.key === 'dashboard') {
     const hidden: Partial<Record<WorkspaceMenuGroup['roles'][number], string[]>> = {
       teacher: ['Financial Overview', 'Institutional Alerts'],
