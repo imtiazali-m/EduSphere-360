@@ -45,6 +45,7 @@ const md = [
   '',
   '**Generated:** by the repository release workflow.',
   '**Scope:** responsive CSS declarations and required mobile navigation/form layout hooks.',
+  '**Automated checks:** 13 responsive source checks passed.',
   '',
   '## Evidence boundary',
   '',
