@@ -989,7 +989,7 @@ check('Institutional review metadata is isolated behind owner/admin database aut
     'drop column reviewed_at',
     'drop column review_notes',
   ]) assert.ok(migration.toLowerCase().includes(safeguard.toLowerCase()), 'Review isolation migration is missing: ' + safeguard)
-  assert.ok(workspace.includes('institutional_record_reviews').toString() && workspace.includes('save_institutional_record_with_review'), 'Workspace must use the secure review relation and atomic owner/admin save')
+  assert.ok(workspace.includes('institutional_record_reviews') && workspace.includes('save_institutional_record_with_review'), 'Workspace must use the secure review relation and atomic owner/admin save')
   assert.ok(workspace.includes("select('id,institution_id,campus_id"), 'Operational rows must use an explicit safe-column projection')
   assert.ok(privacy.includes("'review_notes'"), 'Non-admin export sanitization must include internal review notes')
 })
