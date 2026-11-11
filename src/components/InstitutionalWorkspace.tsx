@@ -10,7 +10,8 @@ import type { RecordRow } from '../lib/types'
 
 type OperationalRow = RecordRow & {
  module_key:string;record_type:string;title:string;reference_code?:string|null;description?:string|null;
- status:string;approval_status:string;record_date?:string|null;due_date?:string|null;amount?:number|null;
+ status:string;approval_status:string;reviewed_by?:string|null;reviewed_at?:string|null;review_notes?:string|null;
+ record_date?:string|null;due_date?:string|null;amount?:number|null;
  quantity?:number|null;payload:Record<string,unknown>;visibility:string
 }
 type Props={workspaceKey:string;onToast:(message:string,error?:boolean)=>void}
@@ -189,6 +190,7 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
  const [description,setDescription]=useState('')
  const [status,setStatus]=useState('draft')
  const [approval,setApproval]=useState('not_required')
+ const [reviewNotes,setReviewNotes]=useState('')
  const [visibility,setVisibility]=useState('staff_only')
  const [recordDate,setRecordDate]=useState(new Date().toISOString().slice(0,10))
  const [dueDate,setDueDate]=useState('')
@@ -225,7 +227,7 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
   if(!supabase||!user||!group.dataModule){setRows([]);setLoading(false);return}
   setLoading(true);setLoadError('')
   try{
-   let query=supabase.from('institutional_records').select('*').eq('institution_id',user.institutionId).eq('module_key',group.dataModule)
+   let query=supabase.from('institutional_records').select('id,institution_id,campus_id,academic_session_id,student_id,teacher_id,parent_record_id,module_key,record_type,title,reference_code,description,status,visibility,class_name,record_date,effective_date,due_date,completed_at,amount,quantity,payload,created_by,updated_by,created_at,updated_at').eq('institution_id',user.institutionId).eq('module_key',group.dataModule)
    if(!isOverview(item.key,item.label))query=query.eq('record_type',item.key)
    if(campus)query=query.eq('campus_id',campus)
    if(range!=='all'){
@@ -234,10 +236,16 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
    }
    const {data,error}=await query.order('created_at',{ascending:false}).limit(500)
    if(error)throw error
-   setRows((data??[]) as OperationalRow[])
+   const records=(data??[]) as OperationalRow[]
+   if(canAdmin&&records.length){
+    const {data:reviews,error:reviewError}=await supabase.from('institutional_record_reviews').select('record_id,approval_status,reviewed_by,reviewed_at,review_notes').eq('institution_id',user.institutionId).in('record_id',records.map(row=>row.id))
+    if(reviewError)throw reviewError
+    const reviewByRecord=new Map((reviews??[]).map(review=>[review.record_id,review]))
+    setRows(records.map(row=>{const review=reviewByRecord.get(row.id);return {...row,approval_status:review?.approval_status??'not_required',reviewed_by:review?.reviewed_by??null,reviewed_at:review?.reviewed_at??null,review_notes:review?.review_notes??null}}))
+   }else setRows(records.map(row=>({...row,approval_status:'not_required',reviewed_by:null,reviewed_at:null,review_notes:null})))
   }catch(error){setLoadError(error instanceof Error?error.message:'Records could not be loaded');setRows([])}
   finally{setLoading(false)}
- },[user?.id,user?.institutionId,group.dataModule,item.key,item.label,campus,range])
+ },[user?.id,user?.institutionId,group.dataModule,item.key,item.label,campus,range,canAdmin])
 
  useEffect(()=>{void load()},[load])
  useEffect(()=>{
@@ -279,17 +287,29 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
   setSaving(true)
   const values={
    institution_id:user.institutionId,module_key:group.dataModule,record_type:item.key,title:title.trim(),
-   reference_code:reference.trim()||null,description:description.trim()||null,status,approval_status:approval,visibility,
+   reference_code:reference.trim()||null,description:description.trim()||null,status,visibility,
    record_date:recordDate||null,due_date:dueDate||null,amount:amount.trim()?Number(amount):null,
    quantity:quantity.trim()?Number(quantity):null,payload,campus_id:campus||null
   }
   try{
-   const query=editing
-    ?supabase.from('institutional_records').update({...values,updated_by:user.id}).eq('id',editing.id).eq('institution_id',user.institutionId).select().single()
-    :supabase.from('institutional_records').insert({...values,created_by:user.id,updated_by:user.id}).select().single()
-   const {data,error}=await query
-   if(error)throw error
-   const saved=data as OperationalRow
+   let saved:OperationalRow
+   if(canAdmin){
+    const {data,error}=await supabase.rpc('save_institutional_record_with_review',{
+     p_record_id:editing?.id??null,p_institution_id:user.institutionId,p_module_key:group.dataModule,p_record_type:item.key,
+     p_title:title.trim(),p_reference_code:reference.trim()||null,p_description:description.trim()||null,p_status:status,
+     p_approval_status:approval,p_visibility:visibility,p_record_date:recordDate||null,p_due_date:dueDate||null,
+     p_amount:amount.trim()?Number(amount):null,p_quantity:quantity.trim()?Number(quantity):null,p_payload:payload,p_campus_id:campus||null
+    })
+    if(error)throw error
+    saved={...(data as OperationalRow),approval_status:approval,review_notes:reviewNotes.trim()||null}
+   }else{
+    const query=editing
+     ?supabase.from('institutional_records').update({...values,updated_by:user.id}).eq('id',editing.id).eq('institution_id',user.institutionId).select().single()
+     :supabase.from('institutional_records').insert({...values,created_by:user.id,updated_by:user.id}).select().single()
+    const {data,error}=await query
+    if(error)throw error
+    saved={...(data as OperationalRow),approval_status:'not_required'}
+   }
    setShowForm(false);setEditing(null);setDetail(saved)
    onToast(editing?'Record updated successfully.':'Record created successfully.')
    await load()
@@ -303,11 +323,18 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
   if(error){onToast(error.message,true);return}
   setDetail(null);onToast('Record deleted.');await load()
  }
+ function openDetails(row:OperationalRow){
+  setDetail(row);setReviewNotes(row.review_notes??'')
+ }
  async function decide(row:OperationalRow,decision:'approved'|'rejected'){
   if(!supabase||!user||!canAdmin)return
-  const {data,error}=await supabase.from('institutional_records').update({approval_status:decision,reviewed_by:user.id,reviewed_at:new Date().toISOString(),updated_by:user.id}).eq('id',row.id).eq('institution_id',user.institutionId).select().single()
+  const {data,error}=await supabase.from('institutional_record_reviews').upsert({
+   record_id:row.id,institution_id:user.institutionId,approval_status:decision,review_notes:reviewNotes.trim()||null
+  },{onConflict:'record_id'}).select('record_id,approval_status,reviewed_by,reviewed_at,review_notes').single()
   if(error){onToast(error.message,true);return}
-  setDetail(data as OperationalRow);onToast('Approval decision saved.');await load()
+  const updated={...row,approval_status:data.approval_status,reviewed_by:data.reviewed_by,reviewed_at:data.reviewed_at,review_notes:data.review_notes}
+  setDetail(updated);setReviewNotes(data.review_notes??'')
+  onToast('Approval decision saved.');await load()
  }
 
  const baseName=(group.label+'-'+item.label).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'')
@@ -361,7 +388,7 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
    <div className="table-toolbar"><div className="table-count"><strong>{filtered.length.toLocaleString()}</strong> {item.label.toLowerCase()} <span>·</span> Institution scope</div><span className="ed360-table-refresh"><button type="button" onClick={()=>void load()}>Refresh records <ArrowUpRight size={13}/></button></span></div>
    {loading?<div className="ed360-workspace-empty">Loading institution records…</div>:filtered.length===0?<div className="ed360-workspace-empty"><strong>No records in this workspace yet</strong><span>Records will appear here after they are created or imported. No sample data is being shown.</span>{canWrite&&<button type="button" className="button button-primary" onClick={()=>resetForm()}><Plus size={15}/> Create first record</button>}</div>:
    <div className="table-scroll"><table aria-label={group.label+' '+item.label+' register'}><thead><tr><th scope="col">{recordLabel}</th>{tableMetaColumns.map(column=><th key={column.key} scope="col" data-column={column.key}>{column.label}</th>)}{tableFields.map(field=><th key={field.key} scope="col">{field.label}</th>)}<th scope="col">Actions</th></tr></thead><tbody>
-    {filtered.map(row=><tr key={row.id}><td><button className="ed360-record-open" type="button" onClick={()=>setDetail(row)}>{row.title}</button><small className="ed360-record-subtitle">{row.description||row.record_type.replaceAll('-',' ')}</small></td>{tableMetaColumns.map(column=><td key={column.key} data-column={column.key}>{column.key==='reference_code'?row.reference_code||'—':column.key==='status'?<span className={'ed360-state-pill state-'+row.status}>{row.status.replaceAll('_',' ')}</span>:column.key==='approval_status'?row.approval_status.replaceAll('_',' '):column.key==='record_date'?displayDate(row.record_date):column.key==='due_date'?displayDate(row.due_date):column.key==='amount'?money(row.amount):row.quantity??'—'}</td>)}{tableFields.map(field=><td key={field.key} data-column={field.key}>{String(row.payload?.[field.key]??'—')}</td>)}<td><div className="ed360-row-actions"><button type="button" onClick={()=>setDetail(row)}>Open</button>{canWrite&&<button type="button" onClick={()=>resetForm(row)}>Edit</button>}</div></td></tr>)}
+    {filtered.map(row=><tr key={row.id}><td><button className="ed360-record-open" type="button" onClick={()=>openDetails(row)}>{row.title}</button><small className="ed360-record-subtitle">{row.description||row.record_type.replaceAll('-',' ')}</small></td>{tableMetaColumns.map(column=><td key={column.key} data-column={column.key}>{column.key==='reference_code'?row.reference_code||'—':column.key==='status'?<span className={'ed360-state-pill state-'+row.status}>{row.status.replaceAll('_',' ')}</span>:column.key==='approval_status'?row.approval_status.replaceAll('_',' '):column.key==='record_date'?displayDate(row.record_date):column.key==='due_date'?displayDate(row.due_date):column.key==='amount'?money(row.amount):row.quantity??'—'}</td>)}{tableFields.map(field=><td key={field.key} data-column={field.key}>{String(row.payload?.[field.key]??'—')}</td>)}<td><div className="ed360-row-actions"><button type="button" onClick={()=>openDetails(row)}>Open</button>{canWrite&&<button type="button" onClick={()=>resetForm(row)}>Edit</button>}</div></td></tr>)}
    </tbody></table></div>}
   </section>
   {showForm&&<div className="modal-backdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setShowForm(false)}}><section className="modal-card ed360-context-form" role="dialog" aria-modal="true" aria-labelledby="ed360-form-heading">
@@ -381,6 +408,7 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
   {detail&&<div className="modal-backdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setDetail(null)}}><section className="modal-card ed360-record-details ed360-context-detail" role="dialog" aria-modal="true" aria-labelledby="ed360-detail-heading">
    <div className="modal-heading"><div><div className="eyebrow">CONTEXTUAL SUB-WINDOW / {group.label.toUpperCase()}</div><h2 id="ed360-detail-heading">{detail.title}</h2><p>{detail.reference_code||detail.record_type.replaceAll('-',' ')} · {detail.status}</p></div><button type="button" className="icon-button" onClick={()=>setDetail(null)} aria-label="Close"><X size={18}/></button></div>
    <div className="ed360-context-detail-callout"><div>{canAdmin&&<><span>RECORD WORKFLOW</span><strong>{detail.approval_status.replaceAll('_',' ')}</strong></>}<p>{detail.description||'No additional description supplied.'}</p></div><aside><b>Responsible workspace</b><p>{group.label} / {item.label}</p><b>Updated</b><p>{detail.updated_at?new Date(detail.updated_at).toLocaleString():'Not available'}</p></aside></div>
+    {canAdmin&&<label className="ed360-review-note-field">Internal review note<textarea rows={3} value={reviewNotes} onChange={event=>setReviewNotes(event.target.value)} maxLength={3000} placeholder="Optional note visible only to owners and administrators"/></label>}
    <div className="ed360-record-details-grid"><div className="ed360-record-detail"><small>Status</small><b>{detail.status}</b></div><div className="ed360-record-detail"><small>Record date</small><b>{displayDate(detail.record_date)}</b></div><div className="ed360-record-detail"><small>Due date</small><b>{displayDate(detail.due_date)}</b></div><div className="ed360-record-detail"><small>Amount</small><b>{money(detail.amount)}</b></div><div className="ed360-record-detail"><small>Quantity</small><b>{detail.quantity??'—'}</b></div><div className="ed360-record-detail"><small>Created</small><b>{detail.created_at?new Date(detail.created_at).toLocaleString():'—'}</b></div></div>
    {Object.keys(detail.payload??{}).length>0&&<section className="ed360-payload-section"><h3>{item.label} details</h3><div className="ed360-record-details-grid">{Object.entries(detail.payload).map(([key,value])=><div className="ed360-record-detail" key={key}><small>{structuredFields.find(field=>field.key===key)?.label??key.replaceAll('_',' ')}</small><b>{typeof value==='boolean'?(value?'Yes':'No'):String(value??'—')}</b></div>)}</div></section>}
    <div className="modal-actions">
