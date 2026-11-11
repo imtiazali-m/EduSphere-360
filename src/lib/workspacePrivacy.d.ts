@@ -6,7 +6,6 @@ export interface WorkspacePrivacyColumn {
 export interface WorkspaceReviewRow {
   status?: unknown
   approval_status?: unknown
-  [key: string]: unknown
 }
 
 export interface WorkspaceReviewMetrics {
