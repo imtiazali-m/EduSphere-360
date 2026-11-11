@@ -49,7 +49,7 @@ const md = [
   '',
   '**Generated:** by the repository release workflow.',
   '**Scope:** responsive CSS declarations and required mobile navigation/form layout hooks.',
-  '**Automated checks:** 14 responsive source checks passed.',
+  '**Automated checks:** 15 responsive source checks passed.',
   '',
   '## Evidence boundary',
   '',
@@ -68,7 +68,8 @@ const md = [
   '| Operational workspaces | Pass | 850px / 600px; horizontally scrollable sub-navigation |',
   '| Finance / payroll / governance | Pass | Dedicated tablet and phone breakpoints in each workspace stylesheet |',
   '| Campus operations and institutional records | Pass | Tablet, 620px and 430px breakpoints |',
-  '| Generic module workspaces | Pass | 1080px / 760px / 720px / 580px / 540px / 520px |',
+  '| Generic module workspaces | Pass | 1080px / 760px / 720px / 580px / 540px / 520px |
+| People & HR workspace | Pass | 760px / 620px / 430px; responsive workflow tables and mobile panel layout |',
   '',
   '## Target viewport coverage (source-level only)',
   '',
