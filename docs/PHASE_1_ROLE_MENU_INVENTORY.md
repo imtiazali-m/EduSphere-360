@@ -1,8 +1,8 @@
 # Phase 1 — Complete role menu inventory
 
-**Audit date:** 10 November 2026  
+**Audit date:** 11 November 2026  
 **Repository:** `imtiazali-m/EduSphere-360`  
-**Branch:** `work/accelerated-12-phase-start-20261110`  
+**Branch:** `stage-6-people-hr`  
 **Source basis:** `src/lib/institutionalCatalog.ts` and `src/lib/navigationCatalog.ts`
 
 ## What this inventory proves — and what it does not
@@ -27,7 +27,7 @@ A visible menu entry or a value in the route index is **not** evidence that its 
 |---|---:|---:|
 | Owner | 31 | 398 |
 | Administrator | 31 | 398 |
-| Teacher / employee | 17 | 196 |
+| Teacher / employee | 17 | 198 |
 | Student | 15 | 140 |
 | Parent / guardian | 15 | 136 |
 | Accountant | 12 | 121 |
