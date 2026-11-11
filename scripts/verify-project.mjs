@@ -23,7 +23,7 @@ check('Vite development and production scripts exist', () => {
 
 const requiredFiles = [
   'index.html', 'src/main.tsx', 'src/App.tsx', 'src/components/Dashboard.tsx', 'src/components/WorkspaceUnavailable.tsx',
-  'src/components/FinanceWorkspace.tsx', 'src/styles/finance-workspace.css', 'src/styles/navigation-refinement.css',
+  'src/components/FinanceWorkspace.tsx', 'src/styles/finance-workspace.css', 'src/styles/student-promotion-workspace.css', 'src/styles/navigation-refinement.css',
   'src/components/PayrollWorkspace.tsx', 'src/styles/payroll-workspace.css',
   'src/components/GovernanceWorkspace.tsx', 'src/styles/governance-workspace.css',
   'src/components/InstitutionOperationsWorkspace.tsx', 'src/styles/institution-operations.css',
@@ -562,7 +562,7 @@ check('Module definitions and generic CRUD table allowlist remain valid', () => 
 check('Student Record is a complete permission-aware multi-window workspace', () => {
   const recordModule = read('src/components/RecordModule.tsx')
   const dataSource = read('src/lib/data.ts')
-  for (const label of ['Overview', 'Admissions', 'Student Directory', 'Student Profile', 'Class Placement', 'Guardians', 'Student Attendance', 'Student Exam Results', 'Student Assignments', 'Student Timetable', 'Student Documentation', 'Student History']) {
+  for (const label of ['Overview', 'Admissions', 'Student Directory', 'Student Profile', 'Class Placement', 'Promotion', 'Guardians', 'Student Attendance', 'Student Exam Results', 'Student Assignments', 'Student Timetable', 'Student Documentation', 'Student History']) {
     assert.ok(recordModule.includes("label: '" + label + "'"), 'Student workspace window is missing: ' + label)
   }
   const studentWorkspaceStart = recordModule.indexOf("if (module.key === 'students') {", recordModule.indexOf('export function RecordModule'))
@@ -585,6 +585,9 @@ check('Student Record is a complete permission-aware multi-window workspace', ()
   assert.ok(recordModule.includes("application_status: nextStatus"), 'Admission status transitions are not persisted')
   assert.ok(recordModule.includes('async function saveGuardianContact') && recordModule.includes("'guardian_students'"), 'Guardian contacts must be linked to students')
   assert.ok(recordModule.includes('async function saveStudentPlacement') && recordModule.includes("'student_placements'"), 'Class placement must use linked class records')
+  assert.ok(recordModule.includes("studentWorkspaceTab === 'promotion'") && recordModule.includes('ed360-student-promotion-workspace'), 'Student promotion must have its own dedicated workspace')
+  assert.ok(recordModule.includes("setStudentWorkspaceTab('promotion')") && recordModule.includes('placementSaving'), 'Promotion navigation and duplicate-save protection must be connected')
+  assert.ok(recordModule.includes('selectedClass.id === activeStudentPlacement?.class_id') && recordModule.includes('placementEffectiveFrom < currentEffectiveFrom'), 'Promotion must reject same-class and earlier-than-current placement dates')
   assert.ok(recordModule.includes("from('student-files')") && recordModule.includes('async function uploadStudentDocument'), 'Private student document upload is missing')
   assert.ok(recordModule.includes("studentHistoryRows.map(event") && recordModule.includes("'student_history'"), 'Student History must render database audit events')
   for (const trigger of ['attendance_student_history_audit', 'exam_results_student_history_audit', 'assignment_submissions_student_history_audit']) assert.ok(read('supabase/migrations/20261109094108_student_activity_history_events.sql').includes(trigger), `Student history trigger is missing: ${trigger}`)
