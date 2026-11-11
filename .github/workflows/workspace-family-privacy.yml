@@ -8,6 +8,9 @@ on:
       - 'src/lib/workspacePrivacy.d.ts'
       - 'scripts/test-workspace-privacy.mjs'
       - 'scripts/verify-project.mjs'
+      - 'supabase/migrations/20261111160000_institutional_record_review_isolation.sql'
+      - 'supabase/migrations/README.md'
+      - 'docs/WORKSPACE_ROLE_PRIVACY.md'
       - 'package.json'
       - '.github/workflows/workspace-family-privacy.yml'
   pull_request:
@@ -17,6 +20,9 @@ on:
       - 'src/lib/workspacePrivacy.d.ts'
       - 'scripts/test-workspace-privacy.mjs'
       - 'scripts/verify-project.mjs'
+      - 'supabase/migrations/20261111160000_institutional_record_review_isolation.sql'
+      - 'supabase/migrations/README.md'
+      - 'docs/WORKSPACE_ROLE_PRIVACY.md'
       - 'package.json'
       - '.github/workflows/workspace-family-privacy.yml'
 
@@ -25,7 +31,7 @@ permissions:
 
 jobs:
   verify-workspace-privacy:
-    name: Verify role-scoped workspace exports and metrics
+    name: Verify role-scoped workspace exports and database review isolation
     runs-on: ubuntu-latest
     steps:
       - name: Check out source
