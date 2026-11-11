@@ -136,6 +136,20 @@ Use this distinction consistently:
 - **Partially implemented:** relevant tables/screens exist, but related operational steps, automation, permissions or end-to-end tests are missing.
 - **Proposed/unconfigured:** no claim of a live integration or operational feature until provider credentials, source connection and delivery tests succeed.
 
+## Parallel backend remediation update — 11 November 2026
+
+A separate backend-focused change now addresses the P1 teacher account-linking defect:
+
+- [PR #19 — Fix teacher account provisioning and employee identity linking](https://github.com/imtiazali-m/EduSphere-360/pull/19)
+- Branch: `fix/teacher-account-link-integrity-20261111`
+- The function resolves exactly one institution-scoped unlinked employee before creating an Auth user, links by exact employee ID with a `user_id IS NULL` guard, verifies the returned employee/user pair, and attempts Auth-user rollback on any later failure.
+- The Account Management form explains that the employee record must first be saved with the same email.
+- Added pure identity-guard regression coverage for normalization, ILIKE wildcard escaping, missing/ambiguous/already-linked employees and returned-row verification.
+- Dedicated guard workflow passed on the PR head. The main repository verifier and production Vite build also passed on the same PR head.
+- Production deployment was skipped. The live `create-user` Edge Function is not updated by this PR; authenticated disposable-account E2E and rollback verification remain mandatory before deploying it.
+
+This PR is independent of PR #15's visual refresh and PR #17's student-admission workspace. It must be reviewed/merged as a backend fix without changing the latter PRs' dependency order.
+
 ## Integration rules for all parallel workstreams
 
 1. Use `imtiazali-m/EduSphere-360` as the canonical source repository and `edusphere360-dev` as the existing Supabase project. Do not create another product repository or a replacement database.
