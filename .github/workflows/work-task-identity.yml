@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - 'src/lib/data.ts'
+      - 'src/components/RecordModule.tsx'
       - 'src/lib/workTaskAccess.js'
       - 'src/lib/workTaskAccess.d.ts'
       - 'scripts/test-work-task-identity.mjs'
