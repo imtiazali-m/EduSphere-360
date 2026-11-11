@@ -1,0 +1,101 @@
+/* Final navigation and workspace-window refinement.
+   Loaded after the theme sheets so legacy overrides cannot hide controls. */
+
+.pro-sidebar .pro-sidebar-collapse {
+  display: grid !important;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  place-items: center;
+  border: 1px solid rgba(226, 238, 255, .24);
+  border-radius: 9px;
+  color: #dceaff;
+  background: rgba(255, 255, 255, .055);
+  transition: background .16s ease, border-color .16s ease, color .16s ease;
+}
+.pro-sidebar .pro-sidebar-collapse:hover {
+  color: #fff;
+  border-color: rgba(169, 202, 255, .52);
+  background: rgba(255, 255, 255, .12);
+}
+.pro-sidebar .pro-sidebar-collapse:focus-visible,
+.pro-sidebar .pro-nav-group-head:focus-visible,
+.pro-sidebar .pro-nav-item:focus-visible,
+.pro-workspace-tabs button:focus-visible {
+  outline: 2px solid #a9caff;
+  outline-offset: 2px;
+}
+.pro-sidebar .pro-navigation {
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+.pro-sidebar .pro-nav-group-head {
+  min-height: 42px;
+  transition: background .16s ease, color .16s ease;
+}
+.pro-sidebar .pro-nav-group.expanded > .pro-nav-group-head {
+  background: rgba(255, 255, 255, .075);
+}
+.pro-sidebar .pro-nav-children { padding-top: 4px; padding-bottom: 7px; }
+.pro-sidebar .pro-nav-item {
+  min-height: 35px;
+  line-height: 1.35;
+  transition: color .14s ease, background .14s ease, box-shadow .14s ease;
+}
+.pro-sidebar .pro-nav-item.active {
+  box-shadow: inset 3px 0 0 #a9caff;
+  background: rgba(47, 111, 228, .24);
+  color: #fff;
+}
+.pro-sidebar .pro-nav-item.active .pro-nav-icon { color: #d9e7ff; }
+
+.pro-workspace-tabs {
+  min-height: 52px;
+  align-items: stretch;
+  gap: 5px;
+  padding-top: 7px;
+  border-bottom-color: #dfe7f1;
+  scrollbar-gutter: stable;
+}
+.pro-workspace-tab {
+  border-color: #dce5ef;
+  background: #f5f8fc;
+  transition: background .16s ease, border-color .16s ease, color .16s ease;
+}
+.pro-workspace-tab.is-active {
+  border-color: #c9d8eb;
+  border-top: 2px solid #2f6fe4;
+  background: #fff;
+  color: #173d67;
+  box-shadow: 0 1px 0 #fff inset;
+}
+.pro-workspace-tab.is-child {
+  border-style: dashed;
+  border-color: #cbd8e7;
+  background: #f7f9fc;
+}
+.pro-workspace-tab.is-child.is-active {
+  border-style: solid;
+  border-top: 2px solid #2f6fe4;
+  background: #fff;
+}
+.pro-workspace-tab-close { min-width: 28px; min-height: 32px; }
+.pro-workspace-tab-close:hover { color: #a0443a; background: #fff0ed; }
+
+@media (max-width: 820px) {
+  .pro-sidebar .pro-sidebar-collapse { display: none !important; }
+  .pro-sidebar .pro-nav-group-head { min-height: 44px; }
+  .pro-sidebar .pro-nav-item { min-height: 40px; }
+  .pro-workspace-tabs {
+    min-height: 48px;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+  }
+  .pro-workspace-tab { scroll-snap-align: start; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pro-sidebar .pro-sidebar-collapse,
+  .pro-sidebar .pro-nav-group-head,
+  .pro-sidebar .pro-nav-item,
+  .pro-workspace-tab { transition: none !important; }
+}

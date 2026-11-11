@@ -20,7 +20,7 @@ check('Vite development and production scripts exist', () => {
 
 const requiredFiles = [
   'index.html', 'src/main.tsx', 'src/App.tsx', 'src/components/Dashboard.tsx', 'src/components/WorkspaceUnavailable.tsx',
-  'src/components/FinanceWorkspace.tsx', 'src/styles/finance-workspace.css',
+  'src/components/FinanceWorkspace.tsx', 'src/styles/finance-workspace.css', 'src/styles/navigation-refinement.css',
   'src/components/PayrollWorkspace.tsx', 'src/styles/payroll-workspace.css',
   'src/components/GovernanceWorkspace.tsx', 'src/styles/governance-workspace.css',
   'src/components/InstitutionOperationsWorkspace.tsx', 'src/styles/institution-operations.css',
@@ -229,6 +229,10 @@ check('Dashboard matches the menu and keeps Quick Access at the sidebar bottom',
   assert.ok(dashboardSource.includes('pro-quick-access'), 'Bottom session action area is missing')
   assert.ok(dashboardSource.includes('sidebarCollapsed') && dashboardSource.includes('compactSidebar'), 'Desktop sidebar collapse state is missing')
   assert.ok(dashboardSource.includes('aria-hidden={isMobileNav && !sidebarOpen}'), 'Visible desktop navigation must remain in the accessibility tree')
+  const navigationRefinement = read('src/styles/navigation-refinement.css')
+  assert.ok(navigationRefinement.includes('display: grid !important') && navigationRefinement.includes('.pro-sidebar-collapse:focus-visible'), 'Desktop sidebar collapse control must be available and keyboard focusable')
+  assert.ok(navigationRefinement.includes('@media (max-width: 820px)') && navigationRefinement.includes('min-height: 40px'), 'Mobile navigation targets must remain comfortably tappable')
+  assert.ok(navigationRefinement.includes('prefers-reduced-motion: reduce'), 'Navigation animation must respect reduced-motion preferences')
   const sidebarCss = read('src/styles/pro-dashboard.css')
   for (const feature of ['sidebar-collapsed', 'width:72px', 'width:calc(100% - 72px)', 'pro-sidebar-brand-copy', 'pro-sidebar-collapse']) {
     assert.ok(sidebarCss.includes(feature), 'Compact sidebar styling is missing: ' + feature)
