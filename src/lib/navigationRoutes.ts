@@ -68,7 +68,6 @@ const employeeViews: Record<string, string> = {
 }
 
 const attendanceViews: Record<string, string> = {
-  'student-attendance': 'students',
   'teacher-attendance': 'teachers',
   'staff-attendance': 'staff',
   'attendance-dashboard': 'students',
