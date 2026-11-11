@@ -271,6 +271,7 @@ export function PeopleHRWorkspace({initialWindow,onToast,onNavigate}:Props) {
     const payload:Record<string,unknown>={institution_id:user.institutionId,...values,updated_at:new Date().toISOString()}
     for(const field of config.fields) {
       if(field.type==='checkbox') payload[field.name]=values[field.name]==='true'
+      else if(field.type==='datetime-local') payload[field.name]=values[field.name]?new Date(values[field.name]).toISOString():null
       else if(field.type==='number') payload[field.name]=values[field.name]===''?null:Number(values[field.name])
       else if(values[field.name]==='') payload[field.name]=null
     }
