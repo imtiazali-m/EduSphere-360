@@ -773,8 +773,8 @@ export function SetupScreen({ navigate }: ScreenProps) {
 }
 
 
-export function ResetPasswordScreen({ navigate }: ScreenProps) {
-  const { completePasswordReset, signOut, clearRecoveryMode } = useAuth()
+export function ResetPasswordScreen({ navigate, mode }: ScreenProps & { mode: AuthLinkMode }) {
+  const { completePasswordReset, signOut, clearAuthLinkMode } = useAuth()
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -797,7 +797,7 @@ export function ResetPasswordScreen({ navigate }: ScreenProps) {
   }
 
   async function returnToLogin() {
-    try { await signOut() } finally { clearRecoveryMode(); navigate('login') }
+    try { await signOut() } finally { clearAuthLinkMode(); navigate('access') }
   }
 
   return <div className="es-auth-page">
@@ -807,20 +807,77 @@ export function ResetPasswordScreen({ navigate }: ScreenProps) {
         <section className="es-auth-card es-login-card" aria-live="polite">
           <div className="es-auth-avatar"><span><LockKeyhole size={22}/></span><i><Check size={11}/></i></div>
           <div className="es-auth-form-heading">
-            <span className="es-auth-overline">SECURE ACCOUNT RECOVERY</span>
-            <h2>{completed ? 'Password updated' : 'Choose a new password'}</h2>
-            <p>{completed ? 'Your password has been changed. Sign in again with your new password.' : 'Create a new password for your EduSphere 360 account.'}</p>
+            <span className="es-auth-overline">{mode === 'invite' ? 'INVITATION / ACCOUNT ACTIVATION' : 'SECURE ACCOUNT RECOVERY'}</span>
+            <h2>{completed ? (mode === 'invite' ? 'Account activated' : 'Password updated') : (mode === 'invite' ? 'Activate your account' : 'Choose a new password')}</h2>
+            <p>{completed ? (mode === 'invite' ? 'Your institution invitation is accepted. Sign in with the password you just created.' : 'Your password has been changed. Sign in again with your new password.') : (mode === 'invite' ? 'Confirm your invitation by creating a private password for your institution account.' : 'Create a new password for your EduSphere 360 account.')}</p>
           </div>
           {completed ? <button className="es-auth-submit" type="button" onClick={() => void returnToLogin()}>Return to login <ArrowRight size={17}/></button> : <form className="es-auth-form" onSubmit={submit}>
             <label className="es-auth-field"><span>New password</span><div className="es-auth-input"><LockKeyhole size={17}/><input type={showPassword ? 'text' : 'password'} autoComplete="new-password" minLength={10} required value={password} onChange={e => setPassword(e.target.value)} placeholder="At least 10 characters"/><button type="button" className="es-password-toggle" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Hide password' : 'Show password'}>{showPassword ? <EyeOff size={17}/> : <Eye size={17}/>}</button></div></label>
             <label className="es-auth-field"><span>Confirm new password</span><div className="es-auth-input"><LockKeyhole size={17}/><input type={showPassword ? 'text' : 'password'} autoComplete="new-password" minLength={10} required value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Enter your new password again"/></div></label>
             {error && <div className="es-auth-error" role="alert">{error}</div>}
-            <button className="es-auth-submit" type="submit" disabled={busy}>{busy ? 'Updating password…' : 'Update password'} <ArrowRight size={17}/></button>
+            <button className="es-auth-submit" type="submit" disabled={busy}>{busy ? (mode === 'invite' ? 'Activating account…' : 'Updating password…') : (mode === 'invite' ? 'Activate account' : 'Update password')} <ArrowRight size={17}/></button>
           </form>}
-          <div className="es-auth-secure-note"><ShieldCheck size={15}/> Use a unique password of at least 10 characters.</div>
+          <div className="es-auth-secure-note"><ShieldCheck size={15}/> {mode === 'invite' ? 'Your invitation is linked to the institution account created for you.' : 'Use a unique password of at least 10 characters.'}</div>
         </section>
       </div>
       <footer className="es-auth-main-foot"><span>© {new Date().getFullYear()} EduSphere 360</span><span>Secure account recovery.</span></footer>
+    </main>
+  </div>
+}
+
+
+export function InstitutionSelectionScreen({ choices, onSelect, onSignOut }: {
+  choices: InstitutionChoice[]
+  onSelect: (institutionId: string) => Promise<void>
+  onSignOut: () => Promise<void>
+}) {
+  const [selectedId, setSelectedId] = useState(choices[0]?.institutionId ?? '')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  async function continueToInstitution() {
+    if (!selectedId || busy) return
+    setBusy(true)
+    setError('')
+    try {
+      await onSelect(selectedId)
+    } catch (err) {
+      setError(userFacingError(err, 'This institution could not be opened. Choose another or sign in again.'))
+    } finally {
+      setBusy(false)
+    }
+  }
+  return <div className="es-auth-page es-institution-choice-page">
+    <AuthVisualPanel variant="login" />
+    <main className="es-auth-main">
+      <div className="es-auth-topline">
+        <span className="es-access-secure"><ShieldCheck size={14}/> MULTI-INSTITUTION ACCESS</span>
+        <button type="button" className="es-auth-back" onClick={() => void onSignOut()}>Sign out</button>
+      </div>
+      <div className="es-auth-form-wrap es-institution-choice-wrap">
+        <section className="es-auth-card es-institution-choice-card">
+          <div className="es-auth-avatar"><span><Building2 size={22}/></span><i><Check size={11}/></i></div>
+          <div className="es-auth-form-heading">
+            <span className="es-auth-overline">SELECT YOUR WORKSPACE</span>
+            <h2>Which institution?</h2>
+            <p>Your account has access to more than one institution. Select the workspace you want to open for this session.</p>
+          </div>
+          <div className="es-institution-choice-list" role="radiogroup" aria-label="Choose an institution">
+            {choices.map(choice => <label className={selectedId === choice.institutionId ? 'is-selected' : ''} key={choice.institutionId}>
+              <input type="radio" name="institution" value={choice.institutionId} checked={selectedId === choice.institutionId} onChange={() => setSelectedId(choice.institutionId)}/>
+              <span className="es-institution-choice-mark"><Building2 size={18}/></span>
+              <span className="es-institution-choice-copy">
+                <b>{choice.institutionName}</b>
+                <small>{(choice.institutionType ?? 'Institution').replaceAll('_',' ')} · {choice.role.replaceAll('_',' ')}</small>
+              </span>
+              <CheckCircle2 size={17} className="es-institution-choice-check"/>
+            </label>)}
+          </div>
+          {error && <div className="es-auth-error" role="alert">{error}</div>}
+          <button type="button" className="es-auth-submit" onClick={() => void continueToInstitution()} disabled={!selectedId || busy}>{busy ? 'Opening institution…' : 'Continue to institution'} <ArrowRight size={17}/></button>
+          <div className="es-auth-secure-note"><ShieldCheck size={15}/> Your role and permissions stay scoped to the selected institution.</div>
+        </section>
+      </div>
+      <footer className="es-auth-main-foot"><span>© {new Date().getFullYear()} EduSphere 360</span><span>Choose the institution you manage.</span></footer>
     </main>
   </div>
 }
