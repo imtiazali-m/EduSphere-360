@@ -233,3 +233,71 @@
   .ed360-linked-pagination{align-items:flex-start;flex-direction:column}
   .ed360-linked-pagination>div{width:100%;justify-content:space-between}
 }
+
+
+/* Purpose-built surface treatments for the shared register shell.
+   The semantic workspace palette remains supplied by each catalogue group. */
+.ed360-institutional-workspace[data-workspace-layout="academic"] .ed360-workspace-hero {
+  border-left: 5px solid var(--workspace-accent);
+  border-radius: 5px 16px 16px 5px;
+  background: linear-gradient(105deg, var(--workspace-soft) 0%, #fff 58%);
+}
+.ed360-institutional-workspace[data-workspace-layout="people"] .ed360-workspace-hero {
+  border-radius: 20px 12px 20px 12px;
+  background: linear-gradient(115deg, #fff 0%, var(--workspace-soft) 100%);
+}
+.ed360-institutional-workspace[data-workspace-layout="people"] .ed360-workspace-hero-icon {
+  border-radius: 50%;
+}
+.ed360-institutional-workspace[data-workspace-layout="assessment"] .ed360-workspace-hero {
+  border-top: 3px solid var(--workspace-accent);
+  background: linear-gradient(120deg, #fff 0%, var(--workspace-soft) 100%);
+}
+.ed360-institutional-workspace[data-workspace-layout="assessment"] .ed360-workspace-chart {
+  border-top: 3px solid var(--workspace-accent);
+}
+.ed360-institutional-workspace[data-workspace-layout="ledger"] .ed360-workspace-hero {
+  border-bottom: 3px solid var(--workspace-accent);
+  border-radius: 14px 14px 7px 7px;
+  background: linear-gradient(115deg, var(--workspace-soft) 0%, #fff 68%);
+}
+.ed360-institutional-workspace[data-workspace-layout="ledger"] .ed360-workspace-record-card td[data-column="amount"],
+.ed360-institutional-workspace[data-workspace-layout="ledger"] .ed360-workspace-record-card td[data-column="quantity"] {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.ed360-institutional-workspace[data-workspace-layout="communication"] .ed360-workspace-hero {
+  border-color: transparent;
+  background: var(--workspace-soft);
+  box-shadow: none;
+}
+.ed360-institutional-workspace[data-workspace-layout="resource"] .ed360-workspace-hero {
+  border-top: 1px solid var(--workspace-accent);
+  background: linear-gradient(120deg, #fff 0%, var(--workspace-soft) 100%);
+}
+.ed360-institutional-workspace[data-workspace-layout="resource"] .ed360-workspace-record-card th {
+  background: var(--workspace-soft);
+  color: var(--workspace-ink);
+}
+.ed360-institutional-workspace[data-workspace-layout="operations"] .ed360-workspace-hero {
+  border-top: 4px solid var(--workspace-accent);
+  border-radius: 8px 8px 16px 16px;
+  box-shadow: 0 5px 16px rgba(21, 54, 88, .045);
+}
+.ed360-institutional-workspace[data-workspace-layout="operations"] .ed360-workspace-record-card td[data-column="quantity"] {
+  font-variant-numeric: tabular-nums;
+  font-weight: 750;
+}
+.ed360-institutional-workspace[data-workspace-layout="governance"] .ed360-workspace-hero {
+  border-left: 4px solid var(--workspace-accent);
+  background: #f7f9fc;
+  box-shadow: none;
+}
+.ed360-institutional-workspace[data-workspace-layout="intelligence"] .ed360-workspace-hero {
+  border-color: var(--workspace-accent);
+  background: linear-gradient(115deg, var(--workspace-soft) 0%, #fff 72%);
+}
+.ed360-institutional-workspace .ed360-workspace-record-card th[data-column="amount"],
+.ed360-institutional-workspace .ed360-workspace-record-card th[data-column="quantity"] {
+  text-align: right;
+}
