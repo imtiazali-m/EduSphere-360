@@ -706,11 +706,11 @@ export function Dashboard({ onToast }: Props) {
     // A workspace window is identified by its canonical destination, not by the
     // menu label that happened to open it. Aliases therefore focus the same
     // window instead of creating two tabs that render the same or confusing view.
-    const identity = key
-    const id = options.parentId ? `${options.parentId}::${identity}` : identity
+    const id = key
+    const parentId = options.parentId && options.parentId !== id ? options.parentId : undefined
     const nextTab: WorkspaceTab = {
       id, route: key, targetKey, targetWindow, title,
-      parentId: options.parentId, groupKey: options.groupKey, itemKey: options.itemKey,
+      parentId, groupKey: options.groupKey, itemKey: options.itemKey,
     }
     setWorkspaceTabs(current => {
       const existing = current.some(tab => tab.id === id)
@@ -776,6 +776,9 @@ export function Dashboard({ onToast }: Props) {
   }
 
   const compactSidebar = sidebarCollapsed && !isMobileNav
+  const activeGroupLabel = activeTab?.groupKey
+    ? visibleGroups.find(group => group.key === activeTab.groupKey)?.label ?? 'Institution workspace'
+    : activeTab?.targetKey === 'overview' ? 'Overview' : 'Workspace'
   return <div className={`pro-app-shell ${sidebarOpen ? 'navigation-open' : ''} ${compactSidebar ? 'sidebar-collapsed' : ''}`}>
     <aside className={`pro-sidebar ${sidebarOpen ? 'is-open' : ''} ${compactSidebar ? 'is-collapsed' : ''}`} aria-hidden={isMobileNav && !sidebarOpen}>
       <div className="pro-sidebar-brand">
@@ -792,11 +795,11 @@ export function Dashboard({ onToast }: Props) {
           const GroupIcon = catalogIcons[group.icon] ?? LayoutDashboard
           const isExpanded = expandedGroups.includes(group.key)
           return <section className={`pro-nav-group ${isExpanded ? 'expanded' : ''}`} key={group.key}>
-            <button className={`pro-nav-group-head ${group.key === "dashboard" ? "pro-nav-dashboard-link" : ""}`} aria-label={group.label} title={group.label} aria-expanded={isExpanded} onClick={() => toggleGroup(group.key)}><span className="pro-nav-group-icon"><GroupIcon size={19}/></span><span className="pro-nav-group-name">{group.label}</span><ChevronRight className="pro-nav-chevron" size={17}/></button>
+            <button className={`pro-nav-group-head ${group.key === "dashboard" ? "pro-nav-dashboard-link" : ""}`} aria-label={group.label} title={group.label} aria-expanded={isExpanded} onClick={() => { if (compactSidebar) setSidebarCollapsed(false); toggleGroup(group.key) }}><span className="pro-nav-group-icon"><GroupIcon size={19}/></span><span className="pro-nav-group-name">{group.label}</span><ChevronRight className="pro-nav-chevron" size={17}/></button>
             {isExpanded && <div className="pro-nav-children">{group.items.map(item => {
               const itemKey = item.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
               const route = getNavigationRoute(group.key, item, user!.role)
-              const isActive = activeTab.groupKey === group.key && activeTab.itemKey === itemKey
+              const isActive = activeTab.route === route && (!activeTab.groupKey || activeTab.groupKey === group.key) && (!activeTab.itemKey || activeTab.itemKey === itemKey)
               const ItemIcon = pageIcon(item, GroupIcon)
               const connected = Boolean(route && !route.startsWith('unavailable:'))
               return <button key={item} className={`pro-nav-item ${isActive ? 'active' : ''}`} aria-label={item} title={item} aria-current={isActive ? 'page' : undefined} onClick={() => navigateCatalogPage(group.key, item)}><span className="pro-nav-icon"><ItemIcon size={16}/></span><span className="pro-nav-title">{item}</span>{connected && <i className="pro-nav-connected" title="Connected workspace"/>}</button>
@@ -842,6 +845,10 @@ export function Dashboard({ onToast }: Props) {
         })}
         <span className="pro-workspace-tabs-help">Switch between open workspaces</span>
       </nav>
+      <div className="pro-active-workspace-context" aria-live="polite" aria-atomic="true" data-active-route={activeTab.route}>
+        <div><span>YOU ARE WORKING IN</span><strong>{activeTab.title}</strong><small>{activeGroupLabel} · {roleLabels[user!.role]}</small></div>
+        <span className="pro-context-state"><i/> Active workspace</span>
+      </div>
       <div className="pro-module-stage">
         <div className="pro-window-stack">
           {workspaceTabs.map(tab => {
