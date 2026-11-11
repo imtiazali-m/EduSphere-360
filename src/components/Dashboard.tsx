@@ -8,7 +8,7 @@ import {
   FileQuestion, ListChecks, BarChart3, Award, Library, Wrench, Database, Bell,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import { roleNavigationGroups } from '../lib/navigationAccess'
+import { roleNavigationGroups, roleNavigationSections } from '../lib/navigationAccess'
 import { getNavigationRoute } from '../lib/navigationRoutes'
 import { useAuth } from '../context/AuthContext'
 import { modulesForRole, roleLabels } from '../lib/modules'
@@ -175,6 +175,7 @@ function Overview({ onNavigate }: { onNavigate: (key: string) => void }) {
   const [classScope, setClassScope] = useState('')
   const available = useMemo(() => modulesForRole(user!.role), [user?.role])
   const visibleGroups = useMemo(() => roleNavigationGroups(user!.role), [user?.role])
+  const visibleSections = useMemo(() => roleNavigationSections(user!.role), [user?.role])
 
   useEffect(() => {
     let live = true
@@ -822,31 +823,34 @@ export function Dashboard({ onToast }: Props) {
       </div>
       <div className="pro-institution-card"><span className="pro-institution-symbol"><Building2 size={20}/></span><span><b>{user?.institutionName}</b><small>{roleLabels[user!.role]}</small></span></div>
       <nav className="pro-navigation" aria-label="Institution workspace">
-        {visibleGroups.map(group => {
-          const GroupIcon = catalogIcons[group.icon] ?? LayoutDashboard
-          const isExpanded = expandedGroups.includes(group.key)
-          return <section className={`pro-nav-group ${isExpanded ? 'expanded' : ''}`} key={group.key}>
-            <button className={`pro-nav-group-head ${group.key === "dashboard" ? "pro-nav-dashboard-link" : ""} ${group.key === 'dashboard' && activeTab.route === 'overview' ? 'is-current' : ''}`} aria-label={group.label} title={group.label} aria-current={group.key === 'dashboard' && activeTab.route === 'overview' ? 'page' : undefined} aria-expanded={isExpanded} onClick={() => {
-              if (compactSidebar) setSidebarCollapsed(false)
-              if (group.key === 'dashboard') {
-                setExpandedGroups(current => current.includes(group.key) ? current : [...current, group.key])
-                navigate('overview', { groupKey: 'dashboard', itemKey: 'institutional-overview', title: 'Dashboard' })
-              } else if (compactSidebar) {
-                setExpandedGroups(current => current.includes(group.key) ? current : [...current, group.key])
-              } else {
-                toggleGroup(group.key)
-              }
-            }}><span className="pro-nav-group-icon"><GroupIcon size={19}/></span><span className="pro-nav-group-name">{group.label}</span><ChevronRight className="pro-nav-chevron" size={17}/></button>
-            {isExpanded && <div className="pro-nav-children">{group.items.map(item => {
-              const itemKey = item.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
-              const route = getNavigationRoute(group.key, item, user!.role)
-              const isActive = activeTab.route === route || (activeNavigationTab.groupKey === group.key && activeNavigationTab.itemKey === itemKey)
-              const ItemIcon = pageIcon(item, GroupIcon)
-              const connected = Boolean(route && !route.startsWith('unavailable:'))
-              return <button key={item} className={`pro-nav-item ${isActive ? 'active' : ''}`} aria-label={item} title={item} aria-current={isActive ? 'page' : undefined} onClick={() => navigateCatalogPage(group.key, item)}><span className="pro-nav-icon"><ItemIcon size={16}/></span><span className="pro-nav-title">{item}</span>{connected && <i className="pro-nav-connected" title="Connected workspace"/>}</button>
-            })}</div>}
-          </section>
-        })}
+        {visibleSections.map(section => <div className="pro-nav-section" key={section.key} aria-label={section.label}>
+          <div className="pro-nav-section-label">{section.label}</div>
+          {section.groups.map(group => {
+            const GroupIcon = catalogIcons[group.icon] ?? LayoutDashboard
+            const isExpanded = expandedGroups.includes(group.key)
+            return <section className={`pro-nav-group ${isExpanded ? 'expanded' : ''}`} key={group.key}>
+              <button className={`pro-nav-group-head ${group.key === "dashboard" ? "pro-nav-dashboard-link" : ""}`} aria-label={group.label} title={group.label} aria-expanded={isExpanded} onClick={() => {
+                if (compactSidebar) setSidebarCollapsed(false)
+                if (group.key === 'dashboard') {
+                  setExpandedGroups(current => current.includes(group.key) ? current : [...current, group.key])
+                  navigate('overview', { groupKey: 'dashboard', itemKey: 'institutional-overview', title: 'Dashboard' })
+                } else if (compactSidebar) {
+                  setExpandedGroups(current => current.includes(group.key) ? current : [...current, group.key])
+                } else {
+                  toggleGroup(group.key)
+                }
+              }}><span className="pro-nav-group-icon"><GroupIcon size={19}/></span><span className="pro-nav-group-name">{group.label}</span><ChevronRight className="pro-nav-chevron" size={17}/></button>
+              {isExpanded && <div className="pro-nav-children">{group.items.map(item => {
+                const itemKey = item.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+                const route = getNavigationRoute(group.key, item, user!.role)
+                const isActive = activeTab.route === route || (activeNavigationTab.groupKey === group.key && activeNavigationTab.itemKey === itemKey)
+                const ItemIcon = pageIcon(item, GroupIcon)
+                const connected = Boolean(route && !route.startsWith('unavailable:'))
+                return <button key={item} className={`pro-nav-item ${isActive ? 'active' : ''}`} aria-label={item} title={item} aria-current={isActive ? 'page' : undefined} onClick={() => navigateCatalogPage(group.key, item)}><span className="pro-nav-icon"><ItemIcon size={16}/></span><span className="pro-nav-title">{item}</span>{connected && <i className="pro-nav-connected" title="Connected workspace"/>}</button>
+              })}</div>}
+            </section>
+          })}
+        </div>)}
       </nav>
       <section className="pro-quick-access" aria-label="Session">
         <button type="button" className="pro-nav-item pro-signout-item" aria-label="Sign out" title="Sign out" onClick={() => void logout()}>
