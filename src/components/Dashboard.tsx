@@ -6,6 +6,7 @@ import {
   School, Settings, ShieldCheck, Users, Wallet, X, UserRound, BrainCircuit,
   Calculator, Banknote, TrendingUp, BookOpenCheck, HeartHandshake, MessageSquare,
   FileQuestion, ListChecks, BarChart3, Award, Library, Wrench, Database, Bell,
+  Sun, Moon, Type,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { roleNavigationGroups, roleNavigationSections } from '../lib/navigationAccess'
@@ -34,9 +35,14 @@ import { PayrollWorkspace } from './PayrollWorkspace'
 import { GovernanceWorkspace } from './GovernanceWorkspace'
 import { InstitutionOperationsWorkspace } from './InstitutionOperationsWorkspace'
 import { supabase } from '../lib/supabase'
+import { readDisplayPreferences, writeDisplayPreferences, type DashboardDisplayPreferences, type DashboardFontSize } from '../lib/displayPreferences'
 
 interface Props { onToast: (message: string, error?: boolean) => void }
 type Dataset = Record<string, RecordRow[]>
+
+function getDisplayPreferenceStorage(): Storage | null {
+  try { return typeof window === 'undefined' ? null : window.localStorage } catch { return null }
+}
 
 const moduleIcons: Record<string, LucideIcon> = {
   overview: LayoutDashboard, students: GraduationCap, teachers: Users, attendance: CalendarCheck,
@@ -583,6 +589,19 @@ export function Dashboard({ onToast }: Props) {
   const [searchText, setSearchText] = useState('')
   const [searchOpen, setSearchOpen] = useState(false)
   const [unreadAnnouncementCount, setUnreadAnnouncementCount] = useState(0)
+  const [displayPreferences, setDisplayPreferences] = useState<DashboardDisplayPreferences>(() => readDisplayPreferences(getDisplayPreferenceStorage()))
+  const [displaySettingsOpen, setDisplaySettingsOpen] = useState(false)
+  const sidebarCollapsed = displayPreferences.sidebar === 'compact'
+  const setSidebarCollapsed = (next: boolean | ((current: boolean) => boolean)) => {
+    setDisplayPreferences(current => {
+      const collapsed = typeof next === 'function' ? next(current.sidebar === 'compact') : next
+      return { ...current, sidebar: collapsed ? 'compact' : 'expanded' }
+    })
+  }
+
+  useEffect(() => {
+    writeDisplayPreferences(getDisplayPreferenceStorage(), displayPreferences)
+  }, [displayPreferences])
 
   // Keep the sidebar context aligned with the parent workspace for nested windows.
   useEffect(() => {
@@ -620,6 +639,7 @@ export function Dashboard({ onToast }: Props) {
         document.getElementById('ed360-workspace-search')?.focus()
       } else if (event.key === 'Escape') {
         setSearchOpen(false)
+        setDisplaySettingsOpen(false)
       }
     }
     window.addEventListener('keydown', onShortcut)
@@ -811,7 +831,7 @@ export function Dashboard({ onToast }: Props) {
   const activeGroupLabel = activeNavigationTab.groupKey
     ? visibleGroups.find(group => group.key === activeNavigationTab.groupKey)?.label ?? 'Institution workspace'
     : activeNavigationTab.targetKey === 'overview' ? 'Overview' : 'Workspace'
-  return <div className={`pro-app-shell ${sidebarOpen ? 'navigation-open' : ''} ${compactSidebar ? 'sidebar-collapsed' : ''}`}>
+  return <div className={`pro-app-shell ${sidebarOpen ? 'navigation-open' : ''} ${compactSidebar ? 'sidebar-collapsed' : ''}`} data-view-mode={displayPreferences.viewMode} data-theme={displayPreferences.theme} data-font-size={displayPreferences.fontSize} data-reduced-motion={displayPreferences.reducedMotion ? 'true' : 'false'}>
     <aside className={`pro-sidebar ${sidebarOpen ? 'is-open' : ''} ${compactSidebar ? 'is-collapsed' : ''}`} aria-hidden={isMobileNav && !sidebarOpen}>
       <div className="pro-sidebar-brand">
         <div className="pro-sidebar-mark"><GraduationCap size={25}/></div>
@@ -870,6 +890,22 @@ export function Dashboard({ onToast }: Props) {
           </div>
         </div>
         <div className="pro-topbar-right">
+          <div className="ed360-display-controls">
+            <div className="ed360-view-switch" role="group" aria-label="Dashboard display mode">
+              <button type="button" aria-pressed={displayPreferences.viewMode === 'modern'} onClick={() => setDisplayPreferences(current => ({ ...current, viewMode: 'modern' }))}>Modern</button>
+              <button type="button" aria-pressed={displayPreferences.viewMode === 'classic'} onClick={() => setDisplayPreferences(current => ({ ...current, viewMode: 'classic' }))}>Classic</button>
+            </div>
+            <button type="button" className="ed360-display-settings-trigger" aria-expanded={displaySettingsOpen} aria-controls="ed360-display-settings" onClick={() => setDisplaySettingsOpen(open => !open)}>
+              <Settings size={16}/><span>Display</span>
+            </button>
+            {displaySettingsOpen && <section className="ed360-display-settings-panel" id="ed360-display-settings" aria-label="Display settings">
+              <div className="ed360-display-settings-heading"><div><strong>Display settings</strong><small>Saved on this device</small></div><button type="button" onClick={() => setDisplaySettingsOpen(false)} aria-label="Close display settings"><X size={16}/></button></div>
+              <label className="ed360-display-setting-row"><span><Sun size={15}/> Theme</span><select value={displayPreferences.theme} onChange={event => setDisplayPreferences(current => ({ ...current, theme: event.target.value as DashboardDisplayPreferences['theme'] }))} aria-label="Colour theme"><option value="light">Light</option><option value="dark">Dark</option></select></label>
+              <label className="ed360-display-setting-row"><span><Type size={15}/> Text size</span><select value={displayPreferences.fontSize} onChange={event => setDisplayPreferences(current => ({ ...current, fontSize: event.target.value as DashboardFontSize }))} aria-label="Readable font size"><option value="standard">Standard</option><option value="large">Large</option><option value="largest">Extra large</option></select></label>
+              <div className="ed360-display-setting-row"><span><PanelLeftClose size={15}/> Sidebar</span><button type="button" className="ed360-preference-toggle" aria-pressed={displayPreferences.sidebar === 'compact'} onClick={() => setSidebarCollapsed(value => !value)}>{displayPreferences.sidebar === 'compact' ? 'Compact' : 'Expanded'}</button></div>
+              <label className="ed360-display-motion"><input type="checkbox" checked={displayPreferences.reducedMotion} onChange={event => setDisplayPreferences(current => ({ ...current, reducedMotion: event.target.checked }))}/><span>Reduce motion</span></label>
+            </section>}
+          </div>
           <div className="ed360-topbar-institution"><Building2 size={19}/><span><b>{user?.institutionName}</b><small><i className={'ed360-status-dot ' + (mode === 'cloud' ? 'is-cloud' : 'is-local')}/>{mode === 'cloud' ? 'Online' : 'Local workspace'}</small></span></div>
           <button type="button" className="pro-topbar-bell ed360-topbar-notice" aria-label={`Open notifications${unreadAnnouncementCount ? `, ${unreadAnnouncementCount} unread` : ''}`} title="Open notification centre" onClick={() => navigate('notifications')}><Bell size={18}/>{unreadAnnouncementCount > 0 && <span className="ed360-notification-count">{unreadAnnouncementCount > 99 ? '99+' : unreadAnnouncementCount}</span>}</button>
           <div className="pro-profile-wrap"><button className="pro-profile-trigger" onClick={() => setProfileOpen(open => !open)} aria-expanded={profileOpen}><span className="pro-profile-avatar">{user?.fullName.slice(0, 1).toUpperCase()}</span><span className="pro-profile-copy"><b>{user?.fullName}</b><small>{roleLabels[user!.role]}</small></span><ChevronDown size={14}/></button>{profileOpen && <div className="pro-profile-menu"><div className="pro-profile-details"><b>{user?.fullName}</b><small>{user?.email}</small><small>{user?.institutionName}</small>{user?.institutionType && <small>Institution type: {user.institutionType.replaceAll('_', ' ')}</small>}<small>Account role: {roleLabels[user!.role]}</small><span className={'pro-profile-mode ' + mode}>Cloud workspace</span></div>{['student', 'parent'].includes(user!.role) && <button type="button" onClick={() => navigate('profile')}><UserRound size={15}/> My Profile</button>}<button type="button" onClick={() => void logout()}><LogOut size={15}/> Sign out</button></div>}</div>
