@@ -41,6 +41,7 @@ const requiredFiles = [
   'supabase/migrations/20261109151231_atomic_institution_setting_approval.sql',
   'supabase/migrations/20261109153658_academic_studentcare_and_campus_operations.sql',
   'supabase/migrations/20261109155028_question_paper_approval_and_line_removal.sql',
+  'supabase/migrations/20261111160000_institutional_record_review_isolation.sql',
   'docs/EDUSPHERE_360_BENCHMARK_AND_GAP_REVIEW.md',
   '.env.example', 'package-lock.json', 'src/lib/types.ts', 'supabase/migrations/20261108053651_owner_signup_institution_details.sql', 'supabase/migrations/20261109085154_faculty_employee_management.sql', 'supabase/migrations/20261109092734_student_management_operations.sql', 'supabase/migrations/20261109092920_student_management_scope_indexes_and_guardian_portal_read.sql',
   '.github/workflows/cloudflare-pages-release.yml', 'docs/FINAL_REBUILD_STAGE.md', 'docs/NAVIGATION_RECONCILIATION.md',
@@ -871,8 +872,8 @@ check('Required database safeguards and Cloudflare redirects remain in the proje
     assert.ok(migrations.includes(migration), `${migration} missing`)
   }
   const timestamped = migrations.filter(name => /^202611\d{8}_.+\.sql$/.test(name))
-  assert.equal(timestamped.length, 30, 'Expected thirty timestamped migrations including staged catalogue, library and transport refinements')
-  assert.ok(read('supabase/migrations/README.md').includes('thirty timestamped migration files'))
+  assert.equal(timestamped.length, 31, 'Expected thirty applied timestamped migrations plus one staged institutional review-isolation migration')
+  assert.ok(read('supabase/migrations/README.md').includes('31 timestamped migration files') && read('supabase/migrations/README.md').includes('one staged migration'))
   assert.equal(read('public/_redirects').trim(), '/* /index.html 200')
   const envExample = read('.env.example')
   const gitignore = read('.gitignore')
@@ -965,6 +966,32 @@ check('Family-facing workspace exports and review metrics exclude internal appro
   assert.ok(workspace.includes('pendingReviewCount!==null'), 'Pending review KPI must be hidden from non-admin roles')
   assert.ok(privacy.includes('reviewed_by') && privacy.includes('reviewed_at'), 'The privacy projection must remove review audit fields as well as approval status')
   assert.ok(tests.includes('family dashboard metrics use public status only') && tests.includes('family exports omit approval and review audit fields'), 'Focused workspace privacy regressions are missing')
+})
+
+check('Institutional review metadata is isolated behind owner/admin database authorization', () => {
+  const migration = read('supabase/migrations/20261111160000_institutional_record_review_isolation.sql')
+  const workspace = read('src/components/InstitutionalWorkspace.tsx')
+  const privacy = read('src/lib/workspacePrivacy.js')
+  for (const safeguard of [
+    'create table public.institutional_record_reviews',
+    'enable row level security',
+    'institutional_record_reviews_owner_admin_select',
+    'institutional_record_reviews_owner_admin_insert',
+    'institutional_record_reviews_owner_admin_update',
+    'institutional_record_reviews_owner_admin_delete',
+    'public.has_institution_role',
+    'foreign key (record_id, institution_id)',
+    'insert into public.institutional_record_reviews',
+    'save_institutional_record_with_review',
+    'private.audit_institutional_record_review',
+    'drop column approval_status',
+    'drop column reviewed_by',
+    'drop column reviewed_at',
+    'drop column review_notes',
+  ]) assert.ok(migration.toLowerCase().includes(safeguard.toLowerCase()), 'Review isolation migration is missing: ' + safeguard)
+  assert.ok(workspace.includes('institutional_record_reviews').toString() && workspace.includes('save_institutional_record_with_review'), 'Workspace must use the secure review relation and atomic owner/admin save')
+  assert.ok(workspace.includes("select('id,institution_id,campus_id"), 'Operational rows must use an explicit safe-column projection')
+  assert.ok(privacy.includes("'review_notes'"), 'Non-admin export sanitization must include internal review notes')
 })
 
 check('Student admission is a dedicated, accessible workspace window', () => {
