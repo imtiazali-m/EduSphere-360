@@ -1,0 +1,287 @@
+/* Stage 2 — dedicated access windows and institutional chooser.
+   Uses the existing EduSphere authentication tokens and campus illustration. */
+.es-access-main {
+  padding-left: clamp(22px, 3.7vw, 54px);
+  padding-right: clamp(22px, 3.7vw, 54px);
+}
+.es-access-secure {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #789080;
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: 1.2px;
+}
+.es-access-content {
+  width: 100%;
+  max-width: 780px;
+  margin: auto;
+  padding: 34px 0;
+}
+.es-access-content > h2 {
+  margin: 8px 0 9px;
+  color: #1d3028;
+  font-size: clamp(29px, 3vw, 38px);
+  line-height: 1.12;
+  letter-spacing: -1.4px;
+}
+.es-access-intro {
+  max-width: 620px;
+  margin: 0;
+  color: #75827a;
+  font-size: 12px;
+  line-height: 1.75;
+}
+.es-access-window-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 25px;
+}
+.es-access-window {
+  min-width: 0;
+  padding: 24px 22px 20px;
+  border: 1px solid #e5ebdf;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 14px 35px rgba(22,52,37,.055);
+}
+.es-access-owner { border-top: 3px solid #94b66c; }
+.es-access-member { border-top: 3px solid #527e9b; }
+.es-access-window-icon {
+  width: 43px;
+  height: 43px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 17px;
+  border-radius: 13px;
+  color: #2c5a43;
+  background: #eef4e6;
+}
+.es-access-member .es-access-window-icon {
+  color: #315d79;
+  background: #eaf2f7;
+}
+.es-access-window-kicker {
+  color: #82917f;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 1.25px;
+}
+.es-access-window h3 {
+  margin: 7px 0 8px;
+  color: #23372c;
+  font-size: 19px;
+  letter-spacing: -.55px;
+}
+.es-access-window > p {
+  min-height: 58px;
+  margin: 0;
+  color: #78857c;
+  font-size: 11px;
+  line-height: 1.65;
+}
+.es-access-window-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 18px;
+}
+.es-access-primary,
+.es-access-secondary,
+.es-access-text-link {
+  width: 100%;
+  min-height: 41px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  border-radius: 9px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 850;
+  cursor: pointer;
+}
+.es-access-primary {
+  border: 1px solid #2d6348;
+  color: #fff;
+  background: #285c43;
+}
+.es-access-primary:hover { background: #204d38; }
+.es-access-secondary {
+  border: 1px solid #e1e9dc;
+  color: #365641;
+  background: #f8faf5;
+}
+.es-access-secondary:hover { background: #f0f5e9; }
+.es-access-text-link {
+  border: 0;
+  color: #427150;
+  background: transparent;
+}
+.es-access-text-link:hover { color: #254f39; }
+.es-access-window ul {
+  margin: 16px 0 0;
+  padding: 13px 0 0 17px;
+  border-top: 1px solid #eef1eb;
+  color: #7e8a80;
+  font-size: 10px;
+  line-height: 1.85;
+}
+.es-access-role-links {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-top: 18px;
+}
+.es-access-role-links button {
+  min-width: 0;
+  min-height: 55px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid #e5ecf0;
+  border-radius: 10px;
+  color: #38617b;
+  background: #fbfdfe;
+  text-align: left;
+  cursor: pointer;
+}
+.es-access-role-links button:hover {
+  border-color: #bdced9;
+  background: #f4f9fc;
+}
+.es-access-role-links button > span {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.es-access-role-links b {
+  color: #2e4554;
+  font-size: 10px;
+}
+.es-access-role-links small {
+  color: #87949c;
+  font-size: 9px;
+}
+.es-access-member-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 15px;
+  padding-top: 13px;
+  border-top: 1px solid #edf1f2;
+  color: #7d8b91;
+  font-size: 9px;
+  line-height: 1.55;
+}
+.es-access-member-note svg { flex: 0 0 auto; }
+.es-access-footer-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 16px;
+  color: #8a968d;
+  font-size: 9px;
+  line-height: 1.6;
+}
+.es-access-contact-note {
+  margin: -2px 0 0;
+  color: #859187;
+  font-size: 9px;
+  line-height: 1.6;
+}
+.es-signup-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 14px;
+}
+.es-field-wide { grid-column: 1 / -1; }
+.es-institution-choice-wrap { max-width: 590px; }
+.es-institution-choice-card { padding: clamp(24px,3vw,38px); }
+.es-institution-choice-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 23px 0 18px;
+}
+.es-institution-choice-list label {
+  min-height: 68px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 11px 13px;
+  border: 1px solid #e6ece3;
+  border-radius: 12px;
+  background: #fbfcfa;
+  cursor: pointer;
+}
+.es-institution-choice-list label.is-selected {
+  border-color: #94b77e;
+  background: #f5f9ef;
+  box-shadow: 0 0 0 2px rgba(147,183,122,.12);
+}
+.es-institution-choice-list input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+.es-institution-choice-mark {
+  width: 37px;
+  height: 37px;
+  flex: 0 0 37px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  color: #315e45;
+  background: #e9f1df;
+}
+.es-institution-choice-copy {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.es-institution-choice-copy b {
+  color: #2a3b30;
+  font-size: 12px;
+}
+.es-institution-choice-copy small {
+  color: #7d897f;
+  font-size: 9px;
+  text-transform: capitalize;
+}
+.es-institution-choice-check { color: #9ca89e; }
+.es-institution-choice-list .is-selected .es-institution-choice-check { color: #4f8056; }
+.es-institution-choice-list input:focus-visible + .es-institution-choice-mark {
+  outline: 3px solid rgba(131,169,102,.27);
+  outline-offset: 2px;
+}
+@media (max-width: 900px) {
+  .es-access-window-grid { grid-template-columns: 1fr; }
+  .es-access-window > p { min-height: 0; }
+  .es-access-content { max-width: 610px; }
+}
+@media (max-width: 760px) {
+  .es-signup-grid { grid-template-columns: 1fr; }
+  .es-field-wide { grid-column: auto; }
+}
+@media (max-width: 620px) {
+  .es-access-main { padding: 18px 18px 20px; }
+  .es-access-content { padding: 22px 0; }
+  .es-access-window { padding: 20px 18px; }
+  .es-access-window-grid { gap: 12px; margin-top: 19px; }
+  .es-access-window h3 { font-size: 18px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .es-access-primary,
+  .es-access-secondary,
+  .es-access-text-link,
+  .es-access-role-links button { transition: none !important; }
+}
