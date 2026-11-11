@@ -402,6 +402,7 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
   if (groupKey === 'visitors' && ['visitor-approvals','visitor-notifications','visitor-reports'].includes(itemKey)) return 'unavailable:visitors:' + itemKey
   if (groupKey === 'timetable' && ['teacher-availability','substitution-management','timetable-publishing','class-coverage','engaged-classes'].includes(itemKey)) return 'unavailable:timetable:' + itemKey
   if (groupKey === 'examinations' && ['invigilation-management','automatic-checking'].includes(itemKey)) return 'unavailable:examinations:' + itemKey
+  if (groupKey === 'examinations' && ['examination-programs','examination-timetable','question-bank','online-tests-and-quizzes','marks-entry','grades-and-grading-system','results-and-result-approval','report-cards','examination-reports'].includes(itemKey)) return 'institutional:examinations:' + itemKey
   if (groupKey === 'examinations' && itemKey === 'examination-rooms') return 'admin:rooms'
   if (groupKey === 'class-tests' && ['online-tests','written-tests','test-questions'].includes(itemKey)) return 'unavailable:class-tests:' + itemKey
   if (groupKey === 'fees' && itemKey === 'online-payments') return 'unavailable:fees:online-payments'
