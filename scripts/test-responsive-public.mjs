@@ -146,7 +146,7 @@ async function inspectViewport({ name, width, height }) {
 
 try {
   await waitForPreview()
-  browser = await chromium.launch({ headless: true })
+  browser = await chromium.launch({ headless: true, channel: 'chrome' })
   for (const viewport of [
     { name: 'desktop', width: 1440, height: 900 },
     { name: 'tablet', width: 768, height: 1024 },
