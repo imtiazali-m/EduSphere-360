@@ -246,7 +246,7 @@ check('Institutional registers and windows are tailored by workspace domain', ()
   for (const value of ['showAmount','showQuantity','showDueDate','showPortalVisibility']) {
     assert.ok(workspace.includes(value), 'Module-specific form visibility is missing: ' + value)
   }
-  assert.ok(workspace.includes("['student','parent'].includes(user?.role??'')"), 'Family portals must not see internal approval columns')
+  assert.ok(workspace.includes('canViewInternalApproval(user?.role)'), 'Only owner/admin may see internal approval columns')
   for (const layout of ['academic','people','assessment','ledger','communication','resource','operations','governance','intelligence']) {
     assert.ok(styles.includes(`[data-workspace-layout="${layout}"]`), 'Distinct workspace surface is missing: ' + layout)
   }
