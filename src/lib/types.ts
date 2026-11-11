@@ -1,6 +1,16 @@
 export type AppRole = 'owner' | 'admin' | 'teacher' | 'student' | 'parent' | 'accountant' | 'exam_officer'
 export type AppMode = 'cloud'
 
+export type AuthLinkMode = 'recovery' | 'invite'
+
+export interface InstitutionChoice {
+  institutionId: string
+  institutionName: string
+  institutionType?: string
+  role: AppRole
+  createdAt?: string
+}
+
 export interface AppUser {
   id: string
   email: string
