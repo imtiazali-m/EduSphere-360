@@ -19,6 +19,7 @@ check('Vite development and production scripts exist', () => {
   assert.equal(packageJson.scripts['audit:navigation'], 'node scripts/generate-navigation-route-audit.mjs')
   assert.equal(packageJson.scripts['audit:route-views'], 'node scripts/generate-route-view-audit.mjs')
   assert.equal(packageJson.scripts['audit:responsive'], 'node scripts/generate-responsive-source-audit.mjs')
+  assert.equal(packageJson.scripts['test:display-preferences'], 'node --test scripts/test-display-preferences.mjs')
 })
 
 const requiredFiles = [
@@ -29,7 +30,7 @@ const requiredFiles = [
   'src/components/InstitutionOperationsWorkspace.tsx', 'src/styles/institution-operations.css',
   'src/components/AuthScreens.tsx', 'src/components/AdministrationModule.tsx',
   'src/components/RecordModule.tsx', 'src/components/FacultyWorkspace.tsx', 'src/styles/faculty-workspace.css', 'src/components/ReportsModule.tsx', 'src/components/ProfileModule.tsx', 'src/context/AuthContext.tsx', 'src/lib/auth.ts',
-  'src/lib/data.ts', 'src/lib/navigationAccess.ts', 'src/lib/userErrors.ts', 'scripts/test-user-errors.mjs',
+  'src/lib/data.ts', 'src/lib/displayPreferences.js', 'src/lib/displayPreferences.d.ts', 'src/styles/dashboard-display-settings.css', 'scripts/test-display-preferences.mjs', '.github/workflows/dashboard-display-preferences.yml', 'src/lib/navigationAccess.ts', 'src/lib/userErrors.ts', 'scripts/test-user-errors.mjs',
   'src/lib/finance.ts', 'scripts/test-finance.mjs', 'src/lib/fileAccess.ts', 'scripts/test-file-access.mjs',
   'scripts/test-account-provisioning.mjs', 'supabase/functions/create-user/index.ts', 'supabase/functions/create-user/provisioning-guards.mjs', '.github/workflows/teacher-account-provisioning.yml', 'docs/TEACHER_ACCOUNT_LINK_INTEGRITY.md',
   'src/lib/navigationCatalog.ts', 'src/lib/navigationRoutes.ts', 'scripts/generate-navigation-route-audit.mjs', 'scripts/generate-route-view-audit.mjs', 'scripts/generate-responsive-source-audit.mjs', 'docs/PHASE_1_EXACT_ROUTE_AUDIT.md', 'docs/PHASE_1_ROUTE_VIEW_AUDIT.md', 'docs/PHASE_2_RESPONSIVE_SOURCE_AUDIT.md', 'src/components/NotificationCenter.tsx', 'src/styles/notification-center.css', 'public/_redirects',
@@ -954,6 +955,27 @@ check('Unified design system is loaded last and removes global browser zoom', ()
   assert.ok(routeAudit.includes('Explicitly unavailable') && routeAudit.includes('acceptance pending'), 'Exact route audit must distinguish unresolved workflows')
 })
 
+check('Modern and Classic dashboard modes preserve role data, workspaces and accessible display preferences', () => {
+  const dashboard = read('src/components/Dashboard.tsx')
+  const preferences = read('src/lib/displayPreferences.js')
+  const displayStyles = read('src/styles/dashboard-display-settings.css')
+  const displayTests = read('scripts/test-display-preferences.mjs')
+  const mainEntry = read('src/main.tsx')
+  assert.ok(dashboard.includes('data-view-mode={displayPreferences.viewMode}') && dashboard.includes('data-theme={displayPreferences.theme}'), 'Display preferences must be applied to the existing signed-in shell')
+  assert.ok(dashboard.includes('aria-label="Dashboard display mode"') && dashboard.includes('Modern') && dashboard.includes('Classic'), 'Top-bar view selector must expose both accessible display modes')
+  assert.ok(dashboard.includes('roleNavigationGroups(user!.role)') && dashboard.includes('modulesForRole(user!.role)'), 'Role-filtered navigation and modules must remain unchanged')
+  assert.ok(dashboard.includes('workspaceTabs.map(tab =>') && dashboard.includes('<Overview onNavigate={navigateChild}/>'), 'View switches must retain the same current workspace and overview component')
+  for (const preference of ['viewMode', 'theme', 'fontSize', 'sidebar', 'reducedMotion']) {
+    assert.ok(preferences.includes(preference), 'Preference persistence is missing: ' + preference)
+  }
+  assert.ok(preferences.includes('localStorage') === false, 'The preference helper must remain storage-adapter based and testable')
+  for (const style of ['data-view-mode="classic"', 'data-theme="dark"', 'data-font-size="largest"', 'data-reduced-motion="true"', 'prefers-reduced-motion: reduce', 'focus-visible', 'min-height: 32px']) {
+    assert.ok(displayStyles.includes(style), 'Display style/accessibility support is missing: ' + style)
+  }
+  assert.ok(mainEntry.includes("import './styles/dashboard-display-settings.css'"), 'Dashboard display styles must be loaded in the application')
+  assert.ok(displayTests.includes('reads all supported settings') && displayTests.includes('storage write failure is non-fatal'), 'Display preference persistence regressions are missing')
+})
+ 
 check('Student admission is a dedicated, accessible workspace window', () => {
   const recordModule = read('src/components/RecordModule.tsx')
   const admissionStyles = read('src/styles/student-admission-workspace.css')
