@@ -93,21 +93,29 @@ export function PayrollWorkspace({initialWindow,onToast}:Props){
     if(!silent){setLoading(true);setError('')}
     try{
       const employeeRows=await listRecords('cloud',user,'teachers') as Employee[]
-      const [profileRows,runRows,itemRows,componentResult,adjustmentResult]=await Promise.all([
+      const [profileRows,runRows,itemRows]=await Promise.all([
         listRecords('cloud',user,'employee_salary_profiles') as Promise<SalaryProfile[]>,
         listRecords('cloud',user,'payroll_runs') as Promise<PayrollRun[]>,
         listRecords('cloud',user,'payroll_items') as Promise<PayrollItem[]>,
-        supabase!.from('employee_salary_components').select('*').eq('institution_id',user.institutionId).order('created_at',{ascending:false}),
-        supabase!.from('payroll_adjustments').select('*').eq('institution_id',user.institutionId).order('created_at',{ascending:false}),
       ])
-      if(componentResult.error)throw componentResult.error
-      if(adjustmentResult.error)throw adjustmentResult.error
+      let componentRows:SalaryComponent[]=[]
+      let adjustmentRows:PayrollAdjustment[]=[]
+      if(financeRole){
+        const [componentResult,adjustmentResult]=await Promise.all([
+          supabase!.from('employee_salary_components').select('*').eq('institution_id',user.institutionId).order('created_at',{ascending:false}),
+          supabase!.from('payroll_adjustments').select('*').eq('institution_id',user.institutionId).order('created_at',{ascending:false}),
+        ])
+        if(componentResult.error)throw componentResult.error
+        if(adjustmentResult.error)throw adjustmentResult.error
+        componentRows=(componentResult.data??[]) as SalaryComponent[]
+        adjustmentRows=(adjustmentResult.data??[]) as PayrollAdjustment[]
+      }
       setEmployees(employeeRows)
       setProfiles(profileRows)
       setRuns(runRows)
       setItems(itemRows)
-      setComponents((componentResult.data??[]) as SalaryComponent[])
-      setAdjustments((adjustmentResult.data??[]) as PayrollAdjustment[])
+      setComponents(componentRows)
+      setAdjustments(adjustmentRows)
       if(!selectedRun&&runRows.length)setSelectedRun(runRows[0].id)
       if(!employeeId&&employeeRows.length)setEmployeeId(employeeRows[0].id)
     }catch(err){
