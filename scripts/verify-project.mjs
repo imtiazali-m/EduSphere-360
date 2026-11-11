@@ -871,8 +871,8 @@ check('Legacy fee-payment compatibility RPC delegates to the strict payment work
   assert.ok(migration.includes('p_payment_reference => p_transaction_reference'))
   assert.ok(migration.includes("p_payment_date => (now() AT TIME ZONE 'Asia/Karachi')::date"))
   assert.ok(migration.includes('WHERE id = v_payment_id') && migration.includes('AND invoice_id = p_invoice_id'))
-  assert.ok(!/INSERT\\s+INTO\\s+public\\.fee_payments/i.test(migration))
-  assert.ok(!/UPDATE\\s+public\\.fee_invoices/i.test(migration))
+  assert.ok(!migration.includes('INSERT INTO public.fee_payments'))
+  assert.ok(!migration.includes('UPDATE public.fee_invoices'))
   assert.ok(test.includes('legacy payment calls delegate to the strict date-aware RPC'))
 })
 
