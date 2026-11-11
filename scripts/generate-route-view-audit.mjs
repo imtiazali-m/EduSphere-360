@@ -36,7 +36,7 @@ const studentVisibleTabs = {
 }
 const facultyTabs = new Set(['overview','registration','directory','profile','id-cards','departments','designations','assignments','attendance','leave','workload','documents','history','reports'])
 const facultyStaffTabs = new Set(['overview','profile','id-cards','assignments','attendance','leave','workload','documents','history'])
-const attendanceWindows = new Set(['students','staff','history','devices'])
+const attendanceWindows = new Set(['students','teachers','staff','history','devices'])
 const reportTabs = new Set(['overview','finance','attendance','academics','students','employees','payroll'])
 const financeTabs = {
   'accounts-finance': new Set(['overview','accounts','journals','reconciliation']),
@@ -68,6 +68,7 @@ const linkedKeys = new Set([
 function shellTarget(route) {
   const student = route.startsWith('students:')
   const attendance = route.startsWith('attendance:')
+  const care = route.startsWith('care:')
   const institutional = route.startsWith('institutional:')
   const unavailable = route.startsWith('unavailable:')
   const employee = route.startsWith('employees:')
@@ -80,6 +81,7 @@ function shellTarget(route) {
   const moduleWindow = parts.length === 2 && ['fees','exams','exam_results','assignments','assignment_submissions','timetable','announcements','work_tasks'].includes(parts[0])
   const targetKey = student ? 'students'
     : attendance ? 'attendance'
+    : care ? 'care'
     : institutional ? 'institutional'
     : unavailable ? 'unavailable'
     : employee ? 'teachers'
@@ -92,6 +94,7 @@ function shellTarget(route) {
     : route
   const targetWindow = student ? route.slice('students:'.length)
     : attendance ? route.slice('attendance:'.length)
+    : care ? route.slice('care:'.length)
     : institutional ? route.slice('institutional:'.length)
     : unavailable ? route.slice('unavailable:'.length)
     : employee ? route.slice('employees:'.length)
@@ -123,6 +126,10 @@ function checkView(role, route, dispatcher) {
   }
   if (targetKey === 'attendance') {
     return { component: 'AttendanceWorkspace', view: targetWindow, status: attendanceWindows.has(targetWindow) ? 'Supported' : 'Unsupported attendance view' }
+  }
+  if (targetKey === 'care') {
+    const careWindows = new Set(['leave','reports','discipline','counselling','health'])
+    return { component: 'Stage7CareWorkspace', view: targetWindow, status: careWindows.has(targetWindow) ? 'Supported' : 'Unsupported care view' }
   }
   if (targetKey === 'reports') {
     return { component: 'ReportsModule', view: targetWindow, status: reportTabs.has(targetWindow) ? 'Supported' : 'Unsupported reports view' }
@@ -183,6 +190,7 @@ for (const [role, label] of roles) {
         : dashboard.targetKey === 'teachers' ? 'FacultyWorkspace'
         : dashboard.targetKey === 'students' ? 'RecordModule · students'
         : dashboard.targetKey === 'attendance' ? 'AttendanceWorkspace'
+        : dashboard.targetKey === 'care' ? 'Stage7CareWorkspace'
         : dashboard.targetKey === 'reports' ? 'ReportsModule'
         : dashboard.targetKey === 'finance' ? 'FinanceWorkspace'
         : dashboard.targetKey === 'payroll' ? 'PayrollWorkspace'
