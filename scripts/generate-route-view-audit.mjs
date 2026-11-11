@@ -253,6 +253,6 @@ md.push('- Test tenant-scoped reads and writes; this audit does not replace RLS 
 md.push('')
 
 const output = path.join(root, 'docs/PHASE_1_ROUTE_VIEW_AUDIT.md')
-fs.writeFileSync(output, md.join('\\n'), 'utf8')
+fs.writeFileSync(output, md.join('\n'), 'utf8')
 console.log(`Generated ${path.relative(root, output)}: ${totals.destinations} role-aware route-to-view evaluations; ${totals.supported} supported; ${totals.unavailable} unavailable; ${totals.pending} lifecycle pending; ${totals.issues} compatibility issues.`)
 if (totals.issues > 0) process.exitCode = 1
