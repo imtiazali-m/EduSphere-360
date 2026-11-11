@@ -553,6 +553,14 @@ check('Campus library inventory and transport registers support independent sear
   assert.ok(styles.includes('.ed360-linked-search:focus-within') && styles.includes('.ed360-linked-pagination'), 'Linked operations filters and page controls need responsive focus styling')
 })
 
+check('Campus and branch editor maintains the saved head and scoped settings fields', () => {
+  const operations = read('src/components/LinkedOperationsWorkspace.tsx')
+  for (const value of ['branch_head_name','academic_settings','operational_settings','campusBranchHead','campusAcademicSettings','campusOperationalSettings']) {
+    assert.ok(operations.includes(value), 'Campus editor is missing: ' + value)
+  }
+  assert.ok(operations.includes('Academic settings (JSON object)') && operations.includes('Operational settings (JSON object)'), 'Campus-specific settings need dedicated validated editors')
+})
+
 check('Linked library inventory and transport ledgers load all pages from Supabase', () => {
   const linked = read('src/components/LinkedOperationsWorkspace.tsx')
   assert.ok(linked.includes('async function loadAllPages'), 'Unbounded Supabase page reader is missing')
