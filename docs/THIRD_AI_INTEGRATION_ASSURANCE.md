@@ -72,7 +72,7 @@ The live schema has a unique index on `(institution_id, lower(btrim(email)) )`, 
 
 **Remediation proposed:** [PR #20 — Align faculty migration filename with applied Supabase version](https://github.com/imtiazali-m/EduSphere-360/pull/20) copies the migration SQL byte-for-byte to `20261109085154_faculty_employee_management.sql`, removes the stale filename and updates all three verifier references. A post-change comparison reports 30 local and 30 remote versions, with no local-only or remote-only versions.
 
-**Status:** <badge>Source correction proposed; CI/PR review pending</badge>. No database migration, SQL statement, live schema or migration-history row was changed. Do not run database push/replay as part of this filename-only correction. Keep the 11 legacy numbered migrations out of replay.
+**Status:** Source correction proposed; CI/PR review pending.. No database migration, SQL statement, live schema or migration-history row was changed. Do not run database push/replay as part of this filename-only correction. Keep the 11 legacy numbered migrations out of replay.
 
 ### P2 — Work task ownership is based on email text, not a stable identity
 
