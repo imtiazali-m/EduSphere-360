@@ -977,6 +977,24 @@ console.log('\nProject verification passed. This checks source and configuration
 
 const landingPage = read('src/components/AuthScreens.tsx')
 const landingStyles = read('src/styles/welcome-completion.css')
+check('Public landing sections follow the requested visitor journey', () => {
+  const sectionOrder = [
+    'id="platform"',
+    'id="features"',
+    'id="analytics"',
+    'id="solutions" aria-labelledby="edm-solutions-heading"',
+    'id="workflow"',
+    'id="campus-services"',
+    'id="security"',
+    'id="testimonials"',
+    'id="faq"',
+  ].map(marker => landingPage.indexOf(marker))
+  for (let index = 0; index < sectionOrder.length; index++) {
+    assert.ok(sectionOrder[index] >= 0, 'Missing landing section in visitor journey')
+    if (index > 0) assert.ok(sectionOrder[index] > sectionOrder[index - 1], 'Landing sections are out of requested order')
+  }
+})
+
 check('Public landing page includes the complete requested navigation and section architecture', () => {
   for (const label of ['>Home</a>', '>Features</a>', '>Solutions</a>', '>About</a>', '>Contact</a>', '>Login</button>', '>Get Started']) {
     assert.ok(landingPage.includes(label), 'Missing public navigation/action: ' + label)
