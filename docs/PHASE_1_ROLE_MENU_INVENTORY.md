@@ -27,7 +27,7 @@ A visible menu entry or a value in the route index is **not** evidence that its 
 |---|---:|---:|
 | Owner | 33 | 430 |
 | Administrator | 33 | 430 |
-| Teacher / employee | 18 | 203 |
+| Teacher / employee | 18 | 202 |
 | Student | 15 | 144 |
 | Parent / guardian | 15 | 139 |
 | Accountant | 12 | 132 |
@@ -169,7 +169,7 @@ A visible menu entry or a value in the route index is **not** evidence that its 
 | 4 | Student Profiles | Owner, Administrator, Teacher / employee, Student, Parent / guardian | Workflow acceptance pending |
 | 5 | Enrollment | Owner, Administrator | Workflow acceptance pending |
 | 6 | Class and Section Assignments | Owner, Administrator, Teacher / employee, Student, Parent / guardian | Workflow acceptance pending |
-| 7 | Student Documentation | Owner, Administrator, Teacher / employee | Workflow acceptance pending |
+| 7 | Student Documentation | Owner, Administrator | Workflow acceptance pending |
 | 8 | Student ID Cards | Owner, Administrator, Student, Parent / guardian | Workflow acceptance pending |
 | 9 | Promotion and Transfer | Owner, Administrator | Workflow acceptance pending |
 | 10 | Student History | Owner, Administrator, Teacher / employee | Workflow acceptance pending |
