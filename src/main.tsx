@@ -9,6 +9,7 @@ import './styles/module-workspaces.css'
 import './styles/operational-hierarchy.css'
 import './styles/institutional-premium.css'
 import './styles/design-system.css'
+import './styles/visual-refresh.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
