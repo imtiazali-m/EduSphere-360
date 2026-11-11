@@ -193,11 +193,11 @@ export function FinanceWorkspace({workspaceKey,initialWindow,onToast}:Props){
   const journalMap=new Map(journals.map(row=>[row.id,row]))
   const accountMap=new Map(accounts.map(row=>[row.id,row]))
   const activeTabs:Section[]=groupKey==='accounts-finance'?['overview','accounts','journals','reconciliation']
-    :groupKey==='receivables'?['overview','receivables','invoices','payments']
-    :groupKey==='payments'?['overview','payments','refunds','reconciliation']
+    :groupKey==='receivables'?['overview','receivables','invoices','payments','reconciliation']
+    :groupKey==='payments'?['overview','payments','receivables','refunds','reconciliation']
     :groupKey==='receipts'?['overview','receipts','payments']
     :groupKey==='reconciliation'?['overview','reconciliation','journals','receivables']
-    :['overview','structures','invoices','payments','receivables','discounts','refunds','receipts']
+    :['overview','structures','invoices','payments','receivables','discounts','refunds','receipts','reconciliation']
 
   async function saveInvoice(event:FormEvent){
     event.preventDefault()
