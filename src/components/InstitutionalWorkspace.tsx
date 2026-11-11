@@ -61,6 +61,101 @@ const themes:Record<string,{accent:string;soft:string;ink:string}>={
  sky:{accent:'#3c91c7',soft:'#edf8ff',ink:'#245e83'},gold:{accent:'#ac8428',soft:'#fbf6e8',ink:'#77601f'},
  red:{accent:'#c65b57',soft:'#fff0ef',ink:'#8e3834'}
 }
+
+type RecordMetaKey='reference_code'|'status'|'approval_status'|'record_date'|'due_date'|'amount'|'quantity'
+const recordMetaLabels:Record<RecordMetaKey,string>={
+ reference_code:'Reference',status:'Status',approval_status:'Approval',record_date:'Date',
+ due_date:'Due date',amount:'Amount (PKR)',quantity:'Quantity'
+}
+const recordMetaColumnPlan:Record<string,RecordMetaKey[]>={
+ ai:['reference_code','status','approval_status','record_date'],
+ administration:['reference_code','status','approval_status','record_date'],
+ 'academic-sessions':['reference_code','status','record_date','due_date'],
+ 'classes-sections':['reference_code','status','quantity'],
+ subjects:['reference_code','status','record_date'],
+ students:['reference_code','status','record_date'],
+ employees:['reference_code','status','record_date'],
+ finance:['reference_code','status','approval_status','record_date','amount'],
+ fees:['reference_code','status','approval_status','due_date','amount'],
+ receivables:['reference_code','status','due_date','amount'],
+ payments:['reference_code','status','approval_status','record_date','amount'],
+ receipts:['reference_code','status','record_date','amount'],
+ payroll:['reference_code','status','approval_status','record_date','amount'],
+ attendance:['reference_code','status','record_date'],
+ timetable:['reference_code','status','record_date','due_date'],
+ teaching:['reference_code','status','due_date'],
+ behaviour:['reference_code','status','record_date'],
+ communication:['reference_code','status','due_date'],
+ question_bank:['reference_code','status','approval_status'],
+ examinations:['reference_code','status','record_date','due_date'],
+ tests:['reference_code','status','record_date','due_date'],
+ reports:['reference_code','status','record_date','due_date'],
+ certificates:['reference_code','status','record_date'],
+ curriculum:['reference_code','status','record_date'],
+ library:['reference_code','status','quantity'],
+ transport:['reference_code','status','quantity','amount'],
+ inventory:['reference_code','status','quantity','amount'],
+ facilities:['reference_code','status','quantity'],
+ visitors:['reference_code','status','record_date'],
+ institution_config:['reference_code','status','approval_status'],
+ reconciliation:['reference_code','status','approval_status','record_date','amount'],
+ backup:['reference_code','status','approval_status','record_date'],
+}
+const workspaceTableFieldOrder:Record<string,string[]>={
+ 'academic-sessions':['session_code','start_date','end_date','student_rollover_status'],
+ 'classes-sections':['grade_level','section','class_teacher','capacity'],
+ subjects:['subject_code','subject_category','grade_level','credit_hours'],
+ ai:['insight_type','source_dataset','confidence_percent','human_review'],
+ administration:['entity_code','contact_name','email','phone'],
+ academic_setup:['academic_level','academic_year','start_date','end_date'],
+ students:['student_reference','class_name','guardian_name','document_type'],
+ employees:['employee_number','employee_category','department','designation'],
+ finance:['account_code','account_category','transaction_type','debit'],
+ fees:['fee_category','fee_frequency','class_name','academic_session'],
+ receivables:['invoice_reference','student_reference','ageing_bucket','follow_up_date'],
+ payments:['payment_method','transaction_reference','verification_status','payment_date'],
+ receipts:['receipt_number','payment_reference','issued_to','issue_date'],
+ payroll:['employee_reference','salary_component','pay_period','base_salary'],
+ attendance:['register_period','marking_source','marking_status','device_reference'],
+ timetable:['weekday','period_label','start_time','end_time'],
+ teaching:['subject_name','class_name','chapter','submission_date'],
+ behaviour:['behaviour_type','severity','observed_date','action_taken'],
+ communication:['channel','audience','delivery_status','scheduled_at'],
+ question_bank:['question_type','subject_name','chapter','difficulty'],
+ examinations:['exam_type','class_name','subject_name','exam_date'],
+ tests:['test_format','subject_name','class_name','test_date'],
+ reports:['report_type','date_from','date_to','schedule_frequency'],
+ certificates:['certificate_type','certificate_number','recipient_name','issue_date'],
+ curriculum:['education_level','subject_name','chapter','coverage_status'],
+ library:['isbn','author','category','total_copies'],
+ transport:['registration_number','route_code','driver_name','seat_capacity'],
+ inventory:['sku','item_category','supplier','unit_cost'],
+ facilities:['room_number','facility_type','building','availability_status'],
+ visitors:['visitor_name','organization','host_name','entry_time'],
+ institution_config:['setting_category','setting_key','permission_scope','access_role'],
+ reconciliation:['account_name','statement_period','matched_total','variance'],
+ backup:['backup_type','backup_window','integrity_check','recovery_status'],
+}
+const workspaceRecordLabels:Record<string,string>={
+ 'academic-sessions':'Academic session','classes-sections':'Class / section',subjects:'Subject',
+ students:'Student',employees:'Employee',attendance:'Attendance register',behaviour:'Behaviour entry',
+ certificates:'Certificate',curriculum:'Learning resource',timetable:'Timetable entry',teaching:'Learning activity',
+ 'question-bank':'Question',examinations:'Examination',tests:'Class test',library:'Library item',
+ finance:'Ledger entry',fees:'Fee record',receivables:'Receivable',payments:'Payment',receipts:'Receipt',
+ payroll:'Payroll entry',reconciliation:'Reconciliation',communication:'Communication item',
+ transport:'Transport record',inventory:'Stock item',facilities:'Facility',visitors:'Visitor',
+ administration:'Institution record',institution_config:'Configuration item',backup:'Data job',ai:'Insight record',
+}
+const workspaceLayouts:Record<string,string>={
+ administration:'governance',institution_config:'governance',backup:'governance',
+ 'academic-sessions':'academic','classes-sections':'academic',academic_setup:'academic',subjects:'academic',
+ curriculum:'academic',timetable:'academic',teaching:'academic',question_bank:'assessment',examinations:'assessment',tests:'assessment',
+ students:'people',employees:'people',attendance:'people',behaviour:'people',certificates:'people',
+ finance:'ledger',fees:'ledger',receivables:'ledger',payments:'ledger',receipts:'ledger',payroll:'ledger',reconciliation:'ledger',
+ communication:'communication',library:'resource',transport:'operations',inventory:'operations',facilities:'operations',visitors:'operations',
+ ai:'intelligence',reports:'intelligence',
+}
+
 const displayDate=(value:unknown)=>typeof value==='string'&&value?new Date(value+'T00:00:00').toLocaleDateString():'—'
 const money=(value:unknown)=>value===null||value===undefined?'—':new Intl.NumberFormat('en-PK',{style:'currency',currency:'PKR',maximumFractionDigits:0}).format(Number(value)||0)
 const isOverview=(key:string,label:string)=>/dashboard|overview|intelligence|analytics/i.test(key+' '+label)
@@ -100,7 +195,17 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
  const [quantity,setQuantity]=useState('')
  const [payloadData,setPayloadData]=useState<Record<string,unknown>>({})
  const structuredFields=workspaceFields[group.key]??workspaceFields[group.dataModule]??[]
- const tableFields=structuredFields.slice(0,4)
+ const preferredFieldKeys=workspaceTableFieldOrder[group.key]??workspaceTableFieldOrder[group.dataModule]??structuredFields.map(field=>field.key)
+ const tableFields=preferredFieldKeys.flatMap(key=>{
+  const field=structuredFields.find(candidate=>candidate.key===key)
+  return field?[field]:[]
+ }).slice(0,4)
+ const metaColumnKeys:RecordMetaKey[]=recordMetaColumnPlan[group.key]??recordMetaColumnPlan[group.dataModule]??['reference_code','status','record_date']
+ const tableMetaColumns=metaColumnKeys
+  .filter(key=>!(['student','parent'].includes(user?.role??'')&&key==='approval_status'))
+  .map(key=>({key,label:recordMetaLabels[key]}))
+ const recordLabel=workspaceRecordLabels[group.key]??workspaceRecordLabels[group.dataModule]??'Record'
+ const workspaceLayout=workspaceLayouts[group.key]??workspaceLayouts[group.dataModule]??'registry'
  const theme=themes[group.theme]||themes.blue
  const canAdmin=Boolean(user&&['owner','admin'].includes(user.role))
  const canWrite=Boolean(user&&(
@@ -110,6 +215,11 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
   (user.role==='exam_officer'&&['question_bank','examinations','tests','reports'].includes(group.dataModule))
  ))
 
+ const showAmount=['accounts-finance','fees','receivables','payments','receipts','payroll','reconciliation','transport','inventory'].includes(group.key)||['finance','fees','receivables','payments','receipts','payroll','reconciliation'].includes(group.dataModule)
+ const showQuantity=['classes-sections','library','transport','inventory','facilities'].includes(group.key)
+ const showDueDate=['academic-sessions','fees','receivables','timetable','teaching','examinations','class-tests','reports','certificates','transport','facilities','visitors','backup'].includes(group.key)||['fees','receivables','timetable','teaching','examinations','tests','reports','certificates'].includes(group.dataModule)
+ const showPortalVisibility=['communication','curriculum','certificates','teaching','library','transport','behaviour'].includes(group.key)
+ 
  const load=useCallback(async()=>{
   if(!supabase||!user||!group.dataModule){setRows([]);setLoading(false);return}
   setLoading(true);setLoadError('')
@@ -206,7 +316,7 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
  function exportWord(){exportDocx(baseName+'.docx',group.label+' — '+item.label,exportRows as unknown as Record<string,unknown>[],columns)}
  function print(){try{printOfficeReport(group.label+' — '+item.label,exportRows as unknown as Record<string,unknown>[],columns,user?.institutionName??'EduSphere 360')}catch(error){onToast(error instanceof Error?error.message:'Print view could not be opened.',true)}}
 
- return <main className="page-content ed360-module-page ed360-institutional-workspace" style={{'--workspace-accent':theme.accent,'--workspace-soft':theme.soft,'--workspace-ink':theme.ink} as CSSProperties}>
+ return <main className="page-content ed360-module-page ed360-institutional-workspace" data-workspace-group={group.key} data-workspace-theme={group.theme} data-workspace-layout={workspaceLayout} style={{'--workspace-accent':theme.accent,'--workspace-soft':theme.soft,'--workspace-ink':theme.ink} as CSSProperties}>
   <header className="ed360-workspace-hero">
    <div className="ed360-workspace-hero-icon"><Activity size={21}/></div>
    <div className="ed360-workspace-hero-copy"><span>{group.label.toUpperCase()} / INSTITUTIONAL WORKSPACE</span><h1>{group.label}</h1><p>{group.description}</p></div>
@@ -248,8 +358,8 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
   <section className="table-card ed360-workspace-record-card">
    <div className="table-toolbar"><div className="table-count"><strong>{filtered.length.toLocaleString()}</strong> {item.label.toLowerCase()} <span>·</span> Institution scope</div><span className="ed360-table-refresh"><button type="button" onClick={()=>void load()}>Refresh records <ArrowUpRight size={13}/></button></span></div>
    {loading?<div className="ed360-workspace-empty">Loading institution records…</div>:filtered.length===0?<div className="ed360-workspace-empty"><strong>No records in this workspace yet</strong><span>Records will appear here after they are created or imported. No sample data is being shown.</span>{canWrite&&<button type="button" className="button button-primary" onClick={()=>resetForm()}><Plus size={15}/> Create first record</button>}</div>:
-   <div className="table-scroll"><table><thead><tr><th>Reference</th><th>Record</th><th>Status</th><th>Approval</th><th>Date</th><th>Due</th><th>Amount</th>{tableFields.map(field=><th key={field.key}>{field.label}</th>)}<th>Actions</th></tr></thead><tbody>
-    {filtered.map(row=><tr key={row.id}><td>{row.reference_code||'—'}</td><td><button className="ed360-record-open" type="button" onClick={()=>setDetail(row)}>{row.title}</button><small className="ed360-record-subtitle">{row.description||row.record_type.replaceAll('-',' ')}</small></td><td><span className={'ed360-state-pill state-'+row.status}>{row.status.replaceAll('_',' ')}</span></td><td>{row.approval_status.replaceAll('_',' ')}</td><td>{displayDate(row.record_date)}</td><td>{displayDate(row.due_date)}</td><td>{money(row.amount)}</td>{tableFields.map(field=><td key={field.key}>{String(row.payload?.[field.key]??'—')}</td>)}<td><div className="ed360-row-actions"><button type="button" onClick={()=>setDetail(row)}>Open</button>{canWrite&&<button type="button" onClick={()=>resetForm(row)}>Edit</button>}</div></td></tr>)}
+   <div className="table-scroll"><table aria-label={group.label+' '+item.label+' register'}><thead><tr><th scope="col">{recordLabel}</th>{tableMetaColumns.map(column=><th key={column.key} scope="col" data-column={column.key}>{column.label}</th>)}{tableFields.map(field=><th key={field.key} scope="col">{field.label}</th>)}<th scope="col">Actions</th></tr></thead><tbody>
+    {filtered.map(row=><tr key={row.id}><td><button className="ed360-record-open" type="button" onClick={()=>setDetail(row)}>{row.title}</button><small className="ed360-record-subtitle">{row.description||row.record_type.replaceAll('-',' ')}</small></td>{tableMetaColumns.map(column=><td key={column.key} data-column={column.key}>{column.key==='reference_code'?row.reference_code||'—':column.key==='status'?<span className={'ed360-state-pill state-'+row.status}>{row.status.replaceAll('_',' ')}</span>:column.key==='approval_status'?row.approval_status.replaceAll('_',' '):column.key==='record_date'?displayDate(row.record_date):column.key==='due_date'?displayDate(row.due_date):column.key==='amount'?money(row.amount):row.quantity??'—'}</td>)}{tableFields.map(field=><td key={field.key} data-column={field.key}>{String(row.payload?.[field.key]??'—')}</td>)}<td><div className="ed360-row-actions"><button type="button" onClick={()=>setDetail(row)}>Open</button>{canWrite&&<button type="button" onClick={()=>resetForm(row)}>Edit</button>}</div></td></tr>)}
    </tbody></table></div>}
   </section>
   {showForm&&<div className="modal-backdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setShowForm(false)}}><section className="modal-card ed360-context-form" role="dialog" aria-modal="true" aria-labelledby="ed360-form-heading">
@@ -258,17 +368,17 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
     <label>Record title *<input required value={title} onChange={e=>setTitle(e.target.value)} maxLength={180} placeholder={'Enter '+item.label.toLowerCase()}/></label>
     <label>Reference / number<input value={reference} onChange={e=>setReference(e.target.value)} maxLength={80} placeholder="Optional reference"/></label>
     <label>Description / notes<textarea value={description} onChange={e=>setDescription(e.target.value)} rows={3} maxLength={3000}/></label>
-    <div className="ed360-form-row"><label>Status<select value={status} onChange={e=>setStatus(e.target.value)}>{statusOptions.map(s=><option value={s} key={s}>{s.replaceAll('_',' ')}</option>)}</select></label><label>Approval<select value={approval} onChange={e=>setApproval(e.target.value)}><option value="not_required">Not required</option><option value="draft">Draft</option><option value="pending">Needs approval</option></select></label></div>
-    <div className="ed360-form-row"><label>Record date<input type="date" value={recordDate} onChange={e=>setRecordDate(e.target.value)}/></label><label>Due date<input type="date" value={dueDate} onChange={e=>setDueDate(e.target.value)}/></label></div>
-    <label>Portal visibility<select value={visibility} onChange={e=>setVisibility(e.target.value)}><option value="staff_only">Staff only</option><option value="student_portal">Student portal</option><option value="parent_portal">Parent portal</option><option value="institution_portal">Institution portal (shared)</option></select><small>Choose portal access deliberately. Sensitive records should remain staff-only.</small></label>
-    <div className="ed360-form-row"><label>Amount (PKR)<input type="number" min="0" step="0.01" value={amount} onChange={e=>setAmount(e.target.value)}/></label><label>Quantity<input type="number" min="0" step="0.001" value={quantity} onChange={e=>setQuantity(e.target.value)}/></label></div>
+    <div className="ed360-form-row"><label>Status<select value={status} onChange={e=>setStatus(e.target.value)}>{statusOptions.map(s=><option value={s} key={s}>{s.replaceAll('_',' ')}</option>)}</select></label>{canAdmin&&<label>Approval<select value={approval} onChange={e=>setApproval(e.target.value)}><option value="not_required">Not required</option><option value="draft">Draft</option><option value="pending">Needs approval</option></select></label>}</div>
+    <div className="ed360-form-row"><label>Record date<input type="date" value={recordDate} onChange={e=>setRecordDate(e.target.value)}/></label>{showDueDate&&<label>Due date<input type="date" value={dueDate} onChange={e=>setDueDate(e.target.value)}/></label>}</div>
+    {showPortalVisibility&&<label>Portal visibility<select value={visibility} onChange={e=>setVisibility(e.target.value)}><option value="staff_only">Staff only</option><option value="student_portal">Student portal</option><option value="parent_portal">Parent portal</option><option value="institution_portal">Institution portal (shared)</option></select><small>Choose portal access deliberately. Sensitive records should remain staff-only.</small></label>}
+    {(showAmount||showQuantity)&&<div className="ed360-form-row">{showAmount&&<label>Amount (PKR)<input type="number" min="0" step="0.01" value={amount} onChange={e=>setAmount(e.target.value)}/></label>}{showQuantity&&<label>Quantity<input type="number" min="0" step="0.001" value={quantity} onChange={e=>setQuantity(e.target.value)}/></label>}</div>}
     {structuredFields.length>0&&<section className="ed360-module-specific-form"><div className="ed360-module-specific-heading"><span>MODULE-SPECIFIC INFORMATION</span><p>Fields for {item.label.toLowerCase()}.</p></div><div className="ed360-context-form-fields">{structuredFields.map(field=><label key={field.key}>{field.label}{field.type==='select'?<select value={String(payloadData[field.key]??'')} onChange={e=>setPayloadData(old=>({...old,[field.key]:e.target.value}))}><option value="">Select / not set</option>{(field.options??[]).map(option=><option value={option} key={option}>{option}</option>)}</select>:field.type==='textarea'?<textarea rows={3} value={String(payloadData[field.key]??'')} onChange={e=>setPayloadData(old=>({...old,[field.key]:e.target.value}))} placeholder={field.placeholder??''}/>:<input type={field.type??'text'} step={field.type==='number'?'0.01':undefined} value={String(payloadData[field.key]??'')} onChange={e=>setPayloadData(old=>({...old,[field.key]:e.target.value}))} placeholder={field.placeholder??''}/>}</label>)}</div></section>}
     <div className="modal-actions"><button type="button" className="button button-outline" onClick={()=>setShowForm(false)}>Cancel</button><button type="submit" className="button button-primary" disabled={saving}>{saving?'Saving…':editing?'Save changes':'Create record'}</button></div>
    </form>
   </section></div>}
   {detail&&<div className="modal-backdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setDetail(null)}}><section className="modal-card ed360-record-details ed360-context-detail" role="dialog" aria-modal="true" aria-labelledby="ed360-detail-heading">
    <div className="modal-heading"><div><div className="eyebrow">CONTEXTUAL SUB-WINDOW / {group.label.toUpperCase()}</div><h2 id="ed360-detail-heading">{detail.title}</h2><p>{detail.reference_code||detail.record_type.replaceAll('-',' ')} · {detail.status}</p></div><button type="button" className="icon-button" onClick={()=>setDetail(null)} aria-label="Close"><X size={18}/></button></div>
-   <div className="ed360-context-detail-callout"><div><span>RECORD WORKFLOW</span><strong>{detail.approval_status.replaceAll('_',' ')}</strong><p>{detail.description||'No additional description supplied.'}</p></div><aside><b>Responsible workspace</b><p>{group.label} / {item.label}</p><b>Updated</b><p>{detail.updated_at?new Date(detail.updated_at).toLocaleString():'Not available'}</p></aside></div>
+   <div className="ed360-context-detail-callout"><div>{canAdmin&&<><span>RECORD WORKFLOW</span><strong>{detail.approval_status.replaceAll('_',' ')}</strong></>}<p>{detail.description||'No additional description supplied.'}</p></div><aside><b>Responsible workspace</b><p>{group.label} / {item.label}</p><b>Updated</b><p>{detail.updated_at?new Date(detail.updated_at).toLocaleString():'Not available'}</p></aside></div>
    <div className="ed360-record-details-grid"><div className="ed360-record-detail"><small>Status</small><b>{detail.status}</b></div><div className="ed360-record-detail"><small>Record date</small><b>{displayDate(detail.record_date)}</b></div><div className="ed360-record-detail"><small>Due date</small><b>{displayDate(detail.due_date)}</b></div><div className="ed360-record-detail"><small>Amount</small><b>{money(detail.amount)}</b></div><div className="ed360-record-detail"><small>Quantity</small><b>{detail.quantity??'—'}</b></div><div className="ed360-record-detail"><small>Created</small><b>{detail.created_at?new Date(detail.created_at).toLocaleString():'—'}</b></div></div>
    {Object.keys(detail.payload??{}).length>0&&<section className="ed360-payload-section"><h3>{item.label} details</h3><div className="ed360-record-details-grid">{Object.entries(detail.payload).map(([key,value])=><div className="ed360-record-detail" key={key}><small>{structuredFields.find(field=>field.key===key)?.label??key.replaceAll('_',' ')}</small><b>{typeof value==='boolean'?(value?'Yes':'No'):String(value??'—')}</b></div>)}</div></section>}
    <div className="modal-actions">

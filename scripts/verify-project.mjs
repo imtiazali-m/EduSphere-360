@@ -60,7 +60,7 @@ require.extensions['.ts'] = (module, filename) => {
 
 const { navigationCatalog } = require(path.join(root, 'src/lib/navigationCatalog.ts'))
 const { navigationRoutes, getNavigationRoute } = require(path.join(root, 'src/lib/navigationRoutes.ts'))
-const { roleNavigationGroups } = require(path.join(root, 'src/lib/navigationAccess.ts'))
+const { roleNavigationGroups, roleNavigationSections, navigationSectionDefinitions } = require(path.join(root, 'src/lib/navigationAccess.ts'))
 const { modules, modulesForRole } = require(path.join(root, 'src/lib/modules.ts'))
 const roles = ['owner', 'admin', 'teacher', 'student', 'parent', 'accountant', 'exam_officer']
 
@@ -171,6 +171,36 @@ check('The full institutional menu maps every submenu to a working destination',
   assert.equal(navigationRoutes['fees:fee-invoices'], 'finance:fees:invoices', 'Fee invoices must open the dedicated Finance & Payments workspace')
 })
 
+
+check('Sidebar workspaces follow the approved parent-section sequence for every role', () => {
+  const expectedGroupOrder = [
+    'dashboard',
+    'administration','institution-config','academic-sessions','classes-sections','subjects','backup',
+    'students','employees','attendance','behaviour','certificates',
+    'curriculum','timetable','teaching','question-bank','examinations','class-tests','library',
+    'accounts-finance','fees','receivables','payments','receipts','payroll','reconciliation',
+    'communication',
+    'transport','inventory','facilities','visitors',
+    'reports','ai',
+  ]
+  assert.deepEqual(navigationSectionDefinitions.map(section => section.key), [
+    'overview','setup','people','academics','finance','communication','campus','intelligence',
+  ])
+  assert.deepEqual(navigationSectionDefinitions.flatMap(section => section.groupKeys), expectedGroupOrder)
+  assert.deepEqual(navigationCatalog.map(group => group.key), expectedGroupOrder)
+  for (const role of roles) {
+    const groups = roleNavigationGroups(role)
+    const sections = roleNavigationSections(role)
+    assert.ok(sections.length > 0, `${role} has no visible navigation sections`)
+    assert.ok(sections.every(section => section.groups.length > 0), `${role} has an empty navigation heading`)
+    assert.deepEqual(
+      sections.flatMap(section => section.groups.map(group => group.key)),
+      groups.map(group => group.key),
+      `${role} hierarchy must preserve every permitted group exactly once`,
+    )
+  }
+})
+
 const roleCounts = {}
 check('All seven roles receive focused, permission-aware workspaces', () => {
   for (const role of roles) {
@@ -205,6 +235,22 @@ check('Institutional workspace includes real record CRUD and office-compatible e
   for (const value of ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','application/vnd.openxmlformats-officedocument.wordprocessingml.document','window.print']) assert.ok(exporters.includes(value))
 })
 
+
+check('Institutional registers and windows are tailored by workspace domain', () => {
+  const workspace = read('src/components/InstitutionalWorkspace.tsx')
+  const styles = read('src/styles/institutional-premium.css')
+  for (const value of ['recordMetaColumnPlan','workspaceTableFieldOrder','workspaceRecordLabels','workspaceLayouts','data-workspace-group','data-workspace-theme','data-workspace-layout']) {
+    assert.ok(workspace.includes(value), 'Module-specific workspace mapping is missing: ' + value)
+  }
+  for (const value of ['showAmount','showQuantity','showDueDate','showPortalVisibility']) {
+    assert.ok(workspace.includes(value), 'Module-specific form visibility is missing: ' + value)
+  }
+  assert.ok(workspace.includes("['student','parent'].includes(user?.role??'')"), 'Family portals must not see internal approval columns')
+  for (const layout of ['academic','people','assessment','ledger','communication','resource','operations','governance','intelligence']) {
+    assert.ok(styles.includes(`[data-workspace-layout="${layout}"]`), 'Distinct workspace surface is missing: ' + layout)
+  }
+})
+
 const dashboardSource = read('src/components/Dashboard.tsx')
 check('Dashboard matches the menu and keeps Quick Access at the sidebar bottom', () => {
   for (const forbidden of ['CatalogWorkspace', '22-group, 122-section', 'WORKSPACE PAGES', 'MENU GROUPS', '⌘ K', '<kbd>/</kbd>', 'pro-sidebar-footer']) {
@@ -217,6 +263,7 @@ check('Dashboard matches the menu and keeps Quick Access at the sidebar bottom',
   assert.ok(quickStart > navEnd, 'Quick Access must be outside the scrollable navigation at the sidebar bottom')
   assert.ok(!dashboardSource.includes('pro-menu-overview') && !dashboardSource.includes('Menu overview'), 'Dashboard must not repeat the sidebar menu')
   assert.ok(dashboardSource.includes('roleNavigationGroups(user!.role)'), 'Sidebar navigation must follow role permissions')
+  assert.ok(dashboardSource.includes('roleNavigationSections(user!.role)') && dashboardSource.includes('pro-nav-section-label'), 'Sidebar must render parent sections without flattening role-specific groups')
   assert.ok(dashboardSource.includes('ed360-dashboard'), 'Approved first-image dashboard layout is missing')
   assert.ok(dashboardSource.includes('ed360-metric-grid') && dashboardSource.includes('ed360-line-chart') && dashboardSource.includes('ed360-module-panel'), 'Dashboard statistics, academic chart or module overview is missing')
   assert.ok(dashboardSource.includes('ed360-recent-panel') && dashboardSource.includes('ed360-events-panel') && dashboardSource.includes('ed360-quick-stats-panel'), 'Dashboard activity, events or quick statistics panel is missing')
