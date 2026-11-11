@@ -19,6 +19,7 @@ const ALLOWED_TABLES = new Set([
   'student_placements',
   'student_documents',
   'student_history',
+  'student_health_emergency',
   'teachers',
   'designations',
   'teacher_assignments',
@@ -62,7 +63,7 @@ const ALLOWED_TABLES = new Set([
 ])
 
 const READ_ONLY_TABLES = new Set(['student_history', 'fee_payments', 'fee_payment_allocations', 'fee_audit_logs', 'employee_salary_profiles', 'payroll_runs', 'payroll_items'])
-const TABLES_WITHOUT_CREATED_BY = new Set(['parent_guardians', 'guardian_students', 'student_documents', 'fee_structure_items', 'fee_invoice_items', 'fee_discount_applications', 'fee_late_fees', 'fee_refunds', 'finance_journal_lines'])
+const TABLES_WITHOUT_CREATED_BY = new Set(['parent_guardians', 'guardian_students', 'student_documents', 'student_health_emergency', 'fee_structure_items', 'fee_invoice_items', 'fee_discount_applications', 'fee_late_fees', 'fee_refunds', 'finance_journal_lines'])
 
 function checkTable(table: string) {
   if (!ALLOWED_TABLES.has(table)) throw new Error(`Unsupported data module: ${table}`)

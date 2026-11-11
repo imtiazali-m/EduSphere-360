@@ -5,7 +5,7 @@ import {
   Check, ChevronLeft, ChevronRight, ClipboardCheck, Download, Edit3, Eye, MoreHorizontal,
   FileCheck2, FileText, FolderOpen, GraduationCap, HeartHandshake, History, ImagePlus,
   LayoutDashboard, Plus, Printer, RefreshCw, Search, ShieldCheck, Trash2, Upload,
-  UserRound, Users, X,
+  UserRound, Users, Wallet, X,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { createRecord, deleteRecord, listAccounts, listFeePayments, listRecords, recordFeePayment, updateRecord } from '../lib/data'
@@ -24,8 +24,8 @@ import { operationalWorkspaceConfigs } from '../lib/operationalWorkspaceViews'
 interface Props { module: ModuleConfig; onToast: (message: string, error?: boolean) => void; initialWindow?: string; showWindowNavigation?: boolean }
 type StudentStatus = 'all' | 'active' | 'pending' | 'graduated' | 'inactive'
 type EmployeeStatus = 'all' | 'active' | 'on_leave' | 'inactive'
-type StudentWorkspaceTab = 'overview' | 'admissions' | 'directory' | 'profile' | 'id-cards' | 'classes' | 'promotion' | 'guardians' | 'attendance' | 'results' | 'assignments' | 'timetable' | 'documents' | 'history'
-const studentRelatedTables = ['attendance', 'exams', 'exam_results', 'assignments', 'assignment_submissions', 'timetable_entries', 'classes', 'academic_sessions', 'programs', 'guardian_students', 'parent_guardians', 'student_placements', 'student_documents', 'student_history'] as const
+type StudentWorkspaceTab = 'overview' | 'admissions' | 'directory' | 'profile' | 'id-cards' | 'classes' | 'promotion' | 'guardians' | 'attendance' | 'results' | 'assignments' | 'timetable' | 'documents' | 'fees' | 'health' | 'history'
+const studentRelatedTables = ['attendance', 'exams', 'exam_results', 'assignments', 'assignment_submissions', 'timetable_entries', 'classes', 'academic_sessions', 'programs', 'guardian_students', 'parent_guardians', 'student_placements', 'student_documents', 'fee_invoices', 'fee_payments', 'student_health_emergency', 'student_history'] as const
 
 function makeEmployeeNumber() {
   const suffix = crypto.randomUUID().replace(/-/g, '').slice(0, 8).toUpperCase()
@@ -595,6 +595,8 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
   const [documentType, setDocumentType] = useState('other')
   const [documentVisibility, setDocumentVisibility] = useState('staff_only')
   const [documentNotes, setDocumentNotes] = useState('')
+  const [healthDraft, setHealthDraft] = useState<Record<string,string>>({})
+  const [healthSaving, setHealthSaving] = useState(false)
   const [employeeStatus, setEmployeeStatus] = useState<EmployeeStatus>('all')
   const [operationalView, setOperationalView] = useState(initialWindow ?? '')
   const operationalWorkspace = operationalWorkspaceConfigs[module.key]
@@ -631,7 +633,8 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
     let active = true
     setStudentRelatedLoading(true)
     setStudentRelatedErrors([])
-    void Promise.all(studentRelatedTables.map(async table => {
+    const visibleTables = studentRelatedTables.filter(table => table !== 'student_health_emergency' || ['owner','admin'].includes(user!.role))
+    void Promise.all(visibleTables.map(async table => {
       try {
         const related = await listRecords(mode, user!, table)
         return { table, rows: related, error: '' }
@@ -731,7 +734,27 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
   const activeStudentClass = studentClassRows.find(row => row.id === activeStudentPlacement?.class_id) ?? null
   const activeStudentSession = (studentRelatedRows.academic_sessions ?? []).find(row => row.id === activeStudentClass?.academic_session_id) ?? null
   const studentDocumentRows = (studentRelatedRows.student_documents ?? []).filter(row => row.student_id === selectedStudent?.id)
+  const studentFeeInvoiceRows = (studentRelatedRows.fee_invoices ?? []).filter(row => row.student_id === selectedStudent?.id)
+  const studentFeeInvoiceIds = new Set(studentFeeInvoiceRows.map(row => row.id))
+  const studentFeePaymentRows = (studentRelatedRows.fee_payments ?? []).filter(row => studentFeeInvoiceIds.has(String(row.invoice_id)))
   const studentHistoryRows = (studentRelatedRows.student_history ?? []).filter(row => row.student_id === selectedStudent?.id).sort((a,b) => String(b.created_at ?? '').localeCompare(String(a.created_at ?? '')))
+  const studentHealthRow = (studentRelatedRows.student_health_emergency ?? []).find(row => row.student_id === selectedStudent?.id) ?? null
+  function openStudentHealth() {
+    setHealthDraft(Object.fromEntries(['blood_group','allergies','medical_conditions','current_medications','care_instructions','doctor_name','doctor_phone','emergency_contact_name','emergency_contact_relationship','emergency_contact_phone','additional_notes'].map(key => [key,String(studentHealthRow?.[key] ?? '')])))
+    setStudentWorkspaceTab('health')
+  }
+  async function saveStudentHealth() {
+    if (!['owner','admin'].includes(user!.role) || !selectedStudent || !supabase) return
+    setHealthSaving(true)
+    const payload = { institution_id:user!.institutionId, student_id:selectedStudent.id, ...healthDraft, updated_by:user!.id, updated_at:new Date().toISOString() }
+    const { error } = await supabase.from('student_health_emergency').upsert(payload,{onConflict:'institution_id,student_id'})
+    if (error) { onToast(userFacingError(error,'Student health and emergency information could not be saved.'),true); setHealthSaving(false); return }
+    const { data, error:reloadError } = await supabase.from('student_health_emergency').select('*').eq('institution_id',user!.institutionId).eq('student_id',selectedStudent.id).maybeSingle()
+    if (reloadError) onToast('Health information was saved, but the latest record could not be reloaded.',true)
+    else setStudentRelatedRows(current => ({...current,student_health_emergency:data?[data as RecordRow]:[]}))
+    onToast('Restricted health and emergency information saved.')
+    setHealthSaving(false)
+  }
   const studentClassCounts = useMemo(() => {
     const counts = new Map<string, number>()
     rows.forEach(row => {
@@ -1023,13 +1046,15 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
       { key: 'assignments' as const, label: 'Student Assignments', icon: FileText },
       { key: 'timetable' as const, label: 'Student Timetable', icon: CalendarDays },
       { key: 'documents' as const, label: 'Student Documentation', icon: FolderOpen },
+      { key: 'fees' as const, label: 'Fee Records', icon: Wallet },
+      { key: 'health' as const, label: 'Health & Emergency', icon: ShieldCheck },
       { key: 'history' as const, label: 'Student History', icon: History },
     ]
     const ownerOrAdmin = ['owner', 'admin'].includes(user!.role)
     const visibleTabItems = tabItems.filter(item => {
       if (ownerOrAdmin) return true
       if (user!.role === 'teacher') return ['overview', 'directory', 'profile', 'id-cards', 'classes', 'attendance', 'results', 'assignments', 'timetable', 'history'].includes(item.key)
-      return ['overview', 'profile', 'id-cards', 'classes', 'guardians', 'attendance', 'results', 'assignments', 'timetable', 'documents', 'history'].includes(item.key)
+      return ['overview', 'profile', 'id-cards', 'classes', 'guardians', 'attendance', 'results', 'assignments', 'timetable', 'documents', 'fees', 'history'].includes(item.key)
     })
     if (showForm) return formDialog
     const pendingRows = rows.filter(row => ['draft','submitted','under_review','documents_required','approved'].includes(String(row.application_status ?? 'submitted').toLowerCase()))
@@ -1040,9 +1065,9 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
     const renderTable = (dataRows: RecordRow[], columns: { key: string; label: string }[], emptyMessage: string) => dataRows.length === 0
       ? <div className="ed360-student-empty"><span><FolderOpen size={21}/></span><strong>No records to display</strong><p>{emptyMessage}</p></div>
       : <div className="ed360-student-table-wrap"><table className="ed360-student-table"><thead><tr>{columns.map(column => <th key={column.key}>{column.label}</th>)}</tr></thead><tbody>{dataRows.map(row => <tr key={row.id}>{columns.map(column => {
-        const raw = row[column.key]
+        const raw = column.key === 'invoice_number' ? (row.invoice_number ?? row.invoice_no) : column.key === 'receipt_number' ? (row.receipt_number ?? row.receipt_no) : row[column.key]
         const value = raw === null || raw === undefined || raw === '' ? '—'
-          : ['attendance_date', 'due_date', 'exam_date', 'submitted_at', 'created_at', 'invoice_date', 'effective_from', 'effective_to', 'issue_date', 'expiry_date', 'application_submitted_at', 'application_reviewed_at'].includes(column.key) ? niceDate(raw)
+          : ['attendance_date', 'due_date', 'exam_date', 'submitted_at', 'created_at', 'invoice_date', 'payment_date', 'effective_from', 'effective_to', 'issue_date', 'expiry_date', 'application_submitted_at', 'application_reviewed_at'].includes(column.key) ? niceDate(raw)
           : ['amount', 'paid_amount', 'marks_obtained', 'total_marks', 'balance'].includes(column.key) ? Number(raw).toLocaleString(undefined, { maximumFractionDigits: 2 })
           : String(raw).replaceAll('_', ' ')
         return <td key={column.key}>{['status', 'result_status', 'application_status', 'verification_status'].includes(column.key) ? <span className={'status-pill status-' + String(raw ?? '').toLowerCase()}>{value}</span> : value}</td>
@@ -1329,7 +1354,7 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
         <nav className="ed360-student-window-nav" aria-label="Student management windows">
           {visibleTabItems.map(item => {
             const Icon = item.icon
-            return <button type="button" key={item.key} className={studentWorkspaceTab === item.key ? 'active' : ''} aria-current={studentWorkspaceTab === item.key ? 'page' : undefined} onClick={() => { setStudentWorkspaceTab(item.key); setCurrentPage(1) }}>
+            return <button type="button" key={item.key} className={studentWorkspaceTab === item.key ? 'active' : ''} aria-current={studentWorkspaceTab === item.key ? 'page' : undefined} onClick={() => { if(item.key==='health') openStudentHealth(); else setStudentWorkspaceTab(item.key); setCurrentPage(1) }}>
               <Icon size={15}/><span>{item.label}</span>{typeof item.count === 'number' && <b>{item.count.toLocaleString()}</b>}
             </button>
           })}
@@ -1628,6 +1653,40 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
             <td><div className="ed360-student-row-actions"><button type="button" onClick={() => void openStudentDocument(doc)}><Eye size={13}/> Open</button>{ownerOrAdmin && doc.verification_status !== 'verified' && <button type="button" onClick={() => void updateStudentDocumentStatus(doc,'verified')}>Verify</button>}{ownerOrAdmin && doc.verification_status !== 'rejected' && <button type="button" onClick={() => void updateStudentDocumentStatus(doc,'rejected')}>Reject</button>}{ownerOrAdmin && <button type="button" className="danger-icon" onClick={() => void removeStudentDocument(doc)}>Remove</button>}</div></td>
           </tr>)}</tbody></table></div> : <div className="ed360-student-empty"><span><FileCheck2 size={21}/></span><strong>No student documents registered</strong><p>Upload verified admission and identity documents here. Files are stored in a private bucket and are not placed in the general institution file area.</p></div>}
         </> : <div className="ed360-student-empty"><strong>No student selected</strong><p>Select a student to manage their document register.</p></div>}
+      </section>}
+      {studentWorkspaceTab === 'fees' && <section className="ed360-student-panel ed360-student-full-panel">
+        <header><div><span className="ed360-student-panel-icon amber"><Wallet size={17}/></span><div><h2>Student fee records</h2><p>Invoices, outstanding balances and receipts linked to this student’s institution account.</p></div></div><span className="ed360-student-record-count">{studentFeeInvoiceRows.length} invoices</span></header>
+        {selectedStudent ? <>
+          <div className="ed360-student-metric-grid">
+            <article><small>Invoiced</small><strong>{studentFeeInvoiceRows.reduce((sum,row)=>sum+Number(row.amount??0),0).toLocaleString(undefined,{maximumFractionDigits:2})}</strong></article>
+            <article><small>Paid</small><strong>{studentFeeInvoiceRows.reduce((sum,row)=>sum+Number(row.paid_amount??0),0).toLocaleString(undefined,{maximumFractionDigits:2})}</strong></article>
+            <article><small>Outstanding</small><strong>{studentFeeInvoiceRows.reduce((sum,row)=>sum+Number(row.balance??Math.max(0,Number(row.amount??0)-Number(row.paid_amount??0))),0).toLocaleString(undefined,{maximumFractionDigits:2})}</strong></article>
+          </div>
+          <div className="ed360-student-table-heading"><strong>Fee invoices</strong><span>{studentFeePaymentRows.length} linked receipts</span></div>
+          {renderTable(studentFeeInvoiceRows,[{key:'invoice_number',label:'Invoice'},{key:'fee_title',label:'Fee item'},{key:'academic_session',label:'Academic session'},{key:'amount',label:'Amount'},{key:'paid_amount',label:'Paid'},{key:'balance',label:'Balance'},{key:'due_date',label:'Due date'},{key:'status',label:'Status'}],'Fee invoices linked to this student will appear here.')}
+          <div className="ed360-student-table-heading"><strong>Payment receipts</strong><span>{studentFeePaymentRows.length} records</span></div>
+          {renderTable(studentFeePaymentRows,[{key:'receipt_number',label:'Receipt'},{key:'payment_date',label:'Payment date'},{key:'amount',label:'Amount'},{key:'payment_method',label:'Method'},{key:'status',label:'Status'},{key:'transaction_reference',label:'Reference'}],'Receipts for this student’s fee invoices will appear here.')}
+        </> : <div className="ed360-student-empty"><strong>No student selected</strong><p>Select a student to review their fee account.</p></div>}
+      </section>}
+      {studentWorkspaceTab === 'health' && ownerOrAdmin && <section className="ed360-student-panel ed360-student-full-panel">
+        <header><div><span className="ed360-student-panel-icon"><ShieldCheck size={17}/></span><div><h2>Health & emergency information</h2><p>Confidential safeguarding and emergency details for authorised institution administrators only.</p></div></div><span className="ed360-student-record-count">Restricted record</span></header>
+        {selectedStudent ? <>
+          <div className="ed360-student-window-context"><div><span className="ed360-context-label">SELECTED STUDENT</span><strong>{String(selectedStudent.full_name ?? 'Student')} · {String(selectedStudent.admission_no ?? 'No admission ID')}</strong></div><span className="status-pill">Private</span></div>
+          <div className="student-form-grid">
+            <label className="field-label student-field"><span>Blood group</span><select className="input-control" value={healthDraft.blood_group ?? ''} onChange={event=>setHealthDraft(old=>({...old,blood_group:event.target.value}))}><option value="">Not recorded</option>{['A+','A-','B+','B-','AB+','AB-','O+','O-','Unknown'].map(v=><option key={v} value={v}>{v}</option>)}</select></label>
+            <label className="field-label student-field"><span>Allergies</span><textarea className="input-control textarea-control" rows={2} value={healthDraft.allergies??''} onChange={event=>setHealthDraft(old=>({...old,allergies:event.target.value}))}/></label>
+            <label className="field-label student-field"><span>Medical conditions</span><textarea className="input-control textarea-control" rows={2} value={healthDraft.medical_conditions??''} onChange={event=>setHealthDraft(old=>({...old,medical_conditions:event.target.value}))}/></label>
+            <label className="field-label student-field"><span>Current medications</span><textarea className="input-control textarea-control" rows={2} value={healthDraft.current_medications??''} onChange={event=>setHealthDraft(old=>({...old, current_medications:event.target.value}))}/></label>
+            <label className="field-label student-field full-field"><span>Care instructions</span><textarea className="input-control textarea-control" rows={2} value={healthDraft.care_instructions??''} onChange={event=>setHealthDraft(old=>({...old,care_instructions:event.target.value}))}/></label>
+            <label className="field-label student-field"><span>Doctor / clinic</span><input className="input-control" value={healthDraft.doctor_name??''} onChange={event=>setHealthDraft(old=>({...old,doctor_name:event.target.value}))}/></label>
+            <label className="field-label student-field"><span>Doctor phone</span><input className="input-control" type="tel" value={healthDraft.doctor_phone??''} onChange={event=>setHealthDraft(old=>({...old,doctor_phone:event.target.value}))}/></label>
+            <label className="field-label student-field"><span>Emergency contact name</span><input className="input-control" value={healthDraft.emergency_contact_name??''} onChange={event=>setHealthDraft(old=>({...old,emergency_contact_name:event.target.value}))}/></label>
+            <label className="field-label student-field"><span>Relationship</span><input className="input-control" value={healthDraft.emergency_contact_relationship??''} onChange={event=>setHealthDraft(old=>({...old,emergency_contact_relationship:event.target.value}))}/></label>
+            <label className="field-label student-field"><span>Emergency contact phone</span><input className="input-control" type="tel" value={healthDraft.emergency_contact_phone??''} onChange={event=>setHealthDraft(old=>({...old,emergency_contact_phone:event.target.value}))}/></label>
+            <label className="field-label student-field full-field"><span>Additional notes</span><textarea className="input-control textarea-control" rows={2} value={healthDraft.additional_notes??''} onChange={event=>setHealthDraft(old=>({...old,additional_notes:event.target.value}))}/></label>
+          </div>
+          <div className="modal-actions"><span className="student-field-help">Access is restricted by database policy to institution owners and administrators.</span><button type="button" className="button button-primary" onClick={()=>void saveStudentHealth()} disabled={healthSaving}>{healthSaving?'Saving…':'Save confidential record'}</button></div>
+        </> : <div className="ed360-student-empty"><strong>No student selected</strong><p>Select a student to manage restricted health information.</p></div>}
       </section>}
       {studentWorkspaceTab === 'history' && <section className="ed360-student-panel ed360-student-full-panel">
         <header><div><span className="ed360-student-panel-icon violet"><History size={17}/></span><div><h2>Student audit history</h2><p>Database-recorded registration, admission decisions, profile changes, guardian links, placements and document events.</p></div></div><span className="ed360-student-record-count">{studentHistoryRows.length} recorded events</span></header>
