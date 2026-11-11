@@ -1,6 +1,6 @@
 # Migration history
 
-The thirty-three timestamped migration files currently versioned in this repository include the three additive Stage 6 People & HR migrations. Keep each 14-digit timestamp unchanged. The linked Supabase project also has previously applied migrations that are not all present in this repository; reconcile that pre-existing source/history gap before using a fresh-database replay or automated migration push.
+The thirty-three timestamped migration files currently versioned in this repository include the three additive Stage 6 People & HR migrations. Keep each 14-digit timestamp unchanged. The linked Supabase project has fourteen applied migration versions whose SQL source is not present in this repository. These include earlier Stage 5 administration, Stage 7 attendance/access, Stage 8 academic, and Stage 9 assessment migrations; reconstruct or recover those source files before a fresh-database replay or automated migration push.
 
 The current online application includes the reviewed schema changes for the existing live schema, Faculty & Employee Management, and Student Management operations (admission lifecycle, linked guardian contacts, class placements, private student documents and audit history for attendance, published results, assignment submissions, guardian policy consolidation and activity indexes). The Student Management and Faculty/Employee migrations have already been applied to the linked project; do not replay them manually.
 
