@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import {
   Activity, AlertCircle, BookOpen, CalendarCheck, CalendarDays,
@@ -38,11 +38,70 @@ function makeAdmissionNumber() {
   return `ES-${new Date().getFullYear()}-${suffix}`
 }
 
+/**
+ * Shared modal behavior for record windows. The top-most dialog owns Escape,
+ * Tab focus and page-scroll locking; closing it returns focus to its opener.
+ */
+function useModalControls(onClose: () => void) {
+  const closeRef = useRef(onClose)
+  closeRef.current = onClose
+
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow
+    const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    const backdrops = Array.from(document.querySelectorAll<HTMLElement>('.modal-backdrop'))
+    const backdrop = backdrops[backdrops.length - 1]
+    const dialog = backdrop?.querySelector<HTMLElement>('.modal-card')
+    const focusableSelector = 'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])'
+
+    document.body.style.overflow = 'hidden'
+    const focusableElements = () => Array.from(dialog?.querySelectorAll<HTMLElement>(focusableSelector) ?? [])
+      .filter(element => !element.hasAttribute('hidden') && element.getAttribute('aria-hidden') !== 'true' && element.getClientRects().length > 0)
+    focusableElements()[0]?.focus()
+
+    function handleKeyDown(event: KeyboardEvent) {
+      const currentBackdrops = Array.from(document.querySelectorAll<HTMLElement>('.modal-backdrop'))
+      if (currentBackdrops[currentBackdrops.length - 1] !== backdrop) return
+
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        closeRef.current()
+        return
+      }
+
+      if (event.key !== 'Tab') return
+      const items = focusableElements()
+      if (!items.length) {
+        event.preventDefault()
+        dialog?.focus()
+        return
+      }
+      const first = items[0]
+      const last = items[items.length - 1]
+      if (event.shiftKey && (document.activeElement === first || !dialog?.contains(document.activeElement))) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && (document.activeElement === last || !dialog?.contains(document.activeElement))) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+      document.body.style.overflow = previousOverflow
+      previouslyFocused?.focus()
+    }
+  }, [])
+}
+
 function RecordForm({ module, initial, onCancel, onSave, saving, mode }: {
   module: ModuleConfig; initial?: RecordRow | null; onCancel: () => void
   onSave: (values: Record<string, unknown>) => void; saving: boolean; mode: AppMode
 }) {
   const { user } = useAuth()
+  useModalControls(onCancel)
   const isStudent = module.key === 'students'
   const isTeacher = module.key === 'teachers'
   const lockTaskAssignee = module.key === 'work_tasks' && !['owner', 'admin'].includes(user!.role)
@@ -157,11 +216,11 @@ function RecordForm({ module, initial, onCancel, onSave, saving, mode }: {
   }
 
   return <div className="modal-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) onCancel() }}>
-    <section className={`modal-card ${isStudent ? 'student-record-modal' : ''} ${isTeacher ? 'faculty-record-modal' : ''}`}>
+    <section className={`modal-card ${isStudent ? 'student-record-modal' : ''} ${isTeacher ? 'faculty-record-modal' : ''}`} role="dialog" aria-modal="true" aria-labelledby="record-form-title" tabIndex={-1}>
       <div className="modal-heading">
         <div>
           <div className="eyebrow">{isStudent ? (initial ? 'UPDATE STUDENT' : 'NEW ADMISSION') : isTeacher ? (initial ? 'UPDATE FACULTY' : 'NEW FACULTY MEMBER') : (initial ? 'UPDATE RECORD' : 'NEW RECORD')}</div>
-          <h2>{isStudent ? (initial ? 'Edit student record' : 'Add student') : isTeacher ? (initial ? 'Edit faculty profile' : 'Add faculty member') : (initial ? 'Edit record' : `Add ${module.title.toLowerCase()}`)}</h2>
+          <h2 id="record-form-title">{isStudent ? (initial ? 'Edit student record' : 'Add student') : isTeacher ? (initial ? 'Edit faculty profile' : 'Add faculty member') : (initial ? 'Edit record' : `Add ${module.title.toLowerCase()}`)}</h2>
           {isStudent && <p className="student-modal-subtitle">Enter the learner's details. A student reference number is generated automatically.</p>}
           {isTeacher && <p className="faculty-modal-subtitle">Create a staff profile. The employee reference is generated automatically.</p>}
         </div>
@@ -289,6 +348,7 @@ function FeePaymentDialog({ invoice, onClose, onSaved }: {
   onSaved: (receiptNo: string) => void
 }) {
   const { mode, user } = useAuth()
+  useModalControls(onClose)
   const balance = outstandingInvoiceBalance(invoice)
   const [amount, setAmount] = useState(balance.toFixed(2))
   const [method, setMethod] = useState('cash')
@@ -343,6 +403,7 @@ function FeePaymentDialog({ invoice, onClose, onSaved }: {
 
 function FeePaymentHistoryDialog({ invoice, onClose }: { invoice: RecordRow; onClose: () => void }) {
   const { mode, user } = useAuth()
+  useModalControls(onClose)
   const [payments, setPayments] = useState<RecordRow[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -366,6 +427,7 @@ function FeePaymentHistoryDialog({ invoice, onClose }: { invoice: RecordRow; onC
 }
 
 function RecordDetailsDialog({ module, row, onClose }: { module: ModuleConfig; row: RecordRow; onClose: () => void }) {
+  useModalControls(onClose)
   const displayFields = module.fields.filter(field => field.name !== 'photo_path')
   const workflowContext: Record<string, { title: string; summary: string; next: string }> = {
     attendance: { title: 'Attendance review window', summary: `Marked ${String(row.status ?? 'unconfirmed')} for ${String(row.attendance_date ?? 'an undated register')} · ${String(row.class_name ?? 'class not specified')}`, next: 'Check the register note and confirm any absence or late-arrival follow-up with the responsible class team.' },
