@@ -41,11 +41,9 @@ export const institutionalMenu:WorkspaceMenuGroup[]=[
  group('backup','Backup, Restore and Data Management','Validated import/export jobs, backup request history, restore approvals and integrity reporting.','Database','slate','backup',management,[
   'Backup Dashboard','Create Backup','Scheduled Cloud Backups','Backup History','Restore Data','Data Recovery','Import Data','Export Data','Bulk Data Import','Data Validation','Import History','Export History','Data Integrity Reports'
  ]),
- group('students','Student Management','The central learner record, admissions, placements, connected family and longitudinal academic history.','GraduationCap','blue','students',family,[
-  'Student Directory','New Admissions','Admission Applications','Student Profiles','Enrollment','Class and Section Assignments','Student Documentation','Student ID Cards','Promotion and Transfer','Student History','Alumni Records','Student Performance Charts','Student Reports','Student Data Export','Bulk Student Operations'
- ]),
- group('employees','Employees and Faculty','Teaching and non-teaching employee records, workload, leave, attendance and performance.','Users','emerald','employees',staff,[
-  'Employee Directory','Add Employee','Teacher Records','Non-Teaching Staff','Employee Profiles','Department Allocation','Designations','Workload Allocation','Employee Documentation','Employee ID Cards','Employee History','Employee Performance','Employee Attendance','Employee Leave Management','Employee Reports'
+ group('people-hr','People Management & Human Resources','A connected people lifecycle for learners, families, educators, employees, recruitment, contracts, performance, payroll and graduates.','Users','emerald','people_hr',all,[
+  'Students','Admissions & Enrollment','Teachers','Faculty & Staff','Parents & Guardians',
+  'HR & Recruitment','Employee Contracts & Documents','Employee Performance','Payroll & Salary Records','Alumni'
  ]),
  group('attendance','Attendance Management','Bulk class and staff registers, exception follow-up, leave, corrections and device-assisted attendance.','CalendarCheck','rose','attendance',staff.concat(['student','parent']),[
   'Attendance Dashboard','Student Attendance','Daily Attendance','Period-wise Attendance','Class-wise Attendance','Bulk Student Attendance','Faculty and Staff Attendance','Bulk Staff Attendance','Attendance Corrections','Leave Applications','Late Arrival','Early Departure','Attendance Calendar','Attendance Reports','Attendance History','Attendance Analytics','Attendance Alerts'
@@ -91,9 +89,6 @@ export const institutionalMenu:WorkspaceMenuGroup[]=[
  ]),
  group('receipts','Receipts','Receipt numbering, templates, generation, reprinting, verification and bulk issue.','FileText','indigo','receipts',finance,[
   'Receipt Dashboard','Generate Receipt','Fee Receipts','Payment Receipts','Receipt Templates','Receipt Numbering','Receipt Reprinting','Receipt Verification','Bulk Receipt Generation','Receipt History'
- ]),
- group('payroll','Salary and Payroll','Compensation setup, monthly payroll, allowances, deductions, advances, payslips and salary payment.','Banknote','emerald','payroll',finance,[
-  'Payroll Dashboard','Salary Structure','Salary Components','Employee Salary Assignment','Monthly Payroll','Allowances','Deductions','Advances and Loans','Advance Recovery','Payslips','Salary Payments','Payroll Reports'
  ]),
  group('reconciliation','Financial Reconciliation and Audit','Bank/cash/payment reconciliation, verification, immutable audit logs and access/change history.','ShieldCheck','red','reconciliation',finance,[
   'Reconciliation Dashboard','Financial Reconciliation','Bank Reconciliation','Cash Reconciliation','Payment Reconciliation','Fee Collection Reconciliation','Transaction Verification','Audit Logs','Administrative Audit','User Activity Logs','Access History','Change History','Audit Reports'
