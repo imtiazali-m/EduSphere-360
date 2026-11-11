@@ -83,5 +83,5 @@ const md = [
   '',
 ]
 const output = path.join(root, 'docs/PHASE_2_RESPONSIVE_SOURCE_AUDIT.md')
-fs.writeFileSync(output, md.join('\\n'), 'utf8')
+fs.writeFileSync(output, md.join('\n'), 'utf8')
 console.log('Generated docs/PHASE_2_RESPONSIVE_SOURCE_AUDIT.md: ' + checks.length + ' responsive source checks passed; visual viewport acceptance remains pending.')
