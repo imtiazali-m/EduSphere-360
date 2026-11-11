@@ -135,18 +135,28 @@ export function PayrollWorkspace({initialWindow,onToast}:Props){
     const employee=employees.find(row=>row.id===profile.teacher_id)
     return [employee?.full_name,employee?.employee_no,profile.status].some(value=>String(value??'').toLowerCase().includes(salarySearch.trim().toLowerCase()))
   }),[profiles,employees,salarySearch])
+  const profileRecurringTotals=(profileId:string,date=today())=>{
+    const effective=components.filter(component=>component.salary_profile_id===profileId&&component.status==='active'&&component.effective_from<=date&&(!component.effective_to||component.effective_to>=date))
+    return {
+      allowances:effective.filter(component=>component.component_type==='allowance').reduce((sum,component)=>sum+Number(component.amount),0),
+      deductions:effective.filter(component=>component.component_type==='deduction').reduce((sum,component)=>sum+Number(component.amount),0),
+    }
+  }
   const orderedProfiles=useMemo(()=>[...filteredProfiles].sort((a,b)=>{
     const value=(profile:SalaryProfile):string|number=>{
       const employee=employees.find(row=>row.id===profile.teacher_id)
       if(salarySortKey==='employee')return employee?.full_name??''
       if(salarySortKey==='employee_no')return employee?.employee_no??''
-      if(salarySortKey==='net_month')return moneyValue(profile.base_salary)+moneyValue(profile.monthly_allowances)-moneyValue(profile.monthly_deductions)
+      const recurring=profileRecurringTotals(profile.id)
+      if(salarySortKey==='monthly_allowances')return moneyValue(profile.monthly_allowances)+recurring.allowances
+      if(salarySortKey==='monthly_deductions')return moneyValue(profile.monthly_deductions)+recurring.deductions
+      if(salarySortKey==='net_month')return moneyValue(profile.base_salary)+moneyValue(profile.monthly_allowances)+recurring.allowances-moneyValue(profile.monthly_deductions)-recurring.deductions
       return profile[salarySortKey] as string|number??''
     }
     const left=value(a),right=value(b)
     const comparison=typeof left==='number'&&typeof right==='number'?left-right:String(left).localeCompare(String(right),undefined,{numeric:true,sensitivity:'base'})
     return salarySortDirection==='asc'?comparison:-comparison
-  }),[filteredProfiles,employees,salarySortKey,salarySortDirection])
+  }),[filteredProfiles,employees,components,salarySortKey,salarySortDirection])
   const orderedPayslips=useMemo(()=>[...filteredItems].sort((a,b)=>{
     const value=(item:PayrollItem):string|number=>{
       const employee=employees.find(row=>row.id===item.teacher_id)
@@ -331,7 +341,8 @@ export function PayrollWorkspace({initialWindow,onToast}:Props){
   }
 
   const tabs:Tab[]=financeRole?['overview','salary','components','adjustments','runs','payslips']:user?.role==='teacher'?['overview','salary','payslips']:['overview','payslips']
-  const activeSalaryTotal=activeProfiles.reduce((sum,p)=>sum+moneyValue(p.base_salary)+moneyValue(p.monthly_allowances)-moneyValue(p.monthly_deductions),0)
+  const activeSalaryTotal=activeProfiles.reduce((sum,p)=>{const recurring=profileRecurringTotals(p.id);return sum+moneyValue(p.base_salary)+moneyValue(p.monthly_allowances)+recurring.allowances-moneyValue(p.monthly_deductions)-recurring.deductions},0)
+  const ownSalaryTotal=profiles.filter(p=>p.status==='active').reduce((sum,p)=>{const recurring=profileRecurringTotals(p.id);return sum+moneyValue(p.base_salary)+moneyValue(p.monthly_allowances)+recurring.allowances-moneyValue(p.monthly_deductions)-recurring.deductions},0)
   const pendingApproval=runs.filter(run=>['draft','review'].includes(run.status)).length
 
   function renderContent(){
@@ -339,7 +350,7 @@ export function PayrollWorkspace({initialWindow,onToast}:Props){
       <article><small>Active employees</small><strong>{financeRole?employees.filter(e=>e.employment_status==='active'||!e.employment_status).length:ownEmployee?1:0}</strong><span>Employee records visible to your role</span></article>
       <article><small>Active salary profiles</small><strong>{financeRole?activeProfiles.length:profiles.filter(p=>p.status==='active').length}</strong><span>Effective compensation records</span></article>
       <article><small>Payroll runs</small><strong>{financeRole?runs.length:new Set(items.map(i=>i.payroll_run_id)).size}</strong><span>{pendingApproval} awaiting owner/admin approval</span></article>
-      <article><small>Estimated monthly net</small><strong>{cash(financeRole?activeSalaryTotal:profiles.filter(p=>p.status==='active').reduce((s,p)=>s+moneyValue(p.base_salary)+moneyValue(p.monthly_allowances)-moneyValue(p.monthly_deductions),0))}</strong><span>From saved salary profiles</span></article>
+      <article><small>Estimated monthly net</small><strong>{cash(financeRole?activeSalaryTotal:ownSalaryTotal)}</strong><span>From saved salary profiles</span></article>
       <section className="payroll-panel"><header><div><h2>Payroll control cycle</h2><p>Salary profiles → draft run → owner/admin approval → recorded payment → paid run.</p></div></header><ol className="payroll-flow"><li>Set effective salary profiles</li><li>Generate a draft monthly run</li><li>Owner or administrator approves it</li><li>Finance records each payment</li><li>Close the run when all items are paid</li></ol></section>
       {financeRole&&missingSalaryProfiles.length>0&&<section className="payroll-warning"><b>{missingSalaryProfiles.length} active employees have no active salary profile.</b><span>These employees will not be included in the next payroll run.</span><button className="payroll-button" onClick={()=>setTab('salary')}>Review salary profiles</button></section>}
     </div>
