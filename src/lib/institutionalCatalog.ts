@@ -56,6 +56,9 @@ export const institutionalMenu:WorkspaceMenuGroup[]=[
  group('certificates','Certificates and Documentation','Template-driven institutional documents, certificates, ID cards, signatures, serial numbers and verification.','Award','gold','certificates',management.concat(['teacher','student','parent']),[
   'Certificate Dashboard','Character Certificate','Leaving Certificate','Enrollment Certificate','Bonafide Certificate','Achievement Certificate','Experience Certificate','ID Card Designer','Certificate Templates','Editable Document Templates','Bulk Certificate Generation','Certificate Verification','Certificate History'
  ]),
+ group('academic-management','Academic Management & Learning','Plan sessions, classes, subjects, curriculum, lesson delivery, timetables, homework, learning materials, digital courses, classroom work, calendar and learner progress.','GraduationCap','blue','academic-management',academic.concat(['student','parent']),[
+  'Academic Sessions','Classes & Sections','Subjects & Courses','Curriculum & Syllabus','Lesson Planning','Timetable','Homework & Assignments','Study Materials','Online Learning','Classwork & Classroom Activities','Academic Calendar','Learning Progress'
+ ]),
  group('curriculum','Curriculum and Learning Resources','Curriculum maps, syllabus, outcomes, teaching resources, chapter materials and progress analytics.','BookOpen','teal','curriculum',family,[
   'Curriculum Dashboard','Curriculum Map','Syllabus Management','Learning Outcomes','Lesson Plans','Teaching Resources','Learning Materials','Resource Downloads','Subject-wise Curriculum','Chapter-wise Learning Resources','Curriculum Coverage','Learning Progress Tracking','Curriculum Reports'
  ]),

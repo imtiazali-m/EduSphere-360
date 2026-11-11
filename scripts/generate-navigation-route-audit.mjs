@@ -41,7 +41,7 @@ const classify = (route) => {
   const known = new Set([
     'admin', 'assignments', 'assignment_submissions', 'attendance', 'announcements',
     'employees', 'exam_results', 'exams', 'fees', 'finance', 'files', 'governance',
-    'care', 'notifications', 'operations', 'overview', 'payroll', 'reports', 'students',
+    'academic', 'care', 'notifications', 'operations', 'overview', 'payroll', 'reports', 'students',
     'timetable', 'work_tasks',
   ])
   if (!known.has(workspace)) return 'Unexpected route family · investigate'
@@ -67,7 +67,7 @@ for (const token of [
   '<AdministrationModule ', '<AccountsModule ', '<FilesModule ', '<ReportsModule ',
   '<FinanceWorkspace ', '<PayrollWorkspace ', '<GovernanceWorkspace ',
   '<InstitutionOperationsWorkspace ', '<LinkedOperationsWorkspace ',
-  '<InstitutionalWorkspace ', '<AssessmentWorkspace ', '<FacultyWorkspace ', '<RecordModule ',
+  '<InstitutionalWorkspace ', '<AssessmentWorkspace ', '<AcademicManagementWorkspace ', '<FacultyWorkspace ', '<RecordModule ',
 ]) {
   if (!dashboardSource.includes(token)) throw new Error('Dashboard dispatcher no longer contains ' + token)
 }
@@ -79,6 +79,7 @@ const resolveDispatcher = (route) => {
   if (route === 'files') return 'FilesModule'
   if (route === 'profile') return 'ProfileModule'
   if (route === 'teachers') return 'FacultyWorkspace'
+  if (route.startsWith('academic:')) return 'AcademicManagementWorkspace'
   if (route.startsWith('unavailable:')) return 'WorkspaceUnavailable'
   if (route.startsWith('students:')) return 'RecordModule · students'
   if (route.startsWith('attendance:')) return 'AttendanceWorkspace'
