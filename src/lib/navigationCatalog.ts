@@ -84,7 +84,6 @@ const roleItemAllow:Record<string,Partial<Record<string,string[]>>>={
 function allowedItems(group:WorkspaceMenuGroup,role:WorkspaceMenuGroup['roles'][number],careAreas:ReadonlySet<string>=new Set()){
   const selected=roleItemAllow[group.key]?.[role]
   let roleFiltered = selected ? group.items.filter(item=>selected.includes(item.label)) : group.items
-  if (group.key === 'dashboard') return []
   if(group.key==='attendance'&&role==='teacher'){
     const grantLabels:Record<string,string>={discipline:'Student Discipline',counselling:'Student Counselling & Wellbeing',health:'Health & Emergency Records'}
     const visible=new Set(roleFiltered.map(item=>item.label))
