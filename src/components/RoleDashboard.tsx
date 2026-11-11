@@ -428,7 +428,7 @@ export function RoleDashboard({ onNavigate }: Props) {
     )
   }
 
-  const rolePanels: Record<AppRole, React.ReactNode> = {
+  const rolePanels: Record<AppRole, ReactNode> = {
     owner: (() => {
       const campuses = get('campuses')
       const branchRows = campuses.map(campus => {
@@ -571,18 +571,24 @@ export function RoleDashboard({ onNavigate }: Props) {
     teacher: (() => {
       const teacher = teachers.find(row => row.user_id === user?.id)
       const assignmentsToTeacher = get('teacher_assignments').filter(item => item.teacher_id === teacher?.id && String(item.status ?? 'active').toLowerCase() === 'active')
-      const classIds = new Set(assignmentsToTeacher.map(item => String(item.class_id ?? '')))
-      const assignedClassRows = get('classes').filter(classRow => classIds.has(String(classRow.id)))
-      const assignedClassNames = new Set(assignedClassRows.flatMap(item => [item.name, item.code].filter(Boolean).map(normalize)))
+      const classIds = new Set(assignmentsToTeacher.map(item => String(item.class_id ?? '')).filter(Boolean))
+      // Class directory rows are owner/admin-only. Use only the teacher's
+      // own timetable labels to scope class content in this dashboard.
+      const assignedClassNames = new Set(
+        timetable
+          .filter(entry => normalize(entry.teacher_name) === normalize(user?.fullName))
+          .map(entry => normalize(entry.class_name))
+          .filter(Boolean),
+      )
       const scope = (items: RecordRow[]) => assignedClassNames.size
-        ? items.filter(item => assignedClassNames.has(normalize(item.class_name)) || [...assignedClassNames].some(name => normalize(item.class_name).includes(name)))
+        ? items.filter(item => assignedClassNames.has(normalize(item.class_name)))
         : items.filter(item => item.created_by === user?.id)
       const teacherAssignments = scope(assignments)
       const teacherExams = scope(exams)
-      const todaySchedule = timetable.filter(entry => normalize(entry.weekday) === todayWeekday(now)
-        && (assignedClassNames.size
-          ? assignedClassNames.has(normalize(entry.class_name)) || [...assignedClassNames].some(name => normalize(entry.class_name).includes(name))
-          : normalize(entry.teacher_name) === normalize(user?.fullName)))
+      const todaySchedule = timetable.filter(entry =>
+        normalize(entry.weekday) === todayWeekday(now)
+        && normalize(entry.teacher_name) === normalize(user?.fullName),
+      )
       const classNamesToday = [...new Set(todaySchedule.map(item => String(item.class_name ?? '').trim()).filter(Boolean))]
       const attended = new Set(todayAttendance.map(item => normalize(item.class_name)))
       const missingRegisters = classNamesToday.filter(className => !attended.has(normalize(className)))
