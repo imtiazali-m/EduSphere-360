@@ -17,6 +17,7 @@
     "audit:responsive": "node scripts/generate-responsive-source-audit.mjs",
     "audit:modal-windows": "node scripts/audit-modal-windows.mjs",
     "test:account-provisioning": "node scripts/test-account-provisioning.mjs",
+    "test:display-preferences": "node --test scripts/test-display-preferences.mjs",
     "test:display-preferences": "node --test scripts/test-display-preferences.mjs"
   },
   "dependencies": {
