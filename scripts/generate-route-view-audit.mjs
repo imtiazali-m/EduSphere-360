@@ -40,9 +40,9 @@ const attendanceWindows = new Set(['students','staff','history','devices'])
 const reportTabs = new Set(['overview','finance','attendance','academics','students','employees','payroll'])
 const financeTabs = {
   'accounts-finance': new Set(['overview','accounts','journals','reconciliation']),
-  fees: new Set(['overview','structures','invoices','payments','receivables','discounts','refunds','receipts']),
-  receivables: new Set(['overview','receivables','invoices','payments']),
-  payments: new Set(['overview','payments','refunds','reconciliation']),
+  fees: new Set(['overview','structures','invoices','payments','receivables','discounts','refunds','receipts','reconciliation']),
+  receivables: new Set(['overview','receivables','invoices','payments','reconciliation']),
+  payments: new Set(['overview','payments','receivables','refunds','reconciliation']),
   receipts: new Set(['overview','receipts','payments']),
   reconciliation: new Set(['overview','reconciliation','journals','receivables']),
 }
