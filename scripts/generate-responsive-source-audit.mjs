@@ -18,6 +18,7 @@ const files = {
   operations: read('src/styles/institution-operations.css'),
   institutional: read('src/styles/institutional-premium.css'),
   modules: read('src/styles/module-workspaces.css'),
+  academic: read('src/styles/academic-management.css'),
 }
 const checks = [
   ['Viewport', /<meta[^>]+name=["']viewport["']/.test(files.html) && /content=["']width=device-width, initial-scale=1\.0["']/.test(files.html), 'The document must declare the device-width viewport.'],
@@ -33,6 +34,7 @@ const checks = [
   ['Institution operations workspace', hasBreakpoint(files.operations, 1000) && hasBreakpoint(files.operations, 620), 'Institution operations must adapt its forms and panels.'],
   ['Institutional workspace', [1000,720,700,650,620,430].some(width => hasBreakpoint(files.institutional,width)) && hasBreakpoint(files.institutional,430), 'Institutional records must have both tablet and narrow-phone adjustments.'],
   ['Generic module workspaces', [1080,760,720,580,540,520].every(width => hasBreakpoint(files.modules,width)), 'Generic record modules must include responsive breakpoints for tablet and phone widths.'],
+  ['Stage 8 academic workspace', hasBreakpoint(files.academic,1100) && hasBreakpoint(files.academic,800) && hasBreakpoint(files.academic,540) && files.academic.includes('.ed360-academic-nav') && files.academic.includes('.ed360-academic-table-wrap') && files.academic.includes('.ed360-academic-modal'), 'Academic navigation, record tables and forms must adapt for desktop, tablet and phone layouts.'],
 ]
 const failed = checks.filter(([,ok]) => !ok)
 if (failed.length) {
@@ -45,7 +47,7 @@ const md = [
   '',
   '**Generated:** by the repository release workflow.',
   '**Scope:** responsive CSS declarations and required mobile navigation/form layout hooks.',
-  '**Automated checks:** 13 responsive source checks passed.',
+  '**Automated checks:** 14 responsive source checks passed.',
   '',
   '## Evidence boundary',
   '',
