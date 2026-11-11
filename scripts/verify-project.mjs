@@ -19,6 +19,7 @@ check('Vite development and production scripts exist', () => {
   assert.equal(packageJson.scripts['audit:navigation'], 'node scripts/generate-navigation-route-audit.mjs')
   assert.equal(packageJson.scripts['audit:route-views'], 'node scripts/generate-route-view-audit.mjs')
   assert.equal(packageJson.scripts['audit:responsive'], 'node scripts/generate-responsive-source-audit.mjs')
+  assert.equal(packageJson.scripts['test:workspace-privacy'], 'node scripts/test-workspace-privacy.mjs')
 })
 
 const requiredFiles = [
@@ -29,7 +30,7 @@ const requiredFiles = [
   'src/components/InstitutionOperationsWorkspace.tsx', 'src/styles/institution-operations.css',
   'src/components/AuthScreens.tsx', 'src/components/AdministrationModule.tsx',
   'src/components/RecordModule.tsx', 'src/components/FacultyWorkspace.tsx', 'src/styles/faculty-workspace.css', 'src/components/ReportsModule.tsx', 'src/components/ProfileModule.tsx', 'src/context/AuthContext.tsx', 'src/lib/auth.ts',
-  'src/lib/data.ts', 'src/lib/navigationAccess.ts', 'src/lib/userErrors.ts', 'scripts/test-user-errors.mjs',
+  'src/lib/data.ts', 'src/lib/workspacePrivacy.js', 'src/lib/workspacePrivacy.d.ts', 'scripts/test-workspace-privacy.mjs', '.github/workflows/workspace-family-privacy.yml', 'src/lib/navigationAccess.ts', 'src/lib/userErrors.ts', 'scripts/test-user-errors.mjs',
   'src/lib/finance.ts', 'scripts/test-finance.mjs', 'src/lib/fileAccess.ts', 'scripts/test-file-access.mjs',
   'scripts/test-account-provisioning.mjs', 'supabase/functions/create-user/index.ts', 'supabase/functions/create-user/provisioning-guards.mjs', '.github/workflows/teacher-account-provisioning.yml', 'docs/TEACHER_ACCOUNT_LINK_INTEGRITY.md',
   'src/lib/navigationCatalog.ts', 'src/lib/navigationRoutes.ts', 'scripts/generate-navigation-route-audit.mjs', 'scripts/generate-route-view-audit.mjs', 'scripts/generate-responsive-source-audit.mjs', 'docs/PHASE_1_EXACT_ROUTE_AUDIT.md', 'docs/PHASE_1_ROUTE_VIEW_AUDIT.md', 'docs/PHASE_2_RESPONSIVE_SOURCE_AUDIT.md', 'src/components/NotificationCenter.tsx', 'src/styles/notification-center.css', 'public/_redirects',
@@ -245,7 +246,7 @@ check('Institutional registers and windows are tailored by workspace domain', ()
   for (const value of ['showAmount','showQuantity','showDueDate','showPortalVisibility']) {
     assert.ok(workspace.includes(value), 'Module-specific form visibility is missing: ' + value)
   }
-  assert.ok(workspace.includes("['student','parent'].includes(user?.role??'')"), 'Family portals must not see internal approval columns')
+  assert.ok(workspace.includes('canViewInternalApproval(user?.role)'), 'Only owner/admin may see internal approval columns')
   for (const layout of ['academic','people','assessment','ledger','communication','resource','operations','governance','intelligence']) {
     assert.ok(styles.includes(`[data-workspace-layout="${layout}"]`), 'Distinct workspace surface is missing: ' + layout)
   }
@@ -952,6 +953,18 @@ check('Unified design system is loaded last and removes global browser zoom', ()
   assert.ok(viewAudit.includes('Hidden from role workspace tabs') === false, 'Role menus must not expose inaccessible internal workspace tabs')
   assert.ok(routeAudit.includes('Owner') && routeAudit.includes('| Student | 15 | 144 |') && routeAudit.includes('Examination officer') && routeAudit.includes('Exact route matrix'), 'Exact route audit must list all seven role sections')
   assert.ok(routeAudit.includes('Explicitly unavailable') && routeAudit.includes('acceptance pending'), 'Exact route audit must distinguish unresolved workflows')
+})
+
+check('Family-facing workspace exports and review metrics exclude internal approvals', () => {
+  const workspace = read('src/components/InstitutionalWorkspace.tsx')
+  const privacy = read('src/lib/workspacePrivacy.js')
+  const tests = read('scripts/test-workspace-privacy.mjs')
+  assert.ok(workspace.includes('getWorkspaceExportColumns(user?.role'), 'All workspace export formats must use role-scoped columns')
+  assert.ok(workspace.includes('getWorkspaceExportRows(user?.role'), 'Export rows must be stripped of internal review metadata for non-admin roles')
+  assert.ok(workspace.includes('getWorkspaceReviewMetrics(rows,user?.role)'), 'Dashboard review metrics must use a role-aware projection')
+  assert.ok(workspace.includes('pendingReviewCount!==null'), 'Pending review KPI must be hidden from non-admin roles')
+  assert.ok(privacy.includes('reviewed_by') && privacy.includes('reviewed_at'), 'The privacy projection must remove review audit fields as well as approval status')
+  assert.ok(tests.includes('family dashboard metrics use public status only') && tests.includes('family exports omit approval and review audit fields'), 'Focused workspace privacy regressions are missing')
 })
 
 check('Student admission is a dedicated, accessible workspace window', () => {
