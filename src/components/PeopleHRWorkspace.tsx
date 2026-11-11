@@ -55,10 +55,12 @@ export function PeopleHRWorkspace({initialWindow,onToast,onNavigate}:Props) {
   const appraisals=tableRows('employee_appraisals')
   const alumni=tableRows('alumni_records')
   const documents=tableRows('staff_documents')
+  const departments=tableRows('departments')
+  const designations=tableRows('designations')
 
   const loadTables = useMemo(() => {
     if(windowKey==='admissions') return ['admission_enquiries','students']
-    if(windowKey==='recruitment') return ['hr_job_postings','hr_candidates','hr_interviews']
+    if(windowKey==='recruitment') return ['hr_job_postings','hr_candidates','hr_interviews','departments','designations']
     if(windowKey==='contracts') return ['employee_contracts','teachers','staff_documents']
     if(windowKey==='performance') return ['employee_appraisals','teachers']
     return ['alumni_records','students']
@@ -107,6 +109,8 @@ export function PeopleHRWorkspace({initialWindow,onToast,onNavigate}:Props) {
         {name:'job_code',label:'Job code',required:true},
         {name:'title',label:'Position title',required:true},
         {name:'department',label:'Department'},
+        {name:'department_id',label:'Institution department',type:'select',options:departments.map(row=>({value:String(row.id),label:String(row.name??row.department_name??'Department')}))},
+        {name:'designation_id',label:'Designation',type:'select',options:designations.map(row=>({value:String(row.id),label:String(row.name??row.title??'Designation')}))},
         {name:'employee_type',label:'Employee category',options:[{value:'teaching',label:'Teaching'},{value:'non_teaching',label:'Non-teaching'}]},
         {name:'employment_type',label:'Employment type',options:[{value:'full_time',label:'Full-time'},{value:'part_time',label:'Part-time'},{value:'contract',label:'Contract'},{value:'temporary',label:'Temporary'}]},
         {name:'openings',label:'Number of openings',type:'number',required:true},
@@ -156,11 +160,12 @@ export function PeopleHRWorkspace({initialWindow,onToast,onNavigate}:Props) {
     }
     if(windowKey==='contracts') return {
       table:'employee_contracts',heading:'Contract register',description:'Versioned employment agreements with approval, signing, effective dates and expiry status.',
-      columns:[['contract_no','Contract no.'],['teacher_id','Employee'],['contract_type','Contract type'],['start_date','Start'],['end_date','End'],['status','Status'],['signed_at','Signed']],
+      columns:[['contract_no','Contract no.'],['teacher_id','Employee'],['contract_type','Contract type'],['staff_document_id','Supporting document'],['start_date','Start'],['end_date','End'],['status','Status'],['signed_at','Signed']],
       fields:[
         {name:'teacher_id',label:'Employee',type:'select',required:true,options:employees.map(row=>({value:String(row.id),label:String(row.full_name)+' · '+String(row.employee_no)}))},
         {name:'contract_no',label:'Contract reference',required:true},
         {name:'contract_type',label:'Contract type',options:['employment','fixed_term','probation','part_time','consultancy','temporary','renewal'].map(value=>({value,label:title(value)}))},
+        {name:'staff_document_id',label:'Supporting private staff document',type:'select',options:documents.filter(doc=>doc.teacher_id===values.teacher_id).map(doc=>({value:String(doc.id),label:String(doc.title??doc.file_name??doc.document_type??'Staff document')}))},
         {name:'start_date',label:'Start date',type:'date',required:true},
         {name:'end_date',label:'End date',type:'date'},
         {name:'probation_end_date',label:'Probation end date',type:'date'},
@@ -208,7 +213,7 @@ export function PeopleHRWorkspace({initialWindow,onToast,onNavigate}:Props) {
         {name:'notes',label:'Notes',type:'textarea'},
       ] as Field[],
     }
-  },[windowKey,recruitTab,employees,students,vacancies,candidates])
+  },[windowKey,recruitTab,employees,students,vacancies,candidates,departments,designations,documents,values.teacher_id])
 
   const currentRows = windowKey==='admissions' ? enquiries
     : windowKey==='recruitment' ? (recruitTab==='vacancies'?vacancies:recruitTab==='candidates'?candidates:interviews)
@@ -229,6 +234,7 @@ export function PeopleHRWorkspace({initialWindow,onToast,onNavigate}:Props) {
     if(key==='student_id') return textValue(students.find(item=>item.id===row.student_id)?.full_name)
     if(key==='candidate_id') return textValue(candidates.find(item=>item.id===row.candidate_id)?.full_name)
     if(key==='job_posting_id') return textValue(vacancies.find(item=>item.id===row.job_posting_id)?.title)
+    if(key==='staff_document_id') return textValue(documents.find(item=>item.id===row.staff_document_id)?.title??documents.find(item=>item.id===row.staff_document_id)?.file_name)
     if(key.includes('date')||key.endsWith('_at')) return dateLabel(row[key])
     if(typeof row[key]==='boolean') return row[key]?'Yes':'No'
     return textValue(row[key]).replaceAll('_',' ')
@@ -267,6 +273,7 @@ export function PeopleHRWorkspace({initialWindow,onToast,onNavigate}:Props) {
       else if(values[field.name]==='') payload[field.name]=null
     }
     if(windowKey==='performance') payload.reviewer_id=user.id
+    if(windowKey==='alumni') payload.consent_captured_at=payload.communication_consent===true?(editing?.consent_captured_at??new Date().toISOString()):null
     if(!editing) payload.created_by=user.id
     setSaving(true)
     try {
