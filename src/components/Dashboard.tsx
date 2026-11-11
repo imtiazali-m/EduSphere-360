@@ -840,7 +840,7 @@ export function Dashboard({ onToast }: Props) {
             {isExpanded && <div className="pro-nav-children">{group.items.map(item => {
               const itemKey = item.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
               const route = getNavigationRoute(group.key, item, user!.role)
-              const isActive = activeNavigationTab.groupKey === group.key && activeNavigationTab.itemKey === itemKey
+              const isActive = activeTab.route === route || (activeNavigationTab.groupKey === group.key && activeNavigationTab.itemKey === itemKey)
               const ItemIcon = pageIcon(item, GroupIcon)
               const connected = Boolean(route && !route.startsWith('unavailable:'))
               return <button key={item} className={`pro-nav-item ${isActive ? 'active' : ''}`} aria-label={item} title={item} aria-current={isActive ? 'page' : undefined} onClick={() => navigateCatalogPage(group.key, item)}><span className="pro-nav-icon"><ItemIcon size={16}/></span><span className="pro-nav-title">{item}</span>{connected && <i className="pro-nav-connected" title="Connected workspace"/>}</button>
