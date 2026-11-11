@@ -877,6 +877,20 @@ check('Unified design system is loaded last and removes global browser zoom', ()
   assert.ok(routeAudit.includes('Explicitly unavailable') && routeAudit.includes('acceptance pending'), 'Exact route audit must distinguish unresolved workflows')
 })
 
+check('Student admission is a dedicated, accessible workspace window', () => {
+  const recordModule = read('src/components/RecordModule.tsx')
+  const admissionStyles = read('src/styles/student-admission-workspace.css')
+  const mainEntry = read('src/main.tsx')
+  assert.ok(recordModule.includes('if (isStudent && fullPage)'), 'Student admission must render in its dedicated full-page mode')
+  assert.ok(recordModule.includes('if (showForm) return formDialog'), 'The student form must replace the directory content while open')
+  for (const section of ['Student identity', 'Academic placement', 'Contact information', 'Parent / guardian information']) {
+    assert.ok(recordModule.includes(section), 'Missing dedicated admission form section: ' + section)
+  }
+  assert.ok(recordModule.includes('Save student admission') && recordModule.includes('Back to students'), 'The admission window must provide clear save and return actions')
+  assert.ok(admissionStyles.includes('.ed360-admission-workspace') && admissionStyles.includes('@media(max-width:680px)'), 'The admission workspace must have dedicated responsive styles')
+  assert.ok(mainEntry.includes("import './styles/student-admission-workspace.css'"), 'Dedicated admission styles must be loaded by the application')
+})
+
 console.log('\nRole workspace counts:')
 for (const [role, count] of Object.entries(roleCounts)) console.log(`  ${role.padEnd(13)} ${String(count.groups).padStart(2)} menu groups / ${String(count.destinations).padStart(2)} destinations`)
 console.log(`\nConfigured data modules: ${modules.length}`)
