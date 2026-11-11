@@ -10,7 +10,7 @@ export const navigationCatalog:NavigationCatalogGroup[]=institutionalMenu.map(gr
 
 const roleItemAllow:Record<string,Partial<Record<string,string[]>>>={
   'people-hr':{
-    teacher:['Students','Teachers','Employee Performance'],
+    teacher:['Students','Teachers','Employee Contracts & Documents','Employee Performance','Payroll & Salary Records'],
     student:['Students'],
     parent:['Students','Parents & Guardians'],
     accountant:['Payroll & Salary Records'],
