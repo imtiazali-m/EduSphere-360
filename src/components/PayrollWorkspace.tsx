@@ -98,16 +98,13 @@ export function PayrollWorkspace({initialWindow,onToast}:Props){
         listRecords('cloud',user,'payroll_runs') as Promise<PayrollRun[]>,
         listRecords('cloud',user,'payroll_items') as Promise<PayrollItem[]>,
       ])
-      let componentRows:SalaryComponent[]=[]
+      const componentResult=await supabase!.from('employee_salary_components').select('*').eq('institution_id',user.institutionId).order('created_at',{ascending:false})
+      if(componentResult.error)throw componentResult.error
+      const componentRows=(componentResult.data??[]) as SalaryComponent[]
       let adjustmentRows:PayrollAdjustment[]=[]
       if(financeRole){
-        const [componentResult,adjustmentResult]=await Promise.all([
-          supabase!.from('employee_salary_components').select('*').eq('institution_id',user.institutionId).order('created_at',{ascending:false}),
-          supabase!.from('payroll_adjustments').select('*').eq('institution_id',user.institutionId).order('created_at',{ascending:false}),
-        ])
-        if(componentResult.error)throw componentResult.error
+        const adjustmentResult=await supabase!.from('payroll_adjustments').select('*').eq('institution_id',user.institutionId).order('created_at',{ascending:false})
         if(adjustmentResult.error)throw adjustmentResult.error
-        componentRows=(componentResult.data??[]) as SalaryComponent[]
         adjustmentRows=(adjustmentResult.data??[]) as PayrollAdjustment[]
       }
       setEmployees(employeeRows)
@@ -367,6 +364,20 @@ export function PayrollWorkspace({initialWindow,onToast}:Props){
         <td>{fmtDate(profile.effective_from)}{profile.effective_to?' – '+fmtDate(profile.effective_to):''}</td><td><PayrollBadge value={profile.status}/></td>
         {financeRole&&<td>{profile.status==='active'&&<button className="payroll-button" onClick={()=>openSalary(employee)}>New version</button>}</td>}
       </tr>})}</tbody></table></div>{payrollPageControls(orderedProfiles.length,salaryCurrentPage,salaryPageCount,setSalaryPage)}</>:<div className="payroll-empty">{salarySearch?'No salary profiles match this search.':'No salary profiles have been configured yet.'}</div>}
+      {!financeRole&&<div className="payroll-own-components">
+        <h3>My recurring salary components</h3>
+        <p>These recurring lines are attached to your effective salary profile and are shown separately from one-off payroll adjustments.</p>
+        {components.filter(component=>profiles.some(profile=>profile.id===component.salary_profile_id)).length>0
+          ? <div className="payroll-table-wrap"><table><thead><tr><th>Component</th><th>Type</th><th>Amount</th><th>Effective period</th><th>Status</th></tr></thead><tbody>
+            {components.filter(component=>profiles.some(profile=>profile.id===component.salary_profile_id)).map(component=><tr key={component.id}>
+              <td><b>{component.label}</b><small>{component.code}</small></td>
+              <td>{statusLabel(component.component_type)}</td><td>{cash(component.amount)}</td>
+              <td>{fmtDate(component.effective_from)}{component.effective_to?' – '+fmtDate(component.effective_to):''}</td>
+              <td><PayrollBadge value={component.status}/></td>
+            </tr>)}
+          </tbody></table></div>
+          : <div className="payroll-empty">No recurring salary components are currently recorded for your salary profile.</div>}
+      </div>}
     </section>
     if(tab==='components')return <section className="payroll-panel">
       <header><div><h2>Recurring salary components</h2><p>Versioned allowance and deduction lines attached to an effective employee salary profile.</p></div><button className="payroll-button primary" onClick={()=>{setComponentProfileId(activeProfiles[0]?.id??'');setComponentForm(true)}}><Plus size={14}/> Add component</button></header>
