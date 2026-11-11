@@ -271,6 +271,13 @@ const authContext = read('src/context/AuthContext.tsx')
 const authSource = read('src/lib/auth.ts')
 const signupMigration = read('supabase/migrations/20261108053651_owner_signup_institution_details.sql')
 
+check('Switching the role-specific login route resets the selected account category', () => {
+  const auth = read('src/components/AuthScreens.tsx')
+  assert.ok(auth.includes('useEffect(() => { setAccountType(initialAccountType) }, [initialAccountType])'), 'Login account type must track the requested role when route props change')
+  const browserTest = read('scripts/test-responsive-public.mjs')
+  assert.ok(browserTest.includes('await page.waitForFunction(expected =>'), 'Responsive browser QA must wait for the selected account category to settle for each role')
+})
+
 check('Public welcome page includes an accessible feature showcase and FAQ', () => {
   const welcome = read('src/components/AuthScreens.tsx')
   const styles = read('src/styles/welcome-marketing.css')
