@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { createRecord, deleteRecord, listAccounts, listFeePayments, listRecords, recordFeePayment, updateRecord } from '../lib/data'
+import { isWorkTaskVisibleToAssignee } from '../lib/workTaskAccess.js'
 import { supabase } from '../lib/supabase'
 import { userFacingError } from '../lib/userErrors'
 import { downloadCsv } from '../lib/csv'
@@ -873,7 +874,8 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
         if (progress < 0 || progress > 100) throw new Error('Progress must be between 0 and 100.')
         if (payload.status === 'completed') payload.progress_percent = 100
         if (payload.status !== 'completed' && progress === 100) payload.status = 'completed'
-        if (!['owner', 'admin'].includes(user!.role) && String(payload.assigned_to_email ?? '').toLowerCase() !== user!.email.toLowerCase()) {
+        if (!['owner', 'admin'].includes(user!.role)
+          && (!targetEditing || !isWorkTaskVisibleToAssignee(targetEditing, user!))) {
           throw new Error('You can only update work assigned to your account.')
         }
       }
