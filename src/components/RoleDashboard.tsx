@@ -381,8 +381,6 @@ export function RoleDashboard({ onNavigate }: Props) {
     const attendanceTasks = todayClassNames.filter(className => ![...attendedClasses].some(attended => attended === normalize(className))).length
     const teacherAssignmentIds = new Set(teacherAssignments.map(item => String(item.id)))
     const pendingReviews = submissions.filter(item => teacherAssignmentIds.has(String(item.assignment_id)) && ['submitted', 'late', 'pending'].includes(String(item.status ?? '').toLowerCase()))
-    const teacherExamIds = new Set(teacherExams.map(item => String(item.id)))
-    const scopedResults = results.filter(item => teacherExamIds.has(String(item.exam_id)))
     metrics.push(
       { label: 'Assigned classes', value: known('teacher_assignments', 'teachers') ? formatCount(classIds.size) : '—', hint: assignedClassNames.size ? formatCount(assignedClassNames.size) + ' class names on your timetable' : (classIds.size ? 'Active teaching allocations' : 'No active class allocations'), icon: School, tone: 'blue', route: 'institutional:employees:workload-allocation' },
       { label: 'Today’s lessons', value: known('timetable_entries') ? formatCount(todaySchedule.length) : '—', hint: 'Periods on your timetable', icon: CalendarDays, tone: 'teal', route: 'timetable:week' },
