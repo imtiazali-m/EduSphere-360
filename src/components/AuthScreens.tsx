@@ -1,19 +1,21 @@
-import { useState, type FormEvent, type KeyboardEvent as ReactKeyboardEvent } from 'react'
+import { useEffect, useState, type FormEvent, type KeyboardEvent as ReactKeyboardEvent } from 'react'
 import {
   ArrowLeft, ArrowRight, ArrowUpRight, BarChart3, BookOpen, Building2,
   CalendarCheck, Check, CheckCircle2, ClipboardCheck,
   GraduationCap, Headphones, HeartHandshake, Layers3, LockKeyhole,
   Eye, EyeOff, Mail, Menu, Monitor, Server, ShieldCheck, Sparkles,
-  Users, Wallet, X, Zap,
+  Users, Wallet, X, Zap, Globe2, MapPin, Phone, Briefcase,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { userFacingError } from '../lib/userErrors'
 import { resendInstitutionOwnerVerification } from '../lib/auth'
-import type { AppRole } from '../lib/types'
+import type { AppRole, AuthLinkMode, InstitutionChoice } from '../lib/types'
+import { loginCategoryForRole, isValidContactPhone, normalizeContactPhone } from '../lib/authAccess.js'
+import '../styles/access-onboarding.css'
 import '../styles/welcome-marketing.css'
 import '../styles/auth-experience.css'
 
-interface ScreenProps { navigate: (screen: 'welcome' | 'login' | 'setup', role?: AppRole) => void }
+interface ScreenProps { navigate: (screen: 'welcome' | 'access' | 'login' | 'setup', role?: AppRole) => void }
 
 const portals: { role: AppRole; title: string; description: string; icon: typeof GraduationCap }[] = [
   { role: 'owner', title: 'Institution owner', description: 'Create and manage your institution workspace', icon: Building2 },
@@ -132,7 +134,7 @@ export function WelcomeScreen({ navigate }: ScreenProps) {
   const [showcaseTab, setShowcaseTab] = useState<ShowcaseKey>('students')
   const [openFaq, setOpenFaq] = useState<number | null>(0)
   const closeMenu = () => setMobileOpen(false)
-  const go = (screen: 'login' | 'setup') => { closeMenu(); navigate(screen) }
+  const go = (screen: 'access' | 'setup') => { closeMenu(); navigate(screen) }
 
   return (
     <div className="edm-home">
@@ -154,7 +156,7 @@ export function WelcomeScreen({ navigate }: ScreenProps) {
           <a className="edm-nav-link" href="#showcase" onClick={closeMenu}>Product tour</a>
           <a className="edm-nav-link" href="#faq" onClick={closeMenu}>FAQ</a>
         </nav>
-        <div className="edm-header-actions"><button className="edm-login-link" onClick={() => go('login')}>Login</button><button className="edm-signup-button" onClick={() => go('setup')}>Sign up now <ArrowUpRight size={16}/></button></div>
+        <div className="edm-header-actions"><button className="edm-login-link" onClick={() => go('access')}>Login</button><button className="edm-signup-button" onClick={() => go('setup')}>Sign up now <ArrowUpRight size={16}/></button></div>
       </header>
 
       <main id="top">
@@ -370,7 +372,7 @@ export function WelcomeScreen({ navigate }: ScreenProps) {
           </div>
         </section>
 
-        <section className="edm-final-cta" id="get-started"><div className="edm-cta-glow"/><div><span className="edm-section-kicker">YOUR NEXT CHAPTER STARTS HERE</span><h2>Ready to transform<br/><em>your institution?</em></h2><p>Bring your people, processes and progress together with EduSphere 360.</p></div><div className="edm-cta-actions"><button className="edm-button edm-button-lime" onClick={() => go('setup')}>Get started today <ArrowUpRight size={18}/></button><button className="edm-cta-login" onClick={() => go('login')}>Already have an account? Login <ArrowRight size={15}/></button></div></section>
+        <section className="edm-final-cta" id="get-started"><div className="edm-cta-glow"/><div><span className="edm-section-kicker">YOUR NEXT CHAPTER STARTS HERE</span><h2>Ready to transform<br/><em>your institution?</em></h2><p>Bring your people, processes and progress together with EduSphere 360.</p></div><div className="edm-cta-actions"><button className="edm-button edm-button-lime" onClick={() => go('setup')}>Get started today <ArrowUpRight size={18}/></button><button className="edm-cta-login" onClick={() => go('access')}>Already have an account? Login <ArrowRight size={15}/></button></div></section>
       </main>
 
       <footer className="edm-footer">
@@ -385,7 +387,7 @@ export function WelcomeScreen({ navigate }: ScreenProps) {
           </div>
           <div className="edm-footer-col"><b>Platform</b><a href="#platform">About EduSphere</a><a href="#features">Features</a><a href="#solutions">Solutions</a><a href="#self-hosted">USV 360 Pro</a></div>
           <div className="edm-footer-col"><b>Explore</b><a href="#portals">User portals</a><a href="#why-choose-us">Why EduSphere</a><a href="#workflow">How it works</a><a href="#why-edusphere">Core capabilities</a></div>
-          <div className="edm-footer-col"><b>Get started</b><a href="#get-started">Create an institution</a><a href="#faq">Frequently asked questions</a><button type="button" onClick={() => go('login')}>Login to your account</button><a href="#top">Back to top</a></div>
+          <div className="edm-footer-col"><b>Get started</b><a href="#get-started">Create an institution</a><a href="#faq">Frequently asked questions</a><button type="button" onClick={() => go('access')}>Login to your account</button><a href="#top">Back to top</a></div>
         </div>
         <div className="edm-footer-bottom"><span>© {new Date().getFullYear()} EduSphere 360. All rights reserved.</span><span>Built for schools · colleges · universities</span><a href="#top">Back to top ↑</a></div>
       </footer>
@@ -427,19 +429,65 @@ function AuthVisualPanel({ variant }: { variant: 'login' | 'signup' | 'cloud' })
 function AuthTopline({ navigate, mode }: { navigate: ScreenProps['navigate']; mode: 'login' | 'signup' }) {
   return (
     <div className="es-auth-topline">
-      <button type="button" className="es-auth-back" onClick={() => navigate('welcome')}><ArrowLeft size={15}/> <span>Back to website</span></button>
+      <button type="button" className="es-auth-back" onClick={() => navigate(mode === 'login' ? 'access' : 'welcome')}><ArrowLeft size={15}/> <span>{mode === 'login' ? 'Back to access options' : 'Back to website'}</span></button>
       {mode === 'login'
-        ? <p>New to EduSphere 360? <button type="button" onClick={() => navigate('setup')}>Sign up</button></p>
-        : <p>Already have an account? <button type="button" onClick={() => navigate('login')}>Login</button></p>}
+        ? <p>Opening a new institution? <button type="button" onClick={() => navigate('setup')}>Register</button></p>
+        : <p>Already have an account? <button type="button" onClick={() => navigate('access')}>Login</button></p>}
     </div>
   )
+}
+
+export function AccessGatewayScreen({ navigate }: ScreenProps) {
+  return <div className="es-auth-page es-access-gateway">
+    <AuthVisualPanel variant="login" />
+    <main className="es-auth-main es-access-main">
+      <div className="es-auth-topline">
+        <button type="button" className="es-auth-back" onClick={() => navigate('welcome')}><ArrowLeft size={15}/> <span>Back to website</span></button>
+        <span className="es-access-secure"><ShieldCheck size={14}/> SECURE ACCOUNT ACCESS</span>
+      </div>
+      <div className="es-access-content">
+        <span className="es-auth-overline">CHOOSE YOUR ACCESS WINDOW</span>
+        <h2>Where do you belong?</h2>
+        <p className="es-access-intro">Choose the account path that matches your responsibility. Institution owners and administration have a separate entry from employees, teachers, students and families.</p>
+        <div className="es-access-window-grid">
+          <section className="es-access-window es-access-owner">
+            <div className="es-access-window-icon"><Building2 size={23}/></div>
+            <span className="es-access-window-kicker">WINDOW 01</span>
+            <h3>Owner &amp; Administration</h3>
+            <p>Create an institution, sign in to manage it, and select the institution you want to administer.</p>
+            <div className="es-access-window-actions">
+              <button type="button" className="es-access-primary" onClick={() => navigate('login','owner')}>Owner login <ArrowRight size={16}/></button>
+              <button type="button" className="es-access-secondary" onClick={() => navigate('login','admin')}>Administrator login</button>
+              <button type="button" className="es-access-text-link" onClick={() => navigate('setup')}>Register a new institution <ArrowUpRight size={15}/></button>
+            </div>
+            <ul><li>Institution registration and setup</li><li>Email verification and password recovery</li><li>Multi-institution selection</li></ul>
+          </section>
+          <section className="es-access-window es-access-member">
+            <div className="es-access-window-icon"><Users size={23}/></div>
+            <span className="es-access-window-kicker">WINDOW 02</span>
+            <h3>Institution Members</h3>
+            <p>Sign in with the account created or invited by your institution. Your role determines your workspace.</p>
+            <div className="es-access-role-links">
+              <button type="button" onClick={() => navigate('login','teacher')}><Briefcase size={17}/><span><b>Employee / Teacher</b><small>Staff, faculty and teaching access</small></span><ArrowRight size={15}/></button>
+              <button type="button" onClick={() => navigate('login','student')}><GraduationCap size={18}/><span><b>Student</b><small>Learning and academic records</small></span><ArrowRight size={15}/></button>
+              <button type="button" onClick={() => navigate('login','parent')}><HeartHandshake size={18}/><span><b>Parent / Guardian</b><small>Linked learner and family access</small></span><ArrowRight size={15}/></button>
+            </div>
+            <div className="es-access-member-note"><Mail size={15}/> Need access? Ask your institution owner or administrator to send an activation invitation.</div>
+          </section>
+        </div>
+        <div className="es-access-footer-note"><LockKeyhole size={15}/> Existing institution members cannot create unlinked public accounts. Their login is connected to an institution membership and record.</div>
+      </div>
+      <footer className="es-auth-main-foot"><span>© {new Date().getFullYear()} EduSphere 360</span><span>One clear path into every role.</span></footer>
+    </main>
+  </div>
 }
 
 export function LoginScreen({ navigate, initialRole }: ScreenProps & { initialRole?: AppRole }) {
   const { mode, signIn, requestPasswordReset } = useAuth()
   type LoginAccountType = 'owner_admin' | 'employee' | 'student' | 'parent'
-  const initialAccountType: LoginAccountType = initialRole === 'student' ? 'student' : initialRole === 'parent' ? 'parent' : initialRole === 'owner' || initialRole === 'admin' || !initialRole ? 'owner_admin' : 'employee'
+  const initialAccountType: LoginAccountType = loginCategoryForRole(initialRole) as LoginAccountType
   const [accountType, setAccountType] = useState<LoginAccountType>(initialAccountType)
+  useEffect(() => { setAccountType(initialAccountType) }, [initialAccountType])
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -513,16 +561,16 @@ export function LoginScreen({ navigate, initialRole }: ScreenProps & { initialRo
             </div>
             {!resetMode && <div className="es-account-type" role="group" aria-label="Choose account type">
               <button type="button" className={accountType === 'owner_admin' ? 'is-active' : ''} onClick={() => { setAccountType('owner_admin'); setError('') }} aria-pressed={accountType === 'owner_admin'}>
-                <span><Building2 size={17}/></span><b>Owner / Admin</b>
+                <span><Building2 size={17}/></span><b>Owner / Administration</b>
               </button>
               <button type="button" className={accountType === 'employee' ? 'is-active' : ''} onClick={() => { setAccountType('employee'); setError('') }} aria-pressed={accountType === 'employee'}>
-                <span><Users size={17}/></span><b>Employee</b>
+                <span><Briefcase size={17}/></span><b>Employee / Teacher</b>
               </button>
               <button type="button" className={accountType === 'student' ? 'is-active' : ''} onClick={() => { setAccountType('student'); setError('') }} aria-pressed={accountType === 'student'}>
                 <span><GraduationCap size={18}/></span><b>Student</b>
               </button>
               <button type="button" className={accountType === 'parent' ? 'is-active' : ''} onClick={() => { setAccountType('parent'); setError('') }} aria-pressed={accountType === 'parent'}>
-                <span><Users size={17}/></span><b>Parent</b>
+                <span><HeartHandshake size={17}/></span><b>Parent / Guardian</b>
               </button>
             </div>}
             {resetMode ? <form className="es-auth-form" onSubmit={sendPasswordReset}>
