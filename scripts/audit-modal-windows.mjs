@@ -34,6 +34,11 @@ const checks = [
   ['open workspace windows keep inactive content hidden and expose active context', dashboard.includes('className="pro-window-panel"') && dashboard.includes('hidden={activeTabId !== tab.id}') && dashboard.includes('aria-label={tab.title}')],
   ['selected workspace tab automatically scrolls into the visible tab strip', dashboard.includes("querySelector<HTMLElement>('.pro-workspace-tabs')") && dashboard.includes("container.querySelectorAll<HTMLElement>('[data-workspace-tab]')") && dashboard.includes('container.scrollTo({ left: Math.max(0, nextLeft)')],
   ['active workspace context receives final desktop and mobile presentation', refresh.includes('.pro-active-workspace-context') && refresh.includes('.pro-context-state') && refresh.includes('@media(max-width:600px)')],
+  ['student and faculty directories receive readable table and metric typography', ['.student-stat-label','.student-table th','.faculty-stat-label','.faculty-table td'].every(selector => refresh.includes(selector))],
+  ['staff management heading, sub-windows, tables and dialogs receive readable presentation', ['.staff-workspace-heading','.staff-window-nav','.staff-table th','.staff-dialog'].every(selector => refresh.includes(selector))],
+  ['administration and attendance workspaces receive consistent card and control styling', ['.admin-heading','.admin-table th','.ed360-attendance-filter-card','.ed360-attendance-board'].every(selector => refresh.includes(selector))],
+  ['signed-in dashboard includes a campus photograph background treatment', refresh.includes('url("https://images.pexels.com/photos/29326797/pexels-photo-29326797.jpeg?auto=compress&cs=tinysrgb&w=1600")')],
+
 ]
 
 let failed = 0
