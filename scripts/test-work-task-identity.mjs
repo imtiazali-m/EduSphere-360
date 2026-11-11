@@ -74,6 +74,13 @@ test('legacy email comparison is case-insensitive and whitespace-normalized', ()
   }, user), true)
 })
 
+test('work-task form permits progress updates through stable identity, not mutable email', () => {
+  const component = fs.readFileSync(path.join(root, 'src/components/RecordModule.tsx'), 'utf8')
+  assert.ok(component.includes("import { isWorkTaskVisibleToAssignee } from '../lib/workTaskAccess.js'"))
+  assert.ok(component.includes('!isWorkTaskVisibleToAssignee(targetEditing, user!)'))
+  assert.ok(!component.includes("String(payload.assigned_to_email ?? '').toLowerCase() !== user!.email.toLowerCase()"))
+})
+
 test('SQL migration keeps identity and explicit legacy rules aligned with client filtering', () => {
   const sql = fs.readFileSync(path.join(root, 'supabase/migrations/20261111140500_work_task_stable_assignee_identity.sql'), 'utf8')
   assert.match(sql, /assigned_to_user_id uuid/i)
