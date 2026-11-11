@@ -25,7 +25,7 @@ const requiredFiles = [
   'index.html', 'src/main.tsx', 'src/App.tsx', 'src/components/Dashboard.tsx', 'src/components/WorkspaceUnavailable.tsx',
   'src/components/FinanceWorkspace.tsx', 'src/styles/finance-workspace.css', 'src/styles/student-promotion-workspace.css', 'src/styles/navigation-refinement.css',
   'src/components/PayrollWorkspace.tsx', 'src/styles/payroll-workspace.css',
-  'src/components/GovernanceWorkspace.tsx', 'src/styles/governance-workspace.css',
+  'src/components/GovernanceWorkspace.tsx', 'src/components/AdministrationStage5Workspace.tsx', 'src/styles/governance-workspace.css',
   'src/components/InstitutionOperationsWorkspace.tsx', 'src/styles/institution-operations.css',
   'src/components/AcademicManagementWorkspace.tsx', 'src/styles/academic-management.css',
   'src/components/AuthScreens.tsx', 'src/components/AdministrationModule.tsx',
@@ -62,25 +62,37 @@ require.extensions['.ts'] = (module, filename) => {
 const { navigationCatalog } = require(path.join(root, 'src/lib/navigationCatalog.ts'))
 const { navigationRoutes, getNavigationRoute } = require(path.join(root, 'src/lib/navigationRoutes.ts'))
 const { roleNavigationGroups, roleNavigationSections, navigationSectionDefinitions } = require(path.join(root, 'src/lib/navigationAccess.ts'))
+const { institutionalMenu } = require(path.join(root, 'src/lib/institutionalCatalog.ts'))
 const { modules, modulesForRole } = require(path.join(root, 'src/lib/modules.ts'))
 const roles = ['owner', 'admin', 'teacher', 'student', 'parent', 'accountant', 'exam_officer']
 
 check('The full institutional menu maps every submenu to a working destination', () => {
-  assert.equal(navigationCatalog.length, 34, 'The complete institutional menu must contain 34 unique main workspaces')
+  assert.equal(navigationCatalog.length, 27, 'The visible sidebar contains 27 main workspaces after Administration and Academic Management consolidation')
   const groupKeys = new Set(navigationCatalog.map(group => group.key))
-  assert.equal(groupKeys.size, 34, 'Main workspace keys must be unique')
+  assert.equal(groupKeys.size, 27, 'Visible main workspace keys must be unique')
   for (const group of navigationCatalog) {
     assert.ok(group.items.length > 0, group.label + ' must have its own operational submenus')
     for (const page of group.items) assert.ok(navigationRoutes[page], 'No route is connected for ' + group.label + '/' + page)
   }
-  for (const required of ['academic-management','curriculum','library','transport','inventory','facilities','visitors','institution-config','reconciliation','backup']) {
+  for (const group of institutionalMenu) {
+    for (const item of group.items) assert.ok(navigationRoutes[item.label], 'No route is connected for ' + group.label + '/' + item.label)
+  }
+  for (const required of ['academic-management','question-bank','library','transport','inventory','facilities','visitors','reconciliation','backup']) {
     assert.ok(groupKeys.has(required), 'Missing expansion workspace: ' + required)
   }
   for (const required of ['attendance','students','employees','accounts-finance','fees','payments','receipts','payroll','examinations','class-tests','reports']) {
     assert.ok(groupKeys.has(required), 'Missing core institution workspace: ' + required)
   }
-  const menuDestinationCount = navigationCatalog.reduce((total, group) => total + group.items.length, 0)
+  assert.ok(institutionalMenu.length === 34, 'Full route catalogue must preserve all 34 source groups')
+  const menuDestinationCount = institutionalMenu.reduce((total, group) => total + group.items.length, 0)
   assert.ok(menuDestinationCount >= 400, 'All specified submenu destinations should be present')
+  const administration = institutionalMenu.find(group => group.key === 'administration')
+  assert.deepEqual(administration?.items.map(item => item.label), [
+    'Institute Profile','Campus and Branch Management','Academic Structure & Sections','Departments & Designations',
+    'Organisational Structure','System Configuration','Approval Workflows','Policies & Rules','Administrative Audit',
+    'User Access & Invitations','Role & Permission Management','Institute Settings','Branding & Document Settings','Security & Access History',
+  ], 'Administration must contain exactly the 14 specified submenus in order')
+  assert.ok(!navigationCatalog.some(group => ['institution-config','academic-sessions','classes-sections','subjects','curriculum','timetable','teaching'].includes(group.key)), 'Nested setup and academic workspaces must not remain separate top-level menus')
   const permittedLinkedRoutes = new Set([
     'administration:campus-and-branch-management',
     'library:digital-library','library:book-management','library:book-catalogue','library:book-categories',
@@ -177,20 +189,14 @@ check('The full institutional menu maps every submenu to a working destination',
 
 
 check('Sidebar workspaces follow the approved parent-section sequence for every role', () => {
-  const expectedGroupOrder = [
-    'dashboard',
-    'administration','institution-config','academic-sessions','classes-sections','subjects','backup',
-    'students','employees','attendance','behaviour','certificates',
-    'academic-management','question-bank','examinations','class-tests','library',
-    'accounts-finance','fees','receivables','payments','receipts','payroll','reconciliation',
-    'communication',
-    'transport','inventory','facilities','visitors',
-    'reports','ai',
-  ]
+  const expectedGroupOrder = ["dashboard","administration","backup","students","employees","attendance","behaviour","certificates","academic-management","question-bank","examinations","class-tests","library","accounts-finance","fees","receivables","payments","receipts","payroll","reconciliation","communication","transport","inventory","facilities","visitors","reports","ai"]
+  const completeCatalogOrder = ["dashboard","administration","institution-config","academic-sessions","classes-sections","subjects","backup","students","employees","attendance","behaviour","certificates","academic-management","curriculum","timetable","teaching","question-bank","examinations","class-tests","library","accounts-finance","fees","receivables","payments","receipts","payroll","reconciliation","communication","transport","inventory","facilities","visitors","reports","ai"]
   assert.deepEqual(navigationSectionDefinitions.map(section => section.key), [
     'overview','setup','people','academics','finance','communication','campus','intelligence',
   ])
   assert.deepEqual(navigationSectionDefinitions.flatMap(section => section.groupKeys), expectedGroupOrder)
+  assert.deepEqual(navigationCatalog.map(group => group.key), expectedGroupOrder)
+  assert.deepEqual(institutionalMenu.map(group => group.key), completeCatalogOrder, 'Nested administration and academic destinations remain in the full route catalogue')
   for (const role of roles) {
     const groups = roleNavigationGroups(role)
     const sections = roleNavigationSections(role)
@@ -201,6 +207,7 @@ check('Sidebar workspaces follow the approved parent-section sequence for every 
       groups.map(group => group.key),
       `${role} hierarchy must preserve every permitted group exactly once`,
     )
+    assert.ok(!groups.some(group => ['institution-config','academic-sessions','classes-sections','subjects','curriculum','timetable','teaching'].includes(group.key)), `${role} must access nested setup/academic work through parent workspaces`)
   }
 })
 
@@ -502,14 +509,14 @@ check('Student, employee and operational records expose accessible row action me
   assert.ok(styles.includes('.ed360-row-action-menu>summary:focus-visible') && styles.includes('.ed360-row-action-menu>div>button:focus-visible'), 'Row menus need visible keyboard focus')
 })
 
-check('Governance settings and approval queues support sorting and pagination', () => {
-  const governance = read('src/components/GovernanceWorkspace.tsx')
+check('Administration settings and approval queues support sorting and pagination', () => {
+  const administration = read('src/components/AdministrationStage5Workspace.tsx')
   const styles = read('src/styles/governance-workspace.css')
   for (const value of ['settingsSortKey', 'settingsSortDirection', 'orderedSettings', 'settingsPageRows', 'orderedApprovals', 'approvalPageRows', 'toggleSettingsSort', 'sortHeader', 'pageControls']) {
-    assert.ok(governance.includes(value), 'Governance list interaction is missing: ' + value)
+    assert.ok(administration.includes(value), 'Administration list interaction is missing: ' + value)
   }
-  assert.ok(governance.includes("onChange={e=>{setQuery(e.target.value);setSettingsPage(1);setApprovalPage(1)}}"), 'Governance search must reset both page positions')
-  assert.ok(styles.includes('.gov-sort-header:focus-visible') && styles.includes('.gov-pagination'), 'Governance controls need accessible responsive styles')
+  assert.ok(administration.includes("onChange={e=>{setSearch(e.target.value);setSettingsPage(1);setApprovalPage(1)}}"), 'Administration search must reset both page positions')
+  assert.ok(styles.includes('.gov-sort-header:focus-visible') && styles.includes('.gov-pagination'), 'Administration controls need accessible responsive styles')
 })
 
 check('Report tables show all rows through accessible sorting and pagination', () => {
@@ -544,6 +551,14 @@ check('Campus library inventory and transport registers support independent sear
     assert.ok(linked.includes(value), 'Linked operations search is missing: ' + value)
   }
   assert.ok(styles.includes('.ed360-linked-search:focus-within') && styles.includes('.ed360-linked-pagination'), 'Linked operations filters and page controls need responsive focus styling')
+})
+
+check('Campus and branch editor maintains the saved head and scoped settings fields', () => {
+  const operations = read('src/components/LinkedOperationsWorkspace.tsx')
+  for (const value of ['branch_head_name','academic_settings','operational_settings','campusBranchHead','campusAcademicSettings','campusOperationalSettings']) {
+    assert.ok(operations.includes(value), 'Campus editor is missing: ' + value)
+  }
+  assert.ok(operations.includes('Academic settings (JSON object)') && operations.includes('Operational settings (JSON object)'), 'Campus-specific settings need dedicated validated editors')
 })
 
 check('Linked library inventory and transport ledgers load all pages from Supabase', () => {
@@ -737,14 +752,14 @@ check('Question bank and paper designer use tenant-safe records and guarded appr
 
 check('Administration settings, approvals and audit are connected to governance tables', () => {
   assert.equal(getNavigationRoute('administration', 'Institute Profile'), 'governance:profile')
-  assert.equal(getNavigationRoute('administration', 'Institution Settings'), 'governance:settings')
-  assert.equal(getNavigationRoute('administration', 'Approval and Workflows'), 'governance:approvals')
+  assert.equal(getNavigationRoute('administration', 'Institute Settings'), 'governance:settings')
+  assert.equal(getNavigationRoute('administration', 'Approval Workflows'), 'governance:approvals')
   assert.equal(getNavigationRoute('administration', 'Administrative Audit'), 'governance:audit')
-  const governance = read('src/components/GovernanceWorkspace.tsx')
+  const administration = read('src/components/AdministrationStage5Workspace.tsx')
   for (const value of ['institution_settings', 'workflow_approvals', 'institutional_audit_events', 'decide_institution_setting_approval']) {
-    assert.ok(governance.includes(value), 'Governance workspace is missing ' + value)
+    assert.ok(administration.includes(value), 'Administration workspace is missing ' + value)
   }
-  assert.ok(governance.includes('Read only') && governance.includes('does not grant direct client updates'), 'Institution profile must not offer an unsupported edit action')
+  assert.ok(administration.includes('Update Profile') && administration.includes("supabase.from('institutions').update(values)"), 'Institution profile must use the existing owner/admin update path')
   assert.ok(read('supabase/migrations/20261109151231_atomic_institution_setting_approval.sql').includes('decide_institution_setting_approval'))
 })
 
@@ -966,7 +981,7 @@ check('Unified design system is loaded last and removes global browser zoom', ()
   ]) assert.ok(contrast(foreground, background) >= 4.5, label + ' must meet WCAG AA normal-text contrast')
   assert.ok(read('docs/PHASE_1_DETAILED_AUDIT.md').includes('Phase 1 disposition'), 'Detailed Phase 1 audit document is missing')
   const roleMenu = read('docs/PHASE_1_ROLE_MENU_INVENTORY.md')
-  assert.ok(roleMenu.includes('33 top-level groups and 430 submenu entries') && roleMenu.includes('Examination officer') && roleMenu.includes('| Owner | 31 | 343 |') && roleMenu.includes('| Administrator | 31 | 343 |') && roleMenu.includes('| Teacher / employee | 18 | 152 |') && roleMenu.includes('| Student | 15 | 107 |') && roleMenu.includes('| Parent / guardian | 15 | 104 |') && roleMenu.includes('| Accountant | 12 | 112 |') && roleMenu.includes('| Examination officer | 7 | 62 |'), 'Complete catalogue inventory and current role-filtered menu totals must cover all seven roles')
+  assert.ok(roleMenu.includes('27 visible sidebar groups') && roleMenu.includes('34 route-catalogue groups') && roleMenu.includes('Administration parent menu') && roleMenu.includes('Academic Management parent menu'), 'Current visible sidebar and consolidated parent workspaces must be documented')
   assert.ok(read('docs/PHASE_2_DESIGN_SYSTEM.md').includes('Core colour tokens'), 'Phase 2 design specification is missing')
   const routeAudit = read('docs/PHASE_1_EXACT_ROUTE_AUDIT.md')
   assert.ok(/Unexpected route families:\*\* 0\./.test(routeAudit), 'Exact route audit must resolve each visible role/menu destination without unknown route families')

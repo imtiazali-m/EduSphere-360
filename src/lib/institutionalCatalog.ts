@@ -3,6 +3,8 @@ export interface WorkspaceMenuItem { key:string; label:string; description:strin
 export interface WorkspaceMenuGroup {
   key:string; label:string; description:string; icon:string; theme:string; dataModule:string;
   roles:WorkspaceRole[]; items:WorkspaceMenuItem[];
+  /** Route source retained for nested Administration windows; not a main sidebar group. */
+  nestedOnly?:boolean;
 }
 const all:WorkspaceRole[]=['owner','admin','teacher','student','parent','accountant','exam_officer']
 const management:WorkspaceRole[]=['owner','admin']
@@ -23,8 +25,8 @@ export const institutionalMenu:WorkspaceMenuGroup[]=[
  group('dashboard','Dashboard','Institution-wide live overview, date filters, approvals, calendar, alerts and verified KPIs.','LayoutDashboard','blue','',all,[
   'Institutional Overview','Academic Overview','Financial Overview','Attendance Overview','Student Performance','Student Behaviour','Employee Performance','Statistics and KPI Cards','Charts and Comparative Analytics','Calendar and Events','Notification Centre','Tasks and Reminders','Pending Approvals','Recent Activities','Institutional Alerts'
  ]),
- group('administration','Administration','Governance, institutional structure, policies, approvals and access management.','Building2','slate','administration',management,[
-  'Institute Profile','Campus and Branch Management','Academic Structure and Sections','Departments','Designations','Organizational Structure','System Configuration','Approval and Workflows','Policies and Rules','Administrative Audit','User Access and Invitations','Role and Permission Management','Institution Settings','Branding and Document Settings','Academic Configuration','Security and Access History'
+ group('administration','Administration','Institution identity, organisational structure, policies, approvals and access control.','Building2','slate','administration',management,[
+  'Institute Profile','Campus and Branch Management','Academic Structure & Sections','Departments & Designations','Organisational Structure','System Configuration','Approval Workflows','Policies & Rules','Administrative Audit','User Access & Invitations','Role & Permission Management','Institute Settings','Branding & Document Settings','Security & Access History'
  ]),
  group('institution-config','Institutional Systems and Configuration','Education levels, institution/campus settings, invitations, role rights, module rights and security.','Settings','slate','institution_config',management,[
   'Institution Configuration','Education System Configuration','Education Levels','Grade and Academic Level Configuration','Institution Settings','Campus Settings','Academic Settings','General System Settings','Invitations and Access','User Management','Role Management','User Permissions','Module Permissions','Approval Permissions','Security Configuration'
