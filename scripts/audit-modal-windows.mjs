@@ -5,7 +5,7 @@ const root = process.cwd()
 const read = file => fs.readFileSync(path.join(root, file), 'utf8')
 const record = read('src/components/RecordModule.tsx')
 const finance = read('src/components/FinanceWorkspace.tsx')
-const refresh = read('src/styles/visual-refresh.css')
+const refresh = read('src/styles/visual-refresh.css') + '\n' + read('src/styles/product-unification.css')
 const main = read('src/main.tsx')
 const dashboard = read('src/components/Dashboard.tsx')
 
