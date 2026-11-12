@@ -24,12 +24,17 @@ const dashboardViews: Record<string, string> = {
   'employee-performance': 'employees:reports',
   'statistics-and-kpi-cards': 'overview',
   'charts-and-comparative-analytics': 'reports:overview',
-  'calendar-and-events': 'unavailable:dashboard:calendar-and-events',
+  'calendar-and-events': 'frontoffice:events',
   'notification-centre': 'notifications',
   'tasks-and-reminders': 'work_tasks:queue',
   'pending-approvals': 'governance:approvals',
   'recent-activities': 'governance:audit',
   'institutional-alerts': 'governance:audit',
+  'my-profile':'personal:my-profile',
+  'account-settings':'personal:account-settings',
+  'notification-settings':'personal:notification-settings',
+  'my-activity':'personal:my-activity',
+  'help-support':'personal:help-support',
 }
 const studentViews: Record<string, string> = {
   'student-directory': 'directory',
@@ -276,6 +281,27 @@ function institutionOperationsRoute(groupKey:string,itemKey:string):string|undef
 }
 
 function dedicatedRoute(groupKey: string, itemKey: string): string | undefined {
+  if (groupKey === 'communication') {
+    const frontOfficeRoutes:Record<string,string>={
+      'reception-enquiries':'frontoffice:enquiries',
+      'circulars-notices':'frontoffice:announcements',
+      'events-activities':'frontoffice:events',
+      'sports-extracurricular-activities':'academic:classroom-activities',
+    }
+    if(frontOfficeRoutes[itemKey])return frontOfficeRoutes[itemKey]
+    if(['sports-and-clubs','teams-and-members','coaches-and-supervisors','activity-schedules','participation-records','competitions-and-results','achievements','activity-reports'].includes(itemKey))return 'academic:classroom-activities'
+    if(['parent-communication','internal-messages','complaints-helpdesk','whatsapp-integration','individual-messages','bulk-messages','class-wise-messaging','employee-notifications','message-templates','email-notifications','delivery-history','communication-logs','communication-reports'].includes(itemKey))return 'unavailable:communication:'+itemKey
+  }
+  if (groupKey === 'certificates') {
+    if(['certificate-dashboard','character-certificate','leaving-certificate','enrollment-certificate','bonafide-certificate','achievement-certificate'].includes(itemKey))return 'operations:certificates:issue'
+    if(itemKey==='certificate-verification'||itemKey==='document-verification')return 'operations:certificates:verify'
+    if(itemKey==='document-records')return 'files'
+    if(['form-builder','form-submissions','letters-applications','experience-certificate','id-card-designer','certificate-templates','editable-document-templates','bulk-certificate-generation','certificate-history'].includes(itemKey))return 'unavailable:certificates:'+itemKey
+  }
+  if (groupKey === 'facilities' && itemKey === 'asset-register') return 'operations:facilities:assets'
+  if (groupKey === 'communication' && itemKey === 'reception-enquiries') return 'frontoffice:enquiries'
+  if (groupKey === 'communication' && itemKey === 'circulars-notices') return 'frontoffice:announcements'
+  if (groupKey === 'communication' && itemKey === 'events-activities') return 'frontoffice:events'
   if (groupKey === 'dashboard') return dashboardViews[itemKey] ?? 'unavailable:dashboard:' + itemKey
   if (groupKey === 'institution-config') {
     const section = institutionConfigurationItems[itemKey]
@@ -368,7 +394,7 @@ function dedicatedRoute(groupKey: string, itemKey: string): string | undefined {
   if (groupKey === 'communication') {
     if (itemKey === 'communication-dashboard' || itemKey === 'notification-centre') return 'notifications'
     if (itemKey.includes('assignment')) return 'announcements:staff'
-    if (['whatsapp-integration','individual-messages','bulk-messages','class-wise-messaging','employee-notifications','message-templates','email-notifications','delivery-history','communication-logs','communication-reports'].includes(itemKey)) return 'unavailable:communication:' + itemKey
+    if (['whatsapp-integration','individual-messages','bulk-messages','class-wise-messaging','employee-notifications','message-templates','email-notifications','delivery-history','communication-logs','communication-reports'].includes(itemKey)) return institutionalRoute(groupKey,itemKey)
     return 'announcements:bulletin'
   }
   if (groupKey === 'reports') {
@@ -427,12 +453,12 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
     }
     return 'academic:' + (academicWindows[itemKey] ?? 'academic-sessions')
   }
-  if (groupKey === 'ai' || groupKey === 'backup') {
-    return 'unavailable:' + groupKey + ':' + itemKey
-  }
+  if (groupKey === 'ai') return itemKey === 'ai-assistant' ? 'assistant:chat' : 'unavailable:ai:' + itemKey
+  if (groupKey === 'backup') return 'unavailable:backup:' + itemKey
   if (groupKey === 'students' && itemKey === 'student-data-export' && role && !['owner','admin'].includes(role)) {
     return 'unavailable:students:student-data-export'
   }
+  if (groupKey === 'students' && itemKey === 'student-data-export') return 'students:directory'
   if(groupKey==='attendance'){
     const stage7Routes:Record<string,string>={
       'student-attendance':'attendance:students',
@@ -448,23 +474,23 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
   }
   if (groupKey === 'attendance' && itemKey === 'attendance-analytics') return 'reports:attendance'
   if (groupKey === 'attendance' && itemKey === 'attendance-alerts') return 'unavailable:attendance:attendance-alerts'
-  if (groupKey === 'reports' && ['custom-report-builder','scheduled-reports','report-templates','report-history'].includes(itemKey)) return 'unavailable:reports:' + itemKey
-  if (groupKey === 'question-bank' && ['question-bank-import-and-export','question-paper-version-history'].includes(itemKey)) return 'unavailable:question-bank:' + itemKey
-  if (groupKey === 'curriculum' && ['teaching-resources','learning-materials','resource-downloads','chapter-wise-learning-resources','learning-progress-tracking'].includes(itemKey)) return 'unavailable:curriculum:' + itemKey
-  if (groupKey === 'behaviour' && ['student-progress-history','behaviour-analytics','downloadable-behaviour-reports'].includes(itemKey)) return 'unavailable:behaviour:' + itemKey
-  if (groupKey === 'certificates' && ['experience-certificate','id-card-designer','certificate-templates','editable-document-templates','bulk-certificate-generation'].includes(itemKey)) return 'unavailable:certificates:' + itemKey
-  if (groupKey === 'library' && ['reading-records','reading-cards','student-reading-history'].includes(itemKey)) return 'unavailable:library:' + itemKey
+  if (groupKey === 'reports' && ['custom-report-builder','scheduled-reports','report-templates','report-history'].includes(itemKey)) return 'unavailable:reports:'+itemKey
+  if (groupKey === 'question-bank' && ['question-bank-import-and-export','question-paper-version-history'].includes(itemKey)) return 'unavailable:question-bank:'+itemKey
+  if (groupKey === 'curriculum' && ['teaching-resources','learning-materials','resource-downloads','chapter-wise-learning-resources','learning-progress-tracking'].includes(itemKey)) return 'unavailable:curriculum:'+itemKey
+  if (groupKey === 'behaviour' && ['student-progress-history','behaviour-analytics','downloadable-behaviour-reports'].includes(itemKey)) return 'unavailable:behaviour:'+itemKey
+  if (groupKey === 'certificates' && ['experience-certificate','id-card-designer','certificate-templates','editable-document-templates','bulk-certificate-generation'].includes(itemKey)) return 'unavailable:certificates:'+itemKey
+  if (groupKey === 'library' && ['reading-records','reading-cards','student-reading-history'].includes(itemKey)) return 'unavailable:library:'+itemKey
   if (groupKey === 'transport' && itemKey === 'transport-attendance') return 'unavailable:transport:transport-attendance'
-  if (groupKey === 'facilities' && ['room-reservations','facilities-reports'].includes(itemKey)) return 'unavailable:facilities:' + itemKey
-  if (groupKey === 'visitors' && ['visitor-approvals','visitor-notifications','visitor-reports'].includes(itemKey)) return 'unavailable:visitors:' + itemKey
-  if (groupKey === 'timetable' && ['teacher-availability','substitution-management','timetable-publishing','class-coverage','engaged-classes'].includes(itemKey)) return 'unavailable:timetable:' + itemKey
-  if (groupKey === 'examinations' && ['invigilation-management','automatic-checking'].includes(itemKey)) return 'unavailable:examinations:' + itemKey
+  if (groupKey === 'facilities' && ['room-reservations','facilities-reports'].includes(itemKey)) return 'unavailable:facilities:'+itemKey
+  if (groupKey === 'visitors' && ['visitor-approvals','visitor-notifications','visitor-reports'].includes(itemKey)) return 'unavailable:visitors:'+itemKey
+  if (groupKey === 'timetable' && ['teacher-availability','substitution-management','timetable-publishing','class-coverage','engaged-classes'].includes(itemKey)) return 'unavailable:timetable:'+itemKey
+  if (groupKey === 'examinations' && ['invigilation-management','automatic-checking'].includes(itemKey)) return 'unavailable:examinations:'+itemKey
   if (groupKey === 'examinations' && ['examination-programs','examination-timetable','question-bank','online-tests-and-quizzes','marks-entry','grades-and-grading-system','results-and-result-approval','report-cards','examination-reports'].includes(itemKey)) return 'institutional:examinations:' + itemKey
   if (groupKey === 'examinations' && itemKey === 'examination-rooms') return 'admin:rooms'
-  if (groupKey === 'class-tests' && ['online-tests','written-tests','test-questions'].includes(itemKey)) return 'unavailable:class-tests:' + itemKey
+  if (groupKey === 'class-tests' && ['online-tests','written-tests','test-questions'].includes(itemKey)) return 'unavailable:class-tests:'+itemKey
   if (groupKey === 'fees' && itemKey === 'online-payments') return 'unavailable:fees:online-payments'
   if (groupKey === 'payments' && itemKey === 'online-payment-records') return 'unavailable:payments:online-payment-records'
-  if (groupKey === 'receipts' && ['receipt-templates','receipt-numbering','bulk-receipt-generation'].includes(itemKey)) return 'unavailable:receipts:' + itemKey
+  if (groupKey === 'receipts' && ['receipt-templates','receipt-numbering','bulk-receipt-generation'].includes(itemKey)) return 'unavailable:receipts:'+itemKey
   if (groupKey === 'inventory' && itemKey === 'inventory-dashboard') return 'institutional:inventory:stock-reports'
   if (groupKey === 'library' && itemKey === 'library-dashboard') return 'institutional:library:library-reports'
   if (groupKey === 'transport' && (itemKey === 'transport-dashboard' || itemKey === 'transport-fees' || itemKey === 'transport-history')) return 'institutional:transport:transport-reports'
@@ -536,7 +562,7 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
   if (route) return route
 
   if (linkedRoutes.has(compositeKey)) return institutionalRoute(groupKey, itemKey)
-  return `unavailable:${groupKey}:${itemKey}`
+  return 'unavailable:' + groupKey + ':' + itemKey
 }
 
 const contextualEntries = institutionalMenu.flatMap(group => group.items.map(item => [

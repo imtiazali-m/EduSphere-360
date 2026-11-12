@@ -23,7 +23,12 @@ const group=(key:string,label:string,description:string,icon:string,theme:string
 
 export const institutionalMenu:WorkspaceMenuGroup[]=[
  group('dashboard','Dashboard','Institution-wide live overview, date filters, approvals, calendar, alerts and verified KPIs.','LayoutDashboard','blue','',all,[
-  'Institutional Overview','Academic Overview','Financial Overview','Attendance Overview','Student Performance','Student Behaviour','Employee Performance','Statistics and KPI Cards','Charts and Comparative Analytics','Calendar and Events','Notification Centre','Tasks and Reminders','Pending Approvals','Recent Activities','Institutional Alerts'
+  'Institutional Overview','Academic Overview','Financial Overview','Attendance Overview','Student Performance','Student Behaviour','Employee Performance','Statistics and KPI Cards','Charts and Comparative Analytics','Calendar and Events','Notification Centre','Tasks and Reminders','Pending Approvals','Recent Activities','Institutional Alerts',
+  'My Profile',
+  'Account Settings',
+  'Notification Settings',
+  'My Activity',
+  'Help & Support'
  ]),
  group('administration','Administration','Institution identity, organisational structure, policies, approvals and access control.','Building2','slate','administration',management,[
   'Institute Profile','Campus and Branch Management','Academic Structure & Sections','Departments & Designations','Organisational Structure','System Configuration','Approval Workflows','Policies & Rules','Administrative Audit','User Access & Invitations','Role & Permission Management','Institute Settings','Branding & Document Settings','Security & Access History'
@@ -41,7 +46,9 @@ export const institutionalMenu:WorkspaceMenuGroup[]=[
   'All Subjects','Add Subject','Subject Categories','Subject Allocation','Teacher Assignment','Class-wise Subjects','Subject Combinations','Subject Syllabus','Subject Performance','Subject-wise Reports'
  ]),
  group('backup','Backup, Restore and Data Management','Validated import/export jobs, backup request history, restore approvals and integrity reporting.','Database','slate','backup',management,[
-  'Backup Dashboard','Create Backup','Scheduled Cloud Backups','Backup History','Restore Data','Data Recovery','Import Data','Export Data','Bulk Data Import','Data Validation','Import History','Export History','Data Integrity Reports'
+  'Backup Dashboard','Create Backup','Scheduled Cloud Backups','Backup History','Restore Data','Data Recovery','Import Data','Export Data','Bulk Data Import','Data Validation','Import History','Export History','Data Integrity Reports',
+  'Duplicate Detection',
+  'Integration Status'
  ]),
  group('people-hr','People Management & Human Resources','A connected people lifecycle for learners, families, educators, employees, recruitment, contracts, performance, payroll and graduates.','Users','emerald','people_hr',all,[
   'Students','Admissions & Enrollment','Teachers','Faculty & Staff','Parents & Guardians',
@@ -54,7 +61,12 @@ export const institutionalMenu:WorkspaceMenuGroup[]=[
   'Behaviour Dashboard','Behaviour Records','Positive Behaviour','Disciplinary Incidents','Rewards and Recognition','Warnings','Student Skills','Co-curricular Activities','Competency Tracking','Student Progress History','Behaviour Analytics','Downloadable Behaviour Reports'
  ]),
  group('certificates','Certificates and Documentation','Template-driven institutional documents, certificates, ID cards, signatures, serial numbers and verification.','Award','gold','certificates',management.concat(['teacher','student','parent']),[
-  'Certificate Dashboard','Character Certificate','Leaving Certificate','Enrollment Certificate','Bonafide Certificate','Achievement Certificate','Experience Certificate','ID Card Designer','Certificate Templates','Editable Document Templates','Bulk Certificate Generation','Certificate Verification','Certificate History'
+  'Certificate Dashboard','Character Certificate','Leaving Certificate','Enrollment Certificate','Bonafide Certificate','Achievement Certificate','Experience Certificate','ID Card Designer','Certificate Templates','Editable Document Templates','Bulk Certificate Generation','Certificate Verification','Certificate History',
+  'Form Builder',
+  'Form Submissions',
+  'Document Records',
+  'Letters & Applications',
+  'Document Verification'
  ]),
  group('academic-management','Academic Management & Learning','Plan sessions, classes, subjects, curriculum, lesson delivery, timetables, homework, learning materials, digital courses, classroom work, calendar and learner progress.','GraduationCap','blue','academic-management',academic.concat(['student','parent']),[
   'Academic Sessions','Classes & Sections','Subjects & Courses','Curriculum & Syllabus','Lesson Planning','Timetable','Homework & Assignments','Study Materials','Online Learning','Classwork & Classroom Activities','Academic Calendar','Learning Progress'
@@ -99,16 +111,62 @@ export const institutionalMenu:WorkspaceMenuGroup[]=[
   'Reconciliation Dashboard','Financial Reconciliation','Bank Reconciliation','Cash Reconciliation','Payment Reconciliation','Fee Collection Reconciliation','Transaction Verification','Audit Logs','Administrative Audit','User Activity Logs','Access History','Change History','Audit Reports'
  ]),
  group('communication','Communication and WhatsApp','Role-targeted notices, message templates, notification centre, delivery history and approved messaging integrations.','MessageSquare','sky','communication',all,[
-  'Communication Dashboard','WhatsApp Integration','Individual Messages','Bulk Messages','Class-wise Messaging','Employee Notifications','Message Templates','Assignment Notifications','Email Notifications','Delivery History','Communication Logs','Notification Centre','Communication Reports'
+  'Communication Dashboard','WhatsApp Integration','Individual Messages','Bulk Messages','Class-wise Messaging','Employee Notifications','Message Templates','Assignment Notifications','Email Notifications','Delivery History','Communication Logs','Notification Centre','Communication Reports',
+  'Reception & Enquiries',
+  'Parent Communication',
+  'Internal Messages',
+  'Circulars & Notices',
+  'Events & Activities',
+  'Complaints & Helpdesk',
+  'Sports & Extracurricular Activities',
+  'Sports & Clubs',
+  'Teams & Members',
+  'Coaches & Supervisors',
+  'Activity Schedules',
+  'Participation Records',
+  'Competitions & Results',
+  'Achievements',
+  'Activity Reports'
  ]),
  group('transport','Transport Management','Vehicles, drivers, route stops, student allocations, transport attendance, fees and maintenance.','Database','orange','transport',management.concat(['teacher','student','parent','accountant']),[
   'Transport Dashboard','Vehicle Management','Drivers Management','Transport Routes','Route Stops','Student Transport Allocation','Transport Fees','Transport Assignments','Vehicle Maintenance','Transport Attendance','Transport History','Transport Reports'
  ]),
  group('inventory','Inventory Management','Item catalogue, suppliers, procurement, stock-in/out, allocation, adjustments and stock audit.','Database','amber','inventory',management.concat(['accountant']),[
-  'Inventory Dashboard','Items Management','Item Catalogue','Item Categories','Stock In','Stock Out','Suppliers','Purchase Records','Stock Allocation','Stock Adjustments','Inventory History','Stock Reports'
+  'Inventory Dashboard','Items Management','Item Catalogue','Item Categories','Stock In','Stock Out','Suppliers','Purchase Records','Stock Allocation','Stock Adjustments','Inventory History','Stock Reports',
+  'Cafeteria Dashboard',
+  'Menu & Price List',
+  'Daily Availability',
+  'Sales Transactions',
+  'Meal Plans',
+  'Cafeteria Inventory',
+  'Cafeteria Reports',
+  'Supplier Directory',
+  'Purchase Requests',
+  'Quotation Comparison',
+  'Purchase Approvals',
+  'Purchase Orders',
+  'Goods Receipt',
+  'Supplier Invoices',
+  'Procurement Reports'
  ]),
  group('facilities','Rooms and Facilities','Classrooms, specialist rooms, availability, reservations, maintenance and facility history.','DoorOpen','cyan','facilities',management.concat(['teacher']),[
-  'Facilities Dashboard','Classroom Management','Laboratories','Library Rooms','Room Allocation','Room Availability','Room Reservations','Facility Maintenance','Facility History','Facilities Reports'
+  'Facilities Dashboard','Classroom Management','Laboratories','Library Rooms','Room Allocation','Room Availability','Room Reservations','Facility Maintenance','Facility History','Facilities Reports',
+  'Hostel Dashboard',
+  'Hostel Buildings',
+  'Room & Bed Register',
+  'Resident Allocation',
+  'Room Transfers',
+  'Check-in & Check-out',
+  'Hostel Visitor Register',
+  'Hostel Fees',
+  'Accommodation Maintenance',
+  'Occupancy Reports',
+  'Asset Register',
+  'Asset Assignment',
+  'Asset Transfers',
+  'Asset Warranty',
+  'Asset Disposal',
+  'Asset Reports'
  ]),
  group('visitors','Visitor Management','Visitor registration, passes, approvals, entry/exit records, notifications and history.','UserRound','slate','visitors',management.concat(['teacher']),[
   'Visitor Dashboard','Visitor Registration','Visitor Information','Visitor Passes','Entry and Exit Records','Visitor Approvals','Visit History','Visitor Notifications','Visitor Reports'

@@ -51,6 +51,124 @@ const workspaceFields:Record<string,WorkspaceField[]>={
 workspaceFields['academic-sessions']=[fld('session_code','Session code'),fld('start_date','Session start date','date'),fld('end_date','Session end date','date'),fld('is_current','Current session','select',['Yes','No']),fld('student_rollover_status','Student rollover status','select',['Not started','In progress','Completed'])]
 workspaceFields['classes-sections']=[fld('grade_level','Grade / academic level'),fld('section','Section'),fld('class_teacher','Class teacher'),fld('capacity','Maximum capacity','number'),fld('room_name','Room / classroom'),fld('promotion_status','Promotion status','select',['Not started','In progress','Completed'])]
 workspaceFields.subjects=[fld('subject_code','Subject code'),fld('subject_category','Subject category'),fld('department','Department'),fld('grade_level','Academic level'),fld('credit_hours','Credit hours','number'),fld('syllabus_reference','Syllabus reference')]
+workspaceFields.front_office=[
+ fld('contact_name','Contact / visitor name'),fld('contact_phone','Phone number'),fld('contact_email','Email address','email'),
+ fld('enquiry_source','Enquiry source','select',['Walk-in','Phone','Website','Referral','Email','Other']),
+ fld('assigned_to','Assigned staff member'),fld('follow_up_date','Follow-up date','date'),fld('request_status','Request status','select',['New','Assigned','In progress','Waiting for response','Resolved','Closed']),
+ fld('audience','Target audience','select',['All institution','Parents','Students','Teachers','Staff','Selected class']),
+ fld('event_venue','Venue / meeting location'),fld('event_start','Event start','datetime-local'),fld('event_end','Event end','datetime-local'),
+ fld('visit_purpose','Purpose / request details','textarea'),fld('resolution_notes','Resolution / next action','textarea')
+]
+workspaceFields.forms_documents=[
+ fld('form_category','Form category','select',['Admission','Leave','Feedback','Event registration','Profile update','General']),
+ fld('audience','Who can submit','select',['Staff','Teachers','Students','Parents','Public','Selected group']),
+ fld('field_schema','Form fields / instructions','textarea'),fld('submission_deadline','Submission deadline','date'),
+ fld('submission_reference','Submission reference'),fld('reviewer','Assigned reviewer'),fld('review_status','Review status','select',['Received','Under review','Needs correction','Approved','Rejected']),
+ fld('document_category','Document category','select',['Student','Employee','Institution','Finance','Academic','Policy','Other']),
+ fld('related_record','Related record / person'),fld('file_reference','Private file reference'),fld('expiry_date','Expiry date','date'),
+ fld('verification_code','Verification code'),fld('verification_status','Verification status','select',['Not checked','Verified','Rejected','Expired']),
+ fld('import_file','Import filename'),fld('import_type','Import record type'),fld('validation_summary','Validation summary','textarea'),fld('export_scope','Export scope')
+]
+workspaceFields.hostel=[
+ fld('building_name','Hostel / building'),fld('floor','Floor / block'),fld('room_number','Room number'),fld('bed_number','Bed number'),
+ fld('room_capacity','Room capacity','number'),fld('resident_reference','Student / resident reference'),fld('allocation_start','Allocation start','date'),fld('allocation_end','Expected checkout','date'),
+ fld('occupancy_status','Occupancy','select',['Available','Part occupied','Full','Maintenance']),fld('hostel_fee','Accommodation fee','number'),fld('warden_name','Warden / supervisor')
+]
+workspaceFields.cafeteria=[
+ fld('menu_category','Menu category'),fld('item_code','Menu item code'),fld('unit_price','Unit price','number'),fld('availability','Availability','select',['Available','Unavailable','Seasonal']),
+ fld('quantity_sold','Quantity sold','number'),fld('transaction_date','Transaction date','datetime-local'),fld('payment_method','Payment method','select',['Cash','Card','Account','Other']),
+ fld('meal_plan','Meal plan'),fld('supplier','Supplier'),fld('stock_reference','Stock reference')
+]
+workspaceFields.assets=[
+ fld('asset_tag','Asset tag / serial'),fld('asset_category','Asset category','select',['IT equipment','Furniture','Laboratory','Vehicle','Facility','Other']),
+ fld('purchase_date','Purchase date','date'),fld('purchase_cost','Purchase cost','number'),fld('assigned_to','Assigned person / department'),
+ fld('location','Current location'),fld('asset_condition','Condition','select',['New','Good','Needs repair','Damaged','Disposed']),
+ fld('warranty_expiry','Warranty expiry','date'),fld('maintenance_due','Next maintenance','date'),fld('disposal_date','Disposal date','date')
+]
+workspaceFields.procurement=[
+ fld('requesting_department','Requesting department'),fld('requested_by','Requested by'),fld('supplier','Supplier'),fld('quotation_reference','Quotation reference'),
+ fld('requested_quantity','Requested quantity','number'),fld('estimated_cost','Estimated cost','number'),fld('approved_amount','Approved amount','number'),
+ fld('purchase_order','Purchase order reference'),fld('delivery_due','Expected delivery','date'),fld('received_quantity','Quantity received','number'),
+ fld('receiving_status','Receiving status','select',['Not ordered','Ordered','Part received','Received','Rejected'])
+]
+workspaceFields.sports=[
+ fld('activity_type','Activity type','select',['Sport','Club','Arts','Competition','Community','Other']),fld('supervisor','Coach / supervisor'),
+ fld('venue','Venue / facility'),fld('schedule_start','Start date/time','datetime-local'),fld('schedule_end','End date/time','datetime-local'),
+ fld('eligibility','Eligibility / class'),fld('team_name','Team / club'),fld('participant_count','Participants','number'),
+ fld('competition','Competition / event'),fld('achievement','Achievement / result','textarea')
+]
+const itemWorkspaceFields:Record<string,WorkspaceField[]> = {
+ 'front-office:reception-enquiries':[fld('contact_name','Applicant / contact name'),fld('contact_phone','Phone number'),fld('contact_email','Email address','email'),fld('requested_program','Requested class / program'),fld('enquiry_source','Enquiry source','select',['Walk-in','Phone','Website','Referral','Email','Other']),fld('assigned_to','Assigned counsellor'),fld('follow_up_date','Next follow-up','date'),fld('conversion_status','Application conversion','select',['Not started','Follow-up required','Converted to application','Closed'])],
+ 'front-office:complaints-helpdesk':[fld('requester_name','Submitted by'),fld('requester_role','Requester role'),fld('category','Request category','select',['Technical','Academic','Finance','Facilities','Transport','Safety','Other']),fld('priority','Priority','select',['Low','Normal','High','Urgent']),fld('assigned_to','Assigned staff'),fld('target_resolution','Target resolution date','date'),fld('resolution_notes','Resolution notes','textarea'),fld('request_status','Request status','select',['Open','Assigned','In progress','Waiting','Resolved','Closed','Reopened'])],
+ 'front-office:visitor-management':[fld('visitor_name','Visitor name'),fld('visitor_phone','Phone number'),fld('organization','Organization'),fld('host_name','Person to meet'),fld('purpose','Visit purpose','textarea'),fld('entry_time','Entry time','datetime-local'),fld('exit_time','Exit time','datetime-local'),fld('pass_number','Visitor pass number')],
+ 'forms-documents:form-builder':[fld('form_category','Form type','select',['Admission','Leave','Feedback','Event registration','Profile update','General']),fld('instructions','Instructions','textarea'),fld('field_schema','Field list and validation rules','textarea'),fld('audience','Audience','select',['Staff','Teachers','Students','Parents','Public']),fld('submission_deadline','Submission deadline','date'),fld('publication_status','Publication','select',['Draft','Published','Closed'])],
+ 'forms-documents:form-submissions':[fld('submission_reference','Submission reference'),fld('form_name','Form name'),fld('submitted_by','Submitted by'),fld('submission_date','Submission date','datetime-local'),fld('reviewer','Assigned reviewer'),fld('review_status','Review status','select',['Received','Under review','Needs correction','Approved','Rejected']),fld('review_notes','Reviewer notes','textarea')],
+ 'forms-documents:document-records':[fld('document_category','Document category'),fld('related_person','Related person / record'),fld('file_reference','Private file reference'),fld('uploaded_on','Upload date','date'),fld('expiry_date','Expiry date','date'),fld('access_classification','Access classification','select',['Restricted','Staff only','Student portal','Parent portal'])],
+ 'forms-documents:document-verification':[fld('verification_code','Verification code'),fld('document_type','Document type'),fld('subject_reference','Student / employee reference'),fld('issued_on','Issue date','date'),fld('verification_status','Verification result','select',['Not checked','Verified','Rejected','Expired']),fld('verification_notes','Verification notes','textarea')],
+ 'forms-documents:data-import':[fld('import_type','Record type'),fld('source_filename','Source filename'),fld('column_mapping','Column mapping','textarea'),fld('rows_total','Total rows','number'),fld('rows_valid','Valid rows','number'),fld('rows_rejected','Rejected rows','number'),fld('import_status','Import status','select',['Draft','Validated','Ready for review','Imported','Failed'])],
+ 'forms-documents:data-export':[fld('export_type','Record type'),fld('date_from','From date','date'),fld('date_to','To date','date'),fld('file_format','File format','select',['CSV','XLSX','PDF','DOCX']),fld('field_scope','Included fields','textarea'),fld('export_status','Export status','select',['Requested','Preparing','Ready','Failed'])],
+ 'forms-documents:data-validation':[fld('validation_type','Validation category'),fld('records_checked','Records checked','number'),fld('issues_found','Issues found','number'),fld('validation_rules','Rules checked','textarea'),fld('validation_status','Validation status','select',['Not run','Passed','Issues found','Failed'])],
+ 'my-account:my-profile':[fld('profile_section','Profile section'),fld('profile_note','Profile update request / note','textarea')],
+ 'my-account:account-settings':[fld('setting_group','Setting group'),fld('setting_name','Preference'),fld('setting_value','Selected value'),fld('saved_on_device','Saved on this device','select',['Yes','No'])],
+ 'my-account:notification-settings':[fld('notification_category','Notification category'),fld('delivery_preference','Preference','select',['In-app','Email','Disabled']),fld('quiet_hours','Quiet hours'),fld('saved_on_device','Saved on this device','select',['Yes','No'])],
+ 'my-account:my-activity':[fld('activity_type','Activity type'),fld('related_reference','Related record'),fld('activity_date','Activity date','datetime-local'),fld('activity_summary','Activity summary','textarea')],
+ 'my-account:help-support':[fld('support_category','Support category','select',['Login / account','Student records','Academic','Attendance','Finance','Technical','Other']),fld('priority','Priority','select',['Normal','High','Urgent']),fld('issue_description','Describe the issue','textarea'),fld('preferred_contact','Preferred contact method','select',['In-app','Email','Phone']),fld('support_status','Request status','select',['Open','In progress','Waiting','Resolved','Closed'])],
+ 'front-office:parent-communication':[fld('student_reference','Linked student'),fld('conversation_subject','Conversation subject'),fld('recipient_name','Parent / guardian'),fld('message_body','Message','textarea'),fld('communication_status','Conversation status','select',['Open','Waiting','Responded','Closed'])],
+ 'front-office:internal-messages':[fld('recipient_name','Recipient / team'),fld('message_subject','Subject'),fld('message_body','Message','textarea'),fld('attachment_reference','Attachment reference'),fld('message_status','Message status','select',['Draft','Sent','Archived'])],
+ 'front-office:circulars-notices':[fld('circular_number','Circular number'),fld('audience','Target audience','select',['All institution','Parents','Students','Teachers','Staff','Selected class']),fld('publication_date','Publication date','date'),fld('expiry_date','Expiry date','date'),fld('notice_body','Circular / notice text','textarea'),fld('publication_status','Publication status','select',['Draft','Published','Expired'])],
+ 'front-office:events-activities':[fld('event_type','Event type','select',['Academic','Sports','Cultural','Parent meeting','Training','Other']),fld('event_venue','Venue'),fld('event_start','Event start','datetime-local'),fld('event_end','Event end','datetime-local'),fld('organiser','Organiser'),fld('target_audience','Audience'),fld('registration_deadline','Registration deadline','date')],
+ 'forms-documents:letters-applications':[fld('document_type','Letter / application type'),fld('recipient_name','Recipient'),fld('reference_number','Reference number'),fld('issue_date','Issue date','date'),fld('document_body','Document content / application details','textarea'),fld('approval_status','Review status','select',['Draft','Pending','Approved','Rejected','Issued'])],
+ 'forms-documents:document-templates':[fld('template_type','Document type','select',['Certificate','Letter','Fee receipt','Report card','Notice','Other']),fld('template_name','Template name'),fld('header_content','Header / institution identity','textarea'),fld('body_content','Template body','textarea'),fld('footer_content','Footer / signatory','textarea'),fld('template_status','Template status','select',['Draft','Active','Archived'])],
+ 'forms-documents:duplicate-detection':[fld('record_category','Record type'),fld('matching_rule','Matching fields'),fld('records_scanned','Records scanned','number'),fld('possible_duplicates','Possible matches','number'),fld('review_outcome','Review outcome','select',['Needs review','Confirmed duplicate','Not a duplicate','Resolved'])],
+ 'forms-documents:integration-status':[fld('integration_name','Connected service'),fld('integration_type','Integration type'),fld('last_checked','Last checked','datetime-local'),fld('last_success','Last successful transfer','datetime-local'),fld('connection_status','Connection status','select',['Not configured','Connected','Needs attention','Failed']),fld('notes','Status notes','textarea')],
+ 'hostel:hostel-dashboard':[fld('building_count','Hostel buildings','number'),fld('room_count','Total rooms','number'),fld('occupied_beds','Occupied beds','number'),fld('available_beds','Available beds','number'),fld('occupancy_note','Occupancy notes','textarea')],
+ 'hostel:hostel-buildings':[fld('building_code','Building code'),fld('building_name','Building name'),fld('warden_name','Warden / supervisor'),fld('address','Building address','textarea'),fld('total_floors','Number of floors','number'),fld('building_status','Status','select',['Active','Maintenance','Inactive'])],
+ 'hostel:room-bed-register':[fld('building_name','Building'),fld('floor','Floor'),fld('room_number','Room number'),fld('bed_number','Bed number'),fld('room_capacity','Room capacity','number'),fld('room_condition','Condition','select',['Good','Needs cleaning','Needs repair','Unavailable'])],
+ 'hostel:resident-allocation':[fld('resident_reference','Student / resident ID'),fld('resident_name','Resident name'),fld('building_name','Building'),fld('room_number','Room number'),fld('bed_number','Bed number'),fld('allocation_start','Check-in date','date'),fld('allocation_end','Expected check-out','date')],
+ 'hostel:room-transfers':[fld('resident_reference','Resident reference'),fld('from_room','Current room'),fld('to_room','New room'),fld('transfer_date','Transfer date','date'),fld('transfer_reason','Reason','textarea'),fld('approved_by','Approved by')],
+ 'hostel:check-in-check-out':[fld('resident_reference','Resident reference'),fld('movement_type','Movement','select',['Check-in','Temporary exit','Return','Check-out']),fld('movement_date','Date and time','datetime-local'),fld('authorised_by','Authorised by'),fld('movement_note','Notes','textarea')],
+ 'hostel:visitor-register':[fld('visitor_name','Visitor name'),fld('resident_reference','Resident being visited'),fld('relationship','Relationship'),fld('visit_purpose','Visit purpose','textarea'),fld('entry_time','Entry time','datetime-local'),fld('exit_time','Exit time','datetime-local')],
+ 'hostel:hostel-fees':[fld('resident_reference','Resident reference'),fld('billing_period','Billing period'),fld('fee_amount','Accommodation fee','number'),fld('due_date','Due date','date'),fld('payment_reference','Payment reference'),fld('payment_status','Payment status','select',['Pending','Part paid','Paid','Waived'])],
+ 'hostel:maintenance-requests':[fld('building_name','Building'),fld('room_number','Room'),fld('reported_by','Reported by'),fld('issue_type','Issue type'),fld('priority','Priority','select',['Low','Normal','High','Urgent']),fld('assigned_to','Assigned technician'),fld('request_status','Status','select',['Open','Assigned','In progress','Resolved','Closed'])],
+ 'hostel:occupancy-reports':[fld('report_period','Report period'),fld('building_name','Building'),fld('total_beds','Total beds','number'),fld('occupied_beds','Occupied beds','number'),fld('vacant_beds','Vacant beds','number'),fld('occupancy_rate','Occupancy rate (%)','number')],
+ 'cafeteria:cafeteria-dashboard':[fld('report_period','Report period'),fld('total_sales','Total sales','number'),fld('transactions_count','Transactions','number'),fld('stock_alerts','Low-stock items','number'),fld('summary_notes','Summary','textarea')],
+ 'cafeteria:menu-price-list':[fld('item_code','Item code'),fld('item_name','Menu item'),fld('menu_category','Category'),fld('unit_price','Price (PKR)','number'),fld('dietary_note','Dietary / allergen notes','textarea'),fld('item_status','Status','select',['Available','Unavailable','Seasonal'])],
+ 'cafeteria:daily-availability':[fld('menu_item','Menu item'),fld('service_date','Service date','date'),fld('available_quantity','Available quantity','number'),fld('sold_quantity','Sold quantity','number'),fld('availability_status','Status','select',['Available','Sold out','Unavailable'])],
+ 'cafeteria:sales-transactions':[fld('transaction_reference','Transaction reference'),fld('transaction_date','Date and time','datetime-local'),fld('buyer_reference','Student / staff reference'),fld('items_summary','Items and quantities','textarea'),fld('total_amount','Total amount (PKR)','number'),fld('payment_method','Payment method','select',['Cash','Card','Account','Other'])],
+ 'cafeteria:meal-plans':[fld('plan_name','Meal plan'),fld('plan_period','Duration'),fld('included_meals','Meals included'),fld('plan_price','Price (PKR)','number'),fld('eligibility','Eligible users'),fld('plan_status','Status','select',['Active','Inactive','Archived'])],
+ 'cafeteria:cafeteria-inventory':[fld('item_code','Stock item'),fld('supplier','Supplier'),fld('quantity_on_hand','Quantity on hand','number'),fld('reorder_level','Reorder level','number'),fld('unit_cost','Unit cost (PKR)','number'),fld('expiry_date','Expiry date','date')],
+ 'cafeteria:supplier-records':[fld('supplier_name','Supplier'),fld('contact_name','Contact person'),fld('phone','Phone'),fld('email','Email','email'),fld('product_category','Supplied category'),fld('supplier_status','Status','select',['Active','On hold','Inactive'])],
+ 'cafeteria:cafeteria-reports':[fld('report_type','Report type'),fld('date_from','From date','date'),fld('date_to','To date','date'),fld('revenue_total','Revenue (PKR)','number'),fld('stock_usage','Stock usage summary','textarea')],
+ 'assets:asset-dashboard':[fld('assets_total','Total assets','number'),fld('assets_active','Active assets','number'),fld('assets_maintenance','Under maintenance','number'),fld('assets_disposed','Disposed assets','number'),fld('summary_note','Summary','textarea')],
+ 'assets:asset-register':[fld('asset_tag','Asset tag'),fld('asset_name','Asset name'),fld('asset_category','Category'),fld('serial_number','Serial number'),fld('purchase_date','Purchase date','date'),fld('purchase_cost','Purchase cost (PKR)','number'),fld('current_location','Location')],
+ 'assets:asset-categories':[fld('category_code','Category code'),fld('category_name','Category name'),fld('depreciation_method','Depreciation method'),fld('useful_life','Useful life (years)','number'),fld('category_notes','Notes','textarea')],
+ 'assets:asset-assignment':[fld('asset_tag','Asset tag'),fld('assigned_to','Assigned person / department'),fld('assigned_date','Assignment date','date'),fld('condition_at_issue','Condition at issue'),fld('expected_return','Expected return','date')],
+ 'assets:asset-transfers':[fld('asset_tag','Asset tag'),fld('from_location','From location'),fld('to_location','To location'),fld('transfer_date','Transfer date','date'),fld('authorised_by','Authorised by'),fld('transfer_reason','Reason','textarea')],
+ 'assets:maintenance-history':[fld('asset_tag','Asset tag'),fld('maintenance_type','Maintenance type'),fld('service_provider','Service provider'),fld('service_date','Service date','date'),fld('service_cost','Service cost (PKR)','number'),fld('next_due','Next service date','date')],
+ 'assets:warranty-register':[fld('asset_tag','Asset tag'),fld('supplier','Supplier'),fld('warranty_start','Warranty start','date'),fld('warranty_expiry','Warranty expiry','date'),fld('coverage','Coverage details','textarea'),fld('claim_status','Claim status')],
+ 'assets:asset-disposal':[fld('asset_tag','Asset tag'),fld('disposal_date','Disposal date','date'),fld('disposal_method','Disposal method'),fld('approved_by','Approved by'),fld('recovered_value','Recovered value (PKR)','number'),fld('disposal_notes','Disposal notes','textarea')],
+ 'assets:asset-reports':[fld('report_type','Report type'),fld('date_from','From date','date'),fld('date_to','To date','date'),fld('assets_scope','Asset scope'),fld('report_notes','Report notes','textarea')],
+ 'procurement:procurement-dashboard':[fld('open_requests','Open requests','number'),fld('pending_approvals','Pending approvals','number'),fld('orders_in_progress','Orders in progress','number'),fld('received_this_month','Received this month','number'),fld('summary_notes','Summary','textarea')],
+ 'procurement:supplier-directory':[fld('supplier_code','Supplier code'),fld('supplier_name','Supplier name'),fld('contact_person','Contact person'),fld('phone','Phone'),fld('email','Email','email'),fld('address','Address','textarea'),fld('supplier_status','Status','select',['Active','On hold','Inactive'])],
+ 'procurement:purchase-requests':[fld('request_reference','Request reference'),fld('requesting_department','Department'),fld('requested_by','Requested by'),fld('item_description','Requested item','textarea'),fld('quantity','Quantity','number'),fld('estimated_cost','Estimated cost (PKR)','number'),fld('required_by','Required by','date')],
+ 'procurement:quotation-comparison':[fld('request_reference','Purchase request'),fld('supplier_one','Supplier 1'),fld('quote_one','Quotation 1 (PKR)','number'),fld('supplier_two','Supplier 2'),fld('quote_two','Quotation 2 (PKR)','number'),fld('supplier_three','Supplier 3'),fld('quote_three','Quotation 3 (PKR)','number'),fld('recommended_supplier','Recommended supplier')],
+ 'procurement:purchase-approvals':[fld('request_reference','Request reference'),fld('requested_by','Requested by'),fld('approver','Approver'),fld('decision','Decision','select',['Pending','Approved','Rejected']),fld('decision_date','Decision date','date'),fld('decision_notes','Decision notes','textarea')],
+ 'procurement:purchase-orders':[fld('purchase_order','Purchase order number'),fld('supplier','Supplier'),fld('order_date','Order date','date'),fld('delivery_due','Expected delivery','date'),fld('order_amount','Order amount (PKR)','number'),fld('order_status','Status','select',['Draft','Issued','Part received','Received','Cancelled'])],
+ 'procurement:goods-receipt':[fld('purchase_order','Purchase order'),fld('received_date','Received date','date'),fld('received_by','Received by'),fld('quantity_ordered','Quantity ordered','number'),fld('quantity_received','Quantity received','number'),fld('inspection_result','Inspection result','select',['Accepted','Part accepted','Rejected'])],
+ 'procurement:supplier-invoices':[fld('supplier_invoice','Supplier invoice number'),fld('supplier','Supplier'),fld('invoice_date','Invoice date','date'),fld('due_date','Due date','date'),fld('invoice_amount','Invoice amount (PKR)','number'),fld('payment_status','Payment status','select',['Pending','Part paid','Paid'])],
+ 'procurement:procurement-reports':[fld('report_type','Report type'),fld('date_from','From date','date'),fld('date_to','To date','date'),fld('spend_total','Spend total (PKR)','number'),fld('report_summary','Summary','textarea')],
+ 'sports:activities-dashboard':[fld('active_activities','Active activities','number'),fld('registered_participants','Participants','number'),fld('upcoming_events','Upcoming events','number'),fld('recent_achievements','Recent achievements','number')],
+ 'sports:activity-directory':[fld('activity_code','Activity code'),fld('activity_name','Activity name'),fld('activity_type','Activity type'),fld('supervisor','Supervisor'),fld('eligibility','Eligibility'),fld('activity_status','Status','select',['Active','Seasonal','Inactive'])],
+ 'sports:sports-clubs':[fld('club_name','Sport / club name'),fld('club_type','Category'),fld('coach','Coach / supervisor'),fld('meeting_schedule','Schedule'),fld('venue','Venue'),fld('club_status','Status','select',['Active','Inactive'])],
+ 'sports:teams-members':[fld('team_name','Team name'),fld('coach','Coach'),fld('members','Members / student IDs','textarea'),fld('competition','Competition'),fld('team_status','Status','select',['Forming','Active','Completed'])],
+ 'sports:coaches-supervisors':[fld('staff_reference','Staff reference'),fld('coach_name','Coach / supervisor'),fld('expertise','Sport / activity expertise'),fld('contact','Contact'),fld('assignment','Assigned team / activity')],
+ 'sports:schedules-venues':[fld('activity_name','Activity'),fld('activity_date','Date','date'),fld('start_time','Start time','time'),fld('end_time','End time','time'),fld('venue','Venue'),fld('supervisor','Supervisor')],
+ 'sports:participation-records':[fld('student_reference','Student reference'),fld('activity_name','Activity'),fld('participation_date','Date','date'),fld('participation_type','Participation type'),fld('recognition','Recognition / result')],
+ 'sports:competitions-results':[fld('competition_name','Competition'),fld('event_date','Date','date'),fld('team_name','Team'),fld('opponent','Opponent'),fld('result','Result'),fld('score','Score')],
+ 'sports:achievements':[fld('student_reference','Student reference'),fld('activity_name','Activity'),fld('achievement_title','Achievement'),fld('award_date','Date','date'),fld('level','Competition level'),fld('evidence_reference','Evidence reference')],
+ 'sports:activity-reports':[fld('report_period','Report period'),fld('activity_name','Activity'),fld('participants','Participants','number'),fld('events_count','Events','number'),fld('report_summary','Summary','textarea')]
+}
+
 const statusOptions=['draft','open','in_progress','pending','approved','published','completed','closed','on_hold','cancelled','rejected']
 const themes:Record<string,{accent:string;soft:string;ink:string}>={
  blue:{accent:'#3477dc',soft:'#edf4ff',ink:'#1c477b'},violet:{accent:'#7955d6',soft:'#f2efff',ink:'#49358b'},
@@ -100,7 +218,7 @@ const recordMetaColumnPlan:Record<string,RecordMetaKey[]>={
  visitors:['reference_code','status','record_date'],
  institution_config:['reference_code','status','approval_status'],
  reconciliation:['reference_code','status','approval_status','record_date','amount'],
- backup:['reference_code','status','approval_status','record_date'],
+ backup:['reference_code','status','approval_status','record_date'],front_office:['reference_code','status','approval_status','record_date','due_date'],forms_documents:['reference_code','status','approval_status','record_date','due_date'],hostel:['reference_code','status','record_date','due_date','amount','quantity'],cafeteria:['reference_code','status','record_date','amount','quantity'],assets:['reference_code','status','record_date','amount'],procurement:['reference_code','status','approval_status','due_date','amount','quantity'],sports:['reference_code','status','record_date','due_date','quantity'], 
 }
 const workspaceTableFieldOrder:Record<string,string[]>={
  'academic-sessions':['session_code','start_date','end_date','student_rollover_status'],
@@ -135,7 +253,7 @@ const workspaceTableFieldOrder:Record<string,string[]>={
  visitors:['visitor_name','organization','host_name','entry_time'],
  institution_config:['setting_category','setting_key','permission_scope','access_role'],
  reconciliation:['account_name','statement_period','matched_total','variance'],
- backup:['backup_type','backup_window','integrity_check','recovery_status'],
+ backup:['backup_type','backup_window','integrity_check','recovery_status'],front_office:['contact_name','contact_phone','enquiry_source','assigned_to'],forms_documents:['form_category','audience','review_status','document_category'],hostel:['building_name','room_number','resident_reference','occupancy_status'],cafeteria:['menu_category','item_code','unit_price','availability'],assets:['asset_tag','asset_category','assigned_to','asset_condition'],procurement:['requesting_department','supplier','purchase_order','receiving_status'],sports:['activity_type','supervisor','venue','team_name'], 
 }
 const workspaceRecordLabels:Record<string,string>={
  'academic-sessions':'Academic session','classes-sections':'Class / section',subjects:'Subject',
@@ -145,7 +263,7 @@ const workspaceRecordLabels:Record<string,string>={
  finance:'Ledger entry',fees:'Fee record',receivables:'Receivable',payments:'Payment',receipts:'Receipt',
  payroll:'Payroll entry',reconciliation:'Reconciliation',communication:'Communication item',
  transport:'Transport record',inventory:'Stock item',facilities:'Facility',visitors:'Visitor',
- administration:'Institution record',institution_config:'Configuration item',backup:'Data job',ai:'Insight record',
+ administration:'Institution record',institution_config:'Configuration item',backup:'Data job',ai:'Insight record',front_office:'Front-office request',forms_documents:'Form / document',hostel:'Accommodation record',cafeteria:'Cafeteria item',assets:'Institutional asset',procurement:'Purchase record',sports:'Activity record',
 }
 const workspaceLayouts:Record<string,string>={
  administration:'governance',institution_config:'governance',backup:'governance',
@@ -154,7 +272,7 @@ const workspaceLayouts:Record<string,string>={
  students:'people',employees:'people',attendance:'people',behaviour:'people',certificates:'people',
  finance:'ledger',fees:'ledger',receivables:'ledger',payments:'ledger',receipts:'ledger',payroll:'ledger',reconciliation:'ledger',
  communication:'communication',library:'resource',transport:'operations',inventory:'operations',facilities:'operations',visitors:'operations',
- ai:'intelligence',reports:'intelligence',
+ ai:'intelligence',reports:'intelligence',front_office:'communication',forms_documents:'intelligence',my_account:'governance',hostel:'operations',cafeteria:'ledger',assets:'operations',procurement:'operations',sports:'operations',
 }
 
 const displayDate=(value:unknown)=>typeof value==='string'&&value?new Date(value+'T00:00:00').toLocaleDateString():'—'
@@ -177,9 +295,13 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
  const [loading,setLoading]=useState(true)
  const [loadError,setLoadError]=useState('')
  const [search,setSearch]=useState('')
- const [range,setRange]=useState('90')
+ const [page,setPage]=useState(1)
+ const pageSize=12
+ const [range,setRange]=useState('all')
  const [campus,setCampus]=useState('')
  const [campuses,setCampuses]=useState<{id:string;name:string}[]>([])
+ const [studentOptions,setStudentOptions]=useState<{id:string;name:string;reference:string}[]>([])
+ const [selectedStudentId,setSelectedStudentId]=useState('')
  const [showForm,setShowForm]=useState(false)
  const [detail,setDetail]=useState<OperationalRow|null>(null)
  const [editing,setEditing]=useState<OperationalRow|null>(null)
@@ -195,7 +317,7 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
  const [amount,setAmount]=useState('')
  const [quantity,setQuantity]=useState('')
  const [payloadData,setPayloadData]=useState<Record<string,unknown>>({})
- const structuredFields=workspaceFields[group.key]??workspaceFields[group.dataModule]??[]
+ const structuredFields=itemWorkspaceFields[group.key+':'+item.key]??workspaceFields[group.key]??workspaceFields[group.dataModule]??[]
  const preferredFieldKeys=workspaceTableFieldOrder[group.key]??workspaceTableFieldOrder[group.dataModule]??structuredFields.map(field=>field.key)
  const tableFields=preferredFieldKeys.flatMap(key=>{
   const field=structuredFields.find(candidate=>candidate.key===key)
@@ -211,15 +333,15 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
  const theme=themes[group.theme]||themes.blue
  const canWrite=Boolean(user&&(
   canAdmin||
-  (user.role==='teacher'&&['academic_setup','attendance','timetable','teaching','behaviour','communication','question_bank','examinations','tests','curriculum'].includes(group.dataModule))||
-  (user.role==='accountant'&&['finance','fees','receivables','payments','receipts','payroll','reconciliation','inventory'].includes(group.dataModule))||
+  (user.role==='teacher'&&['academic_setup','attendance','timetable','teaching','behaviour','communication','question_bank','examinations','tests','curriculum','front_office','forms_documents','hostel','sports'].includes(group.dataModule))||
+  (user.role==='accountant'&&['finance','fees','receivables','payments','receipts','payroll','reconciliation','inventory','cafeteria','assets','procurement','hostel'].includes(group.dataModule))||
   (user.role==='exam_officer'&&['question_bank','examinations','tests','reports'].includes(group.dataModule))
  ))
 
  const showAmount=['accounts-finance','fees','receivables','payments','receipts','payroll','reconciliation','transport','inventory'].includes(group.key)||['finance','fees','receivables','payments','receipts','payroll','reconciliation'].includes(group.dataModule)
  const showQuantity=['classes-sections','library','transport','inventory','facilities'].includes(group.key)
  const showDueDate=['academic-sessions','fees','receivables','timetable','teaching','examinations','class-tests','reports','certificates','transport','facilities','visitors','backup'].includes(group.key)||['fees','receivables','timetable','teaching','examinations','tests','reports','certificates'].includes(group.dataModule)
- const showPortalVisibility=['communication','curriculum','certificates','teaching','library','transport','behaviour'].includes(group.key)
+ const showPortalVisibility=['communication','front-office','forms-documents','curriculum','certificates','teaching','library','transport','behaviour'].includes(group.key)
  
  const load=useCallback(async()=>{
   if(!supabase||!user||!group.dataModule){setRows([]);setLoading(false);return}
@@ -234,7 +356,9 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
    }
    const {data,error}=await query.order('created_at',{ascending:false}).limit(500)
    if(error)throw error
-   setRows((data??[]) as OperationalRow[])
+   const visibleRows=(data??[]) as OperationalRow[]
+   const portalRows=['parent','student'].includes(user.role)?visibleRows.filter(row=>row.visibility==='institution_portal'||Boolean(row.student_id)):visibleRows
+   setRows(portalRows)
   }catch(error){setLoadError(error instanceof Error?error.message:'Records could not be loaded');setRows([])}
   finally{setLoading(false)}
  },[user?.id,user?.institutionId,group.dataModule,item.key,item.label,campus,range])
@@ -250,11 +374,26 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
   void loadCampuses()
   return()=>{live=false}
  },[user?.id,user?.institutionId])
+ useEffect(()=>{
+  let live=true
+  async function loadStudentOptions(){
+   if(!supabase||!user||!showPortalVisibility||!canWrite){setStudentOptions([]);return}
+   const {data,error}=await supabase.from('students').select('id,full_name,admission_no').eq('institution_id',user.institutionId).order('full_name').limit(500)
+   if(error){if(live)setStudentOptions([]);return}
+   if(live)setStudentOptions((data??[]).map(row=>({id:String(row.id),name:String(row.full_name??'Unnamed student'),reference:String(row.admission_no??'')})))
+  }
+  void loadStudentOptions()
+  return()=>{live=false}
+ },[user?.id,user?.institutionId,showPortalVisibility,canWrite])
 
  const filtered=useMemo(()=>{
   const q=search.trim().toLowerCase()
   return rows.filter(row=>!q||[row.title,row.reference_code,row.status,row.description,row.record_type].some(value=>String(value??'').toLowerCase().includes(q)))
  },[rows,search])
+ const pageCount=Math.max(1,Math.ceil(filtered.length/pageSize))
+ const currentPage=Math.min(page,pageCount)
+ const pageRows=filtered.slice((currentPage-1)*pageSize,currentPage*pageSize)
+ useEffect(()=>{setPage(1)},[search,range,campus,selectedItem])
  const dashboard= isOverview(item.key,item.label)
  const reviewMetrics=useMemo(()=>getWorkspaceReviewMetrics(rows,user?.role),[rows,user?.role])
  const pendingReviewCount=reviewMetrics.pendingCount
@@ -267,7 +406,7 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
   setStatus(row?.status??'draft');setApproval(row?.approval_status??'not_required');setVisibility(row?.visibility??(['library','curriculum','certificates','teaching','transport'].includes(group.key)?'student_portal':'staff_only'))
   setRecordDate(row?.record_date??new Date().toISOString().slice(0,10));setDueDate(row?.due_date??'')
   setAmount(row?.amount===null||row?.amount===undefined?'':String(row.amount));setQuantity(row?.quantity===null||row?.quantity===undefined?'':String(row.quantity))
-  setPayloadData(row?.payload??{});setShowForm(true)
+  setPayloadData(row?.payload??{});setSelectedStudentId(String(row?.student_id??''));setShowForm(true)
  }
  async function save(event:FormEvent){
   event.preventDefault()
@@ -276,12 +415,13 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
   for(const field of structuredFields){if(field.type==='number'&&payload[field.key]!==undefined&&payload[field.key]!==''&&payload[field.key]!==null){const numeric=Number(payload[field.key]);if(!Number.isFinite(numeric)){onToast(field.label+' must be a valid number.',true);return}payload[field.key]=numeric}}
   if(amount.trim()&&(!Number.isFinite(Number(amount))||Number(amount)<0)){onToast('Amount must be a valid non-negative number.',true);return}
   if(quantity.trim()&&(!Number.isFinite(Number(quantity))||Number(quantity)<0)){onToast('Quantity must be a valid non-negative number.',true);return}
+  if(['student_portal','parent_portal'].includes(visibility)&&!selectedStudentId){onToast('Select the student this private portal record belongs to.',true);return}
   setSaving(true)
   const values={
    institution_id:user.institutionId,module_key:group.dataModule,record_type:item.key,title:title.trim(),
    reference_code:reference.trim()||null,description:description.trim()||null,status,approval_status:approval,visibility,
    record_date:recordDate||null,due_date:dueDate||null,amount:amount.trim()?Number(amount):null,
-   quantity:quantity.trim()?Number(quantity):null,payload,campus_id:campus||null
+   quantity:quantity.trim()?Number(quantity):null,payload,campus_id:campus||null,student_id:selectedStudentId||null
   }
   try{
    const query=editing
@@ -359,10 +499,11 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
   </section>}
   <section className="table-card ed360-workspace-record-card">
    <div className="table-toolbar"><div className="table-count"><strong>{filtered.length.toLocaleString()}</strong> {item.label.toLowerCase()} <span>·</span> Institution scope</div><span className="ed360-table-refresh"><button type="button" onClick={()=>void load()}>Refresh records <ArrowUpRight size={13}/></button></span></div>
-   {loading?<div className="ed360-workspace-empty">Loading institution records…</div>:filtered.length===0?<div className="ed360-workspace-empty"><strong>No records in this workspace yet</strong><span>Records will appear here after they are created or imported. No sample data is being shown.</span>{canWrite&&<button type="button" className="button button-primary" onClick={()=>resetForm()}><Plus size={15}/> Create first record</button>}</div>:
+   {loading?<div className="ed360-workspace-empty">Loading institution records…</div>:filtered.length===0?<div className="ed360-workspace-empty"><strong>No records in this workspace yet</strong><span>Records appear here after an authorised user creates them through this workspace. No sample data is being shown.</span>{canWrite&&<button type="button" className="button button-primary" onClick={()=>resetForm()}><Plus size={15}/> Create first record</button>}</div>:
    <div className="table-scroll"><table aria-label={group.label+' '+item.label+' register'}><thead><tr><th scope="col">{recordLabel}</th>{tableMetaColumns.map(column=><th key={column.key} scope="col" data-column={column.key}>{column.label}</th>)}{tableFields.map(field=><th key={field.key} scope="col">{field.label}</th>)}<th scope="col">Actions</th></tr></thead><tbody>
-    {filtered.map(row=><tr key={row.id}><td><button className="ed360-record-open" type="button" onClick={()=>setDetail(row)}>{row.title}</button><small className="ed360-record-subtitle">{row.description||row.record_type.replaceAll('-',' ')}</small></td>{tableMetaColumns.map(column=><td key={column.key} data-column={column.key}>{column.key==='reference_code'?row.reference_code||'—':column.key==='status'?<span className={'ed360-state-pill state-'+row.status}>{row.status.replaceAll('_',' ')}</span>:column.key==='approval_status'?row.approval_status.replaceAll('_',' '):column.key==='record_date'?displayDate(row.record_date):column.key==='due_date'?displayDate(row.due_date):column.key==='amount'?money(row.amount):row.quantity??'—'}</td>)}{tableFields.map(field=><td key={field.key} data-column={field.key}>{String(row.payload?.[field.key]??'—')}</td>)}<td><div className="ed360-row-actions"><button type="button" onClick={()=>setDetail(row)}>Open</button>{canWrite&&<button type="button" onClick={()=>resetForm(row)}>Edit</button>}</div></td></tr>)}
+    {pageRows.map(row=><tr key={row.id}><td><button className="ed360-record-open" type="button" onClick={()=>setDetail(row)}>{row.title}</button><small className="ed360-record-subtitle">{row.description||row.record_type.replaceAll('-',' ')}</small></td>{tableMetaColumns.map(column=><td key={column.key} data-column={column.key}>{column.key==='reference_code'?row.reference_code||'—':column.key==='status'?<span className={'ed360-state-pill state-'+row.status}>{row.status.replaceAll('_',' ')}</span>:column.key==='approval_status'?row.approval_status.replaceAll('_',' '):column.key==='record_date'?displayDate(row.record_date):column.key==='due_date'?displayDate(row.due_date):column.key==='amount'?money(row.amount):row.quantity??'—'}</td>)}{tableFields.map(field=><td key={field.key} data-column={field.key}>{String(row.payload?.[field.key]??'—')}</td>)}<td><div className="ed360-row-actions"><button type="button" onClick={()=>setDetail(row)}>Open</button>{canWrite&&<button type="button" onClick={()=>resetForm(row)}>Edit</button>}</div></td></tr>)}
    </tbody></table></div>}
+   {!loading&&filtered.length>pageSize&&<div className="ed360-record-pagination"><span>Showing <b>{(currentPage-1)*pageSize+1}–{Math.min(currentPage*pageSize,filtered.length)}</b> of <b>{filtered.length}</b> records</span><div><button type="button" disabled={currentPage<=1} onClick={()=>setPage(value=>Math.max(1,value-1))}>Previous</button><span>Page {currentPage} of {pageCount}</span><button type="button" disabled={currentPage>=pageCount} onClick={()=>setPage(value=>Math.min(pageCount,value+1))}>Next</button></div></div>}
   </section>
   {showForm&&<div className="modal-backdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setShowForm(false)}}><section className="modal-card ed360-context-form" role="dialog" aria-modal="true" aria-labelledby="ed360-form-heading">
    <div className="modal-heading"><div><div className="eyebrow">{group.label.toUpperCase()} / {item.label.toUpperCase()}</div><h2 id="ed360-form-heading">{editing?'Edit':'Create'} {item.label}</h2><p>This form saves a real institution-scoped record.</p></div><button type="button" className="icon-button" onClick={()=>setShowForm(false)} aria-label="Close"><X size={18}/></button></div>
@@ -372,7 +513,7 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
     <label>Description / notes<textarea value={description} onChange={e=>setDescription(e.target.value)} rows={3} maxLength={3000}/></label>
     <div className="ed360-form-row"><label>Status<select value={status} onChange={e=>setStatus(e.target.value)}>{statusOptions.map(s=><option value={s} key={s}>{s.replaceAll('_',' ')}</option>)}</select></label>{canAdmin&&<label>Approval<select value={approval} onChange={e=>setApproval(e.target.value)}><option value="not_required">Not required</option><option value="draft">Draft</option><option value="pending">Needs approval</option></select></label>}</div>
     <div className="ed360-form-row"><label>Record date<input type="date" value={recordDate} onChange={e=>setRecordDate(e.target.value)}/></label>{showDueDate&&<label>Due date<input type="date" value={dueDate} onChange={e=>setDueDate(e.target.value)}/></label>}</div>
-    {showPortalVisibility&&<label>Portal visibility<select value={visibility} onChange={e=>setVisibility(e.target.value)}><option value="staff_only">Staff only</option><option value="student_portal">Student portal</option><option value="parent_portal">Parent portal</option><option value="institution_portal">Institution portal (shared)</option></select><small>Choose portal access deliberately. Sensitive records should remain staff-only.</small></label>}
+    {showPortalVisibility&&<div className="ed360-form-row"><label>Portal visibility<select value={visibility} onChange={e=>setVisibility(e.target.value)}><option value="staff_only">Staff only</option><option value="student_portal">Student portal (one linked student)</option><option value="parent_portal">Parent portal (one linked student)</option><option value="institution_portal">Institution portal (shared notice)</option></select><small>Student and parent portal records are linked to one student. Institution-wide notices use the shared institution portal.</small></label>{canWrite&&visibility!=='staff_only'&&visibility!=='institution_portal'&&<label>Linked student *<select required value={selectedStudentId} onChange={e=>setSelectedStudentId(e.target.value)}><option value="">Select the relevant student</option>{studentOptions.map(student=><option key={student.id} value={student.id}>{student.name}{student.reference?' · '+student.reference:''}</option>)}</select><small>Only permitted linked guardians/students can read this portal record.</small></label>}</div>}
     {(showAmount||showQuantity)&&<div className="ed360-form-row">{showAmount&&<label>Amount (PKR)<input type="number" min="0" step="0.01" value={amount} onChange={e=>setAmount(e.target.value)}/></label>}{showQuantity&&<label>Quantity<input type="number" min="0" step="0.001" value={quantity} onChange={e=>setQuantity(e.target.value)}/></label>}</div>}
     {structuredFields.length>0&&<section className="ed360-module-specific-form"><div className="ed360-module-specific-heading"><span>MODULE-SPECIFIC INFORMATION</span><p>Fields for {item.label.toLowerCase()}.</p></div><div className="ed360-context-form-fields">{structuredFields.map(field=><label key={field.key}>{field.label}{field.type==='select'?<select value={String(payloadData[field.key]??'')} onChange={e=>setPayloadData(old=>({...old,[field.key]:e.target.value}))}><option value="">Select / not set</option>{(field.options??[]).map(option=><option value={option} key={option}>{option}</option>)}</select>:field.type==='textarea'?<textarea rows={3} value={String(payloadData[field.key]??'')} onChange={e=>setPayloadData(old=>({...old,[field.key]:e.target.value}))} placeholder={field.placeholder??''}/>:<input type={field.type??'text'} step={field.type==='number'?'0.01':undefined} value={String(payloadData[field.key]??'')} onChange={e=>setPayloadData(old=>({...old,[field.key]:e.target.value}))} placeholder={field.placeholder??''}/>}</label>)}</div></section>}
     <div className="modal-actions"><button type="button" className="button button-outline" onClick={()=>setShowForm(false)}>Cancel</button><button type="submit" className="button button-primary" disabled={saving}>{saving?'Saving…':editing?'Save changes':'Create record'}</button></div>

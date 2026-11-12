@@ -32,7 +32,7 @@ const requiredFiles = [
   'src/components/InstitutionOperationsWorkspace.tsx', 'src/styles/institution-operations.css',
   'src/components/AcademicManagementWorkspace.tsx', 'src/styles/academic-management.css',
   'src/components/AuthScreens.tsx', 'src/components/AdministrationModule.tsx',
-  'src/components/RecordModule.tsx', 'src/components/FacultyWorkspace.tsx', 'src/styles/faculty-workspace.css', 'src/components/ReportsModule.tsx', 'src/components/ProfileModule.tsx', 'src/context/AuthContext.tsx', 'src/lib/auth.ts',
+  'src/components/RecordModule.tsx', 'src/components/FacultyWorkspace.tsx', 'src/styles/faculty-workspace.css', 'src/components/ReportsModule.tsx', 'src/components/ProfileModule.tsx', 'src/components/PersonalWorkspace.tsx', 'src/components/AIAssistantWorkspace.tsx', 'src/components/FrontOfficeWorkspace.tsx', 'src/styles/front-office-workspace.css', 'src/context/AuthContext.tsx', 'src/lib/auth.ts',
   'src/lib/data.ts', 'src/lib/workspacePrivacy.js', 'src/lib/workspacePrivacy.d.ts', 'scripts/test-workspace-privacy.mjs', '.github/workflows/workspace-family-privacy.yml', 'docs/WORKSPACE_ROLE_PRIVACY.md', 'src/lib/displayPreferences.js', 'src/lib/displayPreferences.d.ts', 'src/styles/dashboard-display-settings.css', 'scripts/test-display-preferences.mjs', '.github/workflows/dashboard-display-preferences.yml', 'docs/STAGE_4_DASHBOARD_DISPLAY_MODES.md', 'src/lib/navigationAccess.ts', 'src/lib/userErrors.ts', 'scripts/test-user-errors.mjs',
   'src/lib/finance.ts', 'scripts/test-finance.mjs', 'src/lib/fileAccess.ts', 'scripts/test-file-access.mjs',
   'scripts/test-account-provisioning.mjs', 'supabase/functions/create-user/index.ts', 'supabase/functions/create-user/provisioning-guards.mjs', '.github/workflows/teacher-account-provisioning.yml', 'docs/TEACHER_ACCOUNT_LINK_INTEGRITY.md',
@@ -148,7 +148,7 @@ check('The full institutional menu maps every submenu to a working destination',
   assert.equal(getNavigationRoute('receipts', 'Receipt Templates'), 'unavailable:receipts:receipt-templates', 'Receipt template management must not be confused with receipt printing')
   assert.equal(getNavigationRoute('students', 'Student ID Cards'), 'students:id-cards', 'Student ID Cards must open the print workspace')
   assert.equal(getNavigationRoute('employees', 'Employee ID Cards'), 'employees:id-cards', 'Employee ID Cards must open the staff print workspace')
-  assert.equal(getNavigationRoute('ai', 'AI Assistant'), 'unavailable:ai:ai-assistant', 'AI must not pretend to generate results before a model provider is configured')
+  assert.equal(getNavigationRoute('ai', 'AI Assistant'), 'assistant:chat', 'AI Assistant must open its dedicated shell while keeping sending disabled until a provider is configured')
   assert.equal(getNavigationRoute('backup', 'Create Backup'), 'unavailable:backup:create-backup', 'Backup menu must not claim to create a backup without a platform backup service')
   assert.equal(getNavigationRoute('communication', 'WhatsApp Integration'), 'unavailable:communication:whatsapp-integration', 'External messaging must remain unconnected until credentials and delivery tests exist')
   assert.equal(getNavigationRoute('communication', 'Notification Centre'), 'notifications', 'In-app notifications remain a supported communication workflow')
@@ -244,6 +244,24 @@ check('Bulk attendance uses class registers with P A L marking and atomic saves'
   assert.ok(attendance.includes('All present') && attendance.includes('All absent') && attendance.includes('All late'))
   assert.ok(attendance.includes('save_student_attendance_register') && attendance.includes('save_employee_attendance_register') && attendance.includes('Save whole register'), 'Student and employee registers must use their validated atomic save RPCs')
   assert.ok(attendance.includes('not_configured') && attendance.includes('provider feed'), 'Automatic attendance must not pretend that a device is connected')
+})
+check('Stage 12 front-office windows use the live tenant-scoped enquiry, notices and calendar tables', () => {
+  const frontOffice = read('src/components/FrontOfficeWorkspace.tsx')
+  for (const value of ['admission_enquiries','announcements','academic_calendar_events','institution_id','enquiry_no','guardian_phone','created_by','audience','start_date','end_date']) {
+    assert.ok(frontOffice.includes(value), 'Front Office is missing its real persisted field/table: '+value)
+  }
+  assert.ok(frontOffice.includes('follow_up') && frontOffice.includes('application_started') && frontOffice.includes('not_interested'), 'Enquiry statuses must match the live database constraint')
+  assert.ok(frontOffice.includes('Save enquiry') && frontOffice.includes('Publish notice') && frontOffice.includes('Publish event'), 'Each front-office workflow must have its own save/publish action')
+  assert.ok(!frontOffice.includes('institutional_records'), 'Front-office records must not be written into a generic catch-all table')
+})
+check('Stage 14 AI assistant is transparent when no AI provider is connected', () => {
+  const assistant = read('src/components/AIAssistantWorkspace.tsx')
+  assert.ok(assistant.includes('AI service not connected') && assistant.includes('disabled'), 'The assistant must not pretend to send prompts without a configured provider')
+})
+check('Stage 15 personal account pages use the authenticated session and respect personal scope', () => {
+  const personal = read('src/components/PersonalWorkspace.tsx')
+  assert.ok(personal.includes('supabase.auth.updateUser') && personal.includes('signInWithPassword'), 'Password changes must verify the current account before update')
+  assert.ok(personal.includes('.eq(\'actor_id\',user.id)'), 'Personal activity must filter by the signed-in user')
 })
 check('Institutional workspace includes real record CRUD and office-compatible exports', () => {
   const workspace = read('src/components/InstitutionalWorkspace.tsx')

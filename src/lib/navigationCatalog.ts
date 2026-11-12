@@ -12,6 +12,18 @@ export const navigationCatalog:NavigationCatalogGroup[]=institutionalMenu.filter
 }))
 
 const roleItemAllow:Record<string,Partial<Record<string,string[]>>>={
+  'communication':{
+    teacher:['Communication Dashboard','Individual Messages','Class-wise Messaging','Employee Notifications','Assignment Notifications','Email Notifications','Delivery History','Communication Logs','Notification Centre','Communication Reports','Parent Communication','Internal Messages','Circulars & Notices','Events & Activities','Complaints & Helpdesk','Sports & Extracurricular Activities','Sports & Clubs','Teams & Members','Coaches & Supervisors','Activity Schedules','Participation Records','Competitions & Results','Achievements','Activity Reports'],
+    student:['Communication Dashboard','Assignment Notifications','Notification Centre','Circulars & Notices','Events & Activities','Complaints & Helpdesk','Sports & Extracurricular Activities','Sports & Clubs','Activity Schedules','Participation Records','Competitions & Results','Achievements'],
+    parent:['Communication Dashboard','Assignment Notifications','Notification Centre','Parent Communication','Circulars & Notices','Events & Activities','Complaints & Helpdesk','Sports & Extracurricular Activities','Sports & Clubs','Activity Schedules','Participation Records','Competitions & Results','Achievements'],
+    accountant:['Communication Dashboard','Employee Notifications','Notification Centre','Communication Reports','Circulars & Notices','Complaints & Helpdesk'],
+    exam_officer:['Communication Dashboard','Notification Centre','Circulars & Notices','Events & Activities'],
+  },
+  'certificates':{
+    teacher:['Certificate Dashboard','Character Certificate','Leaving Certificate','Enrollment Certificate','Bonafide Certificate','Achievement Certificate','Experience Certificate','ID Card Designer','Certificate Templates','Editable Document Templates','Certificate Verification','Certificate History','Form Builder','Form Submissions','Document Records','Letters & Applications','Document Verification'],
+    student:['Certificate Dashboard','Character Certificate','Leaving Certificate','Enrollment Certificate','Bonafide Certificate','Achievement Certificate','Certificate Verification','Certificate History','Form Submissions','Document Records','Document Verification'],
+    parent:['Certificate Dashboard','Character Certificate','Leaving Certificate','Enrollment Certificate','Bonafide Certificate','Achievement Certificate','Certificate Verification','Certificate History','Form Submissions','Document Records','Document Verification'],
+  },
   'people-hr':{
     teacher:['Students','Teachers','Employee Contracts & Documents','Employee Performance','Payroll & Salary Records'],
     student:['Students'],

@@ -1,0 +1,51 @@
+.ed360-ai-workspace{display:grid;gap:15px;max-width:1540px;min-height:calc(100vh - 180px);margin:0 auto;color:#172b43}
+.ed360-ai-header{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:19px 22px;border:1px solid #dce6f2;border-radius:16px;background:linear-gradient(115deg,#fff 0%,#f4f7ff 100%);box-shadow:0 7px 20px rgba(17,43,73,.04)}
+.ed360-ai-brand{display:flex;align-items:center;gap:13px;min-width:0}
+.ed360-ai-brand>span{width:46px;height:46px;display:grid;place-items:center;flex:0 0 46px;border-radius:14px;color:#fff;background:linear-gradient(145deg,#5e77df,#304eae);box-shadow:0 8px 18px rgba(58,83,180,.2)}
+.ed360-ai-brand>div{min-width:0}
+.ed360-ai-brand small{color:#8191aa;font-size:9px;font-weight:850;letter-spacing:1.15px}
+.ed360-ai-brand h1{margin:3px 0 1px;color:#142e4e;font-family:Manrope,"DM Sans",sans-serif;font-size:24px;font-weight:850;letter-spacing:-.6px}
+.ed360-ai-brand p{margin:0;color:#70849c;font-size:12px}
+.ed360-ai-status{display:inline-flex;align-items:center;gap:8px;padding:8px 11px;border:1px solid #f0dfbd;border-radius:22px;color:#91671f;background:#fff9ed;font-size:11px;font-weight:750;white-space:nowrap}
+.ed360-ai-status i{width:7px;height:7px;border-radius:50%;background:#d49a35}
+.ed360-ai-layout{min-height:600px;display:grid;grid-template-columns:240px minmax(0,1fr);overflow:hidden;border:1px solid #dfe7f0;border-radius:16px;background:#fff;box-shadow:0 8px 26px rgba(17,43,73,.045)}
+.ed360-ai-history{position:relative;display:flex;flex-direction:column;gap:15px;padding:15px;border-right:1px solid #e8edf4;background:#f8fafd}
+.ed360-ai-history-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.ed360-ai-history-head b{color:#344c67;font-size:12px;font-weight:850}
+.ed360-ai-history-head button,.ed360-ai-expand-history{width:31px;height:31px;display:grid;place-items:center;border:1px solid #e1e8f1;border-radius:8px;color:#667c94;background:#fff}
+.ed360-ai-history-empty{display:grid;justify-items:center;gap:8px;margin:auto 0;padding:22px 10px;color:#8292a6;text-align:center}
+.ed360-ai-history-empty svg{color:#8d9ebb}
+.ed360-ai-history-empty b{color:#526a83;font-size:12px}
+.ed360-ai-history-empty p{max-width:180px;margin:0;font-size:10px;line-height:1.6}
+.ed360-ai-history.is-collapsed{width:54px;align-items:center;padding:12px 8px}
+.ed360-ai-history.is-collapsed>*:not(.ed360-ai-expand-history){display:none}
+.ed360-ai-chat{min-width:0;display:flex;flex-direction:column}
+.ed360-ai-chat-top{min-height:48px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 18px;border-bottom:1px solid #edf1f6}
+.ed360-ai-chat-top>span{display:inline-flex;align-items:center;gap:7px;color:#4b6480;font-size:11px;font-weight:800}
+.ed360-ai-chat-top>span svg{color:#5c6fce}
+.ed360-ai-chat-top small{color:#8b9aad;font-size:10px}
+.ed360-ai-chat-body{width:min(780px,100%);display:grid;gap:22px;margin:auto;padding:38px 26px 30px}
+.ed360-ai-welcome{display:grid;justify-items:center;text-align:center}
+.ed360-ai-welcome-mark{width:60px;height:60px;display:grid;place-items:center;margin-bottom:13px;border:1px solid #dce5fb;border-radius:19px;color:#586bd0;background:linear-gradient(145deg,#f3f5ff,#eaf0ff);box-shadow:0 8px 20px rgba(69,91,188,.08)}
+.ed360-ai-eyebrow{color:#7889b7;font-size:9px;font-weight:900;letter-spacing:1.35px}
+.ed360-ai-welcome h2{margin:7px 0;color:#172f50;font-family:Manrope,"DM Sans",sans-serif;font-size:25px;font-weight:850;letter-spacing:-.8px}
+.ed360-ai-welcome p{max-width:570px;margin:0;color:#72869d;font-size:12px;line-height:1.7}
+.ed360-ai-suggestions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.ed360-ai-suggestions button{min-width:0;display:flex;align-items:flex-start;gap:10px;padding:13px;border:1px solid #e0e8f2;border-radius:11px;color:#4e6680;background:#fff;text-align:left;cursor:pointer;transition:border-color .16s,background .16s,transform .16s}
+.ed360-ai-suggestions button:hover{border-color:#c7d7f6;background:#f8faff;transform:translateY(-1px)}
+.ed360-ai-suggestions button>span{width:31px;height:31px;display:grid;place-items:center;flex:0 0 31px;border-radius:9px;color:#5268c8;background:#eff2ff}
+.ed360-ai-suggestions button>div{min-width:0;display:grid;gap:4px}
+.ed360-ai-suggestions b{color:#2c4663;font-size:11px}
+.ed360-ai-suggestions small{color:#8495a9;font-size:10px;line-height:1.45}
+.ed360-ai-readiness{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border:1px solid #f0dfbd;border-radius:11px;color:#8d6828;background:#fffaf0}
+.ed360-ai-readiness>svg{flex:0 0 auto;margin-top:1px}
+.ed360-ai-readiness b{font-size:11px}
+.ed360-ai-readiness p{margin:4px 0 0;color:#886f45;font-size:10px;line-height:1.6}
+.ed360-ai-composer{width:min(820px,calc(100% - 36px));margin:0 auto 20px;padding:13px;border:1px solid #dfe7f0;border-radius:13px;background:#fff;box-shadow:0 8px 26px rgba(17,43,73,.055)}
+.ed360-ai-composer>label{display:block;margin-bottom:7px;color:#536b85;font-size:10px;font-weight:800}
+.ed360-ai-composer>div{display:flex;align-items:flex-end;gap:9px}
+.ed360-ai-composer textarea{min-width:0;flex:1;min-height:54px;max-height:150px;resize:vertical;padding:10px 11px;border:1px solid #e0e7f0;border-radius:9px;color:#72849a;background:#f7f9fc;font-size:12px}
+.ed360-ai-composer button{min-height:40px;display:flex;align-items:center;gap:7px;padding:0 13px;border:0;border-radius:9px;color:#fff;background:#64748b;font-size:11px;font-weight:800;opacity:.55;cursor:not-allowed}
+.ed360-ai-composer>small{display:block;margin-top:8px;color:#8d9caf;font-size:9px;line-height:1.5}
+@media(max-width:900px){.ed360-ai-layout{grid-template-columns:190px minmax(0,1fr)}.ed360-ai-chat-top{align-items:flex-start;flex-direction:column;padding-block:10px}}
+@media(max-width:680px){.ed360-ai-header{align-items:flex-start;flex-direction:column;padding:16px}.ed360-ai-layout{grid-template-columns:minmax(0,1fr);min-height:540px}.ed360-ai-history{display:none}.ed360-ai-suggestions{grid-template-columns:1fr}.ed360-ai-chat-body{padding:25px 15px}.ed360-ai-welcome h2{font-size:21px}.ed360-ai-chat-top{display:none}.ed360-ai-composer{width:calc(100% - 24px)}}
