@@ -40,6 +40,14 @@ jobs:
         run: npm ci --no-audit --no-fund
       - name: Run workspace privacy regression tests
         run: npm run test:workspace-privacy
+      - name: Generate exact role-aware route audit
+        run: npm run audit:navigation
+      - name: Generate role-aware route-to-view compatibility audit
+        run: npm run audit:route-views
+      - name: Generate responsive source coverage audit
+        run: npm run audit:responsive
+      - name: Audit modal keyboard behavior and specialist workspace visual coverage
+        run: npm run audit:modal-windows
       - name: Verify project structure and permissions
         run: npm run verify:project
       - name: Build production assets
