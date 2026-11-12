@@ -137,6 +137,15 @@ test('database review relation is tenant-scoped, admin-only, audited and preserv
     'grant execute on function public.save_institutional_record_with_review',
   ]) assert.ok(migration.toLowerCase().includes(required.toLowerCase()), `Migration is missing safeguard: ${required}`)
 
+  const saveRpcAt = migration.indexOf('create or replace function public.save_institutional_record_with_review')
+  const saveRpcEnd = migration.indexOf('$function$;', saveRpcAt)
+  const saveRpc = migration.slice(saveRpcAt, saveRpcEnd)
+  assert.ok(saveRpc.includes('security invoker'), 'Admin save RPC must retain caller RLS')
+  assert.ok(!saveRpc.includes('security definer'), 'Admin save RPC must not bypass caller RLS')
+  const auditAt = migration.indexOf('create or replace function private.audit_institutional_record_review')
+  const auditEnd = migration.indexOf('$function$;', auditAt)
+  assert.ok(migration.slice(auditAt, auditEnd).includes('security definer'), 'Private audit trigger must write through its protected owner context')
+
   const backfillAt = migration.indexOf('insert into public.institutional_record_reviews (')
   const removeAt = migration.indexOf('drop column approval_status')
   assert.ok(backfillAt >= 0 && removeAt > backfillAt, 'Existing review fields must be backfilled before legacy columns are dropped')
