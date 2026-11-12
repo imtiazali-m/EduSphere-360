@@ -24,12 +24,17 @@ const dashboardViews: Record<string, string> = {
   'employee-performance': 'employees:reports',
   'statistics-and-kpi-cards': 'overview',
   'charts-and-comparative-analytics': 'reports:overview',
-  'calendar-and-events': 'institutional:front-office:events-activities',
+  'calendar-and-events': 'frontoffice:events',
   'notification-centre': 'notifications',
   'tasks-and-reminders': 'work_tasks:queue',
   'pending-approvals': 'governance:approvals',
   'recent-activities': 'governance:audit',
   'institutional-alerts': 'governance:audit',
+  'my-profile':'personal:my-profile',
+  'account-settings':'personal:account-settings',
+  'notification-settings':'personal:notification-settings',
+  'my-activity':'personal:my-activity',
+  'help-support':'personal:help-support',
 }
 const studentViews: Record<string, string> = {
   'student-directory': 'directory',
@@ -276,6 +281,17 @@ function institutionOperationsRoute(groupKey:string,itemKey:string):string|undef
 }
 
 function dedicatedRoute(groupKey: string, itemKey: string): string | undefined {
+  if (groupKey === 'communication') {
+    const frontOfficeRoutes:Record<string,string>={
+      'reception-enquiries':'frontoffice:enquiries',
+      'circulars-notices':'frontoffice:announcements',
+      'events-activities':'frontoffice:events',
+      'sports-extracurricular-activities':'academic:classroom-activities',
+    }
+    if(frontOfficeRoutes[itemKey])return frontOfficeRoutes[itemKey]
+    if(['sports-and-clubs','teams-and-members','coaches-and-supervisors','activity-schedules','participation-records','competitions-and-results','achievements','activity-reports'].includes(itemKey))return 'academic:classroom-activities'
+    if(['parent-communication','internal-messages','complaints-helpdesk','whatsapp-integration','individual-messages','bulk-messages','class-wise-messaging','employee-notifications','message-templates','email-notifications','delivery-history','communication-logs','communication-reports'].includes(itemKey))return 'unavailable:communication:'+itemKey
+  }
   if (groupKey === 'dashboard') return dashboardViews[itemKey] ?? 'unavailable:dashboard:' + itemKey
   if (groupKey === 'institution-config') {
     const section = institutionConfigurationItems[itemKey]
@@ -291,7 +307,7 @@ function dedicatedRoute(groupKey: string, itemKey: string): string | undefined {
     return view && view !== 'unavailable' ? `students:${view}` : undefined
   }
   if (groupKey === 'employees') {
-    if (itemKey === 'employee-performance') return 'peoplehr:performance'
+    if (itemKey === 'employee-performance') return 'unavailable:employees:employee-performance'
     const view = employeeViews[itemKey]
     return view && view !== 'unavailable' ? `employees:${view}` : undefined
   }
@@ -427,15 +443,12 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
     }
     return 'academic:' + (academicWindows[itemKey] ?? 'academic-sessions')
   }
-  if (groupKey === 'ai' || groupKey === 'backup') {
-    return institutionalRoute(groupKey, itemKey)
-  }
-  if (groupKey === 'my-account') return 'personal:' + itemKey
-  if (groupKey === 'ai' && itemKey === 'ai-assistant') return 'assistant:chat'
+  if (groupKey === 'ai') return itemKey === 'ai-assistant' ? 'assistant:chat' : 'unavailable:ai:' + itemKey
+  if (groupKey === 'backup') return 'unavailable:backup:' + itemKey
   if (groupKey === 'students' && itemKey === 'student-data-export' && role && !['owner','admin'].includes(role)) {
     return 'unavailable:students:student-data-export'
   }
-  if (groupKey === 'students' && itemKey === 'student-data-export') return 'institutional:forms-documents:data-export'
+  if (groupKey === 'students' && itemKey === 'student-data-export') return 'students:directory'
   if(groupKey==='attendance'){
     const stage7Routes:Record<string,string>={
       'student-attendance':'attendance:students',
@@ -450,7 +463,7 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
     if(stage7Routes[itemKey])return stage7Routes[itemKey]
   }
   if (groupKey === 'attendance' && itemKey === 'attendance-analytics') return 'reports:attendance'
-  if (groupKey === 'attendance' && itemKey === 'attendance-alerts') return institutionalRoute(groupKey,itemKey)
+  if (groupKey === 'attendance' && itemKey === 'attendance-alerts') return 'unavailable:attendance:attendance-alerts'
   if (groupKey === 'reports' && ['custom-report-builder','scheduled-reports','report-templates','report-history'].includes(itemKey)) return institutionalRoute(groupKey,itemKey)
   if (groupKey === 'question-bank' && ['question-bank-import-and-export','question-paper-version-history'].includes(itemKey)) return institutionalRoute(groupKey,itemKey)
   if (groupKey === 'curriculum' && ['teaching-resources','learning-materials','resource-downloads','chapter-wise-learning-resources','learning-progress-tracking'].includes(itemKey)) return institutionalRoute(groupKey,itemKey)
@@ -539,9 +552,7 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
   if (route) return route
 
   if (linkedRoutes.has(compositeKey)) return institutionalRoute(groupKey, itemKey)
-  // Every authorised catalogue entry receives its own institution-scoped workspace.
-  // Truly external services keep an explicit not-configured state inside that workspace.
-  return institutionalRoute(groupKey, itemKey)
+  return 'unavailable:' + groupKey + ':' + itemKey
 }
 
 const contextualEntries = institutionalMenu.flatMap(group => group.items.map(item => [
