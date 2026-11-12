@@ -123,3 +123,22 @@ button.rd-metric-card:hover{border-color:#b8cce2;transform:translateY(-1px);box-
 @media(max-width:850px){.rd-page-head{flex-direction:column}.rd-heading-meta{max-width:none;justify-content:flex-start}.rd-grid-wide{grid-template-columns:1fr}.rd-metric-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:520px){.ed360-role-dashboard{gap:13px}.rd-heading-main{gap:10px}.rd-heading-icon{width:38px;height:38px;flex-basis:38px}.rd-heading-main h1{font-size:21px}.rd-heading-main p{font-size:11px}.rd-heading-meta{gap:6px}.rd-role-chip,.rd-session-chip,.rd-date-chip{font-size:8px;padding:7px 8px}.rd-metric-grid{gap:7px}.rd-metric-card{min-height:80px;gap:8px;padding:10px 9px}.rd-metric-icon{width:32px;height:32px;flex-basis:32px}.rd-metric-copy small{font-size:9px}.rd-metric-copy strong{font-size:17px}.rd-metric-copy em{font-size:8px}.rd-panel-head{padding:11px}.rd-panel-body{padding:10px}.rd-panel-title h2{font-size:11px}.rd-child-grid{grid-template-columns:1fr}.rd-child-stats b{font-size:13px}.rd-list-row{gap:7px}.rd-list-row time{font-size:8px}.rd-row-copy strong{font-size:9px}.rd-row-copy small{font-size:8px}.rd-row-amount{font-size:9px}}
 @media(prefers-reduced-motion:reduce){.ed360-role-dashboard *{transition:none!important;scroll-behavior:auto!important}}
+
+
+/* Executive time-series analytics: six months of saved, tenant-scoped activity. */
+.rd-trend-panel { grid-column: 1 / -1; }
+.rd-trend-series-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; }
+.rd-trend-series { min-width:0; padding:13px 14px 10px; border:1px solid #e8edf5; border-radius:13px; background:linear-gradient(150deg,#fbfdff,#f7f9fe); }
+.rd-trend-series-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px; }
+.rd-trend-series-head span { color:#657d97; font-size:10px; font-weight:800; }
+.rd-trend-series-head strong { color:#24476d; font-size:13px; font-weight:850; font-variant-numeric:tabular-nums; }
+.rd-trend-bars { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); align-items:end; gap:8px; height:104px; padding:0 3px; border-bottom:1px solid #e3eaf3; }
+.rd-trend-month { display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:7px; height:100%; min-width:0; }
+.rd-trend-track { display:flex; align-items:flex-end; justify-content:center; width:100%; height:78px; overflow:hidden; border-radius:6px 6px 0 0; background:linear-gradient(180deg,#eef3fa,#f4f7fb); }
+.rd-trend-track i { display:block; width:min(24px,72%); min-height:0; border-radius:6px 6px 0 0; background:linear-gradient(180deg,#67a4f3,#356fd5); box-shadow:0 -3px 10px rgba(53,111,213,.11); transition:height .25s ease; }
+.rd-trend-series.attendance .rd-trend-track i { background:linear-gradient(180deg,#57c8aa,#179879); }
+.rd-trend-series.collections .rd-trend-track i { background:linear-gradient(180deg,#b09bf2,#7259ca); }
+.rd-trend-month small { padding-bottom:7px; color:#8496aa; font-size:9px; font-weight:700; }
+.rd-trend-unavailable { display:grid; place-items:center; min-height:104px; color:#8b99aa; font-size:10px; text-align:center; }
+.rd-trend-note { margin:11px 0 0; color:#8998aa; font-size:9px; line-height:1.5; }
+@media(max-width:760px) { .rd-trend-series-grid { grid-template-columns:1fr; gap:9px; } .rd-trend-series { padding:11px; } .rd-trend-bars { height:90px; } .rd-trend-track { height:66px; } }
