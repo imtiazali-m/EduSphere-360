@@ -13,37 +13,16 @@ export const navigationCatalog:NavigationCatalogGroup[]=institutionalMenu.filter
 
 const roleItemAllow:Record<string,Partial<Record<string,string[]>>>={
   'communication':{
-    teacher:['Communication Dashboard','Individual Messages','Class-wise Messaging','Employee Notifications','Assignment Notifications','Email Notifications','Delivery History','Communication Logs','Notification Centre','Communication Reports'],
-    student:['Communication Dashboard','Assignment Notifications','Notification Centre'],
-    parent:['Communication Dashboard','Assignment Notifications','Notification Centre'],
-    accountant:['Communication Dashboard','Employee Notifications','Notification Centre','Communication Reports'],
-    exam_officer:['Communication Dashboard','Notification Centre'],
-  },
-  'forms-documents':{
-    teacher:['Form Submissions','Document Records','Letters & Applications','Document Verification'],
-    student:['Form Submissions','Document Records'],
-    parent:['Form Submissions','Document Records','Letters & Applications'],
-  },
-  'forms-documents':{
-    teacher:['Form Submissions','Document Records','Letters & Applications','Document Verification'],
-    student:['Form Submissions','Document Records','Document Verification'],
-    parent:['Form Submissions','Document Records','Document Verification'],
-  },
-  'hostel':{
-    student:['Hostel Dashboard','Resident Allocation','Room Transfers','Check-in & Check-out','Hostel Fees'],
-    parent:['Hostel Dashboard','Resident Allocation','Hostel Fees'],
-    teacher:['Hostel Dashboard','Resident Allocation','Room & Bed Register','Maintenance Requests'],
-    accountant:['Hostel Dashboard','Hostel Fees','Occupancy Reports'],
-  },
-  'sports':{
-    student:['Activities Dashboard','Activity Directory','Sports & Clubs','Teams & Members','Schedules & Venues','Participation Records','Competitions & Results','Achievements'],
-    parent:['Activities Dashboard','Activity Directory','Sports & Clubs','Schedules & Venues','Participation Records','Competitions & Results','Achievements'],
-    teacher:['Activities Dashboard','Activity Directory','Sports & Clubs','Teams & Members','Coaches & Supervisors','Schedules & Venues','Participation Records','Competitions & Results','Achievements','Activity Reports'],
-  },
-  'front-office':{
-    teacher:['Parent Communication','Internal Messages','Circulars & Notices','Events & Activities','Complaints & Helpdesk'],
-    student:['Circulars & Notices','Events & Activities'],
-    parent:['Parent Communication','Circulars & Notices','Events & Activities'],
+    teacher:['Communication Dashboard','Individual Messages','Class-wise Messaging','Employee Notifications','Assignment Notifications','Email Notifications','Delivery History','Communication Logs','Notification Centre','Communication Reports','Reception & Enquiries','Parent Communication','Internal Messages','Circulars & Notices','Events & Activities','Complaints & Helpdesk','Sports & Extracurricular Activities','Sports & Clubs','Teams & Members','Coaches & Supervisors','Activity Schedules','Participation Records','Competitions & Results','Achievements','Activity Reports'],
+    student:['Communication Dashboard','Assignment Notifications','Notification Centre','Circulars & Notices','Events & Activities','Complaints & Helpdesk','Sports & Extracurricular Activities','Sports & Clubs','Activity Schedules','Participation Records','Competitions & Results','Achievements'],
+    parent:['Communication Dashboard','Assignment Notifications','Notification Centre','Parent Communication','Circulars & Notices','Events & Activities','Complaints & Helpdesk','Sports & Extracurricular Activities','Sports & Clubs','Activity Schedules','Participation Records','Competitions & Results','Achievements'],
+    accountant:['Communication Dashboard','Employee Notifications','Notification Centre','Communication Reports','Circulars & Notices','Complaints & Helpdesk'],
+    exam_officer:['Communication Dashboard','Notification Centre','Circulars & Notices','Events & Activities'],
+  }
+  'certificates':{
+    teacher:['Certificate Dashboard','Character Certificate','Leaving Certificate','Enrollment Certificate','Bonafide Certificate','Achievement Certificate','Experience Certificate','ID Card Designer','Certificate Templates','Editable Document Templates','Certificate Verification','Certificate History','Form Builder','Form Submissions','Document Records','Letters & Applications','Document Verification'],
+    student:['Certificate Dashboard','Character Certificate','Leaving Certificate','Enrollment Certificate','Bonafide Certificate','Achievement Certificate','Certificate Verification','Certificate History','Form Submissions','Document Records','Document Verification'],
+    parent:['Certificate Dashboard','Character Certificate','Leaving Certificate','Enrollment Certificate','Bonafide Certificate','Achievement Certificate','Certificate Verification','Certificate History','Form Submissions','Document Records','Document Verification'],
   },
   'people-hr':{
     teacher:['Students','Teachers','Employee Contracts & Documents','Employee Performance','Payroll & Salary Records'],
@@ -146,10 +125,9 @@ export const navigationSectionDefinitions:NavigationSectionDefinition[]=[
   {key:'people',label:'People & Human Resources',groupKeys:['people-hr','attendance','behaviour','certificates']},
   {key:'academics',label:'Academic Delivery',groupKeys:['academic-management','question-bank','examinations','class-tests','library']},
   {key:'finance',label:'Finance & Payroll',groupKeys:['accounts-finance','fees','receivables','payments','receipts','reconciliation']},
-  {key:'communication',label:'Communication',groupKeys:['communication','front-office','visitors']},
-  {key:'personal',label:'My Workspace',groupKeys:['my-account']},
-  {key:'campus',label:'Campus Operations',groupKeys:['transport','inventory','facilities','hostel','cafeteria','assets','procurement','sports']},
-  {key:'intelligence',label:'Reports & Intelligence',groupKeys:['reports','forms-documents','ai']},
+  {key:'communication',label:'Communication',groupKeys:['communication']},
+  {key:'campus',label:'Campus Operations',groupKeys:['transport','inventory','facilities','visitors']},
+  {key:'intelligence',label:'Reports & Intelligence',groupKeys:['reports','ai']},
 ]
 const navigationGroupOrder=new Map<string,number>(
   navigationSectionDefinitions.flatMap(section=>section.groupKeys).map((key,index)=>[key,index] as const)
