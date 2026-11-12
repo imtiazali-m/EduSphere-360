@@ -22,6 +22,8 @@ check('Vite development and production scripts exist', () => {
   assert.equal(packageJson.scripts['test:responsive:public'], 'node scripts/test-responsive-public.mjs')
   assert.equal(packageJson.scripts['test:workspace-privacy'], 'node scripts/test-workspace-privacy.mjs')
   assert.equal(packageJson.scripts['test:display-preferences'], 'node --test scripts/test-display-preferences.mjs')
+  assert.equal(packageJson.scripts['test:work-task-identity'], 'node --test scripts/test-work-task-identity.mjs')
+  assert.equal(packageJson.scripts['test:legacy-fee-payment-rpc'], 'node --test scripts/test-legacy-fee-payment-rpc.mjs')
 })
 
 const requiredFiles = [
@@ -33,7 +35,7 @@ const requiredFiles = [
   'src/components/AcademicManagementWorkspace.tsx', 'src/styles/academic-management.css',
   'src/components/AuthScreens.tsx', 'src/components/AdministrationModule.tsx',
   'src/components/RecordModule.tsx', 'src/components/FacultyWorkspace.tsx', 'src/styles/faculty-workspace.css', 'src/components/ReportsModule.tsx', 'src/components/ProfileModule.tsx', 'src/context/AuthContext.tsx', 'src/lib/auth.ts',
-  'src/lib/data.ts', 'src/lib/workspacePrivacy.js', 'src/lib/workspacePrivacy.d.ts', 'scripts/test-workspace-privacy.mjs', '.github/workflows/workspace-family-privacy.yml', 'docs/WORKSPACE_ROLE_PRIVACY.md', 'supabase/migrations/20261112000100_institutional_record_review_isolation.sql', 'src/lib/displayPreferences.js', 'src/lib/displayPreferences.d.ts', 'src/styles/dashboard-display-settings.css', 'scripts/test-display-preferences.mjs', '.github/workflows/dashboard-display-preferences.yml', 'docs/STAGE_4_DASHBOARD_DISPLAY_MODES.md', 'src/lib/navigationAccess.ts', 'src/lib/userErrors.ts', 'scripts/test-user-errors.mjs',
+  'src/lib/data.ts', 'src/lib/workspacePrivacy.js', 'src/lib/workspacePrivacy.d.ts', 'scripts/test-workspace-privacy.mjs', '.github/workflows/workspace-family-privacy.yml', 'docs/WORKSPACE_ROLE_PRIVACY.md', 'supabase/migrations/20261112000100_institutional_record_review_isolation.sql', 'src/lib/workTaskAccess.js', 'src/lib/workTaskAccess.d.ts', 'scripts/test-work-task-identity.mjs', 'scripts/test-legacy-fee-payment-rpc.mjs', '.github/workflows/work-task-identity.yml', '.github/workflows/legacy-fee-payment-rpc.yml', 'docs/WORK_TASK_STABLE_IDENTITY.md', 'docs/FEE_PAYMENT_RPC_COMPATIBILITY.md', 'supabase/migrations/20261112000200_work_task_stable_assignee_identity.sql', 'supabase/migrations/20261112000300_harden_legacy_fee_payment_rpc.sql', 'src/lib/displayPreferences.js', 'src/lib/displayPreferences.d.ts', 'src/styles/dashboard-display-settings.css', 'scripts/test-display-preferences.mjs', '.github/workflows/dashboard-display-preferences.yml', 'docs/STAGE_4_DASHBOARD_DISPLAY_MODES.md', 'src/lib/navigationAccess.ts', 'src/lib/userErrors.ts', 'scripts/test-user-errors.mjs',
   'src/lib/finance.ts', 'scripts/test-finance.mjs', 'src/lib/fileAccess.ts', 'scripts/test-file-access.mjs',
   'scripts/test-account-provisioning.mjs', 'supabase/functions/create-user/index.ts', 'supabase/functions/create-user/provisioning-guards.mjs', '.github/workflows/teacher-account-provisioning.yml', 'docs/TEACHER_ACCOUNT_LINK_INTEGRITY.md',
   'src/lib/navigationCatalog.ts', 'src/lib/navigationRoutes.ts', 'scripts/generate-navigation-route-audit.mjs', 'scripts/generate-route-view-audit.mjs', 'scripts/generate-responsive-source-audit.mjs', 'docs/PHASE_1_EXACT_ROUTE_AUDIT.md', 'docs/PHASE_1_ROUTE_VIEW_AUDIT.md', 'docs/PHASE_2_RESPONSIVE_SOURCE_AUDIT.md', 'src/components/NotificationCenter.tsx', 'src/styles/notification-center.css', 'public/_redirects', 'scripts/test-responsive-public.mjs', 'docs/PUBLIC_RESPONSIVE_QA.md',
@@ -272,6 +274,27 @@ check('Institutional registers and windows are tailored by workspace domain', ()
   for (const layout of ['academic','people','assessment','ledger','communication','resource','operations','governance','intelligence']) {
     assert.ok(styles.includes(`[data-workspace-layout="${layout}"]`), 'Distinct workspace surface is missing: ' + layout)
   }
+})
+
+check('Work-task assignment access uses stable tenant-scoped Auth identity', () => {
+  const access = read('src/lib/workTaskAccess.js')
+  const data = read('src/lib/data.ts')
+  const recordModule = read('src/components/RecordModule.tsx')
+  const migration = read('supabase/migrations/20261112000200_work_task_stable_assignee_identity.sql')
+  assert.ok(access.includes('assigned_to_user_id') && access.includes('assigned_to_legacy_email_access'), 'Work-task access helper must prefer stable IDs and explicit legacy fallback')
+  assert.ok(data.includes('isWorkTaskVisibleToAssignee') && recordModule.includes('isWorkTaskVisibleToAssignee'), 'Data filtering and edit guard must use stable task identity')
+  assert.ok(migration.includes('REFERENCES auth.users(id)') && migration.includes('assigned_to_user_id = (SELECT auth.uid())'), 'Work-task RLS must bind assignments to Auth user IDs')
+  assert.ok(migration.includes('REVOKE ALL ON FUNCTION public.guard_work_task_assignment() FROM PUBLIC, anon, authenticated'), 'Trigger-only work-task guard must not be API-executable')
+  assert.ok(migration.includes('NEW.campus_id IS DISTINCT FROM OLD.campus_id') && migration.includes('NEW.created_at IS DISTINCT FROM OLD.created_at'), 'Staff cannot move or rewrite task ownership metadata')
+})
+
+check('Legacy fee-payment RPC delegates to the strict validated operation', () => {
+  const migration = read('supabase/migrations/20261112000300_harden_legacy_fee_payment_rpc.sql')
+  assert.ok(migration.includes("p_payment_date => (now() AT TIME ZONE 'Asia/Karachi')::date"), 'Legacy payment date must use Pakistan-local date')
+  assert.ok(migration.includes('SECURITY DEFINER') && migration.includes("SET search_path = ''"), 'Compatibility wrapper must use a hardened definer context')
+  assert.ok(migration.includes('REVOKE ALL ON FUNCTION public.record_fee_payment(uuid,numeric,text,text,text,text,text) FROM PUBLIC, anon'), 'Legacy wrapper must revoke public/anon execution')
+  assert.ok(migration.includes('GRANT EXECUTE ON FUNCTION public.record_fee_payment(uuid,numeric,text,text,text,text,text) TO authenticated'), 'Legacy wrapper must retain authenticated compatibility')
+  assert.ok(!migration.includes('INSERT INTO public.fee_payments'), 'Legacy wrapper must not duplicate payment insertion')
 })
 
 check('Institutional approval metadata is isolated behind an owner/admin-only review relation', () => {
@@ -983,6 +1006,8 @@ check('Required database safeguards and Cloudflare redirects remain in the proje
     '20261111170350_stage9_online_assessment_manual_review.sql',
     '20261111170921_stage9_weight_scope_validation.sql',
     '20261112000100_institutional_record_review_isolation.sql',
+    '20261112000200_work_task_stable_assignee_identity.sql',
+    '20261112000300_harden_legacy_fee_payment_rpc.sql',
     '20261111161307_stage5_administration_profile_campus_and_access_controls.sql',
     '20261111162254_stage_6_people_hr_and_payroll_controls.sql',
     '20261111162922_20261111193000_academic_sessions_active_members_read.sql',
@@ -1002,8 +1027,9 @@ check('Required database safeguards and Cloudflare redirects remain in the proje
     assert.ok(migrations.includes(migration), `${migration} missing`)
   }
   const timestamped = migrations.filter(name => /^202611\d{8}_.+\.sql$/.test(name))
-  assert.equal(timestamped.length, 51, 'Expected 50 applied migrations plus one staged institutional review-isolation migration')
-  assert.ok(read('supabase/migrations/README.md').includes('51 timestamped migration files'))
+  assert.equal(timestamped.length, 53, 'Expected 50 applied migrations plus three staged release-hardening migrations')
+  assert.ok(read('supabase/migrations/README.md').includes('53 timestamped migration files'))
+  assert.ok(read('supabase/migrations/README.md').includes('three release-hardening migrations are staged but not yet applied'))
   assert.ok(read('supabase/migrations/README.md').includes('one institutional-review isolation migration is staged but not yet applied'))
   assert.equal(read('public/_redirects').trim(), '/* /index.html 200')
   const envExample = read('.env.example')
