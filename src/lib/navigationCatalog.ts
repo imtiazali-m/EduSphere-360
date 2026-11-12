@@ -12,6 +12,29 @@ export const navigationCatalog:NavigationCatalogGroup[]=institutionalMenu.filter
 }))
 
 const roleItemAllow:Record<string,Partial<Record<string,string[]>>>={
+  'communication':{
+    teacher:['Communication Dashboard','Individual Messages','Class-wise Messaging','Employee Notifications','Assignment Notifications','Email Notifications','Delivery History','Communication Logs','Notification Centre','Communication Reports'],
+    student:['Communication Dashboard','Assignment Notifications','Notification Centre'],
+    parent:['Communication Dashboard','Assignment Notifications','Notification Centre'],
+    accountant:['Communication Dashboard','Employee Notifications','Notification Centre','Communication Reports'],
+    exam_officer:['Communication Dashboard','Notification Centre'],
+  },
+  'forms-documents':{
+    teacher:['Form Submissions','Document Records','Letters & Applications','Document Verification'],
+    student:['Form Submissions','Document Records'],
+    parent:['Form Submissions','Document Records','Letters & Applications'],
+  },
+  'hostel':{
+    student:['Hostel Dashboard','Resident Allocation','Room Transfers','Check-in & Check-out','Hostel Fees'],
+    parent:['Hostel Dashboard','Resident Allocation','Hostel Fees'],
+    teacher:['Hostel Dashboard','Resident Allocation','Room & Bed Register','Maintenance Requests'],
+    accountant:['Hostel Dashboard','Hostel Fees','Occupancy Reports'],
+  },
+  'sports':{
+    student:['Activities Dashboard','Activity Directory','Sports & Clubs','Teams & Members','Schedules & Venues','Participation Records','Competitions & Results','Achievements'],
+    parent:['Activities Dashboard','Activity Directory','Sports & Clubs','Schedules & Venues','Participation Records','Competitions & Results','Achievements'],
+    teacher:['Activities Dashboard','Activity Directory','Sports & Clubs','Teams & Members','Coaches & Supervisors','Schedules & Venues','Participation Records','Competitions & Results','Achievements','Activity Reports'],
+  },
   'front-office':{
     teacher:['Parent Communication','Internal Messages','Circulars & Notices','Events & Activities','Complaints & Helpdesk'],
     student:['Circulars & Notices','Events & Activities','Complaints & Helpdesk'],
