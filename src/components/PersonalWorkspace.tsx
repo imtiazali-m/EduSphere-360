@@ -73,6 +73,8 @@ export function PersonalWorkspace({initialWindow,onToast,onNavigate}:{initialWin
   if(newPassword===currentPassword){onToast('Choose a password different from your current password.',true);return}
   setSavingPassword(true)
   try{
+   const {data:verified,error:verifyError}=await supabase.auth.signInWithPassword({email:user.email,password:currentPassword})
+   if(verifyError||verified.user?.id!==user.id)throw new Error('The current password is incorrect. Your password was not changed.')
    const {error}=await supabase.auth.updateUser({password:newPassword})
    if(error)throw error
    setCurrentPassword('');setNewPassword('');setConfirmPassword('')
