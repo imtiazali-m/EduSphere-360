@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { isWorkTaskVisibleToAssignee } from './workTaskAccess.js'
 import { listCloudAccounts } from './auth'
 import type { AppMode, AppUser, RecordRow } from './types'
 
@@ -116,9 +117,7 @@ async function filterRowsForRole(
   rows: RecordRow[],
 ): Promise<RecordRow[]> {
   if (table === 'work_tasks' && !['owner', 'admin'].includes(user.role)) {
-    return rows.filter(
-      (row) => String(row.assigned_to_email ?? '').trim().toLowerCase() === user.email.toLowerCase(),
-    )
+    return rows.filter((row) => isWorkTaskVisibleToAssignee(row, user))
   }
 
   if (!['student', 'parent'].includes(user.role)) return rows

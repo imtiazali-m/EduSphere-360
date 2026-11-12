@@ -1,0 +1,38 @@
+name: Internal function exposure regression
+
+on:
+  pull_request:
+    paths:
+      - 'supabase/migrations/20261112000400_revoke_anon_execute_on_internal_definer_functions.sql'
+      - 'scripts/test-internal-function-exposure.mjs'
+      - 'scripts/verify-project.mjs'
+      - 'package.json'
+      - '.github/workflows/internal-function-exposure.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/migrations/20261112000400_revoke_anon_execute_on_internal_definer_functions.sql'
+      - 'scripts/test-internal-function-exposure.mjs'
+      - 'scripts/verify-project.mjs'
+      - 'package.json'
+      - '.github/workflows/internal-function-exposure.yml'
+
+jobs:
+  internal-function-exposure:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: node scripts/test-internal-function-exposure.mjs
+      - name: Generate required route, responsive and modal audit evidence
+        run: |
+          npm run audit:navigation
+          npm run audit:route-views
+          npm run audit:responsive
+          npm run audit:modal-windows
+      - run: npm run verify:project
+      - run: npm run build

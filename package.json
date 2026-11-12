@@ -19,7 +19,10 @@
     "test:account-provisioning": "node scripts/test-account-provisioning.mjs",
     "test:responsive:public": "node scripts/test-responsive-public.mjs",
     "test:workspace-privacy": "node scripts/test-workspace-privacy.mjs",
-    "test:display-preferences": "node --test scripts/test-display-preferences.mjs"
+    "test:display-preferences": "node --test scripts/test-display-preferences.mjs",
+    "test:work-task-identity": "node --test scripts/test-work-task-identity.mjs",
+    "test:legacy-fee-payment-rpc": "node --test scripts/test-legacy-fee-payment-rpc.mjs",
+    "test:internal-function-exposure": "node --test scripts/test-internal-function-exposure.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.58.0",

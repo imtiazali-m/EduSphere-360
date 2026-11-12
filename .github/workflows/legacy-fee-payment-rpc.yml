@@ -1,0 +1,58 @@
+name: Legacy fee-payment RPC compatibility
+
+on:
+  push:
+    paths:
+      - 'supabase/migrations/20261112000300_harden_legacy_fee_payment_rpc.sql'
+      - 'scripts/test-legacy-fee-payment-rpc.mjs'
+      - 'scripts/verify-project.mjs'
+      - 'docs/FEE_PAYMENT_RPC_COMPATIBILITY.md'
+      - 'supabase/migrations/README.md'
+      - '.github/workflows/legacy-fee-payment-rpc.yml'
+  pull_request:
+    paths:
+      - 'supabase/migrations/20261112000300_harden_legacy_fee_payment_rpc.sql'
+      - 'scripts/test-legacy-fee-payment-rpc.mjs'
+      - 'scripts/verify-project.mjs'
+      - 'docs/FEE_PAYMENT_RPC_COMPATIBILITY.md'
+      - 'supabase/migrations/README.md'
+      - '.github/workflows/legacy-fee-payment-rpc.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify-legacy-fee-payment:
+    name: Verify hardened legacy payment compatibility
+    runs-on: ubuntu-latest
+    env:
+      VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Test legacy fee-payment delegation
+        run: node scripts/test-legacy-fee-payment-rpc.mjs
+
+      - name: Generate required project audit artifacts
+        run: |
+          npm run audit:navigation
+          npm run audit:route-views
+          npm run audit:responsive
+          npm run audit:modal-windows
+
+      - name: Verify full project
+        run: npm run verify:project
+
+      - name: Build production assets
+        run: npm run build
