@@ -727,6 +727,7 @@ export function Dashboard({ onToast }: Props) {
     const payrollWindowRoute = key.startsWith('payroll:')
     const peopleHRWindowRoute = key.startsWith('peoplehr:')
     const personalWindowRoute = key.startsWith('personal:')
+    const assistantWindowRoute = key.startsWith('assistant:')
     const governanceWindowRoute = key.startsWith('governance:')
     const operationsWindowRoute = key.startsWith('operations:')
     const routeParts = key.split(':')
@@ -742,6 +743,7 @@ export function Dashboard({ onToast }: Props) {
       : financeWindowRoute ? 'finance'
       : peopleHRWindowRoute ? 'peoplehr'
       : personalWindowRoute ? 'personal'
+      : assistantWindowRoute ? 'assistant'
       : payrollWindowRoute ? 'payroll'
       : governanceWindowRoute ? 'governance'
       : operationsWindowRoute ? 'operations'
@@ -758,6 +760,7 @@ export function Dashboard({ onToast }: Props) {
       : financeWindowRoute ? key.slice('finance:'.length)
       : peopleHRWindowRoute ? key.slice('peoplehr:'.length)
       : personalWindowRoute ? key.slice('personal:'.length)
+      : assistantWindowRoute ? key.slice('assistant:'.length)
       : payrollWindowRoute ? key.slice('payroll:'.length)
       : governanceWindowRoute ? key.slice('governance:'.length)
       : operationsWindowRoute ? key.slice('operations:'.length)
