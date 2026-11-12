@@ -52,6 +52,6 @@ The Stage 5 administration, Stage 6 people/HR, Stage 7 attendance/leave/wellbein
 
 ## Staged, not applied
 
-`20261112000100_institutional_record_review_isolation.sql` moves approval status, reviewer identity, review timestamp and internal review notes out of portal-visible `institutional_records` and into the tenant-scoped, owner/admin-only `institutional_record_reviews` relation. It backfills existing review metadata before dropping the legacy columns, adds audit triggers, and provides an owner/admin-checked RPC for atomic record/review saves.
+`20261112000100_institutional_record_review_isolation.sql` moves approval status, reviewer identity, review timestamp and internal review notes out of portal-visible `institutional_records` and into the tenant-scoped, owner/admin-only `institutional_record_reviews` relation. It backfills existing review metadata before dropping the legacy columns, adds audit triggers, and provides an owner/admin-checked SECURITY INVOKER RPC for atomic record/review saves, preserving caller RLS; only the private audit trigger uses definer privileges.
 
 This migration is **not recorded as applied** in the linked Supabase project. The live project currently has 50 applied migration versions; this file is the 51st repository migration and is staged only. Do not merge into a deployable release or apply to the linked project until the migration has been tested against a separate development database branch and its RLS/API behavior has been verified.
