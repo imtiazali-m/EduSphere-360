@@ -45,7 +45,7 @@ test('explicitly flagged unlinked legacy tasks retain normalized email access', 
 })
 
 test('unmatched historical task rows do not gain automatic email access', () => {
-  const sql = fs.readFileSync(path.join(root, 'supabase/migrations/20261111140500_work_task_stable_assignee_identity.sql'), 'utf8')
+  const sql = fs.readFileSync(path.join(root, 'supabase/migrations/20261112000200_work_task_stable_assignee_identity.sql'), 'utf8')
   assert.match(sql, /assigned_to_legacy_email_access boolean NOT NULL DEFAULT false/i)
   assert.equal(sql.includes('UPDATE public.work_tasks' + String.fromCharCode(10) + 'SET assigned_to_legacy_email_access = true'), false)
   assert.match(sql, /Leave unmatched or ambiguous historical rows unassigned and inaccessible/i)
@@ -89,14 +89,14 @@ test('work-task form permits progress updates through stable identity, not mutab
 })
 
 test('task institution ownership cannot be changed in place', () => {
-  const sql = fs.readFileSync(path.join(root, 'supabase/migrations/20261111140500_work_task_stable_assignee_identity.sql'), 'utf8')
+  const sql = fs.readFileSync(path.join(root, 'supabase/migrations/20261112000200_work_task_stable_assignee_identity.sql'), 'utf8')
   assert.match(sql, /IF TG_OP = 'UPDATE' AND NEW\.institution_id IS DISTINCT FROM OLD\.institution_id THEN/i)
   assert.match(sql, /Institutional work tasks cannot be transferred between institutions/i)
   assert.match(sql, /Create a new task in the destination institution/i)
 })
 
 test('SQL migration keeps identity and explicit legacy rules aligned with client filtering', () => {
-  const sql = fs.readFileSync(path.join(root, 'supabase/migrations/20261111140500_work_task_stable_assignee_identity.sql'), 'utf8')
+  const sql = fs.readFileSync(path.join(root, 'supabase/migrations/20261112000200_work_task_stable_assignee_identity.sql'), 'utf8')
   assert.match(sql, /assigned_to_user_id uuid/i)
   assert.match(sql, /REFERENCES auth\.users\(id\)\s+ON DELETE SET NULL/i)
   assert.match(sql, /assigned_to_legacy_email_access boolean NOT NULL DEFAULT false/i)
@@ -110,4 +110,12 @@ test('SQL migration keeps identity and explicit legacy rules aligned with client
   assert.match(sql, /NEW\.assigned_to_user_id IS DISTINCT FROM OLD\.assigned_to_user_id/i)
   assert.match(sql, /NOT EXISTS \(\s*SELECT 1 FROM auth\.users/i)
   assert.match(sql, /Only administrators may reassign or redefine institutional work/i)
+})
+
+
+test('non-admin task updates cannot change campus or creation time and trigger function is not API-executable', () => {
+  const sql = fs.readFileSync(path.join(root, 'supabase/migrations/20261112000200_work_task_stable_assignee_identity.sql'), 'utf8')
+  assert.match(sql, /NEW\.campus_id IS DISTINCT FROM OLD\.campus_id/i)
+  assert.match(sql, /NEW\.created_at IS DISTINCT FROM OLD\.created_at/i)
+  assert.match(sql, /REVOKE ALL ON FUNCTION public\.guard_work_task_assignment\(\) FROM PUBLIC, anon, authenticated/i)
 })
