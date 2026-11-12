@@ -1,25 +1,41 @@
-# Institutional workspace approval-data visibility
+# Institutional workspace approval-data confidentiality
 
-Internal approval state is administrative workflow metadata. Owner and administrator accounts may see approval state, reviewer identity and review timestamps in the institutional workspace. Other roles must not receive these fields through workspace tables, exports or review metrics.
+Internal approval state, reviewer identity, review timestamps and internal review notes are administrative workflow metadata. They must not be exposed through student/parent portal-visible operational records or generic Data API reads.
 
-The frontend policy helper in `src/lib/workspacePrivacy.js` is a defense-in-depth presentation rule. It scopes table columns, CSV/XLSX/DOCX/print projections and dashboard metrics by role. It does **not** replace database authorization.
+## Current frontend defense in depth
 
-## Confirmed database release gate
+The merged `src/lib/workspacePrivacy.js` policy limits approval columns, review KPIs and exported review metadata to owner/admin roles. Non-admin exports recursively remove `approval_status`, `reviewed_by`, `reviewed_at` and `review_notes`, including nested payload values.
+
+This presentation-layer protection is useful but does not by itself secure direct Data API access.
+
+## Staged database isolation
+
+The staged migration `supabase/migrations/20261112000100_institutional_record_review_isolation.sql`:
+- creates `public.institutional_record_reviews` with institution-safe record references;
+- enables RLS and restricts review-row reads/writes to active owner/admin roles;
+- backfills all existing approval/reviewer metadata before dropping the legacy columns from `institutional_records`;
+- stamps reviewer identity and decision time in a database trigger rather than trusting client values;
+- records review changes in the existing administrator-only audit stream;
+- uses an owner/admin-checked RPC for atomic operational-record and review-state saves.
+
+The current application source has been updated in the staged branch to use an explicit safe operational-record projection, load review metadata only for owner/admin roles, and save decisions/notes through the isolated relation.
+
+## Live migration state and safety gate
 
 A read-only inspection of the linked Supabase project on 12 November 2026 confirmed:
-- `public.institutional_records` has a SELECT policy that allows students and parents to read selected portal-visible rows.
-- The `authenticated` database role has SELECT privileges on `approval_status`, `reviewed_by`, `reviewed_at`, `review_notes` and other review metadata columns.
-- The current generic institutional workspace query uses `.select('*')`.
+- 50 migration versions are recorded as applied;
+- the new migration version `20261112000100` is not applied;
+- the live `institutional_records` table currently has RLS enabled and permits selected student/parent portal-visible rows;
+- authenticated users currently have SELECT privileges on the legacy approval/reviewer columns;
+- no existing payload records contain top-level or nested keys named `approval_status`, `reviewed_by`, `reviewed_at` or `review_notes`;
+- the required `private` schema, institution-scoped composite record reference and audit table are present.
 
-Postgres RLS filters rows, not columns. Therefore, a family-role user who can read a permitted row may still request internal approval metadata directly through the Data API unless the database/API contract is changed.
+The old draft migration used version `20261111160000`, which is earlier than the latest applied migration version in the live project. The staged migration therefore uses the new version `20261112000100` so it follows the actual 50-version remote history rather than replaying or repairing older versions.
 
-Do not describe this UI helper as complete confidentiality protection. Before production release, design and test a database-side safe projection or column-privilege/API change that:
-- preserves tenant scoping, portal visibility and linked-student/guardian restrictions;
-- keeps owner/admin review access;
-- prevents student/parent direct Data API reads of approval/reviewer metadata;
-- updates every client call site that reads or writes `institutional_records`;
-- is verified with authenticated owner, admin, teacher, student and parent identities.
+**The migration has not been applied.** The application source and migration must not be released together until a separate Supabase development branch is created, the migration applies cleanly, and role-specific API checks prove:
+- owner/admin can read and update review metadata;
+- teacher/student/parent/accountant/exam-officer cannot read or write the review relation;
+- student/parent direct Data API requests cannot retrieve the removed approval/reviewer columns;
+- operational record reads/writes, portal visibility, audit history and linked-student/guardian restrictions still work.
 
-## Safety
-
-This source change does not alter database schema, RLS policies, grants, Auth users, records or production data. The database-side fix is tracked separately and must be tested against a development database before production migration.
+No live database grants, policies, functions, Auth users, records or production data have been changed.
