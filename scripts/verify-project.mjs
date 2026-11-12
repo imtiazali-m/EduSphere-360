@@ -247,6 +247,7 @@ check('Bulk attendance uses class registers with P A L marking and atomic saves'
 })
 check('Institutional workspace includes real record CRUD and office-compatible exports', () => {
   const workspace = read('src/components/InstitutionalWorkspace.tsx')
+  const adminWorkspace = read('src/components/AdministrationStage5Workspace.tsx')
   const exporters = read('src/lib/officeExport.ts')
   for (const value of ['institutional_records','created_by','updated_by','approval_status','CONTEXTUAL SUB-WINDOW']) assert.ok(workspace.includes(value))
   for (const value of ['exportXlsx','exportDocx','printOfficeReport']) assert.ok(workspace.includes(value))
@@ -291,6 +292,8 @@ check('Institutional approval metadata is isolated behind an owner/admin-only re
   assert.ok(workspace.includes(".from('institutional_records').select('id,institution_id,campus_id"), 'Operational records must use an explicit safe projection')
   assert.ok(!workspace.includes(".from('institutional_records').select('*')"), 'No broad institutional_records query may remain')
   assert.ok(workspace.includes("supabase.from('institutional_record_reviews')"), 'Review metadata must be loaded from the isolated relation')
+  assert.ok(adminWorkspace.includes(".from('institutional_records').select('id,institution_id,module_key,record_type,title,reference_code,description,status,effective_date,payload,updated_at,created_at')"), 'Administration policy records must use a safe projection')
+  assert.ok(!adminWorkspace.includes("approval_status:'not_required'"), 'Administration policy writes must not use removed review columns')
 })
 
 check('Non-admin workspace projections remove all internal review metadata recursively', () => {
