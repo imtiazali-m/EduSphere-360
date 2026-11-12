@@ -1030,7 +1030,7 @@ check('Required database safeguards and Cloudflare redirects remain in the proje
   assert.equal(timestamped.length, 53, 'Expected 50 applied migrations plus three staged release-hardening migrations')
   assert.ok(read('supabase/migrations/README.md').includes('53 timestamped migration files'))
   assert.ok(read('supabase/migrations/README.md').includes('three release-hardening migrations are staged but not yet applied'))
-  assert.ok(read('supabase/migrations/README.md').includes('one institutional-review isolation migration is staged but not yet applied'))
+  assert.ok(read('supabase/migrations/README.md').includes('three release-hardening migrations are staged but not yet applied'))
   assert.equal(read('public/_redirects').trim(), '/* /index.html 200')
   const envExample = read('.env.example')
   const gitignore = read('.gitignore')
