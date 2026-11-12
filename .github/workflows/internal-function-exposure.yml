@@ -28,5 +28,11 @@ jobs:
           cache: npm
       - run: npm ci
       - run: node scripts/test-internal-function-exposure.mjs
+      - name: Generate required route, responsive and modal audit evidence
+        run: |
+          npm run audit:navigation
+          npm run audit:route-views
+          npm run audit:responsive
+          npm run audit:modal-windows
       - run: npm run verify:project
       - run: npm run build
