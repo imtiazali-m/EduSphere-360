@@ -316,6 +316,24 @@ export function RoleDashboard({ onNavigate }: Props) {
       : 'No active academic session'
   const now = new Date()
   const monthStart = currentMonthStart()
+  const trendMonths = Array.from({ length: 6 }, (_, index) => new Date(now.getFullYear(), now.getMonth() - 5 + index, 1))
+  const monthlyRecords = (items: RecordRow[], keys: string[]) => trendMonths.map(month =>
+    items.filter(item => {
+      const date = recordDate(item, keys)
+      return date && date.getFullYear() === month.getFullYear() && date.getMonth() === month.getMonth()
+    }).length,
+  )
+  const monthlyAdmissions = monthlyRecords(students, ['admission_date', 'created_at'])
+  const monthlyAttendance = monthlyRecords([...attendance, ...get('employee_attendance')], ['attendance_date', 'created_at'])
+  const monthlyCollections = trendMonths.map(month => payments.filter(payment => {
+    const date = recordDate(payment, ['payment_date', 'created_at'])
+    return date && date.getFullYear() === month.getFullYear() && date.getMonth() === month.getMonth()
+  }).reduce((sum, payment) => sum + numberValue(payment.amount), 0))
+  const executiveTrends = [
+    { key: 'admissions', label: 'New admissions', values: monthlyAdmissions, total: monthlyAdmissions.reduce((sum, value) => sum + value, 0), available: known('students'), display: (value: number) => formatCount(value) },
+    { key: 'attendance', label: 'Attendance entries', values: monthlyAttendance, total: monthlyAttendance.reduce((sum, value) => sum + value, 0), available: known('attendance', 'employee_attendance'), display: (value: number) => formatCount(value) },
+    { key: 'collections', label: 'Fee collections', values: monthlyCollections, total: monthlyCollections.reduce((sum, value) => sum + value, 0), available: known('fee_payments'), display: (value: number) => formatMoney(value) },
+  ] as const
   const monthName = now.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })
   const todayAttendance = attendance.filter(row => isToday(row, ['attendance_date'], today))
   const todayStaffAttendance = get('employee_attendance').filter(row => isToday(row, ['attendance_date'], today))
@@ -488,6 +506,25 @@ export function RoleDashboard({ onNavigate }: Props) {
       const maxBranch = Math.max(1, ...branchRows.map(item => item.students))
       return <>
         <div className="rd-grid rd-grid-wide">
+          <Panel title="Six-month institutional trends" description="Admissions, attendance and collected payments grouped by month from saved institutional records." icon={TrendingUp} className="rd-trend-panel">
+            <div className="rd-trend-series-grid">
+              {executiveTrends.map(series => {
+                const maximum = Math.max(1, ...series.values)
+                return <section className={'rd-trend-series ' + series.key} key={series.key} aria-label={series.label}>
+                  <div className="rd-trend-series-head"><span>{series.label}</span><strong>{loading || !series.available ? '—' : series.display(series.total)}</strong></div>
+                  {loading || !series.available
+                    ? <div className="rd-trend-unavailable">{loading ? 'Loading saved records…' : 'This record set is unavailable to your account.'}</div>
+                    : <div className="rd-trend-bars">
+                      {series.values.map((value, index) => <div className="rd-trend-month" key={trendMonths[index].toISOString()} title={trendMonths[index].toLocaleDateString(undefined, { month: 'long', year: 'numeric' }) + ': ' + series.display(value)}>
+                        <span className="rd-trend-track"><i style={{ height: (value ? Math.max(5, value / maximum * 100) : 0) + '%' }}/></span>
+                        <small>{trendMonths[index].toLocaleDateString(undefined, { month: 'short' })}</small>
+                      </div>)}
+                    </div>}
+                </section>
+              })}
+            </div>
+            <p className="rd-trend-note">Historical activity only. These figures describe recorded activity and are not AI forecasts.</p>
+          </Panel>
           <Panel title="Academic performance" description="Weighted average from recorded examination marks." icon={Award}>
             <div className="rd-performance">
               <strong>{known('exam_results') ? (performance.percent === null ? '—' : performance.percent + '%') : '—'}</strong>
