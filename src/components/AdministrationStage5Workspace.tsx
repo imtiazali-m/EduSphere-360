@@ -52,7 +52,7 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
         admin?supabase.from('institution_settings').select('*').eq('institution_id',user.institutionId).order('category').order('setting_key').limit(1000):Promise.resolve({data:[],error:null}),
         admin?supabase.from('workflow_approvals').select('*').eq('institution_id',user.institutionId).order('requested_at',{ascending:false}).limit(500):Promise.resolve({data:[],error:null}),
         admin?supabase.from('institutional_audit_events').select('*').eq('institution_id',user.institutionId).order('occurred_at',{ascending:false}).limit(500):Promise.resolve({data:[],error:null}),
-        admin?supabase.from('institutional_records').select('*').eq('institution_id',user.institutionId).eq('module_key','administration').eq('record_type','institutional-policy').order('updated_at',{ascending:false}).limit(500):Promise.resolve({data:[],error:null}),
+        admin?supabase.from('institutional_records').select('id,institution_id,module_key,record_type,title,reference_code,description,status,effective_date,payload,updated_at,created_at').eq('institution_id',user.institutionId).eq('module_key','administration').eq('record_type','institutional-policy').order('updated_at',{ascending:false}).limit(500):Promise.resolve({data:[],error:null}),
         admin?supabase.from('departments').select('*').eq('institution_id',user.institutionId).order('name').limit(500):Promise.resolve({data:[],error:null}),
         admin?supabase.from('designations').select('*').eq('institution_id',user.institutionId).order('name').limit(500):Promise.resolve({data:[],error:null}),
         admin?supabase.from('teachers').select('id,full_name,department,department_id,designation_id,employment_status,campus_id').eq('institution_id',user.institutionId).order('full_name').limit(1000):Promise.resolve({data:[],error:null}),
@@ -176,7 +176,7 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
     setSaving(true)
     const previousPayload=jsonObject(policyEditing?.payload)
     const payload={...previousPayload,category:policyCategory,revision:Number(previousPayload.revision??0)+1}
-    const values={institution_id:user!.institutionId,module_key:'administration',record_type:'institutional-policy',title:policyTitle.trim(),reference_code:policyCode.trim()||null,description:policyDescription.trim()||null,status:policyStatus,approval_status:'not_required',visibility:'staff_only',effective_date:policyEffectiveDate||null,payload,updated_by:user!.id,updated_at:new Date().toISOString()}
+    const values={institution_id:user!.institutionId,module_key:'administration',record_type:'institutional-policy',title:policyTitle.trim(),reference_code:policyCode.trim()||null,description:policyDescription.trim()||null,status:policyStatus,visibility:'staff_only',effective_date:policyEffectiveDate||null,payload,updated_by:user!.id,updated_at:new Date().toISOString()}
     try{
       const result=policyEditing?await supabase.from('institutional_records').update(values).eq('institution_id',user!.institutionId).eq('id',policyEditing.id):await supabase.from('institutional_records').insert({...values,created_by:user!.id})
       if(result.error)throw result.error

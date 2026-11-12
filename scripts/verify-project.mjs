@@ -33,7 +33,7 @@ const requiredFiles = [
   'src/components/AcademicManagementWorkspace.tsx', 'src/styles/academic-management.css',
   'src/components/AuthScreens.tsx', 'src/components/AdministrationModule.tsx',
   'src/components/RecordModule.tsx', 'src/components/FacultyWorkspace.tsx', 'src/styles/faculty-workspace.css', 'src/components/ReportsModule.tsx', 'src/components/ProfileModule.tsx', 'src/context/AuthContext.tsx', 'src/lib/auth.ts',
-  'src/lib/data.ts', 'src/lib/workspacePrivacy.js', 'src/lib/workspacePrivacy.d.ts', 'scripts/test-workspace-privacy.mjs', '.github/workflows/workspace-family-privacy.yml', 'docs/WORKSPACE_ROLE_PRIVACY.md', 'src/lib/displayPreferences.js', 'src/lib/displayPreferences.d.ts', 'src/styles/dashboard-display-settings.css', 'scripts/test-display-preferences.mjs', '.github/workflows/dashboard-display-preferences.yml', 'docs/STAGE_4_DASHBOARD_DISPLAY_MODES.md', 'src/lib/navigationAccess.ts', 'src/lib/userErrors.ts', 'scripts/test-user-errors.mjs',
+  'src/lib/data.ts', 'src/lib/workspacePrivacy.js', 'src/lib/workspacePrivacy.d.ts', 'scripts/test-workspace-privacy.mjs', '.github/workflows/workspace-family-privacy.yml', 'docs/WORKSPACE_ROLE_PRIVACY.md', 'supabase/migrations/20261112000100_institutional_record_review_isolation.sql', 'src/lib/displayPreferences.js', 'src/lib/displayPreferences.d.ts', 'src/styles/dashboard-display-settings.css', 'scripts/test-display-preferences.mjs', '.github/workflows/dashboard-display-preferences.yml', 'docs/STAGE_4_DASHBOARD_DISPLAY_MODES.md', 'src/lib/navigationAccess.ts', 'src/lib/userErrors.ts', 'scripts/test-user-errors.mjs',
   'src/lib/finance.ts', 'scripts/test-finance.mjs', 'src/lib/fileAccess.ts', 'scripts/test-file-access.mjs',
   'scripts/test-account-provisioning.mjs', 'supabase/functions/create-user/index.ts', 'supabase/functions/create-user/provisioning-guards.mjs', '.github/workflows/teacher-account-provisioning.yml', 'docs/TEACHER_ACCOUNT_LINK_INTEGRITY.md',
   'src/lib/navigationCatalog.ts', 'src/lib/navigationRoutes.ts', 'scripts/generate-navigation-route-audit.mjs', 'scripts/generate-route-view-audit.mjs', 'scripts/generate-responsive-source-audit.mjs', 'docs/PHASE_1_EXACT_ROUTE_AUDIT.md', 'docs/PHASE_1_ROUTE_VIEW_AUDIT.md', 'docs/PHASE_2_RESPONSIVE_SOURCE_AUDIT.md', 'src/components/NotificationCenter.tsx', 'src/styles/notification-center.css', 'public/_redirects', 'scripts/test-responsive-public.mjs', 'docs/PUBLIC_RESPONSIVE_QA.md',
@@ -247,6 +247,7 @@ check('Bulk attendance uses class registers with P A L marking and atomic saves'
 })
 check('Institutional workspace includes real record CRUD and office-compatible exports', () => {
   const workspace = read('src/components/InstitutionalWorkspace.tsx')
+  const adminWorkspace = read('src/components/AdministrationStage5Workspace.tsx')
   const exporters = read('src/lib/officeExport.ts')
   for (const value of ['institutional_records','created_by','updated_by','approval_status','CONTEXTUAL SUB-WINDOW']) assert.ok(workspace.includes(value))
   for (const value of ['exportXlsx','exportDocx','printOfficeReport']) assert.ok(workspace.includes(value))
@@ -271,6 +272,29 @@ check('Institutional registers and windows are tailored by workspace domain', ()
   for (const layout of ['academic','people','assessment','ledger','communication','resource','operations','governance','intelligence']) {
     assert.ok(styles.includes(`[data-workspace-layout="${layout}"]`), 'Distinct workspace surface is missing: ' + layout)
   }
+})
+
+check('Institutional approval metadata is isolated behind an owner/admin-only review relation', () => {
+  const migration = read('supabase/migrations/20261112000100_institutional_record_review_isolation.sql')
+  const workspace = read('src/components/InstitutionalWorkspace.tsx')
+  const adminWorkspace = read('src/components/AdministrationStage5Workspace.tsx')
+  for (const field of ['approval_status', 'reviewed_by', 'reviewed_at', 'review_notes']) {
+    assert.ok(migration.includes('drop column ' + field), 'Legacy approval metadata column is still on operational records: ' + field)
+  }
+  assert.ok(migration.includes('create table public.institutional_record_reviews'), 'Dedicated review relation is missing')
+  assert.ok(migration.includes('enable row level security'), 'Review relation must enforce RLS')
+  assert.ok(migration.includes("array['owner','admin']::text[]"), 'Review relation must be owner/admin-only')
+  assert.ok(migration.includes('private.audit_institutional_record_review'), 'Review changes must be audited')
+  assert.ok(migration.includes('save_institutional_record_with_review'), 'Admin saves must be atomic')
+  const saveRpcAt = migration.indexOf('create or replace function public.save_institutional_record_with_review')
+  const saveRpcEnd = migration.indexOf('$function$;', saveRpcAt)
+  const saveRpc = migration.slice(saveRpcAt, saveRpcEnd)
+  assert.ok(saveRpc.includes('security invoker') && !saveRpc.includes('security definer'), 'Admin save RPC must preserve caller RLS')
+  assert.ok(workspace.includes(".from('institutional_records').select('id,institution_id,campus_id"), 'Operational records must use an explicit safe projection')
+  assert.ok(!workspace.includes(".from('institutional_records').select('*')"), 'No broad institutional_records query may remain')
+  assert.ok(workspace.includes("supabase.from('institutional_record_reviews')"), 'Review metadata must be loaded from the isolated relation')
+  assert.ok(adminWorkspace.includes(".from('institutional_records').select('id,institution_id,module_key,record_type,title,reference_code,description,status,effective_date,payload,updated_at,created_at')"), 'Administration policy records must use a safe projection')
+  assert.ok(!adminWorkspace.includes("approval_status:'not_required'"), 'Administration policy writes must not use removed review columns')
 })
 
 check('Non-admin workspace projections remove all internal review metadata recursively', () => {
@@ -958,6 +982,7 @@ check('Required database safeguards and Cloudflare redirects remain in the proje
     '20261111170323_stage9_security_rubrics_and_policy_optimization.sql',
     '20261111170350_stage9_online_assessment_manual_review.sql',
     '20261111170921_stage9_weight_scope_validation.sql',
+    '20261112000100_institutional_record_review_isolation.sql',
     '20261111161307_stage5_administration_profile_campus_and_access_controls.sql',
     '20261111162254_stage_6_people_hr_and_payroll_controls.sql',
     '20261111162922_20261111193000_academic_sessions_active_members_read.sql',
@@ -977,8 +1002,9 @@ check('Required database safeguards and Cloudflare redirects remain in the proje
     assert.ok(migrations.includes(migration), `${migration} missing`)
   }
   const timestamped = migrations.filter(name => /^202611\d{8}_.+\.sql$/.test(name))
-  assert.equal(timestamped.length, 50, 'Expected fifty timestamped migrations including the Stage 9 assessment workflows')
-  assert.ok(read('supabase/migrations/README.md').includes('fifty timestamped migration files'))
+  assert.equal(timestamped.length, 51, 'Expected 50 applied migrations plus one staged institutional review-isolation migration')
+  assert.ok(read('supabase/migrations/README.md').includes('51 timestamped migration files'))
+  assert.ok(read('supabase/migrations/README.md').includes('one institutional-review isolation migration is staged but not yet applied'))
   assert.equal(read('public/_redirects').trim(), '/* /index.html 200')
   const envExample = read('.env.example')
   const gitignore = read('.gitignore')

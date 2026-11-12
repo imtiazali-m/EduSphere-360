@@ -1,6 +1,6 @@
 # Migration history
 
-The fifty timestamped migration files in this folder match the remote migration history recorded by the linked Supabase project. Keep each 14-digit timestamp unchanged so local and remote migration histories remain aligned.
+This folder contains 51 timestamped migration files: 50 versions are recorded in the linked Supabase project and one institutional-review isolation migration is staged but not yet applied. Keep each 14-digit timestamp unchanged so local and remote migration histories remain aligned. Do not apply the staged migration until it has passed a development-branch database test.
 
 The current online application includes the reviewed schema changes for the existing live schema, Faculty & Employee Management, and Student Management operations (admission lifecycle, linked guardian contacts, class placements, private student documents and audit history for attendance, published results, assignment submissions, guardian policy consolidation and activity indexes). The Student Management and Faculty/Employee migrations have already been applied to the linked project; do not replay them manually.
 
@@ -48,3 +48,10 @@ The atomic transport allocation migration adds database-side creation and end-al
 
 
 The Stage 5 administration, Stage 6 people/HR, Stage 7 attendance/leave/wellbeing, Stage 8 academic-management, and Stage 9 assessment-weight migrations have been restored from the linked Supabase project's recorded migration statements. Filenames use the exact remote migration versions; these files document already-applied schema changes and must not be replayed manually against the linked production database.
+
+
+## Staged, not applied
+
+`20261112000100_institutional_record_review_isolation.sql` moves approval status, reviewer identity, review timestamp and internal review notes out of portal-visible `institutional_records` and into the tenant-scoped, owner/admin-only `institutional_record_reviews` relation. It backfills existing review metadata before dropping the legacy columns, adds audit triggers, and provides an owner/admin-checked SECURITY INVOKER RPC for atomic record/review saves, preserving caller RLS; only the private audit trigger uses definer privileges.
+
+This migration is **not recorded as applied** in the linked Supabase project. The live project currently has 50 applied migration versions; this file is the 51st repository migration and is staged only. Do not merge into a deployable release or apply to the linked project until the migration has been tested against a separate development database branch and its RLS/API behavior has been verified.
