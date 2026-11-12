@@ -99,7 +99,7 @@ export const institutionalMenu:WorkspaceMenuGroup[]=[
   'Reconciliation Dashboard','Financial Reconciliation','Bank Reconciliation','Cash Reconciliation','Payment Reconciliation','Fee Collection Reconciliation','Transaction Verification','Audit Logs','Administrative Audit','User Activity Logs','Access History','Change History','Audit Reports'
  ]),
  group('communication','Communication and WhatsApp','Role-targeted notices, message templates, notification centre, delivery history and approved messaging integrations.','MessageSquare','sky','communication',all,[
-  'Communication Dashboard','WhatsApp Integration','Individual Messages','Bulk Messages','Class-wise Messaging','Employee Notifications','Message Templates','Assignment Notifications','Email Notifications','Delivery History','Communication Logs','Notification Centre','Communication Reports'
+  'Communication Dashboard','WhatsApp Integration','Individual Messages','Bulk Messages','Class-wise Messaging','Employee Notifications','Message Templates','Assignment Notifications','Email Notifications','Delivery History','Communication Logs','Notification Centre','Communication Reports','Internal Messages','Parent Communication','Circulars & Notices','Reception & Enquiries','Events & Activities','Complaints & Helpdesk'
  ]),
  group('transport','Transport Management','Vehicles, drivers, route stops, student allocations, transport attendance, fees and maintenance.','Database','orange','transport',management.concat(['teacher','student','parent','accountant']),[
   'Transport Dashboard','Vehicle Management','Drivers Management','Transport Routes','Route Stops','Student Transport Allocation','Transport Fees','Transport Assignments','Vehicle Maintenance','Transport Attendance','Transport History','Transport Reports'
@@ -112,6 +112,30 @@ export const institutionalMenu:WorkspaceMenuGroup[]=[
  ]),
  group('visitors','Visitor Management','Visitor registration, passes, approvals, entry/exit records, notifications and history.','UserRound','slate','visitors',management.concat(['teacher']),[
   'Visitor Dashboard','Visitor Registration','Visitor Information','Visitor Passes','Entry and Exit Records','Visitor Approvals','Visit History','Visitor Notifications','Visitor Reports'
+ ]),
+ group('front-office','Front Office & Institutional Activities','Reception enquiries, visitor coordination, parent contact, circulars, events and helpdesk requests.','MessageSquare','sky','front_office',management.concat(['teacher']),[
+  'Reception & Enquiries','Parent Communication','Internal Messages','Circulars & Notices','Events & Activities','Visitor Management','Complaints & Helpdesk'
+ ]),
+ group('forms-documents','Forms, Documents & Data Management','Digital forms, submissions, institutional documents, verification and controlled data exchange.','FileText','indigo','forms_documents',management.concat(['teacher','student','parent']),[
+  'Form Builder','Form Submissions','Document Records','Letters & Applications','Document Templates','Document Verification','Data Import','Data Export','Data Validation','Duplicate Detection','Integration Status'
+ ]),
+ group('hostel','Hostel & Accommodation','Optional residence facilities, room inventory, bed allocation, resident history and accommodation charges.','Building2','slate','hostel',management.concat(['teacher','student','parent','accountant']),[
+  'Hostel Dashboard','Hostel Buildings','Room & Bed Register','Resident Allocation','Room Transfers','Check-in & Check-out','Visitor Register','Hostel Fees','Maintenance Requests','Occupancy Reports'
+ ]),
+ group('cafeteria','Cafeteria & Canteen','Optional meal services, menus, sales, stock usage and permitted student/staff transactions.','Wallet','amber','cafeteria',management.concat(['teacher','accountant']),[
+  'Cafeteria Dashboard','Menu & Price List','Daily Availability','Sales Transactions','Meal Plans','Cafeteria Inventory','Supplier Records','Cafeteria Reports'
+ ]),
+ group('assets','Asset Management','Institution-owned assets, assignment, movement, maintenance, warranty and disposal history.','Database','teal','assets',management.concat(['teacher','accountant']),[
+  'Asset Dashboard','Asset Register','Asset Categories','Asset Assignment','Asset Transfers','Maintenance History','Warranty Register','Asset Disposal','Asset Reports'
+ ]),
+ group('procurement','Procurement & Purchasing','Purchase requests, suppliers, quotations, approvals, purchase orders and receiving records.','ClipboardList','orange','procurement',management.concat(['accountant']),[
+  'Procurement Dashboard','Supplier Directory','Purchase Requests','Quotation Comparison','Purchase Approvals','Purchase Orders','Goods Receipt','Supplier Invoices','Procurement Reports'
+ ]),
+ group('sports','Sports & Extracurricular Activities','Optional co-curricular activities, teams, schedules, supervisors, participation and achievements.','Award','green','sports',management.concat(['teacher','student','parent']),[
+  'Activities Dashboard','Activity Directory','Sports & Clubs','Teams & Members','Coaches & Supervisors','Schedules & Venues','Participation Records','Competitions & Results','Achievements','Activity Reports'
+ ]),
+ group('my-account','My Account & Personal Workspace','Personal profile, account preferences, notification choices, recent personal activity and help.','UserRound','blue','my_account',all,[
+  'My Profile','Account Settings','Notification Settings','My Activity','Help & Support'
  ]),
  group('reports','Reports and Analytics','Role-scoped live reports, custom builders, comparisons, scheduled runs and export history.','BarChart3','blue','reports',management.concat(['teacher','accountant','exam_officer']),[
   'Reports Dashboard','Student Reports','Employee Reports','Attendance Reports','Examination Reports','Academic Reports','Fee Reports','Payroll Reports','Financial Reports','Class Reports','Comparative Analytics','Custom Report Builder','Scheduled Reports','Report Templates','Report History'
