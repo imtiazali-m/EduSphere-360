@@ -113,6 +113,9 @@ check('The full institutional menu maps every submenu to a working destination',
     'examinations:examination-programs','examinations:examination-timetable','examinations:question-bank',
     'examinations:online-tests-and-quizzes','examinations:marks-entry','examinations:grades-and-grading-system',
     'examinations:results-and-result-approval','examinations:report-cards','examinations:examination-reports',
+    // AI question-generation opens the dedicated examination question-bank workspace;
+    // it does not write to the generic institutional-records table.
+    'ai:ai-question-generation',
   ])
   for (const group of navigationCatalog) {
     for (const page of group.items) {
@@ -125,6 +128,7 @@ check('The full institutional menu maps every submenu to a working destination',
       }
     }
   }
+  assert.equal(getNavigationRoute('ai', 'AI Question Generation'), 'institutional:examinations:question-bank', 'AI question generation shortcut must open the dedicated assessment question-bank workspace')
   assert.equal(getNavigationRoute('reports', 'Student Reports'), 'reports:students', 'Student reports must open the student report window')
   assert.equal(getNavigationRoute('reports', 'Attendance Reports'), 'reports:attendance', 'Attendance reports must open the attendance report window')
   assert.equal(getNavigationRoute('teaching', 'Homework'), 'assignments:open', 'Homework must open the open-coursework view')
