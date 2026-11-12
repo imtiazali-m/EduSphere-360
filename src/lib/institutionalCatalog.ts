@@ -99,7 +99,7 @@ export const institutionalMenu:WorkspaceMenuGroup[]=[
   'Reconciliation Dashboard','Financial Reconciliation','Bank Reconciliation','Cash Reconciliation','Payment Reconciliation','Fee Collection Reconciliation','Transaction Verification','Audit Logs','Administrative Audit','User Activity Logs','Access History','Change History','Audit Reports'
  ]),
  group('communication','Communication and WhatsApp','Role-targeted notices, message templates, notification centre, delivery history and approved messaging integrations.','MessageSquare','sky','communication',all,[
-  'Communication Dashboard','WhatsApp Integration','Individual Messages','Bulk Messages','Class-wise Messaging','Employee Notifications','Message Templates','Assignment Notifications','Email Notifications','Delivery History','Communication Logs','Notification Centre','Communication Reports','Internal Messages','Parent Communication','Circulars & Notices','Reception & Enquiries','Events & Activities','Complaints & Helpdesk'
+  'Communication Dashboard','WhatsApp Integration','Individual Messages','Bulk Messages','Class-wise Messaging','Employee Notifications','Message Templates','Assignment Notifications','Email Notifications','Delivery History','Communication Logs','Notification Centre','Communication Reports'
  ]),
  group('transport','Transport Management','Vehicles, drivers, route stops, student allocations, transport attendance, fees and maintenance.','Database','orange','transport',management.concat(['teacher','student','parent','accountant']),[
   'Transport Dashboard','Vehicle Management','Drivers Management','Transport Routes','Route Stops','Student Transport Allocation','Transport Fees','Transport Assignments','Vehicle Maintenance','Transport Attendance','Transport History','Transport Reports'
@@ -114,7 +114,7 @@ export const institutionalMenu:WorkspaceMenuGroup[]=[
   'Visitor Dashboard','Visitor Registration','Visitor Information','Visitor Passes','Entry and Exit Records','Visitor Approvals','Visit History','Visitor Notifications','Visitor Reports'
  ]),
  group('front-office','Front Office & Institutional Activities','Reception enquiries, visitor coordination, parent contact, circulars, events and helpdesk requests.','MessageSquare','sky','front_office',management.concat(['teacher']),[
-  'Reception & Enquiries','Parent Communication','Internal Messages','Circulars & Notices','Events & Activities','Visitor Management','Complaints & Helpdesk'
+  'Reception & Enquiries','Parent Communication','Internal Messages','Circulars & Notices','Events & Activities','Complaints & Helpdesk'
  ]),
  group('forms-documents','Forms, Documents & Data Management','Digital forms, submissions, institutional documents, verification and controlled data exchange.','FileText','indigo','forms_documents',management.concat(['teacher','student','parent']),[
   'Form Builder','Form Submissions','Document Records','Letters & Applications','Document Templates','Document Verification','Data Import','Data Export','Data Validation','Duplicate Detection','Integration Status'
