@@ -277,6 +277,7 @@ check('Institutional registers and windows are tailored by workspace domain', ()
 check('Institutional approval metadata is isolated behind an owner/admin-only review relation', () => {
   const migration = read('supabase/migrations/20261112000100_institutional_record_review_isolation.sql')
   const workspace = read('src/components/InstitutionalWorkspace.tsx')
+  const adminWorkspace = read('src/components/AdministrationStage5Workspace.tsx')
   for (const field of ['approval_status', 'reviewed_by', 'reviewed_at', 'review_notes']) {
     assert.ok(migration.includes('drop column ' + field), 'Legacy approval metadata column is still on operational records: ' + field)
   }
