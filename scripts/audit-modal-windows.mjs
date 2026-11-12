@@ -28,7 +28,7 @@ const checks = [
   ['responsive breakpoints and reduced-motion preferences remain defined', refresh.includes('@media(max-width:680px)') && refresh.includes('@media(prefers-reduced-motion:reduce)')],
   ['workspace windows use one canonical tab identity per destination', dashboard.includes('const id = key') && dashboard.includes('const parentId = options.parentId && options.parentId !== id ? options.parentId : undefined')],
   ['opening a workspace cannot make a window its own parent', dashboard.includes('options.parentId !== id')],
-  ['active menu state follows the selected destination, including child navigation', dashboard.includes('activeTab.route === route')],
+  ['active menu state highlights only the exact selected submenu, including child navigation', dashboard.includes('activeNavigationTab.groupKey === group.key && activeNavigationTab.itemKey === itemKey') && !dashboard.includes('activeTab.route === route')],
   ['active menu state follows the parent workspace context for nested child windows', dashboard.includes('const activeNavigationTab = (() =>') && dashboard.includes('activeNavigationTab.groupKey === group.key')],
   ['collapsed sidebar disclosure expands before showing the selected submenu', dashboard.includes('if (compactSidebar) {') && dashboard.includes('setExpandedGroups(current => current.includes(group.key) ? current : [...current, group.key])')],
   ['open-window tab bar and active-workspace context strip are permanently removed', !dashboard.includes('className="pro-workspace-tabs"') && !dashboard.includes('className="pro-active-workspace-context"')],
