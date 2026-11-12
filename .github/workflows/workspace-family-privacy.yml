@@ -7,6 +7,7 @@ on:
       - 'src/lib/workspacePrivacy.js'
       - 'src/lib/workspacePrivacy.d.ts'
       - 'scripts/test-workspace-privacy.mjs'
+      - 'docs/WORKSPACE_ROLE_PRIVACY.md'
       - 'scripts/verify-project.mjs'
       - 'package.json'
       - '.github/workflows/workspace-family-privacy.yml'
