@@ -1,4 +1,4 @@
-import { ArrowLeft, Construction, Database, ShieldCheck } from 'lucide-react'
+import { ArrowLeft, Sparkles, ShieldCheck } from 'lucide-react'
 import { getWorkspaceGroup, getWorkspaceItem } from '../lib/institutionalCatalog'
 
 interface Props {
@@ -49,27 +49,19 @@ export function WorkspaceUnavailable({ groupKey, itemKey, onNavigate }: Props) {
         ? 'Use the institution bulletin and notification centre for supported in-app notices.'
         : 'Your institution data is not changed by opening this screen.'
 
-  return <main className="page-content ed360-module-page" style={{ maxWidth: 1100, margin: '0 auto', padding: 32 }}>
-    <header style={{ display: 'flex', alignItems: 'center', gap: 18, marginBottom: 28 }}>
-      <span style={{ width: 52, height: 52, borderRadius: 16, display: 'grid', placeItems: 'center', background: '#edf2fb', color: '#315b9b' }}><Construction size={24}/></span>
-      <div>
-        <div className="eyebrow">{group?.label ?? groupKey} / WORKSPACE STATUS</div>
-        <h1 style={{ margin: '5px 0', fontSize: 30 }}>{title}</h1>
-        <p style={{ margin: 0, color: 'var(--muted, #64748b)' }}>{description}</p>
+  return <main className="page-content ed360-module-page es-feature-state">
+    <section className="es-feature-state-card">
+      <div className="es-feature-state-orbit"><Sparkles size={25}/></div>
+      <div className="es-feature-state-copy">
+        <span className="es-feature-eyebrow">{group?.label ?? 'Institution workspace'}</span>
+        <h1>{title}</h1>
+        <p>{description}</p>
+        <div className="es-feature-state-status"><span/> Feature setup in progress</div>
+        <p className="es-feature-state-detail">{reason}</p>
+        <div className="es-feature-state-note"><ShieldCheck size={18}/><span>{alternative} No sample records or unrelated data are created here.</span></div>
+        <button type="button" className="es-feature-state-back" onClick={() => onNavigate('overview')}><ArrowLeft size={16}/> Back to dashboard</button>
       </div>
-    </header>
-    <section className="table-card" style={{ padding: 28, borderRadius: 18 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#9a6515', fontWeight: 700, marginBottom: 12 }}>
-        <Database size={18}/> Dedicated workflow connection required
-      </div>
-      <p style={{ maxWidth: 760, lineHeight: 1.65, color: 'var(--text-secondary, #536173)' }}>
-        {reason} It will not display invented sample records or save unrelated entries in a generic record store.
-      </p>
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: 16, borderRadius: 12, background: '#f3f7fb', color: '#40536b', margin: '20px 0' }}>
-        <ShieldCheck size={18} style={{ flexShrink: 0, marginTop: 2 }}/>
-        <span style={{ lineHeight: 1.55 }}>{alternative} Existing supported workspaces remain available from the main navigation.</span>
-      </div>
-      <button type="button" className="button button-outline" onClick={() => onNavigate('overview')}><ArrowLeft size={15}/> Return to dashboard</button>
+      <div className="es-feature-state-art" aria-hidden="true"><div className="es-feature-art-ring ring-one"/><div className="es-feature-art-ring ring-two"/><div className="es-feature-art-core"><Sparkles size={42}/></div><span className="es-art-dot dot-one"/><span className="es-art-dot dot-two"/><span className="es-art-dot dot-three"/></div>
     </section>
   </main>
 }
