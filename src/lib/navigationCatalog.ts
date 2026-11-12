@@ -113,9 +113,9 @@ export const navigationSectionDefinitions:NavigationSectionDefinition[]=[
   {key:'people',label:'People & Human Resources',groupKeys:['people-hr','attendance','behaviour','certificates']},
   {key:'academics',label:'Academic Delivery',groupKeys:['academic-management','question-bank','examinations','class-tests','library']},
   {key:'finance',label:'Finance & Payroll',groupKeys:['accounts-finance','fees','receivables','payments','receipts','reconciliation']},
-  {key:'communication',label:'Communication',groupKeys:['communication','front-office']},
+  {key:'communication',label:'Communication',groupKeys:['communication','front-office','visitors']},
   {key:'personal',label:'My Workspace',groupKeys:['my-account']},
-  {key:'campus',label:'Campus Operations',groupKeys:['transport','inventory','facilities','visitors','hostel','cafeteria','assets','procurement','sports']},
+  {key:'campus',label:'Campus Operations',groupKeys:['transport','inventory','facilities','hostel','cafeteria','assets','procurement','sports']},
   {key:'intelligence',label:'Reports & Intelligence',groupKeys:['reports','forms-documents','ai']},
 ]
 const navigationGroupOrder=new Map<string,number>(
