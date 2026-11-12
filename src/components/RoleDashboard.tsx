@@ -9,6 +9,7 @@ import {
 import type { LucideIcon } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { listRecords } from '../lib/data'
+import { supabase } from '../lib/supabase'
 import { outstandingInvoiceBalance } from '../lib/finance'
 import { userFacingError } from '../lib/userErrors'
 import { roleLabels } from '../lib/modules'
@@ -232,6 +233,8 @@ export function RoleDashboard({ onNavigate }: Props) {
   const [data, setData] = useState<Dataset>({})
   const [errors, setErrors] = useState<Errors>({})
   const [loading, setLoading] = useState(true)
+  const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(null)
+  const [realtimeStatus, setRealtimeStatus] = useState<'connecting' | 'live' | 'polling'>('connecting')
   const today = localDayKey(new Date())
   const role = user?.role ?? 'student'
 
@@ -239,9 +242,11 @@ export function RoleDashboard({ onNavigate }: Props) {
     if (!user) return
     const activeUser = user
     let live = true
-    async function load() {
-      setLoading(true)
-      setErrors({})
+    let loadedOnce = false
+    let refreshTimer: number | undefined
+    let debounceTimer: number | undefined
+    async function load(showLoading = false) {
+      if (showLoading || !loadedOnce) setLoading(true)
       const entries = await Promise.all(TABLES_BY_ROLE[activeUser.role].map(async table => {
         try {
           return [table, await listRecords(mode, activeUser, table), null] as const
@@ -254,9 +259,41 @@ export function RoleDashboard({ onNavigate }: Props) {
       setData(Object.fromEntries(entries.map(([table, records]) => [table, records])))
       setErrors(Object.fromEntries(entries.filter(([, , error]) => error).map(([table, , error]) => [table, String(error)])))
       setLoading(false)
+      setLastSyncedAt(new Date())
+      loadedOnce = true
     }
-    void load()
-    return () => { live = false }
+    const refreshFromDatabaseEvent = () => {
+      window.clearTimeout(debounceTimer)
+      debounceTimer = window.setTimeout(() => { void load(false) }, 350)
+    }
+    void load(true)
+
+    const channel = supabase?.channel('ed360-dashboard-' + activeUser.institutionId + '-' + activeUser.id)
+    if (channel) {
+      TABLES_BY_ROLE[activeUser.role].forEach(table => {
+        channel.on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table,
+          filter: 'institution_id=eq.' + activeUser.institutionId,
+        }, refreshFromDatabaseEvent)
+      })
+      channel.subscribe(status => {
+        if (live) setRealtimeStatus(status === 'SUBSCRIBED' ? 'live' : 'polling')
+      })
+    } else {
+      setRealtimeStatus('polling')
+    }
+
+    // A one-minute fallback keeps the dashboard fresh if Realtime is not enabled
+    // for a table in the institution's Supabase publication.
+    refreshTimer = window.setInterval(() => { void load(false) }, 60000)
+    return () => {
+      live = false
+      window.clearInterval(refreshTimer)
+      window.clearTimeout(debounceTimer)
+      if (channel && supabase) void supabase.removeChannel(channel)
+    }
   }, [mode, user?.id, user?.institutionId, user?.role])
 
   const known = (...tables: string[]) => tables.every(table => !errors[table] && Object.prototype.hasOwnProperty.call(data, table))
@@ -300,7 +337,7 @@ export function RoleDashboard({ onNavigate }: Props) {
   const performance = averageResult(publishedResults)
 
   const headingByRole: Record<AppRole, { eyebrow: string; title: string; subtitle: string }> = {
-    owner: { eyebrow: 'INSTITUTION COMMAND CENTRE', title: 'Institution overview', subtitle: 'A live view of institutional performance, financial position and the work that needs attention.' },
+    owner: { eyebrow: 'GLOBAL INSTITUTION OVERSIGHT', title: 'Institution dashboard', subtitle: 'Monitor performance across campuses, review financial health and act on the work that needs attention.' },
     admin: { eyebrow: 'ADMINISTRATION WORKSPACE', title: 'Operations overview', subtitle: 'Admissions, people, attendance, approvals and the daily running of your institution.' },
     accountant: { eyebrow: 'FINANCE WORKSPACE', title: 'Finance overview', subtitle: 'Collections, receivables, receipts and the month’s posted financial activity.' },
     teacher: { eyebrow: 'TEACHING WORKSPACE', title: 'Your teaching day', subtitle: 'Your assigned classes, timetable, attendance work and learning activities.' },
@@ -310,6 +347,15 @@ export function RoleDashboard({ onNavigate }: Props) {
   }
 
   const heading = headingByRole[role]
+  const primaryAction: Record<AppRole, { label: string; route: string }> = {
+    owner: { label: 'Add student', route: 'students:admissions' },
+    admin: { label: 'Add student', route: 'students:admissions' },
+    accountant: { label: 'Record payment', route: 'finance:fees:payments' },
+    teacher: { label: 'Mark attendance', route: 'attendance:students' },
+    student: { label: 'View timetable', route: 'timetable:week' },
+    parent: { label: 'View attendance', route: 'attendance:students' },
+    exam_officer: { label: 'Review results', route: 'exam_results:all' },
+  }
   const sessionCaption = currentSessionLabel
   const pendingDuesCaption = known('fee_invoices') ? formatCount(outstandingCount) + ' invoices with a balance' : 'Invoice data unavailable'
   const metrics: Array<{ label: string; value: string; hint: string; icon: LucideIcon; tone: string; route?: string }> = []
@@ -770,7 +816,9 @@ export function RoleDashboard({ onNavigate }: Props) {
       <div className="rd-heading-meta">
         <span className="rd-role-chip">{roleLabels[role]}</span>
         <span className="rd-session-chip"><CalendarDays size={14}/>{sessionCaption}</span>
-        <span className="rd-date-chip"><Clock3 size={14}/>{now.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</span>
+        <span className="rd-date-chip"><Clock3 size={14}/>{lastSyncedAt ? 'Updated ' + lastSyncedAt.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }) : now.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })}</span>
+        <span className="rd-live-chip" aria-live="polite"><i className={realtimeStatus === 'live' ? 'is-live' : ''}/>{realtimeStatus === 'live' ? 'Live updates' : realtimeStatus === 'connecting' ? 'Connecting' : 'Auto refresh'}</span>
+        <button type="button" className="rd-header-cta" onClick={() => onNavigate(primaryAction[role].route)}>{primaryAction[role].label}</button>
       </div>
     </header>
     {errors && Object.keys(errors).length > 0 && <div className="rd-data-warning" role="status"><CircleAlert size={16}/><span>Some live sections could not be loaded. Unavailable figures are shown as a dash rather than being reported as zero.</span></div>}
