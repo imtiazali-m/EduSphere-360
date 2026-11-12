@@ -42,7 +42,7 @@ const classify = (route) => {
     'admin', 'assignments', 'assignment_submissions', 'attendance', 'announcements',
     'employees', 'exam_results', 'exams', 'fees', 'finance', 'files', 'governance',
     'academic', 'care', 'peoplehr', 'notifications', 'operations', 'overview', 'payroll', 'reports', 'students',
-    'timetable', 'work_tasks', 'personal', 'assistant',
+    'timetable', 'work_tasks', 'personal', 'assistant', 'frontoffice',
   ])
   if (!known.has(workspace)) return 'Unexpected route family · investigate'
   if (rootRoute && !intentionalRootRoutes.has(route)) return 'Bare module root · confirm the intended default window'
@@ -81,6 +81,7 @@ const resolveDispatcher = (route) => {
   if (route === 'files') return 'FilesModule'
   if (route === 'profile') return 'ProfileModule'
   if (route.startsWith('personal:')) return 'PersonalWorkspace'
+  if (route.startsWith('frontoffice:')) return 'FrontOfficeWorkspace'
   if (route.startsWith('assistant:')) return 'AIAssistantWorkspace'
   if (route === 'assistant') return 'AIAssistantWorkspace'
   if (route === 'teachers') return 'FacultyWorkspace'
