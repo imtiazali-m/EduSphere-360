@@ -245,7 +245,7 @@ export function LinkedOperationsWorkspace({workspaceKey,onToast,onNavigate}:Prop
  async function saveCampus(event:FormEvent){
   event.preventDefault();if(!supabase||!user||!canAdmin)return
   if(!campusName.trim()){onToast('Campus name is required.',true);return}
-  if(campusEmail&&!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(campusEmail.trim())){onToast('Enter a valid campus email address.',true);return}
+  if(campusEmail&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(campusEmail.trim())){onToast('Enter a valid campus email address.',true);return}
   let academicSettings:Record<string,unknown>,operationalSettings:Record<string,unknown>
   try{
    const academic=JSON.parse(campusAcademicSettings||'{}'),operational=JSON.parse(campusOperationalSettings||'{}')
