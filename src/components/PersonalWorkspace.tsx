@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { Activity, Bell, CheckCircle2, CircleHelp, KeyRound, Save, ShieldCheck, UserRound, X } from 'lucide-react'
+import { Activity, Bell, CircleHelp, KeyRound, Save, ShieldCheck, UserRound } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import '../styles/personal-workspace.css'
