@@ -15,7 +15,7 @@ export function AIAssistantWorkspace(){
  const [showReadiness,setShowReadiness]=useState(false)
  return <main className="ed360-ai-workspace">
   <header className="ed360-ai-header">
-   <div className="ed360-ai-brand"><span><BrainCircuit size={21}/></span><div><small>STAGE 14 / INSTITUTIONAL INTELLIGENCE</small><h1>AI Assistant</h1><p>Assistance for authorised institution work.</p></div></div>
+   <div className="ed360-ai-brand"><span><BrainCircuit size={21}/></span><div><small>EDUSPHERE 360 INTELLIGENCE</small><h1>AI Assistant</h1><p>Assistance for authorised institution work.</p></div></div>
    <div className="ed360-ai-status"><i/> AI service not connected</div>
   </header>
   <div className="ed360-ai-layout">
