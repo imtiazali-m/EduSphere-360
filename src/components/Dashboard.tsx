@@ -25,6 +25,7 @@ import AdministrationModule from './AdministrationModule'
 import { ReportsModule } from './ReportsModule'
 import { ProfileModule } from './ProfileModule'
 import { PersonalWorkspace } from './PersonalWorkspace'
+import { AIAssistantWorkspace } from './AIAssistantWorkspace'
 import { FacultyWorkspace } from './FacultyWorkspace'
 import { institutionalMenu } from '../lib/institutionalCatalog'
 import { InstitutionalWorkspace } from './InstitutionalWorkspace'
@@ -776,6 +777,7 @@ export function Dashboard({ onToast }: Props) {
       else if (targetKey === 'payroll') title = 'Salary and Payroll'
       else if (targetKey === 'peoplehr') title = 'People Management & Human Resources'
       else if (targetKey === 'personal') title = 'My Workspace'
+      else if (targetKey === 'assistant') title = 'AI Assistant'
       else if (targetKey === 'governance') title = 'Institution Governance'
       else if (targetKey === 'operations') title = 'Institution Operations'
       else if (targetKey.startsWith('admin:')) {
@@ -995,6 +997,7 @@ export function Dashboard({ onToast }: Props) {
                 tab.targetKey === 'peoplehr' ? <PeopleHRWorkspace initialWindow={tab.targetWindow} onToast={onToast} onNavigate={navigateChild}/> :
                 tab.targetKey === 'governance' ? <GovernanceWorkspace initialWindow={tab.targetWindow} onToast={onToast} onNavigate={navigateChild}/> :
                 tab.targetKey === 'operations' ? <InstitutionOperationsWorkspace workspaceKey={tab.targetWindow} initialWindow={tab.targetWindow.split(':')[1]} onToast={onToast}/> :
+                tab.targetKey === 'assistant' ? <AIAssistantWorkspace/> :
                 tab.targetKey === 'personal' ? <PersonalWorkspace initialWindow={tab.targetWindow} onToast={onToast} onNavigate={navigateChild}/> :
                 tab.targetKey === 'profile' ? <ProfileModule/> :
                 tab.targetKey === 'teachers' ? <FacultyWorkspace onToast={onToast} onNavigate={navigateChild} initialWindow={tab.targetWindow}/> :
