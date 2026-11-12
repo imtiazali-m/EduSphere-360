@@ -22,13 +22,8 @@ const group=(key:string,label:string,description:string,icon:string,theme:string
 })
 
 export const institutionalMenu:WorkspaceMenuGroup[]=[
- group('dashboard','Dashboard','Institution-wide live overview, date filters, approvals, calendar, alerts and verified KPIs.','LayoutDashboard','blue','',all,[
-  'Institutional Overview','Academic Overview','Financial Overview','Attendance Overview','Student Performance','Student Behaviour','Employee Performance','Statistics and KPI Cards','Charts and Comparative Analytics','Calendar and Events','Notification Centre','Tasks and Reminders','Pending Approvals','Recent Activities','Institutional Alerts',
-  'My Profile',
-  'Account Settings',
-  'Notification Settings',
-  'My Activity',
-  'Help & Support'
+ group('dashboard','Dashboard','Your single overview for live KPIs, campus performance, approvals, audit activity and institutional health.','LayoutDashboard','blue','',all,[
+  'Institutional Overview'
  ]),
  group('administration','Administration','Institution identity, organisational structure, policies, approvals and access control.','Building2','slate','administration',management,[
   'Institute Profile','Campus and Branch Management','Academic Structure & Sections','Departments & Designations','Organisational Structure','System Configuration','Approval Workflows','Policies & Rules','Administrative Audit','User Access & Invitations','Role & Permission Management','Institute Settings','Branding & Document Settings','Security & Access History'
