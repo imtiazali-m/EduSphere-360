@@ -152,7 +152,7 @@ export function Stage7CareWorkspace({initialWindow='leave',onToast}:{initialWind
         if(access.error)throw access.error
         setCareAccessRows((access.data??[]) as RecordRow[])
       }else setCareAccessRows([])
-    }catch(error){setLoadError(message(error,'The Stage 7 workspace could not load its permitted records.'));setStudents([]);setEmployees([])}
+    }catch(error){setLoadError(message(error,'The student care workspace could not load its permitted records.'));setStudents([]);setEmployees([])}
     finally{setLoading(false)}
   },[user?.id,user?.institutionId,user?.role,isAdmin])
 
@@ -238,7 +238,7 @@ export function Stage7CareWorkspace({initialWindow='leave',onToast}:{initialWind
         if(activeWindow==='discipline'&&canRead('discipline'))await loadDiscipline()
         if(activeWindow==='counselling')await loadCounselling()
         if(activeWindow==='health')await loadHealth()
-      }catch(error){setLoadError(message(error,'The selected Stage 7 records could not be loaded.'))}
+      }catch(error){setLoadError(message(error,'The selected student care records could not be loaded.'))}
     }
     void run()
   },[user?.id,user?.institutionId,activeWindow,refreshKey,loadLeave,loadReports,loadDiscipline,loadCounselling,loadHealth,grants])
@@ -443,7 +443,7 @@ export function Stage7CareWorkspace({initialWindow='leave',onToast}:{initialWind
   }
 
   if(!user)return null
-  if(loading)return <main className="page-content s7-page"><div className="s7-empty">Loading your permitted Stage 7 workspace…</div></main>
+  if(loading)return <main className="page-content s7-page"><div className="s7-empty">Loading your permitted student care workspace…</div></main>
   const pageTitle:Record<WindowKey,string>={leave:'Leave Management',reports:'Attendance Reports',discipline:'Student Discipline',counselling:'Student Counselling & Wellbeing',health:'Health & Emergency Records'}
   const pageIntro:Record<WindowKey,string>={
     leave:'Submit, review and track student and employee leave applications.',
