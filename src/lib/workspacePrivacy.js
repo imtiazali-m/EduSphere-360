@@ -1,4 +1,4 @@
-const INTERNAL_REVIEW_FIELDS = new Set(['approval_status', 'reviewed_by', 'reviewed_at'])
+const INTERNAL_REVIEW_FIELDS = new Set(['approval_status', 'reviewed_by', 'reviewed_at', 'review_notes'])
 const REVIEW_STATES = ['draft', 'pending', 'in_progress', 'approved', 'published', 'completed', 'cancelled']
 const PRIVILEGED_ROLES = new Set(['owner', 'admin'])
 
