@@ -81,6 +81,7 @@ const resolveDispatcher = (route) => {
   if (route === 'files') return 'FilesModule'
   if (route === 'profile') return 'ProfileModule'
   if (route.startsWith('personal:')) return 'PersonalWorkspace'
+  if (route.startsWith('assistant:')) return 'AIAssistantWorkspace'
   if (route === 'assistant') return 'AIAssistantWorkspace'
   if (route === 'teachers') return 'FacultyWorkspace'
   if (route.startsWith('academic:')) return 'AcademicManagementWorkspace'
