@@ -24,6 +24,7 @@ check('Vite development and production scripts exist', () => {
   assert.equal(packageJson.scripts['test:display-preferences'], 'node --test scripts/test-display-preferences.mjs')
   assert.equal(packageJson.scripts['test:work-task-identity'], 'node --test scripts/test-work-task-identity.mjs')
   assert.equal(packageJson.scripts['test:legacy-fee-payment-rpc'], 'node --test scripts/test-legacy-fee-payment-rpc.mjs')
+  assert.equal(packageJson.scripts['test:internal-function-exposure'], 'node --test scripts/test-internal-function-exposure.mjs')
 })
 
 const requiredFiles = [
@@ -35,7 +36,7 @@ const requiredFiles = [
   'src/components/AcademicManagementWorkspace.tsx', 'src/styles/academic-management.css',
   'src/components/AuthScreens.tsx', 'src/components/AdministrationModule.tsx',
   'src/components/RecordModule.tsx', 'src/components/FacultyWorkspace.tsx', 'src/styles/faculty-workspace.css', 'src/components/ReportsModule.tsx', 'src/components/ProfileModule.tsx', 'src/context/AuthContext.tsx', 'src/lib/auth.ts',
-  'src/lib/data.ts', 'src/lib/workspacePrivacy.js', 'src/lib/workspacePrivacy.d.ts', 'scripts/test-workspace-privacy.mjs', '.github/workflows/workspace-family-privacy.yml', 'docs/WORKSPACE_ROLE_PRIVACY.md', 'supabase/migrations/20261112000100_institutional_record_review_isolation.sql', 'src/lib/workTaskAccess.js', 'src/lib/workTaskAccess.d.ts', 'scripts/test-work-task-identity.mjs', 'scripts/test-legacy-fee-payment-rpc.mjs', '.github/workflows/work-task-identity.yml', '.github/workflows/legacy-fee-payment-rpc.yml', 'docs/WORK_TASK_STABLE_IDENTITY.md', 'docs/FEE_PAYMENT_RPC_COMPATIBILITY.md', 'supabase/migrations/20261112000200_work_task_stable_assignee_identity.sql', 'supabase/migrations/20261112000300_harden_legacy_fee_payment_rpc.sql', 'src/lib/displayPreferences.js', 'src/lib/displayPreferences.d.ts', 'src/styles/dashboard-display-settings.css', 'scripts/test-display-preferences.mjs', '.github/workflows/dashboard-display-preferences.yml', 'docs/STAGE_4_DASHBOARD_DISPLAY_MODES.md', 'src/lib/navigationAccess.ts', 'src/lib/userErrors.ts', 'scripts/test-user-errors.mjs',
+  'src/lib/data.ts', 'src/lib/workspacePrivacy.js', 'src/lib/workspacePrivacy.d.ts', 'scripts/test-workspace-privacy.mjs', '.github/workflows/workspace-family-privacy.yml', 'docs/WORKSPACE_ROLE_PRIVACY.md', 'supabase/migrations/20261112000100_institutional_record_review_isolation.sql', 'src/lib/workTaskAccess.js', 'src/lib/workTaskAccess.d.ts', 'scripts/test-work-task-identity.mjs', 'scripts/test-legacy-fee-payment-rpc.mjs', 'scripts/test-internal-function-exposure.mjs', '.github/workflows/internal-function-exposure.yml', '.github/workflows/work-task-identity.yml', '.github/workflows/legacy-fee-payment-rpc.yml', 'docs/WORK_TASK_STABLE_IDENTITY.md', 'docs/FEE_PAYMENT_RPC_COMPATIBILITY.md', 'supabase/migrations/20261112000200_work_task_stable_assignee_identity.sql', 'supabase/migrations/20261112000300_harden_legacy_fee_payment_rpc.sql', 'supabase/migrations/20261112000400_revoke_anon_execute_on_internal_definer_functions.sql', 'src/lib/displayPreferences.js', 'src/lib/displayPreferences.d.ts', 'src/styles/dashboard-display-settings.css', 'scripts/test-display-preferences.mjs', '.github/workflows/dashboard-display-preferences.yml', 'docs/STAGE_4_DASHBOARD_DISPLAY_MODES.md', 'src/lib/navigationAccess.ts', 'src/lib/userErrors.ts', 'scripts/test-user-errors.mjs',
   'src/lib/finance.ts', 'scripts/test-finance.mjs', 'src/lib/fileAccess.ts', 'scripts/test-file-access.mjs',
   'scripts/test-account-provisioning.mjs', 'supabase/functions/create-user/index.ts', 'supabase/functions/create-user/provisioning-guards.mjs', '.github/workflows/teacher-account-provisioning.yml', 'docs/TEACHER_ACCOUNT_LINK_INTEGRITY.md',
   'src/lib/navigationCatalog.ts', 'src/lib/navigationRoutes.ts', 'scripts/generate-navigation-route-audit.mjs', 'scripts/generate-route-view-audit.mjs', 'scripts/generate-responsive-source-audit.mjs', 'docs/PHASE_1_EXACT_ROUTE_AUDIT.md', 'docs/PHASE_1_ROUTE_VIEW_AUDIT.md', 'docs/PHASE_2_RESPONSIVE_SOURCE_AUDIT.md', 'src/components/NotificationCenter.tsx', 'src/styles/notification-center.css', 'public/_redirects', 'scripts/test-responsive-public.mjs', 'docs/PUBLIC_RESPONSIVE_QA.md',
@@ -274,6 +275,13 @@ check('Institutional registers and windows are tailored by workspace domain', ()
   for (const layout of ['academic','people','assessment','ledger','communication','resource','operations','governance','intelligence']) {
     assert.ok(styles.includes(`[data-workspace-layout="${layout}"]`), 'Distinct workspace surface is missing: ' + layout)
   }
+})
+
+check('Internal SECURITY DEFINER function execution is not anonymously exposed', () => {
+  const migration = read('supabase/migrations/20261112000400_revoke_anon_execute_on_internal_definer_functions.sql')
+  assert.ok(migration.includes('REVOKE ALL ON FUNCTION public.can_teach_class(uuid, uuid) FROM PUBLIC, anon'), 'Anonymous execution of class-teaching permission RPC must be revoked')
+  assert.ok(migration.includes('GRANT EXECUTE ON FUNCTION public.can_teach_class(uuid, uuid) TO authenticated'), 'Authenticated RLS policies must retain class-teaching permission checks')
+  assert.ok(migration.includes('REVOKE ALL ON FUNCTION public.prevent_academic_timetable_conflicts() FROM PUBLIC, anon, authenticated'), 'Trigger-only timetable function must not be API-executable')
 })
 
 check('Work-task assignment access uses stable tenant-scoped Auth identity', () => {
@@ -1008,6 +1016,7 @@ check('Required database safeguards and Cloudflare redirects remain in the proje
     '20261112000100_institutional_record_review_isolation.sql',
     '20261112000200_work_task_stable_assignee_identity.sql',
     '20261112000300_harden_legacy_fee_payment_rpc.sql',
+    '20261112000400_revoke_anon_execute_on_internal_definer_functions.sql',
     '20261111161307_stage5_administration_profile_campus_and_access_controls.sql',
     '20261111162254_stage_6_people_hr_and_payroll_controls.sql',
     '20261111162922_20261111193000_academic_sessions_active_members_read.sql',
@@ -1027,9 +1036,9 @@ check('Required database safeguards and Cloudflare redirects remain in the proje
     assert.ok(migrations.includes(migration), `${migration} missing`)
   }
   const timestamped = migrations.filter(name => /^202611\d{8}_.+\.sql$/.test(name))
-  assert.equal(timestamped.length, 53, 'Expected 50 applied migrations plus three staged release-hardening migrations')
-  assert.ok(read('supabase/migrations/README.md').includes('53 timestamped migration files'))
-  assert.ok(read('supabase/migrations/README.md').includes('three release-hardening migrations are staged but not yet applied'))
+  assert.equal(timestamped.length, 54, 'Expected 50 applied migrations plus four staged release-hardening migrations')
+  assert.ok(read('supabase/migrations/README.md').includes('54 timestamped migration files'))
+  assert.ok(read('supabase/migrations/README.md').includes('four release-hardening migrations are staged but not yet applied'))
   assert.ok(read('supabase/migrations/README.md').includes('three release-hardening migrations are staged but not yet applied'))
   assert.equal(read('public/_redirects').trim(), '/* /index.html 200')
   const envExample = read('.env.example')
