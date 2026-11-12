@@ -23,14 +23,14 @@ The current application source has been updated in the staged branch to use an e
 ## Live migration state and safety gate
 
 A read-only inspection of the linked Supabase project on 12 November 2026 confirmed:
-- 50 migration versions are recorded as applied;
+- 50 migration versions are recorded as applied; three new migrations are staged in sequence (review isolation, work-task identity and fee-payment compatibility);
 - the new migration version `20261112000100` is not applied;
 - the live `institutional_records` table currently has RLS enabled and permits selected student/parent portal-visible rows;
 - authenticated users currently have SELECT privileges on the legacy approval/reviewer columns;
 - no existing payload records contain top-level or nested keys named `approval_status`, `reviewed_by`, `reviewed_at` or `review_notes`;
 - the required `private` schema, institution-scoped composite record reference and audit table are present.
 
-The old draft migration used version `20261111160000`, which is earlier than the latest applied migration version in the live project. The staged migration therefore uses the new version `20261112000100` so it follows the actual 50-version remote history rather than replaying or repairing older versions.
+The old draft migration used version `20261111160000`, which is earlier than the latest applied migration version in the live project. The staged migration therefore uses the new version `20261112000100` so it follows the actual 50-version remote history rather than replaying or repairing older versions. The subsequent staged work-task and fee-payment migrations use `20261112000200` and `20261112000300`.
 
 **The migration has not been applied.** The application source and migration must not be released together until a separate Supabase development branch is created, the migration applies cleanly, and role-specific API checks prove:
 - owner/admin can read and update review metadata;
