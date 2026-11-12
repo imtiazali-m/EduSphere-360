@@ -51,6 +51,70 @@ const workspaceFields:Record<string,WorkspaceField[]>={
 workspaceFields['academic-sessions']=[fld('session_code','Session code'),fld('start_date','Session start date','date'),fld('end_date','Session end date','date'),fld('is_current','Current session','select',['Yes','No']),fld('student_rollover_status','Student rollover status','select',['Not started','In progress','Completed'])]
 workspaceFields['classes-sections']=[fld('grade_level','Grade / academic level'),fld('section','Section'),fld('class_teacher','Class teacher'),fld('capacity','Maximum capacity','number'),fld('room_name','Room / classroom'),fld('promotion_status','Promotion status','select',['Not started','In progress','Completed'])]
 workspaceFields.subjects=[fld('subject_code','Subject code'),fld('subject_category','Subject category'),fld('department','Department'),fld('grade_level','Academic level'),fld('credit_hours','Credit hours','number'),fld('syllabus_reference','Syllabus reference')]
+workspaceFields.front_office=[
+ fld('contact_name','Contact / visitor name'),fld('contact_phone','Phone number'),fld('contact_email','Email address','email'),
+ fld('enquiry_source','Enquiry source','select',['Walk-in','Phone','Website','Referral','Email','Other']),
+ fld('assigned_to','Assigned staff member'),fld('follow_up_date','Follow-up date','date'),fld('request_status','Request status','select',['New','Assigned','In progress','Waiting for response','Resolved','Closed']),
+ fld('audience','Target audience','select',['All institution','Parents','Students','Teachers','Staff','Selected class']),
+ fld('event_venue','Venue / meeting location'),fld('event_start','Event start','datetime-local'),fld('event_end','Event end','datetime-local'),
+ fld('visit_purpose','Purpose / request details','textarea'),fld('resolution_notes','Resolution / next action','textarea')
+]
+workspaceFields.forms_documents=[
+ fld('form_category','Form category','select',['Admission','Leave','Feedback','Event registration','Profile update','General']),
+ fld('audience','Who can submit','select',['Staff','Teachers','Students','Parents','Public','Selected group']),
+ fld('field_schema','Form fields / instructions','textarea'),fld('submission_deadline','Submission deadline','date'),
+ fld('submission_reference','Submission reference'),fld('reviewer','Assigned reviewer'),fld('review_status','Review status','select',['Received','Under review','Needs correction','Approved','Rejected']),
+ fld('document_category','Document category','select',['Student','Employee','Institution','Finance','Academic','Policy','Other']),
+ fld('related_record','Related record / person'),fld('file_reference','Private file reference'),fld('expiry_date','Expiry date','date'),
+ fld('verification_code','Verification code'),fld('verification_status','Verification status','select',['Not checked','Verified','Rejected','Expired']),
+ fld('import_file','Import filename'),fld('import_type','Import record type'),fld('validation_summary','Validation summary','textarea'),fld('export_scope','Export scope')
+]
+workspaceFields.hostel=[
+ fld('building_name','Hostel / building'),fld('floor','Floor / block'),fld('room_number','Room number'),fld('bed_number','Bed number'),
+ fld('room_capacity','Room capacity','number'),fld('resident_reference','Student / resident reference'),fld('allocation_start','Allocation start','date'),fld('allocation_end','Expected checkout','date'),
+ fld('occupancy_status','Occupancy','select',['Available','Part occupied','Full','Maintenance']),fld('hostel_fee','Accommodation fee','number'),fld('warden_name','Warden / supervisor')
+]
+workspaceFields.cafeteria=[
+ fld('menu_category','Menu category'),fld('item_code','Menu item code'),fld('unit_price','Unit price','number'),fld('availability','Availability','select',['Available','Unavailable','Seasonal']),
+ fld('quantity_sold','Quantity sold','number'),fld('transaction_date','Transaction date','datetime-local'),fld('payment_method','Payment method','select',['Cash','Card','Account','Other']),
+ fld('meal_plan','Meal plan'),fld('supplier','Supplier'),fld('stock_reference','Stock reference')
+]
+workspaceFields.assets=[
+ fld('asset_tag','Asset tag / serial'),fld('asset_category','Asset category','select',['IT equipment','Furniture','Laboratory','Vehicle','Facility','Other']),
+ fld('purchase_date','Purchase date','date'),fld('purchase_cost','Purchase cost','number'),fld('assigned_to','Assigned person / department'),
+ fld('location','Current location'),fld('asset_condition','Condition','select',['New','Good','Needs repair','Damaged','Disposed']),
+ fld('warranty_expiry','Warranty expiry','date'),fld('maintenance_due','Next maintenance','date'),fld('disposal_date','Disposal date','date')
+]
+workspaceFields.procurement=[
+ fld('requesting_department','Requesting department'),fld('requested_by','Requested by'),fld('supplier','Supplier'),fld('quotation_reference','Quotation reference'),
+ fld('requested_quantity','Requested quantity','number'),fld('estimated_cost','Estimated cost','number'),fld('approved_amount','Approved amount','number'),
+ fld('purchase_order','Purchase order reference'),fld('delivery_due','Expected delivery','date'),fld('received_quantity','Quantity received','number'),
+ fld('receiving_status','Receiving status','select',['Not ordered','Ordered','Part received','Received','Rejected'])
+]
+workspaceFields.sports=[
+ fld('activity_type','Activity type','select',['Sport','Club','Arts','Competition','Community','Other']),fld('supervisor','Coach / supervisor'),
+ fld('venue','Venue / facility'),fld('schedule_start','Start date/time','datetime-local'),fld('schedule_end','End date/time','datetime-local'),
+ fld('eligibility','Eligibility / class'),fld('team_name','Team / club'),fld('participant_count','Participants','number'),
+ fld('competition','Competition / event'),fld('achievement','Achievement / result','textarea')
+]
+const itemWorkspaceFields:Record<string,WorkspaceField[]> = {
+ 'front-office:reception-enquiries':[fld('contact_name','Applicant / contact name'),fld('contact_phone','Phone number'),fld('contact_email','Email address','email'),fld('requested_program','Requested class / program'),fld('enquiry_source','Enquiry source','select',['Walk-in','Phone','Website','Referral','Email','Other']),fld('assigned_to','Assigned counsellor'),fld('follow_up_date','Next follow-up','date'),fld('conversion_status','Application conversion','select',['Not started','Follow-up required','Converted to application','Closed'])],
+ 'front-office:complaints-helpdesk':[fld('requester_name','Submitted by'),fld('requester_role','Requester role'),fld('category','Request category','select',['Technical','Academic','Finance','Facilities','Transport','Safety','Other']),fld('priority','Priority','select',['Low','Normal','High','Urgent']),fld('assigned_to','Assigned staff'),fld('target_resolution','Target resolution date','date'),fld('resolution_notes','Resolution notes','textarea'),fld('request_status','Request status','select',['Open','Assigned','In progress','Waiting','Resolved','Closed','Reopened'])],
+ 'front-office:visitor-management':[fld('visitor_name','Visitor name'),fld('visitor_phone','Phone number'),fld('organization','Organization'),fld('host_name','Person to meet'),fld('purpose','Visit purpose','textarea'),fld('entry_time','Entry time','datetime-local'),fld('exit_time','Exit time','datetime-local'),fld('pass_number','Visitor pass number')],
+ 'forms-documents:form-builder':[fld('form_category','Form type','select',['Admission','Leave','Feedback','Event registration','Profile update','General']),fld('instructions','Instructions','textarea'),fld('field_schema','Field list and validation rules','textarea'),fld('audience','Audience','select',['Staff','Teachers','Students','Parents','Public']),fld('submission_deadline','Submission deadline','date'),fld('publication_status','Publication','select',['Draft','Published','Closed'])],
+ 'forms-documents:form-submissions':[fld('submission_reference','Submission reference'),fld('form_name','Form name'),fld('submitted_by','Submitted by'),fld('submission_date','Submission date','datetime-local'),fld('reviewer','Assigned reviewer'),fld('review_status','Review status','select',['Received','Under review','Needs correction','Approved','Rejected']),fld('review_notes','Reviewer notes','textarea')],
+ 'forms-documents:document-records':[fld('document_category','Document category'),fld('related_person','Related person / record'),fld('file_reference','Private file reference'),fld('uploaded_on','Upload date','date'),fld('expiry_date','Expiry date','date'),fld('access_classification','Access classification','select',['Restricted','Staff only','Student portal','Parent portal'])],
+ 'forms-documents:document-verification':[fld('verification_code','Verification code'),fld('document_type','Document type'),fld('subject_reference','Student / employee reference'),fld('issued_on','Issue date','date'),fld('verification_status','Verification result','select',['Not checked','Verified','Rejected','Expired']),fld('verification_notes','Verification notes','textarea')],
+ 'forms-documents:data-import':[fld('import_type','Record type'),fld('source_filename','Source filename'),fld('column_mapping','Column mapping','textarea'),fld('rows_total','Total rows','number'),fld('rows_valid','Valid rows','number'),fld('rows_rejected','Rejected rows','number'),fld('import_status','Import status','select',['Draft','Validated','Ready for review','Imported','Failed'])],
+ 'forms-documents:data-export':[fld('export_type','Record type'),fld('date_from','From date','date'),fld('date_to','To date','date'),fld('file_format','File format','select',['CSV','XLSX','PDF','DOCX']),fld('field_scope','Included fields','textarea'),fld('export_status','Export status','select',['Requested','Preparing','Ready','Failed'])],
+ 'forms-documents:data-validation':[fld('validation_type','Validation category'),fld('records_checked','Records checked','number'),fld('issues_found','Issues found','number'),fld('validation_rules','Rules checked','textarea'),fld('validation_status','Validation status','select',['Not run','Passed','Issues found','Failed'])],
+ 'my-account:my-profile':[fld('profile_section','Profile section'),fld('profile_note','Profile update request / note','textarea')],
+ 'my-account:account-settings':[fld('setting_group','Setting group'),fld('setting_name','Preference'),fld('setting_value','Selected value'),fld('saved_on_device','Saved on this device','select',['Yes','No'])],
+ 'my-account:notification-settings':[fld('notification_category','Notification category'),fld('delivery_preference','Preference','select',['In-app','Email','Disabled']),fld('quiet_hours','Quiet hours'),fld('saved_on_device','Saved on this device','select',['Yes','No'])],
+ 'my-account:my-activity':[fld('activity_type','Activity type'),fld('related_reference','Related record'),fld('activity_date','Activity date','datetime-local'),fld('activity_summary','Activity summary','textarea')],
+ 'my-account:help-support':[fld('support_category','Support category','select',['Login / account','Student records','Academic','Attendance','Finance','Technical','Other']),fld('priority','Priority','select',['Normal','High','Urgent']),fld('issue_description','Describe the issue','textarea'),fld('preferred_contact','Preferred contact method','select',['In-app','Email','Phone']),fld('support_status','Request status','select',['Open','In progress','Waiting','Resolved','Closed'])]
+}
+
 const statusOptions=['draft','open','in_progress','pending','approved','published','completed','closed','on_hold','cancelled','rejected']
 const themes:Record<string,{accent:string;soft:string;ink:string}>={
  blue:{accent:'#3477dc',soft:'#edf4ff',ink:'#1c477b'},violet:{accent:'#7955d6',soft:'#f2efff',ink:'#49358b'},
@@ -177,7 +241,7 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
  const [loading,setLoading]=useState(true)
  const [loadError,setLoadError]=useState('')
  const [search,setSearch]=useState('')
- const [range,setRange]=useState('90')
+ const [range,setRange]=useState('all')
  const [campus,setCampus]=useState('')
  const [campuses,setCampuses]=useState<{id:string;name:string}[]>([])
  const [showForm,setShowForm]=useState(false)
@@ -195,7 +259,7 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
  const [amount,setAmount]=useState('')
  const [quantity,setQuantity]=useState('')
  const [payloadData,setPayloadData]=useState<Record<string,unknown>>({})
- const structuredFields=workspaceFields[group.key]??workspaceFields[group.dataModule]??[]
+ const structuredFields=itemWorkspaceFields[group.key+':'+item.key]??workspaceFields[group.key]??workspaceFields[group.dataModule]??[]
  const preferredFieldKeys=workspaceTableFieldOrder[group.key]??workspaceTableFieldOrder[group.dataModule]??structuredFields.map(field=>field.key)
  const tableFields=preferredFieldKeys.flatMap(key=>{
   const field=structuredFields.find(candidate=>candidate.key===key)
@@ -211,8 +275,8 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
  const theme=themes[group.theme]||themes.blue
  const canWrite=Boolean(user&&(
   canAdmin||
-  (user.role==='teacher'&&['academic_setup','attendance','timetable','teaching','behaviour','communication','question_bank','examinations','tests','curriculum'].includes(group.dataModule))||
-  (user.role==='accountant'&&['finance','fees','receivables','payments','receipts','payroll','reconciliation','inventory'].includes(group.dataModule))||
+  (user.role==='teacher'&&['academic_setup','attendance','timetable','teaching','behaviour','communication','question_bank','examinations','tests','curriculum','front_office','forms_documents','hostel','sports'].includes(group.dataModule))||
+  (user.role==='accountant'&&['finance','fees','receivables','payments','receipts','payroll','reconciliation','inventory','cafeteria','assets','procurement','hostel'].includes(group.dataModule))||
   (user.role==='exam_officer'&&['question_bank','examinations','tests','reports'].includes(group.dataModule))
  ))
 
