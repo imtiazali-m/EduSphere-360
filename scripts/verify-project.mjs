@@ -52,6 +52,12 @@ check('Integrated frontend, authentication, modules and deployment files exist',
   for (const file of requiredFiles) assert.ok(fs.existsSync(path.join(root, file)), `${file} is missing`)
 })
 
+const dashboardNavigationSource = read('src/components/Dashboard.tsx')
+check('Sidebar highlights only the exact selected submenu', () => {
+  assert.match(dashboardNavigationSource, /const isActive = activeNavigationTab\\.groupKey === group\\.key && activeNavigationTab\\.itemKey === itemKey/)
+  assert.doesNotMatch(dashboardNavigationSource, /const isActive = activeTab\\.route === route \\|\\|/)
+})
+
 const require = createRequire(import.meta.url)
 const ts = require('typescript')
 require.extensions['.ts'] = (module, filename) => {
