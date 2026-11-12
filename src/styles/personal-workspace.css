@@ -1,0 +1,65 @@
+.ed360-personal-workspace{display:grid;gap:16px;max-width:1240px;margin:0 auto;color:#172b43}
+.ed360-personal-hero{display:flex;align-items:center;gap:15px;padding:22px 24px;border:1px solid #dce6f2;border-radius:16px;background:linear-gradient(120deg,#fff 0%,#f5f8ff 100%);box-shadow:0 7px 20px rgba(17,43,73,.045)}
+.ed360-personal-hero-mark{width:48px;height:48px;display:grid;place-items:center;flex:0 0 48px;border-radius:14px;color:#fff;background:linear-gradient(145deg,#4c8af0,#2459c7);box-shadow:0 7px 18px rgba(49,111,224,.2)}
+.ed360-personal-hero>div:last-child{min-width:0}
+.ed360-personal-hero>div:last-child>span,.ed360-personal-section-heading>div>span{color:#7c90a8;font-size:9px;font-weight:850;letter-spacing:1.25px}
+.ed360-personal-hero h1{margin:3px 0;color:#102b49;font-family:Manrope,"DM Sans",sans-serif;font-size:26px;font-weight:850;letter-spacing:-.7px}
+.ed360-personal-hero p{margin:0;color:#667c95;font-size:13px}
+.ed360-personal-nav{display:flex;gap:6px;overflow-x:auto;padding:6px;border:1px solid #dfe7f0;border-radius:12px;background:#fff;scrollbar-width:thin}
+.ed360-personal-nav button{min-height:40px;display:flex;align-items:center;justify-content:center;gap:8px;flex:0 0 auto;padding:0 12px;border:1px solid transparent;border-radius:9px;color:#60758e;background:transparent;font-size:12px;font-weight:750;white-space:nowrap;cursor:pointer}
+.ed360-personal-nav button:hover{background:#f4f7fc;color:#2459c7}
+.ed360-personal-nav button.active{border-color:#cddcf5;color:#2459c7;background:#edf4ff;box-shadow:inset 0 -2px #3478f6}
+.ed360-personal-content{display:grid;gap:14px}
+.ed360-personal-section-heading h2{margin:4px 0 3px;color:#173858;font-family:Manrope,"DM Sans",sans-serif;font-size:19px;font-weight:850;letter-spacing:-.35px}
+.ed360-personal-section-heading p{margin:0;color:#71869e;font-size:12px}
+.ed360-personal-profile-layout{display:grid;grid-template-columns:minmax(230px,.78fr) minmax(0,1.6fr);gap:13px;align-items:start}
+.ed360-personal-card{min-width:0;padding:19px;border:1px solid #dfe7f0;border-radius:14px;background:#fff;box-shadow:0 4px 15px rgba(17,43,73,.04)}
+.ed360-personal-id-card{display:grid;justify-items:start;gap:12px}
+.ed360-personal-avatar{width:58px;height:58px;display:grid;place-items:center;border:3px solid #e9f0ff;border-radius:19px;color:#fff;background:linear-gradient(145deg,#4c8af0,#2459c7);font-size:24px;font-weight:850}
+.ed360-personal-id-card h3{margin:0;color:#173858;font-size:17px;font-weight:850}
+.ed360-personal-id-card p{margin:3px 0 0;color:#71869e;font-size:12px;text-transform:capitalize}
+.ed360-personal-active{display:inline-flex;align-items:center;gap:7px;padding:6px 9px;border:1px solid #d8eee2;border-radius:30px;color:#177b55;background:#f0faf4;font-size:11px;font-weight:750}
+.ed360-personal-active i{width:7px;height:7px;border-radius:50%;background:#1b9b68}
+.ed360-personal-id-card>small{color:#8798aa;font-size:11px;line-height:1.5}
+.ed360-personal-card>h3{margin:0 0 13px;color:#173858;font-family:Manrope,"DM Sans",sans-serif;font-size:15px;font-weight:850}
+.ed360-personal-card dl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 18px;margin:0}
+.ed360-personal-card dl>div{min-width:0;padding:11px 0;border-bottom:1px solid #edf1f6}
+.ed360-personal-card dt{margin-bottom:4px;color:#7c8fa5;font-size:10px;font-weight:800;letter-spacing:.4px;text-transform:uppercase}
+.ed360-personal-card dd{margin:0;overflow-wrap:anywhere;color:#28445f;font-size:13px;font-weight:650}
+.ed360-personal-note{display:flex;align-items:flex-start;gap:8px;margin:14px 0 0;padding:10px 11px;border:1px solid #dce8f8;border-radius:9px;color:#5d7896;background:#f5f8ff;font-size:11px;line-height:1.5}
+.ed360-personal-note svg{flex:0 0 auto;color:#3478f6}
+.ed360-personal-card-heading{display:flex;align-items:center;gap:11px;margin-bottom:18px}
+.ed360-personal-card-heading>span{width:38px;height:38px;display:grid;place-items:center;border-radius:11px;color:#2459c7;background:#edf4ff}
+.ed360-personal-card-heading h3{margin:0;color:#173858;font-size:15px;font-weight:850}
+.ed360-personal-card-heading p{margin:3px 0 0;color:#788ca3;font-size:11px;line-height:1.5}
+.ed360-personal-form-card form{max-width:620px;display:grid;gap:13px}
+.ed360-personal-form-card label{display:grid;gap:6px;color:#425972;font-size:12px;font-weight:750}
+.ed360-personal-form-card input{width:100%;min-height:43px;padding:0 12px;border:1px solid #d8e2ee;border-radius:9px;color:#203a54;background:#fbfcff;font-size:13px}
+.ed360-personal-form-card input:focus{border-color:#84a9eb;outline:0;box-shadow:0 0 0 3px rgba(49,111,224,.1)}
+.ed360-personal-form-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:8px;padding-top:13px;border-top:1px solid #edf1f6}
+.ed360-personal-form-actions>span{color:#8495a8;font-size:10px;line-height:1.5}
+.ed360-personal-form-actions button,.ed360-personal-help-grid button{min-height:39px;display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:0 13px;border:1px solid #2459c7;border-radius:9px;color:#fff;background:#2459c7;font-size:12px;font-weight:800;cursor:pointer}
+.ed360-personal-form-actions button:hover,.ed360-personal-help-grid button:hover{background:#1e4ca8}
+.ed360-personal-form-actions button:disabled{opacity:.55;cursor:not-allowed}
+.ed360-personal-preferences{display:grid;gap:0}
+.ed360-personal-preferences label{min-height:60px;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:9px 2px;border-bottom:1px solid #edf1f6;cursor:pointer}
+.ed360-personal-preferences label>span{display:grid;gap:3px}
+.ed360-personal-preferences b{color:#29445f;font-size:12px}
+.ed360-personal-preferences small{color:#8192a6;font-size:10px}
+.ed360-personal-preferences input{width:18px;height:18px;flex:0 0 18px;accent-color:#316fe0}
+.ed360-personal-activity-list{display:grid}
+.ed360-personal-activity-list article{min-height:64px;display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1px solid #edf1f6}
+.ed360-personal-activity-icon{width:34px;height:34px;display:grid;place-items:center;flex:0 0 34px;border-radius:10px;color:#2459c7;background:#edf4ff}
+.ed360-personal-activity-list article>div{min-width:0;flex:1;display:grid;gap:3px}
+.ed360-personal-activity-list b{color:#29445f;font-size:12px;text-transform:capitalize}
+.ed360-personal-activity-list small,.ed360-personal-activity-list time{color:#8092a7;font-size:10px;text-transform:capitalize}
+.ed360-personal-activity-list code{color:#8092a7;font-size:10px}
+.ed360-personal-empty{padding:32px 14px;text-align:center;color:#8192a6;font-size:12px}
+.ed360-personal-error{margin-bottom:12px;padding:11px 12px;border:1px solid #f1d4d1;border-radius:9px;color:#a64640;background:#fff5f4;font-size:12px}
+.ed360-personal-help-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.ed360-personal-help-grid .ed360-personal-card{display:grid;align-content:start;justify-items:start;gap:10px}
+.ed360-personal-help-icon{width:38px;height:38px;display:grid;place-items:center;border-radius:11px;color:#2459c7;background:#edf4ff}
+.ed360-personal-help-grid h3{margin:0;color:#173858;font-family:Manrope,"DM Sans",sans-serif;font-size:15px;font-weight:850}
+.ed360-personal-help-grid p{margin:0 0 4px;color:#6e839b;font-size:12px;line-height:1.7}
+@media(max-width:760px){.ed360-personal-profile-layout,.ed360-personal-help-grid{grid-template-columns:1fr}.ed360-personal-hero{align-items:flex-start;padding:17px}.ed360-personal-card dl{grid-template-columns:1fr}}
+@media(max-width:460px){.ed360-personal-hero h1{font-size:22px}.ed360-personal-nav button{min-height:38px;padding-inline:10px}.ed360-personal-form-actions{align-items:stretch;flex-direction:column}.ed360-personal-form-actions button{width:100%}}
