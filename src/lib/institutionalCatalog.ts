@@ -113,7 +113,7 @@ export const institutionalMenu:WorkspaceMenuGroup[]=[
  group('visitors','Visitor Management','Visitor registration, passes, approvals, entry/exit records, notifications and history.','UserRound','slate','visitors',management.concat(['teacher']),[
   'Visitor Dashboard','Visitor Registration','Visitor Information','Visitor Passes','Entry and Exit Records','Visitor Approvals','Visit History','Visitor Notifications','Visitor Reports'
  ]),
- group('front-office','Front Office & Institutional Activities','Reception enquiries, visitor coordination, parent contact, circulars, events and helpdesk requests.','MessageSquare','sky','front_office',management.concat(['teacher']),[
+ group('front-office','Front Office & Institutional Activities','Reception enquiries, visitor coordination, parent contact, circulars, events and helpdesk requests.','MessageSquare','sky','front_office',management.concat(['teacher','student','parent']),[
   'Reception & Enquiries','Parent Communication','Internal Messages','Circulars & Notices','Events & Activities','Complaints & Helpdesk'
  ]),
  group('forms-documents','Forms, Documents & Data Management','Digital forms, submissions, institutional documents, verification and controlled data exchange.','FileText','indigo','forms_documents',management.concat(['teacher','student','parent']),[
