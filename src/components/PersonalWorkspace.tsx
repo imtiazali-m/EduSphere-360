@@ -95,7 +95,7 @@ export function PersonalWorkspace({initialWindow,onToast,onNavigate}:{initialWin
  return <main className="ed360-personal-workspace">
   <header className="ed360-personal-hero">
    <div className="ed360-personal-hero-mark"><UserRound size={23}/></div>
-   <div><span>STAGE 15 / ROLE PORTAL & PERSONAL SETTINGS</span><h1>My Workspace</h1><p>Manage your personal account details, preferences and support requests.</p></div>
+   <div><span>PERSONAL ACCOUNT</span><h1>My Workspace</h1><p>Manage your personal account details, preferences and support requests.</p></div>
   </header>
   <nav className="ed360-personal-nav" aria-label="Personal workspace pages">
    {sections.map(item=>{const Icon=item.icon;return <button key={item.key} type="button" className={section===item.key?'active':''} aria-current={section===item.key?'page':undefined} onClick={()=>setSection(item.key)}><Icon size={16}/><span>{item.label}</span></button>})}
