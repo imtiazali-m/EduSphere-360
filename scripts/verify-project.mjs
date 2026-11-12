@@ -54,8 +54,8 @@ check('Integrated frontend, authentication, modules and deployment files exist',
 
 const dashboardNavigationSource = read('src/components/Dashboard.tsx')
 check('Sidebar highlights only the exact selected submenu', () => {
-  assert.match(dashboardNavigationSource, /const isActive = activeNavigationTab\\.groupKey === group\\.key && activeNavigationTab\\.itemKey === itemKey/)
-  assert.doesNotMatch(dashboardNavigationSource, /const isActive = activeTab\\.route === route \\|\\|/)
+  assert.ok(dashboardNavigationSource.includes('const isActive = activeNavigationTab.groupKey === group.key && activeNavigationTab.itemKey === itemKey'))
+  assert.ok(!dashboardNavigationSource.includes('const isActive = activeTab.route === route ||'))
 })
 
 const require = createRequire(import.meta.url)
