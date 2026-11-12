@@ -8,6 +8,8 @@ on:
       - 'src/lib/workTaskAccess.js'
       - 'src/lib/workTaskAccess.d.ts'
       - 'scripts/test-work-task-identity.mjs'
+      - 'scripts/verify-project.mjs'
+      - 'package.json'
       - 'supabase/migrations/**'
       - '.github/workflows/work-task-identity.yml'
   pull_request:
