@@ -272,6 +272,16 @@ check('Institutional registers and windows are tailored by workspace domain', ()
   }
 })
 
+check('Non-admin workspace projections remove all internal review metadata recursively', () => {
+  const privacy = read('src/lib/workspacePrivacy.js')
+  const tests = read('scripts/test-workspace-privacy.mjs')
+  for (const field of ['approval_status', 'reviewed_by', 'reviewed_at', 'review_notes']) {
+    assert.ok(privacy.includes(field), 'Protected review field is missing: ' + field)
+    assert.ok(tests.includes(field), 'Privacy regression is missing protected field: ' + field)
+  }
+  assert.ok(privacy.includes('removeInternalReviewFields'), 'Nested export metadata must be recursively removed')
+})
+
 const dashboardSource = read('src/components/Dashboard.tsx')
 check('Dashboard matches the menu and keeps Quick Access at the sidebar bottom', () => {
   for (const forbidden of ['CatalogWorkspace', '22-group, 122-section', 'WORKSPACE PAGES', 'MENU GROUPS', '⌘ K', '<kbd>/</kbd>', 'pro-sidebar-footer']) {
