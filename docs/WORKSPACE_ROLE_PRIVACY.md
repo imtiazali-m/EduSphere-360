@@ -8,7 +8,7 @@ The frontend policy helper in `src/lib/workspacePrivacy.js` is a defense-in-dept
 
 A read-only inspection of the linked Supabase project on 12 November 2026 confirmed:
 - `public.institutional_records` has a SELECT policy that allows students and parents to read selected portal-visible rows.
-- The `authenticated` database role has SELECT privileges on `approval_status`, `reviewed_by`, `reviewed_at` and other review metadata columns.
+- The `authenticated` database role has SELECT privileges on `approval_status`, `reviewed_by`, `reviewed_at`, `review_notes` and other review metadata columns.
 - The current generic institutional workspace query uses `.select('*')`.
 
 Postgres RLS filters rows, not columns. Therefore, a family-role user who can read a permitted row may still request internal approval metadata directly through the Data API unless the database/API contract is changed.
