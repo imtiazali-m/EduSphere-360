@@ -245,6 +245,7 @@ export function LinkedOperationsWorkspace({workspaceKey,onToast,onNavigate}:Prop
  async function saveCampus(event:FormEvent){
   event.preventDefault();if(!supabase||!user||!canAdmin)return
   if(!campusName.trim()){onToast('Campus name is required.',true);return}
+  if(campusEmail&&!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(campusEmail.trim())){onToast('Enter a valid campus email address.',true);return}
   let academicSettings:Record<string,unknown>,operationalSettings:Record<string,unknown>
   try{
    const academic=JSON.parse(campusAcademicSettings||'{}'),operational=JSON.parse(campusOperationalSettings||'{}')
@@ -253,19 +254,16 @@ export function LinkedOperationsWorkspace({workspaceKey,onToast,onNavigate}:Prop
    academicSettings=academic as Record<string,unknown>;operationalSettings=operational as Record<string,unknown>
   }catch(error){onToast(error instanceof Error?error.message:'Enter valid campus settings.',true);return}
   setSaving(true)
-  const values={institution_id:user.institutionId,name:campusName.trim(),campus_code:campusCode.trim()||null,address:campusAddress.trim()||null,phone:campusPhone.trim()||null,email:campusEmail.trim()||null,branch_head_name:campusBranchHead.trim()||null,academic_settings:academicSettings,operational_settings:operationalSettings,is_headquarters:campusHQ,is_active:campusActive}
-  const result=editingCampus
-   ?await supabase.from('campuses').update(values).eq('institution_id',user.institutionId).eq('id',editingCampus.id)
-   :await supabase.from('campuses').insert({...values,created_by:user.id})
-  if(result.error){onToast(result.error.message,true);setSaving(false);return}
-  setShowCampusForm(false);setEditingCampus(null);onToast(editingCampus?'Campus updated.':'Campus created.');setSaving(false);await load()
- }
- async function deleteCampus(row:Campus){
-  if(!supabase||!user||!canAdmin)return
-  if(!window.confirm('Delete campus '+row.name+'? Records linked to this campus prevent deletion.'))return
-  const {error}=await supabase.from('campuses').delete().eq('institution_id',user.institutionId).eq('id',row.id)
-  if(error){onToast(error.message,true);return}
-  onToast('Campus deleted.');await load()
+  try{
+   const values={institution_id:user.institutionId,name:campusName.trim(),campus_code:campusCode.trim()||null,address:campusAddress.trim()||null,phone:campusPhone.trim()||null,email:campusEmail.trim()||null,branch_head_name:campusBranchHead.trim()||null,academic_settings:academicSettings,operational_settings:operationalSettings,is_headquarters:campusHQ,is_active:campusActive}
+   const result=editingCampus
+    ?await supabase.from('campuses').update(values).eq('institution_id',user.institutionId).eq('id',editingCampus.id)
+    :await supabase.from('campuses').insert({...values,created_by:user.id})
+   if(result.error)throw result.error
+   setShowCampusForm(false);setEditingCampus(null);onToast(editingCampus?'Campus updated.':'Campus created.');await load()
+  }catch(error){
+   onToast(userFacingError(error,'The campus could not be saved. Check that the campus name and code are unique.'),true)
+  }finally{setSaving(false)}
  }
  async function issueBook(event:FormEvent){
   event.preventDefault();if(!supabase||!user||!canLibrary)return
@@ -368,7 +366,7 @@ export function LinkedOperationsWorkspace({workspaceKey,onToast,onNavigate}:Prop
    <section className="ed360-workspace-kpis"><article><span>Registered campuses</span><strong>{campuses.length}</strong><small>Institution branches and sites</small></article><article><span>Active campuses</span><strong>{campuses.filter(x=>x.is_active).length}</strong><small>Available for assignment</small></article><article><span>Headquarters</span><strong>{campuses.filter(x=>x.is_headquarters).length}</strong><small>Primary campus designation</small></article><article><span>Inactive</span><strong>{campuses.filter(x=>!x.is_active).length}</strong><small>Retained in records</small></article></section>
    <section className="table-card ed360-workspace-record-card"><div className="table-toolbar"><div className="table-count"><strong>{visibleCampuses.length}</strong> matching campuses · Institution scope</div><span className="ed360-table-refresh"><button type="button" onClick={()=>void load()}>Refresh <RefreshCw size={13}/></button></span></div>
     <label className="ed360-linked-search">Search campuses<input aria-label="Search campuses" value={campusSearch} onChange={e=>{setCampusSearch(e.target.value);setCampusPage(1)}} placeholder="Name, campus code, branch head, address or contact…"/></label>
-    {visibleCampuses.length===0?<div className="ed360-workspace-empty"><strong>No campuses are registered</strong><span>Add a campus or branch before assigning institutional records to a site.</span>{canAdmin&&<button className="button button-primary" onClick={()=>resetCampus()}>Add first campus</button>}</div>:<div className="table-scroll"><table><thead><tr><th>Campus code</th><th>Campus</th><th>Branch head</th><th>Address</th><th>Contact</th><th>Type</th><th>Status</th><th>Actions</th></tr></thead><tbody>{pageRows(visibleCampuses,campusPage).map(row=><tr key={row.id}><td>{row.campus_code||'—'}</td><td><b>{row.name}</b></td><td>{row.branch_head_name||'Not assigned'}</td><td>{row.address||'—'}</td><td>{row.phone||row.email||'—'}</td><td>{row.is_headquarters?'Headquarters':'Branch'}</td><td><span className={'ed360-state-pill '+(row.is_active?'state-approved':'state-cancelled')}>{row.is_active?'Active':'Inactive'}</span></td><td><div className="ed360-row-actions">{canAdmin&&<button onClick={()=>resetCampus(row)}>Edit</button>}{canAdmin&&<button onClick={()=>void deleteCampus(row)}>Delete</button>}</div></td></tr>)}</tbody></table></div>}
+    {visibleCampuses.length===0?<div className="ed360-workspace-empty"><strong>No campuses are registered</strong><span>Add a campus or branch before assigning institutional records to a site.</span>{canAdmin&&<button className="button button-primary" onClick={()=>resetCampus()}>Add first campus</button>}</div>:<div className="table-scroll"><table><thead><tr><th>Campus code</th><th>Campus</th><th>Branch head</th><th>Address</th><th>Contact</th><th>Type</th><th>Status</th><th>Actions</th></tr></thead><tbody>{pageRows(visibleCampuses,campusPage).map(row=><tr key={row.id}><td>{row.campus_code||'—'}</td><td><b>{row.name}</b></td><td>{row.branch_head_name||'Not assigned'}</td><td>{row.address||'—'}</td><td>{row.phone||row.email||'—'}</td><td>{row.is_headquarters?'Headquarters':'Branch'}</td><td><span className={'ed360-state-pill '+(row.is_active?'state-approved':'state-cancelled')}>{row.is_active?'Active':'Inactive'}</span></td><td><div className="ed360-row-actions">{canAdmin&&<button onClick={()=>resetCampus(row)}>Edit</button>}</div></td></tr>)}</tbody></table></div>}
     {pageControls(visibleCampuses.length,campusPage,setCampusPage)}
    </section>
    {showCampusForm&&<div className="modal-backdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setShowCampusForm(false)}}><section className="modal-card ed360-context-form" role="dialog" aria-modal="true"><div className="modal-heading"><div><div className="eyebrow">INSTITUTION ADMINISTRATION / CAMPUS</div><h2>{editingCampus?'Edit campus':'Register campus / branch'}</h2></div><button className="icon-button" onClick={()=>setShowCampusForm(false)}><X size={18}/></button></div><form className="ed360-context-form-grid" onSubmit={saveCampus}><label>Campus name *<input required value={campusName} onChange={e=>setCampusName(e.target.value)}/></label><label>Campus code<input value={campusCode} onChange={e=>setCampusCode(e.target.value)}/></label><label>Branch head<input value={campusBranchHead} onChange={e=>setCampusBranchHead(e.target.value)} placeholder="Responsible campus head"/></label><label>Address<textarea rows={2} value={campusAddress} onChange={e=>setCampusAddress(e.target.value)}/></label><div className="ed360-form-row"><label>Phone<input value={campusPhone} onChange={e=>setCampusPhone(e.target.value)}/></label><label>Email<input type="email" value={campusEmail} onChange={e=>setCampusEmail(e.target.value)}/></label></div><label>Academic settings (JSON object)<textarea rows={4} value={campusAcademicSettings} onChange={e=>setCampusAcademicSettings(e.target.value)} placeholder="{&quot;default_session_id&quot;:&quot;...&quot;}"/></label><label>Operational settings (JSON object)<textarea rows={4} value={campusOperationalSettings} onChange={e=>setCampusOperationalSettings(e.target.value)} placeholder="{&quot;attendance_cutoff&quot;:&quot;...&quot;}"/></label><label className="ed360-check-label"><input type="checkbox" checked={campusHQ} onChange={e=>setCampusHQ(e.target.checked)}/> Headquarters</label><label className="ed360-check-label"><input type="checkbox" checked={campusActive} onChange={e=>setCampusActive(e.target.checked)}/> Active campus</label><div className="modal-actions"><button type="button" className="button button-outline" onClick={()=>setShowCampusForm(false)}>Cancel</button><button type="submit" className="button button-primary" disabled={saving}>{saving?'Saving…':'Save campus'}</button></div></form></section></div>}
