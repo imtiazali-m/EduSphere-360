@@ -167,7 +167,7 @@ const itemWorkspaceFields:Record<string,WorkspaceField[]> = {
  'sports:competitions-results':[fld('competition_name','Competition'),fld('event_date','Date','date'),fld('team_name','Team'),fld('opponent','Opponent'),fld('result','Result'),fld('score','Score')],
  'sports:achievements':[fld('student_reference','Student reference'),fld('activity_name','Activity'),fld('achievement_title','Achievement'),fld('award_date','Date','date'),fld('level','Competition level'),fld('evidence_reference','Evidence reference')],
  'sports:activity-reports':[fld('report_period','Report period'),fld('activity_name','Activity'),fld('participants','Participants','number'),fld('events_count','Events','number'),fld('report_summary','Summary','textarea')]
-
+}
 
 const statusOptions=['draft','open','in_progress','pending','approved','published','completed','closed','on_hold','cancelled','rejected']
 const themes:Record<string,{accent:string;soft:string;ink:string}>={
