@@ -8,10 +8,16 @@ import { execFileSync } from 'node:child_process'
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const read = (relative) => fs.readFileSync(path.join(root, relative), 'utf8')
 
-// Route audits are generated build artifacts. Recreate the exact route matrix when a clean checkout does not contain it.
-const exactRouteAudit = path.join(root, 'docs/PHASE_1_EXACT_ROUTE_AUDIT.md')
-if (!fs.existsSync(exactRouteAudit)) {
-  execFileSync(process.execPath, [path.join(root, 'scripts/generate-navigation-route-audit.mjs')], { cwd: root, stdio: 'inherit' })
+// Route and responsive audits are generated build artifacts. Recreate them when absent in a clean checkout.
+const generatedAudits = [
+  ['docs/PHASE_1_EXACT_ROUTE_AUDIT.md', 'scripts/generate-navigation-route-audit.mjs'],
+  ['docs/PHASE_1_ROUTE_VIEW_AUDIT.md', 'scripts/generate-route-view-audit.mjs'],
+  ['docs/PHASE_2_RESPONSIVE_SOURCE_AUDIT.md', 'scripts/generate-responsive-source-audit.mjs'],
+]
+for (const [output, generator] of generatedAudits) {
+  if (!fs.existsSync(path.join(root, output))) {
+    execFileSync(process.execPath, [path.join(root, generator)], { cwd: root, stdio: 'inherit' })
+  }
 }
 const check = (label, fn) => {
   try { fn(); console.log(`PASS  ${label}`) }
