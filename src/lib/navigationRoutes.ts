@@ -431,7 +431,7 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
     return institutionalRoute(groupKey, itemKey)
   }
   if (groupKey === 'my-account') return 'personal:' + itemKey
-  if (groupKey === 'ai' && itemKey === 'ai-assistant') return 'assistant'
+  if (groupKey === 'ai' && itemKey === 'ai-assistant') return 'assistant:chat'
   if (groupKey === 'students' && itemKey === 'student-data-export' && role && !['owner','admin'].includes(role)) {
     return 'unavailable:students:student-data-export'
   }
