@@ -778,7 +778,7 @@ export function Dashboard({ onToast }: Props) {
       else if (targetKey === 'institutional') title = 'Institutional Workspace'
       else if (targetKey === 'unavailable') title = 'Workspace not connected'
       else if (targetKey === 'attendance') title = 'Attendance Management'
-      else if (targetKey === 'care') title = 'Stage 7 · Student Care & Wellbeing'
+      else if (targetKey === 'care') title = 'Student Care & Wellbeing'
       else if (targetKey === 'reports') title = 'Reports'
       else if (targetKey === 'finance') title = 'Finance & Payments'
       else if (targetKey === 'payroll') title = 'Salary and Payroll'
@@ -961,25 +961,6 @@ export function Dashboard({ onToast }: Props) {
           <div className="pro-profile-wrap"><button className="pro-profile-trigger" onClick={() => setProfileOpen(open => !open)} aria-expanded={profileOpen}><span className="pro-profile-avatar">{user?.fullName.slice(0, 1).toUpperCase()}</span><span className="pro-profile-copy"><b>{user?.fullName}</b><small>{roleLabels[user!.role]}</small></span><ChevronDown size={14}/></button>{profileOpen && <div className="pro-profile-menu"><div className="pro-profile-details"><b>{user?.fullName}</b><small>{user?.email}</small><small>{user?.institutionName}</small>{user?.institutionType && <small>Institution type: {user.institutionType.replaceAll('_', ' ')}</small>}<small>Account role: {roleLabels[user!.role]}</small><span className={'pro-profile-mode ' + mode}>Cloud workspace</span></div>{['student', 'parent'].includes(user!.role) && <button type="button" onClick={() => navigate('profile')}><UserRound size={15}/> My Profile</button>}<button type="button" onClick={() => void logout()}><LogOut size={15}/> Sign out</button></div>}</div>
         </div>
       </header>
-      <nav className="pro-workspace-tabs" aria-label="Open workspace windows">
-        <div className="pro-workspace-tabs-label">OPEN WINDOWS</div>
-        {workspaceTabs.map(tab => {
-          const parentTab = tab.parentId ? workspaceTabs.find(parent => parent.id === tab.parentId) : undefined
-          return <div className={`pro-workspace-tab ${activeTabId === tab.id ? 'is-active' : ''} ${parentTab ? 'is-child' : ''}`} key={tab.id} data-workspace-route={tab.route} data-workspace-tab={tab.id}>
-            <button type="button" className="pro-workspace-tab-main" aria-label={`Open ${tab.title} workspace`} title={tab.title} aria-current={activeTabId === tab.id ? 'page' : undefined} onClick={() => setActiveTabId(tab.id)}>
-              {parentTab ? <ChevronRight size={14}/> : tab.targetKey === 'overview' ? <LayoutDashboard size={15}/> : <FileText size={15}/>}
-              <span>{tab.title}</span>
-              {parentTab && <small title={`Opened from ${parentTab.title}`}>{parentTab.title}</small>}
-            </button>
-            {tab.id !== 'overview' && <button type="button" className="pro-workspace-tab-close" aria-label={`Close ${tab.title} and its sub-windows`} title={`Close ${tab.title} and its sub-windows`} onClick={() => closeWorkspaceTab(tab.id)}><X size={13}/></button>}
-          </div>
-        })}
-        <span className="pro-workspace-tabs-help">Switch between open workspaces</span>
-      </nav>
-      <div className="pro-active-workspace-context" aria-live="polite" aria-atomic="true" data-active-route={activeTab.route}>
-        <div><span>YOU ARE WORKING IN</span><strong>{activeTab.title}</strong><small>{activeGroupLabel} · {roleLabels[user!.role]}</small></div>
-        <span className="pro-context-state"><i/> Active workspace</span>
-      </div>
       <div className="pro-module-stage">
         <div className="pro-window-stack">
           {workspaceTabs.map(tab => {
