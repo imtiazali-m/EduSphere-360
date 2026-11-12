@@ -24,7 +24,7 @@ const dashboardViews: Record<string, string> = {
   'employee-performance': 'employees:reports',
   'statistics-and-kpi-cards': 'overview',
   'charts-and-comparative-analytics': 'reports:overview',
-  'calendar-and-events': 'unavailable:dashboard:calendar-and-events',
+  'calendar-and-events': 'institutional:front-office:events-and-activities',
   'notification-centre': 'notifications',
   'tasks-and-reminders': 'work_tasks:queue',
   'pending-approvals': 'governance:approvals',
@@ -286,12 +286,12 @@ function dedicatedRoute(groupKey: string, itemKey: string): string | undefined {
   }
 
   if (groupKey === 'students') {
-    if (itemKey === 'bulk-student-operations') return 'unavailable:students:bulk-student-operations'
+    if (itemKey === 'bulk-student-operations') return 'institutional:forms-documents:data-import'
     const view = studentViews[itemKey]
     return view && view !== 'unavailable' ? `students:${view}` : undefined
   }
   if (groupKey === 'employees') {
-    if (itemKey === 'employee-performance') return 'unavailable:employees:employee-performance'
+    if (itemKey === 'employee-performance') return 'peoplehr:performance'
     const view = employeeViews[itemKey]
     return view && view !== 'unavailable' ? `employees:${view}` : undefined
   }
@@ -368,7 +368,7 @@ function dedicatedRoute(groupKey: string, itemKey: string): string | undefined {
   if (groupKey === 'communication') {
     if (itemKey === 'communication-dashboard' || itemKey === 'notification-centre') return 'notifications'
     if (itemKey.includes('assignment')) return 'announcements:staff'
-    if (['whatsapp-integration','individual-messages','bulk-messages','class-wise-messaging','employee-notifications','message-templates','email-notifications','delivery-history','communication-logs','communication-reports'].includes(itemKey)) return 'unavailable:communication:' + itemKey
+    if (['whatsapp-integration','individual-messages','bulk-messages','class-wise-messaging','employee-notifications','message-templates','email-notifications','delivery-history','communication-logs','communication-reports'].includes(itemKey)) return institutionalRoute(groupKey,itemKey)
     return 'announcements:bulletin'
   }
   if (groupKey === 'reports') {
@@ -435,6 +435,7 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
   if (groupKey === 'students' && itemKey === 'student-data-export' && role && !['owner','admin'].includes(role)) {
     return 'unavailable:students:student-data-export'
   }
+  if (groupKey === 'students' && itemKey === 'student-data-export') return 'institutional:forms-documents:data-export'
   if(groupKey==='attendance'){
     const stage7Routes:Record<string,string>={
       'student-attendance':'attendance:students',
@@ -449,7 +450,7 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
     if(stage7Routes[itemKey])return stage7Routes[itemKey]
   }
   if (groupKey === 'attendance' && itemKey === 'attendance-analytics') return 'reports:attendance'
-  if (groupKey === 'attendance' && itemKey === 'attendance-alerts') return 'unavailable:attendance:attendance-alerts'
+  if (groupKey === 'attendance' && itemKey === 'attendance-alerts') return institutionalRoute(groupKey,itemKey)
   if (groupKey === 'reports' && ['custom-report-builder','scheduled-reports','report-templates','report-history'].includes(itemKey)) return institutionalRoute(groupKey,itemKey)
   if (groupKey === 'question-bank' && ['question-bank-import-and-export','question-paper-version-history'].includes(itemKey)) return institutionalRoute(groupKey,itemKey)
   if (groupKey === 'curriculum' && ['teaching-resources','learning-materials','resource-downloads','chapter-wise-learning-resources','learning-progress-tracking'].includes(itemKey)) return institutionalRoute(groupKey,itemKey)
