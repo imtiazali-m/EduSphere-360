@@ -1,5 +1,8 @@
 import assert from 'node:assert/strict'
+import fs from 'node:fs'
 import test from 'node:test'
+
+const migration = fs.readFileSync(new URL('../supabase/migrations/20261112000100_institutional_record_review_isolation.sql', import.meta.url), 'utf8')
 
 let privacy
 try {
@@ -108,4 +111,42 @@ test('owner and admin retain review KPIs and review-state distribution', () => {
       { status: 'completed', count: 1 },
     ])
   }
+})
+
+test('database review relation is tenant-scoped, admin-only, audited and preserves existing metadata', () => {
+  for (const required of [
+    'create table public.institutional_record_reviews',
+    'foreign key (record_id, institution_id)',
+    'alter table public.institutional_record_reviews enable row level security',
+    'revoke all on public.institutional_record_reviews from public, anon',
+    'grant select, insert, update, delete on public.institutional_record_reviews to authenticated',
+    'institutional_record_reviews_owner_admin_select',
+    'institutional_record_reviews_owner_admin_insert',
+    'institutional_record_reviews_owner_admin_update',
+    'institutional_record_reviews_owner_admin_delete',
+    "public.has_institution_role(institution_id, array['owner','admin']::text[])",
+    'review_notes',
+    'private.audit_institutional_record_review',
+    'module_key text not null',
+    'record_type text not null',
+    'after insert or update or delete on public.institutional_record_reviews',
+    'v_module_key := old.module_key',
+    'save_institutional_record_with_review',
+    "set search_path = ''",
+    'revoke all on function public.save_institutional_record_with_review',
+    'grant execute on function public.save_institutional_record_with_review',
+  ]) assert.ok(migration.toLowerCase().includes(required.toLowerCase()), `Migration is missing safeguard: ${required}`)
+
+  const backfillAt = migration.indexOf('insert into public.institutional_record_reviews (')
+  const removeAt = migration.indexOf('drop column approval_status')
+  assert.ok(backfillAt >= 0 && removeAt > backfillAt, 'Existing review fields must be backfilled before legacy columns are dropped')
+  for (const column of ['drop column approval_status', 'drop column reviewed_by', 'drop column reviewed_at', 'drop column review_notes']) {
+    assert.ok(migration.includes(column), `Legacy review column is still exposed: ${column}`)
+  }
+
+  const workspace = fs.readFileSync(new URL('../src/components/InstitutionalWorkspace.tsx', import.meta.url), 'utf8')
+  assert.ok(workspace.includes(".from('institutional_records').select('id,institution_id,campus_id"), 'Operational records must use an explicit safe column projection')
+  assert.ok(!workspace.includes(".from('institutional_records').select('*')"), 'No broad institutional_records select may remain')
+  assert.ok(workspace.includes("supabase.from('institutional_record_reviews')"), 'Admin review metadata must use the isolated relation')
+  assert.ok(workspace.includes("supabase.rpc('save_institutional_record_with_review'"), 'Admin record and review saves must use the scoped RPC')
 })
