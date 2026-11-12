@@ -547,3 +547,49 @@ button { -webkit-tap-highlight-color: transparent; }
   .ed360-view-switch button { padding-inline: 7px; font-size: 11px; }
   .pro-window-panel :is(.ed360-metric-grid,.ed360-workspace-metrics) { gap: 7px; }
 }
+
+
+/* Shared record pagination and contextual workflow cues. */
+.pro-window-panel .ed360-record-pagination {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 14px;
+  border-top: 1px solid var(--es-line-soft);
+  color: var(--es-muted);
+  background: var(--es-surface-soft);
+  font-size: 11px;
+}
+.pro-window-panel .ed360-record-pagination b { color: var(--es-ink); }
+.pro-window-panel .ed360-record-pagination>div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pro-window-panel .ed360-record-pagination button {
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--es-line);
+  border-radius: 8px;
+  color: var(--es-ink);
+  background: var(--es-surface);
+  font-size: 11px;
+  font-weight: 750;
+}
+.pro-window-panel .ed360-record-pagination button:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+.pro-window-panel .ed360-record-pagination span { white-space: nowrap; }
+@media(max-width:560px) {
+  .pro-window-panel .ed360-record-pagination {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .pro-window-panel .ed360-record-pagination>div {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
