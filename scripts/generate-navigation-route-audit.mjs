@@ -37,12 +37,12 @@ const classify = (route) => {
   if (route.startsWith('institutional:')) return 'Linked institutional workspace · acceptance pending'
   const workspace = route.split(':')[0]
   const rootRoute = route === workspace
-  const intentionalRootRoutes = new Set(['overview', 'notifications', 'files'])
+  const intentionalRootRoutes = new Set(['overview', 'notifications', 'files', 'assistant'])
   const known = new Set([
     'admin', 'assignments', 'assignment_submissions', 'attendance', 'announcements',
     'employees', 'exam_results', 'exams', 'fees', 'finance', 'files', 'governance',
     'academic', 'care', 'peoplehr', 'notifications', 'operations', 'overview', 'payroll', 'reports', 'students',
-    'timetable', 'work_tasks',
+    'timetable', 'work_tasks', 'personal', 'assistant',
   ])
   if (!known.has(workspace)) return 'Unexpected route family · investigate'
   if (rootRoute && !intentionalRootRoutes.has(route)) return 'Bare module root · confirm the intended default window'
@@ -63,6 +63,8 @@ for (const key of linkedWorkspaceKeys) {
   }
 }
 for (const token of [
+  '<PersonalWorkspace ',
+  '<AIAssistantWorkspace',
   '<RoleDashboard ', '<NotificationCenter ', '<WorkspaceUnavailable ', '<AttendanceWorkspace ',
   '<AdministrationModule ', '<AccountsModule ', '<FilesModule ', '<ReportsModule ',
   '<FinanceWorkspace ', '<PayrollWorkspace ', '<PeopleHRWorkspace ', '<GovernanceWorkspace ',
@@ -78,6 +80,8 @@ const resolveDispatcher = (route) => {
   if (route === 'accounts') return 'AccountsModule'
   if (route === 'files') return 'FilesModule'
   if (route === 'profile') return 'ProfileModule'
+  if (route.startsWith('personal:')) return 'PersonalWorkspace'
+  if (route === 'assistant') return 'AIAssistantWorkspace'
   if (route === 'teachers') return 'FacultyWorkspace'
   if (route.startsWith('academic:')) return 'AcademicManagementWorkspace'
   if (route.startsWith('unavailable:')) return 'WorkspaceUnavailable'
