@@ -453,7 +453,24 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
     }
     return 'academic:' + (academicWindows[itemKey] ?? 'academic-sessions')
   }
-  if (groupKey === 'ai') return itemKey === 'ai-assistant' ? 'assistant:chat' : 'unavailable:ai:' + itemKey
+  if (groupKey === 'ai') {
+    const intelligenceRoutes: Record<string, string> = {
+      'ai-assistant': 'assistant:chat',
+      'smart-reports': 'reports:overview',
+      'student-performance-prediction': 'reports:academics',
+      'student-analysis': 'reports:students',
+      'fee-collection-prediction': 'finance:fees:overview',
+      'examination-analysis': 'reports:academics',
+      'ai-timetable-suggestions': 'timetable:conflicts',
+      'ai-question-generation': 'institutional:examinations:question-bank',
+      'ai-document-assistant': 'files',
+      'ai-learning-recommendations': 'academic:learning-progress',
+      'academic-performance-insights': 'reports:academics',
+      'attendance-and-behaviour-insights': 'reports:attendance',
+      'institutional-intelligence': 'reports:overview',
+    }
+    return intelligenceRoutes[itemKey] ?? 'unavailable:ai:' + itemKey
+  }
   if (groupKey === 'backup') return 'unavailable:backup:' + itemKey
   if (groupKey === 'students' && itemKey === 'student-data-export' && role && !['owner','admin'].includes(role)) {
     return 'unavailable:students:student-data-export'
@@ -483,7 +500,6 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
   if (groupKey === 'transport' && itemKey === 'transport-attendance') return 'unavailable:transport:transport-attendance'
   if (groupKey === 'facilities' && ['room-reservations','facilities-reports'].includes(itemKey)) return 'unavailable:facilities:'+itemKey
   if (groupKey === 'visitors' && ['visitor-approvals','visitor-notifications','visitor-reports'].includes(itemKey)) return 'unavailable:visitors:'+itemKey
-  if (groupKey === 'timetable' && ['teacher-availability','substitution-management','timetable-publishing','class-coverage','engaged-classes'].includes(itemKey)) return 'unavailable:timetable:'+itemKey
   if (groupKey === 'examinations' && ['invigilation-management','automatic-checking'].includes(itemKey)) return 'unavailable:examinations:'+itemKey
   if (groupKey === 'examinations' && ['examination-programs','examination-timetable','question-bank','online-tests-and-quizzes','marks-entry','grades-and-grading-system','results-and-result-approval','report-cards','examination-reports'].includes(itemKey)) return 'institutional:examinations:' + itemKey
   if (groupKey === 'examinations' && itemKey === 'examination-rooms') return 'admin:rooms'
