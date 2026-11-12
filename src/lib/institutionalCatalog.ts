@@ -113,25 +113,25 @@ export const institutionalMenu:WorkspaceMenuGroup[]=[
  group('visitors','Visitor Management','Visitor registration, passes, approvals, entry/exit records, notifications and history.','UserRound','slate','visitors',management.concat(['teacher']),[
   'Visitor Dashboard','Visitor Registration','Visitor Information','Visitor Passes','Entry and Exit Records','Visitor Approvals','Visit History','Visitor Notifications','Visitor Reports'
  ]),
- group('front-office','Front Office & Institutional Activities','Reception enquiries, visitor coordination, parent contact, circulars, events and helpdesk requests.','MessageSquare','sky','front_office',management.concat(['teacher','student','parent']),[
+ group('front-office','Front Office & Institutional Activities','Reception enquiries, visitor coordination, parent contact, circulars, events and helpdesk requests.','MessageSquare','sky','communication',management.concat(['teacher','student','parent']),[
   'Reception & Enquiries','Parent Communication','Internal Messages','Circulars & Notices','Events & Activities','Complaints & Helpdesk'
  ]),
- group('forms-documents','Forms, Documents & Data Management','Digital forms, submissions, institutional documents, verification and controlled data exchange.','FileText','indigo','forms_documents',management.concat(['teacher','student','parent']),[
+ group('forms-documents','Forms, Documents & Data Management','Digital forms, submissions, institutional documents, verification and controlled data exchange.','FileText','indigo','certificates',management.concat(['teacher','student','parent']),[
   'Form Builder','Form Submissions','Document Records','Letters & Applications','Document Templates','Document Verification','Data Import','Data Export','Data Validation','Duplicate Detection','Integration Status'
  ]),
  group('hostel','Hostel & Accommodation','Optional residence facilities, room inventory, bed allocation, resident history and accommodation charges.','Building2','slate','hostel',management.concat(['teacher','student','parent','accountant']),[
   'Hostel Dashboard','Hostel Buildings','Room & Bed Register','Resident Allocation','Room Transfers','Check-in & Check-out','Visitor Register','Hostel Fees','Maintenance Requests','Occupancy Reports'
  ]),
- group('cafeteria','Cafeteria & Canteen','Optional meal services, menus, sales, stock usage and permitted student/staff transactions.','Wallet','amber','cafeteria',management.concat(['teacher','accountant']),[
+ group('cafeteria','Cafeteria & Canteen','Optional meal services, menus, sales, stock usage and permitted student/staff transactions.','Wallet','amber','cafeteria',management,[
   'Cafeteria Dashboard','Menu & Price List','Daily Availability','Sales Transactions','Meal Plans','Cafeteria Inventory','Supplier Records','Cafeteria Reports'
  ]),
- group('assets','Asset Management','Institution-owned assets, assignment, movement, maintenance, warranty and disposal history.','Database','teal','assets',management.concat(['teacher','accountant']),[
+ group('assets','Asset Management','Institution-owned assets, assignment, movement, maintenance, warranty and disposal history.','Database','teal','assets',management,[
   'Asset Dashboard','Asset Register','Asset Categories','Asset Assignment','Asset Transfers','Maintenance History','Warranty Register','Asset Disposal','Asset Reports'
  ]),
- group('procurement','Procurement & Purchasing','Purchase requests, suppliers, quotations, approvals, purchase orders and receiving records.','ClipboardList','orange','procurement',management.concat(['accountant']),[
+ group('procurement','Procurement & Purchasing','Purchase requests, suppliers, quotations, approvals, purchase orders and receiving records.','ClipboardList','orange','procurement',management,[
   'Procurement Dashboard','Supplier Directory','Purchase Requests','Quotation Comparison','Purchase Approvals','Purchase Orders','Goods Receipt','Supplier Invoices','Procurement Reports'
  ]),
- group('sports','Sports & Extracurricular Activities','Optional co-curricular activities, teams, schedules, supervisors, participation and achievements.','Award','green','sports',management.concat(['teacher','student','parent']),[
+ group('sports','Sports & Extracurricular Activities','Optional co-curricular activities, teams, schedules, supervisors, participation and achievements.','Award','green','sports',management,[
   'Activities Dashboard','Activity Directory','Sports & Clubs','Teams & Members','Coaches & Supervisors','Schedules & Venues','Participation Records','Competitions & Results','Achievements','Activity Reports'
  ]),
  group('my-account','My Account & Personal Workspace','Personal profile, account preferences, notification choices, recent personal activity and help.','UserRound','blue','my_account',all,[
