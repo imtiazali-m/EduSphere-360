@@ -154,8 +154,11 @@ test('database review relation is tenant-scoped, admin-only, audited and preserv
   }
 
   const workspace = fs.readFileSync(new URL('../src/components/InstitutionalWorkspace.tsx', import.meta.url), 'utf8')
+  const adminWorkspace = fs.readFileSync(new URL('../src/components/AdministrationStage5Workspace.tsx', import.meta.url), 'utf8')
   assert.ok(workspace.includes(".from('institutional_records').select('id,institution_id,campus_id"), 'Operational records must use an explicit safe column projection')
   assert.ok(!workspace.includes(".from('institutional_records').select('*')"), 'No broad institutional_records select may remain')
   assert.ok(workspace.includes("supabase.from('institutional_record_reviews')"), 'Admin review metadata must use the isolated relation')
   assert.ok(workspace.includes("supabase.rpc('save_institutional_record_with_review'"), 'Admin record and review saves must use the scoped RPC')
+  assert.ok(adminWorkspace.includes(".from('institutional_records').select('id,institution_id,module_key,record_type,title,reference_code,description,status,effective_date,payload,updated_at,created_at')"), 'Administration policy records must use an explicit safe projection')
+  assert.ok(!adminWorkspace.includes("approval_status:'not_required'"), 'Administration policy writes must not use the removed approval column')
 })
