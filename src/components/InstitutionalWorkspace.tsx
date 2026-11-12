@@ -164,7 +164,7 @@ const recordMetaColumnPlan:Record<string,RecordMetaKey[]>={
  visitors:['reference_code','status','record_date'],
  institution_config:['reference_code','status','approval_status'],
  reconciliation:['reference_code','status','approval_status','record_date','amount'],
- backup:['reference_code','status','approval_status','record_date'],
+ backup:['reference_code','status','approval_status','record_date'],front_office:['reference_code','status','approval_status','record_date','due_date'],forms_documents:['reference_code','status','approval_status','record_date','due_date'],hostel:['reference_code','status','record_date','due_date','amount','quantity'],cafeteria:['reference_code','status','record_date','amount','quantity'],assets:['reference_code','status','record_date','amount'],procurement:['reference_code','status','approval_status','due_date','amount','quantity'],sports:['reference_code','status','record_date','due_date','quantity'], 
 }
 const workspaceTableFieldOrder:Record<string,string[]>={
  'academic-sessions':['session_code','start_date','end_date','student_rollover_status'],
@@ -199,7 +199,7 @@ const workspaceTableFieldOrder:Record<string,string[]>={
  visitors:['visitor_name','organization','host_name','entry_time'],
  institution_config:['setting_category','setting_key','permission_scope','access_role'],
  reconciliation:['account_name','statement_period','matched_total','variance'],
- backup:['backup_type','backup_window','integrity_check','recovery_status'],
+ backup:['backup_type','backup_window','integrity_check','recovery_status'],front_office:['contact_name','contact_phone','enquiry_source','assigned_to'],forms_documents:['form_category','audience','review_status','document_category'],hostel:['building_name','room_number','resident_reference','occupancy_status'],cafeteria:['menu_category','item_code','unit_price','availability'],assets:['asset_tag','asset_category','assigned_to','asset_condition'],procurement:['requesting_department','supplier','purchase_order','receiving_status'],sports:['activity_type','supervisor','venue','team_name'], 
 }
 const workspaceRecordLabels:Record<string,string>={
  'academic-sessions':'Academic session','classes-sections':'Class / section',subjects:'Subject',
@@ -209,7 +209,7 @@ const workspaceRecordLabels:Record<string,string>={
  finance:'Ledger entry',fees:'Fee record',receivables:'Receivable',payments:'Payment',receipts:'Receipt',
  payroll:'Payroll entry',reconciliation:'Reconciliation',communication:'Communication item',
  transport:'Transport record',inventory:'Stock item',facilities:'Facility',visitors:'Visitor',
- administration:'Institution record',institution_config:'Configuration item',backup:'Data job',ai:'Insight record',
+ administration:'Institution record',institution_config:'Configuration item',backup:'Data job',ai:'Insight record',front_office:'Front-office request',forms_documents:'Form / document',hostel:'Accommodation record',cafeteria:'Cafeteria item',assets:'Institutional asset',procurement:'Purchase record',sports:'Activity record',
 }
 const workspaceLayouts:Record<string,string>={
  administration:'governance',institution_config:'governance',backup:'governance',
@@ -218,7 +218,7 @@ const workspaceLayouts:Record<string,string>={
  students:'people',employees:'people',attendance:'people',behaviour:'people',certificates:'people',
  finance:'ledger',fees:'ledger',receivables:'ledger',payments:'ledger',receipts:'ledger',payroll:'ledger',reconciliation:'ledger',
  communication:'communication',library:'resource',transport:'operations',inventory:'operations',facilities:'operations',visitors:'operations',
- ai:'intelligence',reports:'intelligence',
+ ai:'intelligence',reports:'intelligence',front_office:'communication',forms_documents:'intelligence',my_account:'governance',hostel:'operations',cafeteria:'ledger',assets:'operations',procurement:'operations',sports:'operations',
 }
 
 const displayDate=(value:unknown)=>typeof value==='string'&&value?new Date(value+'T00:00:00').toLocaleDateString():'—'
