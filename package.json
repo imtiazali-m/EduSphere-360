@@ -17,7 +17,8 @@
     "audit:responsive": "node scripts/generate-responsive-source-audit.mjs",
     "audit:modal-windows": "node scripts/audit-modal-windows.mjs",
     "test:account-provisioning": "node scripts/test-account-provisioning.mjs",
-    "test:responsive:public": "node scripts/test-responsive-public.mjs"
+    "test:responsive:public": "node scripts/test-responsive-public.mjs",
+    "test:workspace-privacy": "node scripts/test-workspace-privacy.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.58.0",
