@@ -3,9 +3,16 @@ import path from 'node:path'
 import { createRequire } from 'node:module'
 import assert from 'node:assert/strict'
 import { fileURLToPath } from 'node:url'
+import { execFileSync } from 'node:child_process'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const read = (relative) => fs.readFileSync(path.join(root, relative), 'utf8')
+
+// Route audits are generated build artifacts. Recreate the exact route matrix when a clean checkout does not contain it.
+const exactRouteAudit = path.join(root, 'docs/PHASE_1_EXACT_ROUTE_AUDIT.md')
+if (!fs.existsSync(exactRouteAudit)) {
+  execFileSync(process.execPath, [path.join(root, 'scripts/generate-navigation-route-audit.mjs')], { cwd: root, stdio: 'inherit' })
+}
 const check = (label, fn) => {
   try { fn(); console.log(`PASS  ${label}`) }
   catch (error) { console.error(`FAIL  ${label}: ${error.message}`); process.exitCode = 1 }
@@ -1039,7 +1046,6 @@ check('Required database safeguards and Cloudflare redirects remain in the proje
   assert.equal(timestamped.length, 54, 'Expected 50 applied migrations plus four staged release-hardening migrations')
   assert.ok(read('supabase/migrations/README.md').includes('54 timestamped migration files'))
   assert.ok(read('supabase/migrations/README.md').includes('four release-hardening migrations are staged but not yet applied'))
-  assert.ok(read('supabase/migrations/README.md').includes('three release-hardening migrations are staged but not yet applied'))
   assert.equal(read('public/_redirects').trim(), '/* /index.html 200')
   const envExample = read('.env.example')
   const gitignore = read('.gitignore')
