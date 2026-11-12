@@ -673,27 +673,6 @@ export function Dashboard({ onToast }: Props) {
   }, [displaySettingsOpen])
 
   useEffect(() => {
-    const container = document.querySelector<HTMLElement>('.pro-workspace-tabs')
-    if (!container) return
-    const selected = Array.from(container.querySelectorAll<HTMLElement>('[data-workspace-tab]'))
-      .find(element => element.dataset.workspaceTab === activeTabId)
-    if (!selected) return
-    const containerBounds = container.getBoundingClientRect()
-    const selectedBounds = selected.getBoundingClientRect()
-    const inset = 10
-    let nextLeft = container.scrollLeft
-    if (selectedBounds.left < containerBounds.left + inset) {
-      nextLeft -= containerBounds.left + inset - selectedBounds.left
-    } else if (selectedBounds.right > containerBounds.right - inset) {
-      nextLeft += selectedBounds.right - (containerBounds.right - inset)
-    }
-    if (Math.abs(nextLeft - container.scrollLeft) > 1) {
-      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-      container.scrollTo({ left: Math.max(0, nextLeft), behavior: reduceMotion ? 'auto' : 'smooth' })
-    }
-  }, [activeTabId, workspaceTabs.length])
-
-  useEffect(() => {
     let live = true
     async function loadUnreadCount() {
       if (!supabase || !user) { if (live) setUnreadAnnouncementCount(0); return }
@@ -848,28 +827,6 @@ export function Dashboard({ onToast }: Props) {
     setExpandedGroups(current => current.includes(key) ? current.filter(item => item !== key) : [...current, key])
   }
 
-  function closeWorkspaceTab(id: string) {
-    if (id === 'overview') return
-    const closing = new Set([id])
-    let changed = true
-    while (changed) {
-      changed = false
-      workspaceTabs.forEach(tab => {
-        if (tab.parentId && closing.has(tab.parentId) && !closing.has(tab.id)) {
-          closing.add(tab.id)
-          changed = true
-        }
-      })
-    }
-    const closingTab = workspaceTabs.find(tab => tab.id === id)
-    const remaining = workspaceTabs.filter(tab => !closing.has(tab.id))
-    setWorkspaceTabs(remaining.length ? remaining : [{ id: 'overview', route: 'overview', targetKey: 'overview', targetWindow: 'overview', title: 'Dashboard' }])
-    if (closing.has(activeTabId)) {
-      const parentStillOpen = closingTab?.parentId && remaining.some(tab => tab.id === closingTab.parentId)
-      setActiveTabId(parentStillOpen ? closingTab!.parentId! : remaining[remaining.length - 1]?.id ?? 'overview')
-    }
-  }
-
   async function logout() {
     await signOut()
     setProfileOpen(false)
@@ -877,9 +834,7 @@ export function Dashboard({ onToast }: Props) {
   }
 
   const compactSidebar = sidebarCollapsed && !isMobileNav
-  const activeGroupLabel = activeNavigationTab.groupKey
-    ? visibleGroups.find(group => group.key === activeNavigationTab.groupKey)?.label ?? 'Institution workspace'
-    : activeNavigationTab.targetKey === 'overview' ? 'Overview' : 'Workspace'
+
   return <div className={`pro-app-shell ${sidebarOpen ? 'navigation-open' : ''} ${compactSidebar ? 'sidebar-collapsed' : ''}`} data-view-mode={displayPreferences.viewMode} data-theme={displayPreferences.theme} data-font-size={displayPreferences.fontSize} data-reduced-motion={displayPreferences.reducedMotion ? 'true' : 'false'}>
     <aside className={`pro-sidebar ${sidebarOpen ? 'is-open' : ''} ${compactSidebar ? 'is-collapsed' : ''}`} aria-hidden={isMobileNav && !sidebarOpen}>
       <div className="pro-sidebar-brand">
