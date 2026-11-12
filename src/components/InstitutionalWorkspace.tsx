@@ -339,7 +339,7 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
  const showAmount=['accounts-finance','fees','receivables','payments','receipts','payroll','reconciliation','transport','inventory'].includes(group.key)||['finance','fees','receivables','payments','receipts','payroll','reconciliation'].includes(group.dataModule)
  const showQuantity=['classes-sections','library','transport','inventory','facilities'].includes(group.key)
  const showDueDate=['academic-sessions','fees','receivables','timetable','teaching','examinations','class-tests','reports','certificates','transport','facilities','visitors','backup'].includes(group.key)||['fees','receivables','timetable','teaching','examinations','tests','reports','certificates'].includes(group.dataModule)
- const showPortalVisibility=['communication','curriculum','certificates','teaching','library','transport','behaviour'].includes(group.key)
+ const showPortalVisibility=['communication','front-office','forms-documents','curriculum','certificates','teaching','library','transport','behaviour'].includes(group.key)
  
  const load=useCallback(async()=>{
   if(!supabase||!user||!group.dataModule){setRows([]);setLoading(false);return}
