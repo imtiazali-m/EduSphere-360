@@ -8,6 +8,8 @@ on:
       - 'src/lib/workspacePrivacy.d.ts'
       - 'scripts/test-workspace-privacy.mjs'
       - 'docs/WORKSPACE_ROLE_PRIVACY.md'
+      - 'supabase/migrations/20261112000100_institutional_record_review_isolation.sql'
+      - 'supabase/migrations/README.md'
       - 'scripts/verify-project.mjs'
       - 'package.json'
       - '.github/workflows/workspace-family-privacy.yml'
