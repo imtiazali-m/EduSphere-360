@@ -82,14 +82,14 @@ async function inspectViewport({ name, width, height }) {
       await menuToggle.waitFor({ state: 'visible' })
       await menuToggle.click()
       await page.locator('.edm-nav.is-open').waitFor({ state: 'visible' })
-      const platformLink = page.locator('.edm-nav.is-open a[href="#platform"]').first()
-      await platformLink.click()
-      await page.waitForFunction(() => location.hash === '#platform')
+      const featuresLink = page.locator('.edm-nav.is-open a[href="#features"]').first()
+      await featuresLink.click()
+      await page.waitForFunction(() => location.hash === '#features')
       await page.goto(`${baseUrl}/#/`, { waitUntil: 'domcontentloaded' })
       await page.locator('.edm-hero h1').waitFor({ state: 'visible' })
       await assertNoHorizontalOverflow(page, `${name} welcome mobile navigation`)
     } else {
-      await page.locator('.edm-nav a[href="#platform"]').first().waitFor({ state: 'visible' })
+      await page.locator('.edm-nav a[href="#features"]').first().waitFor({ state: 'visible' })
     }
 
     const roleCategories = {
