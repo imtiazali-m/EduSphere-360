@@ -26,6 +26,7 @@ import { ReportsModule } from './ReportsModule'
 import { ProfileModule } from './ProfileModule'
 import { PersonalWorkspace } from './PersonalWorkspace'
 import { AIAssistantWorkspace } from './AIAssistantWorkspace'
+import { FrontOfficeWorkspace } from './FrontOfficeWorkspace'
 import { FacultyWorkspace } from './FacultyWorkspace'
 import { institutionalMenu } from '../lib/institutionalCatalog'
 import { InstitutionalWorkspace } from './InstitutionalWorkspace'
@@ -728,6 +729,7 @@ export function Dashboard({ onToast }: Props) {
     const peopleHRWindowRoute = key.startsWith('peoplehr:')
     const personalWindowRoute = key.startsWith('personal:')
     const assistantWindowRoute = key.startsWith('assistant:')
+    const frontOfficeWindowRoute = key.startsWith('frontoffice:')
     const governanceWindowRoute = key.startsWith('governance:')
     const operationsWindowRoute = key.startsWith('operations:')
     const routeParts = key.split(':')
@@ -744,6 +746,7 @@ export function Dashboard({ onToast }: Props) {
       : peopleHRWindowRoute ? 'peoplehr'
       : personalWindowRoute ? 'personal'
       : assistantWindowRoute ? 'assistant'
+      : frontOfficeWindowRoute ? 'frontoffice'
       : payrollWindowRoute ? 'payroll'
       : governanceWindowRoute ? 'governance'
       : operationsWindowRoute ? 'operations'
@@ -761,6 +764,7 @@ export function Dashboard({ onToast }: Props) {
       : peopleHRWindowRoute ? key.slice('peoplehr:'.length)
       : personalWindowRoute ? key.slice('personal:'.length)
       : assistantWindowRoute ? key.slice('assistant:'.length)
+      : frontOfficeWindowRoute ? key.slice('frontoffice:'.length)
       : payrollWindowRoute ? key.slice('payroll:'.length)
       : governanceWindowRoute ? key.slice('governance:'.length)
       : operationsWindowRoute ? key.slice('operations:'.length)
@@ -781,6 +785,7 @@ export function Dashboard({ onToast }: Props) {
       else if (targetKey === 'peoplehr') title = 'People Management & Human Resources'
       else if (targetKey === 'personal') title = 'My Workspace'
       else if (targetKey === 'assistant') title = 'AI Assistant'
+      else if (targetKey === 'frontoffice') title = 'Front Office & Communication'
       else if (targetKey === 'governance') title = 'Institution Governance'
       else if (targetKey === 'operations') title = 'Institution Operations'
       else if (targetKey.startsWith('admin:')) {
@@ -1001,6 +1006,7 @@ export function Dashboard({ onToast }: Props) {
                 tab.targetKey === 'governance' ? <GovernanceWorkspace initialWindow={tab.targetWindow} onToast={onToast} onNavigate={navigateChild}/> :
                 tab.targetKey === 'operations' ? <InstitutionOperationsWorkspace workspaceKey={tab.targetWindow} initialWindow={tab.targetWindow.split(':')[1]} onToast={onToast}/> :
                 tab.targetKey === 'assistant' ? <AIAssistantWorkspace/> :
+                tab.targetKey === 'frontoffice' ? <FrontOfficeWorkspace initialView={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'personal' ? <PersonalWorkspace initialWindow={tab.targetWindow} onToast={onToast} onNavigate={navigateChild}/> :
                 tab.targetKey === 'profile' ? <ProfileModule/> :
                 tab.targetKey === 'teachers' ? <FacultyWorkspace onToast={onToast} onNavigate={navigateChild} initialWindow={tab.targetWindow}/> :
