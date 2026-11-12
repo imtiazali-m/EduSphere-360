@@ -269,7 +269,7 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
     event.preventDefault()
     if(!supabase||!admin||!user?.institutionId)return
     if(!campusDraft.name.trim()){onToast('Enter a branch name.',true);return}
-    if(campusDraft.email&&!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(campusDraft.email)){onToast('Enter a valid branch email address.',true);return}
+    if(campusDraft.email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(campusDraft.email)){onToast('Enter a valid branch email address.',true);return}
     setSaving(true)
     const values={name:campusDraft.name.trim(),campus_code:campusDraft.campus_code.trim()||null,branch_head_name:campusDraft.branch_head_name.trim()||null,address:campusDraft.address.trim()||null,phone:campusDraft.phone.trim()||null,email:campusDraft.email.trim()||null,is_active:campusDraft.is_active,updated_at:new Date().toISOString()}
     try{
