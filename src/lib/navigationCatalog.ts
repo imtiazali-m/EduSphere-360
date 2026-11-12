@@ -12,6 +12,11 @@ export const navigationCatalog:NavigationCatalogGroup[]=institutionalMenu.filter
 }))
 
 const roleItemAllow:Record<string,Partial<Record<string,string[]>>>={
+  'front-office':{
+    teacher:['Parent Communication','Internal Messages','Circulars & Notices','Events & Activities','Complaints & Helpdesk'],
+    student:['Circulars & Notices','Events & Activities','Complaints & Helpdesk'],
+    parent:['Parent Communication','Circulars & Notices','Events & Activities','Complaints & Helpdesk'],
+  },
   'people-hr':{
     teacher:['Students','Teachers','Employee Contracts & Documents','Employee Performance','Payroll & Salary Records'],
     student:['Students'],
