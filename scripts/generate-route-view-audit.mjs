@@ -80,6 +80,7 @@ function shellTarget(route) {
   const peopleHR = route.startsWith('peoplehr:')
   const personal = route.startsWith('personal:')
   const assistant = route.startsWith('assistant:')
+  const frontOffice = route.startsWith('frontoffice:')
   const governance = route.startsWith('governance:')
   const operations = route.startsWith('operations:')
   const parts = route.split(':')
@@ -97,6 +98,7 @@ function shellTarget(route) {
     : peopleHR ? 'peoplehr'
     : personal ? 'personal'
     : assistant ? 'assistant'
+    : frontOffice ? 'frontoffice'
     : governance ? 'governance'
     : operations ? 'operations'
     : moduleWindow ? parts[0]
@@ -114,6 +116,7 @@ function shellTarget(route) {
     : peopleHR ? route.slice('peoplehr:'.length)
     : personal ? route.slice('personal:'.length)
     : assistant ? route.slice('assistant:'.length)
+    : frontOffice ? route.slice('frontoffice:'.length)
     : governance ? route.slice('governance:'.length)
     : operations ? route.slice('operations:'.length)
     : moduleWindow ? parts[1]
@@ -130,6 +133,7 @@ function checkView(role, route, dispatcher) {
   }
   if (targetKey === 'personal') return { component:'PersonalWorkspace', view:targetWindow, status:new Set(['my-profile','account-settings','notification-settings','my-activity','help-support']).has(targetWindow)?'Supported':'Unsupported personal view' }
   if (targetKey === 'assistant') return { component:'AIAssistantWorkspace', view:targetWindow, status:targetWindow==='chat'?'Supported':'Unsupported AI assistant view' }
+  if (targetKey === 'frontoffice') return { component:'FrontOfficeWorkspace', view:targetWindow, status:new Set(['enquiries','announcements','events']).has(targetWindow)?'Supported':'Unsupported front-office view' }
   if (targetKey === 'overview') return { component: 'RoleDashboard', view: 'overview', status: 'Supported' }
   if (targetKey === 'notifications') return { component: 'NotificationCenter', view: 'notifications', status: 'Supported' }
   if (targetKey === 'accounts') return { component: 'AccountsModule', view: 'accounts', status: 'Supported' }
@@ -221,6 +225,7 @@ for (const [role, label] of roles) {
         : dashboard.targetKey === 'peoplehr' ? 'PeopleHRWorkspace'
         : dashboard.targetKey === 'personal' ? 'PersonalWorkspace'
         : dashboard.targetKey === 'assistant' ? 'AIAssistantWorkspace'
+        : dashboard.targetKey === 'frontoffice' ? 'FrontOfficeWorkspace'
         : dashboard.targetKey === 'governance' ? 'GovernanceWorkspace'
         : dashboard.targetKey === 'operations' ? 'InstitutionOperationsWorkspace'
         : dashboard.targetKey.startsWith('admin:') ? 'AdministrationModule'
