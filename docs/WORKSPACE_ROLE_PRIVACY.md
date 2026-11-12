@@ -16,7 +16,7 @@ The staged migration `supabase/migrations/20261112000100_institutional_record_re
 - backfills all existing approval/reviewer metadata before dropping the legacy columns from `institutional_records`;
 - stamps reviewer identity and decision time in a database trigger rather than trusting client values;
 - records review changes in the existing administrator-only audit stream;
-- uses an owner/admin-checked RPC for atomic operational-record and review-state saves.
+- uses an owner/admin-checked SECURITY INVOKER RPC for atomic operational-record and review-state saves, preserving the caller's RLS context; only the private audit trigger runs with definer privileges.
 
 The current application source has been updated in the staged branch to use an explicit safe operational-record projection, load review metadata only for owner/admin roles, and save decisions/notes through the isolated relation.
 
