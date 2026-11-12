@@ -169,7 +169,7 @@ create or replace function public.save_institutional_record_with_review(
 )
 returns public.institutional_records
 language plpgsql
-security definer
+security invoker
 set search_path = ''
 as $function$
 declare
