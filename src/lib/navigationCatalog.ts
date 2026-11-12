@@ -18,7 +18,7 @@ const roleItemAllow:Record<string,Partial<Record<string,string[]>>>={
     parent:['Communication Dashboard','Assignment Notifications','Notification Centre','Parent Communication','Circulars & Notices','Events & Activities','Complaints & Helpdesk','Sports & Extracurricular Activities','Sports & Clubs','Activity Schedules','Participation Records','Competitions & Results','Achievements'],
     accountant:['Communication Dashboard','Employee Notifications','Notification Centre','Communication Reports','Circulars & Notices','Complaints & Helpdesk'],
     exam_officer:['Communication Dashboard','Notification Centre','Circulars & Notices','Events & Activities'],
-  }
+  },
   'certificates':{
     teacher:['Certificate Dashboard','Character Certificate','Leaving Certificate','Enrollment Certificate','Bonafide Certificate','Achievement Certificate','Experience Certificate','ID Card Designer','Certificate Templates','Editable Document Templates','Certificate Verification','Certificate History','Form Builder','Form Submissions','Document Records','Letters & Applications','Document Verification'],
     student:['Certificate Dashboard','Character Certificate','Leaving Certificate','Enrollment Certificate','Bonafide Certificate','Achievement Certificate','Certificate Verification','Certificate History','Form Submissions','Document Records','Document Verification'],
