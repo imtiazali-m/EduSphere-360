@@ -14,6 +14,7 @@ const columns = [
   { key: 'approval_status', label: 'Approval' },
   { key: 'reviewed_by', label: 'Reviewed by' },
   { key: 'reviewed_at', label: 'Reviewed at' },
+  { key: 'review_notes', label: 'Review notes' },
 ]
 const rows = [
   {
@@ -23,6 +24,7 @@ const rows = [
     approval_status: 'pending',
     reviewed_by: 'internal-user',
     reviewed_at: '2026-11-11T10:00:00Z',
+    review_notes: 'Internal reviewer comment',
     payload: {
       chapter: 'Unit 1',
       approval_status: 'draft',
@@ -63,7 +65,7 @@ test('non-admin export rows deeply remove internal review fields', () => {
   for (const role of ['teacher', 'student', 'parent', 'accountant', 'exam_officer']) {
     const safeRows = privacy.getWorkspaceExportRows(role, rows)
     for (const row of safeRows) {
-      for (const field of ['approval_status', 'reviewed_by', 'reviewed_at']) {
+      for (const field of ['approval_status', 'reviewed_by', 'reviewed_at', 'review_notes']) {
         assert.equal(Object.hasOwn(row, field), false, `Unexpected export field ${field}`)
       }
     }
@@ -75,6 +77,7 @@ test('non-admin export rows deeply remove internal review fields', () => {
   }
   const adminRows = privacy.getWorkspaceExportRows('admin', rows)
   assert.equal(adminRows[0].approval_status, 'pending')
+  assert.equal(adminRows[0].review_notes, 'Internal reviewer comment')
   assert.equal(adminRows[0].payload.nested.reviewed_by, 'internal-user')
 })
 
