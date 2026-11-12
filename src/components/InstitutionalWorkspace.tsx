@@ -300,6 +300,8 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
  const [range,setRange]=useState('all')
  const [campus,setCampus]=useState('')
  const [campuses,setCampuses]=useState<{id:string;name:string}[]>([])
+ const [studentOptions,setStudentOptions]=useState<{id:string;name:string;reference:string}[]>([])
+ const [selectedStudentId,setSelectedStudentId]=useState('')
  const [showForm,setShowForm]=useState(false)
  const [detail,setDetail]=useState<OperationalRow|null>(null)
  const [editing,setEditing]=useState<OperationalRow|null>(null)
@@ -354,7 +356,9 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
    }
    const {data,error}=await query.order('created_at',{ascending:false}).limit(500)
    if(error)throw error
-   setRows((data??[]) as OperationalRow[])
+   const visibleRows=(data??[]) as OperationalRow[]
+   const portalRows=['parent','student'].includes(user.role)?visibleRows.filter(row=>row.visibility==='institution_portal'||Boolean(row.student_id)):visibleRows
+   setRows(portalRows)
   }catch(error){setLoadError(error instanceof Error?error.message:'Records could not be loaded');setRows([])}
   finally{setLoading(false)}
  },[user?.id,user?.institutionId,group.dataModule,item.key,item.label,campus,range])
@@ -370,6 +374,17 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
   void loadCampuses()
   return()=>{live=false}
  },[user?.id,user?.institutionId])
+ useEffect(()=>{
+  let live=true
+  async function loadStudentOptions(){
+   if(!supabase||!user||!showPortalVisibility||!canWrite){setStudentOptions([]);return}
+   const {data,error}=await supabase.from('students').select('id,full_name,admission_no').eq('institution_id',user.institutionId).order('full_name').limit(500)
+   if(error){if(live)setStudentOptions([]);return}
+   if(live)setStudentOptions((data??[]).map(row=>({id:String(row.id),name:String(row.full_name??'Unnamed student'),reference:String(row.admission_no??'')})))
+  }
+  void loadStudentOptions()
+  return()=>{live=false}
+ },[user?.id,user?.institutionId,showPortalVisibility,canWrite])
 
  const filtered=useMemo(()=>{
   const q=search.trim().toLowerCase()
@@ -391,7 +406,7 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
   setStatus(row?.status??'draft');setApproval(row?.approval_status??'not_required');setVisibility(row?.visibility??(['library','curriculum','certificates','teaching','transport'].includes(group.key)?'student_portal':'staff_only'))
   setRecordDate(row?.record_date??new Date().toISOString().slice(0,10));setDueDate(row?.due_date??'')
   setAmount(row?.amount===null||row?.amount===undefined?'':String(row.amount));setQuantity(row?.quantity===null||row?.quantity===undefined?'':String(row.quantity))
-  setPayloadData(row?.payload??{});setShowForm(true)
+  setPayloadData(row?.payload??{});setSelectedStudentId(String(row?.student_id??''));setShowForm(true)
  }
  async function save(event:FormEvent){
   event.preventDefault()
@@ -400,12 +415,13 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
   for(const field of structuredFields){if(field.type==='number'&&payload[field.key]!==undefined&&payload[field.key]!==''&&payload[field.key]!==null){const numeric=Number(payload[field.key]);if(!Number.isFinite(numeric)){onToast(field.label+' must be a valid number.',true);return}payload[field.key]=numeric}}
   if(amount.trim()&&(!Number.isFinite(Number(amount))||Number(amount)<0)){onToast('Amount must be a valid non-negative number.',true);return}
   if(quantity.trim()&&(!Number.isFinite(Number(quantity))||Number(quantity)<0)){onToast('Quantity must be a valid non-negative number.',true);return}
+  if(['student_portal','parent_portal'].includes(visibility)&&!selectedStudentId){onToast('Select the student this private portal record belongs to.',true);return}
   setSaving(true)
   const values={
    institution_id:user.institutionId,module_key:group.dataModule,record_type:item.key,title:title.trim(),
    reference_code:reference.trim()||null,description:description.trim()||null,status,approval_status:approval,visibility,
    record_date:recordDate||null,due_date:dueDate||null,amount:amount.trim()?Number(amount):null,
-   quantity:quantity.trim()?Number(quantity):null,payload,campus_id:campus||null
+   quantity:quantity.trim()?Number(quantity):null,payload,campus_id:campus||null,student_id:selectedStudentId||null
   }
   try{
    const query=editing
@@ -497,7 +513,7 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
     <label>Description / notes<textarea value={description} onChange={e=>setDescription(e.target.value)} rows={3} maxLength={3000}/></label>
     <div className="ed360-form-row"><label>Status<select value={status} onChange={e=>setStatus(e.target.value)}>{statusOptions.map(s=><option value={s} key={s}>{s.replaceAll('_',' ')}</option>)}</select></label>{canAdmin&&<label>Approval<select value={approval} onChange={e=>setApproval(e.target.value)}><option value="not_required">Not required</option><option value="draft">Draft</option><option value="pending">Needs approval</option></select></label>}</div>
     <div className="ed360-form-row"><label>Record date<input type="date" value={recordDate} onChange={e=>setRecordDate(e.target.value)}/></label>{showDueDate&&<label>Due date<input type="date" value={dueDate} onChange={e=>setDueDate(e.target.value)}/></label>}</div>
-    {showPortalVisibility&&<label>Portal visibility<select value={visibility} onChange={e=>setVisibility(e.target.value)}><option value="staff_only">Staff only</option><option value="student_portal">Student portal</option><option value="parent_portal">Parent portal</option><option value="institution_portal">Institution portal (shared)</option></select><small>Choose portal access deliberately. Sensitive records should remain staff-only.</small></label>}
+    {showPortalVisibility&&<div className="ed360-form-row"><label>Portal visibility<select value={visibility} onChange={e=>setVisibility(e.target.value)}><option value="staff_only">Staff only</option><option value="student_portal">Student portal (one linked student)</option><option value="parent_portal">Parent portal (one linked student)</option><option value="institution_portal">Institution portal (shared notice)</option></select><small>Student and parent portal records are linked to one student. Institution-wide notices use the shared institution portal.</small></label>{canWrite&&visibility!=='staff_only'&&visibility!=='institution_portal'&&<label>Linked student *<select required value={selectedStudentId} onChange={e=>setSelectedStudentId(e.target.value)}><option value="">Select the relevant student</option>{studentOptions.map(student=><option key={student.id} value={student.id}>{student.name}{student.reference?' · '+student.reference:''}</option>)}</select><small>Only permitted linked guardians/students can read this portal record.</small></label>}</div>}
     {(showAmount||showQuantity)&&<div className="ed360-form-row">{showAmount&&<label>Amount (PKR)<input type="number" min="0" step="0.01" value={amount} onChange={e=>setAmount(e.target.value)}/></label>}{showQuantity&&<label>Quantity<input type="number" min="0" step="0.001" value={quantity} onChange={e=>setQuantity(e.target.value)}/></label>}</div>}
     {structuredFields.length>0&&<section className="ed360-module-specific-form"><div className="ed360-module-specific-heading"><span>MODULE-SPECIFIC INFORMATION</span><p>Fields for {item.label.toLowerCase()}.</p></div><div className="ed360-context-form-fields">{structuredFields.map(field=><label key={field.key}>{field.label}{field.type==='select'?<select value={String(payloadData[field.key]??'')} onChange={e=>setPayloadData(old=>({...old,[field.key]:e.target.value}))}><option value="">Select / not set</option>{(field.options??[]).map(option=><option value={option} key={option}>{option}</option>)}</select>:field.type==='textarea'?<textarea rows={3} value={String(payloadData[field.key]??'')} onChange={e=>setPayloadData(old=>({...old,[field.key]:e.target.value}))} placeholder={field.placeholder??''}/>:<input type={field.type??'text'} step={field.type==='number'?'0.01':undefined} value={String(payloadData[field.key]??'')} onChange={e=>setPayloadData(old=>({...old,[field.key]:e.target.value}))} placeholder={field.placeholder??''}/>}</label>)}</div></section>}
     <div className="modal-actions"><button type="button" className="button button-outline" onClick={()=>setShowForm(false)}>Cancel</button><button type="submit" className="button button-primary" disabled={saving}>{saving?'Saving…':editing?'Save changes':'Create record'}</button></div>
