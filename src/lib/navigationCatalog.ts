@@ -24,6 +24,11 @@ const roleItemAllow:Record<string,Partial<Record<string,string[]>>>={
     student:['Form Submissions','Document Records'],
     parent:['Form Submissions','Document Records','Letters & Applications'],
   },
+  'forms-documents':{
+    teacher:['Form Submissions','Document Records','Letters & Applications','Document Verification'],
+    student:['Form Submissions','Document Records','Document Verification'],
+    parent:['Form Submissions','Document Records','Document Verification'],
+  },
   'hostel':{
     student:['Hostel Dashboard','Resident Allocation','Room Transfers','Check-in & Check-out','Hostel Fees'],
     parent:['Hostel Dashboard','Resident Allocation','Hostel Fees'],
