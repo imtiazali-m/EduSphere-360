@@ -5,7 +5,7 @@ import test from 'node:test'
 import { fileURLToPath } from 'node:url'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
-const migrationPath = path.join(root, 'supabase/migrations/20261111150000_harden_legacy_fee_payment_rpc.sql')
+const migrationPath = path.join(root, 'supabase/migrations/20261112000300_harden_legacy_fee_payment_rpc.sql')
 const sql = fs.readFileSync(migrationPath, 'utf8')
 
 test('the existing seven-argument legacy RPC signature and defaults remain compatible', () => {
