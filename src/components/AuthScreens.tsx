@@ -523,6 +523,7 @@ export function LoginScreen({ navigate, initialRole }: ScreenProps & { initialRo
   type LoginAccountType = 'owner_admin' | 'employee' | 'student' | 'parent'
   const initialAccountType: LoginAccountType = initialRole === 'student' ? 'student' : initialRole === 'parent' ? 'parent' : initialRole === 'owner' || initialRole === 'admin' || !initialRole ? 'owner_admin' : 'employee'
   const [accountType, setAccountType] = useState<LoginAccountType>(initialAccountType)
+  useEffect(() => { setAccountType(initialAccountType) }, [initialAccountType])
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
