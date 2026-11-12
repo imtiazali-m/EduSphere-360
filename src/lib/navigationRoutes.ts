@@ -24,7 +24,7 @@ const dashboardViews: Record<string, string> = {
   'employee-performance': 'employees:reports',
   'statistics-and-kpi-cards': 'overview',
   'charts-and-comparative-analytics': 'reports:overview',
-  'calendar-and-events': 'institutional:front-office:events-and-activities',
+  'calendar-and-events': 'institutional:front-office:events-activities',
   'notification-centre': 'notifications',
   'tasks-and-reminders': 'work_tasks:queue',
   'pending-approvals': 'governance:approvals',
