@@ -159,7 +159,7 @@ export function FrontOfficeWorkspace({initialView='enquiries',onToast}:{initialV
  const rowsCount=view==='enquiries'?enquiries.length:view==='announcements'?announcements.length:events.length
 
  return <main className="ed360-front-office">
-  <header className="ed360-front-office-hero"><div><span>STAGE 12 / COMMUNICATION & FRONT OFFICE</span><h1>Front Office & Communication</h1><p>Manage prospective-family enquiries, official notices and the institution calendar in their correct registers.</p></div><div className="ed360-front-office-count"><b>{rowsCount}</b><span>{activeLabel.toLowerCase()} records</span></div></header>
+  <header className="ed360-front-office-hero"><div><span>FRONT OFFICE & COMMUNICATION</span><h1>Front Office & Communication</h1><p>Manage prospective-family enquiries, official notices and the institution calendar in their correct registers.</p></div><div className="ed360-front-office-count"><b>{rowsCount}</b><span>{activeLabel.toLowerCase()} records</span></div></header>
   <nav className="ed360-front-office-tabs" aria-label="Front office workspaces">
    {viewOptions.filter(item=>item.key!=='enquiries'||canManage).map(item=>{const Icon=item.icon;return <button type="button" key={item.key} className={view===item.key?'active':''} aria-current={view===item.key?'page':undefined} onClick={()=>{setView(item.key);setSearch('');setShowForm(false);setSelectedEnquiry(null)}}><Icon size={16}/><span>{item.label}</span></button>})}
   </nav>
