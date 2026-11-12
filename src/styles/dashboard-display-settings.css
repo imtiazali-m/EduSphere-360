@@ -1,0 +1,349 @@
+/* Stage 4 — presentation preferences. No selector in this file changes routes, records or permissions. */
+
+.ed360-display-controls {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+.ed360-view-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px;
+  border: 1px solid var(--es-line, #dfe7f0);
+  border-radius: 11px;
+  background: var(--es-surface-soft, #f8fafd);
+}
+.ed360-view-switch button,
+.ed360-display-settings-trigger {
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 11px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--es-muted, #5e7289);
+  background: transparent;
+  font-size: 12px;
+  font-weight: 750;
+  white-space: nowrap;
+}
+.ed360-view-switch button[aria-pressed="true"] {
+  border-color: var(--es-line, #dfe7f0);
+  color: var(--es-ink, #172b43);
+  background: var(--es-surface, #fff);
+  box-shadow: 0 1px 3px rgba(17,43,73,.08);
+}
+.ed360-display-settings-trigger {
+  min-width: 38px;
+  border-color: var(--es-line, #dfe7f0);
+  background: var(--es-surface, #fff);
+}
+.ed360-display-settings-trigger:hover,
+.ed360-view-switch button:hover { color: var(--es-ink, #172b43); }
+.ed360-display-settings-panel[hidden] { display: none; }
+.ed360-display-settings-panel {
+  position: absolute;
+  z-index: 80;
+  top: calc(100% + 10px);
+  right: 0;
+  width: min(310px, calc(100vw - 28px));
+  display: grid;
+  gap: 12px;
+  padding: 15px;
+  border: 1px solid var(--es-line, #dfe7f0);
+  border-radius: 14px;
+  color: var(--es-ink, #172b43);
+  background: var(--es-surface, #fff);
+  box-shadow: 0 18px 46px rgba(12,35,64,.18);
+}
+.ed360-display-settings-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--es-line-soft, #eaf0f6);
+}
+.ed360-display-settings-heading > div { display: grid; gap: 3px; }
+.ed360-display-settings-heading strong { font-size: 13px; }
+.ed360-display-settings-heading small { color: var(--es-muted, #5e7289); font-size: 11px; }
+.ed360-display-settings-heading button {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--es-line, #dfe7f0);
+  border-radius: 8px;
+  color: inherit;
+  background: transparent;
+}
+.ed360-display-setting-row {
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--es-ink, #172b43);
+  font-size: 12px;
+  font-weight: 650;
+}
+.ed360-display-setting-row > span {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.ed360-display-setting-row select {
+  width: 138px;
+  min-height: 34px;
+  padding: 5px 9px;
+  border: 1px solid var(--es-line, #dfe7f0);
+  border-radius: 8px;
+  color: inherit;
+  background: var(--es-surface, #fff);
+  font-size: 12px;
+}
+.ed360-preference-toggle {
+  min-width: 94px;
+  min-height: 34px;
+  padding: 5px 10px;
+  border: 1px solid var(--es-line, #dfe7f0);
+  border-radius: 8px;
+  color: var(--es-ink, #172b43);
+  background: var(--es-surface-soft, #f8fafd);
+  font-size: 11px;
+  font-weight: 750;
+}
+.ed360-display-motion {
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding-top: 8px;
+  border-top: 1px solid var(--es-line-soft, #eaf0f6);
+  color: var(--es-ink, #172b43);
+  font-size: 12px;
+  font-weight: 650;
+}
+.ed360-display-motion input { width: 18px; height: 18px; accent-color: #316fe0; }
+
+.pro-app-shell .ed360-display-controls button:focus-visible,
+.pro-app-shell .ed360-display-settings-panel select:focus-visible,
+.pro-app-shell .ed360-display-settings-panel input:focus-visible {
+  outline: 3px solid #2459c7;
+  outline-offset: 3px;
+}
+
+/* Classic: a compact, register-oriented presentation of the same workspace content. */
+.pro-app-shell[data-view-mode="classic"] .pro-module-stage { padding-top: 11px; }
+.pro-app-shell[data-view-mode="classic"] .ed360-dashboard { gap: 13px; }
+.pro-app-shell[data-view-mode="classic"] .ed360-dashboard-heading { margin-bottom: 0; }
+.pro-app-shell[data-view-mode="classic"] .ed360-dashboard-heading h1 { font-size: 25px; letter-spacing: -.2px; }
+.pro-app-shell[data-view-mode="classic"] .ed360-dashboard-heading p { font-size: 12px; }
+.pro-app-shell[data-view-mode="classic"] .ed360-dashboard-scope { gap: 8px; padding: 10px; border-radius: 7px; box-shadow: none; }
+.pro-app-shell[data-view-mode="classic"] .ed360-metric-grid { gap: 8px; }
+.pro-app-shell[data-view-mode="classic"] .ed360-metric-card {
+  min-height: 76px;
+  padding: 11px 13px;
+  border: 1px solid var(--es-line, #dfe7f0);
+  border-radius: 7px;
+  box-shadow: none;
+}
+.pro-app-shell[data-view-mode="classic"] .ed360-metric-card::before { width: 2px; }
+.pro-app-shell[data-view-mode="classic"] .ed360-metric-icon { width: 34px; height: 34px; border-radius: 7px; box-shadow: none; }
+.pro-app-shell[data-view-mode="classic"] .ed360-metric-copy strong { font-size: 20px; }
+.pro-app-shell[data-view-mode="classic"] .ed360-start-panel { gap: 11px; padding: 13px; border: 1px solid var(--es-line, #dfe7f0); border-radius: 7px; box-shadow: none; background: var(--es-surface, #fff); }
+.pro-app-shell[data-view-mode="classic"] .ed360-start-heading h2 { font-size: 15px; }
+.pro-app-shell[data-view-mode="classic"] .ed360-start-heading p { font-size: 11px; }
+.pro-app-shell[data-view-mode="classic"] .ed360-start-grid { gap: 7px; }
+.pro-app-shell[data-view-mode="classic"] .ed360-start-card { min-height: 128px; padding: 10px; border-radius: 6px; box-shadow: none; }
+.pro-app-shell[data-view-mode="classic"] .ed360-start-card h3 { font-size: 11px; }
+.pro-app-shell[data-view-mode="classic"] .ed360-dashboard-row { gap: 11px; }
+.pro-app-shell[data-view-mode="classic"] .ed360-panel {
+  padding: 14px;
+  border: 1px solid var(--es-line, #dfe7f0);
+  border-radius: 7px;
+  box-shadow: none;
+}
+.pro-app-shell[data-view-mode="classic"] .ed360-panel-heading { margin-bottom: 10px; }
+.pro-app-shell[data-view-mode="classic"] .ed360-panel-heading h2 { font-size: 13px; }
+.pro-app-shell[data-view-mode="classic"] .ed360-panel-heading p { font-size: 10px; }
+.pro-app-shell[data-view-mode="classic"] .ed360-recent-list { gap: 0; border-top: 1px solid var(--es-line, #dfe7f0); }
+.pro-app-shell[data-view-mode="classic"] .ed360-recent-row {
+  display: grid;
+  grid-template-columns: 28px minmax(0,1fr) minmax(76px,auto);
+  gap: 10px;
+  min-height: 43px;
+  padding: 7px 4px;
+  border-bottom: 1px solid var(--es-line-soft, #eaf0f6);
+  border-radius: 0;
+  background: transparent;
+}
+.pro-app-shell[data-view-mode="classic"] .ed360-recent-row:hover { background: var(--es-surface-soft, #f8fafd); transform: none; }
+.pro-app-shell[data-view-mode="classic"] .ed360-events-list { gap: 0; }
+.pro-app-shell[data-view-mode="classic"] .ed360-event-row { min-height: 51px; padding: 7px 4px; border-radius: 0; border-bottom: 1px solid var(--es-line-soft, #eaf0f6); }
+.pro-app-shell[data-view-mode="classic"] .ed360-workspace-tabs { gap: 3px; }
+.pro-app-shell[data-view-mode="classic"] .pro-workspace-tab { border-radius: 5px 5px 0 0; box-shadow: none; }
+.pro-app-shell[data-view-mode="classic"] .pro-workspace-tab-main { padding: 7px 9px; font-size: 11px; }
+.pro-app-shell[data-view-mode="classic"] .pro-active-workspace-context { padding-top: 8px; padding-bottom: 8px; }
+.pro-app-shell[data-view-mode="classic"] .pro-window-panel .table-card,
+.pro-app-shell[data-view-mode="classic"] .pro-window-panel .ed360-workspace-record-card,
+.pro-app-shell[data-view-mode="classic"] .pro-window-panel .ed360-panel,
+.pro-app-shell[data-view-mode="classic"] .pro-window-panel .modal-card {
+  border-radius: 6px;
+  box-shadow: none;
+}
+.pro-app-shell[data-view-mode="classic"] .pro-window-panel table { border-collapse: collapse; }
+.pro-app-shell[data-view-mode="classic"] .pro-window-panel th { font-size: 11px; font-weight: 800; letter-spacing: .01em; }
+.pro-app-shell[data-view-mode="classic"] .pro-window-panel td { font-size: 12px; }
+.pro-app-shell[data-view-mode="classic"] .pro-window-panel .table-scroll th { padding-top: 9px; padding-bottom: 9px; }
+.pro-app-shell[data-view-mode="classic"] .pro-window-panel .table-scroll td { padding-top: 8px; padding-bottom: 8px; }
+.pro-app-shell[data-view-mode="classic"] .pro-window-panel input,
+.pro-app-shell[data-view-mode="classic"] .pro-window-panel select,
+.pro-app-shell[data-view-mode="classic"] .pro-window-panel textarea { border-radius: 5px; }
+.pro-app-shell[data-view-mode="classic"] .ed360-metric-card,
+.pro-app-shell[data-view-mode="classic"] .ed360-panel,
+.pro-app-shell[data-view-mode="classic"] .ed360-start-card { transition: none; }
+
+/* User-selected readable type scale. It never changes table data or available controls. */
+.pro-app-shell[data-font-size="large"] .pro-module-stage { font-size: 1.0625rem; }
+.pro-app-shell[data-font-size="largest"] .pro-module-stage { font-size: 1.125rem; }
+.pro-app-shell[data-font-size="large"] .pro-window-panel :is(p,small,label,th,td,button,input,select,textarea) { font-size: max(13px, 1rem); }
+.pro-app-shell[data-font-size="largest"] .pro-window-panel :is(p,small,label,th,td,button,input,select,textarea) { font-size: max(14px, 1.0625rem); }
+
+/* The selected motion preference supplements the operating-system preference. */
+.pro-app-shell[data-reduced-motion="true"] *,
+.pro-app-shell[data-reduced-motion="true"] *::before,
+.pro-app-shell[data-reduced-motion="true"] *::after {
+  animation-duration: .01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: .01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* Dark theme is scoped to the signed-in shell. */
+.pro-app-shell[data-theme="dark"] {
+  color-scheme: dark;
+  --es-ink: #e6edf7;
+  --es-muted: #a5b4c7;
+  --es-subtle: #a5b4c7;
+  --es-line: #30435a;
+  --es-line-soft: #26384e;
+  --es-canvas: #0d1827;
+  --es-surface: #142338;
+  --es-surface-soft: #192b41;
+  --es-primary-100: #203b60;
+  background: var(--es-canvas);
+  color: var(--es-ink);
+}
+.pro-app-shell[data-theme="dark"] .pro-main-shell,
+.pro-app-shell[data-theme="dark"] .pro-module-stage,
+.pro-app-shell[data-theme="dark"] .pro-window-stack,
+.pro-app-shell[data-theme="dark"] .pro-window-panel,
+.pro-app-shell[data-theme="dark"] .ed360-dashboard { background: var(--es-canvas); color: var(--es-ink); }
+.pro-app-shell[data-theme="dark"] .pro-topbar,
+.pro-app-shell[data-theme="dark"] .pro-workspace-tabs,
+.pro-app-shell[data-theme="dark"] .pro-active-workspace-context,
+.pro-app-shell[data-theme="dark"] .pro-workspace-tab,
+.pro-app-shell[data-theme="dark"] .pro-profile-menu,
+.pro-app-shell[data-theme="dark"] .pro-search-results,
+.pro-app-shell[data-theme="dark"] .ed360-panel,
+.pro-app-shell[data-theme="dark"] .ed360-metric-card,
+.pro-app-shell[data-theme="dark"] .ed360-start-panel,
+.pro-app-shell[data-theme="dark"] .ed360-start-card,
+.pro-app-shell[data-theme="dark"] .ed360-dashboard-scope,
+.pro-app-shell[data-theme="dark"] .table-card,
+.pro-app-shell[data-theme="dark"] .modal-card,
+.pro-app-shell[data-theme="dark"] .ed360-display-settings-panel {
+  border-color: var(--es-line) !important;
+  color: var(--es-ink) !important;
+  background: var(--es-surface) !important;
+  box-shadow: 0 6px 20px rgba(0,0,0,.18);
+}
+.pro-app-shell[data-theme="dark"] .pro-workspace-tab.is-active { background: #203753 !important; color: #f1f5fb !important; }
+.pro-app-shell[data-theme="dark"] .pro-workspace-tab-main,
+.pro-app-shell[data-theme="dark"] .pro-active-workspace-context strong,
+.pro-app-shell[data-theme="dark"] .pro-active-workspace-context small,
+.pro-app-shell[data-theme="dark"] .ed360-panel h2,
+.pro-app-shell[data-theme="dark"] .ed360-dashboard-heading h1,
+.pro-app-shell[data-theme="dark"] .ed360-start-heading h2,
+.pro-app-shell[data-theme="dark"] .ed360-start-card h3,
+.pro-app-shell[data-theme="dark"] .ed360-metric-copy strong,
+.pro-app-shell[data-theme="dark"] .ed360-recent-copy strong,
+.pro-app-shell[data-theme="dark"] .ed360-event-copy strong,
+.pro-app-shell[data-theme="dark"] .pro-profile-copy,
+.pro-app-shell[data-theme="dark"] .pro-profile-details,
+.pro-app-shell[data-theme="dark"] .ed360-display-settings-heading strong {
+  color: var(--es-ink) !important;
+}
+.pro-app-shell[data-theme="dark"] .ed360-dashboard p,
+.pro-app-shell[data-theme="dark"] .ed360-dashboard small,
+.pro-app-shell[data-theme="dark"] .ed360-panel p,
+.pro-app-shell[data-theme="dark"] .ed360-start-card p,
+.pro-app-shell[data-theme="dark"] .ed360-dashboard-scope label,
+.pro-app-shell[data-theme="dark"] .ed360-display-setting-row,
+.pro-app-shell[data-theme="dark"] .ed360-display-settings-heading small,
+.pro-app-shell[data-theme="dark"] .ed360-profile-copy small,
+.pro-app-shell[data-theme="dark"] .pro-workspace-tabs-help {
+  color: var(--es-muted) !important;
+}
+.pro-app-shell[data-theme="dark"] .pro-global-search,
+.pro-app-shell[data-theme="dark"] .pro-global-search input,
+.pro-app-shell[data-theme="dark"] .ed360-display-settings-panel select,
+.pro-app-shell[data-theme="dark"] .ed360-display-settings-panel button,
+.pro-app-shell[data-theme="dark"] .pro-window-panel input,
+.pro-app-shell[data-theme="dark"] .pro-window-panel select,
+.pro-app-shell[data-theme="dark"] .pro-window-panel textarea {
+  border-color: var(--es-line) !important;
+  color: var(--es-ink) !important;
+  background: var(--es-surface-soft) !important;
+}
+.pro-app-shell[data-theme="dark"] .pro-window-panel table th { background: #1a2c42 !important; color: #c5d2e2 !important; }
+.pro-app-shell[data-theme="dark"] .pro-window-panel table td { border-color: var(--es-line-soft) !important; color: #d0dbea !important; }
+.pro-app-shell[data-theme="dark"] .pro-window-panel tbody tr:hover { background: #1b3049 !important; }
+.pro-app-shell[data-theme="dark"] .ed360-recent-row,
+.pro-app-shell[data-theme="dark"] .ed360-event-row { border-color: var(--es-line-soft) !important; background: transparent !important; }
+.pro-app-shell[data-theme="dark"] .ed360-view-switch { border-color: var(--es-line); background: var(--es-surface-soft); }
+.pro-app-shell[data-theme="dark"] .ed360-view-switch button[aria-pressed="true"],
+.pro-app-shell[data-theme="dark"] .ed360-display-settings-trigger { border-color: var(--es-line); color: var(--es-ink); background: #203651; }
+.pro-app-shell[data-theme="dark"] .ed360-preference-toggle { border-color: var(--es-line); color: var(--es-ink); background: var(--es-surface-soft); }
+.pro-app-shell[data-theme="dark"] .ed360-display-settings-panel { border-color: var(--es-line); }
+.pro-app-shell[data-theme="dark"] .ed360-display-settings-heading { border-color: var(--es-line); }
+
+/* WCAG 2.2 AA minimum target size and focus visibility for the new controls. */
+.pro-app-shell[data-theme="dark"] .ed360-display-controls button:focus-visible,
+.pro-app-shell[data-theme="dark"] .ed360-display-settings-panel select:focus-visible,
+.pro-app-shell[data-theme="dark"] .ed360-display-settings-panel input:focus-visible { outline-color: #a9caff; }
+
+.pro-app-shell .ed360-display-controls button,
+.pro-app-shell .ed360-display-settings-panel select,
+.pro-app-shell .ed360-display-settings-panel input { min-height: 32px; }
+.pro-app-shell .ed360-display-controls button,
+.pro-app-shell .ed360-display-settings-panel button { min-width: 32px; }
+@media (max-width: 900px) {
+  .pro-topbar { flex-wrap: wrap; }
+  .pro-topbar-right { gap: 8px; flex-wrap: wrap; }
+  .ed360-display-controls { order: 3; }
+}
+@media (max-width: 600px) {
+  .ed360-display-controls { width: 100%; justify-content: space-between; }
+  .ed360-view-switch { flex: 1; }
+  .ed360-view-switch button { flex: 1; }
+  .ed360-display-settings-trigger { flex: 0 0 auto; }
+  .ed360-display-settings-panel { right: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pro-app-shell *,
+  .pro-app-shell *::before,
+  .pro-app-shell *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
