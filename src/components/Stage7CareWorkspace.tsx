@@ -462,7 +462,7 @@ export function Stage7CareWorkspace({initialWindow='leave',onToast}:{initialWind
   return <main className="page-content s7-page">
     <header className="s7-hero">
       <div className="s7-hero-icon">{activeWindow==='health'?<HeartPulse size={23}/>:activeWindow==='discipline'?<ShieldCheck size={23}/>:activeWindow==='counselling'?<MessageSquare size={23}/>:activeWindow==='reports'?<Activity size={23}/>:<CalendarDays size={23}/>}</div>
-      <div><span>STAGE 7 / ATTENDANCE, LEAVE & STUDENT WELLBEING</span><h1>{pageTitle[activeWindow]}</h1><p>{pageIntro[activeWindow]}</p></div>
+      <div><span>STUDENT CARE & WELLBEING</span><h1>{pageTitle[activeWindow]}</h1><p>{pageIntro[activeWindow]}</p></div>
       <button type="button" className="s7-refresh" onClick={()=>setRefreshKey(v=>v+1)}><RefreshCw size={15}/> Refresh</button>
     </header>
     {loadError&&<div className="s7-alert" role="alert"><AlertTriangle size={16}/>{loadError}</div>}
