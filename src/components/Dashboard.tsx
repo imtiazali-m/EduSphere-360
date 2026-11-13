@@ -713,6 +713,9 @@ export function Dashboard({ onToast }: Props) {
     const assistantWindowRoute = key.startsWith('assistant:')
     const frontOfficeWindowRoute = key.startsWith('frontoffice:')
     const governanceWindowRoute = key.startsWith('governance:')
+    const dataManagementWindowRoute = key.startsWith('data-management:')
+    const customReportsWindowRoute = key.startsWith('custom-reports:')
+    const messagingWindowRoute = key.startsWith('messaging:')
     const operationsWindowRoute = key.startsWith('operations:')
     const routeParts = key.split(':')
     const moduleWindowRoute = routeParts.length === 2 && ['fees', 'exams', 'exam_results', 'assignments', 'assignment_submissions', 'timetable', 'announcements', 'work_tasks'].includes(routeParts[0])
@@ -731,6 +734,9 @@ export function Dashboard({ onToast }: Props) {
       : frontOfficeWindowRoute ? 'frontoffice'
       : payrollWindowRoute ? 'payroll'
       : governanceWindowRoute ? 'governance'
+      : dataManagementWindowRoute ? 'data-management'
+      : customReportsWindowRoute ? 'custom-reports'
+      : messagingWindowRoute ? 'messaging'
       : operationsWindowRoute ? 'operations'
       : moduleWindowRoute ? routeParts[0]
       : key
@@ -749,6 +755,9 @@ export function Dashboard({ onToast }: Props) {
       : frontOfficeWindowRoute ? key.slice('frontoffice:'.length)
       : payrollWindowRoute ? key.slice('payroll:'.length)
       : governanceWindowRoute ? key.slice('governance:'.length)
+      : dataManagementWindowRoute ? key.slice('data-management:'.length)
+      : customReportsWindowRoute ? key.slice('custom-reports:'.length)
+      : messagingWindowRoute ? key.slice('messaging:'.length)
       : operationsWindowRoute ? key.slice('operations:'.length)
       : moduleWindowRoute ? routeParts[1]
       : 'overview'
