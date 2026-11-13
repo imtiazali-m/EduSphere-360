@@ -423,7 +423,7 @@ function Overview({ onNavigate, careAreas }: { onNavigate: (key: string) => void
     <header className="ed360-dashboard-heading">
       <div className="ed360-heading-title">
         <span className="ed360-heading-emblem"><GraduationCap size={25}/></span>
-        <div><h1>Dashboard</h1><p>Welcome back, {user!.fullName.split(' ')[0]}! Here’s your institution overview.</p></div>
+        <div><h1>College Overview</h1><p>Welcome back, {user!.fullName.split(' ')[0]}. Here’s the latest view of your college workspace.</p></div>
       </div>
       <div className="ed360-heading-date"><CalendarDays size={16}/><span>{today}</span></div>
     </header>
@@ -576,7 +576,7 @@ type WorkspaceTab = { id: string; route: string; targetKey: string; targetWindow
 
 export function Dashboard({ onToast }: Props) {
   const { user, mode, signOut } = useAuth()
-  const [workspaceTabs, setWorkspaceTabs] = useState<WorkspaceTab[]>([{ id: 'overview', route: 'overview', targetKey: 'overview', targetWindow: 'overview', title: 'Dashboard' }])
+  const [workspaceTabs, setWorkspaceTabs] = useState<WorkspaceTab[]>([{ id: 'overview', route: 'overview', targetKey: 'overview', targetWindow: 'overview', title: 'College Overview' }])
   const [activeTabId, setActiveTabId] = useState('overview')
   const activeTab = workspaceTabs.find(tab => tab.id === activeTabId) ?? workspaceTabs[0]
   const activeNavigationTab = (() => {
@@ -752,7 +752,7 @@ export function Dashboard({ onToast }: Props) {
     let title = options.title ?? 'Dashboard'
 
     if (!options.title) {
-      if (targetKey === 'overview') title = 'Dashboard'
+      if (targetKey === 'overview') title = 'College Overview'
       else if (targetKey === 'notifications') title = 'Notification Centre'
       else if (targetKey === 'institutional') title = 'College Workspace'
       else if (targetKey === 'unavailable') title = 'Workspace not connected'
