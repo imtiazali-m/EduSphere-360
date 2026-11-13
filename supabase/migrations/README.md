@@ -1,6 +1,6 @@
 # Migration history
 
-The fifty-seven timestamped migration files in this folder match the remote migration history recorded by the linked Supabase project. Keep each 14-digit timestamp unchanged so local and remote migration histories remain aligned.
+The fifty-nine timestamped migration files in this folder match the remote migration history recorded by the linked Supabase project. Keep each 14-digit timestamp unchanged so local and remote migration histories remain aligned.
 
 The current online application includes the reviewed schema changes for the existing live schema, Faculty & Employee Management, and Student Management operations (admission lifecycle, linked guardian contacts, class placements, private student documents and audit history for attendance, published results, assignment submissions, guardian policy consolidation and activity indexes). The Student Management and Faculty/Employee migrations have already been applied to the linked project; do not replay them manually.
 
@@ -54,3 +54,6 @@ The residence operations migration adds institution-scoped hostel buildings, roo
 
 
 The latest timestamped migrations add institution-scoped in-app messaging, transport attendance, room reservation approval, hostel/residence management, supplier procurement, purchase orders and goods receiving, plus cafeteria menus, daily availability, meal plans and stock-aware sales. Purchase receiving and cafeteria sales update the inventory movement ledger through database transactions; provider-dependent backups, WhatsApp/email delivery and external payment settlement are not represented as completed by these migrations.
+
+
+Library reading progress records are linked to institution students and, when selected, the associated library loan. Student reader cards are derived from the current student profile and actual loan activity. Fee receipt issuance is recorded in a separate tenant-scoped ledger against an existing fee payment; receipt numbers are allocated atomically, stored snapshots support later verification, and batch issuance does not create or alter fee payments.
