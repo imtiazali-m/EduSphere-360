@@ -169,3 +169,23 @@
 .ed360-duplicate-actions{display:flex;gap:5px;flex-wrap:wrap}
 .ed360-duplicate-actions .button{font-size:11px;padding:6px 8px}
 @media(max-width:700px){.ed360-duplicate-workspace .ed360-workspace-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+
+.ed360-certificate-forms{display:grid;gap:16px}
+.ed360-certificate-forms .ed360-data-card{display:grid;gap:14px}
+.ed360-certificate-forms .ed360-data-card>header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.ed360-certificate-forms .ed360-data-card h2{margin:0 0 6px;color:#18324e;font-size:18px}
+.ed360-certificate-forms .ed360-data-form>label{display:grid;gap:7px;min-width:190px;flex:1;font-size:13px;font-weight:650;color:#344b65}
+.ed360-certificate-forms .ed360-data-form input,.ed360-certificate-forms .ed360-data-form select,.ed360-certificate-forms .ed360-data-form textarea{width:100%;min-height:42px;border:1px solid #d5deea;border-radius:9px;padding:9px 11px;background:#fff;color:#1c344d;font:inherit}
+.ed360-certificate-forms .ed360-forms-wide{flex:1 0 100%}
+.ed360-certificate-forms .ed360-form-actions{display:flex;gap:6px;flex-wrap:wrap}
+.ed360-certificate-forms .ed360-form-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.ed360-certificate-forms .ed360-form-list-item{display:grid;text-align:left;gap:6px;padding:13px;border:1px solid #dce5ee;border-radius:10px;background:#fff;cursor:pointer;color:#25405d}
+.ed360-certificate-forms .ed360-form-list-item.selected{border-color:#4a83b7;background:#f2f8ff}
+.ed360-certificate-forms .ed360-form-list-item small{color:#6e8094}
+.ed360-certificate-forms .ed360-form-review{display:grid;gap:6px;min-width:220px}
+.ed360-certificate-forms .ed360-form-review input{border:1px solid #d5deea;border-radius:7px;padding:7px}
+.ed360-certificate-forms details pre{max-width:360px;white-space:pre-wrap;overflow-wrap:anywhere;background:#f7f9fc;padding:9px;border-radius:8px}
+.ed360-certificate-forms .ed360-form-checkbox{display:flex!important;align-items:center;gap:8px}
+.ed360-certificate-forms .ed360-form-checkbox input{width:auto;min-height:auto}
+@media(max-width:640px){.ed360-certificate-forms .ed360-data-form>label{min-width:100%}}
