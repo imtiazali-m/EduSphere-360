@@ -338,7 +338,7 @@ export function CollegeWebsite({ navigate }: Props) {
             </div>
             <div className="gic-life-photo">
               <img
-                src="https://images.unsplash.com/photo-1756037020659-6f9d3418f6b6?auto=format&fit=crop&fm=jpg&ixlib=rb-4.1.0&q=60&w=1200"
+                src="https://images.unsplash.com/photo-1507842217343-583bb7270b66"
                 alt="University students sharing ideas during a study session; illustrative image, not a photograph of Government Islamia Degree College Badin"
                 loading="lazy"
               />
@@ -415,7 +415,7 @@ export function CollegeWebsite({ navigate }: Props) {
           </div>
           <div className="gic-footer-bottom">
             <span>© {new Date().getFullYear()} Government Islamia Degree College Badin</span>
-            <span>Illustrative photographs: Vitaly Gariev and Leo Okuyama / Unsplash</span>
+            <span>Illustrative photographs: Vitaly Gariev and Unsplash contributors</span>
             <a href="#top">Back to top ↑</a>
           </div>
         </div>
