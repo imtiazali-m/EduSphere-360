@@ -839,7 +839,7 @@ export function Dashboard({ onToast }: Props) {
     <aside className={`pro-sidebar ${sidebarOpen ? 'is-open' : ''} ${compactSidebar ? 'is-collapsed' : ''}`} aria-hidden={isMobileNav && !sidebarOpen}>
       <div className="pro-sidebar-brand">
         <div className="pro-sidebar-mark"><GraduationCap size={25}/></div>
-        <div className="pro-sidebar-brand-copy"><b>EduSphere <i>360</i></b><small>INSTITUTION MANAGEMENT</small></div>
+        <div className="pro-sidebar-brand-copy"><b>Government Islamia</b><small>DEGREE COLLEGE · BADIN</small></div>
         <button type="button" className="pro-sidebar-collapse" onClick={() => setSidebarCollapsed(value => !value)} aria-label={compactSidebar ? 'Expand navigation' : 'Collapse navigation'} aria-pressed={compactSidebar} title={compactSidebar ? 'Expand navigation' : 'Collapse navigation'}>
           {compactSidebar ? <ChevronRight size={18}/> : <ChevronLeft size={18}/>}
         </button>
