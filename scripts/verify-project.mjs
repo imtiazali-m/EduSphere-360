@@ -393,13 +393,32 @@ check('Public welcome page includes an accessible feature showcase and FAQ', () 
   assert.ok(welcome.includes('href="#showcase"') && welcome.includes('href="#faq"'), 'The welcome navigation must link to the product tour and FAQ')
   assert.ok(welcome.includes('Frequently asked questions'), 'The footer must include a visible FAQ link')
 })
-check('Owner signup collects and sends name, institution and institution type', () => {
-  for (const value of ['Your full name', 'Institution name', 'Institution type', 'Owner / Admin']) assert.ok(authScreens.includes(value), `${value} is missing from authentication screens`)
-  for (const value of ['institutionName', 'institutionType', 'fullName']) assert.ok(authContext.includes(value) && authSource.includes(value), `${value} is missing from auth context/client`)
-  assert.ok(authSource.includes('institution_name: institutionName'))
-  assert.ok(authSource.includes('institution_type: input.institutionType'))
-  assert.ok(signupMigration.includes("new.raw_user_meta_data ->> 'institution_name'"))
-  assert.ok(signupMigration.includes("new.raw_user_meta_data ->> 'institution_type'"))
+check('Government Islamia Degree College Badin has a college-specific public website', () => {
+  const college = read('src/components/CollegeWebsite.tsx')
+  for (const value of ['Government Islamia', 'Degree College, Badin', 'Badin District, Sindh', '#about', '#academics', '#admissions', '#notices', '#portal', '#contact', 'College Education Department']) {
+    assert.ok(college.includes(value), 'College website content is missing: ' + value)
+  }
+  assert.ok(college.includes('https://college.sindh.gov.pk/government-colleges'), 'The college website must link to the official Government of Sindh directory')
+  assert.ok(college.includes('https://seccap.dgcs.gos.pk/'), 'The college website must link to the official government admissions channel')
+  assert.ok(college.includes('not a photograph of the Badin campus'), 'Illustrative photography must not be misrepresented as the college campus')
+  assert.ok(read('index.html').includes('Government Islamia Degree College Badin'), 'Browser title and metadata must identify the college')
+})
+
+check('College portal directs new users to approved account provisioning, not public tenant signup', () => {
+  const setupStart = authScreens.indexOf('export function SetupScreen(')
+  const setupEnd = authScreens.indexOf('export function ResetPasswordScreen', setupStart)
+  assert.ok(setupStart >= 0 && setupEnd > setupStart, 'College account access screen is missing')
+  const setup = authScreens.slice(setupStart, setupEnd)
+  for (const value of ['Get access through the college', 'New accounts are created or approved by authorised college staff', 'Students and guardians', 'Faculty and employees', 'Continue to sign in']) {
+    assert.ok(setup.includes(value), 'College account access guidance is missing: ' + value)
+  }
+  for (const value of ['registerAdmin(', 'cloudRegisterInstitutionOwner(', 'Create your account', 'Institution name']) {
+    assert.ok(!setup.includes(value), 'Public institution self-registration is still exposed: ' + value)
+  }
+  for (const value of ['Principal / Office', 'Faculty / Staff', 'Student', 'Parent']) {
+    assert.ok(authScreens.includes(value), 'College login category is missing: ' + value)
+  }
+  assert.ok(authScreens.includes('requestPasswordReset'), 'College users must retain self-service password recovery')
 })
 check('Login separates owner/admin, employee, student and parent role checks', () => {
   assert.ok(authScreens.includes("'owner_admin' | 'employee' | 'student' | 'parent'"))
