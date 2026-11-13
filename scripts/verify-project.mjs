@@ -371,6 +371,7 @@ check('Campus and finance submenu workspaces use their dedicated records and tra
     '20261113160000_library_reading_history.sql',
     '20261113170000_fee_receipt_issuance_and_numbering.sql',
     '20261113180000_payment_gateway_review_register.sql',
+    '20261113190000_facility_asset_lifecycle.sql',
   ]
   for (const migration of migrations) {
     assert.ok(read(path.join('supabase','migrations',migration)).length>0, 'Missing transaction/schema migration: '+migration)
@@ -1082,8 +1083,8 @@ check('Required database safeguards and Cloudflare redirects remain in the proje
     assert.ok(migrations.includes(migration), `${migration} missing`)
   }
   const timestamped = migrations.filter(name => /^202611\d{8}_.+\.sql$/.test(name))
-  assert.equal(timestamped.length, 61, 'Expected sixty-one timestamped migrations including the payment review register')
-  assert.ok(read('supabase/migrations/README.md').includes('sixty-one timestamped migration files'))
+  assert.equal(timestamped.length, 62, 'Expected sixty-two timestamped migrations including asset lifecycle events')
+  assert.ok(read('supabase/migrations/README.md').includes('sixty-two timestamped migration files'))
   assert.equal(read('public/_redirects').trim(), '/* /index.html 200')
   const envExample = read('.env.example')
   const gitignore = read('.gitignore')
