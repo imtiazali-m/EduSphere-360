@@ -597,3 +597,21 @@
   .nl-faq-list h3 button { min-height: 54px; font-size: 9px; }
   .nl-faq-list article p { font-size: 8px; }
 }
+
+
+@media (max-width: 1040px) {
+  .nl-header { height: 76px; }
+  .nl-mobile-toggle {
+    width: 39px; height: 39px; display: grid; place-items: center; margin-left: auto;
+    border: 1px solid var(--es-line); border-radius: 9px; color: var(--es-brand-800); background: #fff;
+  }
+  .nl-nav {
+    display: none; position: absolute; top: 68px; left: 0; right: 0;
+    align-items: stretch; flex-direction: column; gap: 0; padding: 9px;
+    border: 1px solid var(--es-line); border-radius: 12px; background: #fff;
+    box-shadow: var(--es-shadow-lg);
+  }
+  .nl-nav.nl-open { display: flex; }
+  .nl-nav a { padding: 13px 12px; border-radius: 7px; color: var(--es-muted); }
+  .nl-nav a:hover { background: var(--es-primary-050); color: var(--es-primary-700); }
+}
