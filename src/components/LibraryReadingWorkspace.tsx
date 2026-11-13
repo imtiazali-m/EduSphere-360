@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { BookOpen, CalendarDays, Download, GraduationCap, History, Printer, RefreshCw } from 'lucide-react'
+import { BookOpen, Printer, RefreshCw } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import '../styles/data-management.css'
@@ -13,7 +13,6 @@ const notes:Record<string,string>={
  'student-reading-history':'Combine circulation issue/return history with logged student reading progress.'
 }
 const date=(v:unknown)=>v?new Date(String(v)).toLocaleDateString():'—'
-const datetime=(v:unknown)=>v?new Date(String(v)).toLocaleString():'—'
 const label=(v:unknown)=>String(v??'').replaceAll('_',' ').replace(/\b\w/g,c=>c.toUpperCase())
 function getBook(row:Row){return row.book_title??row.title??row.book_name??row.book_record_id??row.book_id??'Library book'}
 function getLoanDate(row:Row){return row.issued_at??row.issue_date??row.loan_date??row.created_at}
@@ -80,6 +79,7 @@ export function LibraryReadingWorkspace({workspaceKey,onToast}:{workspaceKey:str
  const field=(name:string,labelText:string,type='text',required=true)=><label className="ed360-library-field">{labelText}<input type={type} required={required} value={form[name]??''} onChange={e=>setForm(v=>({...v,[name]:e.target.value}))}/></label>
  if(!user)return null
  return <main className="page-content ed360-module-page ed360-library-reading">
+  {loading&&<div className="ed360-workspace-empty">Loading library records…</div>}
   <header className="ed360-workspace-hero"><div className="ed360-workspace-hero-icon"><BookOpen size={21}/></div><div className="ed360-workspace-hero-copy"><span>LIBRARY / READING & CIRCULATION</span><h1>{titles[page]??'Library Reading Workspace'}</h1><p>{notes[page]??'Student library reading activity and circulation.'}</p></div><div className="ed360-workspace-hero-tools"><span className="ed360-data-state"><i/> Institution records</span><button className="button button-outline" type="button" onClick={()=>void load()}><RefreshCw size={15}/> Refresh</button></div></header>
   {page==='reading-records'&&<section className="ed360-data-card"><header><h2>Record a reading session</h2><p>Reading entries can be linked to a library loan or recorded as an independent reading activity.</p></header>{staff&&<form className="ed360-data-form" onSubmit={addReading}>
    <label>Student<select required value={form.student_id??''} onChange={e=>setForm(v=>({...v,student_id:e.target.value,library_loan_id:''}))}><option value="">Select student</option>{students.map(s=><option key={s.id} value={s.id}>{s.full_name} · {s.admission_no??'No admission ID'}</option>)}</select></label>
