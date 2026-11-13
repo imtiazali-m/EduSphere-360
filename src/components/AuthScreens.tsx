@@ -11,6 +11,7 @@ import { useAuth } from '../context/AuthContext'
 import { userFacingError } from '../lib/userErrors'
 import { resendInstitutionOwnerVerification } from '../lib/auth'
 import type { AppRole } from '../lib/types'
+import { NewLandingPage } from './NewLandingPage'
 import '../styles/welcome-marketing.css'
 import '../styles/welcome-completion.css'
 import '../styles/auth-experience.css'
@@ -129,7 +130,7 @@ const welcomeFaqs = [
   },
 ]
 
-export function WelcomeScreen({ navigate }: ScreenProps) {
+export function LegacyWelcomeScreen({ navigate }: ScreenProps) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [showcaseTab, setShowcaseTab] = useState<ShowcaseKey>('students')
   const [openFaq, setOpenFaq] = useState<number | null>(0)
@@ -498,6 +499,11 @@ export function WelcomeScreen({ navigate }: ScreenProps) {
       {legalDocument && <LegalNotice kind={legalDocument} onClose={() => setLegalDocument(null)} />}
     </div>
   )
+}
+
+
+export function WelcomeScreen({ navigate }: ScreenProps) {
+  return <NewLandingPage navigate={navigate} />
 }
 
 function AuthVisualPanel({ variant }: { variant: 'login' | 'signup' | 'cloud' }) {
