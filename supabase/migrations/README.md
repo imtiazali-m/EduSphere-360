@@ -1,6 +1,6 @@
 # Migration history
 
-The sixty-three timestamped migration files in this folder match the remote migration history recorded by the linked Supabase project. Keep each 14-digit timestamp unchanged so local and remote migration histories remain aligned.
+The sixty-five timestamped migration files in this folder match the remote migration history recorded by the linked Supabase project. Keep each 14-digit timestamp unchanged so local and remote migration histories remain aligned.
 
 The current online application includes the reviewed schema changes for the existing live schema, Faculty & Employee Management, and Student Management operations (admission lifecycle, linked guardian contacts, class placements, private student documents and audit history for attendance, published results, assignment submissions, guardian policy consolidation and activity indexes). The Student Management and Faculty/Employee migrations have already been applied to the linked project; do not replay them manually.
 
@@ -66,3 +66,6 @@ Facility asset lifecycle actions assign and transfer assets, update warranty inf
 
 
 Receipt issuance validates the current fee-payment record at insertion time and rejects pending, failed, unpaid, void or reversed transactions. A payment snapshot is stored with the issued receipt so later verification reflects the actual record at issuance.
+
+
+Scheduled report definitions can now be run immediately from the institution workspace. A CSV is generated from the selected live tenant-scoped source and the execution history records the report, row count, output filename and requesting user. Saved frequency/recipient preferences are not automatically executed or emailed until a server scheduler and delivery provider are configured.
