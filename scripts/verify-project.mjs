@@ -420,6 +420,18 @@ check('College portal directs new users to approved account provisioning, not pu
   }
   assert.ok(authScreens.includes('requestPasswordReset'), 'College users must retain self-service password recovery')
 })
+check('College library reading records use the existing role-scoped data workflow', () => {
+  const workspace = read('src/components/LinkedOperationsWorkspace.tsx')
+  const dashboard = read('src/components/Dashboard.tsx')
+  const routes = read('src/lib/navigationRoutes.ts')
+  assert.ok(workspace.includes("db.from('library_reading_records')"), 'The reading screen must read the protected reading log')
+  assert.ok(workspace.includes("supabase.from('library_reading_records').insert"), 'Staff must be able to record reading activity')
+  assert.ok(workspace.includes("['owner','admin','teacher'].includes(user.role)"), 'Only authorised staff roles can create reading records')
+  assert.ok(workspace.includes('visibleReadingRecords') && workspace.includes('downloadCsv'), 'The reading log must support filtered records and export')
+  assert.ok(routes.includes("return 'institutional:library:reading-records'"), 'Library reading routes must resolve to the live workspace')
+  assert.ok(dashboard.includes("'library:reading-records'"), 'The college dashboard must dispatch the reading workspace')
+})
+
 check('Login separates owner/admin, employee, student and parent role checks', () => {
   assert.ok(authScreens.includes("'owner_admin' | 'employee' | 'student' | 'parent'"))
   assert.ok(authContext.includes("expectedRole === 'owner_admin'"))
