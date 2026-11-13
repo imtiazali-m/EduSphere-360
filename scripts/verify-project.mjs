@@ -325,6 +325,26 @@ check('Institutional registers and windows are tailored by workspace domain', ()
   }
 })
 
+check('Expanded unavailable submenu records have typed fields and visible register columns', () => {
+  const workspace = read('src/components/InstitutionalWorkspace.tsx')
+  const start = workspace.indexOf('const completionItemFields:')
+  const end = workspace.indexOf('\\nconst statusOptions', start)
+  assert.ok(start >= 0 && end > start, 'Task-specific submenu field catalogue must exist')
+  const fieldMap = workspace.slice(start, end)
+  const keys = [...fieldMap.matchAll(/'([^']+:[^']+)':\\[/g)].map(match => match[1])
+  assert.equal(keys.length, 90, 'Ninety previously missing submenus must have their own task-specific field definitions')
+  assert.equal(new Set(keys).size, keys.length, 'Task-specific field definition keys must be unique')
+  for (const group of ['backup','behaviour','certificates','library','payments','receipts','communication','transport','inventory','facilities','visitors','reports']) {
+    assert.ok(keys.some(key => key.startsWith(group + ':')), 'Missing task-specific form definitions for ' + group)
+  }
+  assert.ok(workspace.includes('const tableFields=(preferredTableFields.length?preferredTableFields:structuredFields).slice(0,4)'), 'Submenu-specific fields must appear in their register columns')
+  assert.ok(workspace.includes('completionItemFields[group.key+\':\'+item.key]'), 'The selected submenu must load its own field schema')
+  const finance = read('src/components/FinanceWorkspace.tsx')
+  for (const section of ['structures','discounts','refunds','receipts']) {
+    assert.ok(finance.includes("section==='" + section + "'"), 'Missing dedicated finance workflow: ' + section)
+  }
+})
+
 check('Non-admin workspace projections remove all internal review metadata recursively', () => {
   const privacy = read('src/lib/workspacePrivacy.js')
   const tests = read('scripts/test-workspace-privacy.mjs')
