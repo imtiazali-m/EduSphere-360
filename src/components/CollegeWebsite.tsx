@@ -154,8 +154,8 @@ export function CollegeWebsite({ navigate }: Props) {
         <section className="gic-hero" aria-labelledby="gic-hero-title">
           <div className="gic-container gic-hero-grid">
             <div className="gic-hero-copy">
-              <div className="gic-overline"><span /> A GOVERNMENT COLLEGE IN BADIN</div>
-              <h1 id="gic-hero-title">A place to learn.<br /><em>A reason to</em> <strong>lead.</strong></h1>
+              <div className="gic-overline"><span /> GOVERNMENT ISLAMIA DEGREE COLLEGE, BADIN</div>
+              <h1 id="gic-hero-title">Learn here.<br /><em>Take it</em> <strong>further.</strong></h1>
               <p className="gic-hero-lead">
                 Government Islamia Degree College Badin is part of Sindh’s public college network.
                 Explore the college, check official academic information and find the right route to admission.
@@ -201,7 +201,7 @@ export function CollegeWebsite({ navigate }: Props) {
             <div className="gic-container gic-hero-bottom-inner">
               <span className="gic-fact-label">COLLEGE AT A GLANCE</span>
               <div><b>Government</b><small>Public sector college</small></div>
-              <div><b>Badin</b><small>Hyderabad Region · Sindh</small></div>
+              <div><b>Badin</b><small>Badin District · Sindh</small></div>
               <div><b>Science</b><small>Stream listed in the government directory</small></div>
               <OfficialLink href={officialCollegeList}>View official listing</OfficialLink>
             </div>
@@ -217,7 +217,7 @@ export function CollegeWebsite({ navigate }: Props) {
             </div>
             <div className="gic-intro-main">
               <p className="gic-section-kicker">A PUBLIC COLLEGE WITH A LOCAL ROOT</p>
-              <h2 id="gic-intro-title">Learning belongs<br />to <em>everyone.</em></h2>
+              <h2 id="gic-intro-title">A government college<br />in <em>Badin.</em></h2>
               <p className="gic-intro-text">
                 Government Islamia Degree College Badin is listed by the Sindh College Education Department
                 among the functional government colleges of Badin District. The same directory identifies
@@ -230,9 +230,9 @@ export function CollegeWebsite({ navigate }: Props) {
             </div>
             <aside className="gic-intro-aside">
               <div className="gic-aside-ornament"><BookOpen size={30} /></div>
-              <blockquote>“Education is not preparation for life; education is life itself.”</blockquote>
-              <small>— JOHN DEWEY</small>
-              <p className="gic-quote-note">A reflection on the value of learning, included as an educational quotation.</p>
+              <blockquote>A good education gives curiosity room to grow.</blockquote>
+              <small>A COLLEGE-WIDE PRINCIPLE</small>
+              <p className="gic-quote-note">An invitation to think carefully, ask questions and keep learning.</p>
             </aside>
           </div>
         </section>
@@ -338,11 +338,11 @@ export function CollegeWebsite({ navigate }: Props) {
             </div>
             <div className="gic-life-photo">
               <img
-                src="https://images.unsplash.com/photo-1758270704787-615782711641?auto=format&fit=crop&fm=jpg&ixlib=rb-4.1.0&q=78&w=1200"
+                src="https://images.unsplash.com/photo-1767102060241-130cb9260718?auto=format&fit=crop&fm=jpg&ixlib=rb-4.1.0&q=78&w=1200"
                 alt="University students sharing ideas during a study session; illustrative image, not a photograph of Government Islamia Degree College Badin"
                 loading="lazy"
               />
-              <span>ILLUSTRATIVE STUDENT-LIFE PHOTOGRAPH</span>
+              <span>ILLUSTRATIVE LIBRARY PHOTOGRAPH · ILLUSTRATIVE</span>
             </div>
           </div>
         </section>
@@ -415,7 +415,7 @@ export function CollegeWebsite({ navigate }: Props) {
           </div>
           <div className="gic-footer-bottom">
             <span>© {new Date().getFullYear()} Government Islamia Degree College Badin</span>
-            <span>Illustrative student photography: Vitaly Gariev / Unsplash</span>
+            <span>Illustrative photographs: Vitaly Gariev and Fer Troulik / Unsplash</span>
             <a href="#top">Back to top ↑</a>
           </div>
         </div>
