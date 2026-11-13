@@ -67,7 +67,7 @@ async function inspectViewport({ name, width, height }) {
     await page.waitForTimeout(250)
 
     const heading = (await page.locator('.gic-hero h1').innerText()).replace(/\\s+/g, ' ').trim()
-    assert.match(heading, /A place to learn/i, `${name}: college homepage headline is missing`)
+    assert.match(heading, /Learn here/i, `${name}: college homepage headline is missing`)
     assert.ok((await page.locator('.gic-brand-copy').first().innerText()).includes('Government Islamia'), `${name}: college identity is missing`)
     assert.equal(await page.locator('.gic-portal-card').count(), 7, `${name}: all seven existing college portal routes should be visible`)
     assert.equal(await page.locator('.gic-notice-row').count(), 4, `${name}: official information links are missing`)
@@ -167,7 +167,7 @@ async function inspectViewport({ name, width, height }) {
       await page.goto(`${baseUrl}/#${route}`, { waitUntil: 'domcontentloaded' })
       await page.locator('.gic-hero h1').waitFor({ state: 'visible' })
       const returnedHeading = await page.locator('.gic-hero h1').innerText()
-      assert.match(returnedHeading, /A place to learn/i, `${name}: ${route} should resolve to the college website, not product marketing`)
+      assert.match(returnedHeading, /Learn here/i, `${name}: ${route} should resolve to the college website, not product marketing`)
       await assertNoHorizontalOverflow(page, `${name} legacy public route ${route}`)
     }
 
