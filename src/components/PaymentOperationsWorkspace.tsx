@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { AlertCircle, CreditCard, RefreshCw, ShieldCheck } from 'lucide-react'
+import { AlertCircle, CreditCard, RefreshCw } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import '../styles/data-management.css'
