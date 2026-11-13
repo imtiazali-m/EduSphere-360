@@ -26,3 +26,19 @@
 .ed360-data-toolbar{display:grid;grid-template-columns:minmax(220px,1fr) 220px;gap:10px;margin-bottom:14px}
 .ed360-data-management .ed360-row-action{margin-left:8px;color:#a33c2d;background:transparent;border:0;cursor:pointer;font-size:12px}
 @media(max-width:640px){.ed360-data-management .ed360-data-card{padding:14px}.ed360-data-toolbar{grid-template-columns:1fr}.ed360-data-form{align-items:stretch}.ed360-data-form>label{min-width:100%}}
+
+
+.ed360-report-field-picker{flex:1 0 100%;display:grid;gap:10px;padding:14px;border:1px solid #e3e9f1;border-radius:10px;background:#f9fbfd;color:#344b65;font-size:13px}
+.ed360-report-field-picker>div{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.ed360-report-field-picker label{display:flex;align-items:center;gap:8px;font-weight:500}
+.ed360-report-field-picker input{width:16px;min-height:16px;accent-color:#286bb6}
+.ed360-data-action-row{display:flex;flex-wrap:wrap;gap:9px;flex-basis:100%}
+.ed360-template-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:14px 0;border-top:1px solid #e5ebf2}
+.ed360-template-row>div{display:grid;gap:5px;min-width:0}
+.ed360-template-row b{color:#263d56}
+.ed360-template-row small{color:#718096}
+.ed360-template-row p{white-space:pre-wrap;color:#52677e;font-size:13px}
+.ed360-data-toolbar>label{display:flex;align-items:center;gap:8px}
+.ed360-communication-workspace .ed360-message-body{min-width:240px;max-width:440px;white-space:pre-wrap}
+.ed360-communication-workspace .ed360-data-warning{display:block}
+@media(max-width:640px){.ed360-template-row{display:grid}.ed360-report-field-picker>div{grid-template-columns:repeat(2,minmax(0,1fr))}}
