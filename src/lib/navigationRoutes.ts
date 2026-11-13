@@ -284,6 +284,7 @@ function institutionOperationsRoute(groupKey:string,itemKey:string):string|undef
 }
 
 function dedicatedRoute(groupKey: string, itemKey: string): string | undefined {
+  if(groupKey==='reports' && itemKey==='scheduled-reports')return 'scheduled-reports:scheduled-reports'
   if(groupKey==='facilities' && ['asset-assignment','asset-transfers','asset-warranty','asset-disposal','asset-reports'].includes(itemKey))return 'asset-lifecycle:'+itemKey
   if(groupKey==='payments' && ['online-payment-records','failed-and-pending-payments'].includes(itemKey))return 'payment-operations:'+itemKey
   if(groupKey==='receipts' && ['receipt-templates','receipt-numbering','bulk-receipt-generation','receipt-verification'].includes(itemKey))return 'receipt-operations:'+itemKey
