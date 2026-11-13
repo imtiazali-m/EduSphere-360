@@ -204,6 +204,7 @@ export function LinkedOperationsWorkspace({workspaceKey,onToast,onNavigate}:Prop
      setVehicleMaintenance(extras.filter(row=>row.record_type==='vehicle-maintenance'))
      setAllocations(allocationRows);setTransportEvents(attendanceRows)
      setTransportFeeCharges((feeRows.data??[]) as FeeCharge[]);setTransportFeePayments((paymentRows.data??[]) as FeePayment[])
+     }
     }catch(error){setLoadError(error instanceof Error?error.message:'The operation records could not be loaded.');}
   finally{setLoading(false)}
  },[user?.id,user?.institutionId,isCampus,isLibrary,isInventory,isTransport])
