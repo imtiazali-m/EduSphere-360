@@ -94,7 +94,7 @@ async function inspectViewport({name,width,height}){
 
     await page.goto(`${baseUrl}/#/login/owner`,{waitUntil:'domcontentloaded'})
     await page.locator('.es-auth-page').waitFor({state:'visible'})
-    await page.getByRole('heading',{name:'Welcome back',exact:true}).waitFor({state:'visible'})
+    await page.getByRole('heading', { name: 'Welcome back', exact: true }).waitFor({state:'visible'})
     await page.getByRole('button',{name:'Forgot your password?'}).click()
     await page.getByRole('heading',{name:'Reset your password'}).waitFor({state:'visible'})
     await page.getByRole('button',{name:'Send password-reset link'}).waitFor({state:'visible'})
