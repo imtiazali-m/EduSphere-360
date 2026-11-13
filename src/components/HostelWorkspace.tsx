@@ -69,6 +69,7 @@ export function HostelWorkspace({workspaceKey,onToast}:{workspaceKey:string;onTo
     supabase.from('hostel_movements').select('*').eq('institution_id',user.institutionId).order('occurred_at',{ascending:false}).limit(1000),
     supabase.from('hostel_guest_visits').select('*').eq('institution_id',user.institutionId).order('check_in_at',{ascending:false}).limit(1000),
     canReadCharges?supabase.from('hostel_fee_charges').select('*').eq('institution_id',user.institutionId).order('due_date'):Promise.resolve({data:[],error:null}),
+    canReadCharges?supabase.from('hostel_fee_payments').select('*').eq('institution_id',user.institutionId).order('received_at',{ascending:false}):Promise.resolve({data:[],error:null}),
     supabase.from('hostel_maintenance_requests').select('*').eq('institution_id',user.institutionId).order('created_at',{ascending:false}),
     supabase.from('students').select('id,full_name,admission_no,class_name,status').eq('institution_id',user.institutionId).order('full_name'),
     supabase.from('teachers').select('id,full_name,employee_no').eq('institution_id',user.institutionId).order('full_name')
@@ -131,7 +132,7 @@ export function HostelWorkspace({workspaceKey,onToast}:{workspaceKey:string;onTo
  const markGuestExit=async(row:Row)=>{
   if(!supabase||!admin)return
   await run(async()=>{
-   const {error}=await supabase.from('hostel_guest_visits').update({check_out_at:new Date().toISOString()}).eq('institution_id',user!.institutionId).eq('id',row.id)
+   const {error}=await supabase!.from('hostel_guest_visits').update({check_out_at:new Date().toISOString()}).eq('institution_id',user!.institutionId).eq('id',row.id)
    if(error)throw error
   },'Guest check-out recorded.')
  }
@@ -154,7 +155,7 @@ export function HostelWorkspace({workspaceKey,onToast}:{workspaceKey:string;onTo
  const updateMaintenance=async(row:Row,next:string)=>{
   if(!supabase||!staff)return
   await run(async()=>{
-   const {error}=await supabase.from('hostel_maintenance_requests').update({status:next,updated_at:new Date().toISOString(),resolved_at:next==='resolved'?new Date().toISOString():null}).eq('institution_id',user!.institutionId).eq('id',row.id)
+   const {error}=await supabase!.from('hostel_maintenance_requests').update({status:next,updated_at:new Date().toISOString(),resolved_at:next==='resolved'?new Date().toISOString():null}).eq('institution_id',user!.institutionId).eq('id',row.id)
    if(error)throw error
   },'Maintenance status updated.')
  }
