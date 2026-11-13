@@ -5,6 +5,7 @@ import {
   getWorkspaceGroup,
   getWorkspaceItem,
 } from './institutionalCatalog'
+import { roleNavigationGroups } from './navigationCatalog'
 
 const slug = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
 
@@ -604,6 +605,11 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
   if (!group || !item || !group.dataModule || !group.roles.includes(actorRole as typeof group.roles[number])) {
     return route
   }
+  // Do not resurrect catalogue-only or nested groups as new sidebar pages.
+  // The fallback is only for submenus actually visible to this role.
+  const visibleGroup = roleNavigationGroups(actorRole as Parameters<typeof roleNavigationGroups>[0])
+    .find(candidate => candidate.key === groupKey)
+  if (!visibleGroup?.items.includes(item.label)) return route
   return institutionalRoute(groupKey, item.key)
 }
 
