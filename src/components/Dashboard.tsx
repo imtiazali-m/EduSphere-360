@@ -54,6 +54,7 @@ import { AssetLifecycleWorkspace } from './AssetLifecycleWorkspace'
 import { ScheduledReportsWorkspace } from './ScheduledReportsWorkspace'
 import { HelpdeskWorkspace } from './HelpdeskWorkspace'
 import { DuplicateDetectionWorkspace } from './DuplicateDetectionWorkspace'
+import { CertificateFormsWorkspace } from './CertificateFormsWorkspace'
 import { AcademicManagementWorkspace } from './AcademicManagementWorkspace'
 import { supabase } from '../lib/supabase'
 import { readDisplayPreferences, writeDisplayPreferences, type DashboardDisplayPreferences, type DashboardFontSize } from '../lib/displayPreferences'
@@ -735,6 +736,7 @@ export function Dashboard({ onToast }: Props) {
     const assetLifecycleWindowRoute = key.startsWith('asset-lifecycle:')
     const scheduledReportsWindowRoute = key.startsWith('scheduled-reports:')
     const helpdeskWindowRoute = key.startsWith('helpdesk:')
+    const certificateFormsWindowRoute = key.startsWith('certificate-forms:')
     const duplicateDetectionWindowRoute = key.startsWith('duplicate-detection:')
     const operationsWindowRoute = key.startsWith('operations:')
     const routeParts = key.split(':')
@@ -1025,6 +1027,7 @@ export function Dashboard({ onToast }: Props) {
                 tab.targetKey === 'scheduled-reports' ? <ScheduledReportsWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'helpdesk' ? <HelpdeskWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'duplicate-detection' ? <DuplicateDetectionWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'certificate-forms' ? <CertificateFormsWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'institutional' && linkedWorkspaceKeys.includes(tab.targetWindow) ? <LinkedOperationsWorkspace workspaceKey={tab.targetWindow} onToast={onToast} onNavigate={navigateChild}/> :
                 tab.targetKey === 'institutional' ? <InstitutionalWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'unavailable' ? <WorkspaceUnavailable groupKey={tab.targetWindow.split(':')[0]} itemKey={tab.targetWindow.split(':').slice(1).join(':')} onNavigate={navigate}/> :
