@@ -57,7 +57,7 @@ const modules = [
   { key: 'examinations', label: 'Examinations & results', actions: ['view','create','edit','delete','approve','publish'] },
   { key: 'fees', label: 'Fees & payments', actions: ['view','create','edit','delete'] },
   { key: 'hr', label: 'HR, contracts & leave', actions: ['view','create','edit','delete'] },
-  { key: 'payroll', label: 'Payroll records', actions: ['view','create','edit','delete'] },
+  { key: 'payroll', label: 'Payroll records', actions: ['view','create','edit','delete','approve'] },
   { key: 'library', label: 'Library circulation', actions: ['view','create','edit','delete'] },
   { key: 'certificates', label: 'Certificates', actions: ['view','create','edit','delete'] },
   { key: 'visitors', label: 'Visitors & reception', actions: ['view','create','edit','delete'] },
@@ -79,7 +79,7 @@ const modules = [
 
 const templates: { name: string; base_role: BaseRole; description: string; permissions: Record<string,string[]> }[] = [
   { name:'Principal / Head of College', base_role:'admin', description:'College-wide operational leadership. Ownership and platform security remain with the institution owner.', permissions:{
-    students:['view','create','edit','delete'],employees:['view','create','edit'],administration:['view','create','edit'],academic_setup:['view','create','edit'],admissions:['view','create','edit'],departments:['view','create','edit'],programs:['view','create','edit'],subjects:['view','create','edit'],attendance:['view','create','edit'],employee_attendance:['view','create','edit'],assignments:['view','create','edit'],examinations:['view','create','edit','approve','publish'],fees:['view'],hr:['view'],payroll:['view'],library:['view'],certificates:['view','create'],visitors:['view'],approvals:['view','create','approve'],work_tasks:['view','create','edit'],announcements:['view','create','edit'],campuses:['view'],settings:['view']
+    students:['view','create','edit','delete'],employees:['view','create','edit'],administration:['view','create','edit'],academic_setup:['view','create','edit'],admissions:['view','create','edit'],departments:['view','create','edit'],programs:['view','create','edit'],subjects:['view','create','edit'],attendance:['view','create','edit'],employee_attendance:['view','create','edit'],assignments:['view','create','edit'],examinations:['view','create','edit','approve','publish'],fees:['view'],hr:['view'],payroll:['view','approve'],library:['view'],certificates:['view','create'],visitors:['view'],approvals:['view','create','approve'],work_tasks:['view','create','edit'],announcements:['view','create','edit'],campuses:['view'],settings:['view']
   }},
   { name:'Vice Principal', base_role:'admin', description:'Delegated campus leadership across student, staff and academic operations.', permissions:{
     students:['view','create','edit'],employees:['view'],administration:['view','edit'],academic_setup:['view','edit'],departments:['view'],programs:['view'],subjects:['view'],attendance:['view','create','edit'],employee_attendance:['view'],assignments:['view','edit'],examinations:['view','create','edit'],fees:['view'],approvals:['view'],work_tasks:['view','create','edit'],announcements:['view','create','edit'],campuses:['view']
@@ -103,7 +103,7 @@ const templates: { name: string; base_role: BaseRole; description: string; permi
     students:['view'],attendance:['view','create','edit'],examinations:['view'],announcements:['view']
   }},
   { name:'Accounts Officer', base_role:'accountant', description:'Fee invoices, payments, receipts and financial records in the authorised campus scope.', permissions:{
-    students:['view'],fees:['view','create','edit'],payroll:['view'],announcements:['view']
+    students:['view'],fees:['view','create','edit'],payroll:['view','create'],transport:['view','create'],announcements:['view']
   }},
   { name:'Cashier', base_role:'accountant', description:'Receive and record payments. Cannot change fee structures or delete financial records.', permissions:{
     students:['view'],fees:['view','create'],announcements:['view']
@@ -114,6 +114,7 @@ const templates: { name: string; base_role: BaseRole; description: string; permi
   { name:'Librarian', base_role:'teacher', description:'Library catalogue and circulation workflows, with limited student identification access.', permissions:{
     students:['view'],library:['view','create','edit'],announcements:['view']
   }},
+  { name:'Transport Manager', base_role:'admin', description:'Routes, vehicle allocations and transport charges in the authorised campus scope.', permissions:{students:['view'],transport:['view','create','edit'],fees:['view'],announcements:['view']} },
   { name:'Receptionist', base_role:'admin', description:'Visitor registration, enquiries and public-facing college announcements.', permissions:{
     visitors:['view','create','edit'],announcements:['view'],work_tasks:['view','create']
   }},
