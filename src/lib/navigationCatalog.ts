@@ -120,14 +120,14 @@ export type RoleNavigationGroup = Omit<WorkspaceMenuGroup,'items'> & { items:str
 export interface RoleNavigationSection { key:string; label:string; groups:RoleNavigationGroup[] }
 
 export const navigationSectionDefinitions:NavigationSectionDefinition[]=[
-  {key:'overview',label:'Overview',groupKeys:['dashboard']},
-  {key:'setup',label:'Institute Setup',groupKeys:['administration','backup']},
-  {key:'people',label:'People & Human Resources',groupKeys:['people-hr','attendance','behaviour','certificates']},
-  {key:'academics',label:'Academic Delivery',groupKeys:['academic-management','question-bank','examinations','class-tests','library']},
-  {key:'finance',label:'Finance & Payroll',groupKeys:['accounts-finance','fees','receivables','payments','receipts','reconciliation']},
+  {key:'overview',label:'College Overview',groupKeys:['dashboard']},
+  {key:'setup',label:'College Administration',groupKeys:['administration','backup']},
+  {key:'people',label:'Faculty, Staff & Students',groupKeys:['people-hr','attendance','behaviour','certificates']},
+  {key:'academics',label:'Academics & Examinations',groupKeys:['academic-management','question-bank','examinations','class-tests','library']},
+  {key:'finance',label:'Accounts & Fee Management',groupKeys:['accounts-finance','fees','receivables','payments','receipts','reconciliation']},
   {key:'communication',label:'Communication',groupKeys:['communication']},
-  {key:'campus',label:'Campus Operations',groupKeys:['transport','inventory','facilities','visitors']},
-  {key:'intelligence',label:'Reports & Intelligence',groupKeys:['reports','ai']},
+  {key:'campus',label:'Campus Services',groupKeys:['transport','inventory','facilities','visitors']},
+  {key:'intelligence',label:'College Reports & Insights',groupKeys:['reports','ai']},
 ]
 const navigationGroupOrder=new Map<string,number>(
   navigationSectionDefinitions.flatMap(section=>section.groupKeys).map((key,index)=>[key,index] as const)
