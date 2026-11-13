@@ -2,6 +2,8 @@ import {
   institutionalMenu,
   institutionalRoute,
   existingRouteOverrides,
+  getWorkspaceGroup,
+  getWorkspaceItem,
 } from './institutionalCatalog'
 
 const slug = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
@@ -417,7 +419,7 @@ function dedicatedRoute(groupKey: string, itemKey: string): string | undefined {
  * two groups contain the same display label and prevents silent routing into
  * the generic institutional_records CRUD screen.
  */
-export function getNavigationRoute(groupKey: string, itemLabel: string, role?: string): string {
+function resolveNavigationRoute(groupKey: string, itemLabel: string, role?: string): string {
   const itemKey = slug(itemLabel)
   if (groupKey === 'people-hr') {
     const destinations: Record<string,string> = {
@@ -580,6 +582,30 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
 
   if (linkedRoutes.has(compositeKey)) return institutionalRoute(groupKey, itemKey)
   return 'unavailable:' + groupKey + ':' + itemKey
+}
+
+
+/**
+ * A menu item with a configured institution data module must never dead-end
+ * at the generic unavailable screen. When no specialised workflow resolver
+ * exists yet, open its own typed, institution-scoped record window instead.
+ *
+ * This provides real record CRUD/review/export in the existing
+ * InstitutionalWorkspace. Provider-dependent execution (WhatsApp/email,
+ * cloud backup/restore, payment gateways and AI generation) remains honestly
+ * labelled as requiring provider/platform configuration in that workspace.
+ */
+export function getNavigationRoute(groupKey: string, itemLabel: string, role?: string): string {
+  const route = resolveNavigationRoute(groupKey, itemLabel, role)
+  if (!route.startsWith('unavailable:')) return route
+
+  const group = getWorkspaceGroup(groupKey)
+  const item = getWorkspaceItem(groupKey, slug(itemLabel))
+  const actorRole = role ?? 'owner'
+  if (!group || !item || !group.dataModule || !group.roles.includes(actorRole as typeof group.roles[number])) {
+    return route
+  }
+  return institutionalRoute(groupKey, item.key)
 }
 
 const contextualEntries = institutionalMenu.flatMap(group => group.items.map(item => [
