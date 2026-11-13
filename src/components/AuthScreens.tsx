@@ -765,7 +765,7 @@ export function ResetPasswordScreen({ navigate }: ScreenProps) {
           <div className="es-auth-form-heading">
             <span className="es-auth-overline">SECURE ACCOUNT RECOVERY</span>
             <h2>{completed ? 'Password updated' : 'Choose a new password'}</h2>
-            <p>{completed ? 'Your password has been changed. Sign in again with your new password.' : 'Create a new password for your EduSphere 360 account.'}</p>
+            <p>{completed ? 'Your password has been changed. Sign in again with your new password.' : 'Create a new password for your college portal account.'}</p>
           </div>
           {completed ? <button className="es-auth-submit" type="button" onClick={() => void returnToLogin()}>Return to login <ArrowRight size={17}/></button> : <form className="es-auth-form" onSubmit={submit}>
             <label className="es-auth-field"><span>New password</span><div className="es-auth-input"><LockKeyhole size={17}/><input type={showPassword ? 'text' : 'password'} autoComplete="new-password" minLength={10} required value={password} onChange={e => setPassword(e.target.value)} placeholder="At least 10 characters"/><button type="button" className="es-password-toggle" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Hide password' : 'Show password'}>{showPassword ? <EyeOff size={17}/> : <Eye size={17}/>}</button></div></label>
@@ -776,7 +776,7 @@ export function ResetPasswordScreen({ navigate }: ScreenProps) {
           <div className="es-auth-secure-note"><ShieldCheck size={15}/> Use a unique password of at least 10 characters.</div>
         </section>
       </div>
-      <footer className="es-auth-main-foot"><span>© {new Date().getFullYear()} EduSphere 360</span><span>Secure account recovery.</span></footer>
+      <footer className="es-auth-main-foot"><span>© {new Date().getFullYear()} Government Islamia Degree College Badin</span><span>Secure account recovery.</span></footer>
     </main>
   </div>
 }
