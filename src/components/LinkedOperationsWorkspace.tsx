@@ -13,6 +13,7 @@ type Student={id:string;full_name:string;admission_no?:string|null;class_name?:s
 type Item={id:string;title:string;reference_code?:string|null;quantity?:number|null;payload?:Record<string,unknown>}
 type RouteRecord={id:string;title:string;reference_code?:string|null;parent_record_id?:string|null;payload?:Record<string,unknown>}
 type Loan={id:string;book_record_id:string;student_id:string|null;issued_at:string;due_at:string;returned_at:string|null;status:string;fine_amount:number;notes?:string|null}
+type ReadingRecord={id:string;student_id:string;book_title:string;reading_date:string;pages_read:number;reading_minutes:number;progress_percent:number|null;rating:number|null;status:string;notes?:string|null;recorded_by:string}
 type Movement={id:string;item_record_id:string;movement_type:string;quantity:number;unit_cost?:number|null;movement_date:string;reference_code?:string|null;notes?:string|null}
 type Allocation={id:string;student_id:string;route_record_id:string;stop_record_id?:string|null;vehicle_record_id?:string|null;effective_from:string;effective_to?:string|null;transport_fee:number;status:string;notes?:string|null}
 
@@ -92,6 +93,19 @@ export function LinkedOperationsWorkspace({workspaceKey,onToast,onNavigate}:Prop
  const [loanDue,setLoanDue]=useState(()=>new Date(Date.now()+14*86400000).toLocaleDateString('en-CA'))
  const [loanNotes,setLoanNotes]=useState('')
  const [showLoanForm,setShowLoanForm]=useState(false)
+ const [readingRecords,setReadingRecords]=useState<ReadingRecord[]>([])
+ const [readingSearch,setReadingSearch]=useState('')
+ const [readingPage,setReadingPage]=useState(1)
+ const [readingStudentId,setReadingStudentId]=useState('')
+ const [readingBookTitle,setReadingBookTitle]=useState('')
+ const [readingDate,setReadingDate]=useState(today())
+ const [readingPages,setReadingPages]=useState('0')
+ const [readingMinutes,setReadingMinutes]=useState('0')
+ const [readingProgress,setReadingProgress]=useState('')
+ const [readingRating,setReadingRating]=useState('')
+ const [readingStatus,setReadingStatus]=useState('in_progress')
+ const [readingNotes,setReadingNotes]=useState('')
+ const [showReadingForm,setShowReadingForm]=useState(false)
  const [itemId,setItemId]=useState('')
  const [movementType,setMovementType]=useState(itemKey==='stock-in'?'stock_in':itemKey==='stock-out'?'stock_out':itemKey==='stock-allocation'?'allocation':'adjustment')
  const [movementQty,setMovementQty]=useState('1')
@@ -112,6 +126,7 @@ export function LinkedOperationsWorkspace({workspaceKey,onToast,onNavigate}:Prop
 
  const isCampus=groupKey==='administration'&&itemKey==='campus-and-branch-management'
  const isLibrary=groupKey==='library'&&['book-issue-and-returns','library-reports'].includes(itemKey)
+ const isReading=groupKey==='library'&&itemKey==='reading-records'
  const isLibraryReport=groupKey==='library'&&itemKey==='library-reports'
  const isInventory=groupKey==='inventory'&&['stock-in','stock-out','stock-allocation','stock-adjustments','inventory-history','stock-reports'].includes(itemKey)
  const isTransport=groupKey==='transport'&&['student-transport-allocation','transport-reports'].includes(itemKey)
@@ -138,6 +153,18 @@ export function LinkedOperationsWorkspace({workspaceKey,onToast,onNavigate}:Prop
     if(bookResult.error)throw bookResult.error
     if(studentResult.error)throw studentResult.error
     setBooks((bookResult.data??[]) as Book[]);setStudents((studentResult.data??[]) as Student[]);setLoans(loanRows)
+   }else if(isReading){
+    const readingRows=await loadAllPages<ReadingRecord>((from,to)=>db.from('library_reading_records').select('*').eq('institution_id',user.institutionId).order('reading_date',{ascending:false}).range(from,to))
+    setReadingRecords(readingRows)
+    if(canLibrary){
+     const studentResult=await db.from('students').select('id,full_name,admission_no,class_name').eq('institution_id',user.institutionId).eq('status','active').order('full_name')
+     if(studentResult.error)throw studentResult.error
+     setStudents((studentResult.data??[]) as Student[])
+    }else if(readingRows.length){
+     const visibleStudentIds=[...new Set(readingRows.map(row=>row.student_id))]
+     const studentResult=await db.from('students').select('id,full_name,admission_no,class_name').eq('institution_id',user.institutionId).in('id',visibleStudentIds)
+     if(!studentResult.error)setStudents((studentResult.data??[]) as Student[])
+    }
    }else if(isInventory){
     const [itemResult,movementRows]=await Promise.all([
      supabase.from('institutional_records').select('id,title,reference_code,quantity,payload').eq('institution_id',user.institutionId).eq('module_key','inventory').in('record_type',['items-management','item-catalogue']).order('title'),
@@ -160,7 +187,7 @@ export function LinkedOperationsWorkspace({workspaceKey,onToast,onNavigate}:Prop
    }
   }catch(error){setLoadError(error instanceof Error?error.message:'The operation records could not be loaded.');}
   finally{setLoading(false)}
- },[user?.id,user?.institutionId,isCampus,isLibrary,isInventory,isTransport])
+ },[user?.id,user?.institutionId,isCampus,isLibrary,isReading,isInventory,isTransport,canLibrary])
 
  useEffect(()=>{void load()},[load])
  const loanCounts=useMemo(()=>({
@@ -197,6 +224,10 @@ export function LinkedOperationsWorkspace({workspaceKey,onToast,onNavigate}:Prop
  },[movements,itemKey])
  const matches=(values:unknown[],query:string)=>!query.trim()||values.map(value=>String(value??'')).join(' ').toLowerCase().includes(query.trim().toLowerCase())
  const visibleCampuses=useMemo(()=>campuses.filter(row=>matches([row.name,row.campus_code,row.branch_head_name,row.address,row.phone,row.email,row.is_active?'active':'inactive'],campusSearch)),[campuses,campusSearch])
+ const visibleReadingRecords=useMemo(()=>readingRecords.filter(row=>{
+  const student=students.find(item=>item.id===row.student_id)
+  return matches([row.book_title,row.reading_date,row.pages_read,row.reading_minutes,row.progress_percent,row.rating,row.status,row.notes,student?.full_name,student?.admission_no,student?.class_name],readingSearch)
+ }),[readingRecords,students,readingSearch])
  const visibleLoans=useMemo(()=>loans.filter(row=>{
   const book=bookMap.get(row.book_record_id)
   const student=students.find(item=>item.id===row.student_id)
@@ -296,6 +327,28 @@ export function LinkedOperationsWorkspace({workspaceKey,onToast,onNavigate}:Prop
   const fineAmount=Number(result?.fine_amount??0)
   onToast(lateDays>0?'Book returned. '+lateDays+' overdue day(s); fine assessed: '+pkMoney(fineAmount)+'.':'Book return recorded. No overdue fine was due.');await load()
  }
+ async function saveReadingRecord(event:FormEvent){
+  event.preventDefault()
+  if(!supabase||!user||!canLibrary)return
+  const student=students.find(row=>row.id===readingStudentId)
+  const pages=Number(readingPages),minutes=Number(readingMinutes)
+  const progress=readingProgress.trim()===''?null:Number(readingProgress)
+  const rating=readingRating.trim()===''?null:Number(readingRating)
+  if(!student||!readingBookTitle.trim()||readingBookTitle.trim().length>240||!readingDate||!Number.isInteger(pages)||pages<0||!Number.isInteger(minutes)||minutes<0||progress!==null&&(!Number.isFinite(progress)||progress<0||progress>100)||rating!==null&&(!Number.isInteger(rating)||rating<1||rating>5)||!['in_progress','completed','paused'].includes(readingStatus)){
+   onToast('Choose a student, enter a book title, and check the reading date, pages, time, progress and rating.',true);return
+  }
+  setSaving(true)
+  const {error}=await supabase.from('library_reading_records').insert({
+   institution_id:user.institutionId,student_id:student.id,book_title:readingBookTitle.trim(),
+   reading_date:readingDate,pages_read:pages,reading_minutes:minutes,
+   progress_percent:progress,rating,status:readingStatus,notes:readingNotes.trim()||null,recorded_by:user.id
+  })
+  if(error){onToast(userFacingError(error,'The reading record could not be saved. Check the student relationship and your library permissions.'),true);setSaving(false);return}
+  setShowReadingForm(false);setReadingStudentId('');setReadingBookTitle('');setReadingDate(today())
+  setReadingPages('0');setReadingMinutes('0');setReadingProgress('');setReadingRating('')
+  setReadingStatus('in_progress');setReadingNotes('')
+  onToast('Student reading record saved.');setSaving(false);await load()
+ }
  async function saveMovement(event:FormEvent){
   event.preventDefault();if(!supabase||!user||!canAdmin)return
   const qty=Number(movementQty);const cost=movementCost.trim()?Number(movementCost):null
@@ -355,9 +408,9 @@ export function LinkedOperationsWorkspace({workspaceKey,onToast,onNavigate}:Prop
  }
 
  if(!user||!group)return null
- const specialTitle=isCampus?'Campus and Branch Management':isLibrary?(isLibraryReport?'Library Circulation Reports':'Book Issue and Returns'):isInventory?(itemKey==='stock-reports'?'Inventory Stock Reports':itemKey==='inventory-history'?'Inventory Movement History':itemKey==='stock-in'?'Stock In':itemKey==='stock-out'?'Stock Out':itemKey==='stock-allocation'?'Stock Allocation':itemKey==='stock-adjustments'?'Stock Adjustments':'Inventory Stock Movements'):isTransport?(isTransportReport?'Transport Allocation Reports':'Student Transport Allocation'):'Institution Operations'
+ const specialTitle=isCampus?'Campus and Branch Management':isReading?'Student Reading Records':isLibrary?(isLibraryReport?'Library Circulation Reports':'Book Issue and Returns'):isInventory?(itemKey==='stock-reports'?'Inventory Stock Reports':itemKey==='inventory-history'?'Inventory Movement History':itemKey==='stock-in'?'Stock In':itemKey==='stock-out'?'Stock Out':itemKey==='stock-allocation'?'Stock Allocation':itemKey==='stock-adjustments'?'Stock Adjustments':'Inventory Stock Movements'):isTransport?(isTransportReport?'Transport Allocation Reports':'Student Transport Allocation'):'Institution Operations'
  const nav=<nav className="ed360-operations-window-nav ed360-workspace-tabs" aria-label={group.label+' submenus'}>{group.items.map(menu=><button key={menu.key} className={menu.key===itemKey?'active':''} type="button" onClick={()=>onNavigate('institutional:'+group.key+':'+menu.key)}>{menu.label}</button>)}</nav>
- const header=<header className="ed360-workspace-hero" style={{'--workspace-accent':theme.accent,'--workspace-soft':theme.soft,'--workspace-ink':theme.ink} as CSSProperties}><div className="ed360-workspace-hero-icon">{isCampus?<MapPin size={21}/>:isLibrary?<BookOpen size={21}/>:isInventory?<Package size={21}/>:<Bus size={21}/>}</div><div className="ed360-workspace-hero-copy"><span>{group.label.toUpperCase()} / LIVE RELATIONAL WORKFLOW</span><h1>{specialTitle}</h1><p>{isCampus?'Manage real institution branches. Campus assignments are referenced by existing institutional tables.':isLibrary?(isLibraryReport?'Review actual issue, return, overdue and fine activity from the library loan ledger.':'Issue and return books against student records, with due dates and traceable circulation history.'):isInventory?'Record stock movement through an atomic transaction that prevents inventory going below zero.':isTransport?(isTransportReport?'Review active allocations, registered routes, vehicle usage and recorded transport fees.':'Allocate students to registered routes, stops and vehicles with effective dates and transport fees.'):'Institution operations'}</p></div><div className="ed360-workspace-hero-tools"><span className="ed360-data-state"><i/> Live Supabase records</span>{isCampus&&canAdmin&&<button className="button button-primary" onClick={()=>resetCampus()}><Plus size={16}/> Add campus</button>}{isLibrary&&!isLibraryReport&&canLibrary&&<button className="button button-primary" onClick={()=>setShowLoanForm(true)}><Plus size={16}/> Issue book</button>}{isInventory&&!['stock-reports','inventory-history'].includes(itemKey)&&canAdmin&&<button className="button button-primary" onClick={()=>setShowMovementForm(true)}><Plus size={16}/> Record movement</button>}{isTransport&&!isTransportReport&&canAdmin&&<button className="button button-primary" onClick={()=>setShowAllocationForm(true)}><Plus size={16}/> Allocate student</button>}</div></header>
+ const header=<header className="ed360-workspace-hero" style={{'--workspace-accent':theme.accent,'--workspace-soft':theme.soft,'--workspace-ink':theme.ink} as CSSProperties}><div className="ed360-workspace-hero-icon">{isCampus?<MapPin size={21}/>:isLibrary||isReading?<BookOpen size={21}/>:isInventory?<Package size={21}/>:<Bus size={21}/>}</div><div className="ed360-workspace-hero-copy"><span>{group.label.toUpperCase()} / LIVE RELATIONAL WORKFLOW</span><h1>{specialTitle}</h1><p>{isCampus?'Manage college campuses and branches with linked institutional records.':isReading?'Track reading activity, pages completed, time spent and progress for students visible to your account.':isLibrary?(isLibraryReport?'Review actual issue, return, overdue and fine activity from the library loan ledger.':'Issue and return books against student records, with due dates and traceable circulation history.'):isInventory?'Record stock movement through an atomic transaction that prevents inventory going below zero.':isTransport?(isTransportReport?'Review active allocations, registered routes, vehicle usage and recorded transport fees.':'Allocate students to registered routes, stops and vehicles with effective dates and transport fees.'):'Institution operations'}</p></div><div className="ed360-workspace-hero-tools"><span className="ed360-data-state"><i/> Live Supabase records</span>{isCampus&&canAdmin&&<button className="button button-primary" onClick={()=>resetCampus()}><Plus size={16}/> Add campus</button>}{isReading&&canLibrary&&<button className="button button-primary" onClick={()=>setShowReadingForm(true)}><Plus size={16}/> Record reading</button>}{isLibrary&&!isLibraryReport&&canLibrary&&<button className="button button-primary" onClick={()=>setShowLoanForm(true)}><Plus size={16}/> Issue book</button>}{isInventory&&!['stock-reports','inventory-history'].includes(itemKey)&&canAdmin&&<button className="button button-primary" onClick={()=>setShowMovementForm(true)}><Plus size={16}/> Record movement</button>}{isTransport&&!isTransportReport&&canAdmin&&<button className="button button-primary" onClick={()=>setShowAllocationForm(true)}><Plus size={16}/> Allocate student</button>}</div></header>
 
  return <main className="page-content ed360-module-page ed360-institutional-workspace ed360-linked-operations" style={{'--workspace-accent':theme.accent,'--workspace-soft':theme.soft,'--workspace-ink':theme.ink} as React.CSSProperties}>
   {header}{nav}
@@ -374,6 +427,45 @@ export function LinkedOperationsWorkspace({workspaceKey,onToast,onNavigate}:Prop
    {showCampusForm&&<div className="modal-backdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setShowCampusForm(false)}}><section className="modal-card ed360-context-form" role="dialog" aria-modal="true"><div className="modal-heading"><div><div className="eyebrow">INSTITUTION ADMINISTRATION / CAMPUS</div><h2>{editingCampus?'Edit campus':'Register campus / branch'}</h2></div><button className="icon-button" onClick={()=>setShowCampusForm(false)}><X size={18}/></button></div><form className="ed360-context-form-grid" onSubmit={saveCampus}><label>Campus name *<input required value={campusName} onChange={e=>setCampusName(e.target.value)}/></label><label>Campus code<input value={campusCode} onChange={e=>setCampusCode(e.target.value)}/></label><label>Branch head<input value={campusBranchHead} onChange={e=>setCampusBranchHead(e.target.value)} placeholder="Responsible campus head"/></label><label>Address<textarea rows={2} value={campusAddress} onChange={e=>setCampusAddress(e.target.value)}/></label><div className="ed360-form-row"><label>Phone<input value={campusPhone} onChange={e=>setCampusPhone(e.target.value)}/></label><label>Email<input type="email" value={campusEmail} onChange={e=>setCampusEmail(e.target.value)}/></label></div><label>Academic settings (JSON object)<textarea rows={4} value={campusAcademicSettings} onChange={e=>setCampusAcademicSettings(e.target.value)} placeholder="{&quot;default_session_id&quot;:&quot;...&quot;}"/></label><label>Operational settings (JSON object)<textarea rows={4} value={campusOperationalSettings} onChange={e=>setCampusOperationalSettings(e.target.value)} placeholder="{&quot;attendance_cutoff&quot;:&quot;...&quot;}"/></label><label className="ed360-check-label"><input type="checkbox" checked={campusHQ} onChange={e=>setCampusHQ(e.target.checked)}/> Headquarters</label><label className="ed360-check-label"><input type="checkbox" checked={campusActive} onChange={e=>setCampusActive(e.target.checked)}/> Active campus</label><div className="modal-actions"><button type="button" className="button button-outline" onClick={()=>setShowCampusForm(false)}>Cancel</button><button type="submit" className="button button-primary" disabled={saving}>{saving?'Saving…':'Save campus'}</button></div></form></section></div>}
   </>}
 
+  {isReading&&<>
+   <section className="ed360-workspace-kpis">
+    <article><span>Reading records</span><strong>{visibleReadingRecords.length}</strong><small>Records visible to your account</small></article>
+    <article><span>Pages recorded</span><strong>{visibleReadingRecords.reduce((sum,row)=>sum+Number(row.pages_read||0),0).toLocaleString()}</strong><small>Across visible reading logs</small></article>
+    <article><span>Reading time</span><strong>{Math.round(visibleReadingRecords.reduce((sum,row)=>sum+Number(row.reading_minutes||0),0)/60*10)/10} h</strong><small>Recorded reading minutes</small></article>
+    <article><span>Completed logs</span><strong>{visibleReadingRecords.filter(row=>row.status==='completed').length}</strong><small>Marked as completed</small></article>
+   </section>
+   <section className="table-card ed360-workspace-record-card">
+    <div className="table-toolbar">
+     <div className="table-count"><strong>{visibleReadingRecords.length}</strong> visible reading records</div>
+     <div className="ed360-row-actions">
+      <button type="button" onClick={()=>downloadCsv('college-reading-records-'+today()+'.csv',visibleReadingRecords.map(row=>({student:students.find(person=>person.id===row.student_id)?.full_name??'Linked student',admission_no:students.find(person=>person.id===row.student_id)?.admission_no??'',book_title:row.book_title,reading_date:row.reading_date,pages_read:row.pages_read,reading_minutes:row.reading_minutes,progress_percent:row.progress_percent??'',rating:row.rating??'',status:row.status,notes:row.notes??''})),[{key:'student',label:'Student'},{key:'admission_no',label:'Admission ID'},{key:'book_title',label:'Book title'},{key:'reading_date',label:'Reading date'},{key:'pages_read',label:'Pages'},{key:'reading_minutes',label:'Minutes'},{key:'progress_percent',label:'Progress %'},{key:'rating',label:'Rating'},{key:'status',label:'Status'},{key:'notes',label:'Notes'}])}>Export CSV</button>
+      <button type="button" onClick={()=>void load()}>Refresh <RefreshCw size={13}/></button>
+     </div>
+    </div>
+    <label className="ed360-linked-search">Search reading records<input aria-label="Search reading records" value={readingSearch} onChange={e=>{setReadingSearch(e.target.value);setReadingPage(1)}} placeholder="Student, admission ID, book title, date or status…"/></label>
+    {visibleReadingRecords.length===0
+     ?<div className="ed360-workspace-empty"><strong>No reading records are available</strong><span>{canLibrary?'Record a student’s reading activity to start the college reading log.':'Reading records will appear here when they have been recorded for a student linked to your account.'}</span>{canLibrary&&<button className="button button-primary" type="button" onClick={()=>setShowReadingForm(true)}>Record first reading</button>}</div>
+     :<div className="table-scroll"><table><thead><tr><th>Student</th><th>Book / reading material</th><th>Date</th><th>Pages</th><th>Time</th><th>Progress</th><th>Rating</th><th>Status</th><th>Notes</th></tr></thead><tbody>{pageRows(visibleReadingRecords,readingPage).map(row=>{
+      const student=students.find(person=>person.id===row.student_id)
+      return <tr key={row.id}><td><b>{student?.full_name??'My linked student'}</b><small className="ed360-record-subtitle">{student?.admission_no??''}</small></td><td>{row.book_title}</td><td>{dateLabel(row.reading_date)}</td><td>{Number(row.pages_read).toLocaleString()}</td><td>{Number(row.reading_minutes)} min</td><td>{row.progress_percent===null||row.progress_percent===undefined?'—':Number(row.progress_percent).toLocaleString()+'%'}</td><td>{row.rating===null||row.rating===undefined?'—':row.rating+'/5'}</td><td><span className={'ed360-state-pill '+(row.status==='completed'?'state-approved':row.status==='paused'?'state-pending':'')}>{statusText(row.status)}</span></td><td>{row.notes||'—'}</td></tr>
+     })}</tbody></table></div>}
+    {pageControls(visibleReadingRecords.length,readingPage,setReadingPage)}
+   </section>
+   {showReadingForm&&canLibrary&&<div className="modal-backdrop" role="presentation" onMouseDown={event=>{if(event.target===event.currentTarget)setShowReadingForm(false)}}>
+    <section className="modal-card ed360-context-form" role="dialog" aria-modal="true" aria-labelledby="reading-record-title">
+     <div className="modal-heading"><div><div className="eyebrow">COLLEGE LIBRARY / STUDENT READING</div><h2 id="reading-record-title">Record reading activity</h2><p>Log reading against a student record. Access is checked again by the database.</p></div><button type="button" className="icon-button" aria-label="Close reading form" onClick={()=>setShowReadingForm(false)}><X size={18}/></button></div>
+     <form className="ed360-context-form-grid" onSubmit={saveReadingRecord}>
+      <label>Student *<select required value={readingStudentId} onChange={event=>setReadingStudentId(event.target.value)}><option value="">Select student</option>{students.map(student=><option key={student.id} value={student.id}>{student.full_name}{student.admission_no?' · '+student.admission_no:''}</option>)}</select></label>
+      <label>Book / reading material *<input required maxLength={240} value={readingBookTitle} onChange={event=>setReadingBookTitle(event.target.value)} placeholder="Enter book or material title"/></label>
+      <div className="ed360-form-row"><label>Reading date *<input required type="date" value={readingDate} max={today()} onChange={event=>setReadingDate(event.target.value)}/></label><label>Pages read<input type="number" min="0" step="1" value={readingPages} onChange={event=>setReadingPages(event.target.value)}/></label></div>
+      <div className="ed360-form-row"><label>Reading time (minutes)<input type="number" min="0" step="1" value={readingMinutes} onChange={event=>setReadingMinutes(event.target.value)}/></label><label>Progress (%)<input type="number" min="0" max="100" step="0.1" value={readingProgress} onChange={event=>setReadingProgress(event.target.value)} placeholder="Optional"/></label></div>
+      <div className="ed360-form-row"><label>Rating<select value={readingRating} onChange={event=>setReadingRating(event.target.value)}><option value="">Not rated</option>{[1,2,3,4,5].map(value=><option value={value} key={value}>{value} / 5</option>)}</select></label><label>Progress status<select value={readingStatus} onChange={event=>setReadingStatus(event.target.value)}><option value="in_progress">In progress</option><option value="completed">Completed</option><option value="paused">Paused</option></select></label></div>
+      <label>Reading notes<textarea rows={3} maxLength={2000} value={readingNotes} onChange={event=>setReadingNotes(event.target.value)} placeholder="Optional notes or teacher feedback"/></label>
+      <div className="modal-actions"><button type="button" className="button button-outline" onClick={()=>setShowReadingForm(false)}>Cancel</button><button type="submit" className="button button-primary" disabled={saving||!students.length}>{saving?'Saving…':'Save reading record'}</button></div>
+     </form>
+    </section>
+   </div>}
+  </>}
   {isLibrary&&<>
    <section className="ed360-workspace-kpis"><article><span>Books registered</span><strong>{books.length}</strong><small>Book catalogue records</small></article><article><span>Currently issued</span><strong>{loanCounts.issued}</strong><small>Not yet due</small></article><article><span>Overdue</span><strong>{overdueLoans.length}</strong><small>Past due date</small></article><article><span>{isLibraryReport?'Fines assessed':'Returned'}</span><strong>{isLibraryReport?pkMoney(totalLibraryFines):loanCounts.returned}</strong><small>{isLibraryReport?'Recorded at return time':'Completed circulation'}</small></article></section>
    <section className="table-card ed360-workspace-record-card"><div className="table-toolbar"><div className="table-count"><strong>{visibleLoans.length}</strong> matching {isLibraryReport?'historical circulation transactions':'circulation records'}</div><div className="ed360-row-actions">{isLibraryReport&&<button type="button" onClick={()=>downloadCsv('edusphere-library-circulation-'+today()+'.csv',loans.map(loan=>({book:bookMap.get(loan.book_record_id)?.title??'Book record',student:students.find(row=>row.id===loan.student_id)?.full_name??'Linked student',admission_no:students.find(row=>row.id===loan.student_id)?.admission_no??'',issued_at:loan.issued_at,due_at:loan.due_at,returned_at:loan.returned_at??'',status:loan.status,fine_amount:Number(loan.fine_amount??0)})),[{key:'book',label:'Book'},{key:'student',label:'Student'},{key:'admission_no',label:'Admission ID'},{key:'issued_at',label:'Issued'},{key:'due_at',label:'Due'},{key:'returned_at',label:'Returned'},{key:'status',label:'Status'},{key:'fine_amount',label:'Fine (PKR)'}])}>Export CSV</button>}<button type="button" onClick={()=>void load()}>Refresh <RefreshCw size={13}/></button></div></div>
