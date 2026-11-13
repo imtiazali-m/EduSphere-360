@@ -72,7 +72,7 @@ export function ScheduledReportsWorkspace({workspaceKey,onToast}:{workspaceKey:s
   if(!supabase||!user||!finance)return
   const source=row.payload?.source_module as Source
   if(!Object.keys(sources).includes(source)){onToast('This report has an unsupported data source.',true);return}
-  const columns=Array.isArray(row.payload?.fields)?row.payload.fields.filter((x:unknown)=>typeof x==='string'&&safeColumns[source].includes(x)):safeColumns[source]
+  const columns:string[]=Array.isArray(row.payload?.fields)?row.payload.fields.filter((column:unknown):column is string=>typeof column==='string'&&safeColumns[source].includes(column)):safeColumns[source]
   if(!columns.length){onToast('This report has no valid columns.',true);return}
   setBusy(true)
   try{
@@ -97,6 +97,7 @@ export function ScheduledReportsWorkspace({workspaceKey,onToast}:{workspaceKey:s
  if(!user)return null
  if(!finance)return <main className="page-content ed360-module-page"><section className="ed360-workspace-empty">Report management is available to owner, administrator and accountant roles.</section></main>
  return <main className="page-content ed360-module-page ed360-scheduled-reports">
+  {loading&&<div className="ed360-workspace-empty">Loading saved report definitions…</div>}
   <header className="ed360-workspace-hero"><div className="ed360-workspace-hero-icon"><CalendarClock size={21}/></div><div className="ed360-workspace-hero-copy"><span>REPORTS / {workspaceKey.split(':').slice(-1)[0].replaceAll('-', ' ').toUpperCase()}</span><h1>Scheduled Reports</h1><p>Save report definitions, run them on demand, download the result and retain an execution record.</p></div><div className="ed360-workspace-hero-tools"><span className="ed360-data-state"><i/> Institution report definitions</span><button className="button button-outline" type="button" onClick={()=>void load()}><RefreshCw size={15}/> Refresh</button></div></header>
   <div className="ed360-payment-provider-note"><FileClock size={18}/><span><b>Execution mode</b> Report definitions can store daily/weekly/monthly preferences, but automatic background execution and email delivery need a server scheduler and approved delivery provider. Run now generates and downloads a CSV immediately.</span></div>
   {admin&&<section className="ed360-data-card"><header><h2>Create a report definition</h2><p>Choose a tenant-scoped source and permitted columns. Recipients are stored for future delivery configuration only.</p></header><form className="ed360-data-form" onSubmit={saveSchedule}>
