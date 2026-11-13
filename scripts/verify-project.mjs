@@ -376,20 +376,20 @@ check('Campus and finance submenu workspaces use their dedicated records and tra
   const payments = read('src/components/PaymentOperationsWorkspace.tsx')
   assert.ok(payments.includes("rpc('record_payment_gateway_review'"), 'Online-payment review must be recorded through the role-checked RPC')
   const migrations = [
-    '20261113140000_hostel_residence_operations.sql',
-    '20261113150000_procurement_purchase_order_and_receiving.sql',
-    '20261113152000_cafeteria_menu_availability_sales.sql',
-    '20261113160000_library_reading_history.sql',
-    '20261113170000_fee_receipt_issuance_and_numbering.sql',
-    '20261113180000_payment_gateway_review_register.sql',
-    '20261113190000_facility_asset_lifecycle.sql',
-    '20261113194000_receipt_payment_status_guard.sql',
-    '20261113220000_institution_helpdesk_ticket_lifecycle.sql',
-    '20261113230000_hostel_fee_payment_ledger.sql',
-    '20261113240000_duplicate_detection_review_workflow.sql',
-    '20261113210000_scheduled_report_execution_history.sql',
-    '20261113200000_cafeteria_business_timezone.sql',
-    '20261113173000_receipt_rpc_write_privileges.sql',
+    '20261113090948_hostel_residence_operations.sql',
+    '20261113091451_procurement_purchase_order_and_receiving.sql',
+    '20261113091806_cafeteria_menu_availability_sales.sql',
+    '20261113092458_library_reading_history.sql',
+    '20261113092730_fee_receipt_issuance_and_numbering.sql',
+    '20261113092952_payment_gateway_review_register.sql',
+    '20261113093152_facility_asset_lifecycle.sql',
+    '20261113093423_receipt_payment_status_guard.sql',
+    '20261113094248_institution_helpdesk_ticket_lifecycle.sql',
+    '20261113142644_hostel_fee_payment_ledger.sql',
+    '20261113094459_duplicate_detection_review_workflow.sql',
+    '20261113094116_scheduled_report_execution_history.sql',
+    '20261113093612_cafeteria_business_timezone.sql',
+    '20261113092917_receipt_rpc_write_privileges.sql',
   ]
   for (const migration of migrations) {
     assert.ok(read(path.join('supabase','migrations',migration)).length>0, 'Missing transaction/schema migration: '+migration)
@@ -1101,8 +1101,8 @@ check('Required database safeguards and Cloudflare redirects remain in the proje
     assert.ok(migrations.includes(migration), `${migration} missing`)
   }
   const timestamped = migrations.filter(name => /^202611\d{8}_.+\.sql$/.test(name))
-  assert.equal(timestamped.length, 68, 'Expected sixty-eight timestamped migrations including duplicate review history')
-  assert.ok(read('supabase/migrations/README.md').includes('sixty-eight timestamped migration files'))
+  assert.equal(timestamped.length, 69, 'Expected sixty-nine timestamped migrations matching remote applied history')
+  assert.ok(read('supabase/migrations/README.md').includes('sixty-nine timestamped migration files'))
   assert.equal(read('public/_redirects').trim(), '/* /index.html 200')
   const envExample = read('.env.example')
   const gitignore = read('.gitignore')
