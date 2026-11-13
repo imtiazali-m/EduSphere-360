@@ -306,3 +306,6 @@
 .gic-portal-grid { border: 0; background: transparent; gap: 12px; }
 .gic-portal-card { border: 1px solid var(--gic-line); border-radius: 3px; }
 .gic-portal-card:hover { border-color: #b9c8b6; box-shadow: 0 8px 20px rgba(25,61,49,.07); }
+
+.gic-library-illustration { position: relative; width: 100%; height: 360px; display: block; object-fit: cover; background: #e7e3d7; }
+@media (max-width: 560px) { .gic-library-illustration { height: 250px; } }
