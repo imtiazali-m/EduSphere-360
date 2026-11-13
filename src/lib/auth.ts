@@ -12,6 +12,43 @@ export async function getCloudUserContext(userId: string): Promise<AppUser> {
   if (!membership) throw new Error('This login has no active institution account. Ask your administrator to create or activate your account.')
   const institution = membership.institutions as unknown as { name: string; institution_type?: string } | null
   const role = membership.role as AppRole
+
+  const { data: assignmentRows, error: assignmentsError } = await supabase
+    .from('institution_user_role_assignments')
+    .select('role_profile_id,status,starts_at,ends_at,campus_id,department_id')
+    .eq('institution_id', membership.institution_id)
+    .eq('user_id', userId)
+  if (assignmentsError) throw assignmentsError
+  const customAccessConfigured = (assignmentRows ?? []).length > 0
+  const now = Date.now()
+  const activeAssignments = (assignmentRows ?? []).filter(row =>
+    row.status === 'active' &&
+    new Date(row.starts_at).getTime() <= now &&
+    (!row.ends_at || new Date(row.ends_at).getTime() > now)
+  )
+  const profileIds = Array.from(new Set(activeAssignments.map(row => row.role_profile_id)))
+  let customRolePermissions: Record<string, string[]> = {}
+  if (customAccessConfigured && profileIds.length) {
+    const { data: roleProfiles, error: roleProfilesError } = await supabase
+      .from('institution_role_profiles')
+      .select('id,base_role,module_permissions,is_active')
+      .eq('institution_id', membership.institution_id)
+      .in('id', profileIds)
+      .eq('is_active', true)
+    if (roleProfilesError) throw roleProfilesError
+    for (const roleProfile of roleProfiles ?? []) {
+      if (roleProfile.base_role !== role) continue
+      const grants = roleProfile.module_permissions as Record<string, unknown>
+      for (const [moduleKey, actions] of Object.entries(grants ?? {})) {
+        if (!Array.isArray(actions)) continue
+        const allowed = actions.filter((action): action is string =>
+          ['view','create','edit','delete','approve','publish'].includes(String(action))
+        )
+        customRolePermissions[moduleKey] = Array.from(new Set([...(customRolePermissions[moduleKey] ?? []), ...allowed]))
+      }
+    }
+  }
+
   let linkedStudentId: string | null = null
   if (role === 'student') {
     const { data: student } = await supabase.from('students').select('id').eq('user_id', userId).eq('institution_id', membership.institution_id).maybeSingle()
@@ -29,6 +66,9 @@ export async function getCloudUserContext(userId: string): Promise<AppUser> {
     institutionName: institution?.name ?? 'Institution',
     institutionType: institution?.institution_type ?? undefined,
     linkedStudentId,
+    customAccessConfigured,
+    customRolePermissions,
+    customRoleScopes: activeAssignments.map(row => ({ campusId: row.campus_id, departmentId: row.department_id })),
   }
 }
 
