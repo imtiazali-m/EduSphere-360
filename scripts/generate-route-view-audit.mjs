@@ -88,6 +88,7 @@ function shellTarget(route) {
   const receiptOperations = route.startsWith('receipt-operations:')
   const paymentOperations = route.startsWith('payment-operations:')
   const assetLifecycle = route.startsWith('asset-lifecycle:')
+  const scheduledReports = route.startsWith('scheduled-reports:')
   const personal = route.startsWith('personal:')
   const assistant = route.startsWith('assistant:')
   const frontOffice = route.startsWith('frontoffice:')
@@ -116,6 +117,7 @@ function shellTarget(route) {
     : receiptOperations ? 'receipt-operations'
     : paymentOperations ? 'payment-operations'
     : assetLifecycle ? 'asset-lifecycle'
+    : scheduledReports ? 'scheduled-reports'
     : personal ? 'personal'
     : assistant ? 'assistant'
     : frontOffice ? 'frontoffice'
@@ -144,6 +146,7 @@ function shellTarget(route) {
     : receiptOperations ? route.slice('receipt-operations:'.length)
     : paymentOperations ? route.slice('payment-operations:'.length)
     : assetLifecycle ? route.slice('asset-lifecycle:'.length)
+    : scheduledReports ? route.slice('scheduled-reports:'.length)
     : personal ? route.slice('personal:'.length)
     : assistant ? route.slice('assistant:'.length)
     : frontOffice ? route.slice('frontoffice:'.length)
@@ -177,6 +180,7 @@ function checkView(role, route, dispatcher) {
     const pages = new Set(['hostel-dashboard','hostel-buildings','room-bed-register','resident-allocation','room-transfers','check-in-check-out','hostel-visitor-register','hostel-fees','accommodation-maintenance','occupancy-reports'])
     return { component:'HostelWorkspace', view:targetWindow, status:pages.has(targetWindow)?'Supported':'Unsupported hostel view' }
   }
+  if(targetKey==='scheduled-reports')return {component:'ScheduledReportsWorkspace',view:targetWindow,status:targetWindow==='scheduled-reports'?'Supported':'Unsupported scheduled report view'}
   if(targetKey==='asset-lifecycle'){
     const pages=new Set(['asset-assignment','asset-transfers','asset-warranty','asset-disposal','asset-reports'])
     return {component:'AssetLifecycleWorkspace',view:targetWindow,status:pages.has(targetWindow)?'Supported':'Unsupported asset lifecycle view'}
@@ -303,6 +307,7 @@ for (const [role, label] of roles) {
         : dashboard.targetKey === 'receipt-operations' ? 'ReceiptWorkspace'
         : dashboard.targetKey === 'payment-operations' ? 'PaymentOperationsWorkspace'
         : dashboard.targetKey === 'asset-lifecycle' ? 'AssetLifecycleWorkspace'
+        : dashboard.targetKey === 'scheduled-reports' ? 'ScheduledReportsWorkspace'
         : dashboard.targetKey === 'personal' ? 'PersonalWorkspace'
         : dashboard.targetKey === 'assistant' ? 'AIAssistantWorkspace'
         : dashboard.targetKey === 'frontoffice' ? 'FrontOfficeWorkspace'
