@@ -621,7 +621,7 @@ export function LoginScreen({ navigate, initialRole }: ScreenProps & { initialRo
           <section className="es-auth-card es-login-card">
             <div className="es-auth-avatar"><span><GraduationCap size={23}/></span><i><Check size={11}/></i></div>
             <div className="es-auth-form-heading">
-              <span className="es-auth-overline">YOUR LEARNING COMMUNITY</span>
+              <span className="es-auth-overline">GOVERNMENT ISLAMIA DEGREE COLLEGE BADIN</span>
               <h2>{resetMode ? 'Reset your password' : 'Welcome back'}</h2>
               <p>{resetMode ? 'Enter the email address associated with your institution account. We will send a secure reset link when an account matches.' : 'Enter the college account details issued or approved by the administration.'}</p>
             </div>
