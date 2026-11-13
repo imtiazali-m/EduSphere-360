@@ -194,6 +194,8 @@ export function WelcomeScreen({ navigate }: ScreenProps) {
             <a href="#/public/reviews" onClick={closeMenu}><HeartHandshake size={17}/><span><b>Institution feedback</b><small>Verified stories only</small></span></a>
           </div></div>
           <a className="edm-nav-link" href="#contact" onClick={closeMenu}>Contact</a>
+          <a className="edm-nav-link" href="#showcase" onClick={closeMenu}>Product tour</a>
+          <a className="edm-nav-link" href="#faq" onClick={closeMenu}>FAQ</a>
         </nav>
         <div className="edm-header-actions"><button className="edm-login-link" onClick={() => go('login')}>Login</button><button className="edm-signup-button" onClick={() => go('setup')}>Get Started <ArrowUpRight size={16}/></button></div>
       </header>
@@ -486,7 +488,7 @@ export function WelcomeScreen({ navigate }: ScreenProps) {
           </div>
           <div className="edm-footer-col"><b>Platform</b><a href="#/public/features">Feature catalogue</a><a href="#/public/solutions">Role-based workspaces</a><a href="#/public/analytics">Analytics preview</a><a href="#/public/campus-services">Campus services</a><a href="#/public/integrations">Integrations</a></div>
           <div className="edm-footer-col"><b>Discover</b><a href="#/public/about">About EduSphere</a><a href="#/public/product-tour">Product tour</a><a href="#/public/mobile">Mobile access</a><a href="#/public/pricing">Plans & availability</a><a href="#/public/updates">Release information</a></div>
-          <div className="edm-footer-col"><b>Help & access</b><a href="#/public/resources">Getting started</a><a href="#/public/support">Help & FAQs</a><a href="#/public/reviews">Institution feedback</a><button type="button" onClick={() => go('login')}>Login to your account</button><button type="button" onClick={() => setLegalDocument('privacy')}>Privacy notice</button><button type="button" onClick={() => setLegalDocument('terms')}>Terms & conditions</button><button type="button" onClick={() => go('setup')}>Create an institution</button><a href="#top">Back to top</a></div>
+          <div className="edm-footer-col"><b>Help & access</b><a href="#/public/resources">Getting started</a><a href="#/public/support">Help & FAQs</a><a href="#faq">Frequently asked questions</a><a href="#/public/reviews">Institution feedback</a><button type="button" onClick={() => go('login')}>Login to your account</button><button type="button" onClick={() => setLegalDocument('privacy')}>Privacy notice</button><button type="button" onClick={() => setLegalDocument('terms')}>Terms & conditions</button><button type="button" onClick={() => go('setup')}>Create an institution</button><a href="#top">Back to top</a></div>
         </div>
         <div className="edm-footer-bottom"><span>© {new Date().getFullYear()} EduSphere 360. All rights reserved.</span><span>Schools · colleges · universities</span><a href="#top">Back to top ↑</a></div>
       </footer>
