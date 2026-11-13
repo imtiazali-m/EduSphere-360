@@ -80,3 +80,15 @@
 .ed360-procurement-workspace th{background:#f7f9fc;color:#64748b}
 .ed360-procurement-workspace td small{display:block;color:#7a8a9b;margin-top:4px}
 @media(max-width:640px){.ed360-procurement-workspace .ed360-data-form>label{min-width:100%}.ed360-procurement-workspace .ed360-data-card{padding:14px}}
+
+
+.ed360-receipt-workspace{display:grid;gap:16px}
+.ed360-receipt-workspace .ed360-data-card{display:grid;gap:14px}
+.ed360-receipt-workspace .ed360-data-card>header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.ed360-receipt-workspace .ed360-data-card h2{margin:0 0 6px;color:#18324e;font-size:18px}
+.ed360-receipt-workspace .ed360-data-form>label{display:grid;gap:7px;min-width:190px;flex:1;font-size:13px;font-weight:650;color:#344b65}
+.ed360-receipt-workspace .ed360-data-form input,.ed360-receipt-workspace .ed360-data-form select{width:100%;min-height:42px;border:1px solid #d5deea;border-radius:9px;padding:9px 11px;background:#fff;color:#1c344d;font:inherit}
+.ed360-receipt-verification{display:flex;align-items:flex-start;gap:14px;padding:15px;border:1px solid #b8dec8;border-radius:12px;background:#f1fbf5;color:#236445;flex-wrap:wrap}
+.ed360-receipt-verification>div{flex:1;min-width:200px}
+.ed360-print-receipt-root{display:none}
+@media print{body *{visibility:hidden!important}#ed360-print-receipt,#ed360-print-receipt *{visibility:visible!important}#ed360-print-receipt{display:block!important;position:absolute;inset:0;padding:24px;background:#fff}.ed360-print-receipt-card{max-width:720px;margin:0 auto;padding:28px;border:1px solid #b8c4d1;color:#152d46}.ed360-print-receipt-card h1,.ed360-print-receipt-card h2{text-align:center;margin:12px 0 22px}.ed360-print-receipt-card p{padding:8px;border-bottom:1px solid #edf0f4}}
