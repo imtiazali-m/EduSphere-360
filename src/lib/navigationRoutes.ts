@@ -291,6 +291,12 @@ function dedicatedRoute(groupKey: string, itemKey: string): string | undefined {
   if(groupKey==='payments' && ['online-payment-records','failed-and-pending-payments'].includes(itemKey))return 'payment-operations:'+itemKey
   if(groupKey==='receipts' && ['receipt-templates','receipt-numbering','bulk-receipt-generation','receipt-verification'].includes(itemKey))return 'receipt-operations:'+itemKey
   if(groupKey==='library' && ['reading-records','reading-cards','student-reading-history'].includes(itemKey))return 'library-reading:'+itemKey
+  if(groupKey==='fees' && itemKey==='online-payments')return 'payment-operations:online-payment-records'
+  if(groupKey==='library' && ['library-dashboard','book-management','book-catalogue','book-categories','book-registration','book-issue-and-returns','digital-library','learning-materials','resource-downloads','library-reports'].includes(itemKey))return institutionalRoute(groupKey,itemKey)
+  if(groupKey==='inventory' && ['inventory-dashboard','items-management','item-catalogue','item-categories','stock-in','stock-out','stock-allocation','stock-adjustments','inventory-history','stock-reports'].includes(itemKey))return institutionalRoute(groupKey,itemKey)
+  if(groupKey==='transport' && ['transport-dashboard','vehicle-management','drivers-management','transport-routes','route-stops','student-transport-allocation','transport-fees','transport-assignments','vehicle-maintenance','transport-attendance','transport-history','transport-reports'].includes(itemKey))return institutionalRoute(groupKey,itemKey)
+  if(groupKey==='administration' && itemKey==='campus-and-branch-management')return institutionalRoute(groupKey,itemKey)
+  if(groupKey==='ai' && itemKey==='ai-question-generation')return 'institutional:examinations:question-bank'
   if(groupKey==='inventory'){
     const procurementPages=new Set(['suppliers','supplier-directory','purchase-records','purchase-requests','quotation-comparison','purchase-approvals','purchase-orders','goods-receipt','supplier-invoices','procurement-reports'])
     const cafeteriaPages=new Set(['cafeteria-dashboard','menu-price-list','daily-availability','sales-transactions','meal-plans','cafeteria-inventory','cafeteria-reports'])
@@ -445,6 +451,8 @@ function dedicatedRoute(groupKey: string, itemKey: string): string | undefined {
  */
 function resolveNavigationRoute(groupKey: string, itemLabel: string, role?: string): string {
   const itemKey = slug(itemLabel)
+  const directDedicated = dedicatedRoute(groupKey,itemKey)
+  if(directDedicated && !directDedicated.startsWith('unavailable:')) return directDedicated
   if (groupKey === 'people-hr') {
     const destinations: Record<string,string> = {
       'students':role==='student'||role==='parent'?'students:profile':'students:directory',
