@@ -20,6 +20,8 @@ create table if not exists public.student_transport_fee_charges (
 create index if not exists student_transport_fee_charges_due_idx
  on public.student_transport_fee_charges(institution_id,due_date,status);
 
+alter table public.student_transport_fee_charges add constraint student_transport_fee_charges_id_institution_uq unique(id,institution_id);
+
 create table if not exists public.student_transport_fee_payments (
  id uuid primary key default gen_random_uuid(),
  institution_id uuid not null references public.institutions(id) on delete cascade,
