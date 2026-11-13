@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { ArrowDown, ArrowUp, BadgeCheck, BookOpen, Building2, Check, ChevronDown, CircleAlert, Edit3, LockKeyhole, Plus, RefreshCw, Save, ShieldCheck, UserPlus, Users, X } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { userFacingError } from '../lib/userErrors'
@@ -156,6 +156,8 @@ export function CollegeRolePermissionWorkspace({
   const [assignCampusId,setAssignCampusId] = useState('')
   const [assignDepartmentId,setAssignDepartmentId] = useState('')
   const [assignEndDate,setAssignEndDate] = useState('')
+  const editorModalRef = useRef<HTMLFormElement|null>(null)
+  const assignmentModalRef = useRef<HTMLFormElement|null>(null)
 
   async function load(silent=false) {
     if (!supabase) { setError('Database connection is unavailable.'); setLoading(false); return }
@@ -182,6 +184,36 @@ export function CollegeRolePermissionWorkspace({
   }
 
   useEffect(()=>{ void load() },[institutionId])
+
+  useEffect(()=>{
+    if(!editorOpen&&!assignOpen)return
+    const previousOverflow=document.body.style.overflow
+    const previousFocus=document.activeElement instanceof HTMLElement?document.activeElement:null
+    document.body.style.overflow='hidden'
+    const modal=assignOpen?assignmentModalRef.current:editorModalRef.current
+    const focusable=()=>Array.from(modal?.querySelectorAll<HTMLElement>('button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),a[href],[tabindex]:not([tabindex="-1"])')??[])
+    focusable()[0]?.focus()
+    const onKeyDown=(event:KeyboardEvent)=>{
+      if(event.key==='Escape'){
+        event.preventDefault()
+        if(assignOpen)setAssignOpen(false)
+        else setEditorOpen(false)
+        return
+      }
+      if(event.key!=='Tab')return
+      const items=focusable()
+      if(!items.length)return
+      const first=items[0],last=items[items.length-1]
+      if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus()}
+      else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus()}
+    }
+    document.addEventListener('keydown',onKeyDown)
+    return ()=>{
+      document.removeEventListener('keydown',onKeyDown)
+      document.body.style.overflow=previousOverflow
+      previousFocus?.focus()
+    }
+  },[editorOpen,assignOpen])
 
   const memberById=useMemo(()=>new Map(members.map(member=>[member.user_id,member])),[members])
   const profileById=useMemo(()=>new Map(profiles.map(profile=>[profile.id,profile])),[profiles])
@@ -356,7 +388,7 @@ export function CollegeRolePermissionWorkspace({
     </section>
 
     {editorOpen&&<div className="crp-modal-backdrop" role="presentation" onMouseDown={event=>{if(event.target===event.currentTarget)setEditorOpen(false)}}>
-      <form className="crp-modal" onSubmit={saveProfile} role="dialog" aria-modal="true" aria-labelledby="crp-editor-title">
+      <form ref={editorModalRef} className="crp-modal" onSubmit={saveProfile} role="dialog" aria-modal="true" aria-labelledby="crp-editor-title">
         <header><div><span className="crp-kicker">ROLE PROFILE EDITOR</span><h3 id="crp-editor-title">{editingProfile?'Edit college role':'Create college role'}</h3><p>Choose a base account role and select only the module actions required for the job.</p></div><button type="button" className="crp-icon-button" onClick={()=>setEditorOpen(false)} aria-label="Close editor"><X size={19}/></button></header>
         <div className="crp-form-grid">
           <label><span>Job title / role name</span><input required maxLength={100} value={editor.name} onChange={event=>setEditor(current=>({...current,name:event.target.value}))} placeholder="e.g. Senior Lecturer / HOD"/></label>
@@ -373,7 +405,7 @@ export function CollegeRolePermissionWorkspace({
     </div>}
 
     {assignOpen&&<div className="crp-modal-backdrop" role="presentation" onMouseDown={event=>{if(event.target===event.currentTarget)setAssignOpen(false)}}>
-      <form className="crp-modal crp-assign-modal" onSubmit={saveAssignment} role="dialog" aria-modal="true" aria-labelledby="crp-assign-title">
+      <form ref={assignmentModalRef} className="crp-modal crp-assign-modal" onSubmit={saveAssignment} role="dialog" aria-modal="true" aria-labelledby="crp-assign-title">
         <header><div><span className="crp-kicker">COLLEGE ACCOUNT ACCESS</span><h3 id="crp-assign-title">Assign a job profile</h3><p>Only active members whose base account role matches the selected profile can be assigned.</p></div><button type="button" className="crp-icon-button" onClick={()=>setAssignOpen(false)} aria-label="Close assignment"><X size={19}/></button></header>
         <div className="crp-form-grid">
           <label className="crp-form-wide"><span>College member</span><select required value={assignUserId} onChange={event=>{const nextUserId=event.target.value;setAssignUserId(nextUserId);const selectedProfile=profileById.get(assignProfileId);if(selectedProfile&&memberById.get(nextUserId)?.role!==selectedProfile.base_role)setAssignProfileId('')}}><option value="">Choose an active member…</option>{eligibleMembers.map(member=><option key={member.user_id} value={member.user_id}>{member.full_name||member.email||member.user_id} — {member.role.replaceAll('_',' ')}</option>)}</select></label>
