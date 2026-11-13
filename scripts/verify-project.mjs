@@ -373,7 +373,7 @@ check('Campus and finance submenu workspaces use their dedicated records and tra
     '20261113180000_payment_gateway_review_register.sql',
   ]
   for (const migration of migrations) {
-    assert.ok(exists(path.join(root,'supabase','migrations',migration)), 'Missing transaction/schema migration: '+migration)
+    assert.ok(read(path.join('supabase','migrations',migration)).length>0, 'Missing transaction/schema migration: '+migration)
   }
 })
 
