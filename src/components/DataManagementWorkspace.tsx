@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { createRecord, listRecords } from '../lib/data'
 import type { RecordRow } from '../lib/types'
+import '../styles/data-management.css'
 
 type Job = {id:string;job_type:string;module_key:string|null;file_name:string|null;status:string;total_rows:number;successful_rows:number;rejected_rows:number;error_summary:string|null;details:Record<string,unknown>;created_at:string}
 type Row = RecordRow & {id:string;[key:string]:unknown}
