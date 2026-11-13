@@ -160,7 +160,7 @@ export function WelcomeScreen({ navigate }: ScreenProps) {
   return (
     <div className="edm-home">
       <header className="edm-header edm-public-header">
-        <a className="edm-brand" href="#/" aria-label="EduSphere 360 home" onClick={closeMenu}>
+        <a className="edm-brand" href="#top" aria-label="EduSphere 360 home" onClick={closeMenu}>
           <span className="edm-brand-symbol"><GraduationCap size={24} strokeWidth={2.1}/><i>360</i></span>
           <span className="edm-brand-copy"><b>EduSphere <em>360</em></b><small>EDUCATION MANAGEMENT</small></span>
         </a>
@@ -482,7 +482,7 @@ export function WelcomeScreen({ navigate }: ScreenProps) {
       <footer className="edm-footer">
         <div className="edm-footer-main">
           <div className="edm-footer-brand">
-            <a className="edm-brand edm-brand-footer" href="#/" aria-label="EduSphere 360 home">
+            <a className="edm-brand edm-brand-footer" href="#top" aria-label="EduSphere 360 home">
               <span className="edm-brand-symbol"><GraduationCap size={24}/><i>360</i></span>
               <span className="edm-brand-copy"><b>EduSphere <em>360</em></b><small>EDUCATION MANAGEMENT</small></span>
             </a>
