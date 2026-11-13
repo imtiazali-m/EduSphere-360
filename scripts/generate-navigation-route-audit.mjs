@@ -43,7 +43,7 @@ const classify = (route) => {
     'employees', 'exam_results', 'exams', 'fees', 'finance', 'files', 'governance',
     'academic', 'care', 'peoplehr', 'notifications', 'operations', 'overview', 'payroll', 'reports', 'students',
     'timetable', 'work_tasks', 'personal', 'assistant', 'frontoffice',
-    'data-management', 'custom-reports', 'messaging', 'hostel', 'procurement', 'cafeteria', 'library-reading','receipt-operations','payment-operations','asset-lifecycle','scheduled-reports',
+    'data-management', 'custom-reports', 'messaging', 'hostel', 'procurement', 'cafeteria', 'library-reading','receipt-operations','payment-operations','asset-lifecycle','scheduled-reports','helpdesk',
   ])
   if (!known.has(workspace)) return 'Unexpected route family · investigate'
   if (rootRoute && !intentionalRootRoutes.has(route)) return 'Bare module root · confirm the intended default window'
@@ -71,7 +71,7 @@ for (const token of [
   '<FinanceWorkspace ', '<PayrollWorkspace ', '<PeopleHRWorkspace ', '<GovernanceWorkspace ',
   '<InstitutionOperationsWorkspace ', '<LinkedOperationsWorkspace ',
   '<InstitutionalWorkspace ', '<AssessmentWorkspace ', '<AcademicManagementWorkspace ', '<FacultyWorkspace ', '<RecordModule ',
-  '<DataManagementWorkspace ', '<CustomReportsWorkspace ', '<CommunicationWorkspace ', '<HostelWorkspace ', '<ProcurementWorkspace ', '<CafeteriaWorkspace ', '<LibraryReadingWorkspace ', '<ReceiptWorkspace ', '<PaymentOperationsWorkspace ', '<AssetLifecycleWorkspace ', '<ScheduledReportsWorkspace ',
+  '<DataManagementWorkspace ', '<CustomReportsWorkspace ', '<CommunicationWorkspace ', '<HostelWorkspace ', '<ProcurementWorkspace ', '<CafeteriaWorkspace ', '<LibraryReadingWorkspace ', '<ReceiptWorkspace ', '<PaymentOperationsWorkspace ', '<AssetLifecycleWorkspace ', '<ScheduledReportsWorkspace ', '<HelpdeskWorkspace ',
 ]) {
   if (!dashboardSource.includes(token)) throw new Error('Dashboard dispatcher no longer contains ' + token)
 }
@@ -93,6 +93,7 @@ const resolveDispatcher = (route) => {
   if (route.startsWith('payment-operations:')) return 'PaymentOperationsWorkspace'
   if (route.startsWith('asset-lifecycle:')) return 'AssetLifecycleWorkspace'
   if (route.startsWith('scheduled-reports:')) return 'ScheduledReportsWorkspace'
+  if (route.startsWith('helpdesk:')) return 'HelpdeskWorkspace'
   if (route.startsWith('personal:')) return 'PersonalWorkspace'
   if (route.startsWith('frontoffice:')) return 'FrontOfficeWorkspace'
   if (route.startsWith('assistant:')) return 'AIAssistantWorkspace'
