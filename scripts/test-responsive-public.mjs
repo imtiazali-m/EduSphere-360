@@ -68,6 +68,15 @@ async function inspectViewport({ name, width, height }) {
 
     const heading = (await page.locator('.nl-hero h1').innerText()).replace(/\s+/g, ' ').trim()
     assert.match(heading, /Bring your whole institution/, `${name}: welcome headline is missing`)
+
+    const landingTheme = await page.locator('.nl-page').evaluate(element => {
+      const pageStyle = getComputedStyle(element)
+      const actionStyle = getComputedStyle(element.querySelector('.nl-header-cta'))
+      return { font: pageStyle.fontFamily, canvas: pageStyle.backgroundColor, primary: actionStyle.backgroundColor }
+    })
+    assert.match(landingTheme.font, /Inter/i, `${name}: landing typography does not match the internal Inter system`)
+    assert.equal(landingTheme.canvas, 'rgb(243, 246, 251)', `${name}: landing canvas does not match the internal app canvas`)
+    assert.equal(landingTheme.primary, 'rgb(49, 111, 224)', `${name}: landing primary action does not match the internal app blue`)
     await assertNoHorizontalOverflow(page, `${name} welcome page`)
 
     await page.locator('#product-tour').waitFor({ state: 'visible' })
@@ -78,6 +87,8 @@ async function inspectViewport({ name, width, height }) {
     assert.match(await page.locator('.nl-tour-preview h3').innerText(), /fee obligation|records connected/i, `${name}: finance preview content did not update`)
     assert.equal(await page.locator('.nl-module-group').count(), 4, `${name}: expanded module groups are missing`)
     assert.equal(await page.locator('.nl-campus-grid article').count(), 5, `${name}: campus service cards are missing`)
+    assert.equal(await page.locator('.nl-availability-card').count(), 4, `${name}: product availability cards are missing`)
+    assert.equal(await page.locator('.nl-resources-grid > a').count(), 4, `${name}: resource and support links are missing`)
     const faqToggle = page.locator('.nl-faq-list h3 button').nth(1)
     await faqToggle.click()
     assert.equal(await faqToggle.getAttribute('aria-expanded'), 'true', `${name}: homepage FAQ did not open`)
