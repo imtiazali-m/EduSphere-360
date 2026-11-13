@@ -29,7 +29,6 @@ export function LibraryReadingWorkspace({workspaceKey,onToast}:{workspaceKey:str
  const [loading,setLoading]=useState(true)
  const [busy,setBusy]=useState(false)
  const [search,setSearch]=useState('')
- const [selectedStudent,setSelectedStudent]=useState('')
  const [form,setForm]=useState<Record<string,string>>({reading_date:new Date().toISOString().slice(0,10),status:'in_progress'})
  async function load(){
   if(!supabase||!user){setLoading(false);return}
