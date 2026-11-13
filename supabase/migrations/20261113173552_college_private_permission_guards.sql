@@ -73,7 +73,7 @@ declare r record; module_sql text; campus_sql text; department_sql text; policy_
 begin
  for r in select * from (values
   ('students','students',false,'campus_id','private.college_department_for_student(id)'),
-  ('teachers','employees',false,'campus_id','private.college_department_for_teacher(id)'),
+  ('teachers','employees',false,'campus_id','department_id'),
   ('departments','departments',false,'campus_id','id'),
   ('programs','programs',false,'campus_id','department_id'),
   ('subjects','subjects',false,'campus_id','department_id'),
