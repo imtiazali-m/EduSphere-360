@@ -44,6 +44,7 @@ import { InstitutionOperationsWorkspace } from './InstitutionOperationsWorkspace
 import { DataManagementWorkspace } from './DataManagementWorkspace'
 import { CustomReportsWorkspace } from './CustomReportsWorkspace'
 import { CommunicationWorkspace } from './CommunicationWorkspace'
+import { HostelWorkspace } from './HostelWorkspace'
 import { AcademicManagementWorkspace } from './AcademicManagementWorkspace'
 import { supabase } from '../lib/supabase'
 import { readDisplayPreferences, writeDisplayPreferences, type DashboardDisplayPreferences, type DashboardFontSize } from '../lib/displayPreferences'
@@ -716,6 +717,7 @@ export function Dashboard({ onToast }: Props) {
     const dataManagementWindowRoute = key.startsWith('data-management:')
     const customReportsWindowRoute = key.startsWith('custom-reports:')
     const messagingWindowRoute = key.startsWith('messaging:')
+    const hostelWindowRoute = key.startsWith('hostel:')
     const operationsWindowRoute = key.startsWith('operations:')
     const routeParts = key.split(':')
     const moduleWindowRoute = routeParts.length === 2 && ['fees', 'exams', 'exam_results', 'assignments', 'assignment_submissions', 'timetable', 'announcements', 'work_tasks'].includes(routeParts[0])
@@ -737,6 +739,7 @@ export function Dashboard({ onToast }: Props) {
       : dataManagementWindowRoute ? 'data-management'
       : customReportsWindowRoute ? 'custom-reports'
       : messagingWindowRoute ? 'messaging'
+      : hostelWindowRoute ? 'hostel'
       : operationsWindowRoute ? 'operations'
       : moduleWindowRoute ? routeParts[0]
       : key
@@ -758,6 +761,7 @@ export function Dashboard({ onToast }: Props) {
       : dataManagementWindowRoute ? key.slice('data-management:'.length)
       : customReportsWindowRoute ? key.slice('custom-reports:'.length)
       : messagingWindowRoute ? key.slice('messaging:'.length)
+      : hostelWindowRoute ? key.slice('hostel:'.length)
       : operationsWindowRoute ? key.slice('operations:'.length)
       : moduleWindowRoute ? routeParts[1]
       : 'overview'
@@ -941,6 +945,7 @@ export function Dashboard({ onToast }: Props) {
                 tab.targetKey === 'data-management' ? <DataManagementWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'custom-reports' ? <CustomReportsWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'messaging' ? <CommunicationWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'hostel' ? <HostelWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'institutional' && linkedWorkspaceKeys.includes(tab.targetWindow) ? <LinkedOperationsWorkspace workspaceKey={tab.targetWindow} onToast={onToast} onNavigate={navigateChild}/> :
                 tab.targetKey === 'institutional' ? <InstitutionalWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'unavailable' ? <WorkspaceUnavailable groupKey={tab.targetWindow.split(':')[0]} itemKey={tab.targetWindow.split(':').slice(1).join(':')} onNavigate={navigate}/> :
