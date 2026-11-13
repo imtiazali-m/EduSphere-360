@@ -284,6 +284,7 @@ function institutionOperationsRoute(groupKey:string,itemKey:string):string|undef
 }
 
 function dedicatedRoute(groupKey: string, itemKey: string): string | undefined {
+  if (groupKey === 'communication' && ['whatsapp-integration','individual-messages','bulk-messages','class-wise-messaging','employee-notifications','message-templates','email-notifications','delivery-history','communication-logs','communication-reports','parent-communication','internal-messages','complaints-helpdesk'].includes(itemKey)) return 'messaging:'+itemKey
   if (groupKey === 'communication') {
     const frontOfficeRoutes:Record<string,string>={
       'reception-enquiries':'frontoffice:enquiries',
@@ -473,7 +474,7 @@ function resolveNavigationRoute(groupKey: string, itemLabel: string, role?: stri
     }
     return intelligenceRoutes[itemKey] ?? 'unavailable:ai:' + itemKey
   }
-  if (groupKey === 'backup') return 'unavailable:backup:' + itemKey
+  if (groupKey === 'backup') return 'data-management:' + itemKey
   if (groupKey === 'timetable' && ['teacher-availability','substitution-management','timetable-publishing','class-coverage','engaged-classes'].includes(itemKey)) return 'unavailable:timetable:'+itemKey
   if (groupKey === 'students' && itemKey === 'student-data-export' && role && !['owner','admin'].includes(role)) {
     return 'unavailable:students:student-data-export'
@@ -494,7 +495,7 @@ function resolveNavigationRoute(groupKey: string, itemLabel: string, role?: stri
   }
   if (groupKey === 'attendance' && itemKey === 'attendance-analytics') return 'reports:attendance'
   if (groupKey === 'attendance' && itemKey === 'attendance-alerts') return 'unavailable:attendance:attendance-alerts'
-  if (groupKey === 'reports' && ['custom-report-builder','scheduled-reports','report-templates','report-history'].includes(itemKey)) return 'unavailable:reports:'+itemKey
+  if (groupKey === 'reports' && ['custom-report-builder','scheduled-reports','report-templates','report-history'].includes(itemKey)) return 'custom-reports:'+itemKey
   if (groupKey === 'question-bank' && ['question-bank-import-and-export','question-paper-version-history'].includes(itemKey)) return 'unavailable:question-bank:'+itemKey
   if (groupKey === 'curriculum' && ['teaching-resources','learning-materials','resource-downloads','chapter-wise-learning-resources','learning-progress-tracking'].includes(itemKey)) return 'unavailable:curriculum:'+itemKey
   if (groupKey === 'behaviour' && ['student-progress-history','behaviour-analytics','downloadable-behaviour-reports'].includes(itemKey)) return 'unavailable:behaviour:'+itemKey
