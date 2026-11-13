@@ -85,6 +85,12 @@ export function InstitutionOperationsWorkspace({workspaceKey,initialWindow,onToa
   const [classes,setClasses]=useState<Row[]>([])
   const [sessions,setSessions]=useState<Row[]>([])
   const [rooms,setRooms]=useState<Row[]>([])
+  const [certificateTemplates,setCertificateTemplates]=useState<Row[]>([])
+  const [reservationRooms,setReservationRooms]=useState<Row[]>([])
+  const [roomReservations,setRoomReservations]=useState<Row[]>([])
+  const [reservationStatus,setReservationStatus]=useState('all')
+  const [bulkStudents,setBulkStudents]=useState<string[]>([])
+  const [bulkTemplateId,setBulkTemplateId]=useState('')
   const [dialog,setDialog]=useState<string|null>(null)
   const [draft,setDraft]=useState<Draft>({})
   const [selectedPaper,setSelectedPaper]=useState('')
@@ -300,12 +306,12 @@ export function InstitutionOperationsWorkspace({workspaceKey,initialWindow,onToa
       const {error:insertError}=await supabase.from('student_certificates').insert({
         institution_id:user!.institutionId,student_id:student.id,certificate_no:todayCode('CERT'),
         verification_code:crypto.randomUUID().replaceAll('-','').toUpperCase(),
-        certificate_type:String(template.description??'certificate'),title:template.title,
+        certificate_type:String(template.description??'certificate'),title:String(template.title??'Certificate'),
         achievement:String(template.payload?.body??''),issue_date:null,expiry_date:null,
         signatory_name:String(template.payload?.signatory??''),status:'draft',issued_by:null,created_by:user!.id,
         remarks:'Generated in bulk from template '+template.title,
       })
-      if(insertError)errors.push(student.full_name+': '+insertError.message);else created++
+      if(insertError)errors.push(String(student.full_name??'Student')+': '+insertError.message);else created++
     }
     onToast('Bulk certificate generation: '+created+' draft(s) created, '+errors.length+' failed. Review each draft before issuing.',errors.length>0)
     setBulkStudents([]);await load(true);setBusy(false)
@@ -417,7 +423,6 @@ export function InstitutionOperationsWorkspace({workspaceKey,initialWindow,onToa
       if(view==='competencies')return categoryFor(row).includes('competency')
       return true
     })
-    const insight=view==='analytics'||view==='reports'
     const title=view==='positive'?'Positive behaviour and recognition':view==='follow-up'?'Student care follow-up queue':view==='skills'?'Student skills register':view==='activities'?'Co-curricular participation':view==='competencies'?'Competency tracking':view==='history'?'Student progress history':view==='analytics'?'Behaviour and skills analytics':view==='reports'?'Downloadable student-care report':'Student behaviour register'
     const categoryCounts=['student-skill','co-curricular','competency'].map(category=>({category,total:behaviour.filter(row=>categoryFor(row).includes(category)).length,positive:behaviour.filter(row=>categoryFor(row).includes(category)&&row.event_type==='positive').length}))
     const openCases=behaviour.filter(row=>!['resolved','closed'].includes(String(row.status)))
