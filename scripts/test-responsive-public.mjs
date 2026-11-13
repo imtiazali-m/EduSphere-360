@@ -63,7 +63,7 @@ async function inspectViewport({ name, width, height }) {
   try {
     const response = await page.goto(`${baseUrl}/#/`, { waitUntil: 'domcontentloaded' })
     assert.equal(response?.status(), 200, `${name}: welcome page did not return HTTP 200`)
-    await page.locator('.edm-hero h1').waitFor({ state: 'visible' })
+    await page.locator('.nl-hero h1').waitFor({ state: 'visible' })
     await page.waitForTimeout(350)
 
     const heading = (await page.locator('.edm-hero h1').innerText()).replace(/\s+/g, ' ').trim()
@@ -77,11 +77,11 @@ async function inspectViewport({ name, width, height }) {
       animations: 'disabled',
     })
 
-    const menuToggle = page.locator('.edm-mobile-toggle')
+    const menuToggle = page.locator('.nl-mobile-toggle')
     if (width <= 900) {
       await menuToggle.waitFor({ state: 'visible' })
       await menuToggle.click()
-      await page.locator('.edm-nav.is-open').waitFor({ state: 'visible' })
+      await page.locator('.nl-nav.nl-open').waitFor({ state: 'visible' })
       const featuresLink = page.locator('.edm-nav.is-open a[href="#features"]').first()
       await featuresLink.click()
       await page.waitForFunction(() => location.hash === '#features')
@@ -89,7 +89,7 @@ async function inspectViewport({ name, width, height }) {
       await page.locator('.edm-hero h1').waitFor({ state: 'visible' })
       await assertNoHorizontalOverflow(page, `${name} welcome mobile navigation`)
     } else {
-      await page.locator('.edm-nav a[href="#features"]').first().waitFor({ state: 'visible' })
+      await page.locator('.nl-nav a[href="#features"]').first().waitFor({ state: 'visible' })
     }
 
     const roleCategories = {
