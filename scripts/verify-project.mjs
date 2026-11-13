@@ -346,6 +346,17 @@ check('Expanded unavailable submenu records have typed fields and visible regist
 })
 
 check('Campus and finance submenu workspaces use their dedicated records and transaction actions', () => {
+  const linked = read('src/components/LinkedOperationsWorkspace.tsx')
+  for (const token of [
+    'issue_library_book', 'return_library_book', 'record_inventory_movement',
+    'create_student_transport_allocation', 'transport_attendance_events',
+    'create_student_transport_fee_charge', 'record_student_transport_fee_payment',
+    'book-registration', 'item-categories', 'vehicle-management', 'drivers-management',
+    'transport-routes', 'route-stops', 'vehicle-maintenance'
+  ]) assert.ok(linked.includes(token), 'Missing linked campus/library/inventory/transport workflow token: '+token)
+  assert.ok(linked.includes('Add book') || linked.includes('Register book'), 'Library catalogue must have an actual create action')
+  assert.ok(linked.includes('Add item') || linked.includes('Register inventory item'), 'Inventory catalogue must have an actual create action')
+
   const procurement = read('src/components/ProcurementWorkspace.tsx')
   assert.ok(procurement.includes("rpc('post_goods_receipt'"), 'Goods receipt must post stock through the procurement RPC')
   assert.ok(procurement.includes("rpc('approve_purchase_order'"), 'Purchase orders must use the approval transaction')
