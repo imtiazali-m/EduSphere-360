@@ -337,12 +337,50 @@ export function CollegeWebsite({ navigate }: Props) {
               </div>
             </div>
             <div className="gic-life-photo">
-              <img
-                src="https://images.unsplash.com/photo-1507842217343-583bb7270b66"
-                alt="University students sharing ideas during a study session; illustrative image, not a photograph of Government Islamia Degree College Badin"
-                loading="lazy"
-              />
-              <span>ILLUSTRATIVE LIBRARY PHOTOGRAPH · ILLUSTRATIVE</span>
+              <svg className="gic-library-illustration" viewBox="0 0 880 520" role="img" aria-label="A hand-drawn illustration of a college library with bookshelves, a reading table, books, plants and daylight">
+                <defs>
+                  <linearGradient id="gic-library-wall" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#f2eadb"/><stop offset="1" stopColor="#dfe6d7"/></linearGradient>
+                  <linearGradient id="gic-library-window" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#b8d0c5"/><stop offset="1" stopColor="#e3e9d8"/></linearGradient>
+                </defs>
+                <rect width="880" height="520" fill="url(#gic-library-wall)"/>
+                <rect y="390" width="880" height="130" fill="#c8bda7"/>
+                <rect x="48" y="48" width="330" height="260" rx="4" fill="#fffdf7" stroke="#193d31" strokeWidth="9"/>
+                <rect x="63" y="63" width="300" height="230" fill="url(#gic-library-window)"/>
+                <path d="M63 205 Q130 156 194 190 T363 165 V293 H63Z" fill="#9bae8a"/>
+                <path d="M63 243 Q135 210 211 236 T363 218 V293 H63Z" fill="#718d69"/>
+                <path d="M211 63V293 M63 178H363" stroke="#f7f2e8" strokeWidth="10"/>
+                <rect x="430" y="42" width="398" height="310" rx="3" fill="#8d6545"/>
+                <rect x="442" y="54" width="374" height="286" fill="#d7c5a7"/>
+                <g stroke="#714d37" strokeWidth="8">
+                  <path d="M442 148H816 M442 242H816 M442 336H816"/>
+                </g>
+                <g>
+                  <rect x="454" y="70" width="34" height="70" rx="3" fill="#294f3e"/><rect x="492" y="83" width="29" height="57" rx="2" fill="#ad6546"/><rect x="526" y="62" width="39" height="78" rx="3" fill="#c6a15e"/><rect x="570" y="78" width="31" height="62" rx="2" fill="#657f66"/><rect x="606" y="65" width="42" height="75" rx="3" fill="#8b5640"/><rect x="653" y="86" width="28" height="54" rx="2" fill="#3e6453"/><rect x="687" y="71" width="40" height="69" rx="3" fill="#c19a5d"/><rect x="733" y="80" width="34" height="60" rx="3" fill="#49624e"/><rect x="773" y="66" width="32" height="74" rx="3" fill="#a75e43"/>
+                  <rect x="456" y="156" width="27" height="80" rx="2" fill="#c3975a"/><rect x="487" y="170" width="42" height="66" rx="3" fill="#6b8162"/><rect x="534" y="159" width="31" height="77" rx="2" fill="#9c523e"/><rect x="570" y="177" width="38" height="59" rx="2" fill="#d3b579"/><rect x="613" y="158" width="30" height="78" rx="2" fill="#345844"/><rect x="648" y="167" width="44" height="69" rx="3" fill="#9d7050"/><rect x="697" y="156" width="32" height="80" rx="2" fill="#55745b"/><rect x="734" y="177" width="38" height="59" rx="2" fill="#c18b56"/><rect x="778" y="158" width="26" height="78" rx="2" fill="#6b5542"/>
+                  <rect x="455" y="249" width="37" height="83" rx="2" fill="#42624d"/><rect x="497" y="265" width="27" height="67" rx="2" fill="#b66a47"/><rect x="529" y="252" width="43" height="80" rx="2" fill="#d0b277"/><rect x="578" y="268" width="28" height="64" rx="2" fill="#405d4a"/><rect x="612" y="253" width="36" height="79" rx="2" fill="#995d48"/><rect x="653" y="261" width="39" height="71" rx="2" fill="#b79256"/><rect x="698" y="251" width="30" height="81" rx="2" fill="#41694f"/><rect x="734" y="267" width="37" height="65" rx="2" fill="#9c6545"/><rect x="777" y="253" width="28" height="79" rx="2" fill="#d2b57e"/>
+                </g>
+                <rect x="94" y="355" width="622" height="24" rx="5" fill="#694b36"/>
+                <path d="M124 379L104 486 M684 379L708 486" stroke="#694b36" strokeWidth="15" strokeLinecap="round"/>
+                <rect x="235" y="325" width="170" height="22" rx="3" fill="#b78c59"/>
+                <rect x="254" y="306" width="128" height="17" rx="3" fill="#f4ebd8"/>
+                <rect x="268" y="289" width="100" height="16" rx="3" fill="#55735d"/>
+                <rect x="516" y="334" width="116" height="19" rx="3" fill="#b66a47"/>
+                <rect x="535" y="315" width="96" height="18" rx="3" fill="#e2c789"/>
+                <path d="M745 365Q752 306 776 298Q800 316 798 365" fill="#69865e"/>
+                <path d="M774 380V305 M774 340L746 316 M775 345L803 322" stroke="#54764f" strokeWidth="8" strokeLinecap="round"/>
+                <path d="M725 381H822L813 421H736Z" fill="#a65b3b"/>
+                <ellipse cx="390" cy="420" rx="82" ry="28" fill="#193d31" opacity=".12"/>
+                <g transform="translate(390 350)">
+                  <path d="M-10 32Q-20 4 2 -16Q28 -26 42 -3L55 48H1Z" fill="#a65b3b"/>
+                  <circle cx="14" cy="-30" r="22" fill="#b98260"/>
+                  <path d="M-7 -35Q-3 -62 27 -54Q49 -45 34 -29Q14 -40 -7 -35Z" fill="#253c32"/>
+                  <path d="M5 48L-13 94 M42 48L57 93" stroke="#294f3e" strokeWidth="15" strokeLinecap="round"/>
+                  <path d="M-10 7L-51 37 M42 4L77 22" stroke="#b98260" strokeWidth="12" strokeLinecap="round"/>
+                  <path d="M-42 39L-77 39" stroke="#b98260" strokeWidth="10" strokeLinecap="round"/>
+                </g>
+                <g fill="#e3ce9c" opacity=".7"><circle cx="406" cy="95" r="4"/><circle cx="400" cy="118" r="2"/><circle cx="388" cy="140" r="3"/></g>
+              </svg>
+              <span>COLLEGE LIBRARY · ILLUSTRATIVE ARTWORK</span>
             </div>
           </div>
         </section>
@@ -415,7 +453,7 @@ export function CollegeWebsite({ navigate }: Props) {
           </div>
           <div className="gic-footer-bottom">
             <span>© {new Date().getFullYear()} Government Islamia Degree College Badin</span>
-            <span>Illustrative photographs: Vitaly Gariev and Unsplash contributors</span>
+            <span>Illustrative hero photograph: Vitaly Gariev / Unsplash · Library illustration: original vector artwork</span>
             <a href="#top">Back to top ↑</a>
           </div>
         </div>
