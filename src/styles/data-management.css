@@ -61,3 +61,22 @@
 .ed360-hostel-workspace .iop-button{border:1px solid #d2deea;background:#fff;border-radius:8px;padding:7px 10px;font-size:12px;color:#274463;cursor:pointer}
 .ed360-hostel-workspace .iop-button.primary{background:#245f9d;color:#fff;border-color:#245f9d}
 @media(max-width:640px){.ed360-hostel-workspace .ed360-data-card{padding:14px}.ed360-hostel-workspace .ed360-data-form{align-items:stretch}.ed360-hostel-workspace .iop-field{min-width:100%}.ed360-hostel-workspace .ed360-workspace-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+
+.ed360-procurement-workspace{display:grid;gap:16px}
+.ed360-procurement-workspace .ed360-data-card{display:grid;gap:14px}
+.ed360-procurement-workspace .ed360-data-card>header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.ed360-procurement-workspace .ed360-data-card h2{margin:0 0 6px;font-size:18px;color:#18324e}
+.ed360-procurement-workspace .ed360-data-card h3{margin:0;color:#24415f}
+.ed360-procurement-workspace .ed360-data-card p{color:#64748b;line-height:1.5}
+.ed360-procurement-workspace .ed360-data-form>label{display:grid;gap:7px;min-width:180px;flex:1;font-size:13px;font-weight:650;color:#344b65}
+.ed360-procurement-workspace .ed360-data-form input,.ed360-procurement-workspace .ed360-data-form select,.ed360-procurement-workspace .ed360-data-form textarea{width:100%;min-height:42px;border:1px solid #d5deea;border-radius:9px;padding:9px 11px;color:#1c344d;background:#fff;font:inherit}
+.ed360-procurement-workspace .ed360-proc-subpanel{background:#f8fbfe;border-color:#cfdae7}
+.ed360-proc-actions{display:flex;gap:6px;flex-wrap:wrap}
+.ed360-proc-actions .button{font-size:12px;padding:6px 10px}
+.ed360-procurement-workspace .table-scroll{max-width:100%;overflow:auto}
+.ed360-procurement-workspace table{border-collapse:collapse;width:100%}
+.ed360-procurement-workspace th,.ed360-procurement-workspace td{padding:10px 12px;border-bottom:1px solid #e6edf4;text-align:left;font-size:13px;vertical-align:top}
+.ed360-procurement-workspace th{background:#f7f9fc;color:#64748b}
+.ed360-procurement-workspace td small{display:block;color:#7a8a9b;margin-top:4px}
+@media(max-width:640px){.ed360-procurement-workspace .ed360-data-form>label{min-width:100%}.ed360-procurement-workspace .ed360-data-card{padding:14px}}
