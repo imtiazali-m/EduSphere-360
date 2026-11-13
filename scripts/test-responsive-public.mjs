@@ -109,7 +109,7 @@ async function inspectViewport({name,width,height}){
       ['/public/about','OUR COLLEGE'],
       ['/public/features','ACADEMIC PATHWAYS'],
       ['/public/features/invoices-payments','ACADEMIC PATHWAYS'],
-      ['/public/solutions','SECURE COLLEGE ACCESS'],
+      ['/public/solutions','COLLEGE DIGITAL SERVICES'],
       ['/public/analytics','NOTICE BOARD'],
       ['/public/support','GET IN TOUCH'],
     ]
