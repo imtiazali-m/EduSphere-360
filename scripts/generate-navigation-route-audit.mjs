@@ -43,6 +43,7 @@ const classify = (route) => {
     'employees', 'exam_results', 'exams', 'fees', 'finance', 'files', 'governance',
     'academic', 'care', 'peoplehr', 'notifications', 'operations', 'overview', 'payroll', 'reports', 'students',
     'timetable', 'work_tasks', 'personal', 'assistant', 'frontoffice',
+    'data-management', 'custom-reports', 'messaging',
   ])
   if (!known.has(workspace)) return 'Unexpected route family · investigate'
   if (rootRoute && !intentionalRootRoutes.has(route)) return 'Bare module root · confirm the intended default window'
@@ -70,6 +71,7 @@ for (const token of [
   '<FinanceWorkspace ', '<PayrollWorkspace ', '<PeopleHRWorkspace ', '<GovernanceWorkspace ',
   '<InstitutionOperationsWorkspace ', '<LinkedOperationsWorkspace ',
   '<InstitutionalWorkspace ', '<AssessmentWorkspace ', '<AcademicManagementWorkspace ', '<FacultyWorkspace ', '<RecordModule ',
+  '<DataManagementWorkspace ', '<CustomReportsWorkspace ', '<CommunicationWorkspace ',
 ]) {
   if (!dashboardSource.includes(token)) throw new Error('Dashboard dispatcher no longer contains ' + token)
 }
@@ -80,6 +82,9 @@ const resolveDispatcher = (route) => {
   if (route === 'accounts') return 'AccountsModule'
   if (route === 'files') return 'FilesModule'
   if (route === 'profile') return 'ProfileModule'
+  if (route.startsWith('data-management:')) return 'DataManagementWorkspace'
+  if (route.startsWith('custom-reports:')) return 'CustomReportsWorkspace'
+  if (route.startsWith('messaging:')) return 'CommunicationWorkspace'
   if (route.startsWith('personal:')) return 'PersonalWorkspace'
   if (route.startsWith('frontoffice:')) return 'FrontOfficeWorkspace'
   if (route.startsWith('assistant:')) return 'AIAssistantWorkspace'
