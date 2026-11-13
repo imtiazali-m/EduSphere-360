@@ -42,3 +42,22 @@
 .ed360-communication-workspace .ed360-message-body{min-width:240px;max-width:440px;white-space:pre-wrap}
 .ed360-communication-workspace .ed360-data-warning{display:block}
 @media(max-width:640px){.ed360-template-row{display:grid}.ed360-report-field-picker>div{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+
+.ed360-hostel-workspace{display:grid;gap:16px}
+.ed360-hostel-workspace .ed360-data-card{background:#fff;border:1px solid #e4e9f0;border-radius:16px;padding:20px;box-shadow:0 8px 24px rgba(21,43,69,.045);display:grid;gap:14px}
+.ed360-hostel-workspace .ed360-data-card>header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.ed360-hostel-workspace .ed360-data-card h2{margin:0 0 6px;color:#18324e;font-size:18px}
+.ed360-hostel-workspace .ed360-data-card p{margin:0;color:#64748b;line-height:1.5}
+.ed360-hostel-workspace .iop-field{display:grid;gap:7px;min-width:190px;flex:1;color:#344b65;font-size:13px;font-weight:650}
+.ed360-hostel-workspace .iop-field input,.ed360-hostel-workspace .iop-field select,.ed360-hostel-workspace .iop-field textarea{width:100%;min-height:42px;border:1px solid #d5deea;border-radius:9px;padding:9px 11px;color:#1c344d;background:#fff;font:inherit}
+.ed360-hostel-workspace .iop-field textarea{min-height:72px}
+.ed360-hostel-workspace .ed360-workspace-error{padding:12px 14px;border:1px solid #f1cccc;background:#fff1f1;border-radius:10px;color:#a32222}
+.ed360-hostel-workspace .ed360-hostel-footer{background:#f8fbfe}
+.ed360-hostel-workspace table{width:100%;border-collapse:collapse}
+.ed360-hostel-workspace th,.ed360-hostel-workspace td{padding:11px 12px;text-align:left;border-bottom:1px solid #e7edf4;font-size:13px;vertical-align:top}
+.ed360-hostel-workspace th{color:#64748b;font-weight:700;background:#f7f9fc}
+.ed360-hostel-workspace td small{display:block;color:#75869a;margin-top:4px}
+.ed360-hostel-workspace .iop-button{border:1px solid #d2deea;background:#fff;border-radius:8px;padding:7px 10px;font-size:12px;color:#274463;cursor:pointer}
+.ed360-hostel-workspace .iop-button.primary{background:#245f9d;color:#fff;border-color:#245f9d}
+@media(max-width:640px){.ed360-hostel-workspace .ed360-data-card{padding:14px}.ed360-hostel-workspace .ed360-data-form{align-items:stretch}.ed360-hostel-workspace .iop-field{min-width:100%}.ed360-hostel-workspace .ed360-workspace-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
