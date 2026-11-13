@@ -22,7 +22,7 @@ const info:Record<string,string>={
 }
 const money=(v:unknown)=>'PKR '+Number(v??0).toLocaleString(undefined,{maximumFractionDigits:2})
 const label=(v:unknown)=>String(v??'').replaceAll('_',' ').replace(/\b\w/g,c=>c.toUpperCase())
-const day=()=>new Date().toISOString().slice(0,10)
+const day=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Karachi'}).format(new Date())
 export function CafeteriaWorkspace({workspaceKey,onToast}:{workspaceKey:string;onToast:(message:string,error?:boolean)=>void}){
  const {user}=useAuth()
  const page=workspaceKey.split(':').slice(-1)[0]
