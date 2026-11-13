@@ -1,6 +1,6 @@
 /* Public product pages inherit the EduSphere 360 shared navy/blue design system. */
-.edm-public-page{background:#f5f7f9;color:#171d25;min-height:100vh}
-.edm-public-header{position:sticky;top:0;background:rgba(248,249,245,.96);backdrop-filter:blur(18px);border-bottom:1px solid #e3e7ec}
+.edm-public-page{background:var(--es-canvas);color:var(--es-ink);min-height:100vh}
+.edm-public-header{position:sticky;top:0;background:rgba(255,255,255,.96);backdrop-filter:blur(18px);border-bottom:1px solid #e3e7ec}
 .edm-public-page .edm-nav-group>button{border:0;background:transparent;cursor:pointer}
 .edm-public-page .edm-nav-dropdown{min-width:270px;max-width:340px}
 .edm-public-page .edm-nav-dropdown a{min-height:58px}
