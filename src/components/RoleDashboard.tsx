@@ -355,8 +355,8 @@ export function RoleDashboard({ onNavigate }: Props) {
   const performance = averageResult(publishedResults)
 
   const headingByRole: Record<AppRole, { eyebrow: string; title: string; subtitle: string }> = {
-    owner: { eyebrow: 'GLOBAL INSTITUTION OVERSIGHT', title: 'Institution dashboard', subtitle: 'Monitor performance across campuses, review financial health and act on the work that needs attention.' },
-    admin: { eyebrow: 'ADMINISTRATION WORKSPACE', title: 'Operations overview', subtitle: 'Admissions, people, attendance, approvals and the daily running of your institution.' },
+    owner: { eyebrow: 'COLLEGE-WIDE OVERSIGHT', title: 'College dashboard', subtitle: 'Monitor performance across campuses, review financial health and act on the work that needs attention.' },
+    admin: { eyebrow: 'ADMINISTRATION WORKSPACE', title: 'College operations overview', subtitle: 'Admissions, people, attendance, approvals and the daily running of your institution.' },
     accountant: { eyebrow: 'FINANCE WORKSPACE', title: 'Finance overview', subtitle: 'Collections, receivables, receipts and the month’s posted financial activity.' },
     teacher: { eyebrow: 'TEACHING WORKSPACE', title: 'Your teaching day', subtitle: 'Your assigned classes, timetable, attendance work and learning activities.' },
     student: { eyebrow: 'STUDENT WORKSPACE', title: 'My learning dashboard', subtitle: 'Your timetable, attendance, coursework, examinations and account status.' },
@@ -380,9 +380,9 @@ export function RoleDashboard({ onNavigate }: Props) {
 
   if (role === 'owner') {
     metrics.push(
-      { label: 'Total students', value: knownCount('students'), hint: 'Institution learner records', icon: GraduationCap, tone: 'blue', route: 'students' },
-      { label: 'Teachers & staff', value: knownCount('teachers'), hint: 'Institution team records', icon: Users, tone: 'green', route: 'teachers' },
-      { label: 'Branches', value: knownCount('campuses'), hint: 'Registered campuses', icon: Building2, tone: 'violet', route: 'institutional:administration:campus-and-branch-management' },
+      { label: 'Total students', value: knownCount('students'), hint: 'College student records', icon: GraduationCap, tone: 'blue', route: 'students' },
+      { label: 'Teachers & staff', value: knownCount('teachers'), hint: 'College staff records', icon: Users, tone: 'green', route: 'teachers' },
+      { label: 'Campuses', value: knownCount('campuses'), hint: 'Registered campuses', icon: Building2, tone: 'violet', route: 'institutional:administration:campus-and-branch-management' },
       { label: 'Today’s attendance', value: known('attendance', 'employee_attendance') ? (todayAttendancePercent === null ? '—' : todayAttendancePercent + '%') : '—', hint: known('attendance', 'employee_attendance') ? (totalTodayAttendance ? formatCount(presentToday) + ' present of ' + formatCount(totalTodayAttendance) + ' student and staff records' : 'No attendance recorded today') : 'Attendance unavailable', icon: CalendarCheck, tone: 'teal', route: 'attendance:students' },
       { label: 'Collected today', value: known('fee_payments') ? formatMoney(collectedToday) : '—', hint: known('fee_payments') ? formatCount(todayPayments.length) + ' successful receipts' : 'Payment data unavailable', icon: Wallet, tone: 'amber', route: 'finance:fees:payments' },
       { label: 'Outstanding dues', value: known('fee_invoices') ? formatMoney(outstanding) : '—', hint: pendingDuesCaption, icon: ReceiptText, tone: 'rose', route: 'finance:receivables:receivables' },
