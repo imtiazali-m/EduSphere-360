@@ -676,7 +676,7 @@ function LegalNotice({ kind, onClose }: { kind: 'terms' | 'privacy'; onClose: ()
     <div className="es-legal-backdrop" role="presentation" onMouseDown={onClose}>
       <section className="es-legal-dialog" role="dialog" aria-modal="true" aria-labelledby="es-legal-title" onMouseDown={event => event.stopPropagation()}>
         <button type="button" className="es-legal-close" onClick={onClose} aria-label="Close">×</button>
-        <span className="es-auth-overline">EDUSPHERE 360</span>
+        <span className="es-auth-overline">GOVERNMENT ISLAMIA DEGREE COLLEGE BADIN</span>
         <h2 id="es-legal-title">{isTerms ? 'Terms and Conditions' : 'Privacy Notice'}</h2>
         {isTerms ? (
           <div className="es-legal-copy">
@@ -874,7 +874,7 @@ export function ResetPasswordScreen({ navigate }: ScreenProps) {
           <div className="es-auth-secure-note"><ShieldCheck size={15}/> Use a unique password of at least 10 characters.</div>
         </section>
       </div>
-      <footer className="es-auth-main-foot"><span>© {new Date().getFullYear()} EduSphere 360</span><span>Secure account recovery.</span></footer>
+      <footer className="es-auth-main-foot"><span>© {new Date().getFullYear()} Government Islamia Degree College Badin</span><span>Secure college account recovery.</span></footer>
     </main>
   </div>
 }
