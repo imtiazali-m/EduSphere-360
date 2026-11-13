@@ -101,3 +101,14 @@
 .ed360-payment-provider-note span{flex:1}
 .ed360-online-payment-workspace .ed360-data-form>label{display:grid;gap:7px;min-width:190px;flex:1;font-size:13px;font-weight:650;color:#344b65}
 .ed360-online-payment-workspace .ed360-data-form input,.ed360-online-payment-workspace .ed360-data-form select,.ed360-online-payment-workspace .ed360-data-form textarea{width:100%;min-height:42px;border:1px solid #d5deea;border-radius:9px;padding:9px 11px;background:#fff;color:#1c344d;font:inherit}
+
+
+.ed360-asset-lifecycle{display:grid;gap:16px}
+.ed360-asset-lifecycle .ed360-data-card{display:grid;gap:14px}
+.ed360-asset-lifecycle .ed360-data-card>header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.ed360-asset-lifecycle .ed360-data-card h2{margin:0 0 6px;font-size:18px;color:#18324e}
+.ed360-asset-lifecycle .ed360-data-card h3{margin:10px 0;color:#24415f}
+.ed360-asset-lifecycle .ed360-data-form>label{display:grid;gap:7px;min-width:190px;flex:1;font-size:13px;font-weight:650;color:#344b65}
+.ed360-asset-lifecycle .ed360-data-form input,.ed360-asset-lifecycle .ed360-data-form select{width:100%;min-height:42px;border:1px solid #d5deea;border-radius:9px;padding:9px 11px;background:#fff;color:#1c344d;font:inherit}
+.ed360-asset-lifecycle .ed360-asset-confirm{display:flex!important;flex-direction:row;align-items:center}
+.ed360-asset-lifecycle .ed360-asset-confirm input{width:auto;min-height:auto}
