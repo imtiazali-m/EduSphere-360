@@ -63,4 +63,4 @@ The seven existing membership roles remain the authentication ceiling. Profiles 
 The current permission guard covers direct RLS-backed access to the listed tables and has explicit database triggers for result and approval status decisions. Review existing SECURITY DEFINER RPCs separately before claiming every RPC-based action has full custom-profile enforcement. The existing project security advisor still reports pre-existing SECURITY DEFINER functions exposed to authenticated users and recommends reviewing them individually.
 
 
-- `20261113175010_college_custom_role_high_impact_rpc_guards.sql` adds the custom-profile checks to question-paper approval, payroll approval and adjustments, transport fee charge creation, and institutional setting approval RPCs. These checks run in addition to the original base membership-role checks.
+- `20261113175058_college_custom_role_high_impact_rpc_guards.sql` adds the custom-profile checks to question-paper approval, payroll approval and adjustments, transport fee charge creation, and institutional setting approval RPCs. These checks run in addition to the original base membership-role checks.
