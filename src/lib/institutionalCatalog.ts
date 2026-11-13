@@ -22,40 +22,40 @@ const group=(key:string,label:string,description:string,icon:string,theme:string
 })
 
 export const institutionalMenu:WorkspaceMenuGroup[]=[
- group('dashboard','Dashboard','Your single overview for live KPIs, campus performance, approvals, audit activity and institutional health.','LayoutDashboard','blue','',all,[
+ group('dashboard','College Overview','Your single overview for live KPIs, campus performance, approvals, audit activity and institutional health.','LayoutDashboard','blue','',all,[
   'Institutional Overview'
  ]),
- group('administration','Administration','Institution identity, organisational structure, policies, approvals and access control.','Building2','slate','administration',management,[
+ group('administration','College Administration','Institution identity, organisational structure, policies, approvals and access control.','Building2','slate','administration',management,[
   'Institute Profile','Campus and Branch Management','Academic Structure & Sections','Departments & Designations','Organisational Structure','System Configuration','Approval Workflows','Policies & Rules','Administrative Audit','User Access & Invitations','Role & Permission Management','Institute Settings','Branding & Document Settings','Security & Access History'
  ]),
- group('institution-config','Institutional Systems and Configuration','Education levels, institution/campus settings, invitations, role rights, module rights and security.','Settings','slate','institution_config',management,[
+ group('institution-config','College Systems & Configuration','Education levels, institution/campus settings, invitations, role rights, module rights and security.','Settings','slate','institution_config',management,[
   'Institution Configuration','Education System Configuration','Education Levels','Grade and Academic Level Configuration','Institution Settings','Campus Settings','Academic Settings','General System Settings','Invitations and Access','User Management','Role Management','User Permissions','Module Permissions','Approval Permissions','Security Configuration'
  ]),
  group('academic-sessions','Academic Sessions','Academic years, terms, session activation, rollover and session history.','CalendarDays','blue','academic_setup',management,[
   'All Academic Sessions','Create Academic Session','Session Calendar','Session Start and End Dates','Active Session Management','Session-wise Student Records','Session-wise Examination Records','Session History','Session Reports'
  ]),
- group('classes-sections','Classes and Sections','Class structures, allocations, capacity, teacher assignment and learner progression.','School','cyan','academic_setup',management,[
+ group('classes-sections','Classes & Sections','Class structures, allocations, capacity, teacher assignment and learner progression.','School','cyan','academic_setup',management,[
   'All Classes','Add Class','Sections','Class Teachers','Class Allocation','Student Class Assignment','Class Capacity','Class Promotion History','Transfer History','Class History'
  ]),
  group('subjects','Subjects','Subject catalogue, allocation, teacher assignment, syllabus and performance.','BookOpen','teal','academic_setup',management,[
   'All Subjects','Add Subject','Subject Categories','Subject Allocation','Teacher Assignment','Class-wise Subjects','Subject Combinations','Subject Syllabus','Subject Performance','Subject-wise Reports'
  ]),
- group('backup','Backup, Restore and Data Management','Validated import/export jobs, backup request history, restore approvals and integrity reporting.','Database','slate','backup',management,[
+ group('backup','Backup & Data Recovery','Validated import/export jobs, backup request history, restore approvals and integrity reporting.','Database','slate','backup',management,[
   'Backup Dashboard','Create Backup','Scheduled Cloud Backups','Backup History','Restore Data','Data Recovery','Import Data','Export Data','Bulk Data Import','Data Validation','Import History','Export History','Data Integrity Reports',
   'Duplicate Detection',
   'Integration Status'
  ]),
- group('people-hr','People Management & Human Resources','A connected people lifecycle for learners, families, educators, employees, recruitment, contracts, performance, payroll and graduates.','Users','emerald','people_hr',all,[
+ group('people-hr','Faculty, Staff & HR','A connected people lifecycle for learners, families, educators, employees, recruitment, contracts, performance, payroll and graduates.','Users','emerald','people_hr',all,[
   'Students','Admissions & Enrollment','Teachers','Faculty & Staff','Parents & Guardians',
   'HR & Recruitment','Employee Contracts & Documents','Employee Performance','Payroll & Salary Records','Alumni'
  ]),
- group('attendance','Attendance, Leave & Student Wellbeing','Daily attendance registers, leave decisions, reporting and restricted student-care records.','CalendarCheck','rose','attendance',staff.concat(['student','parent']),[
+ group('attendance','Attendance, Leave & Student Support','Daily attendance registers, leave decisions, reporting and restricted student-care records.','CalendarCheck','rose','attendance',staff.concat(['student','parent']),[
   'Student Attendance','Teacher Attendance','Staff Attendance','Leave Management','Attendance Reports','Student Discipline','Student Counselling & Wellbeing','Health & Emergency Records'
  ]),
- group('behaviour','Behaviour and Skills','Positive recognition, safeguarding-aware behaviour logs, incidents, skills and competency tracking.','HeartHandshake','pink','behaviour',staff.concat(['student','parent']),[
+ group('behaviour','Student Development & Activities','Positive recognition, safeguarding-aware behaviour logs, incidents, skills and competency tracking.','HeartHandshake','pink','behaviour',staff.concat(['student','parent']),[
   'Behaviour Dashboard','Behaviour Records','Positive Behaviour','Disciplinary Incidents','Rewards and Recognition','Warnings','Student Skills','Co-curricular Activities','Competency Tracking','Student Progress History','Behaviour Analytics','Downloadable Behaviour Reports'
  ]),
- group('certificates','Certificates and Documentation','Template-driven institutional documents, certificates, ID cards, signatures, serial numbers and verification.','Award','gold','certificates',management.concat(['teacher','student','parent']),[
+ group('certificates','Certificates & Documents','Template-driven institutional documents, certificates, ID cards, signatures, serial numbers and verification.','Award','gold','certificates',management.concat(['teacher','student','parent']),[
   'Certificate Dashboard','Character Certificate','Leaving Certificate','Enrollment Certificate','Bonafide Certificate','Achievement Certificate','Experience Certificate','ID Card Designer','Certificate Templates','Editable Document Templates','Bulk Certificate Generation','Certificate Verification','Certificate History',
   'Form Builder',
   'Form Submissions',
@@ -63,37 +63,37 @@ export const institutionalMenu:WorkspaceMenuGroup[]=[
   'Letters & Applications',
   'Document Verification'
  ]),
- group('academic-management','Academic Management & Learning','Plan sessions, classes, subjects, curriculum, lesson delivery, timetables, homework, learning materials, digital courses, classroom work, calendar and learner progress.','GraduationCap','blue','academic-management',academic.concat(['student','parent']),[
+ group('academic-management','Academics & Learning','Plan sessions, classes, subjects, curriculum, lesson delivery, timetables, homework, learning materials, digital courses, classroom work, calendar and learner progress.','GraduationCap','blue','academic-management',academic.concat(['student','parent']),[
   'Academic Sessions','Classes & Sections','Subjects & Courses','Curriculum & Syllabus','Lesson Planning','Timetable','Homework & Assignments','Study Materials','Online Learning','Classwork & Classroom Activities','Academic Calendar','Learning Progress'
  ]),
- group('curriculum','Curriculum and Learning Resources','Curriculum maps, syllabus, outcomes, teaching resources, chapter materials and progress analytics.','BookOpen','teal','curriculum',family,[
+ group('curriculum','Curriculum & Learning Resources','Curriculum maps, syllabus, outcomes, teaching resources, chapter materials and progress analytics.','BookOpen','teal','curriculum',family,[
   'Curriculum Dashboard','Curriculum Map','Syllabus Management','Learning Outcomes','Lesson Plans','Teaching Resources','Learning Materials','Resource Downloads','Subject-wise Curriculum','Chapter-wise Learning Resources','Curriculum Coverage','Learning Progress Tracking','Curriculum Reports'
  ]),
  group('timetable','Timetable','Master and role-based schedules, teacher availability, room allocation, substitution and class coverage.','CalendarDays','cyan','timetable',academic.concat(['student','parent']),[
   'Timetable Dashboard','Master Timetable','Class Timetable','Teacher Timetable','Room Timetable','Period Timetable','Teacher Availability','Substitution Management','Timetable Conflicts','Timetable Publishing','Timetable History','Class Coverage','Engaged Classes'
  ]),
- group('teaching','Teaching, Homework and Assignments','Lesson delivery, homework, coursework, submissions, grading, teacher review and student feedback.','BookOpenCheck','violet','teaching',family,[
+ group('teaching','Teaching & Coursework','Lesson delivery, homework, coursework, submissions, grading, teacher review and student feedback.','BookOpenCheck','violet','teaching',family,[
   'Teaching Dashboard','Homework','Create Assignment','Assignment Design and Management','Student Submissions','Teacher Review','Marks and Feedback','Teaching Materials','Lesson Plans','Homework Calendar','Pending Assignments','Pending Reviews','Assignment History','Assignment Reports','Downloadable Attachments'
  ]),
- group('question-bank','Question Bank and Question Papers','Legacy question-bank entry consolidated into the Stage 9 examination workspace.','FileQuestion','indigo','question_bank',[],[
+ group('question-bank','Question Bank & Papers','Legacy question-bank entry consolidated into the Stage 9 examination workspace.','FileQuestion','indigo','question_bank',[],[
   'Question Bank Dashboard','Multiple-Choice Questions','Short Questions','Long Questions','Subject-wise Questions','Chapter-wise Questions','Difficulty Levels','Question Categories','Question Builder','Question Paper Designer','Paper Templates','Marks Distribution','Random Question Selection','Question Review','Question Bank Import and Export','Question Paper Download','Question Paper Version History'
  ]),
- group('examinations','Examinations, Assessments and Results','Formal examinations, classroom tests, question banks, online assessment, marks approval, report cards and analysis.','ClipboardCheck','blue','examinations',exams,[
+ group('examinations','Examinations & Results','Formal examinations, classroom tests, question banks, online assessment, marks approval, report cards and analysis.','ClipboardCheck','blue','examinations',exams,[
   'Examination Programs','Examination Timetable','Question Bank','Online Tests and Quizzes','Marks Entry','Grades and Grading System','Results and Result Approval','Report Cards','Examination Reports'
  ]),
- group('class-tests','Class Tests','Legacy class-test entry consolidated into the Stage 9 examination workspace.','ListChecks','violet','tests',[],[
+ group('class-tests','Class Tests & Assessments','Legacy class-test entry consolidated into the Stage 9 examination workspace.','ListChecks','violet','tests',[],[
   'Class Test Dashboard','Create Class Tests','Test Schedule','Online Tests','Written Tests','Test Questions','Marks Entry','Test Results','Performance Analysis','Test Reports','Student-wise Test History'
  ]),
- group('library','Digital Library','Catalogue, book inventory, member reading records, circulation, returns, fines and reports.','Library','indigo','library',family,[
+ group('library','Library Services','Catalogue, book inventory, member reading records, circulation, returns, fines and reports.','Library','indigo','library',family,[
   'Library Dashboard','Digital Library','Book Management','Book Catalogue','Book Categories','Book Registration','Reading Records','Reading Cards','Student Reading History','Book Issue and Returns','Learning Materials','Resource Downloads','Library Reports'
  ]),
- group('accounts-finance','Accounts and Finance','General ledger, income, expenses, cash/bank books, vouchers and financial statements.','Calculator','amber','finance',finance,[
+ group('accounts-finance','Accounts & Finance','General ledger, income, expenses, cash/bank books, vouchers and financial statements.','Calculator','amber','finance',finance,[
   'Accounts Dashboard','Chart of Accounts','Income','Expenses','Cash Book','Bank Book','Transactions','Vouchers','General Ledger','Financial Statements','Account Reconciliation','Financial Reports'
  ]),
- group('fees','Fees Management','Fee structures, invoices, discounts, scholarships, collection and receipts.','Wallet','amber','fees',finance.concat(['student','parent']),[
+ group('fees','Fees & Scholarships','Fee structures, invoices, discounts, scholarships, collection and receipts.','Wallet','amber','fees',finance.concat(['student','parent']),[
   'Fees Dashboard','Fee Structure','Fee Categories','Student Fee Assignment','Fee Invoices','Payment Collection','Online Payments','Partial Payments','Discounts','Scholarships','Outstanding Dues','Fee Refunds','Fee Receipts','Class-wise Collection Reports','Section-wise Collection Reports','Overall Collection Reports'
  ]),
- group('receivables','Accounts Receivable','Outstanding balances, ageing, follow-ups and collection forecasting from live invoice balances.','TrendingUp','orange','receivables',finance,[
+ group('receivables','Outstanding Fees','Outstanding balances, ageing, follow-ups and collection forecasting from live invoice balances.','TrendingUp','orange','receivables',finance,[
   'Receivables Dashboard','Total Outstanding','Student-wise Receivables','Invoice-wise Receivables','Overdue Accounts','Ageing Analysis','Partial Payment Balances','Collection Follow-ups','Outstanding History','Receivable Reconciliation','Collection Forecasts','Receivables Reports'
  ]),
  group('payments','Payments and Collections','Cash/bank/online payment processing, verification, allocation, refunds and reconciliation.','Wallet','green','payments',finance,[
@@ -102,10 +102,10 @@ export const institutionalMenu:WorkspaceMenuGroup[]=[
  group('receipts','Receipts','Receipt numbering, templates, generation, reprinting, verification and bulk issue.','FileText','indigo','receipts',finance,[
   'Receipt Dashboard','Generate Receipt','Fee Receipts','Payment Receipts','Receipt Templates','Receipt Numbering','Receipt Reprinting','Receipt Verification','Bulk Receipt Generation','Receipt History'
  ]),
- group('reconciliation','Financial Reconciliation and Audit','Bank/cash/payment reconciliation, verification, immutable audit logs and access/change history.','ShieldCheck','red','reconciliation',finance,[
+ group('reconciliation','Financial Reconciliation','Bank/cash/payment reconciliation, verification, immutable audit logs and access/change history.','ShieldCheck','red','reconciliation',finance,[
   'Reconciliation Dashboard','Financial Reconciliation','Bank Reconciliation','Cash Reconciliation','Payment Reconciliation','Fee Collection Reconciliation','Transaction Verification','Audit Logs','Administrative Audit','User Activity Logs','Access History','Change History','Audit Reports'
  ]),
- group('communication','Communication and WhatsApp','Role-targeted notices, message templates, notification centre, delivery history and approved messaging integrations.','MessageSquare','sky','communication',all,[
+ group('communication','Communication & Notices','Role-targeted notices, message templates, notification centre, delivery history and approved messaging integrations.','MessageSquare','sky','communication',all,[
   'Communication Dashboard','WhatsApp Integration','Individual Messages','Bulk Messages','Class-wise Messaging','Employee Notifications','Message Templates','Assignment Notifications','Email Notifications','Delivery History','Communication Logs','Notification Centre','Communication Reports',
   'Reception & Enquiries',
   'Parent Communication',
@@ -123,10 +123,10 @@ export const institutionalMenu:WorkspaceMenuGroup[]=[
   'Achievements',
   'Activity Reports'
  ]),
- group('transport','Transport Management','Vehicles, drivers, route stops, student allocations, transport attendance, fees and maintenance.','Database','orange','transport',management.concat(['teacher','student','parent','accountant']),[
+ group('transport','Transport Services','Vehicles, drivers, route stops, student allocations, transport attendance, fees and maintenance.','Database','orange','transport',management.concat(['teacher']),[
   'Transport Dashboard','Vehicle Management','Drivers Management','Transport Routes','Route Stops','Student Transport Allocation','Transport Fees','Transport Assignments','Vehicle Maintenance','Transport Attendance','Transport History','Transport Reports'
  ]),
- group('inventory','Inventory Management','Item catalogue, suppliers, procurement, stock-in/out, allocation, adjustments and stock audit.','Database','amber','inventory',management.concat(['accountant']),[
+ group('inventory','Stores & Inventory','Item catalogue, suppliers, procurement, stock-in/out, allocation, adjustments and stock audit.','Database','amber','inventory',management.concat(['accountant']),[
   'Inventory Dashboard','Items Management','Item Catalogue','Item Categories','Stock In','Stock Out','Suppliers','Purchase Records','Stock Allocation','Stock Adjustments','Inventory History','Stock Reports',
   'Cafeteria Dashboard',
   'Menu & Price List',
@@ -163,13 +163,13 @@ export const institutionalMenu:WorkspaceMenuGroup[]=[
   'Asset Disposal',
   'Asset Reports'
  ]),
- group('visitors','Visitor Management','Visitor registration, passes, approvals, entry/exit records, notifications and history.','UserRound','slate','visitors',management.concat(['teacher']),[
+ group('visitors','Visitor & Front Office','Visitor registration, passes, approvals, entry/exit records, notifications and history.','UserRound','slate','visitors',management.concat(['teacher']),[
   'Visitor Dashboard','Visitor Registration','Visitor Information','Visitor Passes','Entry and Exit Records','Visitor Approvals','Visit History','Visitor Notifications','Visitor Reports'
  ]),
- group('reports','Reports and Analytics','Role-scoped live reports, custom builders, comparisons, scheduled runs and export history.','BarChart3','blue','reports',management.concat(['teacher','accountant','exam_officer']),[
+ group('reports','College Reports & Analytics','Role-scoped live reports, custom builders, comparisons, scheduled runs and export history.','BarChart3','blue','reports',management.concat(['teacher','accountant','exam_officer']),[
   'Reports Dashboard','Student Reports','Employee Reports','Attendance Reports','Examination Reports','Academic Reports','Fee Reports','Payroll Reports','Financial Reports','Class Reports','Comparative Analytics','Custom Report Builder','Scheduled Reports','Report Templates','Report History'
  ]),
- group('ai','AI Intelligence','Evidence-grounded assistance and explainable insights. Predictions must disclose source data, assumptions and uncertainty.','BrainCircuit','violet','ai',management,[
+ group('ai','AI Assistant & Insights','Evidence-grounded assistance and explainable insights. Predictions must disclose source data, assumptions and uncertainty.','BrainCircuit','violet','ai',management,[
   'AI Assistant','Smart Reports','Student Performance Prediction','Student Analysis','Fee Collection Prediction','Examination Analysis','AI Timetable Suggestions','AI Question Generation','AI Document Assistant','AI Learning Recommendations','Academic Performance Insights','Attendance and Behaviour Insights','Institutional Intelligence'
  ]),
 ]

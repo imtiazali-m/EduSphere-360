@@ -3,7 +3,7 @@ import {
   ArrowLeft, ArrowRight, ArrowUpRight, BarChart3, BookOpen, Building2, Bus,
   CalendarCheck, Check, CheckCircle2, ChevronDown, ClipboardCheck, DoorOpen,
   Package, UserCheck,
-  GraduationCap, Headphones, HeartHandshake, Layers3, LockKeyhole,
+  GraduationCap, Headphones, HeartHandshake, Landmark, Layers3, LockKeyhole,
   Eye, EyeOff, FileText, Mail, Menu, Monitor, Server, ShieldCheck, Sparkles,
   Users, Wallet, X, Zap,
 } from 'lucide-react'
@@ -11,10 +11,11 @@ import { useAuth } from '../context/AuthContext'
 import { userFacingError } from '../lib/userErrors'
 import { resendInstitutionOwnerVerification } from '../lib/auth'
 import type { AppRole } from '../lib/types'
-import { NewLandingPage } from './NewLandingPage'
 import '../styles/welcome-marketing.css'
 import '../styles/welcome-completion.css'
 import '../styles/auth-experience.css'
+
+import { CollegeWebsite } from './CollegeWebsite'
 
 interface ScreenProps { navigate: (screen: 'welcome' | 'login' | 'setup', role?: AppRole) => void }
 
@@ -29,9 +30,9 @@ const portals: { role: AppRole; title: string; description: string; icon: typeof
 ]
 
 function Brand() {
-  return <div className="es-auth-brand" aria-label="EduSphere 360">
-    <span className="es-auth-brand-mark"><GraduationCap size={23} strokeWidth={2.1} /></span>
-    <span className="es-auth-brand-copy"><b>EduSphere <em>360</em></b><small>EDUCATION MANAGEMENT</small></span>
+  return <div className="es-auth-brand" aria-label="Government Islamia Degree College Badin">
+    <span className="es-auth-brand-mark"><BookOpen size={23} strokeWidth={1.9} /></span>
+    <span className="es-auth-brand-copy"><b>Government Islamia</b><small>DEGREE COLLEGE · BADIN</small></span>
   </div>
 }
 
@@ -503,36 +504,29 @@ export function LegacyWelcomeScreen({ navigate }: ScreenProps) {
 
 
 export function WelcomeScreen({ navigate }: ScreenProps) {
-  return <NewLandingPage navigate={navigate} />
+  return <CollegeWebsite navigate={navigate} />
 }
 
 function AuthVisualPanel({ variant }: { variant: 'login' | 'signup' | 'cloud' }) {
   return (
     <aside className={`es-auth-visual es-auth-visual-${variant}`}>
-      <div className="es-auth-visual-head"><Brand /><span className="es-auth-visual-label">ONE PLATFORM · EVERY POSSIBILITY</span></div>
+      <div className="es-auth-visual-head"><Brand /><span className="es-auth-visual-label">GOVERNMENT COLLEGE · BADIN</span></div>
       <div className="es-auth-visual-copy">
-        <span className="es-auth-kicker"><i /> {variant === 'login' ? 'WELCOME BACK' : 'YOUR INSTITUTION STARTS HERE'}</span>
-        <h1>{variant === 'login' ? <>Welcome back to<br/><em>better learning.</em></> : <>Bring your campus<br/><em>together.</em></>}</h1>
+        <span className="es-auth-kicker"><i /> {variant === 'login' ? 'COLLEGE PORTAL' : 'STUDENT AND STAFF SERVICES'}</span>
+        <h1>{variant === 'login' ? <>Your college.<br/><em>Your next step.</em></> : <>A shared place<br/><em>to learn and serve.</em></>}</h1>
         <p>{variant === 'login'
-          ? 'Sign in to the people, tools and progress that keep your institution moving forward.'
-          : 'A thoughtful, connected way to manage admissions, academics, people and everyday operations.'}</p>
+          ? 'Sign in to the college services available to your approved role. Your access is limited to the records and work assigned to you.'
+          : 'A connected college workspace for authorised administrators, faculty, students and families.'}</p>
       </div>
-      <div className="es-auth-illustration" aria-label="Illustration of a connected education campus">
-        <div className="es-auth-illustration-glow" />
-        <div className="es-auth-orbit es-auth-orbit-one" />
-        <div className="es-auth-orbit es-auth-orbit-two" />
-        <div className="es-campus-illustration">
-          <div className="es-campus-roof" />
-          <div className="es-campus-top"><span /><span /><span /></div>
-          <div className="es-campus-columns"><i /><i /><i /><i /><i /></div>
-          <div className="es-campus-base"><span>EDUSPHERE 360</span></div>
-          <div className="es-campus-ground" />
-        </div>
-        <div className="es-auth-float es-auth-float-admissions"><span><Users size={16}/></span><div><b>Admissions</b><small>Student records</small></div><CheckCircle2 size={15}/></div>
-        <div className="es-auth-float es-auth-float-learning"><span><BookOpen size={16}/></span><div><b>Learning</b><small>Classes & assessments</small></div></div>
-        <div className="es-auth-float es-auth-float-finance"><span><Wallet size={16}/></span><div><b>Operations</b><small>Fees & administration</small></div></div>
+      <div className="es-auth-illustration">
+        <img
+          src="https://images.unsplash.com/photo-1758270704787-615782711641?auto=format&fit=crop&fm=jpg&ixlib=rb-4.1.0&q=82&w=1400"
+          alt="College students studying together in a lecture hall; illustrative photograph, not a photograph of the Badin campus"
+          loading="lazy"
+        />
+        <span className="es-auth-illustration-caption">STUDENTS LEARNING TOGETHER · ILLUSTRATIVE PHOTOGRAPH</span>
       </div>
-      <div className="es-auth-visual-foot"><span className="es-auth-foot-symbol"><ShieldCheck size={16}/></span><span><b>Designed around your institution</b><small>One connected education experience</small></span><span className="es-auth-foot-dots"><i/><i/><i/></span></div>
+      <div className="es-auth-visual-foot"><span className="es-auth-foot-symbol"><ShieldCheck size={16}/></span><span><b>Access shaped by responsibility</b><small>Government Islamia Degree College, Badin</small></span></div>
     </aside>
   )
 }
@@ -540,10 +534,8 @@ function AuthVisualPanel({ variant }: { variant: 'login' | 'signup' | 'cloud' })
 function AuthTopline({ navigate, mode }: { navigate: ScreenProps['navigate']; mode: 'login' | 'signup' }) {
   return (
     <div className="es-auth-topline">
-      <button type="button" className="es-auth-back" onClick={() => navigate('welcome')}><ArrowLeft size={15}/> <span>Back to website</span></button>
-      {mode === 'login'
-        ? <p>New to EduSphere 360? <button type="button" onClick={() => navigate('setup')}>Sign up</button></p>
-        : <p>Already have an account? <button type="button" onClick={() => navigate('login')}>Login</button></p>}
+      <button type="button" className="es-auth-back" onClick={() => navigate('welcome')}><ArrowLeft size={15}/> <span>Back to college website</span></button>
+      <p>{mode === 'login' ? 'Need an account? Contact the college office.' : <>Already have access? <button type="button" onClick={() => navigate('login')}>Sign in</button></>}</p>
     </div>
   )
 }
@@ -621,16 +613,16 @@ export function LoginScreen({ navigate, initialRole }: ScreenProps & { initialRo
           <section className="es-auth-card es-login-card">
             <div className="es-auth-avatar"><span><GraduationCap size={23}/></span><i><Check size={11}/></i></div>
             <div className="es-auth-form-heading">
-              <span className="es-auth-overline">YOUR LEARNING COMMUNITY</span>
+              <span className="es-auth-overline">GOVERNMENT ISLAMIA DEGREE COLLEGE</span>
               <h2>{resetMode ? 'Reset your password' : 'Welcome back'}</h2>
-              <p>{resetMode ? 'Enter the email address associated with your institution account. We will send a secure reset link when an account matches.' : 'Enter your account details to continue to EduSphere 360.'}</p>
+              <p>{resetMode ? 'Enter the email address associated with your institution account. We will send a secure reset link when an account matches.' : 'Enter the account details issued or approved by your college.'}</p>
             </div>
             {!resetMode && <div className="es-account-type" role="group" aria-label="Choose account type">
               <button type="button" className={accountType === 'owner_admin' ? 'is-active' : ''} onClick={() => { setAccountType('owner_admin'); setError('') }} aria-pressed={accountType === 'owner_admin'}>
-                <span><Building2 size={17}/></span><b>Owner / Admin</b>
+                <span><Building2 size={17}/></span><b>Principal / Office</b>
               </button>
               <button type="button" className={accountType === 'employee' ? 'is-active' : ''} onClick={() => { setAccountType('employee'); setError('') }} aria-pressed={accountType === 'employee'}>
-                <span><Users size={17}/></span><b>Employee</b>
+                <span><Users size={17}/></span><b>Faculty / Staff</b>
               </button>
               <button type="button" className={accountType === 'student' ? 'is-active' : ''} onClick={() => { setAccountType('student'); setError('') }} aria-pressed={accountType === 'student'}>
                 <span><GraduationCap size={18}/></span><b>Student</b>
@@ -660,11 +652,11 @@ export function LoginScreen({ navigate, initialRole }: ScreenProps & { initialRo
               {resendNotice && <div className="es-auth-notice" role="status">{resendNotice}</div>}
               <button className="es-auth-submit" type="submit" disabled={busy}>{busy ? 'Signing in…' : 'Login'} <ArrowRight size={17}/></button>
             </form>}
-            {!resetMode && <div className="es-auth-mobile-signup">Don't have an account? <button type="button" onClick={() => navigate('setup')}>Sign up</button></div>}
+            {!resetMode && <div className="es-auth-mobile-signup">Portal accounts are issued by the college administration.</div>}
             <div className="es-auth-secure-note"><ShieldCheck size={15}/> Your account is protected with role-based access.</div>
           </section>
         </div>
-        <footer className="es-auth-main-foot"><span>© {new Date().getFullYear()} EduSphere 360</span><span>Education management, thoughtfully connected.</span></footer>
+        <footer className="es-auth-main-foot"><span>© {new Date().getFullYear()} Government Islamia Degree College Badin</span><span>Official college portal.</span></footer>
       </main>
     </div>
   )
@@ -709,123 +701,33 @@ function LegalNotice({ kind, onClose }: { kind: 'terms' | 'privacy'; onClose: ()
 }
 
 export function SetupScreen({ navigate }: ScreenProps) {
-  const { registerAdmin } = useAuth()
-  const [fullName, setFullName] = useState('')
-  const [institutionName, setInstitutionName] = useState('')
-  const [institutionType, setInstitutionType] = useState<'school' | 'college' | 'university' | 'multi_institution'>('school')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
-  const [acceptedTerms, setAcceptedTerms] = useState(false)
-  const [legalDocument, setLegalDocument] = useState<'terms' | 'privacy' | null>(null)
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState('')
-  const [verificationEmail, setVerificationEmail] = useState('')
-  const [resendBusy, setResendBusy] = useState(false)
-  const [resendMessage, setResendMessage] = useState('')
-  const [resendError, setResendError] = useState('')
-
-  async function submit(event: FormEvent) {
-    event.preventDefault()
-    setError('')
-    if (!fullName.trim()) { setError('Enter your full name.'); return }
-    if (!institutionName.trim()) { setError('Enter your institution name.'); return }
-    if (password.length < 10) { setError('Use a password with at least 10 characters.'); return }
-    if (password !== confirmPassword) { setError('Your passwords do not match. Please check and try again.'); return }
-    if (!acceptedTerms) { setError('Please accept the Terms and Conditions and Privacy Notice to continue.'); return }
-    setBusy(true)
-    try {
-      const result = await registerAdmin({ fullName: fullName.trim(), institutionName: institutionName.trim(), institutionType, email: email.trim().toLowerCase(), password })
-      if (result.verificationRequired) {
-        setVerificationEmail(result.email)
-        setResendMessage('')
-        setResendError('')
-      }
-    } catch (err) {
-      setError(userFacingError(err, 'Could not create your EduSphere 360 account. Please review the details and try again.'))
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  async function resendVerification() {
-    if (!verificationEmail || resendBusy) return
-    setResendBusy(true)
-    setResendMessage('')
-    setResendError('')
-    try {
-      await resendInstitutionOwnerVerification(verificationEmail)
-      setResendMessage('A new verification email has been sent. Check your inbox and spam folder.')
-    } catch (err) {
-      setResendError(userFacingError(err, 'The verification email could not be resent. Please try again shortly.'))
-    } finally {
-      setResendBusy(false)
-    }
-  }
-
   return (
     <div className="es-auth-page es-auth-page-signup">
       <AuthVisualPanel variant="signup" />
       <main className="es-auth-main es-auth-main-signup">
         <AuthTopline navigate={navigate} mode="signup" />
         <div className="es-auth-form-wrap es-signup-wrap">
-          {verificationEmail ? (
-          <section className="es-auth-card es-signup-card es-verification-card" aria-live="polite">
-            <div className="es-auth-avatar es-verification-avatar"><span><Mail size={23}/></span><i><Check size={11}/></i></div>
-            <div className="es-auth-form-heading">
-              <span className="es-auth-overline">ONE LAST STEP</span>
-              <h2>Check your inbox</h2>
-              <p>We sent a verification link to the email address below. Confirm it to activate your EduSphere 360 Owner account.</p>
-            </div>
-            <div className="es-verification-email"><Mail size={17}/><strong>{verificationEmail}</strong></div>
-            <div className="es-verification-explainer">
-              <CheckCircle2 size={17}/>
-              <span>Your institution workspace is reserved. Its dashboard and institution records stay locked until your email is verified.</span>
-            </div>
-            {resendMessage && <div className="es-auth-notice" role="status">{resendMessage}</div>}
-            {resendError && <div className="es-auth-error" role="alert">{resendError}</div>}
-            <button className="es-auth-submit" type="button" onClick={resendVerification} disabled={resendBusy}>
-              {resendBusy ? 'Sending verification email…' : 'Resend verification email'} <ArrowRight size={17}/>
-            </button>
-            <div className="es-verification-actions">
-              <button type="button" onClick={() => { setVerificationEmail(''); setError(''); setResendMessage(''); setResendError('') }}>Use a different email</button>
-              <span>Already verified? <button type="button" onClick={() => navigate('login')}>Login</button></span>
-            </div>
-            <p className="es-verification-help">If you do not see the message, check your spam or junk folder. The link returns you to this website after confirmation.</p>
-          </section>
-          ) : (
           <section className="es-auth-card es-signup-card">
-            <div className="es-auth-avatar"><span><Building2 size={22}/></span><i><Check size={11}/></i></div>
+            <div className="es-auth-avatar"><span><ShieldCheck size={22}/></span><i><Check size={11}/></i></div>
             <div className="es-auth-form-heading">
-              <span className="es-auth-overline">START WITH EDUSPHERE 360</span>
-              <h2>Create your account</h2>
-              <p>Enter your details and institution information. Your account will become the first owner of this new institution after email verification.</p>
+              <span className="es-auth-overline">COLLEGE ACCOUNT ACCESS</span>
+              <h2>Get access through the college</h2>
+              <p>This is the official portal for Government Islamia Degree College Badin. New accounts are created or approved by authorised college staff.</p>
             </div>
-            <form className="es-auth-form es-signup-form" onSubmit={submit}>
-              <label className="es-auth-field"><span>Your full name</span><div className="es-auth-input"><Users size={17}/><input type="text" autoComplete="name" maxLength={120} required value={fullName} onChange={event => setFullName(event.target.value)} placeholder="Enter your full name"/></div></label>
-              <label className="es-auth-field"><span>Institution name</span><div className="es-auth-input"><Building2 size={17}/><input type="text" maxLength={160} required value={institutionName} onChange={event => setInstitutionName(event.target.value)} placeholder="Enter your school, college or university name"/></div></label>
-              <label className="es-auth-field"><span>Institution type</span><select className="es-auth-select" required value={institutionType} onChange={event => setInstitutionType(event.target.value as typeof institutionType)}><option value="school">School</option><option value="college">College</option><option value="university">University</option><option value="multi_institution">Multi-institution group</option></select></label>
-              <label className="es-auth-field"><span>Email address</span><div className="es-auth-input"><Mail size={17}/><input type="email" autoComplete="email" required value={email} onChange={event => setEmail(event.target.value)} placeholder="you@institution.edu"/></div></label>
-              <label className="es-auth-field"><span>Choose password</span><div className="es-auth-input"><LockKeyhole size={17}/><input type={showPassword ? 'text' : 'password'} autoComplete="new-password" minLength={10} required value={password} onChange={event => setPassword(event.target.value)} placeholder="At least 10 characters"/><button type="button" className="es-password-toggle" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Hide password' : 'Show password'}>{showPassword ? <EyeOff size={17}/> : <Eye size={17}/>}</button></div></label>
-              <label className="es-auth-field"><span>Confirm password</span><div className="es-auth-input"><LockKeyhole size={17}/><input type={showPassword ? 'text' : 'password'} autoComplete="new-password" minLength={10} required value={confirmPassword} onChange={event => setConfirmPassword(event.target.value)} placeholder="Enter your password again"/></div></label>
-              <label className="es-auth-check es-terms-check"><input type="checkbox" checked={acceptedTerms} onChange={event => setAcceptedTerms(event.target.checked)}/><span className="es-check-box"/><span className="es-terms-copy">I agree to the <button type="button" onClick={() => setLegalDocument('terms')}>Terms and Conditions</button> and <button type="button" onClick={() => setLegalDocument('privacy')}>Privacy Notice</button>.</span></label>
-              {error && <div className="es-auth-error" role="alert">{error}</div>}
-              <button className="es-auth-submit" type="submit" disabled={busy}>{busy ? 'Creating your account…' : 'Sign up'} <ArrowRight size={17}/></button>
-            </form>
-            <p className="es-signup-account-note">This sign-up starts a <strong>new institution workspace</strong>. Existing institutions create employee and student accounts from their own administration area.</p>
-            <div className="es-auth-inline-switch">Already have an account? <button type="button" onClick={() => navigate('login')}>Login</button></div>
-            <div className="es-auth-secure-note"><ShieldCheck size={15}/> Your account becomes the owner of its new institution workspace after email verification.</div>
+            <div className="es-college-access-note">
+              <div><Users size={18}/><span><b>Students and guardians</b><small>Contact the college office for enrolment and verified family-account linking.</small></span></div>
+              <div><BookOpen size={18}/><span><b>Faculty and employees</b><small>Ask the authorised administrator to issue your employee account and role.</small></span></div>
+              <div><Landmark size={18}/><span><b>College administration</b><small>Privileged accounts are provisioned through the approved institutional process.</small></span></div>
+            </div>
+            <button className="es-auth-submit" type="button" onClick={() => navigate('login')}>Continue to sign in <ArrowRight size={17}/></button>
+            <div className="es-auth-secure-note"><ShieldCheck size={15}/> Do not share your password or use another person's account.</div>
           </section>
-          )}
         </div>
-        <footer className="es-auth-main-foot"><span>© {new Date().getFullYear()} EduSphere 360</span><span>Education management, thoughtfully connected.</span></footer>
+        <footer className="es-auth-main-foot"><span>© {new Date().getFullYear()} Government Islamia Degree College Badin</span><span>College portal access</span></footer>
       </main>
-      {legalDocument && <LegalNotice kind={legalDocument} onClose={() => setLegalDocument(null)}/>}
     </div>
   )
 }
-
 
 export function ResetPasswordScreen({ navigate }: ScreenProps) {
   const { completePasswordReset, signOut, clearRecoveryMode } = useAuth()
@@ -863,7 +765,7 @@ export function ResetPasswordScreen({ navigate }: ScreenProps) {
           <div className="es-auth-form-heading">
             <span className="es-auth-overline">SECURE ACCOUNT RECOVERY</span>
             <h2>{completed ? 'Password updated' : 'Choose a new password'}</h2>
-            <p>{completed ? 'Your password has been changed. Sign in again with your new password.' : 'Create a new password for your EduSphere 360 account.'}</p>
+            <p>{completed ? 'Your password has been changed. Sign in again with your new password.' : 'Create a new password for your college portal account.'}</p>
           </div>
           {completed ? <button className="es-auth-submit" type="button" onClick={() => void returnToLogin()}>Return to login <ArrowRight size={17}/></button> : <form className="es-auth-form" onSubmit={submit}>
             <label className="es-auth-field"><span>New password</span><div className="es-auth-input"><LockKeyhole size={17}/><input type={showPassword ? 'text' : 'password'} autoComplete="new-password" minLength={10} required value={password} onChange={e => setPassword(e.target.value)} placeholder="At least 10 characters"/><button type="button" className="es-password-toggle" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Hide password' : 'Show password'}>{showPassword ? <EyeOff size={17}/> : <Eye size={17}/>}</button></div></label>
@@ -874,7 +776,7 @@ export function ResetPasswordScreen({ navigate }: ScreenProps) {
           <div className="es-auth-secure-note"><ShieldCheck size={15}/> Use a unique password of at least 10 characters.</div>
         </section>
       </div>
-      <footer className="es-auth-main-foot"><span>© {new Date().getFullYear()} EduSphere 360</span><span>Secure account recovery.</span></footer>
+      <footer className="es-auth-main-foot"><span>© {new Date().getFullYear()} Government Islamia Degree College Badin</span><span>Secure account recovery.</span></footer>
     </main>
   </div>
 }

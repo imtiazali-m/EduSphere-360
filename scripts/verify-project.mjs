@@ -153,8 +153,8 @@ check('The full institutional menu maps every submenu to a working destination',
   assert.equal(getNavigationRoute('examinations', 'Automatic Checking'), 'unavailable:examinations:automatic-checking', 'Automated marking is not configured')
   assert.equal(getNavigationRoute('reports', 'Custom Report Builder'), 'unavailable:reports:custom-report-builder', 'Custom report builder must not open fixed report cards')
   assert.equal(getNavigationRoute('reports', 'Scheduled Reports'), 'unavailable:reports:scheduled-reports', 'Scheduled report execution is not implemented')
-  assert.equal(getNavigationRoute('library', 'Student Reading History'), 'unavailable:library:student-reading-history', 'Reading progress history is distinct from the library loan ledger')
-  assert.equal(getNavigationRoute('transport', 'Transport Attendance'), 'unavailable:transport:transport-attendance', 'Transport boarding attendance requires its own route attendance register')
+  assert.equal(getNavigationRoute('library', 'Student Reading History'), 'institutional:library:reading-records', 'Student reading history must use the protected reading-record workspace')
+  assert.equal(getNavigationRoute('transport', 'Transport Attendance'), 'institutional:transport:transport-attendance', 'Transport boarding attendance must open the protected college event register')
   assert.equal(getNavigationRoute('receipts', 'Receipt Templates'), 'unavailable:receipts:receipt-templates', 'Receipt template management must not be confused with receipt printing')
   assert.equal(getNavigationRoute('students', 'Student ID Cards'), 'students:id-cards', 'Student ID Cards must open the print workspace')
   assert.equal(getNavigationRoute('employees', 'Employee ID Cards'), 'employees:id-cards', 'Employee ID Cards must open the staff print workspace')
@@ -393,14 +393,59 @@ check('Public welcome page includes an accessible feature showcase and FAQ', () 
   assert.ok(welcome.includes('href="#showcase"') && welcome.includes('href="#faq"'), 'The welcome navigation must link to the product tour and FAQ')
   assert.ok(welcome.includes('Frequently asked questions'), 'The footer must include a visible FAQ link')
 })
-check('Owner signup collects and sends name, institution and institution type', () => {
-  for (const value of ['Your full name', 'Institution name', 'Institution type', 'Owner / Admin']) assert.ok(authScreens.includes(value), `${value} is missing from authentication screens`)
-  for (const value of ['institutionName', 'institutionType', 'fullName']) assert.ok(authContext.includes(value) && authSource.includes(value), `${value} is missing from auth context/client`)
-  assert.ok(authSource.includes('institution_name: institutionName'))
-  assert.ok(authSource.includes('institution_type: input.institutionType'))
-  assert.ok(signupMigration.includes("new.raw_user_meta_data ->> 'institution_name'"))
-  assert.ok(signupMigration.includes("new.raw_user_meta_data ->> 'institution_type'"))
+check('Government Islamia Degree College Badin has a college-specific public website', () => {
+  const college = read('src/components/CollegeWebsite.tsx')
+  for (const value of ['Government Islamia', 'Degree College, Badin', 'Badin District, Sindh', '#about', '#academics', '#admissions', '#notices', '#portal', '#contact', 'College Education Department']) {
+    assert.ok(college.includes(value), 'College website content is missing: ' + value)
+  }
+  assert.ok(college.includes('https://college.sindh.gov.pk/government-colleges'), 'The college website must link to the official Government of Sindh directory')
+  assert.ok(college.includes('https://seccap.dgcs.gos.pk/'), 'The college website must link to the official government admissions channel')
+  assert.ok(college.includes('not a photograph of the Badin campus'), 'Illustrative photography must not be misrepresented as the college campus')
+  assert.ok(read('index.html').includes('Government Islamia Degree College Badin'), 'Browser title and metadata must identify the college')
 })
+
+check('College portal directs new users to approved account provisioning, not public tenant signup', () => {
+  const setupStart = authScreens.indexOf('export function SetupScreen(')
+  const setupEnd = authScreens.indexOf('export function ResetPasswordScreen', setupStart)
+  assert.ok(setupStart >= 0 && setupEnd > setupStart, 'College account access screen is missing')
+  const setup = authScreens.slice(setupStart, setupEnd)
+  for (const value of ['Get access through the college', 'New accounts are created or approved by authorised college staff', 'Students and guardians', 'Faculty and employees', 'Continue to sign in']) {
+    assert.ok(setup.includes(value), 'College account access guidance is missing: ' + value)
+  }
+  for (const value of ['registerAdmin(', 'cloudRegisterInstitutionOwner(', 'Create your account', 'Institution name']) {
+    assert.ok(!setup.includes(value), 'Public institution self-registration is still exposed: ' + value)
+  }
+  for (const value of ['Principal / Office', 'Faculty / Staff', 'Student', 'Parent']) {
+    assert.ok(authScreens.includes(value), 'College login category is missing: ' + value)
+  }
+  assert.ok(authScreens.includes('requestPasswordReset'), 'College users must retain self-service password recovery')
+})
+check('College transport attendance uses the active-allocation event register', () => {
+  const workspace = read('src/components/LinkedOperationsWorkspace.tsx')
+  const dashboard = read('src/components/Dashboard.tsx')
+  const routes = read('src/lib/navigationRoutes.ts')
+  const catalogue = read('src/lib/institutionalCatalog.ts')
+  assert.ok(workspace.includes("db.from('transport_attendance_events')"), 'Transport attendance must read its event register')
+  assert.ok(workspace.includes("supabase.from('transport_attendance_events').insert"), 'Authorised transport staff must be able to record events')
+  assert.ok(workspace.includes("row.status==='active'"), 'Transport events must be linked to active allocations')
+  assert.ok(workspace.includes("'boarded'|'alighted'|'absent'"), 'The supported transport event types must be explicit')
+  assert.ok(routes.includes("return 'institutional:transport:transport-attendance'"), 'Transport attendance must route to the live workspace')
+  assert.ok(dashboard.includes("'transport:transport-attendance'"), 'The college dashboard must dispatch transport attendance')
+  assert.ok(catalogue.includes("management.concat(['teacher'])"), 'Transport event screens must not be presented to student and parent roles')
+})
+
+check('College library reading records use the existing role-scoped data workflow', () => {
+  const workspace = read('src/components/LinkedOperationsWorkspace.tsx')
+  const dashboard = read('src/components/Dashboard.tsx')
+  const routes = read('src/lib/navigationRoutes.ts')
+  assert.ok(workspace.includes("db.from('library_reading_records')"), 'The reading screen must read the protected reading log')
+  assert.ok(workspace.includes("supabase.from('library_reading_records').insert"), 'Staff must be able to record reading activity')
+  assert.ok(workspace.includes("['owner','admin','teacher'].includes(user.role)"), 'Only authorised staff roles can create reading records')
+  assert.ok(workspace.includes('visibleReadingRecords') && workspace.includes('downloadCsv'), 'The reading log must support filtered records and export')
+  assert.ok(routes.includes("return 'institutional:library:reading-records'"), 'Library reading routes must resolve to the live workspace')
+  assert.ok(dashboard.includes("'library:reading-records'"), 'The college dashboard must dispatch the reading workspace')
+})
+
 check('Login separates owner/admin, employee, student and parent role checks', () => {
   assert.ok(authScreens.includes("'owner_admin' | 'employee' | 'student' | 'parent'"))
   assert.ok(authContext.includes("expectedRole === 'owner_admin'"))

@@ -131,7 +131,7 @@ function buildStats(role: AppRole, data: Dataset) {
   const present = attendance.filter(row => row.status === 'present').length
   if (role === 'owner' || role === 'admin') return [
     { label: 'Total Students', value: students.length.toLocaleString(), hint: 'Registered learner profiles', icon: GraduationCap, tone: 'blue', route: 'students' },
-    { label: 'Faculty & Staff', value: teachers.length.toLocaleString(), hint: 'Institution team records', icon: Users, tone: 'green', route: 'teachers' },
+    { label: 'Faculty & Staff', value: teachers.length.toLocaleString(), hint: 'College team records', icon: Users, tone: 'green', route: 'teachers' },
     { label: 'Attendance Rate', value: (attendance.length ? Math.round((present / attendance.length) * 100) : 0) + '%', hint: present + ' present of ' + attendance.length + ' records', icon: CalendarCheck, tone: 'violet', route: 'attendance' },
     { label: 'Fees Collected', value: money(invoices.reduce((total, row) => total + Number(row.paid_amount ?? 0), 0)), hint: invoices.length + ' invoices recorded', icon: Wallet, tone: 'amber', route: 'fees' },
   ]
@@ -331,7 +331,7 @@ function Overview({ onNavigate, careAreas }: { onNavigate: (key: string) => void
   const quickStats = isAdmin
     ? [
       { label: 'New Admissions', value: newAdmissions, hint: 'This month', icon: GraduationCap, route: 'students', tone: 'blue' },
-      { label: 'Departments', value: departments.length, hint: 'Institution units', icon: Building2, route: 'admin:departments', tone: 'violet' },
+      { label: 'Departments', value: departments.length, hint: 'College departments', icon: Building2, route: 'admin:departments', tone: 'violet' },
       { label: 'Assignments', value: assignments.length, hint: 'Coursework records', icon: BookOpen, route: 'assignments', tone: 'green' },
       { label: 'Exam Schedules', value: exams.length, hint: 'Assessments recorded', icon: ClipboardCheck, route: 'exams', tone: 'amber' },
     ]
@@ -349,15 +349,15 @@ function Overview({ onNavigate, careAreas }: { onNavigate: (key: string) => void
   const hasRecords = (...tables: string[]) => tables.some(table => getRows(data, table).length > 0)
   const workspaceGuide = user!.role === 'owner' || user!.role === 'admin'
     ? {
-      heading: 'Build your institution workspace',
+      heading: 'Set up your college workspace',
       intro: 'A practical launch path for setting up academic structure, people and everyday operations.',
       steps: [
-        { title: 'Set up academic structure', detail: 'Create the academic session, classes, departments and subjects your institution uses.', route: 'admin:academic_sessions', action: 'Open administration', icon: Building2, started: hasRecords('academic_sessions', 'classes', 'departments', 'subjects') },
+        { title: 'Set up academic structure', detail: 'Create the academic session, classes, departments and subjects used by the college.', route: 'admin:academic_sessions', action: 'Open administration', icon: Building2, started: hasRecords('academic_sessions', 'classes', 'departments', 'subjects') },
         { title: 'Register your learners', detail: 'Create admission records and connect each learner to the right class and family.', route: 'students:admissions', action: 'Open admissions', icon: GraduationCap, started: hasRecords('students') },
         { title: 'Build your team', detail: 'Add faculty and staff profiles and organise responsibilities across departments.', route: 'teachers', action: 'Open staff', icon: Users, started: hasRecords('teachers') },
         { title: 'Activate daily operations', detail: 'Start the attendance register and publish the first class timetable.', route: 'attendance:students', action: 'Open attendance', icon: CalendarCheck, started: hasRecords('attendance', 'timetable_entries') },
         { title: 'Set up fee administration', detail: 'Create fee invoices and review received payments and outstanding balances.', route: 'finance:fees:invoices', action: 'Open fee ledger', icon: Wallet, started: hasRecords('fee_invoices') },
-        { title: 'Connect your community', detail: 'Publish an institution announcement for the relevant staff and families.', route: 'announcements', action: 'Open announcements', icon: Megaphone, started: hasRecords('announcements') },
+        { title: 'Connect your community', detail: 'Publish a college announcement for the relevant staff and families.', route: 'announcements', action: 'Open announcements', icon: Megaphone, started: hasRecords('announcements') },
       ],
     }
     : user!.role === 'teacher'
@@ -423,7 +423,7 @@ function Overview({ onNavigate, careAreas }: { onNavigate: (key: string) => void
     <header className="ed360-dashboard-heading">
       <div className="ed360-heading-title">
         <span className="ed360-heading-emblem"><GraduationCap size={25}/></span>
-        <div><h1>Dashboard</h1><p>Welcome back, {user!.fullName.split(' ')[0]}! Here’s your institution overview.</p></div>
+        <div><h1>College Overview</h1><p>Welcome back, {user!.fullName.split(' ')[0]}. Here’s the latest view of your college workspace.</p></div>
       </div>
       <div className="ed360-heading-date"><CalendarDays size={16}/><span>{today}</span></div>
     </header>
@@ -576,7 +576,7 @@ type WorkspaceTab = { id: string; route: string; targetKey: string; targetWindow
 
 export function Dashboard({ onToast }: Props) {
   const { user, mode, signOut } = useAuth()
-  const [workspaceTabs, setWorkspaceTabs] = useState<WorkspaceTab[]>([{ id: 'overview', route: 'overview', targetKey: 'overview', targetWindow: 'overview', title: 'Dashboard' }])
+  const [workspaceTabs, setWorkspaceTabs] = useState<WorkspaceTab[]>([{ id: 'overview', route: 'overview', targetKey: 'overview', targetWindow: 'overview', title: 'College Overview' }])
   const [activeTabId, setActiveTabId] = useState('overview')
   const activeTab = workspaceTabs.find(tab => tab.id === activeTabId) ?? workspaceTabs[0]
   const activeNavigationTab = (() => {
@@ -752,21 +752,21 @@ export function Dashboard({ onToast }: Props) {
     let title = options.title ?? 'Dashboard'
 
     if (!options.title) {
-      if (targetKey === 'overview') title = 'Dashboard'
+      if (targetKey === 'overview') title = 'College Overview'
       else if (targetKey === 'notifications') title = 'Notification Centre'
-      else if (targetKey === 'institutional') title = 'Institutional Workspace'
+      else if (targetKey === 'institutional') title = 'College Workspace'
       else if (targetKey === 'unavailable') title = 'Workspace not connected'
       else if (targetKey === 'attendance') title = 'Attendance Management'
       else if (targetKey === 'care') title = 'Student Care & Wellbeing'
-      else if (targetKey === 'reports') title = 'Reports'
+      else if (targetKey === 'reports') title = 'College Reports'
       else if (targetKey === 'finance') title = 'Finance & Payments'
       else if (targetKey === 'payroll') title = 'Salary and Payroll'
       else if (targetKey === 'peoplehr') title = 'People Management & Human Resources'
       else if (targetKey === 'personal') title = 'My Workspace'
       else if (targetKey === 'assistant') title = 'AI Assistant'
       else if (targetKey === 'frontoffice') title = 'Front Office & Communication'
-      else if (targetKey === 'governance') title = 'Institution Governance'
-      else if (targetKey === 'operations') title = 'Institution Operations'
+      else if (targetKey === 'governance') title = 'College Governance'
+      else if (targetKey === 'operations') title = 'College Operations'
       else if (targetKey.startsWith('admin:')) {
         const subkey = targetKey.slice(6)
         title = adminModuleLabels[subkey] ?? 'Administration'
@@ -839,7 +839,7 @@ export function Dashboard({ onToast }: Props) {
     <aside className={`pro-sidebar ${sidebarOpen ? 'is-open' : ''} ${compactSidebar ? 'is-collapsed' : ''}`} aria-hidden={isMobileNav && !sidebarOpen}>
       <div className="pro-sidebar-brand">
         <div className="pro-sidebar-mark"><GraduationCap size={25}/></div>
-        <div className="pro-sidebar-brand-copy"><b>EduSphere <i>360</i></b><small>INSTITUTION MANAGEMENT</small></div>
+        <div className="pro-sidebar-brand-copy"><b>Government Islamia</b><small>DEGREE COLLEGE · BADIN</small></div>
         <button type="button" className="pro-sidebar-collapse" onClick={() => setSidebarCollapsed(value => !value)} aria-label={compactSidebar ? 'Expand navigation' : 'Collapse navigation'} aria-pressed={compactSidebar} title={compactSidebar ? 'Expand navigation' : 'Collapse navigation'}>
           {compactSidebar ? <ChevronRight size={18}/> : <ChevronLeft size={18}/>}
         </button>
@@ -913,7 +913,7 @@ export function Dashboard({ onToast }: Props) {
           </div>
           <div className="ed360-topbar-institution"><Building2 size={19}/><span><b>{user?.institutionName}</b><small><i className={'ed360-status-dot ' + (mode === 'cloud' ? 'is-cloud' : 'is-local')}/>{mode === 'cloud' ? 'Online' : 'Local workspace'}</small></span></div>
           <button type="button" className="pro-topbar-bell ed360-topbar-notice" aria-label={`Open notifications${unreadAnnouncementCount ? `, ${unreadAnnouncementCount} unread` : ''}`} title="Open notification centre" onClick={() => navigate('notifications')}><Bell size={18}/>{unreadAnnouncementCount > 0 && <span className="ed360-notification-count">{unreadAnnouncementCount > 99 ? '99+' : unreadAnnouncementCount}</span>}</button>
-          <div className="pro-profile-wrap"><button className="pro-profile-trigger" onClick={() => setProfileOpen(open => !open)} aria-expanded={profileOpen}><span className="pro-profile-avatar">{user?.fullName.slice(0, 1).toUpperCase()}</span><span className="pro-profile-copy"><b>{user?.fullName}</b><small>{roleLabels[user!.role]}</small></span><ChevronDown size={14}/></button>{profileOpen && <div className="pro-profile-menu"><div className="pro-profile-details"><b>{user?.fullName}</b><small>{user?.email}</small><small>{user?.institutionName}</small>{user?.institutionType && <small>Institution type: {user.institutionType.replaceAll('_', ' ')}</small>}<small>Account role: {roleLabels[user!.role]}</small><span className={'pro-profile-mode ' + mode}>Cloud workspace</span></div>{['student', 'parent'].includes(user!.role) && <button type="button" onClick={() => navigate('profile')}><UserRound size={15}/> My Profile</button>}<button type="button" onClick={() => void logout()}><LogOut size={15}/> Sign out</button></div>}</div>
+          <div className="pro-profile-wrap"><button className="pro-profile-trigger" onClick={() => setProfileOpen(open => !open)} aria-expanded={profileOpen}><span className="pro-profile-avatar">{user?.fullName.slice(0, 1).toUpperCase()}</span><span className="pro-profile-copy"><b>{user?.fullName}</b><small>{roleLabels[user!.role]}</small></span><ChevronDown size={14}/></button>{profileOpen && <div className="pro-profile-menu"><div className="pro-profile-details"><b>{user?.fullName}</b><small>{user?.email}</small><small>{user?.institutionName}</small>{user?.institutionType && <small>Institution type: {user.institutionType.replaceAll('_', ' ')}</small>}<small>Account role: {roleLabels[user!.role]}</small><span className={'pro-profile-mode ' + mode}>{mode === 'cloud' ? 'Cloud workspace' : 'Local workspace'}</span></div>{['student', 'parent'].includes(user!.role) && <button type="button" onClick={() => navigate('profile')}><UserRound size={15}/> My Profile</button>}<button type="button" onClick={() => void logout()}><LogOut size={15}/> Sign out</button></div>}</div>
         </div>
       </header>
       <div className="pro-module-stage">
@@ -921,7 +921,7 @@ export function Dashboard({ onToast }: Props) {
           {workspaceTabs.map(tab => {
             const tabModule = available.find(module => module.key === tab.targetKey)
             const tabAdminKey = tab.targetKey.startsWith('admin:') ? tab.targetKey.slice(6) : undefined
-            const linkedWorkspaceKeys = ['administration:campus-and-branch-management','library:book-issue-and-returns','library:library-reports','inventory:stock-in','inventory:stock-out','inventory:stock-allocation','inventory:stock-adjustments','inventory:inventory-history','inventory:stock-reports','transport:student-transport-allocation','transport:transport-reports']
+            const linkedWorkspaceKeys = ['administration:campus-and-branch-management','library:book-issue-and-returns','library:library-reports','library:reading-records','inventory:stock-in','inventory:stock-out','inventory:stock-allocation','inventory:stock-adjustments','inventory:inventory-history','inventory:stock-reports','transport:student-transport-allocation','transport:transport-attendance','transport:transport-reports']
             return <section className="pro-window-panel" key={tab.id} hidden={activeTabId !== tab.id} aria-label={tab.title}>
               {tab.targetKey === 'notifications' ? <NotificationCenter onToast={onToast} onUnreadCountChange={setUnreadAnnouncementCount}/> :
                 tab.targetKey === 'overview' ? <RoleDashboard onNavigate={navigateChild}/> :

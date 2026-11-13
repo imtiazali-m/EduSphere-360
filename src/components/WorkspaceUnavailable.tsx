@@ -11,13 +11,13 @@ export function WorkspaceUnavailable({ groupKey, itemKey, onNavigate }: Props) {
   const group = getWorkspaceGroup(groupKey)
   const item = getWorkspaceItem(groupKey, itemKey)
   const title = item?.label ?? itemKey.replaceAll('-', ' ').replace(/\b\w/g, value => value.toUpperCase())
-  const description = item?.description ?? group?.description ?? 'This destination belongs to the institution workspace.'
+  const description = item?.description ?? group?.description ?? 'This destination belongs to the college workspace.'
   const reason = groupKey === 'ai'
     ? 'EduSphere AI is not connected to a configured model provider yet. This screen will remain unavailable until generation, evidence-grounding, data-scope controls and human-review rules are implemented and tested.'
     : groupKey === 'backup'
       ? 'Automated cloud backups and restore operations are platform-level services that are not connected to this project yet. No backup or restore is being created by this screen.'
       : groupKey === 'communication'
-        ? 'The selected external messaging or delivery provider is not configured. Institution notices and the in-app notification centre remain separate supported features.'
+        ? 'The selected external messaging or delivery provider is not configured. College notices and the in-app notification centre remain separate supported features.'
         : groupKey === 'students' && itemKey === 'bulk-student-operations'
           ? 'A safe batch-processing workflow is not connected yet. Student admissions and the individual student directory remain available; this destination will not perform unreviewed bulk edits.'
           : groupKey === 'employees' && itemKey === 'employee-performance'
@@ -46,14 +46,14 @@ export function WorkspaceUnavailable({ groupKey, itemKey, onNavigate }: Props) {
     : groupKey === 'backup'
       ? 'Existing module reports can be exported where the relevant workspace provides an export action. This is not a full database or file backup.'
       : groupKey === 'communication'
-        ? 'Use the institution bulletin and notification centre for supported in-app notices.'
-        : 'Your institution data is not changed by opening this screen.'
+        ? 'Use the college bulletin and notification centre for supported in-app notices.'
+        : 'Your college data is not changed by opening this screen.'
 
   return <main className="page-content ed360-module-page es-feature-state">
     <section className="es-feature-state-card">
       <div className="es-feature-state-orbit"><Sparkles size={25}/></div>
       <div className="es-feature-state-copy">
-        <span className="es-feature-eyebrow">{group?.label ?? 'Institution workspace'}</span>
+        <span className="es-feature-eyebrow">{group?.label ?? 'College workspace'}</span>
         <h1>{title}</h1>
         <p>{description}</p>
         <div className="es-feature-state-status"><span/> Feature setup in progress</div>
