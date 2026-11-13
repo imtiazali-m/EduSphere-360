@@ -10,6 +10,9 @@ export interface AppUser {
   institutionName: string
   institutionType?: string
   linkedStudentId?: string | null
+  customAccessConfigured?: boolean
+  customRolePermissions?: Record<string, string[]>
+  customRoleScopes?: { campusId: string | null; departmentId: string | null }[]
 }
 
 export interface RecordRow {
