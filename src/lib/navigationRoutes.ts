@@ -511,7 +511,7 @@ function resolveNavigationRoute(groupKey: string, itemLabel: string, role?: stri
   if (groupKey === 'library' && ['reading-records','reading-cards','student-reading-history'].includes(itemKey)) return 'unavailable:library:'+itemKey
   if (groupKey === 'visitors') {
     const visitorPages:Record<string,string>={'visitor-approvals':'approvals','visitor-notifications':'notifications','visitor-reports':'reports'}
-    if(visitorPages[itemKey])return 'operations:visitors:'+visitorPages[itemKey]
+    if(visitorPages[itemKey])return itemKey==='visitor-notifications'?'messaging:visitor-notifications':'operations:visitors:'+visitorPages[itemKey]
   }
   if (groupKey === 'examinations' && ['invigilation-management','automatic-checking'].includes(itemKey)) return 'unavailable:examinations:'+itemKey
   if (groupKey === 'examinations' && ['examination-programs','examination-timetable','question-bank','online-tests-and-quizzes','marks-entry','grades-and-grading-system','results-and-result-approval','report-cards','examination-reports'].includes(itemKey)) return 'institutional:examinations:' + itemKey
