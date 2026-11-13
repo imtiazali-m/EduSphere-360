@@ -87,6 +87,7 @@ function shellTarget(route) {
   const libraryReading = route.startsWith('library-reading:')
   const receiptOperations = route.startsWith('receipt-operations:')
   const paymentOperations = route.startsWith('payment-operations:')
+  const assetLifecycle = route.startsWith('asset-lifecycle:')
   const personal = route.startsWith('personal:')
   const assistant = route.startsWith('assistant:')
   const frontOffice = route.startsWith('frontoffice:')
@@ -114,6 +115,7 @@ function shellTarget(route) {
     : libraryReading ? 'library-reading'
     : receiptOperations ? 'receipt-operations'
     : paymentOperations ? 'payment-operations'
+    : assetLifecycle ? 'asset-lifecycle'
     : personal ? 'personal'
     : assistant ? 'assistant'
     : frontOffice ? 'frontoffice'
@@ -141,6 +143,7 @@ function shellTarget(route) {
     : libraryReading ? route.slice('library-reading:'.length)
     : receiptOperations ? route.slice('receipt-operations:'.length)
     : paymentOperations ? route.slice('payment-operations:'.length)
+    : assetLifecycle ? route.slice('asset-lifecycle:'.length)
     : personal ? route.slice('personal:'.length)
     : assistant ? route.slice('assistant:'.length)
     : frontOffice ? route.slice('frontoffice:'.length)
@@ -173,6 +176,10 @@ function checkView(role, route, dispatcher) {
   if (targetKey === 'hostel') {
     const pages = new Set(['hostel-dashboard','hostel-buildings','room-bed-register','resident-allocation','room-transfers','check-in-check-out','hostel-visitor-register','hostel-fees','accommodation-maintenance','occupancy-reports'])
     return { component:'HostelWorkspace', view:targetWindow, status:pages.has(targetWindow)?'Supported':'Unsupported hostel view' }
+  }
+  if(targetKey==='asset-lifecycle'){
+    const pages=new Set(['asset-assignment','asset-transfers','asset-warranty','asset-disposal','asset-reports'])
+    return {component:'AssetLifecycleWorkspace',view:targetWindow,status:pages.has(targetWindow)?'Supported':'Unsupported asset lifecycle view'}
   }
   if(targetKey==='payment-operations'){
     const pages=new Set(['online-payment-records','failed-and-pending-payments'])
@@ -295,6 +302,7 @@ for (const [role, label] of roles) {
         : dashboard.targetKey === 'library-reading' ? 'LibraryReadingWorkspace'
         : dashboard.targetKey === 'receipt-operations' ? 'ReceiptWorkspace'
         : dashboard.targetKey === 'payment-operations' ? 'PaymentOperationsWorkspace'
+        : dashboard.targetKey === 'asset-lifecycle' ? 'AssetLifecycleWorkspace'
         : dashboard.targetKey === 'personal' ? 'PersonalWorkspace'
         : dashboard.targetKey === 'assistant' ? 'AIAssistantWorkspace'
         : dashboard.targetKey === 'frontoffice' ? 'FrontOfficeWorkspace'
