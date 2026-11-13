@@ -475,6 +475,35 @@ export function NewLandingPage({ navigate }: LandingProps) {
           <div className="nl-getting-footer"><span>Ready to create a new institution?</span><button type="button" onClick={() => go('setup')}>Start owner registration <ArrowUpRight size={15}/></button></div>
         </section>
 
+
+        <section className="nl-availability-section" id="availability">
+          <div className="nl-section-heading">
+            <div><div className="nl-section-kicker">KNOW WHAT IS INCLUDED <span>10 / AVAILABILITY</span></div><h2>A clear view of<br/><em>today and what is next.</em></h2></div>
+            <p>Understand the current cloud edition, responsive browser access, services that require provider setup and capabilities that are still planned.</p>
+          </div>
+          <div className="nl-availability-grid">
+            <article className="nl-availability-card nl-availability-current"><span className="nl-availability-status"><i/>CURRENT CLOUD EDITION</span><h3>Core institution workspace</h3><p>Role-aware workflows for administration, people, academics, attendance, fees, financial records, announcements and available reporting.</p><a href="/#/public/features">See core capabilities <ArrowUpRight size={14}/></a></article>
+            <article className="nl-availability-card"><span className="nl-availability-status">RESPONSIVE ACCESS</span><h3>Desktop, tablet & mobile browsers</h3><p>Open the online workspace through a supported browser, using the access assigned to your institution role.</p><a href="/#/public/mobile">Mobile access details <ArrowUpRight size={14}/></a></article>
+            <article className="nl-availability-card"><span className="nl-availability-status">SEPARATE PROVIDER SETUP</span><h3>External integrations</h3><p>Messaging gateways, payment providers and external device feeds require their own configuration before being treated as connected services.</p><a href="/#/public/integrations">Integration status <ArrowUpRight size={14}/></a></article>
+            <article className="nl-availability-card nl-availability-planned"><span className="nl-availability-status">PLANNED EDITION</span><h3>USV 360 Pro self-hosted</h3><p>A separate self-hosted edition is planned for institutions that prefer deployment under their own infrastructure. It is not available as a released installation today.</p><a href="/#/public/updates">Product updates <ArrowUpRight size={14}/></a></article>
+          </div>
+          <div className="nl-availability-footer"><span>Need pricing or deployment details before deciding?</span><a href="/#/public/pricing">Review plans & current availability <ArrowUpRight size={15}/></a></div>
+        </section>
+
+        <section className="nl-resources-section" id="resources">
+          <div className="nl-section-heading">
+            <div><div className="nl-section-kicker">HELP WHEN YOU NEED IT <span>11 / RESOURCES</span></div><h2>Find your next step.<br/><em>Keep moving forward.</em></h2></div>
+            <p>Browse practical product information and release details before onboarding or when your team needs help with a workspace.</p>
+          </div>
+          <div className="nl-resources-grid">
+            <a href="/#/public/product-tour"><span><Layers3 size={19}/></span><small>START HERE</small><h3>Product tour</h3><p>See how the core institution workflows are organised.</p><b>Explore the product <ArrowUpRight size={14}/></b></a>
+            <a href="/#/public/resources"><span><BookOpen size={19}/></span><small>GUIDES & MANUALS</small><h3>Getting started</h3><p>Find role-based guides and practical onboarding information.</p><b>Browse resources <ArrowUpRight size={14}/></b></a>
+            <a href="/#/public/support"><span><ShieldCheck size={19}/></span><small>HELP & ANSWERS</small><h3>Support centre</h3><p>Read common questions about access, records and feature availability.</p><b>Visit help & FAQs <ArrowUpRight size={14}/></b></a>
+            <a href="/#/public/updates"><span><Activity size={19}/></span><small>PRODUCT INFORMATION</small><h3>Release updates</h3><p>Review what is available now and what is described as future scope.</p><b>See current updates <ArrowUpRight size={14}/></b></a>
+          </div>
+          <div className="nl-resources-footer"><span>Trust is built with real institution experience—not invented endorsements.</span><a href="/#/public/reviews">Institution feedback policy <ArrowUpRight size={14}/></a></div>
+        </section>
+
         <section className="nl-faq-section" id="faq">
           <div className="nl-faq-intro">
             <div className="nl-section-kicker">GOOD TO KNOW <span>09 / FREQUENT QUESTIONS</span></div>
