@@ -1001,13 +1001,16 @@ check('Required database safeguards and Cloudflare redirects remain in the proje
     '20261111170233_stage7_branch_scope_and_guardian_message_access.sql',
     '20261111170358_stage_6_employee_salary_components_own_read.sql',
     '20261111170659_stage_6_employee_appraisal_acknowledgement.sql',
-    '20261111170722_stage8_timetable_session_and_student_submission_guards.sql'
+    '20261111170722_stage8_timetable_session_and_student_submission_guards.sql',
+    '20261113173320_college_custom_role_profiles_and_scope_policies.sql',
+    '20261113173552_college_private_permission_guards.sql',
+    '20261113174054_college_approval_profile_action_alignment.sql'
   ]) {
     assert.ok(migrations.includes(migration), `${migration} missing`)
   }
   const timestamped = migrations.filter(name => /^202611\d{8}_.+\.sql$/.test(name))
-  assert.equal(timestamped.length, 50, 'Expected fifty timestamped migrations including the Stage 9 assessment workflows')
-  assert.ok(read('supabase/migrations/README.md').includes('fifty timestamped migration files'))
+  assert.equal(timestamped.length, 53, 'Expected fifty-three timestamped migrations including Stage 9 and college custom-role security workflows')
+  assert.ok(read('supabase/migrations/README.md').includes('fifty-three timestamped migration files'))
   assert.equal(read('public/_redirects').trim(), '/* /index.html 200')
   const envExample = read('.env.example')
   const gitignore = read('.gitignore')
