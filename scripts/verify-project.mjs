@@ -328,10 +328,10 @@ check('Institutional registers and windows are tailored by workspace domain', ()
 check('Expanded unavailable submenu records have typed fields and visible register columns', () => {
   const workspace = read('src/components/InstitutionalWorkspace.tsx')
   const start = workspace.indexOf('const completionItemFields:')
-  const end = workspace.indexOf('\\nconst statusOptions', start)
+  const end = workspace.indexOf('\nconst statusOptions', start)
   assert.ok(start >= 0 && end > start, 'Task-specific submenu field catalogue must exist')
   const fieldMap = workspace.slice(start, end)
-  const keys = [...fieldMap.matchAll(/'([^']+:[^']+)':\\[/g)].map(match => match[1])
+  const keys = [...fieldMap.matchAll(/'([^']+:[^']+)':\[/g)].map(match => match[1])
   assert.equal(keys.length, 90, 'Ninety previously missing submenus must have their own task-specific field definitions')
   assert.equal(new Set(keys).size, keys.length, 'Task-specific field definition keys must be unique')
   for (const group of ['backup','behaviour','certificates','library','payments','receipts','communication','transport','inventory','facilities','visitors','reports']) {
