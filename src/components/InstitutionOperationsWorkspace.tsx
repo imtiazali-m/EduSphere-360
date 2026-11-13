@@ -231,6 +231,11 @@ export function InstitutionOperationsWorkspace({workspaceKey,initialWindow,onToa
           checked_in_at:v.checked_in_at||null,notes:v.notes||null,created_by:user!.id,
         })
         onToast('Visitor entry registered.')
+      }else if(dialog==='room-reservation'){
+        const startAt=new Date(v.start_at).getTime(),endAt=new Date(v.end_at).getTime()
+        if(!v.room_id||!Number.isFinite(startAt)||!Number.isFinite(endAt)||endAt<=startAt)throw new Error('Choose a room and a valid end time after the start time.')
+        await insert('facility_room_reservations',{room_id:v.room_id,title:v.title?.trim(),purpose:v.purpose?.trim(),start_at:new Date(startAt).toISOString(),end_at:new Date(endAt).toISOString(),status:'requested',requested_by:user!.id,notes:v.notes||null})
+        onToast('Room reservation submitted for approval. The booking is not confirmed until an administrator approves it.')
       }else if(dialog==='asset'){
         if(!admin)throw new Error('Only the owner or an administrator can register facility assets.')
         await insert('facility_assets',{
@@ -259,6 +264,51 @@ export function InstitutionOperationsWorkspace({workspaceKey,initialWindow,onToa
     try{await updateRow(table,row.id,payload);onToast(message);await load(true)}
     catch(err){onToast(userFacingError(err,'The status change could not be saved.'),true)}
     finally{setBusy(false)}
+  }
+  async function approveRoomReservation(row:Row){
+    if(!admin||!supabase)return
+    setBusy(true)
+    try{
+      const {error:approvalError}=await supabase.rpc('approve_facility_room_reservation',{p_institution_id:user!.institutionId,p_reservation_id:row.id})
+      if(approvalError)throw approvalError
+      onToast('Room reservation approved. Its time slot was checked against other approved bookings.')
+      await load(true)
+    }catch(err){onToast(userFacingError(err,'The reservation could not be approved. The room may already be booked for this time.'),true)}
+    finally{setBusy(false)}
+  }
+  async function saveCertificateTemplate(event:FormEvent){
+    event.preventDefault();if(!admin||!supabase)return
+    const templateName=draft.template_name?.trim()
+    if(!templateName){onToast('Enter a template name.',true);return}
+    setBusy(true)
+    try{
+      await insert('institutional_records',{module_key:'certificates',record_type:'certificate-template',title:templateName,description:draft.document_kind||'certificate',status:'active',approval_status:'not_required',visibility:'staff_only',record_date:day(),created_by:user!.id,payload:{document_kind:draft.document_kind||'certificate',body:draft.template_body||'',signatory:draft.template_signatory||'',version:1}})
+      onToast('Document template saved to this institution.')
+      setDraft({});await load(true)
+    }catch(err){onToast(userFacingError(err,'The document template could not be saved.'),true)}
+    finally{setBusy(false)}
+  }
+  async function generateBulkCertificates(event:FormEvent){
+    event.preventDefault();if(!admin||!supabase)return
+    if(!bulkStudents.length){onToast('Select at least one student.',true);return}
+    const template=certificateTemplates.find(row=>row.id===bulkTemplateId)
+    if(!template){onToast('Select an active certificate template.',true);return}
+    setBusy(true);let created=0;const errors:string[]=[]
+    for(const studentId of bulkStudents){
+      const student=students.find(row=>row.id===studentId)
+      if(!student)continue
+      const {error:insertError}=await supabase.from('student_certificates').insert({
+        institution_id:user!.institutionId,student_id:student.id,certificate_no:todayCode('CERT'),
+        verification_code:crypto.randomUUID().replaceAll('-','').toUpperCase(),
+        certificate_type:String(template.description??'certificate'),title:template.title,
+        achievement:String(template.payload?.body??''),issue_date:null,expiry_date:null,
+        signatory_name:String(template.payload?.signatory??''),status:'draft',issued_by:null,created_by:user!.id,
+        remarks:'Generated in bulk from template '+template.title,
+      })
+      if(insertError)errors.push(student.full_name+': '+insertError.message);else created++
+    }
+    onToast('Bulk certificate generation: '+created+' draft(s) created, '+errors.length+' failed. Review each draft before issuing.',errors.length>0)
+    setBulkStudents([]);await load(true);setBusy(false)
   }
   async function addPaperQuestion(){
     if(!supabase||!selectedPaper||!questionToAdd)return
@@ -390,6 +440,7 @@ export function InstitutionOperationsWorkspace({workspaceKey,initialWindow,onToa
     const studentOptions=students.map(row=>({label:String(row.full_name)+' · '+String(row.admission_no),value:String(row.id)}))
     const teacherOptions=teachers.map(row=>({label:String(row.full_name),value:String(row.id)}))
     const roomOptions=rooms.map(row=>({label:String(row.room_name??row.room_code??row.id),value:String(row.id)}))
+    const reservationRoomOptions=reservationRooms.map(row=>({label:String(row.name)+' · '+String(row.room_type??'room')+' · '+String(row.code??row.id).slice(0,8),value:String(row.id)}))
     if(dialog==='question'){
       title='Create question bank item'
       fields.push(field('Question code','question_code'),field('Question type','question_type','text',true,['multiple_choice','true_false','short_answer','long_answer','fill_blank'].map(x=>({label:toLabel(x),value:x}))),field('Subject','subject_id','text',true,subjectOptions),field('Class','class_id','text',false,classOptions),field('Academic session','academic_session_id','text',false,sessionOptions),field('Prompt','prompt','textarea'),field('Options JSON array','options','textarea',false),field('Answer key JSON','answer_key','textarea',false),field('Explanation','explanation','textarea',false),field('Marks','marks','number'),field('Difficulty','difficulty','text',true,['easy','medium','hard'].map(x=>({label:toLabel(x),value:x}))),field('Topic','topic','text',false),field('Tags (comma-separated)','tags','text',false))
@@ -411,6 +462,9 @@ export function InstitutionOperationsWorkspace({workspaceKey,initialWindow,onToa
     }else if(dialog==='asset'){
       title='Register facility asset'
       fields.push(field('Asset code','asset_code','text',false),field('Asset name','asset_name'),field('Category','category'),field('Room','room_id','text',false,roomOptions),field('Building / location','building','text',false),field('Condition','condition','text',true,['excellent','good','fair','poor','out_of_service'].map(x=>({label:toLabel(x),value:x}))),field('Acquired on','acquired_on','date',false),field('Replacement due','replacement_due','date',false),field('Purchase cost (PKR)','purchase_cost','number',false),field('Notes','notes','textarea',false))
+    }else if(dialog==='room-reservation'){
+      title='Request a room reservation'
+      fields.push(field('Room','room_id','text',true,reservationRoomOptions),field('Reservation title','title'),field('Purpose','purpose','textarea'),field('Start time','start_at','datetime-local'),field('End time','end_at','datetime-local'),field('Notes','notes','textarea',false))
     }else if(dialog==='maintenance'){
       title='Submit maintenance request'
       fields.push(field('Request title','title'),field('Description','description','textarea'),field('Asset','asset_id','text',false,assets.map(row=>({label:String(row.asset_code)+' · '+String(row.asset_name),value:String(row.id)}))),field('Room','room_id','text',false,roomOptions),field('Priority','priority','text',true,['low','medium','high','urgent'].map(x=>({label:toLabel(x),value:x}))),admin?field('Assign to employee','assigned_to','text',false,teacherOptions):null,field('Scheduled date','scheduled_for','date',false))
