@@ -1,6 +1,6 @@
 # Migration history
 
-The sixty-one timestamped migration files in this folder match the remote migration history recorded by the linked Supabase project. Keep each 14-digit timestamp unchanged so local and remote migration histories remain aligned.
+The sixty-two timestamped migration files in this folder match the remote migration history recorded by the linked Supabase project. Keep each 14-digit timestamp unchanged so local and remote migration histories remain aligned.
 
 The current online application includes the reviewed schema changes for the existing live schema, Faculty & Employee Management, and Student Management operations (admission lifecycle, linked guardian contacts, class placements, private student documents and audit history for attendance, published results, assignment submissions, guardian policy consolidation and activity indexes). The Student Management and Faculty/Employee migrations have already been applied to the linked project; do not replay them manually.
 
@@ -60,3 +60,6 @@ Library reading progress records are linked to institution students and, when se
 
 
 Online payment screens read the existing fee-payment ledger and store separately reviewed gateway references. A provider review is a finance audit note only; it does not charge a card, call a gateway, or automatically change a payment to settled.
+
+
+Facility asset lifecycle actions assign and transfer assets, update warranty information and record authorised disposal. Each action updates the current asset fields and appends an institution-scoped event entry for later lifecycle reports.
