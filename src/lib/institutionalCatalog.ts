@@ -123,7 +123,7 @@ export const institutionalMenu:WorkspaceMenuGroup[]=[
   'Achievements',
   'Activity Reports'
  ]),
- group('transport','Transport Services','Vehicles, drivers, route stops, student allocations, transport attendance, fees and maintenance.','Database','orange','transport',management.concat(['teacher','student','parent','accountant']),[
+ group('transport','Transport Services','Vehicles, drivers, route stops, student allocations, transport attendance, fees and maintenance.','Database','orange','transport',management.concat(['teacher']),[
   'Transport Dashboard','Vehicle Management','Drivers Management','Transport Routes','Route Stops','Student Transport Allocation','Transport Fees','Transport Assignments','Vehicle Maintenance','Transport Attendance','Transport History','Transport Reports'
  ]),
  group('inventory','Stores & Inventory','Item catalogue, suppliers, procurement, stock-in/out, allocation, adjustments and stock audit.','Database','amber','inventory',management.concat(['accountant']),[
