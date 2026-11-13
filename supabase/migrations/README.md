@@ -1,6 +1,6 @@
 # Migration history
 
-The fifty timestamped migration files in this folder match the remote migration history recorded by the linked Supabase project. Keep each 14-digit timestamp unchanged so local and remote migration histories remain aligned.
+The sixty-five timestamped migration files in this folder match the remote migration history recorded by the linked Supabase project. Keep each 14-digit timestamp unchanged so local and remote migration histories remain aligned.
 
 The current online application includes the reviewed schema changes for the existing live schema, Faculty & Employee Management, and Student Management operations (admission lifecycle, linked guardian contacts, class placements, private student documents and audit history for attendance, published results, assignment submissions, guardian policy consolidation and activity indexes). The Student Management and Faculty/Employee migrations have already been applied to the linked project; do not replay them manually.
 
@@ -48,3 +48,6 @@ The atomic transport allocation migration adds database-side creation and end-al
 
 
 The Stage 5 administration, Stage 6 people/HR, Stage 7 attendance/leave/wellbeing, Stage 8 academic-management, and Stage 9 assessment-weight migrations have been restored from the linked Supabase project's recorded migration statements. Filenames use the exact remote migration versions; these files document already-applied schema changes and must not be replayed manually against the linked production database.
+
+
+The residence operations migration adds institution-scoped hostel buildings, rooms, beds, resident allocations, movement history, visitor records, accommodation fee charges and maintenance requests. Bed allocation, transfer and final check-out are transaction-guarded database functions. Student and guardian visibility follows linked student relationships; staff management and finance access remain role-restricted. Accommodation charges are tracked separately and are not automatically posted to the tuition fee ledger.
