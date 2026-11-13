@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import {
   ArrowDown, ArrowRight, ArrowUpRight, BookOpen, CalendarDays, CheckCircle2,
-  ChevronDown, ExternalLink, GraduationCap, Landmark, LibraryBig, Menu,
+  ExternalLink, GraduationCap, Landmark, LibraryBig, Menu,
   Microscope, Newspaper, ShieldCheck, Users, X,
 } from 'lucide-react'
 import type { AppRole } from '../lib/types'
