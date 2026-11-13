@@ -159,7 +159,7 @@ export function WelcomeScreen({ navigate }: ScreenProps) {
 
   return (
     <div className="edm-home">
-      <header className="edm-header">
+      <header className="edm-header edm-public-header">
         <a className="edm-brand" href="#/" aria-label="EduSphere 360 home" onClick={closeMenu}>
           <span className="edm-brand-symbol"><GraduationCap size={24} strokeWidth={2.1}/><i>360</i></span>
           <span className="edm-brand-copy"><b>EduSphere <em>360</em></b><small>EDUCATION MANAGEMENT</small></span>
@@ -177,9 +177,9 @@ export function WelcomeScreen({ navigate }: ScreenProps) {
           </div></div>
           <div className="edm-nav-group"><button className="edm-nav-link" type="button">Solutions <ChevronDown size={13}/></button><div className="edm-nav-dropdown">
             <a href="#/public/solutions" onClick={closeMenu}><Users size={17}/><span><b>Seven role workspaces</b><small>Access shaped by responsibility</small></span></a>
-            <a href="#/public/solutions#schools" onClick={closeMenu}><GraduationCap size={17}/><span><b>Schools</b><small>Learners, classes and families</small></span></a>
-            <a href="#/public/solutions#colleges" onClick={closeMenu}><BookOpen size={17}/><span><b>Colleges</b><small>Departments and programmes</small></span></a>
-            <a href="#/public/solutions#universities" onClick={closeMenu}><Building2 size={17}/><span><b>Universities</b><small>Multi-department coordination</small></span></a>
+            <a href="#/public/solutions" onClick={closeMenu}><GraduationCap size={17}/><span><b>Schools</b><small>Learners, classes and families</small></span></a>
+            <a href="#/public/solutions" onClick={closeMenu}><BookOpen size={17}/><span><b>Colleges</b><small>Departments and programmes</small></span></a>
+            <a href="#/public/solutions" onClick={closeMenu}><Building2 size={17}/><span><b>Universities</b><small>Multi-department coordination</small></span></a>
           </div></div>
           <div className="edm-nav-group"><button className="edm-nav-link" type="button">Explore <ChevronDown size={13}/></button><div className="edm-nav-dropdown">
             <a href="#/public/about" onClick={closeMenu}><HeartHandshake size={17}/><span><b>About EduSphere</b><small>Purpose and product principles</small></span></a>
