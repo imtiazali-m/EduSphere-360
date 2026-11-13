@@ -313,6 +313,86 @@ export function LinkedOperationsWorkspace({workspaceKey,onToast,onNavigate}:Prop
   if(error){onToast(error.message,true);return}
   onToast('Campus deleted.');await load()
  }
+ function updateManagedDraft(key:string,value:string){setManagedDraft(current=>({...current,[key]:value}))}
+ function openManagedRecord(){
+  setManagedDraft({title:'',code:'',description:'',category:'',quantity:'1',sku:'',unit:'unit',unit_cost:'0',reorder_level:'0',author:'',publisher:'',isbn:'',shelf_location:'',resource_url:'',audience:'all',route_id:'',route_code:'',stop_order:'1',arrival_time:'',departure_time:'',registration_number:'',vehicle_type:'bus',capacity:'20',phone:'',license_number:'',license_expiry:'',vehicle_id:'',maintenance_type:'service',maintenance_date:today(),maintenance_cost:'0'})
+  setShowManagedRecordForm(true)
+ }
+ async function saveManagedRecord(event:FormEvent){
+  event.preventDefault()
+  if(!user||!canAdmin||saving)return
+  const title=managedDraft.title.trim()
+  if(!title){onToast('Enter a name or title before saving.',true);return}
+  let recordType=itemKey
+  let payload:Record<string,unknown>={description:managedDraft.description.trim()||null}
+  let referenceCode=managedDraft.code.trim()||null
+  let quantity:number|null=null
+  let parentRecordId:string|null=null
+  if(groupKey==='library'){
+   if(['book-management','book-catalogue','book-registration'].includes(itemKey)){
+    recordType='book-registration'
+    const copies=Number(managedDraft.quantity||1)
+    if(!Number.isInteger(copies)||copies<1){onToast('Book copy count must be a positive whole number.',true);return}
+    quantity=copies;referenceCode=referenceCode||managedDraft.isbn.trim()||null
+    payload={...payload,author:managedDraft.author.trim()||null,publisher:managedDraft.publisher.trim()||null,isbn:managedDraft.isbn.trim()||null,category:managedDraft.category.trim()||null,shelf_location:managedDraft.shelf_location.trim()||null,total_copies:copies,available_copies:copies}
+   }else if(itemKey==='book-categories'){recordType='book-categories';payload={...payload,category_code:referenceCode}}
+   else{recordType=itemKey;payload={...payload,resource_url:managedDraft.resource_url.trim(),category:managedDraft.category.trim()||null,audience:managedDraft.audience}}
+  }else if(groupKey==='inventory'){
+   if(['items-management','item-catalogue'].includes(itemKey)){
+    recordType='items-management'
+    quantity=Number(managedDraft.quantity||0)
+    const unitCost=Number(managedDraft.unit_cost||0),reorder=Number(managedDraft.reorder_level||0)
+    if(!Number.isFinite(quantity)||quantity<0||!Number.isFinite(unitCost)||unitCost<0||!Number.isFinite(reorder)||reorder<0){onToast('Enter valid non-negative quantity, cost and reorder values.',true);return}
+    payload={...payload,sku:managedDraft.sku.trim()||referenceCode,unit:managedDraft.unit||'unit',unit_cost:unitCost,reorder_level:reorder,item_category:managedDraft.category.trim()||null}
+   }else{recordType='item-categories';payload={...payload,category_code:referenceCode}}
+  }else if(groupKey==='transport'){
+   if(itemKey==='transport-routes'){
+    payload={...payload,route_code:referenceCode,origin:managedDraft.category.trim()||null,destination:managedDraft.description.trim()||null,capacity:Number(managedDraft.capacity||0)}
+   }else if(itemKey==='route-stops'){
+    parentRecordId=managedDraft.route_id||null
+    if(!parentRecordId){onToast('Choose the route for this stop.',true);return}
+    payload={...payload,route_record_id:parentRecordId,stop_order:Number(managedDraft.stop_order||1),arrival_time:managedDraft.arrival_time||null,departure_time:managedDraft.departure_time||null}
+   }else if(itemKey==='vehicle-management'){
+    payload={...payload,registration_number:managedDraft.registration_number.trim()||referenceCode,vehicle_type:managedDraft.vehicle_type,seat_capacity:Number(managedDraft.capacity||0),make_model:managedDraft.category.trim()||null,insurance_expiry:managedDraft.license_expiry||null}
+   }else if(itemKey==='drivers-management'){
+    payload={...payload,phone:managedDraft.phone.trim()||null,license_number:managedDraft.license_number.trim()||null,license_expiry:managedDraft.license_expiry||null}
+   }else if(itemKey==='vehicle-maintenance'){
+    parentRecordId=managedDraft.vehicle_id||null
+    payload={...payload,vehicle_record_id:parentRecordId,maintenance_type:managedDraft.maintenance_type,maintenance_date:managedDraft.maintenance_date,maintenance_cost:Number(managedDraft.maintenance_cost||0),status:'scheduled'}
+   }
+  }
+  setSaving(true)
+  try{
+   const saved=await createRecord(mode,user,'institutional_records',{
+    module_key:groupKey,record_type:recordType,title,reference_code:referenceCode,quantity,
+    description:managedDraft.description.trim()||null,status:'active',parent_record_id:parentRecordId,payload
+   })
+   if(saved===null)throw new Error('The record could not be confirmed as saved.')
+   setShowManagedRecordForm(false);onToast('Record saved to the institution '+groupKey+' register.');await load()
+  }catch(error){onToast(userFacingError(error,'The record could not be saved.'),true)}
+  finally{setSaving(false)}
+ }
+ async function createTransportCharge(event:FormEvent){
+  event.preventDefault()
+  if(!supabase||!user||!['owner','admin','accountant'].includes(user.role))return
+  if(!feeAllocationId){onToast('Select an active transport allocation.',true);return}
+  setSaving(true)
+  const {error}=await supabase.rpc('create_student_transport_fee_charge',{p_institution_id:user.institutionId,p_allocation_id:feeAllocationId,p_billing_period:feeBillingPeriod,p_due_date:feeDueDate})
+  setSaving(false)
+  if(error){onToast(userFacingError(error,'Transport fee charge could not be created.'),true);return}
+  onToast('Transport fee charge created or updated for this billing period.');await load()
+ }
+ async function recordTransportPayment(event:FormEvent){
+  event.preventDefault()
+  if(!supabase||!user||!['owner','admin','accountant'].includes(user.role))return
+  const amount=Number(feePaymentAmount)
+  if(!feeChargeId||!Number.isFinite(amount)||amount<=0){onToast('Select a charge and enter a positive payment amount.',true);return}
+  setSaving(true)
+  const {error}=await supabase.rpc('record_student_transport_fee_payment',{p_institution_id:user.institutionId,p_charge_id:feeChargeId,p_amount:amount,p_payment_method:feePaymentMethod,p_payment_reference:feePaymentReference.trim()||null})
+  setSaving(false)
+  if(error){onToast(userFacingError(error,'Transport fee payment could not be recorded.'),true);return}
+  setFeePaymentAmount('');setFeePaymentReference('');onToast('Transport fee payment recorded and balance updated.');await load()
+ }
  async function issueBook(event:FormEvent){
   event.preventDefault();if(!supabase||!user||!canLibrary)return
   const book=books.find(row=>row.id===bookId)
