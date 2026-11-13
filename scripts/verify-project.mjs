@@ -362,6 +362,9 @@ check('Campus and finance submenu workspaces use their dedicated records and tra
   const receipts = read('src/components/ReceiptWorkspace.tsx')
   assert.ok(receipts.includes("rpc('issue_fee_receipts_bulk'"), 'Bulk receipt issuance must use the sequence-backed RPC')
   assert.ok(receipts.includes("rpc('issue_fee_receipt'"), 'Individual receipt issuance must use the idempotent RPC')
+  const helpdesk = read('src/components/HelpdeskWorkspace.tsx')
+  assert.ok(helpdesk.includes("rpc('update_institution_helpdesk_ticket'"), 'Helpdesk ticket status and resolution must use the guarded ticket RPC')
+  assert.ok(helpdesk.includes('institution_helpdesk_comments'), 'Helpdesk must store threaded ticket conversation comments')
   const scheduled = read('src/components/ScheduledReportsWorkspace.tsx')
   assert.ok(scheduled.includes("rpc('log_scheduled_report_execution'"), 'Manual scheduled-report execution must save auditable run history')
   assert.ok(scheduled.includes("createObjectURL"), 'Manual report execution must create a downloadable result file')
@@ -378,6 +381,7 @@ check('Campus and finance submenu workspaces use their dedicated records and tra
     '20261113180000_payment_gateway_review_register.sql',
     '20261113190000_facility_asset_lifecycle.sql',
     '20261113194000_receipt_payment_status_guard.sql',
+    '20261113220000_institution_helpdesk_ticket_lifecycle.sql',
     '20261113210000_scheduled_report_execution_history.sql',
     '20261113200000_cafeteria_business_timezone.sql',
     '20261113173000_receipt_rpc_write_privileges.sql',
@@ -1092,8 +1096,8 @@ check('Required database safeguards and Cloudflare redirects remain in the proje
     assert.ok(migrations.includes(migration), `${migration} missing`)
   }
   const timestamped = migrations.filter(name => /^202611\d{8}_.+\.sql$/.test(name))
-  assert.equal(timestamped.length, 65, 'Expected sixty-five timestamped migrations including scheduled report history and cafeteria business time')
-  assert.ok(read('supabase/migrations/README.md').includes('sixty-five timestamped migration files'))
+  assert.equal(timestamped.length, 66, 'Expected sixty-six timestamped migrations including report execution and Helpdesk workflows')
+  assert.ok(read('supabase/migrations/README.md').includes('sixty-six timestamped migration files'))
   assert.equal(read('public/_redirects').trim(), '/* /index.html 200')
   const envExample = read('.env.example')
   const gitignore = read('.gitignore')
