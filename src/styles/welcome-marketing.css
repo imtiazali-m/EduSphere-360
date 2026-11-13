@@ -41,8 +41,8 @@
 .edm-analytics-heading p { max-width: 540px; margin: 0; color: #718075; font-size: 14px; line-height: 1.75; }
 .edm-analytics-disclaimer { display: inline-flex; align-items: center; gap: 8px; flex: 0 0 auto; padding: 11px 14px; border: 1px solid #d6dee8; border-radius: 11px; color: #5d6a7b; background: #fff; font-size: 11px; font-weight: 750; }
 .edm-analytics-grid { max-width: 1180px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
-.edm-analytics-card { min-width: 0; min-height: 250px; padding: 22px; overflow: hidden; border: 1px solid #dce2ea; border-radius: 19px; background: #fff; box-shadow: 0 10px 30px rgba(31, 61, 38, .045); transition: transform .22s ease, box-shadow .22s ease; }
-.edm-analytics-card:hover { transform: translateY(-3px); box-shadow: 0 17px 36px rgba(31,61,38,.08); }
+.edm-analytics-card { min-width: 0; min-height: 250px; padding: 22px; overflow: hidden; border: 1px solid #dce2ea; border-radius: 19px; background: #fff; box-shadow: 0 10px 30px rgba(31, 44, 61, .045); transition: transform .22s ease, box-shadow .22s ease; }
+.edm-analytics-card:hover { transform: translateY(-3px); box-shadow: 0 17px 36px rgba(31, 44, 61, .08); }
 .edm-analytics-area-card { grid-column: span 2; }
 .edm-analytics-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .edm-analytics-card-head > div { display: grid; gap: 6px; }
@@ -114,7 +114,7 @@
 .edm-showcase-shell{max-width:1128px;margin-left:auto;margin-right:auto}
 .edm-showcase-shell{
   overflow:hidden;border:1px solid #d7dee8;border-radius:22px;
-  background:#fff;box-shadow:0 20px 55px rgba(39,65,39,.07);
+  background:#fff;box-shadow:0 20px 55px rgba(39, 50, 65, .07);
 }
 .edm-showcase-tabs{
   display:flex;gap:7px;flex-wrap:wrap;padding:13px 15px;
@@ -128,7 +128,7 @@
 .edm-showcase-tabs button:hover{background:#e9eef5;color:#39485c}
 .edm-showcase-tabs button.active{
   border-color:#d1dbe8;color:#334256;background:#e2e9f2;
-  box-shadow:inset 0 0 0 1px rgba(111,145,75,.04);
+  box-shadow:inset 0 0 0 1px rgba(75, 105, 145, .04);
 }
 .edm-showcase-tabs button:focus-visible,
 .edm-faq-item button:focus-visible,
@@ -159,12 +159,12 @@
   display:inline-flex;align-items:center;justify-content:center;gap:9px;
   min-height:42px;padding:0 15px;border:0;border-radius:9px;
   color:#fff;background:#31445c;font-size:11px;font-weight:800;
-  box-shadow:0 7px 16px rgba(35,81,49,.12);
+  box-shadow:0 7px 16px rgba(35, 55, 81, .12);
 }
 .edm-showcase-cta:hover{background:#24344a}
 .edm-showcase-preview{
   min-width:0;overflow:hidden;border:1px solid #dbe2ea;border-radius:15px;
-  background:#f4f7fa;box-shadow:0 13px 28px rgba(44,70,42,.07);
+  background:#f4f7fa;box-shadow:0 13px 28px rgba(42, 54, 70, .07);
 }
 .edm-showcase-preview-top{
   display:flex;align-items:center;gap:10px;min-height:48px;padding:0 13px;
