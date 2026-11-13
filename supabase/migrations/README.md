@@ -1,6 +1,6 @@
 # Migration history
 
-The sixty timestamped migration files in this folder match the remote migration history recorded by the linked Supabase project. Keep each 14-digit timestamp unchanged so local and remote migration histories remain aligned.
+The sixty-one timestamped migration files in this folder match the remote migration history recorded by the linked Supabase project. Keep each 14-digit timestamp unchanged so local and remote migration histories remain aligned.
 
 The current online application includes the reviewed schema changes for the existing live schema, Faculty & Employee Management, and Student Management operations (admission lifecycle, linked guardian contacts, class placements, private student documents and audit history for attendance, published results, assignment submissions, guardian policy consolidation and activity indexes). The Student Management and Faculty/Employee migrations have already been applied to the linked project; do not replay them manually.
 
@@ -57,3 +57,6 @@ The latest timestamped migrations add institution-scoped in-app messaging, trans
 
 
 Library reading progress records are linked to institution students and, when selected, the associated library loan. Student reader cards are derived from the current student profile and actual loan activity. Fee receipt issuance is recorded in a separate tenant-scoped ledger against an existing fee payment; receipt numbers are allocated atomically, stored snapshots support later verification, and batch issuance does not create or alter fee payments.
+
+
+Online payment screens read the existing fee-payment ledger and store separately reviewed gateway references. A provider review is a finance audit note only; it does not charge a card, call a gateway, or automatically change a payment to settled.
