@@ -85,6 +85,7 @@ function shellTarget(route) {
   const procurement = route.startsWith('procurement:')
   const cafeteria = route.startsWith('cafeteria:')
   const libraryReading = route.startsWith('library-reading:')
+  const receiptOperations = route.startsWith('receipt-operations:')
   const personal = route.startsWith('personal:')
   const assistant = route.startsWith('assistant:')
   const frontOffice = route.startsWith('frontoffice:')
@@ -110,6 +111,7 @@ function shellTarget(route) {
     : procurement ? 'procurement'
     : cafeteria ? 'cafeteria'
     : libraryReading ? 'library-reading'
+    : receiptOperations ? 'receipt-operations'
     : personal ? 'personal'
     : assistant ? 'assistant'
     : frontOffice ? 'frontoffice'
@@ -135,6 +137,7 @@ function shellTarget(route) {
     : procurement ? route.slice('procurement:'.length)
     : cafeteria ? route.slice('cafeteria:'.length)
     : libraryReading ? route.slice('library-reading:'.length)
+    : receiptOperations ? route.slice('receipt-operations:'.length)
     : personal ? route.slice('personal:'.length)
     : assistant ? route.slice('assistant:'.length)
     : frontOffice ? route.slice('frontoffice:'.length)
@@ -167,6 +170,10 @@ function checkView(role, route, dispatcher) {
   if (targetKey === 'hostel') {
     const pages = new Set(['hostel-dashboard','hostel-buildings','room-bed-register','resident-allocation','room-transfers','check-in-check-out','hostel-visitor-register','hostel-fees','accommodation-maintenance','occupancy-reports'])
     return { component:'HostelWorkspace', view:targetWindow, status:pages.has(targetWindow)?'Supported':'Unsupported hostel view' }
+  }
+  if(targetKey==='receipt-operations'){
+    const pages=new Set(['receipt-templates','receipt-numbering','bulk-receipt-generation','receipt-verification'])
+    return {component:'ReceiptWorkspace',view:targetWindow,status:pages.has(targetWindow)?'Supported':'Unsupported receipt view'}
   }
   if(targetKey==='library-reading'){
     const pages=new Set(['reading-records','reading-cards','student-reading-history'])
@@ -279,6 +286,7 @@ for (const [role, label] of roles) {
         : dashboard.targetKey === 'procurement' ? 'ProcurementWorkspace'
         : dashboard.targetKey === 'cafeteria' ? 'CafeteriaWorkspace'
         : dashboard.targetKey === 'library-reading' ? 'LibraryReadingWorkspace'
+        : dashboard.targetKey === 'receipt-operations' ? 'ReceiptWorkspace'
         : dashboard.targetKey === 'personal' ? 'PersonalWorkspace'
         : dashboard.targetKey === 'assistant' ? 'AIAssistantWorkspace'
         : dashboard.targetKey === 'frontoffice' ? 'FrontOfficeWorkspace'
