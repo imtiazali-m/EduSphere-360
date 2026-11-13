@@ -3,6 +3,7 @@ import { BookOpen, CalendarDays, Download, GraduationCap, History, Printer, Refr
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import '../styles/data-management.css'
+import '../styles/library-reading.css'
 
 type Row=Record<string,any>&{id:string}
 const titles:Record<string,string>={'reading-records':'Reading Records','reading-cards':'Student Reading Cards','student-reading-history':'Student Reading History'}
@@ -47,7 +48,7 @@ export function LibraryReadingWorkspace({workspaceKey,onToast}:{workspaceKey:str
  useEffect(()=>{void load()},[user?.id,user?.institutionId,user?.role])
  const studentFor=(id:string)=>students.find(s=>s.id===id)
  const loansFor=(id:string)=>loans.filter(l=>String(l.student_id??'')===id)
- const selectedLoans=useMemo(()=>selectedStudent?loansFor(selectedStudent):loans,[selectedStudent,loans,students])
+ const selectedLoans=useMemo(()=>form.student_id?loansFor(form.student_id):[],[form.student_id,loans,students])
  const visibleReading=reading.filter(r=>{
   const student=studentFor(String(r.student_id))
   return !search||[student?.full_name,student?.admission_no,r.book_title,r.notes,r.status].some(x=>String(x??'').toLowerCase().includes(search.toLowerCase()))
