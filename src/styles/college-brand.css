@@ -299,3 +299,139 @@ button.rd-metric-card:hover { border-color: #bbc9b7; box-shadow: 0 8px 18px rgba
 .rd-trend-series.collections .rd-trend-track i { background: linear-gradient(180deg, #d0b27e, #a8783d); }
 .rd-trend-month small { color: var(--es-muted); }
 .rd-trend-unavailable { color: var(--es-muted); }
+
+
+/* Shared semantic tokens used by legacy college workspaces */
+:root {
+  --primary: var(--es-brand-800);
+  --primary-soft: var(--es-teal-100);
+  --surface: var(--es-surface);
+  --surface-muted: var(--es-surface-soft);
+  --surface-hover: #f1f1e9;
+  --line: var(--es-line);
+  --ink: var(--es-ink);
+  --muted: var(--es-muted);
+}
+
+/* Front office, admission enquiries, circulars and college calendar */
+.ed360-front-office { color: var(--es-ink); }
+.ed360-front-office-hero {
+  border-color: var(--es-line);
+  border-radius: 6px;
+  background: linear-gradient(120deg, var(--es-surface) 0%, var(--es-primary-050) 100%);
+  box-shadow: var(--es-shadow-sm);
+}
+.ed360-front-office-hero>div:first-child>span, .ed360-front-office-modal>header small { color: var(--es-primary-700); }
+.ed360-front-office-hero h1, .ed360-front-office-toolbar h2, .ed360-front-office-modal>header h2,
+.ed360-front-office-detail h3 { color: var(--es-brand-900); font-family: 'Playfair Display', Georgia, serif; font-weight: 600; }
+.ed360-front-office-hero p, .ed360-front-office-toolbar p { color: var(--es-muted); }
+.ed360-front-office-count b { color: var(--es-brand-800); }
+.ed360-front-office-count span { color: var(--es-muted); }
+.ed360-front-office-tabs { border-color: var(--es-line); border-radius: 5px; background: var(--es-surface); }
+.ed360-front-office-tabs button { color: var(--es-muted); }
+.ed360-front-office-tabs button:hover { color: var(--es-brand-800); background: var(--es-surface-soft); }
+.ed360-front-office-tabs button.active { border-color: #cbd8c8; color: var(--es-brand-900); background: var(--es-teal-100); }
+.ed360-front-office-panel { border-color: var(--es-line); border-radius: 6px; box-shadow: var(--es-shadow-sm); }
+.ed360-front-office-toolbar, .ed360-front-office-modal>header { border-bottom-color: var(--es-line-soft); }
+.ed360-front-office-search, .ed360-front-office-refresh, .ed360-front-office-actions>button,
+.ed360-front-office-table-wrap td button, .ed360-front-office-modal>header button,
+.ed360-front-office-detail .close { border-color: var(--es-line); border-radius: 4px; color: var(--es-muted); background: var(--es-surface); }
+.ed360-front-office-search { background: #fffefa; }
+.ed360-front-office-search input, .ed360-front-office-table-wrap td { color: var(--es-ink); }
+.ed360-front-office-primary { border-color: var(--es-brand-800) !important; background: var(--es-brand-800) !important; border-radius: 4px; box-shadow: none; }
+.ed360-front-office-primary:hover { border-color: var(--es-primary-700) !important; background: var(--es-primary-700) !important; }
+.ed360-front-office-table-wrap th { color: var(--es-brand-800); background: #f1f0e8; border-bottom-color: var(--es-line); }
+.ed360-front-office-table-wrap td { border-bottom-color: var(--es-line-soft); }
+.ed360-front-office-table-wrap td b { color: var(--es-brand-900); }
+.ed360-front-office-table-wrap td small, .ed360-front-office-detail p { color: var(--es-muted); }
+.ed360-front-office-status { border-color: var(--es-line); color: var(--es-muted); background: #f2f2eb; }
+.ed360-front-office-status.state-converted, .ed360-front-office-status.state-published { border-color: #d4e2d0; color: var(--es-success); background: var(--es-success-bg); }
+.ed360-front-office-status.state-new, .ed360-front-office-status.state-draft { border-color: #e7d9bc; color: var(--es-warning); background: var(--es-warning-bg); }
+.ed360-front-office-empty { color: var(--es-muted); }
+.ed360-front-office-empty b, .ed360-front-office-detail dt { color: var(--es-brand-800); }
+.ed360-front-office-empty span, .ed360-front-office-detail dd { color: var(--es-muted); }
+.ed360-front-office-modal { border-color: var(--es-line); border-radius: 7px; box-shadow: var(--es-shadow-lg); }
+.ed360-front-office-modal input:not([type=checkbox]), .ed360-front-office-modal select, .ed360-front-office-modal textarea {
+  border-color: var(--es-line); border-radius: 4px; background: #fffefa; color: var(--es-ink);
+}
+.ed360-front-office-modal :is(input,select,textarea):focus { border-color: #8da58f; box-shadow: 0 0 0 3px rgba(85,115,93,.10); }
+.ed360-front-office-checkbox input { accent-color: var(--es-brand-800); }
+.ed360-front-office-form-note, .ed360-front-office-detail>small, .ed360-front-office-detail dt { color: var(--es-muted); }
+.ed360-front-office-detail { border-color: var(--es-line); border-radius: 6px; box-shadow: var(--es-shadow-lg); }
+
+/* Academic management, programme setup, teaching and timetable workspaces */
+.ed360-academic-page { color: var(--es-ink); }
+.ed360-academic-heading-copy>span, .ed360-academic-kicker { color: var(--es-primary-700); }
+.ed360-academic-heading-copy h1, .ed360-academic-workspace-top h2 { color: var(--es-brand-900); font-family: 'Playfair Display', Georgia, serif; font-weight: 600; }
+.ed360-academic-heading-copy p, .ed360-academic-workspace-top p { color: var(--es-muted); }
+.ed360-academic-live { border-color: var(--es-line); background: var(--es-surface); color: var(--es-muted); }
+.ed360-academic-nav button { border-color: var(--es-line); color: var(--es-muted); background: var(--es-surface); }
+.ed360-academic-nav button:hover { border-color: #c2d0bf; background: #f6f6ef; }
+.ed360-academic-nav button.active { border-color: #c5d4c2; background: var(--es-teal-100); color: var(--es-brand-900); box-shadow: none; }
+.ed360-academic-nav-number { background: #f0efe7; color: var(--es-muted); }
+.ed360-academic-nav button.active .ed360-academic-nav-number { background: #d4e0d0; color: var(--es-brand-800); }
+.ed360-academic-workspace { border-color: var(--es-line); border-radius: 6px; background: var(--es-surface); box-shadow: var(--es-shadow-sm); }
+.ed360-academic-online-control>span { color: var(--es-warning); }
+.ed360-academic-online-control>span.is-on { color: var(--es-success); }
+.ed360-academic-online-control button, .ed360-academic-icon-button,
+.ed360-academic-secondary, .ed360-academic-row-actions button { border-color: var(--es-line); border-radius: 4px; color: var(--es-brand-800); background: var(--es-surface); }
+.ed360-academic-mode-tabs { border-color: var(--es-line); background: var(--es-surface-soft); }
+.ed360-academic-mode-tabs button { color: var(--es-muted); }
+.ed360-academic-mode-tabs button.active { color: var(--es-brand-900); background: var(--es-surface); box-shadow: var(--es-shadow-sm); }
+.ed360-academic-toolbar-copy strong { color: var(--es-brand-900); }
+.ed360-academic-toolbar-copy span, .ed360-academic-search { color: var(--es-muted); }
+.ed360-academic-search { border-color: var(--es-line); background: #fffefa; }
+.ed360-academic-search input { color: var(--es-ink); }
+.ed360-academic-primary { border-color: var(--es-brand-800); border-radius: 4px; background: var(--es-brand-800); color: #fff; box-shadow: none; }
+.ed360-academic-primary:hover { border-color: var(--es-primary-700); background: var(--es-primary-700); }
+.ed360-academic-metrics>div { border-color: var(--es-line); border-radius: 6px; background: #faf8f1; }
+.ed360-academic-metrics>div>span { background: var(--es-teal-100); color: var(--es-brand-800); }
+.ed360-academic-metrics>div:nth-child(2)>span { background: var(--es-success-bg); color: var(--es-success); }
+.ed360-academic-metrics>div:nth-child(3)>span { background: var(--es-violet-bg); color: var(--es-violet); }
+.ed360-academic-metrics>div:nth-child(4)>span { background: var(--es-warning-bg); color: var(--es-warning); }
+.ed360-academic-metrics small { color: var(--es-muted); }
+.ed360-academic-metrics strong { color: var(--es-brand-900); }
+.ed360-academic-table-wrap { border-color: var(--es-line); }
+.ed360-academic-table th { border-bottom-color: var(--es-line); background: #f1f0e8; color: var(--es-brand-800); }
+.ed360-academic-table td { border-bottom-color: var(--es-line-soft); color: var(--es-ink); }
+.ed360-academic-table tbody tr:hover td { background: #f8f7f0; }
+.ed360-academic-row-actions button:hover { border-color: #c2d0bf; background: var(--es-teal-100); color: var(--es-brand-900); }
+.ed360-academic-status { border-color: var(--es-line); background: #f4f2eb; color: var(--es-muted); }
+.ed360-academic-status.status-active, .ed360-academic-status.status-published, .ed360-academic-status.status-completed, .ed360-academic-status.status-graded { border-color: #d1e2cd; background: var(--es-success-bg); color: var(--es-success); }
+.ed360-academic-status.status-draft, .ed360-academic-status.status-planned, .ed360-academic-status.status-in-progress, .ed360-academic-status.status-submitted { border-color: #d4dfd0; background: var(--es-teal-100); color: var(--es-brand-800); }
+.ed360-academic-status.status-cancelled, .ed360-academic-status.status-archived, .ed360-academic-status.status-needs-support { border-color: #ecd6cf; background: var(--es-danger-bg); color: var(--es-danger); }
+.ed360-academic-foot { color: var(--es-muted); }
+.ed360-academic-foot>svg { color: var(--es-brand-700); }
+.ed360-academic-foot>span:last-child { color: var(--es-muted); }
+.ed360-academic-error { border-color: #ecd6cf; border-radius: 5px; background: var(--es-danger-bg); color: var(--es-danger); }
+.ed360-academic-loading { color: var(--es-muted); }
+.ed360-academic-spinner { border-color: #e6e6dc; border-top-color: var(--es-brand-800); }
+.ed360-academic-locked { border-color: var(--es-line); background: var(--es-surface-soft); color: var(--es-muted); }
+.ed360-academic-locked>svg { color: var(--es-brand-800); }
+.ed360-academic-locked strong { color: var(--es-brand-900); }
+.ed360-academic-locked p { color: var(--es-muted); }
+.ed360-academic-modal { border-color: var(--es-line); border-radius: 7px; box-shadow: var(--es-shadow-lg); }
+.ed360-academic-modal>header { border-bottom-color: var(--es-line); }
+.ed360-academic-modal>header span { color: var(--es-primary-700); }
+.ed360-academic-modal>header h2 { color: var(--es-brand-900); font-family: 'Playfair Display', Georgia, serif; font-weight: 600; }
+
+/* Examination planning and grade workflows */
+.ed360-assess-hero { border-color: var(--es-line); border-radius: 6px; background: linear-gradient(120deg, var(--es-surface), var(--es-primary-050)); box-shadow: var(--es-shadow-sm); }
+.ed360-assess-hero-icon { border-radius: 7px; color: var(--es-brand-900); background: var(--es-primary-100); }
+.ed360-assess-hero h1 { color: var(--es-brand-900); font-family: 'Playfair Display', Georgia, serif; font-weight: 600; }
+.ed360-assess-live { border-color: #d2e2cf; background: var(--es-success-bg); color: var(--es-success); }
+.ed360-assess-tabs button.active { border-color: #c5d4c2; color: var(--es-brand-900); background: var(--es-teal-100); }
+.ed360-assess-toolbar>button:hover, .ed360-assess-actions button:hover, .ed360-assess-link:hover { border-color: #c2d0bf; background: #f6f6ef; }
+.ed360-assess-table-wrap th { color: var(--es-brand-800); background: #f1f0e8; border-bottom-color: var(--es-line); }
+.ed360-assess-table-wrap tbody tr:hover td { background: #f8f7f0; }
+.ed360-assess-table-wrap input[type=text], .ed360-assess-table-wrap input[type=number] { border-color: var(--es-line); border-radius: 4px; }
+.ed360-assess-pill { border-color: var(--es-line); background: #f5f3eb; color: var(--es-muted); }
+.ed360-assess-pill.published { border-color: #d2e2cf; background: var(--es-success-bg); color: var(--es-success); }
+.ed360-assess-actions button, .ed360-assess-link { border-color: var(--es-line); border-radius: 4px; color: var(--es-brand-800); }
+.ed360-assess-form { border-color: var(--es-line); border-radius: 6px; background: var(--es-surface-soft); }
+.ed360-assess-form input:not([type=checkbox]), .ed360-assess-form select, .ed360-assess-form textarea, .ed360-assess-select-row select { border-color: var(--es-line); border-radius: 4px; background: #fffefa; }
+.ed360-assess-form input:focus, .ed360-assess-form select:focus, .ed360-assess-form textarea:focus, .ed360-assess-select-row select:focus { border-color: #8da58f; box-shadow: 0 0 0 3px rgba(85,115,93,.10); }
+.ed360-assess-import { border-color: #c9d4c5; background: #faf9f3; }
+.ed360-assess-mark-summary span, .ed360-assess-workflow>div { border-color: var(--es-line); background: var(--es-surface-soft); color: var(--es-muted); }
+.ed360-assess-workflow .done { border-color: #d2e2cf; background: var(--es-success-bg); color: var(--es-success); }
+.ed360-assess-timer { border-color: #d4dfd0; color: var(--es-brand-800); background: var(--es-teal-100); }
