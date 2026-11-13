@@ -3,7 +3,7 @@ import {
   ArrowLeft, ArrowRight, ArrowUpRight, BarChart3, BookOpen, Building2, Bus,
   CalendarCheck, Check, CheckCircle2, ChevronDown, ClipboardCheck, DoorOpen,
   Package, UserCheck,
-  GraduationCap, Headphones, HeartHandshake, Layers3, LockKeyhole,
+  GraduationCap, Headphones, HeartHandshake, Landmark, Layers3, LockKeyhole,
   Eye, EyeOff, FileText, Mail, Menu, Monitor, Server, ShieldCheck, Sparkles,
   Users, Wallet, X, Zap,
 } from 'lucide-react'
