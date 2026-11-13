@@ -3,6 +3,7 @@ import { ArrowUpRight, BookOpen, Building2, CalendarDays, CheckCircle2, FileText
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { userFacingError } from '../lib/userErrors'
+import { CollegeRolePermissionWorkspace } from './CollegeRolePermissionWorkspace'
 import type { RecordRow } from '../lib/types'
 import '../styles/governance-workspace.css'
 
@@ -287,16 +288,8 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
     </section>
   }
   function renderPermissions(){
-    const rows=[
-      {role:'Owner',scope:'All institution responsibilities',view:'All',create:'All',edit:'All',remove:'All',approve:'Configured flows',export:'Where enabled',settings:'Yes'},
-      {role:'Administrator',scope:'Delegated institution operations',view:'Allowed modules',create:'Allowed modules',edit:'Allowed modules',remove:'RLS guarded',approve:'Configured flows',export:'Where enabled',settings:'Yes'},
-      {role:'Teacher',scope:'Assigned teaching and staff records',view:'Assigned records',create:'Teaching workflows',edit:'Permitted records',remove:'Restricted',approve:'Request / review',export:'No institution-wide',settings:'No'},
-      {role:'Accountant',scope:'Finance, fees and payroll',view:'Finance scope',create:'Finance scope',edit:'Finance scope',remove:'Restricted',approve:'No global approval',export:'Finance reports',settings:'No'},
-      {role:'Examination officer',scope:'Assessments and reports',view:'Exam scope',create:'Assessment scope',edit:'Assessment scope',remove:'Restricted',approve:'Assessment-specific',export:'Result reports',settings:'No'},
-      {role:'Student',scope:'Linked student portal records',view:'Linked records',create:'No',edit:'No',remove:'No',approve:'No',export:'No',settings:'No'},
-      {role:'Parent / guardian',scope:'Linked family portal records',view:'Linked records',create:'No',edit:'No',remove:'No',approve:'No',export:'No',settings:'No'},
-    ]
-    return <div className="ed360-admin-stage5"><section className="gov-panel"><header><div><h2>Effective role permission matrix</h2><p>Current role boundaries across the institution—not an unrestricted permission editor.</p></div><ShieldCheck size={20}/></header><div className="gov-table-wrap"><table className="ed360-admin-permission-table"><thead><tr><th>Role</th><th>View</th><th>Create</th><th>Edit</th><th>Delete</th><th>Approve</th><th>Export</th><th>Manage settings</th></tr></thead><tbody>{rows.map(row=><tr key={row.role}><td title={row.scope}>{row.role}<small style={{display:'block',fontWeight:400,color:'#89968b',marginTop:3}}>{row.scope}</small></td>{(['view','create','edit','remove','approve','export','settings'] as const).map(key=><td key={key} className={row[key]==='No'?'ed360-admin-permission-no':row[key]==='All'?'ed360-admin-permission-yes':'ed360-admin-permission-limited'}>{row[key]}</td>)}</tr>)}</tbody></table></div></section><div className="ed360-admin-callout warning">This matrix documents role boundaries enforced by application routes and Supabase Row Level Security. It does not create custom role overrides. Editable permission toggles are intentionally omitted until a matching permission model and database policies exist; front-end-only toggles cannot protect sensitive data.</div></div>
+    if(!admin)return <div className="ed360-admin-callout warning">Role profiles can only be administered by the college owner or an authorised administrator.</div>
+    return <div className="ed360-admin-stage5"><CollegeRolePermissionWorkspace institutionId={user!.institutionId} currentUserId={user!.id} members={members} onToast={onToast}/></div>
   }
   function renderAudit(){
     return <section className="gov-panel"><header><div><h2>Administrative change history</h2><p>Searchable, institution-scoped events showing action, module, timestamp, actor and before/after values.</p></div><span className="gov-readonly">Immutable feed</span></header><label className="ed360-admin-search"><Search size={14}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search actor, action, module or record…"/></label>{filteredAudit.length?<div className="gov-timeline">{filteredAudit.map(row=><article key={row.id}><i/><div><strong>{label(row.action)} · {label(row.module_key)} / {label(row.record_type)}</strong><small>{dateLabel(row.occurred_at)} · Actor {String(row.actor_id??'system')} · Record {String(row.record_id)}</small><details><summary>View recorded values</summary><div><div><b>Before</b><pre>{JSON.stringify(row.old_values??null,null,2)}</pre></div><div><b>After</b><pre>{JSON.stringify(row.new_values??null,null,2)}</pre></div></div></details></div></article>)}</div>:<div className="gov-empty">No administrative audit events match this search.</div>}</section>
