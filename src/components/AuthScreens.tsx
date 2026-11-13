@@ -169,6 +169,9 @@ export function WelcomeScreen({ navigate }: ScreenProps) {
         </button>
         <nav className={`edm-nav ${mobileOpen ? 'is-open' : ''}`} aria-label="Main navigation">
           <a className="edm-nav-link" href="#top" onClick={closeMenu}>Home</a>
+          <a className="edm-nav-link" href="#features" onClick={closeMenu}>Features</a>
+          <a className="edm-nav-link" href="#solutions" onClick={closeMenu}>Solutions</a>
+          <a className="edm-nav-link" href="#about" onClick={closeMenu}>About</a>
           <div className="edm-nav-group"><button className="edm-nav-link" type="button">Platform <ChevronDown size={13}/></button><div className="edm-nav-dropdown">
             <a href="#/public/features" onClick={closeMenu}><Layers3 size={17}/><span><b>Feature catalogue</b><small>Every platform area and release status</small></span></a>
             <a href="#/public/product-tour" onClick={closeMenu}><Monitor size={17}/><span><b>Product tour</b><small>How institutional workflows connect</small></span></a>
