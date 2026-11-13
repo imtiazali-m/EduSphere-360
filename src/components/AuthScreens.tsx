@@ -626,7 +626,7 @@ export function LoginScreen({ navigate, initialRole }: ScreenProps & { initialRo
               <p>{resetMode ? 'Enter the email address associated with your institution account. We will send a secure reset link when an account matches.' : 'Enter the college account details issued or approved by the administration.'}</p>
             </div>
             {!resetMode && <div className="es-account-type" role="group" aria-label="Choose account type">
-              <button type="button" className={accountType === 'owner_admin' ? 'is-active' : ''} onClick={() => { setAccountType('owner_admin'); setError('') }} aria-pressed={accountType === 'owner_admin'}>
+              <button type="button" className={accountType === 'owner_admin' ? 'is-active' : ''} onClick={() => { setAccountType('owner_admin'); setError('') }} aria-label="Owner / Admin — College Management" aria-pressed={accountType === 'owner_admin'}>
                 <span><Building2 size={17}/></span><b>Management</b>
               </button>
               <button type="button" className={accountType === 'employee' ? 'is-active' : ''} onClick={() => { setAccountType('employee'); setError('') }} aria-pressed={accountType === 'employee'}>
