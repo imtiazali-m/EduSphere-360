@@ -83,6 +83,7 @@ function shellTarget(route) {
   const messaging = route.startsWith('messaging:')
   const hostel = route.startsWith('hostel:')
   const procurement = route.startsWith('procurement:')
+  const cafeteria = route.startsWith('cafeteria:')
   const personal = route.startsWith('personal:')
   const assistant = route.startsWith('assistant:')
   const frontOffice = route.startsWith('frontoffice:')
@@ -106,6 +107,7 @@ function shellTarget(route) {
     : messaging ? 'messaging'
     : hostel ? 'hostel'
     : procurement ? 'procurement'
+    : cafeteria ? 'cafeteria'
     : personal ? 'personal'
     : assistant ? 'assistant'
     : frontOffice ? 'frontoffice'
@@ -129,6 +131,7 @@ function shellTarget(route) {
     : messaging ? route.slice('messaging:'.length)
     : hostel ? route.slice('hostel:'.length)
     : procurement ? route.slice('procurement:'.length)
+    : cafeteria ? route.slice('cafeteria:'.length)
     : personal ? route.slice('personal:'.length)
     : assistant ? route.slice('assistant:'.length)
     : frontOffice ? route.slice('frontoffice:'.length)
@@ -161,6 +164,10 @@ function checkView(role, route, dispatcher) {
   if (targetKey === 'hostel') {
     const pages = new Set(['hostel-dashboard','hostel-buildings','room-bed-register','resident-allocation','room-transfers','check-in-check-out','hostel-visitor-register','hostel-fees','accommodation-maintenance','occupancy-reports'])
     return { component:'HostelWorkspace', view:targetWindow, status:pages.has(targetWindow)?'Supported':'Unsupported hostel view' }
+  }
+  if(targetKey==='cafeteria'){
+    const pages=new Set(['cafeteria-dashboard','menu-price-list','daily-availability','sales-transactions','meal-plans','cafeteria-inventory','cafeteria-reports'])
+    return {component:'CafeteriaWorkspace',view:targetWindow,status:pages.has(targetWindow)?'Supported':'Unsupported cafeteria view'}
   }
   if(targetKey==='procurement'){
     const pages=new Set(['supplier-directory','suppliers','purchase-records','purchase-requests','quotation-comparison','purchase-approvals','purchase-orders','goods-receipt','supplier-invoices','procurement-reports'])
@@ -263,6 +270,7 @@ for (const [role, label] of roles) {
         : dashboard.targetKey === 'messaging' ? 'CommunicationWorkspace'
         : dashboard.targetKey === 'hostel' ? 'HostelWorkspace'
         : dashboard.targetKey === 'procurement' ? 'ProcurementWorkspace'
+        : dashboard.targetKey === 'cafeteria' ? 'CafeteriaWorkspace'
         : dashboard.targetKey === 'personal' ? 'PersonalWorkspace'
         : dashboard.targetKey === 'assistant' ? 'AIAssistantWorkspace'
         : dashboard.targetKey === 'frontoffice' ? 'FrontOfficeWorkspace'
