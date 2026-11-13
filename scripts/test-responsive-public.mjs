@@ -101,7 +101,7 @@ async function inspectViewport({name,width,height}){
 
     await page.goto(`${baseUrl}/#/setup`,{waitUntil:'domcontentloaded'})
     await page.locator('.es-auth-page').waitFor({state:'visible'})
-    assert.match(page.url(),/\\/#\\/login\\/owner$/,`${name}: setup path must direct visitors to this college's management login, not create another institution`)
+    assert.equal(await page.locator('.es-signup-form').count(),0,`${name}: the single-college portal must not expose public creation of a separate institution`)
     await page.getByRole('heading',{name:'Welcome back'}).waitFor({state:'visible'})
 
     const publicRoutes=[
