@@ -52,10 +52,10 @@ const governanceTabs = new Set(['profile','settings','approvals','audit','academ
 const operationTabs = {
   'question-bank': new Set(['pool','papers']),
   curriculum: new Set(['units','coverage']),
-  behaviour: new Set(['register','positive','follow-up']),
-  certificates: new Set(['verify','issue']),
-  visitors: new Set(['log','checked-in','history']),
-  facilities: new Set(['assets','maintenance','history']),
+  behaviour: new Set(['register','positive','follow-up','skills','activities','competencies','history','analytics','reports']),
+  certificates: new Set(['verify','issue','templates','bulk','history']),
+  visitors: new Set(['log','checked-in','approvals','notifications','history','reports']),
+  facilities: new Set(['assets','maintenance','history','reservations','reports']),
 }
 const adminKeys = new Set(['departments','programs','classes','academic_sessions','subjects','rooms'])
 const linkedKeys = new Set([
@@ -63,7 +63,7 @@ const linkedKeys = new Set([
   'library:book-issue-and-returns','library:library-reports',
   'inventory:stock-in','inventory:stock-out','inventory:stock-allocation',
   'inventory:stock-adjustments','inventory:inventory-history','inventory:stock-reports',
-  'transport:student-transport-allocation','transport:transport-reports',
+  'transport:student-transport-allocation','transport:transport-attendance','transport:transport-reports',
 ])
 
 function shellTarget(route) {
