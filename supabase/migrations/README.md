@@ -48,3 +48,16 @@ The atomic transport allocation migration adds database-side creation and end-al
 
 
 The Stage 5 administration, Stage 6 people/HR, Stage 7 attendance/leave/wellbeing, Stage 8 academic-management, and Stage 9 assessment-weight migrations have been restored from the linked Supabase project's recorded migration statements. Filenames use the exact remote migration versions; these files document already-applied schema changes and must not be replayed manually against the linked production database.
+
+
+## Government Islamia Degree College Badin — custom role permissions
+
+The college redesign adds three migrations to the linked Supabase project:
+
+- `20261113173320_college_custom_role_profiles_and_scope_policies.sql` creates tenant-scoped job role profiles and user assignments, stores module/action grants, supports optional campus and department scope, and intersects existing row-level policies on core student, employee, academic, attendance, exam, fee, HR, payroll, library, certificate and visitor records.
+- `20261113173552_college_private_permission_guards.sql` moves permission evaluators into the non-API `private` schema and guards examination result approval/publication and approval-queue decisions.
+- `20261113174054_college_approval_profile_action_alignment.sql` allows an explicitly delegated approval profile to perform an approval decision without granting general edit access.
+
+The seven existing membership roles remain the authentication ceiling. Profiles such as Principal, Vice Principal, HOD, Registrar, Admissions Officer, Examination Controller, Invigilator, Accounts Officer, Cashier, HR Manager, Librarian and Receptionist are job/access profiles assigned to a matching active membership role. A profile cannot elevate an account to owner or administrator. An account with any custom assignment is restricted to its active profiles; an account with no custom assignment retains its prior role-based access. Do not seed or assign profiles automatically; the institution owner/authorised administrator must review the employee and scope before assignment.
+
+The current permission guard covers direct RLS-backed access to the listed tables and has explicit database triggers for result and approval status decisions. Review existing SECURITY DEFINER RPCs separately before claiming every RPC-based action has full custom-profile enforcement. The existing project security advisor still reports pre-existing SECURITY DEFINER functions exposed to authenticated users and recommends reviewing them individually.
