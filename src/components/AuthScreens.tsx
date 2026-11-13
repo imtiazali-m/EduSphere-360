@@ -11,7 +11,7 @@ import { useAuth } from '../context/AuthContext'
 import { userFacingError } from '../lib/userErrors'
 import { resendInstitutionOwnerVerification } from '../lib/auth'
 import type { AppRole } from '../lib/types'
-import { NewLandingPage } from './NewLandingPage'
+import { CollegeHomePage } from './CollegeHomePage'
 import '../styles/welcome-marketing.css'
 import '../styles/welcome-completion.css'
 import '../styles/auth-experience.css'
@@ -29,9 +29,9 @@ const portals: { role: AppRole; title: string; description: string; icon: typeof
 ]
 
 function Brand() {
-  return <div className="es-auth-brand" aria-label="EduSphere 360">
+  return <div className="es-auth-brand" aria-label="Government Islamia Degree College Badin">
     <span className="es-auth-brand-mark"><GraduationCap size={23} strokeWidth={2.1} /></span>
-    <span className="es-auth-brand-copy"><b>EduSphere <em>360</em></b><small>EDUCATION MANAGEMENT</small></span>
+    <span className="es-auth-brand-copy"><b>Government Islamia</b><small>DEGREE COLLEGE BADIN</small></span>
   </div>
 }
 
@@ -503,19 +503,19 @@ export function LegacyWelcomeScreen({ navigate }: ScreenProps) {
 
 
 export function WelcomeScreen({ navigate }: ScreenProps) {
-  return <NewLandingPage navigate={navigate} />
+  return <CollegeHomePage navigate={navigate} />
 }
 
 function AuthVisualPanel({ variant }: { variant: 'login' | 'signup' | 'cloud' }) {
   return (
     <aside className={`es-auth-visual es-auth-visual-${variant}`}>
-      <div className="es-auth-visual-head"><Brand /><span className="es-auth-visual-label">ONE PLATFORM · EVERY POSSIBILITY</span></div>
+      <div className="es-auth-visual-head"><Brand /><span className="es-auth-visual-label">GOVERNMENT ISLAMIA DEGREE COLLEGE BADIN</span></div>
       <div className="es-auth-visual-copy">
-        <span className="es-auth-kicker"><i /> {variant === 'login' ? 'WELCOME BACK' : 'YOUR INSTITUTION STARTS HERE'}</span>
-        <h1>{variant === 'login' ? <>Welcome back to<br/><em>better learning.</em></> : <>Bring your campus<br/><em>together.</em></>}</h1>
+        <span className="es-auth-kicker"><i /> {variant === 'login' ? 'COLLEGE PORTAL · SECURE ACCESS' : 'COLLEGE ADMINISTRATION'}</span>
+        <h1>{variant === 'login' ? <>Welcome back to<br/><em>your college portal.</em></> : <>Supporting the work<br/><em>of the college.</em></>}</h1>
         <p>{variant === 'login'
-          ? 'Sign in to the people, tools and progress that keep your institution moving forward.'
-          : 'A thoughtful, connected way to manage admissions, academics, people and everyday operations.'}</p>
+          ? 'Sign in to your authorised college workspace for academic, student and administrative services.'
+          : 'A shared digital workspace for the people who support teaching, learning and college administration.'}</p>
       </div>
       <div className="es-auth-illustration" aria-label="Illustration of a connected education campus">
         <div className="es-auth-illustration-glow" />
@@ -525,14 +525,14 @@ function AuthVisualPanel({ variant }: { variant: 'login' | 'signup' | 'cloud' })
           <div className="es-campus-roof" />
           <div className="es-campus-top"><span /><span /><span /></div>
           <div className="es-campus-columns"><i /><i /><i /><i /><i /></div>
-          <div className="es-campus-base"><span>EDUSPHERE 360</span></div>
+          <div className="es-campus-base"><span>GOVT. ISLAMIA COLLEGE · BADIN</span></div>
           <div className="es-campus-ground" />
         </div>
         <div className="es-auth-float es-auth-float-admissions"><span><Users size={16}/></span><div><b>Admissions</b><small>Student records</small></div><CheckCircle2 size={15}/></div>
         <div className="es-auth-float es-auth-float-learning"><span><BookOpen size={16}/></span><div><b>Learning</b><small>Classes & assessments</small></div></div>
         <div className="es-auth-float es-auth-float-finance"><span><Wallet size={16}/></span><div><b>Operations</b><small>Fees & administration</small></div></div>
       </div>
-      <div className="es-auth-visual-foot"><span className="es-auth-foot-symbol"><ShieldCheck size={16}/></span><span><b>Designed around your institution</b><small>One connected education experience</small></span><span className="es-auth-foot-dots"><i/><i/><i/></span></div>
+      <div className="es-auth-visual-foot"><span className="es-auth-foot-symbol"><ShieldCheck size={16}/></span><span><b>Access managed by the college</b><small>Each account is limited to its approved responsibilities</small></span><span className="es-auth-foot-dots"><i/><i/><i/></span></div>
     </aside>
   )
 }
@@ -542,7 +542,7 @@ function AuthTopline({ navigate, mode }: { navigate: ScreenProps['navigate']; mo
     <div className="es-auth-topline">
       <button type="button" className="es-auth-back" onClick={() => navigate('welcome')}><ArrowLeft size={15}/> <span>Back to website</span></button>
       {mode === 'login'
-        ? <p>New to EduSphere 360? <button type="button" onClick={() => navigate('setup')}>Sign up</button></p>
+        ? <p>Need an account? Contact the College Administration.</p>
         : <p>Already have an account? <button type="button" onClick={() => navigate('login')}>Login</button></p>}
     </div>
   )
@@ -623,14 +623,14 @@ export function LoginScreen({ navigate, initialRole }: ScreenProps & { initialRo
             <div className="es-auth-form-heading">
               <span className="es-auth-overline">YOUR LEARNING COMMUNITY</span>
               <h2>{resetMode ? 'Reset your password' : 'Welcome back'}</h2>
-              <p>{resetMode ? 'Enter the email address associated with your institution account. We will send a secure reset link when an account matches.' : 'Enter your account details to continue to EduSphere 360.'}</p>
+              <p>{resetMode ? 'Enter the email address associated with your institution account. We will send a secure reset link when an account matches.' : 'Enter the college account details issued or approved by the administration.'}</p>
             </div>
             {!resetMode && <div className="es-account-type" role="group" aria-label="Choose account type">
               <button type="button" className={accountType === 'owner_admin' ? 'is-active' : ''} onClick={() => { setAccountType('owner_admin'); setError('') }} aria-pressed={accountType === 'owner_admin'}>
-                <span><Building2 size={17}/></span><b>Owner / Admin</b>
+                <span><Building2 size={17}/></span><b>Management</b>
               </button>
               <button type="button" className={accountType === 'employee' ? 'is-active' : ''} onClick={() => { setAccountType('employee'); setError('') }} aria-pressed={accountType === 'employee'}>
-                <span><Users size={17}/></span><b>Employee</b>
+                <span><Users size={17}/></span><b>Faculty / Staff</b>
               </button>
               <button type="button" className={accountType === 'student' ? 'is-active' : ''} onClick={() => { setAccountType('student'); setError('') }} aria-pressed={accountType === 'student'}>
                 <span><GraduationCap size={18}/></span><b>Student</b>
@@ -660,11 +660,11 @@ export function LoginScreen({ navigate, initialRole }: ScreenProps & { initialRo
               {resendNotice && <div className="es-auth-notice" role="status">{resendNotice}</div>}
               <button className="es-auth-submit" type="submit" disabled={busy}>{busy ? 'Signing in…' : 'Login'} <ArrowRight size={17}/></button>
             </form>}
-            {!resetMode && <div className="es-auth-mobile-signup">Don't have an account? <button type="button" onClick={() => navigate('setup')}>Sign up</button></div>}
+            {!resetMode && <div className="es-auth-mobile-signup">College accounts are issued by authorised administration. Contact the college office for access.</div>}
             <div className="es-auth-secure-note"><ShieldCheck size={15}/> Your account is protected with role-based access.</div>
           </section>
         </div>
-        <footer className="es-auth-main-foot"><span>© {new Date().getFullYear()} EduSphere 360</span><span>Education management, thoughtfully connected.</span></footer>
+        <footer className="es-auth-main-foot"><span>© {new Date().getFullYear()} Government Islamia Degree College Badin</span><span>College portal · Authorised access only</span></footer>
       </main>
     </div>
   )
@@ -680,7 +680,7 @@ function LegalNotice({ kind, onClose }: { kind: 'terms' | 'privacy'; onClose: ()
         <h2 id="es-legal-title">{isTerms ? 'Terms and Conditions' : 'Privacy Notice'}</h2>
         {isTerms ? (
           <div className="es-legal-copy">
-            <p>By creating an account, you agree to use EduSphere 360 only for lawful education and institution-management purposes.</p>
+            <p>By using this portal, you agree to use the college’s digital services only for lawful education and institution-management purposes.</p>
             <ul>
               <li>Public sign-up creates a new institution workspace and makes the registering account its first owner.</li>
               <li>Employees, students and parents of an existing institution receive access from that institution's authorised owner or administrator.</li>
@@ -691,17 +691,17 @@ function LegalNotice({ kind, onClose }: { kind: 'terms' | 'privacy'; onClose: ()
           </div>
         ) : (
           <div className="es-legal-copy">
-            <p>EduSphere 360 uses your email address and authentication data to create and secure your account. Institution records are stored for the workspace you create and are available to its authorised users.</p>
+            <p>The college portal uses your email address and authentication data to create and secure your account. Institution records are stored for the workspace you create and are available to its authorised users.</p>
             <ul>
               <li>Each public sign-up creates a separate institution workspace. Your account is not added to another institution.</li>
               <li>Institution records are available according to the account's role and the institution's access permissions.</li>
-              <li>EduSphere 360 operates online. Institution data is processed by the configured hosting and database providers and is available only with an internet connection.</li>
+              <li>The college portal operates online. Institution data is processed by the configured hosting and database providers and is available only with an internet connection.</li>
               <li>Do not enter sensitive or real student information into a demonstration workspace unless your institution has approved its use.</li>
               <li>Contact your institution owner for requests about records managed inside that institution.</li>
             </ul>
           </div>
         )}
-        <p className="es-legal-footnote">This is the current in-product notice. The institution operating EduSphere 360 should have its final legal terms and privacy notice reviewed and approved before public production use.</p>
+        <p className="es-legal-footnote">This is the current in-product notice. The college administration should review and approve its final privacy notice and portal terms before public production use.</p>
         <button type="button" className="es-auth-submit" onClick={onClose}>Close <ArrowRight size={16}/></button>
       </section>
     </div>
@@ -743,7 +743,7 @@ export function SetupScreen({ navigate }: ScreenProps) {
         setResendError('')
       }
     } catch (err) {
-      setError(userFacingError(err, 'Could not create your EduSphere 360 account. Please review the details and try again.'))
+      setError(userFacingError(err, 'Could not create your college portal account. Please review the details and try again.'))
     } finally {
       setBusy(false)
     }
@@ -776,7 +776,7 @@ export function SetupScreen({ navigate }: ScreenProps) {
             <div className="es-auth-form-heading">
               <span className="es-auth-overline">ONE LAST STEP</span>
               <h2>Check your inbox</h2>
-              <p>We sent a verification link to the email address below. Confirm it to activate your EduSphere 360 Owner account.</p>
+              <p>We sent a verification link to the email address below. Confirm it to activate your college management account.</p>
             </div>
             <div className="es-verification-email"><Mail size={17}/><strong>{verificationEmail}</strong></div>
             <div className="es-verification-explainer">
@@ -863,7 +863,7 @@ export function ResetPasswordScreen({ navigate }: ScreenProps) {
           <div className="es-auth-form-heading">
             <span className="es-auth-overline">SECURE ACCOUNT RECOVERY</span>
             <h2>{completed ? 'Password updated' : 'Choose a new password'}</h2>
-            <p>{completed ? 'Your password has been changed. Sign in again with your new password.' : 'Create a new password for your EduSphere 360 account.'}</p>
+            <p>{completed ? 'Your password has been changed. Sign in again with your new password.' : 'Create a new password for your college portal account.'}</p>
           </div>
           {completed ? <button className="es-auth-submit" type="button" onClick={() => void returnToLogin()}>Return to login <ArrowRight size={17}/></button> : <form className="es-auth-form" onSubmit={submit}>
             <label className="es-auth-field"><span>New password</span><div className="es-auth-input"><LockKeyhole size={17}/><input type={showPassword ? 'text' : 'password'} autoComplete="new-password" minLength={10} required value={password} onChange={e => setPassword(e.target.value)} placeholder="At least 10 characters"/><button type="button" className="es-password-toggle" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Hide password' : 'Show password'}>{showPassword ? <EyeOff size={17}/> : <Eye size={17}/>}</button></div></label>
