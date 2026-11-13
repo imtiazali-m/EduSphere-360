@@ -171,7 +171,7 @@ function WorkspacePreview({feature}:{feature:Feature}) {
   </div>
 }
 
-function FeatureDetail({feature,navigate}:{feature:Feature;navigate:Navigate}) {
+function FeatureDetail({feature}:{feature:Feature}) {
   const status=feature.status==='core'?'CORE PLATFORM AREA':feature.status==='campus'?'CAMPUS SERVICE OVERVIEW':feature.status==='unavailable'?'NOT AVAILABLE IN THIS RELEASE':feature.status==='planned'?'PLANNED EDITION':feature.status==='setup'?'REQUIRES SEPARATE SETUP':'NOT ADVERTISED AS LIVE'
   return <><PageHero kicker={`PLATFORM / ${feature.category.toUpperCase()}`} title={feature.title} description={feature.summary}><ActionLink href="#/public/features" secondary>All features</ActionLink>{feature.status==='core'?<ActionLink href="#/setup">Create an institution</ActionLink>:<ActionLink href="#/public/support">Ask about availability</ActionLink>}</PageHero><section className="ep-detail-section"><div className="ep-detail-copy"><span className={`ep-status ep-status-${feature.status}`}>{status}</span><h2>{feature.title}<br/><em>in the institution workflow.</em></h2><p>{feature.detail}</p><ul className="ep-check-list">{feature.bullets.map(item=><li key={item}><CheckCircle2 size={17}/>{item}</li>)}</ul><div className="ep-detail-note"><ShieldCheck size={17}/><p>Availability and actions depend on the current release, institution configuration and your assigned role. Do not assume a planned or unlisted capability is enabled.</p></div></div><WorkspacePreview feature={feature}/></section><section className="ep-related-section"><div><Eyebrow>KEEP EXPLORING</Eyebrow><h2>Connected work,<br/><em>one institution.</em></h2></div><div className="ep-related-links"><a href="#/public/features">Browse all features <ArrowRight size={16}/></a><a href="#/public/solutions">Explore role workspaces <ArrowRight size={16}/></a><a href="#/public/support">Read the availability FAQs <ArrowRight size={16}/></a></div></section></>
 }
@@ -244,7 +244,7 @@ export function PublicPageScreen({page,navigate}:{page:string;navigate:Navigate}
   const slug=parts[1]
   const selectedFeature=slug?featureCatalog.find(item=>item.slug===slug):undefined
   let content:ReactNode
-  if(pageKey==='features'&&selectedFeature) content=<FeatureDetail feature={selectedFeature} navigate={navigate}/>
+  if(pageKey==='features'&&selectedFeature) content=<FeatureDetail feature={selectedFeature}/>
   else if(pageKey==='features') content=<FeatureCatalogue/>
   else if(pageKey==='solutions') content=<SolutionsPage/>
   else if(pageKey==='analytics') content=<AnalyticsPage/>
