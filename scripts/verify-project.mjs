@@ -362,6 +362,8 @@ check('Campus and finance submenu workspaces use their dedicated records and tra
   const receipts = read('src/components/ReceiptWorkspace.tsx')
   assert.ok(receipts.includes("rpc('issue_fee_receipts_bulk'"), 'Bulk receipt issuance must use the sequence-backed RPC')
   assert.ok(receipts.includes("rpc('issue_fee_receipt'"), 'Individual receipt issuance must use the idempotent RPC')
+  const assets = read('src/components/AssetLifecycleWorkspace.tsx')
+  assert.ok(assets.includes("rpc('record_facility_asset_lifecycle'"), 'Asset assignment, transfer, warranty and disposal must use the tenant-checked lifecycle RPC')
   const payments = read('src/components/PaymentOperationsWorkspace.tsx')
   assert.ok(payments.includes("rpc('record_payment_gateway_review'"), 'Online-payment review must be recorded through the role-checked RPC')
   const migrations = [
@@ -373,6 +375,7 @@ check('Campus and finance submenu workspaces use their dedicated records and tra
     '20261113180000_payment_gateway_review_register.sql',
     '20261113190000_facility_asset_lifecycle.sql',
     '20261113194000_receipt_payment_status_guard.sql',
+    '20261113173000_receipt_rpc_write_privileges.sql',
   ]
   for (const migration of migrations) {
     assert.ok(read(path.join('supabase','migrations',migration)).length>0, 'Missing transaction/schema migration: '+migration)
