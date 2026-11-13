@@ -43,7 +43,7 @@ const classify = (route) => {
     'employees', 'exam_results', 'exams', 'fees', 'finance', 'files', 'governance',
     'academic', 'care', 'peoplehr', 'notifications', 'operations', 'overview', 'payroll', 'reports', 'students',
     'timetable', 'work_tasks', 'personal', 'assistant', 'frontoffice',
-    'data-management', 'custom-reports', 'messaging', 'hostel', 'procurement', 'cafeteria', 'library-reading','receipt-operations',
+    'data-management', 'custom-reports', 'messaging', 'hostel', 'procurement', 'cafeteria', 'library-reading','receipt-operations','payment-operations',
   ])
   if (!known.has(workspace)) return 'Unexpected route family · investigate'
   if (rootRoute && !intentionalRootRoutes.has(route)) return 'Bare module root · confirm the intended default window'
@@ -71,7 +71,7 @@ for (const token of [
   '<FinanceWorkspace ', '<PayrollWorkspace ', '<PeopleHRWorkspace ', '<GovernanceWorkspace ',
   '<InstitutionOperationsWorkspace ', '<LinkedOperationsWorkspace ',
   '<InstitutionalWorkspace ', '<AssessmentWorkspace ', '<AcademicManagementWorkspace ', '<FacultyWorkspace ', '<RecordModule ',
-  '<DataManagementWorkspace ', '<CustomReportsWorkspace ', '<CommunicationWorkspace ', '<HostelWorkspace ', '<ProcurementWorkspace ', '<CafeteriaWorkspace ', '<LibraryReadingWorkspace ', '<ReceiptWorkspace ',
+  '<DataManagementWorkspace ', '<CustomReportsWorkspace ', '<CommunicationWorkspace ', '<HostelWorkspace ', '<ProcurementWorkspace ', '<CafeteriaWorkspace ', '<LibraryReadingWorkspace ', '<ReceiptWorkspace ', '<PaymentOperationsWorkspace ',
 ]) {
   if (!dashboardSource.includes(token)) throw new Error('Dashboard dispatcher no longer contains ' + token)
 }
@@ -90,6 +90,7 @@ const resolveDispatcher = (route) => {
   if (route.startsWith('cafeteria:')) return 'CafeteriaWorkspace'
   if (route.startsWith('library-reading:')) return 'LibraryReadingWorkspace'
   if (route.startsWith('receipt-operations:')) return 'ReceiptWorkspace'
+  if (route.startsWith('payment-operations:')) return 'PaymentOperationsWorkspace'
   if (route.startsWith('personal:')) return 'PersonalWorkspace'
   if (route.startsWith('frontoffice:')) return 'FrontOfficeWorkspace'
   if (route.startsWith('assistant:')) return 'AIAssistantWorkspace'
