@@ -284,6 +284,10 @@ function institutionOperationsRoute(groupKey:string,itemKey:string):string|undef
 }
 
 function dedicatedRoute(groupKey: string, itemKey: string): string | undefined {
+  if(groupKey==='facilities'){
+    const hostelPages=new Set(['hostel-dashboard','hostel-buildings','room-bed-register','resident-allocation','room-transfers','check-in-check-out','hostel-visitor-register','hostel-fees','accommodation-maintenance','occupancy-reports'])
+    if(hostelPages.has(itemKey))return 'hostel:'+itemKey
+  }
   if (groupKey === 'communication' && ['whatsapp-integration','individual-messages','bulk-messages','class-wise-messaging','employee-notifications','message-templates','email-notifications','delivery-history','communication-logs','communication-reports','parent-communication','internal-messages','complaints-helpdesk'].includes(itemKey)) return 'messaging:'+itemKey
   if (groupKey === 'communication') {
     const frontOfficeRoutes:Record<string,string>={
