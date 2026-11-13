@@ -66,8 +66,8 @@ async function inspectViewport({ name, width, height }) {
     await page.locator('.nl-hero h1').waitFor({ state: 'visible' })
     await page.waitForTimeout(350)
 
-    const heading = (await page.locator('.edm-hero h1').innerText()).replace(/\s+/g, ' ').trim()
-    assert.match(heading, /Your institution\./, `${name}: welcome headline is missing`)
+    const heading = (await page.locator('.nl-hero h1').innerText()).replace(/\s+/g, ' ').trim()
+    assert.match(heading, /Bring your whole institution/, `${name}: welcome headline is missing`)
     await assertNoHorizontalOverflow(page, `${name} welcome page`)
 
     await mkdir(artifactDir, { recursive: true })
@@ -82,11 +82,11 @@ async function inspectViewport({ name, width, height }) {
       await menuToggle.waitFor({ state: 'visible' })
       await menuToggle.click()
       await page.locator('.nl-nav.nl-open').waitFor({ state: 'visible' })
-      const featuresLink = page.locator('.edm-nav.is-open a[href="#features"]').first()
+      const featuresLink = page.locator('.nl-nav.nl-open a[href="#features"]').first()
       await featuresLink.click()
       await page.waitForFunction(() => location.hash === '#features')
       await page.goto(`${baseUrl}/#/`, { waitUntil: 'domcontentloaded' })
-      await page.locator('.edm-hero h1').waitFor({ state: 'visible' })
+      await page.locator('.nl-hero h1').waitFor({ state: 'visible' })
       await assertNoHorizontalOverflow(page, `${name} welcome mobile navigation`)
     } else {
       await page.locator('.nl-nav a[href="#features"]').first().waitFor({ state: 'visible' })
