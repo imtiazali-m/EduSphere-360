@@ -214,9 +214,9 @@
 .ep-integration-icon{flex:0 0 auto}
 .ep-principle-grid article,.ep-feature-card,.ep-role-card,.ep-chart-card,.ep-support-grid article{transition:transform .18s ease,box-shadow .18s ease}
 .ep-principle-grid article:hover,.ep-support-grid article:hover{transform:translateY(-3px);box-shadow:0 15px 35px #183d2b10}
-.ep-public-footer .edm-footer-main{max-width:1380px}
-.ep-public-footer .edm-footer-brand .edm-brand{min-width:0}
-.ep-public-footer .edm-footer-col a,.ep-public-footer .edm-footer-col button{cursor:pointer}
+.edm-public-footer .edm-footer-main{max-width:1380px}
+.edm-public-footer .edm-footer-brand .edm-brand{min-width:0}
+.edm-public-footer .edm-footer-col a,.edm-public-footer .edm-footer-col button{cursor:pointer}
 @media(max-width:1120px){
   .edm-public-header{gap:15px}
   .edm-public-header .edm-brand{min-width:180px}
