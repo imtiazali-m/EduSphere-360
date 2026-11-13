@@ -1,6 +1,6 @@
 # Migration history
 
-The fifty-four timestamped migration files in this folder match the remote migration history recorded by the linked Supabase project. Keep each 14-digit timestamp unchanged so local and remote migration histories remain aligned.
+The fifty-seven timestamped migration files in this folder match the remote migration history recorded by the linked Supabase project. Keep each 14-digit timestamp unchanged so local and remote migration histories remain aligned.
 
 The current online application includes the reviewed schema changes for the existing live schema, Faculty & Employee Management, and Student Management operations (admission lifecycle, linked guardian contacts, class placements, private student documents and audit history for attendance, published results, assignment submissions, guardian policy consolidation and activity indexes). The Student Management and Faculty/Employee migrations have already been applied to the linked project; do not replay them manually.
 
@@ -51,3 +51,6 @@ The Stage 5 administration, Stage 6 people/HR, Stage 7 attendance/leave/wellbein
 
 
 The residence operations migration adds institution-scoped hostel buildings, rooms, beds, resident allocations, movement history, visitor records, accommodation fee charges and maintenance requests. Bed allocation, transfer and final check-out are transaction-guarded database functions. Student and guardian visibility follows linked student relationships; staff management and finance access remain role-restricted. Accommodation charges are tracked separately and are not automatically posted to the tuition fee ledger.
+
+
+The latest timestamped migrations add institution-scoped in-app messaging, transport attendance, room reservation approval, hostel/residence management, supplier procurement, purchase orders and goods receiving, plus cafeteria menus, daily availability, meal plans and stock-aware sales. Purchase receiving and cafeteria sales update the inventory movement ledger through database transactions; provider-dependent backups, WhatsApp/email delivery and external payment settlement are not represented as completed by these migrations.
