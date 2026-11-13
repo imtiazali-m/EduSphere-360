@@ -345,6 +345,38 @@ check('Expanded unavailable submenu records have typed fields and visible regist
   }
 })
 
+check('Campus and finance submenu workspaces use their dedicated records and transaction actions', () => {
+  const procurement = read('src/components/ProcurementWorkspace.tsx')
+  assert.ok(procurement.includes("rpc('post_goods_receipt'"), 'Goods receipt must post stock through the procurement RPC')
+  assert.ok(procurement.includes("rpc('approve_purchase_order'"), 'Purchase orders must use the approval transaction')
+  assert.ok(procurement.includes("rpc('review_procurement_request'"), 'Purchase requests must support owner/admin review')
+  const cafeteria = read('src/components/CafeteriaWorkspace.tsx')
+  assert.ok(cafeteria.includes("rpc('record_cafeteria_sale'"), 'Cafeteria sales must use the stock-aware sale transaction')
+  assert.ok(cafeteria.includes('cafeteria_daily_availability'), 'Cafeteria must use daily availability records')
+  const hostel = read('src/components/HostelWorkspace.tsx')
+  assert.ok(hostel.includes("rpc('allocate_hostel_bed'"), 'Hostel allocation must use the bed-availability transaction')
+  assert.ok(hostel.includes("rpc('transfer_hostel_resident'"), 'Hostel transfers must update bed assignments transactionally')
+  const library = read('src/components/LibraryReadingWorkspace.tsx')
+  assert.ok(library.includes('library_reading_records'), 'Library reading records must use the dedicated reading table')
+  assert.ok(library.includes('library_loans'), 'Reader history and cards must use actual circulation records')
+  const receipts = read('src/components/ReceiptWorkspace.tsx')
+  assert.ok(receipts.includes("rpc('issue_fee_receipts_bulk'"), 'Bulk receipt issuance must use the sequence-backed RPC')
+  assert.ok(receipts.includes("rpc('issue_fee_receipt'"), 'Individual receipt issuance must use the idempotent RPC')
+  const payments = read('src/components/PaymentOperationsWorkspace.tsx')
+  assert.ok(payments.includes("rpc('record_payment_gateway_review'"), 'Online-payment review must be recorded through the role-checked RPC')
+  const migrations = [
+    '20261113140000_hostel_residence_operations.sql',
+    '20261113150000_procurement_purchase_order_and_receiving.sql',
+    '20261113152000_cafeteria_menu_availability_sales.sql',
+    '20261113160000_library_reading_history.sql',
+    '20261113170000_fee_receipt_issuance_and_numbering.sql',
+    '20261113180000_payment_gateway_review_register.sql',
+  ]
+  for (const migration of migrations) {
+    assert.ok(exists(path.join(root,'supabase','migrations',migration)), 'Missing transaction/schema migration: '+migration)
+  }
+})
+
 check('Non-admin workspace projections remove all internal review metadata recursively', () => {
   const privacy = read('src/lib/workspacePrivacy.js')
   const tests = read('scripts/test-workspace-privacy.mjs')
