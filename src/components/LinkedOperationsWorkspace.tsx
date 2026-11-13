@@ -199,7 +199,7 @@ export function LinkedOperationsWorkspace({workspaceKey,onToast,onNavigate}:Prop
    }
   }catch(error){setLoadError(error instanceof Error?error.message:'The operation records could not be loaded.');}
   finally{setLoading(false)}
- },[user?.id,user?.institutionId,isCampus,isLibrary,isReading,isInventory,isTransport,canLibrary])
+ },[user?.id,user?.institutionId,isCampus,isLibrary,isReading,isInventory,isTransport,isTransportAttendance,canLibrary])
 
  useEffect(()=>{void load()},[load])
  const loanCounts=useMemo(()=>({
