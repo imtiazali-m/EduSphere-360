@@ -346,6 +346,10 @@ check('Expanded unavailable submenu records have typed fields and visible regist
 })
 
 check('Campus and finance submenu workspaces use their dedicated records and transaction actions', () => {
+  const certificateForms=read('src/components/CertificateFormsWorkspace.tsx')
+  assert.ok(certificateForms.includes("rpc('review_institution_form_submission'"), 'Certificate form submissions must use the owner/admin review RPC')
+  assert.ok(certificateForms.includes('field_schema'), 'Form builder must store validated dynamic field schema')
+
   const linked = read('src/components/LinkedOperationsWorkspace.tsx')
   for (const token of [
     'issue_library_book', 'return_library_book', 'record_inventory_movement',
