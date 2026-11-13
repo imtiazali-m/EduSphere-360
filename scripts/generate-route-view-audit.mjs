@@ -261,6 +261,7 @@ function checkView(role, route, dispatcher) {
     }
     if (!getWorkspaceGroup(group) || !getWorkspaceItem(group, item)) return { component: dispatcher, view: key, status: 'Unknown institutional item' }
     if (dispatcher === 'LinkedOperationsWorkspace' && !linkedKeys.has(key)) return { component: dispatcher, view: key, status: 'Missing linked-workspace dispatch key' }
+    if (dispatcher === 'LinkedOperationsWorkspace' && linkedKeys.has(key)) return { component: dispatcher, view: key, status: 'Supported' }
     return { component: dispatcher, view: key, status: 'Supported destination; lifecycle pending' }
   }
   if (targetKey.startsWith('admin:')) {
