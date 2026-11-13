@@ -53,7 +53,7 @@ export function ReceiptWorkspace({workspaceKey,onToast}:{workspaceKey:string;onT
  }
  useEffect(()=>{void load()},[user?.id,user?.institutionId,user?.role])
  const receiptsByPayment=new Map(receipts.map(r=>[r.payment_id,r]))
- const eligiblePayments=payments.filter(p=>!receiptsByPayment.has(p.id)&&!['void','cancelled','failed'].includes(String(p.status??'').toLowerCase()))
+ const eligiblePayments=payments.filter(p=>!receiptsByPayment.has(p.id)&&!['void','cancelled','failed','pending','initiated','processing','awaiting'].includes(String(p.status??p.payment_status??'').toLowerCase()))
  const visibleReceipts=receipts.filter(r=>[r.receipt_number,r.payment_snapshot?.student_name,r.payment_snapshot?.invoice_number,r.payment_snapshot?.transaction_reference].join(' ').toLowerCase().includes(search.toLowerCase()))
  const visiblePayments=eligiblePayments.filter(p=>!search||[p.student_name,p.invoice_number,p.receipt_number,p.transaction_reference,p.payment_method,p.status].join(' ').toLowerCase().includes(search.toLowerCase()))
  async function saveTemplate(event:FormEvent){
@@ -112,7 +112,8 @@ export function ReceiptWorkspace({workspaceKey,onToast}:{workspaceKey:string;onT
   add('p','Student: '+info.student);add('p','Admission ID: '+info.studentId)
   add('p','Invoice: '+info.invoice);add('p','Payment date: '+info.paymentDate)
   add('p','Payment method: '+info.method);add('p','Reference: '+info.reference)
-  add('h2','Amount received: '+money(info.amount))
+  add('h2','Amount received: '+money(info.amount));add('p',info.templateFooter)
+  if(info.showSignature){add('p','');add('p','____________________________');add('p','Authorised signatory')}
   container.appendChild(card);window.print()
  }
  function verifyReceipt(event:FormEvent){
