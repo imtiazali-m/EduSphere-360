@@ -284,6 +284,7 @@ function institutionOperationsRoute(groupKey:string,itemKey:string):string|undef
 }
 
 function dedicatedRoute(groupKey: string, itemKey: string): string | undefined {
+  if(groupKey==='library' && ['reading-records','reading-cards','student-reading-history'].includes(itemKey))return 'library-reading:'+itemKey
   if(groupKey==='inventory'){
     const procurementPages=new Set(['suppliers','supplier-directory','purchase-records','purchase-requests','quotation-comparison','purchase-approvals','purchase-orders','goods-receipt','supplier-invoices','procurement-reports'])
     const cafeteriaPages=new Set(['cafeteria-dashboard','menu-price-list','daily-availability','sales-transactions','meal-plans','cafeteria-inventory','cafeteria-reports'])
