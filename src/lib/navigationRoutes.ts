@@ -326,7 +326,7 @@ function dedicatedRoute(groupKey: string, itemKey: string): string | undefined {
     if(['id-card-designer','certificate-templates','editable-document-templates'].includes(itemKey))return 'operations:certificates:templates'
     if(itemKey==='bulk-certificate-generation')return 'operations:certificates:bulk'
     if(itemKey==='document-records')return 'files'
-    if(['form-builder','form-submissions','letters-applications'].includes(itemKey))return undefined
+    if(['form-builder','form-submissions','letters-applications'].includes(itemKey))return 'certificate-forms:'+itemKey
   }
   if (groupKey === 'facilities' && itemKey === 'asset-register') return 'operations:facilities:assets'
   if (groupKey === 'facilities' && itemKey === 'room-reservations') return 'operations:facilities:reservations'
