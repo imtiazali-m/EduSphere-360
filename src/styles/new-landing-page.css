@@ -615,3 +615,35 @@
   .nl-nav a { padding: 13px 12px; border-radius: 7px; color: var(--es-muted); }
   .nl-nav a:hover { background: var(--es-primary-050); color: var(--es-primary-700); }
 }
+
+
+.nl-availability-section, .nl-resources-section { width: min(1160px, calc(100% - 64px)); margin: 0 auto; padding: 98px 0 108px; border-top: 1px solid var(--nl-line); }
+.nl-availability-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 10px; margin-top: 42px; }
+.nl-availability-card { min-width: 0; min-height: 220px; display: flex; flex-direction: column; padding: 18px 16px; border: 1px solid var(--es-line); border-radius: 12px; background: #fff; box-shadow: var(--es-shadow-sm); }
+.nl-availability-current { border-color: #c8d8f0; background: linear-gradient(145deg,#fff,#f7faff); }
+.nl-availability-planned { background: #f8fafd; }
+.nl-availability-status { display: inline-flex; align-items: center; gap: 6px; color: var(--es-primary-700); font-size: 6px; font-weight: 850; letter-spacing: .09em; }
+.nl-availability-status i { width: 6px; height: 6px; border-radius: 50%; background: var(--es-success); }
+.nl-availability-card h3 { margin: 19px 0 8px; color: var(--es-brand-900); font: 800 14px/1.35 Inter,sans-serif; letter-spacing: -.035em; }
+.nl-availability-card p { margin: 0 0 14px; color: var(--es-muted); font-size: 8px; line-height: 1.7; }
+.nl-availability-card a { display: inline-flex; align-items: center; gap: 6px; margin-top: auto; padding-top: 12px; border-top: 1px solid var(--es-line-soft); color: var(--es-primary-700); font-size: 8px; font-weight: 850; }
+.nl-availability-footer, .nl-resources-footer { display: flex; justify-content: space-between; align-items: center; gap: 15px; margin-top: 13px; padding: 15px 18px; border-radius: 10px; color: var(--es-muted); background: var(--es-primary-050); font-size: 9px; }
+.nl-availability-footer a, .nl-resources-footer a { display: inline-flex; align-items: center; gap: 7px; color: var(--es-primary-700); font-weight: 850; }
+.nl-resources-section { padding-top: 85px; }
+.nl-resources-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 10px; margin-top: 40px; }
+.nl-resources-grid > a { min-height: 210px; display: flex; flex-direction: column; align-items: flex-start; padding: 18px; border: 1px solid var(--es-line); border-radius: 12px; background: #fff; box-shadow: var(--es-shadow-sm); transition: transform .2s,border-color .2s,box-shadow .2s; }
+.nl-resources-grid > a:hover { transform: translateY(-3px); border-color: #bfd1ed; box-shadow: var(--es-shadow-md); }
+.nl-resources-grid > a > span { width: 37px; height: 37px; display: grid; place-items: center; border-radius: 10px; color: var(--es-primary-700); background: var(--es-primary-100); }
+.nl-resources-grid > a > small { margin-top: 15px; color: var(--es-muted); font-size: 6px; font-weight: 850; letter-spacing: .1em; }
+.nl-resources-grid h3 { margin: 7px 0 6px; color: var(--es-brand-900); font: 800 13px Inter,sans-serif; }
+.nl-resources-grid p { margin: 0 0 14px; color: var(--es-muted); font-size: 8px; line-height: 1.65; }
+.nl-resources-grid b { display: inline-flex; align-items: center; gap: 6px; margin-top: auto; color: var(--es-primary-700); font-size: 8px; }
+@media (max-width: 900px) {
+  .nl-availability-grid, .nl-resources-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
+@media (max-width: 620px) {
+  .nl-availability-section, .nl-resources-section { width: calc(100% - 34px); padding: 75px 0 78px; }
+  .nl-availability-grid, .nl-resources-grid { grid-template-columns: 1fr; gap: 7px; margin-top: 26px; }
+  .nl-availability-card, .nl-resources-grid > a { min-height: 175px; padding: 15px; }
+  .nl-availability-footer, .nl-resources-footer { align-items: flex-start; flex-direction: column; gap: 8px; padding: 13px; font-size: 8px; }
+}
