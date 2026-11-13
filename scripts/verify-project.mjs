@@ -420,6 +420,20 @@ check('College portal directs new users to approved account provisioning, not pu
   }
   assert.ok(authScreens.includes('requestPasswordReset'), 'College users must retain self-service password recovery')
 })
+check('College transport attendance uses the active-allocation event register', () => {
+  const workspace = read('src/components/LinkedOperationsWorkspace.tsx')
+  const dashboard = read('src/components/Dashboard.tsx')
+  const routes = read('src/lib/navigationRoutes.ts')
+  const catalogue = read('src/lib/institutionalCatalog.ts')
+  assert.ok(workspace.includes("db.from('transport_attendance_events')"), 'Transport attendance must read its event register')
+  assert.ok(workspace.includes("supabase.from('transport_attendance_events').insert"), 'Authorised transport staff must be able to record events')
+  assert.ok(workspace.includes("row.status==='active'"), 'Transport events must be linked to active allocations')
+  assert.ok(workspace.includes("'boarded'|'alighted'|'absent'"), 'The supported transport event types must be explicit')
+  assert.ok(routes.includes("return 'institutional:transport:transport-attendance'"), 'Transport attendance must route to the live workspace')
+  assert.ok(dashboard.includes("'transport:transport-attendance'"), 'The college dashboard must dispatch transport attendance')
+  assert.ok(catalogue.includes("management.concat(['teacher'])"), 'Transport event screens must not be presented to student and parent roles')
+})
+
 check('College library reading records use the existing role-scoped data workflow', () => {
   const workspace = read('src/components/LinkedOperationsWorkspace.tsx')
   const dashboard = read('src/components/Dashboard.tsx')
