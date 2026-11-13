@@ -49,7 +49,7 @@ const palette:Record<string,{accent:string;soft:string;ink:string}>={
 }
 
 export function LinkedOperationsWorkspace({workspaceKey,onToast,onNavigate}:Props){
- const {user}=useAuth()
+ const {user,mode}=useAuth()
  const [groupKey,itemKey]=workspaceKey.split(':')
  const group=getWorkspaceGroup(groupKey)
  const [loading,setLoading]=useState(true)
@@ -119,13 +119,34 @@ export function LinkedOperationsWorkspace({workspaceKey,onToast,onNavigate}:Prop
  const [transportFee,setTransportFee]=useState('')
  const [allocationNotes,setAllocationNotes]=useState('')
  const [showAllocationForm,setShowAllocationForm]=useState(false)
+ const [libraryCategories,setLibraryCategories]=useState<RouteRecord[]>([])
+ const [libraryResources,setLibraryResources]=useState<RouteRecord[]>([])
+ const [inventoryCategories,setInventoryCategories]=useState<RouteRecord[]>([])
+ const [drivers,setDrivers]=useState<RouteRecord[]>([])
+ const [vehicleMaintenance,setVehicleMaintenance]=useState<RouteRecord[]>([])
+ const [transportFeeCharges,setTransportFeeCharges]=useState<FeeCharge[]>([])
+ const [transportFeePayments,setTransportFeePayments]=useState<FeePayment[]>([])
+ const [showManagedRecordForm,setShowManagedRecordForm]=useState(false)
+ const [managedDraft,setManagedDraft]=useState<Record<string,string>>({title:'',code:'',description:'',category:'',quantity:'1',sku:'',unit:'unit',unit_cost:'0',reorder_level:'0',author:'',publisher:'',isbn:'',shelf_location:'',resource_url:'',audience:'all',route_id:'',route_code:'',stop_order:'1',arrival_time:'',departure_time:'',registration_number:'',vehicle_type:'bus',capacity:'20',phone:'',license_number:'',license_expiry:'',vehicle_id:'',maintenance_type:'service',maintenance_date:today(),maintenance_cost:'0'})
+ const [feeAllocationId,setFeeAllocationId]=useState('')
+ const [feeBillingPeriod,setFeeBillingPeriod]=useState(new Date().toISOString().slice(0,7))
+ const [feeDueDate,setFeeDueDate]=useState(today())
+ const [feeChargeId,setFeeChargeId]=useState('')
+ const [feePaymentAmount,setFeePaymentAmount]=useState('')
+ const [feePaymentMethod,setFeePaymentMethod]=useState('cash')
+ const [feePaymentReference,setFeePaymentReference]=useState('')
 
  const isCampus=groupKey==='administration'&&itemKey==='campus-and-branch-management'
- const isLibrary=groupKey==='library'&&['book-issue-and-returns','library-reports'].includes(itemKey)
+ const isLibrary=groupKey==='library'&&['library-dashboard','book-management','book-catalogue','book-categories','book-registration','book-issue-and-returns','digital-library','learning-materials','resource-downloads','library-reports'].includes(itemKey)
+ const isLibraryCatalog=['library-dashboard','book-management','book-catalogue','book-categories','book-registration','digital-library','learning-materials','resource-downloads'].includes(itemKey)
+ const isLibraryResources=['digital-library','learning-materials','resource-downloads'].includes(itemKey)
  const isLibraryReport=groupKey==='library'&&itemKey==='library-reports'
- const isInventory=groupKey==='inventory'&&['stock-in','stock-out','stock-allocation','stock-adjustments','inventory-history','stock-reports'].includes(itemKey)
- const isTransport=groupKey==='transport'&&['student-transport-allocation','transport-reports','transport-attendance'].includes(itemKey)
- const isTransportReport=groupKey==='transport'&&itemKey==='transport-reports'
+ const isInventory=groupKey==='inventory'&&['inventory-dashboard','items-management','item-catalogue','item-categories','stock-in','stock-out','stock-allocation','stock-adjustments','inventory-history','stock-reports'].includes(itemKey)
+ const isInventoryCatalog=['inventory-dashboard','items-management','item-catalogue','item-categories'].includes(itemKey)
+ const isTransport=groupKey==='transport'&&['transport-dashboard','vehicle-management','drivers-management','transport-routes','route-stops','student-transport-allocation','transport-fees','transport-assignments','vehicle-maintenance','transport-attendance','transport-history','transport-reports'].includes(itemKey)
+ const isTransportReport=groupKey==='transport'&&['transport-dashboard','transport-history','transport-reports'].includes(itemKey)
+ const isTransportRegistry=['vehicle-management','drivers-management','transport-routes','route-stops','vehicle-maintenance'].includes(itemKey)
+ const isTransportFees=groupKey==='transport'&&itemKey==='transport-fees'
  const isTransportAttendance=groupKey==='transport'&&itemKey==='transport-attendance'
  const canRecordTransportAttendance=Boolean(user&&['owner','admin','teacher'].includes(user.role))
  const canAdmin=Boolean(user&&['owner','admin'].includes(user.role))
