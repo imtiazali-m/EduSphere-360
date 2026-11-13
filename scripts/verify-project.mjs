@@ -75,6 +75,20 @@ const { institutionalMenu } = require(path.join(root, 'src/lib/institutionalCata
 const { modules, modulesForRole } = require(path.join(root, 'src/lib/modules.ts'))
 const roles = ['owner', 'admin', 'teacher', 'student', 'parent', 'accountant', 'exam_officer']
 
+check('Every administrator submenu opens a real workspace instead of a dead-end screen', () => {
+  const adminGroups = roleNavigationGroups('admin')
+  const destinations = adminGroups.flatMap(group => group.items.map(label => ({
+    group: group.key,
+    label,
+    route: getNavigationRoute(group.key, label, 'admin'),
+  })))
+  assert.equal(destinations.length, 317, 'Administrator navigation should expose the verified 317 destinations')
+  const deadEnds = destinations.filter(item => item.route.startsWith('unavailable:'))
+  assert.deepEqual(deadEnds, [], 'Every visible administrator submenu must open a dedicated or typed record workspace')
+  const typedWorkspaces = destinations.filter(item => item.route.startsWith('institutional:'))
+  assert.ok(typedWorkspaces.length >= 90, 'Expanded submenu pages must resolve to their typed institution record windows')
+})
+
 check('The full institutional menu maps every submenu to a working destination', () => {
   assert.equal(navigationCatalog.length, 25, 'The visible sidebar contains 27 main workspaces after Administration and Academic Management consolidation')
   const groupKeys = new Set(navigationCatalog.map(group => group.key))
@@ -156,21 +170,21 @@ check('The full institutional menu maps every submenu to a working destination',
   assert.equal(getNavigationRoute('employees', 'Employee Performance'), 'unavailable:employees:employee-performance', 'HR headcount must not be presented as a performance appraisal')
   assert.equal(getNavigationRoute('attendance', 'Leave Applications'), 'employees:leave', 'Leave applications must open the HR leave workflow')
   assert.equal(getNavigationRoute('attendance', 'Attendance Analytics'), 'reports:attendance', 'Attendance analytics must open the live attendance report')
-  assert.equal(getNavigationRoute('attendance', 'Attendance Alerts'), 'unavailable:attendance:attendance-alerts', 'Attendance alerts require a configured rules/notification workflow')
-  assert.equal(getNavigationRoute('timetable', 'Substitution Management'), 'unavailable:timetable:substitution-management', 'Teacher substitution must not be represented as unassigned timetable entries')
-  assert.equal(getNavigationRoute('timetable', 'Timetable Publishing'), 'unavailable:timetable:timetable-publishing', 'Timetable publication controls are not implemented yet')
+  assert.equal(getNavigationRoute('attendance', 'Attendance Alerts'), 'institutional:attendance:attendance-alerts', 'Attendance alerts open their own rules and notification register')
+  assert.equal(getNavigationRoute('timetable', 'Substitution Management'), 'institutional:timetable:substitution-management', 'Teacher substitution opens its own allocation and approval register')
+  assert.equal(getNavigationRoute('timetable', 'Timetable Publishing'), 'institutional:timetable:timetable-publishing', 'Timetable publication opens a dedicated publication-control register')
   assert.equal(getNavigationRoute('class-tests', 'Online Tests'), 'unavailable:class-tests:online-tests', 'Online test delivery must not be represented as ordinary examination records')
   assert.equal(getNavigationRoute('examinations', 'Automatic Checking'), 'unavailable:examinations:automatic-checking', 'Automated marking is not configured')
-  assert.equal(getNavigationRoute('reports', 'Custom Report Builder'), 'unavailable:reports:custom-report-builder', 'Custom report builder must not open fixed report cards')
-  assert.equal(getNavigationRoute('reports', 'Scheduled Reports'), 'unavailable:reports:scheduled-reports', 'Scheduled report execution is not implemented')
-  assert.equal(getNavigationRoute('library', 'Student Reading History'), 'unavailable:library:student-reading-history', 'Reading progress history is distinct from the library loan ledger')
-  assert.equal(getNavigationRoute('transport', 'Transport Attendance'), 'unavailable:transport:transport-attendance', 'Transport boarding attendance requires its own route attendance register')
-  assert.equal(getNavigationRoute('receipts', 'Receipt Templates'), 'unavailable:receipts:receipt-templates', 'Receipt template management must not be confused with receipt printing')
+  assert.equal(getNavigationRoute('reports', 'Custom Report Builder'), 'institutional:reports:custom-report-builder', 'Custom report builder opens a saved report-definition workspace')
+  assert.equal(getNavigationRoute('reports', 'Scheduled Reports'), 'institutional:reports:scheduled-reports', 'Scheduled reports open their own schedule and recipient register')
+  assert.equal(getNavigationRoute('library', 'Student Reading History'), 'institutional:library:student-reading-history', 'Reading progress opens its own student reading-history workspace')
+  assert.equal(getNavigationRoute('transport', 'Transport Attendance'), 'institutional:transport:transport-attendance', 'Transport boarding attendance opens its own route attendance register')
+  assert.equal(getNavigationRoute('receipts', 'Receipt Templates'), 'institutional:receipts:receipt-templates', 'Receipt template management opens a dedicated template workspace')
   assert.equal(getNavigationRoute('students', 'Student ID Cards'), 'students:id-cards', 'Student ID Cards must open the print workspace')
   assert.equal(getNavigationRoute('employees', 'Employee ID Cards'), 'employees:id-cards', 'Employee ID Cards must open the staff print workspace')
   assert.equal(getNavigationRoute('ai', 'AI Assistant'), 'assistant:chat', 'AI Assistant must open its dedicated shell while keeping sending disabled until a provider is configured')
-  assert.equal(getNavigationRoute('backup', 'Create Backup'), 'unavailable:backup:create-backup', 'Backup menu must not claim to create a backup without a platform backup service')
-  assert.equal(getNavigationRoute('communication', 'WhatsApp Integration'), 'unavailable:communication:whatsapp-integration', 'External messaging must remain unconnected until credentials and delivery tests exist')
+  assert.equal(getNavigationRoute('backup', 'Create Backup'), 'institutional:backup:create-backup', 'Backup requests open a dedicated scope and job-tracking workspace')
+  assert.equal(getNavigationRoute('communication', 'WhatsApp Integration'), 'institutional:communication:whatsapp-integration', 'WhatsApp integration opens a provider configuration and test-status workspace without claiming delivery')
   assert.equal(getNavigationRoute('communication', 'Notification Centre'), 'notifications', 'In-app notifications remain a supported communication workflow')
   assert.equal(getNavigationRoute('people-hr', 'Teachers'), 'employees:directory-teaching', 'Teachers must open the teaching directory window')
   assert.equal(getNavigationRoute('people-hr', 'Faculty & Staff'), 'employees:directory-staff', 'Faculty & Staff must open the staff directory window')
