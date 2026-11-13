@@ -9,16 +9,16 @@ import type { RecordRow } from '../lib/types'
 import '../styles/institution-operations.css'
 
 type Domain = 'question-bank'|'curriculum'|'behaviour'|'certificates'|'visitors'|'facilities'
-type View = 'pool'|'papers'|'units'|'coverage'|'register'|'positive'|'follow-up'|'issue'|'verify'|'log'|'checked-in'|'history'|'assets'|'maintenance'
+type View = 'pool'|'papers'|'units'|'coverage'|'register'|'positive'|'follow-up'|'skills'|'activities'|'competencies'|'analytics'|'reports'|'issue'|'verify'|'templates'|'bulk'|'log'|'checked-in'|'approvals'|'notifications'|'history'|'assets'|'maintenance'|'reservations'
 type Row = RecordRow & { id:string; [key:string]:unknown }
 type Props = { workspaceKey:string; initialWindow?:string; onToast:(message:string,error?:boolean)=>void }
 type Draft = Record<string,string>
 
 const viewLabels:Record<View,string>={
   pool:'Question bank',papers:'Question papers',units:'Curriculum units',coverage:'Curriculum coverage',
-  register:'Behaviour register',positive:'Positive recognition', 'follow-up':'Follow-up cases',
-  issue:'Issue certificate',verify:'Certificate register',log:'Visitor log','checked-in':'Currently on site',
-  history:'Visit history',assets:'Asset register',maintenance:'Maintenance queue',
+  register:'Behaviour register',positive:'Positive recognition', 'follow-up':'Follow-up cases',skills:'Student skills',activities:'Co-curricular activities',competencies:'Competency tracking',analytics:'Behaviour analytics',reports:'Behaviour reports',
+  issue:'Issue certificate',verify:'Certificate register',templates:'Certificate and ID-card templates',bulk:'Bulk certificate generation',log:'Visitor log','checked-in':'Currently on site',approvals:'Visitor approvals',notifications:'Visitor notifications',
+  history:'Visit and certificate history',assets:'Asset register',maintenance:'Maintenance queue',reservations:'Room reservations',
 }
 const toLabel=(value:unknown)=>String(value??'').replaceAll('_',' ').replace(/\b\w/g,c=>c.toUpperCase())
 const day=()=>new Date().toLocaleDateString('en-CA')
@@ -39,18 +39,18 @@ const domainTitles:Record<Domain,string>={
 const domainDescriptions:Record<Domain,string>={
   'question-bank':'Build institution-owned question pools, assemble paper drafts and control review and approval.',
   curriculum:'Plan subject and class units, record outcomes and publish the learning map for linked students and families.',
-  behaviour:'Maintain confidential staff records, celebrate positive conduct and schedule follow-up with controlled family visibility.',
-  certificates:'Issue institution-numbered learner certificates, retain status history and verify recorded certificate codes.',
-  visitors:'Register expected visitors, control check-in and check-out, and retain the visit register.',
-  facilities:'Track institution assets and handle room or equipment maintenance requests from report to resolution.',
+  behaviour:'Maintain confidential behaviour, skills, co-curricular recognition, competency and follow-up records with controlled family visibility.',
+  certificates:'Create and issue learner certificates, manage reusable document templates, generate batches and verify certificate codes.',
+  visitors:'Register visitors, approve access, record check-in/out, notify hosts and review visitor activity.',
+  facilities:'Reserve real rooms, track assets, manage maintenance requests and review facility availability and usage.',
 }
 const views:Record<Domain,View[]>={
   'question-bank':['pool','papers'],
   curriculum:['units','coverage'],
-  behaviour:['register','positive','follow-up'],
-  certificates:['verify','issue'],
-  visitors:['log','checked-in','history'],
-  facilities:['assets','maintenance','history'],
+  behaviour:['register','positive','follow-up','skills','activities','competencies','history','analytics','reports'],
+  certificates:['verify','issue','templates','bulk','history'],
+  visitors:['log','checked-in','approvals','notifications','history','reports'],
+  facilities:['assets','maintenance','history','reservations','reports'],
 }
 const initialViews:Record<Domain,string>={'question-bank':'pool',curriculum:'units',behaviour:'register',certificates:'verify',visitors:'log',facilities:'assets'}
 
@@ -128,16 +128,17 @@ export function InstitutionOperationsWorkspace({workspaceKey,initialWindow,onToa
         const [rows,studentRows]=await Promise.all([fetchRows('student_behaviour_events'),listRecords(mode,user!,'students') as Promise<Row[]>])
         setBehaviour(rows);setStudents(studentRows)
       }else if(selectedDomain==='certificates'){
-        const [rows,studentRows]=await Promise.all([fetchRows('student_certificates'),listRecords(mode,user!,'students') as Promise<Row[]>])
-        setCertificates(rows);setStudents(studentRows)
+        const [rows,studentRows,recordRows]=await Promise.all([fetchRows('student_certificates'),listRecords(mode,user!,'students') as Promise<Row[]>,listRecords(mode,user!,'institutional_records') as Promise<Row[]>])
+        setCertificates(rows);setStudents(studentRows);setCertificateTemplates(recordRows.filter(row=>row.module_key==='certificates'&&row.record_type==='certificate-template'))
       }else if(selectedDomain==='visitors'){
         const [rows,employeeRows]=await Promise.all([fetchRows('visitor_entries'),listRecords(mode,user!,'teachers') as Promise<Row[]>])
         setVisitors(rows);setTeachers(employeeRows)
       }else if(selectedDomain==='facilities'){
-        const [assetRows,requestRows,roomRows,employeeRows]=await Promise.all([
+        const [assetRows,requestRows,roomRows,employeeRows,bookableRooms,reservationRows]=await Promise.all([
           fetchRows('facility_assets'),fetchRows('facility_maintenance_requests'),fetchRows('institution_rooms'),listRecords(mode,user!,'teachers') as Promise<Row[]>,
+          fetchRows('rooms'),fetchRows('facility_room_reservations'),
         ])
-        setAssets(assetRows);setMaintenance(requestRows);setRooms(roomRows);setTeachers(employeeRows)
+        setAssets(assetRows);setMaintenance(requestRows);setRooms(roomRows);setTeachers(employeeRows);setReservationRooms(bookableRooms.filter(row=>row.is_active));setRoomReservations(reservationRows)
       }
     }catch(err){
       const message=userFacingError(err,'This institutional workspace could not load its records.')
