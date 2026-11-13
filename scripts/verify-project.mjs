@@ -354,6 +354,7 @@ check('Campus and finance submenu workspaces use their dedicated records and tra
   assert.ok(cafeteria.includes("rpc('record_cafeteria_sale'"), 'Cafeteria sales must use the stock-aware sale transaction')
   assert.ok(cafeteria.includes('cafeteria_daily_availability'), 'Cafeteria must use daily availability records')
   const hostel = read('src/components/HostelWorkspace.tsx')
+  assert.ok(hostel.includes("rpc('record_hostel_fee_payment'"), 'Hostel fee payments must update the charge balance through a guarded ledger RPC')
   assert.ok(hostel.includes("rpc('allocate_hostel_bed'"), 'Hostel allocation must use the bed-availability transaction')
   assert.ok(hostel.includes("rpc('transfer_hostel_resident'"), 'Hostel transfers must update bed assignments transactionally')
   const library = read('src/components/LibraryReadingWorkspace.tsx')
@@ -382,6 +383,7 @@ check('Campus and finance submenu workspaces use their dedicated records and tra
     '20261113190000_facility_asset_lifecycle.sql',
     '20261113194000_receipt_payment_status_guard.sql',
     '20261113220000_institution_helpdesk_ticket_lifecycle.sql',
+    '20261113230000_hostel_fee_payment_ledger.sql',
     '20261113210000_scheduled_report_execution_history.sql',
     '20261113200000_cafeteria_business_timezone.sql',
     '20261113173000_receipt_rpc_write_privileges.sql',
@@ -1096,8 +1098,8 @@ check('Required database safeguards and Cloudflare redirects remain in the proje
     assert.ok(migrations.includes(migration), `${migration} missing`)
   }
   const timestamped = migrations.filter(name => /^202611\d{8}_.+\.sql$/.test(name))
-  assert.equal(timestamped.length, 66, 'Expected sixty-six timestamped migrations including report execution and Helpdesk workflows')
-  assert.ok(read('supabase/migrations/README.md').includes('sixty-six timestamped migration files'))
+  assert.equal(timestamped.length, 67, 'Expected sixty-seven timestamped migrations including hostel fee payment history')
+  assert.ok(read('supabase/migrations/README.md').includes('sixty-seven timestamped migration files'))
   assert.equal(read('public/_redirects').trim(), '/* /index.html 200')
   const envExample = read('.env.example')
   const gitignore = read('.gitignore')
