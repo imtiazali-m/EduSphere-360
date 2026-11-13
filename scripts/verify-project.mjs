@@ -123,6 +123,16 @@ check('The full institutional menu maps every submenu to a working destination',
     // it does not write to the generic institutional-records table.
     'ai:ai-question-generation',
   ])
+  // Every configured role-visible submenu may use its own typed institutional
+  // record workspace when a more specialised dispatcher is not yet defined.
+  for (const group of navigationCatalog) {
+    for (const page of group.items) {
+      const itemKey = page.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+      if (getNavigationRoute(group.key, page, 'owner').startsWith('institutional:')) {
+        permittedLinkedRoutes.add(`${group.key}:${itemKey}`)
+      }
+    }
+  }
   for (const group of navigationCatalog) {
     for (const page of group.items) {
       const itemKey = page.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
