@@ -68,7 +68,47 @@ async function inspectViewport({ name, width, height }) {
 
     const heading = (await page.locator('.nl-hero h1').innerText()).replace(/\s+/g, ' ').trim()
     assert.match(heading, /Bring your whole institution/, `${name}: welcome headline is missing`)
+
+    const landingTheme = await page.locator('.nl-page').evaluate(element => {
+      const pageStyle = getComputedStyle(element)
+      const actionStyle = getComputedStyle(element.querySelector('.nl-header-cta'))
+      const rootStyle = getComputedStyle(document.documentElement)
+      const toRgb = (value) => {
+        const hex = value.trim().replace(/^#/, '')
+        const expanded = hex.length === 3 ? [...hex].map(part => part + part).join('') : hex
+        if (!/^[0-9a-f]{6}$/i.test(expanded)) return value.trim()
+        const number = Number.parseInt(expanded, 16)
+        return `rgb(${(number >> 16) & 255}, ${(number >> 8) & 255}, ${number & 255})`
+      }
+      return {
+        font: pageStyle.fontFamily,
+        displayFont: rootStyle.getPropertyValue('--es-font-display').trim(),
+        canvas: pageStyle.backgroundColor,
+        appCanvas: toRgb(rootStyle.getPropertyValue('--es-canvas')),
+        primary: actionStyle.backgroundColor,
+        appPrimary: toRgb(rootStyle.getPropertyValue('--es-primary-600')),
+      }
+    })
+    assert.match(landingTheme.font, /DM Sans/i, `${name}: landing body typography differs from the internal design system`)
+    assert.match(landingTheme.displayFont, /Manrope/i, `${name}: shared display typography token is missing`)
+    assert.equal(landingTheme.canvas, landingTheme.appCanvas, `${name}: landing canvas must match the final internal app token`)
+    assert.equal(landingTheme.primary, landingTheme.appPrimary, `${name}: landing primary action must match the final internal app token`)
     await assertNoHorizontalOverflow(page, `${name} welcome page`)
+
+    await page.locator('#product-tour').waitFor({ state: 'visible' })
+    assert.equal(await page.locator('.nl-tour-tab').count(), 5, `${name}: product tour should expose five workspace areas`)
+    await page.locator('.nl-tour-tab').nth(2).click()
+    await page.locator('.nl-tour-tab').nth(2).waitFor({ state: 'visible' })
+    assert.equal(await page.locator('.nl-tour-tab').nth(2).getAttribute('aria-selected'), 'true', `${name}: finance tour tab did not activate`)
+    assert.match(await page.locator('.nl-tour-preview h3').innerText(), /fee obligation|records connected/i, `${name}: finance preview content did not update`)
+    assert.equal(await page.locator('.nl-module-group').count(), 4, `${name}: expanded module groups are missing`)
+    assert.equal(await page.locator('.nl-campus-grid article').count(), 5, `${name}: campus service cards are missing`)
+    assert.equal(await page.locator('.nl-availability-card').count(), 4, `${name}: product availability cards are missing`)
+    assert.equal(await page.locator('.nl-resources-grid > a').count(), 4, `${name}: resource and support links are missing`)
+    const faqToggle = page.locator('.nl-faq-list h3 button').nth(1)
+    await faqToggle.click()
+    assert.equal(await faqToggle.getAttribute('aria-expanded'), 'true', `${name}: homepage FAQ did not open`)
+    await page.locator('.nl-mobile-section').waitFor({ state: 'visible' })
 
     await mkdir(artifactDir, { recursive: true })
     await page.screenshot({
@@ -78,7 +118,7 @@ async function inspectViewport({ name, width, height }) {
     })
 
     const menuToggle = page.locator('.nl-mobile-toggle')
-    if (width <= 900) {
+    if (width <= 1040) {
       await menuToggle.waitFor({ state: 'visible' })
       await menuToggle.click()
       await page.locator('.nl-nav.nl-open').waitFor({ state: 'visible' })
@@ -176,6 +216,7 @@ try {
   browser = await chromium.launch({ headless: true, channel: 'chrome' })
   for (const viewport of [
     { name: 'desktop', width: 1440, height: 900 },
+    { name: 'tablet-landscape', width: 1024, height: 768 },
     { name: 'tablet', width: 768, height: 1024 },
     { name: 'mobile', width: 390, height: 844 },
   ]) {

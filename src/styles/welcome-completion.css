@@ -12,7 +12,7 @@
   max-width: none;
   padding: 94px clamp(22px, 6vw, 88px) 102px;
 }
-.edm-campus-services-section { background: #f6f8f2; }
+.edm-campus-services-section { background: #f2f5f8; }
 .edm-campus-services-section > .edm-section-heading,
 .edm-security-section > .edm-section-heading,
 .edm-testimonials-section > .edm-section-heading {
@@ -24,40 +24,40 @@
 }
 .edm-campus-service-card {
   min-width: 0; display: flex; align-items: flex-start; gap: 15px;
-  padding: 22px; border: 1px solid #e3eadc; border-radius: 17px;
+  padding: 22px; border: 1px solid #dce2ea; border-radius: 17px;
   background: #fff; box-shadow: 0 10px 28px rgba(31,61,38,.035);
   transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
 }
 .edm-campus-service-card:hover {
-  transform: translateY(-3px); border-color: #cbdcba;
+  transform: translateY(-3px); border-color: #bac9dc;
   box-shadow: 0 16px 34px rgba(31,61,38,.08);
 }
 .edm-campus-service-icon {
   width: 44px; height: 44px; flex: 0 0 44px; display: grid; place-items: center;
-  border-radius: 13px; color: #527746; background: #edf4e7;
+  border-radius: 13px; color: #465b77; background: #e7edf4;
 }
 .edm-campus-service-icon.service-transport { color: #9b643a; background: #fbf0e7; }
 .edm-campus-service-icon.service-facilities { color: #536c9b; background: #eef2fa; }
 .edm-campus-service-icon.service-inventory { color: #92723c; background: #f7f2e6; }
 .edm-campus-service-icon.service-visitors { color: #6a669b; background: #f0effa; }
-.edm-campus-service-icon.service-hostel { color: #788477; background: #f0f2ee; }
+.edm-campus-service-icon.service-hostel { color: #788477; background: #eef0f2; }
 .edm-campus-service-card > div { min-width: 0; flex: 1; }
 .edm-campus-service-card > div > small {
-  display: inline-block; margin: 2px 0 8px; color: #82927e;
+  display: inline-block; margin: 2px 0 8px; color: #7e8792;
   font-size: 8px; font-weight: 900; letter-spacing: 1px;
 }
-.edm-campus-service-card h3 { margin: 0 0 8px; color: #2b4432; font-size: 16px; letter-spacing: -.35px; }
+.edm-campus-service-card h3 { margin: 0 0 8px; color: #2b3644; font-size: 16px; letter-spacing: -.35px; }
 .edm-campus-service-card p { margin: 0; color: #778579; font-size: 11px; line-height: 1.75; }
 .edm-campus-service-card a {
   display: inline-flex; align-items: center; gap: 6px; margin-top: 14px;
-  color: #63864b; font-size: 10px; font-weight: 800; text-decoration: none;
+  color: #4b6586; font-size: 10px; font-weight: 800; text-decoration: none;
 }
-.edm-campus-service-card a:hover { color: #345b39; }
-.edm-campus-service-planned { background: #fbfcfa; border-style: dashed; }
+.edm-campus-service-card a:hover { color: #34455b; }
+.edm-campus-service-planned { background: #fafbfc; border-style: dashed; }
 .edm-campus-service-planned .edm-campus-service-icon { opacity: .8; }
 .edm-service-status {
   display: inline-flex; margin-top: 14px; padding: 6px 9px; border-radius: 7px;
-  color: #758075; background: #eff2ed; font-size: 9px; font-weight: 800;
+  color: #758075; background: #edeff2; font-size: 9px; font-weight: 800;
 }
 
 .edm-security-section { background: #fff; }
@@ -66,40 +66,40 @@
   grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px;
 }
 .edm-security-grid article {
-  min-width: 0; padding: 22px 19px; border: 1px solid #e5ebe1;
-  border-radius: 15px; background: #fbfcfa;
+  min-width: 0; padding: 22px 19px; border: 1px solid #e1e5eb;
+  border-radius: 15px; background: #fafbfc;
 }
 .edm-security-grid article > span {
   width: 42px; height: 42px; display: grid; place-items: center;
-  margin-bottom: 18px; border-radius: 12px; color: #5d8048; background: #edf4e7;
+  margin-bottom: 18px; border-radius: 12px; color: #486080; background: #e7edf4;
 }
-.edm-security-grid h3 { margin: 0 0 9px; color: #304633; font-size: 14px; }
+.edm-security-grid h3 { margin: 0 0 9px; color: #303a46; font-size: 14px; }
 .edm-security-grid p { margin: 0; color: #7a887c; font-size: 10px; line-height: 1.8; }
 .edm-reliability-note {
   max-width: 1180px; margin: 18px auto 0; padding: 18px 20px;
   display: flex; align-items: flex-start; gap: 13px;
-  border: 1px solid #dfe8d7; border-radius: 13px; background: #f5f8f0;
+  border: 1px solid #d7dee8; border-radius: 13px; background: #f0f3f8;
 }
 .edm-reliability-note > span {
   width: 34px; height: 34px; flex: 0 0 34px; display: grid; place-items: center;
-  border-radius: 10px; color: #66874c; background: #e7efdf;
+  border-radius: 10px; color: #4c6687; background: #dfe6ef;
 }
-.edm-reliability-note b { color: #3c563d; font-size: 11px; }
+.edm-reliability-note b { color: #3c4756; font-size: 11px; }
 .edm-reliability-note p { margin: 5px 0 0; color: #758276; font-size: 10px; line-height: 1.8; }
 
-.edm-testimonials-section { background: #f6f8f2; }
+.edm-testimonials-section { background: #f2f5f8; }
 .edm-testimonial-empty {
   max-width: 850px; margin: 0 auto; padding: 28px 32px;
   display: flex; align-items: flex-start; gap: 18px;
-  border: 1px solid #e0e8d9; border-radius: 18px; background: #fff;
+  border: 1px solid #d9e0e8; border-radius: 18px; background: #fff;
   box-shadow: 0 12px 30px rgba(31,61,38,.04);
 }
 .edm-testimonial-empty > span {
   width: 52px; height: 52px; flex: 0 0 52px; display: grid; place-items: center;
-  border-radius: 15px; color: #64864a; background: #edf4e7;
+  border-radius: 15px; color: #4a6486; background: #e7edf4;
 }
-.edm-testimonial-empty small { color: #809477; font-size: 8px; font-weight: 900; letter-spacing: 1.2px; }
-.edm-testimonial-empty h3 { margin: 8px 0 7px; color: #2d4633; font-size: 18px; }
+.edm-testimonial-empty small { color: #778494; font-size: 8px; font-weight: 900; letter-spacing: 1.2px; }
+.edm-testimonial-empty h3 { margin: 8px 0 7px; color: #2d3846; font-size: 18px; }
 .edm-testimonial-empty p { margin: 0; color: #78867a; font-size: 11px; line-height: 1.8; }
 
 .edm-contact-section {
@@ -108,33 +108,33 @@
 }
 .edm-contact-intro { max-width: 400px; }
 .edm-contact-intro h2 {
-  margin: 13px 0 13px; color: #203529; font-size: clamp(30px,3.8vw,45px);
+  margin: 13px 0 13px; color: #202935; font-size: clamp(30px,3.8vw,45px);
   line-height: 1.08; letter-spacing: -1.6px;
 }
-.edm-contact-intro h2 em { color: #78964e; font-style: normal; }
+.edm-contact-intro h2 em { color: #4e6d96; font-style: normal; }
 .edm-contact-intro p { margin: 0; color: #778579; font-size: 12px; line-height: 1.8; }
 .edm-contact-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
 .edm-contact-grid article {
-  min-width: 0; padding: 19px; border: 1px solid #e4ebe0;
-  border-radius: 14px; background: #fbfcfa;
+  min-width: 0; padding: 19px; border: 1px solid #e0e5eb;
+  border-radius: 14px; background: #fafbfc;
 }
 .edm-contact-grid article > span {
   width: 38px; height: 38px; display: grid; place-items: center; margin-bottom: 13px;
-  border-radius: 11px; color: #63844b; background: #edf4e7;
+  border-radius: 11px; color: #4b6484; background: #e7edf4;
 }
-.edm-contact-grid article > small { color: #85947f; font-size: 8px; font-weight: 900; letter-spacing: 1px; }
-.edm-contact-grid h3 { margin: 7px 0 7px; color: #304633; font-size: 14px; }
+.edm-contact-grid article > small { color: #7f8894; font-size: 8px; font-weight: 900; letter-spacing: 1px; }
+.edm-contact-grid h3 { margin: 7px 0 7px; color: #303a46; font-size: 14px; }
 .edm-contact-grid p { margin: 0; color: #7b887d; font-size: 10px; line-height: 1.75; }
 .edm-contact-grid article > button,
 .edm-contact-grid article > div button,
 .edm-contact-grid article > div a {
   display: inline-flex; align-items: center; gap: 6px; margin: 13px 12px 0 0;
-  padding: 0; border: 0; color: #63864b; background: transparent;
+  padding: 0; border: 0; color: #4b6586; background: transparent;
   font: inherit; font-size: 10px; font-weight: 850; text-decoration: none; cursor: pointer;
 }
 .edm-contact-grid article > button:hover,
 .edm-contact-grid article > div button:hover,
-.edm-contact-grid article > div a:hover { color: #2f5837; text-decoration: underline; }
+.edm-contact-grid article > div a:hover { color: #2f4158; text-decoration: underline; }
 .edm-contact-channel-note {
   grid-column: 2; margin: -24px 0 0; color: #899588; font-size: 9px; line-height: 1.7;
 }
@@ -142,8 +142,8 @@
 .edm-feature-card .edm-admission-visual,
 .edm-feature-card .edm-learner-visual,
 .edm-feature-card .edm-teacher-visual {
-  display: grid; gap: 7px; padding: 12px; border: 1px solid #e8eee3;
-  border-radius: 12px; background: #f8faf6;
+  display: grid; gap: 7px; padding: 12px; border: 1px solid #e3e8ee;
+  border-radius: 12px; background: #f6f8fa;
 }
 .edm-admission-visual > div,
 .edm-learner-visual > div,
@@ -153,16 +153,16 @@
 }
 .edm-admission-visual > div > span {
   width: 22px; height: 22px; flex: 0 0 22px; display: grid; place-items: center;
-  border-radius: 6px; color: #63844b; background: #edf4e7; font-size: 8px; font-weight: 900;
+  border-radius: 6px; color: #4b6484; background: #e7edf4; font-size: 8px; font-weight: 900;
 }
 .edm-admission-visual b,
 .edm-learner-visual b,
-.edm-teacher-visual b { display: block; color: #4a5c49; font-size: 9px; }
+.edm-teacher-visual b { display: block; color: #49515c; font-size: 9px; }
 .edm-admission-visual small,
 .edm-learner-visual small,
-.edm-teacher-visual small { display: block; margin-top: 2px; color: #92a08f; font-size: 8px; }
+.edm-teacher-visual small { display: block; margin-top: 2px; color: #8f96a0; font-size: 8px; }
 .edm-learner-visual > div > svg,
-.edm-teacher-visual > span > svg { flex: 0 0 auto; color: #7a9a60; }
+.edm-teacher-visual > span > svg { flex: 0 0 auto; color: #60799a; }
 .edm-learner-visual > div > b,
 .edm-teacher-visual > span > b { min-width: 0; }
 .edm-teacher-visual > span { flex-wrap: wrap; }
