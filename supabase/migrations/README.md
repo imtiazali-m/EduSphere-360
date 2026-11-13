@@ -1,6 +1,6 @@
 # Migration history
 
-The sixty-six timestamped migration files in this folder match the remote migration history recorded by the linked Supabase project. Keep each 14-digit timestamp unchanged so local and remote migration histories remain aligned.
+The sixty-seven timestamped migration files in this folder match the remote migration history recorded by the linked Supabase project. Keep each 14-digit timestamp unchanged so local and remote migration histories remain aligned.
 
 The current online application includes the reviewed schema changes for the existing live schema, Faculty & Employee Management, and Student Management operations (admission lifecycle, linked guardian contacts, class placements, private student documents and audit history for attendance, published results, assignment submissions, guardian policy consolidation and activity indexes). The Student Management and Faculty/Employee migrations have already been applied to the linked project; do not replay them manually.
 
@@ -72,3 +72,6 @@ Scheduled report definitions can now be run immediately from the institution wor
 
 
 The Helpdesk extension adds institution-scoped requester tickets, priority and status queues, ticket conversation, private staff notes, self-assignment and required resolution notes. Requesters can see only their own tickets, while owners and administrators can manage the institution queue.
+
+
+Hostel accommodation charges now support separate partial/full payment entries. Each payment is recorded in a payment ledger and updates the charge balance under a row lock; overpayments and waived charges are rejected. These payments remain separate from tuition fee invoices.
