@@ -50,6 +50,7 @@ import { CafeteriaWorkspace } from './CafeteriaWorkspace'
 import { LibraryReadingWorkspace } from './LibraryReadingWorkspace'
 import { ReceiptWorkspace } from './ReceiptWorkspace'
 import { PaymentOperationsWorkspace } from './PaymentOperationsWorkspace'
+import { AssetLifecycleWorkspace } from './AssetLifecycleWorkspace'
 import { AcademicManagementWorkspace } from './AcademicManagementWorkspace'
 import { supabase } from '../lib/supabase'
 import { readDisplayPreferences, writeDisplayPreferences, type DashboardDisplayPreferences, type DashboardFontSize } from '../lib/displayPreferences'
@@ -728,6 +729,7 @@ export function Dashboard({ onToast }: Props) {
     const libraryReadingWindowRoute = key.startsWith('library-reading:')
     const receiptOperationsWindowRoute = key.startsWith('receipt-operations:')
     const paymentOperationsWindowRoute = key.startsWith('payment-operations:')
+    const assetLifecycleWindowRoute = key.startsWith('asset-lifecycle:')
     const operationsWindowRoute = key.startsWith('operations:')
     const routeParts = key.split(':')
     const moduleWindowRoute = routeParts.length === 2 && ['fees', 'exams', 'exam_results', 'assignments', 'assignment_submissions', 'timetable', 'announcements', 'work_tasks'].includes(routeParts[0])
@@ -755,6 +757,7 @@ export function Dashboard({ onToast }: Props) {
       : libraryReadingWindowRoute ? 'library-reading'
       : receiptOperationsWindowRoute ? 'receipt-operations'
       : paymentOperationsWindowRoute ? 'payment-operations'
+      : assetLifecycleWindowRoute ? 'asset-lifecycle'
       : operationsWindowRoute ? 'operations'
       : moduleWindowRoute ? routeParts[0]
       : key
@@ -782,6 +785,7 @@ export function Dashboard({ onToast }: Props) {
       : libraryReadingWindowRoute ? key.slice('library-reading:'.length)
       : receiptOperationsWindowRoute ? key.slice('receipt-operations:'.length)
       : paymentOperationsWindowRoute ? key.slice('payment-operations:'.length)
+      : assetLifecycleWindowRoute ? key.slice('asset-lifecycle:'.length)
       : operationsWindowRoute ? key.slice('operations:'.length)
       : moduleWindowRoute ? routeParts[1]
       : 'overview'
@@ -971,6 +975,7 @@ export function Dashboard({ onToast }: Props) {
                 tab.targetKey === 'library-reading' ? <LibraryReadingWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'receipt-operations' ? <ReceiptWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'payment-operations' ? <PaymentOperationsWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'asset-lifecycle' ? <AssetLifecycleWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'institutional' && linkedWorkspaceKeys.includes(tab.targetWindow) ? <LinkedOperationsWorkspace workspaceKey={tab.targetWindow} onToast={onToast} onNavigate={navigateChild}/> :
                 tab.targetKey === 'institutional' ? <InstitutionalWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'unavailable' ? <WorkspaceUnavailable groupKey={tab.targetWindow.split(':')[0]} itemKey={tab.targetWindow.split(':').slice(1).join(':')} onNavigate={navigate}/> :
