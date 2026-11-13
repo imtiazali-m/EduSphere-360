@@ -1,6 +1,6 @@
 # Migration history
 
-The seventy-one timestamped migration files in this folder match the remote migration history recorded by the linked Supabase project. Keep each 14-digit timestamp unchanged so local and remote migration histories remain aligned.
+The seventy-two timestamped migration files in this folder match the remote migration history recorded by the linked Supabase project. Keep each 14-digit timestamp unchanged so local and remote migration histories remain aligned.
 
 The current online application includes the reviewed schema changes for the existing live schema, Faculty & Employee Management, and Student Management operations (admission lifecycle, linked guardian contacts, class placements, private student documents and audit history for attendance, published results, assignment submissions, guardian policy consolidation and activity indexes). The Student Management and Faculty/Employee migrations have already been applied to the linked project; do not replay them manually.
 
@@ -87,3 +87,6 @@ The timetable teacher-class authorization helper is available only to authentica
 
 
 Transport fees are invoiced by active allocation and billing period and support partial/full collections. Payment entries are retained separately from the monthly allocation amount, with overpayment protection and student/guardian read access limited to linked allocations.
+
+
+Institution form definitions contain validated JSON field schemas and audience roles. Form submissions are requester-scoped, and owner/admin review decisions are recorded with reviewer, timestamp and resolution note.
