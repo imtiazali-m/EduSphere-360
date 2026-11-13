@@ -131,7 +131,7 @@ function buildStats(role: AppRole, data: Dataset) {
   const present = attendance.filter(row => row.status === 'present').length
   if (role === 'owner' || role === 'admin') return [
     { label: 'Total Students', value: students.length.toLocaleString(), hint: 'Registered learner profiles', icon: GraduationCap, tone: 'blue', route: 'students' },
-    { label: 'Faculty & Staff', value: teachers.length.toLocaleString(), hint: 'Institution team records', icon: Users, tone: 'green', route: 'teachers' },
+    { label: 'Faculty & Staff', value: teachers.length.toLocaleString(), hint: 'College team records', icon: Users, tone: 'green', route: 'teachers' },
     { label: 'Attendance Rate', value: (attendance.length ? Math.round((present / attendance.length) * 100) : 0) + '%', hint: present + ' present of ' + attendance.length + ' records', icon: CalendarCheck, tone: 'violet', route: 'attendance' },
     { label: 'Fees Collected', value: money(invoices.reduce((total, row) => total + Number(row.paid_amount ?? 0), 0)), hint: invoices.length + ' invoices recorded', icon: Wallet, tone: 'amber', route: 'fees' },
   ]
@@ -331,7 +331,7 @@ function Overview({ onNavigate, careAreas }: { onNavigate: (key: string) => void
   const quickStats = isAdmin
     ? [
       { label: 'New Admissions', value: newAdmissions, hint: 'This month', icon: GraduationCap, route: 'students', tone: 'blue' },
-      { label: 'Departments', value: departments.length, hint: 'Institution units', icon: Building2, route: 'admin:departments', tone: 'violet' },
+      { label: 'Departments', value: departments.length, hint: 'College departments', icon: Building2, route: 'admin:departments', tone: 'violet' },
       { label: 'Assignments', value: assignments.length, hint: 'Coursework records', icon: BookOpen, route: 'assignments', tone: 'green' },
       { label: 'Exam Schedules', value: exams.length, hint: 'Assessments recorded', icon: ClipboardCheck, route: 'exams', tone: 'amber' },
     ]
@@ -349,15 +349,15 @@ function Overview({ onNavigate, careAreas }: { onNavigate: (key: string) => void
   const hasRecords = (...tables: string[]) => tables.some(table => getRows(data, table).length > 0)
   const workspaceGuide = user!.role === 'owner' || user!.role === 'admin'
     ? {
-      heading: 'Build your institution workspace',
+      heading: 'Set up your college workspace',
       intro: 'A practical launch path for setting up academic structure, people and everyday operations.',
       steps: [
-        { title: 'Set up academic structure', detail: 'Create the academic session, classes, departments and subjects your institution uses.', route: 'admin:academic_sessions', action: 'Open administration', icon: Building2, started: hasRecords('academic_sessions', 'classes', 'departments', 'subjects') },
+        { title: 'Set up academic structure', detail: 'Create the academic session, classes, departments and subjects used by the college.', route: 'admin:academic_sessions', action: 'Open administration', icon: Building2, started: hasRecords('academic_sessions', 'classes', 'departments', 'subjects') },
         { title: 'Register your learners', detail: 'Create admission records and connect each learner to the right class and family.', route: 'students:admissions', action: 'Open admissions', icon: GraduationCap, started: hasRecords('students') },
         { title: 'Build your team', detail: 'Add faculty and staff profiles and organise responsibilities across departments.', route: 'teachers', action: 'Open staff', icon: Users, started: hasRecords('teachers') },
         { title: 'Activate daily operations', detail: 'Start the attendance register and publish the first class timetable.', route: 'attendance:students', action: 'Open attendance', icon: CalendarCheck, started: hasRecords('attendance', 'timetable_entries') },
         { title: 'Set up fee administration', detail: 'Create fee invoices and review received payments and outstanding balances.', route: 'finance:fees:invoices', action: 'Open fee ledger', icon: Wallet, started: hasRecords('fee_invoices') },
-        { title: 'Connect your community', detail: 'Publish an institution announcement for the relevant staff and families.', route: 'announcements', action: 'Open announcements', icon: Megaphone, started: hasRecords('announcements') },
+        { title: 'Connect your community', detail: 'Publish a college announcement for the relevant staff and families.', route: 'announcements', action: 'Open announcements', icon: Megaphone, started: hasRecords('announcements') },
       ],
     }
     : user!.role === 'teacher'
@@ -754,19 +754,19 @@ export function Dashboard({ onToast }: Props) {
     if (!options.title) {
       if (targetKey === 'overview') title = 'Dashboard'
       else if (targetKey === 'notifications') title = 'Notification Centre'
-      else if (targetKey === 'institutional') title = 'Institutional Workspace'
+      else if (targetKey === 'institutional') title = 'College Workspace'
       else if (targetKey === 'unavailable') title = 'Workspace not connected'
       else if (targetKey === 'attendance') title = 'Attendance Management'
       else if (targetKey === 'care') title = 'Student Care & Wellbeing'
-      else if (targetKey === 'reports') title = 'Reports'
+      else if (targetKey === 'reports') title = 'College Reports'
       else if (targetKey === 'finance') title = 'Finance & Payments'
       else if (targetKey === 'payroll') title = 'Salary and Payroll'
       else if (targetKey === 'peoplehr') title = 'People Management & Human Resources'
       else if (targetKey === 'personal') title = 'My Workspace'
       else if (targetKey === 'assistant') title = 'AI Assistant'
       else if (targetKey === 'frontoffice') title = 'Front Office & Communication'
-      else if (targetKey === 'governance') title = 'Institution Governance'
-      else if (targetKey === 'operations') title = 'Institution Operations'
+      else if (targetKey === 'governance') title = 'College Governance'
+      else if (targetKey === 'operations') title = 'College Operations'
       else if (targetKey.startsWith('admin:')) {
         const subkey = targetKey.slice(6)
         title = adminModuleLabels[subkey] ?? 'Administration'
