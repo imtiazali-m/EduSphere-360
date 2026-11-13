@@ -153,7 +153,7 @@ check('The full institutional menu maps every submenu to a working destination',
   assert.equal(getNavigationRoute('examinations', 'Automatic Checking'), 'unavailable:examinations:automatic-checking', 'Automated marking is not configured')
   assert.equal(getNavigationRoute('reports', 'Custom Report Builder'), 'unavailable:reports:custom-report-builder', 'Custom report builder must not open fixed report cards')
   assert.equal(getNavigationRoute('reports', 'Scheduled Reports'), 'unavailable:reports:scheduled-reports', 'Scheduled report execution is not implemented')
-  assert.equal(getNavigationRoute('library', 'Student Reading History'), 'unavailable:library:student-reading-history', 'Reading progress history is distinct from the library loan ledger')
+  assert.equal(getNavigationRoute('library', 'Student Reading History'), 'institutional:library:reading-records', 'Student reading history must use the protected reading-record workspace')
   assert.equal(getNavigationRoute('transport', 'Transport Attendance'), 'unavailable:transport:transport-attendance', 'Transport boarding attendance requires its own route attendance register')
   assert.equal(getNavigationRoute('receipts', 'Receipt Templates'), 'unavailable:receipts:receipt-templates', 'Receipt template management must not be confused with receipt printing')
   assert.equal(getNavigationRoute('students', 'Student ID Cards'), 'students:id-cards', 'Student ID Cards must open the print workspace')
