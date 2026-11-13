@@ -170,7 +170,7 @@ check('The full institutional menu maps every submenu to a working destination',
   assert.equal(getNavigationRoute('employees', 'Employee Performance'), 'unavailable:employees:employee-performance', 'HR headcount must not be presented as a performance appraisal')
   assert.equal(getNavigationRoute('attendance', 'Leave Applications'), 'employees:leave', 'Leave applications must open the HR leave workflow')
   assert.equal(getNavigationRoute('attendance', 'Attendance Analytics'), 'reports:attendance', 'Attendance analytics must open the live attendance report')
-  assert.equal(getNavigationRoute('attendance', 'Attendance Alerts'), 'institutional:attendance:attendance-alerts', 'Attendance alerts open their own rules and notification register')
+  assert.equal(getNavigationRoute('attendance', 'Attendance Alerts'), 'unavailable:attendance:attendance-alerts', 'An unavailable non-catalogue shortcut must not be invented as a visible submenu')
   assert.equal(getNavigationRoute('timetable', 'Substitution Management'), 'institutional:timetable:substitution-management', 'Teacher substitution opens its own allocation and approval register')
   assert.equal(getNavigationRoute('timetable', 'Timetable Publishing'), 'institutional:timetable:timetable-publishing', 'Timetable publication opens a dedicated publication-control register')
   assert.equal(getNavigationRoute('class-tests', 'Online Tests'), 'unavailable:class-tests:online-tests', 'Online test delivery must not be represented as ordinary examination records')
