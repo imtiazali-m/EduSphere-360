@@ -62,84 +62,62 @@ async function inspectViewport({ name, width, height }) {
 
   try {
     const response = await page.goto(`${baseUrl}/#/`, { waitUntil: 'domcontentloaded' })
-    assert.equal(response?.status(), 200, `${name}: welcome page did not return HTTP 200`)
-    await page.locator('.nl-hero h1').waitFor({ state: 'visible' })
-    await page.waitForTimeout(350)
+    assert.equal(response?.status(), 200, `${name}: college homepage did not return HTTP 200`)
+    await page.locator('.gic-hero h1').waitFor({ state: 'visible' })
+    await page.waitForTimeout(250)
 
-    const heading = (await page.locator('.nl-hero h1').innerText()).replace(/\s+/g, ' ').trim()
-    assert.match(heading, /Bring your whole institution/, `${name}: welcome headline is missing`)
+    const heading = (await page.locator('.gic-hero h1').innerText()).replace(/\\s+/g, ' ').trim()
+    assert.match(heading, /A place to learn/i, `${name}: college homepage headline is missing`)
+    assert.ok((await page.locator('.gic-brand-copy').first().innerText()).includes('Government Islamia'), `${name}: college identity is missing`)
+    assert.equal(await page.locator('.gic-portal-card').count(), 7, `${name}: all seven existing college portal routes should be visible`)
+    assert.equal(await page.locator('.gic-notice-row').count(), 4, `${name}: official information links are missing`)
+    assert.equal(await page.locator('.gic-faq-item').count(), 4, `${name}: college FAQ entries are missing`)
 
-    const landingTheme = await page.locator('.nl-page').evaluate(element => {
-      const pageStyle = getComputedStyle(element)
-      const actionStyle = getComputedStyle(element.querySelector('.nl-header-cta'))
-      const rootStyle = getComputedStyle(document.documentElement)
-      const toRgb = (value) => {
-        const hex = value.trim().replace(/^#/, '')
-        const expanded = hex.length === 3 ? [...hex].map(part => part + part).join('') : hex
-        if (!/^[0-9a-f]{6}$/i.test(expanded)) return value.trim()
-        const number = Number.parseInt(expanded, 16)
-        return `rgb(${(number >> 16) & 255}, ${(number >> 8) & 255}, ${number & 255})`
-      }
-      return {
-        font: pageStyle.fontFamily,
-        displayFont: rootStyle.getPropertyValue('--es-font-display').trim(),
-        canvas: pageStyle.backgroundColor,
-        appCanvas: toRgb(rootStyle.getPropertyValue('--es-canvas')),
-        primary: actionStyle.backgroundColor,
-        appPrimary: toRgb(rootStyle.getPropertyValue('--es-primary-600')),
-      }
+    const theme = await page.locator('.gic-site').evaluate(element => {
+      const site = getComputedStyle(element)
+      const headingStyle = getComputedStyle(element.querySelector('.gic-hero h1'))
+      const primary = getComputedStyle(element.querySelector('.gic-button-primary'))
+      return { font: site.fontFamily, displayFont: headingStyle.fontFamily, canvas: site.backgroundColor, primary: primary.backgroundColor }
     })
-    assert.match(landingTheme.font, /DM Sans/i, `${name}: landing body typography differs from the internal design system`)
-    assert.match(landingTheme.displayFont, /Manrope/i, `${name}: shared display typography token is missing`)
-    assert.equal(landingTheme.canvas, landingTheme.appCanvas, `${name}: landing canvas must match the final internal app token`)
-    assert.equal(landingTheme.primary, landingTheme.appPrimary, `${name}: landing primary action must match the final internal app token`)
-    await assertNoHorizontalOverflow(page, `${name} welcome page`)
+    assert.match(theme.font, /DM Sans/i, `${name}: college body typography is missing`)
+    assert.match(theme.displayFont, /Playfair Display/i, `${name}: college heading typography is missing`)
+    assert.equal(theme.canvas, 'rgb(255, 253, 248)', `${name}: college paper background is not applied`)
+    assert.equal(theme.primary, 'rgb(25, 61, 49)', `${name}: college forest-green primary action is not applied`)
+    await assertNoHorizontalOverflow(page, `${name} college homepage`)
 
-    await page.locator('#product-tour').waitFor({ state: 'visible' })
-    assert.equal(await page.locator('.nl-tour-tab').count(), 5, `${name}: product tour should expose five workspace areas`)
-    await page.locator('.nl-tour-tab').nth(2).click()
-    await page.locator('.nl-tour-tab').nth(2).waitFor({ state: 'visible' })
-    assert.equal(await page.locator('.nl-tour-tab').nth(2).getAttribute('aria-selected'), 'true', `${name}: finance tour tab did not activate`)
-    assert.match(await page.locator('.nl-tour-preview h3').innerText(), /fee obligation|records connected/i, `${name}: finance preview content did not update`)
-    assert.equal(await page.locator('.nl-module-group').count(), 4, `${name}: expanded module groups are missing`)
-    assert.equal(await page.locator('.nl-campus-grid article').count(), 5, `${name}: campus service cards are missing`)
-    assert.equal(await page.locator('.nl-availability-card').count(), 4, `${name}: product availability cards are missing`)
-    assert.equal(await page.locator('.nl-resources-grid > a').count(), 4, `${name}: resource and support links are missing`)
-    const faqToggle = page.locator('.nl-faq-list h3 button').nth(1)
+    const faqToggle = page.locator('.gic-faq-item button').nth(1)
     await faqToggle.click()
-    assert.equal(await faqToggle.getAttribute('aria-expanded'), 'true', `${name}: homepage FAQ did not open`)
-    await page.locator('.nl-mobile-section').waitFor({ state: 'visible' })
+    assert.equal(await faqToggle.getAttribute('aria-expanded'), 'true', `${name}: college FAQ did not open`)
 
     await mkdir(artifactDir, { recursive: true })
     await page.screenshot({
-      path: `${artifactDir}/${name}-welcome.png`,
+      path: `${artifactDir}/${name}-college-home.png`,
       fullPage: true,
       animations: 'disabled',
     })
 
-    const menuToggle = page.locator('.nl-mobile-toggle')
-    if (width <= 1040) {
+    if (width <= 800) {
+      const menuToggle = page.locator('.gic-menu-toggle')
       await menuToggle.waitFor({ state: 'visible' })
       await menuToggle.click()
-      await page.locator('.nl-nav.nl-open').waitFor({ state: 'visible' })
-      const featuresLink = page.locator('.nl-nav.nl-open a[href="#features"]').first()
-      await featuresLink.click()
-      await page.waitForFunction(() => location.hash === '#features')
+      await page.locator('.gic-nav.is-open').waitFor({ state: 'visible' })
+      await page.locator('.gic-nav.is-open a[href="#admissions"]').click()
+      await page.waitForFunction(() => location.hash === '#admissions')
       await page.goto(`${baseUrl}/#/`, { waitUntil: 'domcontentloaded' })
-      await page.locator('.nl-hero h1').waitFor({ state: 'visible' })
-      await assertNoHorizontalOverflow(page, `${name} welcome mobile navigation`)
+      await page.locator('.gic-hero h1').waitFor({ state: 'visible' })
+      await assertNoHorizontalOverflow(page, `${name} college mobile navigation`)
     } else {
-      await page.locator('.nl-nav a[href="#features"]').first().waitFor({ state: 'visible' })
+      await page.locator('.gic-nav a[href="#admissions"]').first().waitFor({ state: 'visible' })
     }
 
     const roleCategories = {
-      owner: 'Owner / Admin',
-      admin: 'Owner / Admin',
-      teacher: 'Employee',
+      owner: 'Principal / Office',
+      admin: 'Principal / Office',
+      teacher: 'Faculty / Staff',
       student: 'Student',
       parent: 'Parent',
-      accountant: 'Employee',
-      exam_officer: 'Employee',
+      accountant: 'Faculty / Staff',
+      exam_officer: 'Faculty / Staff',
     }
     for (const [role, expectedCategory] of Object.entries(roleCategories)) {
       await page.goto(`${baseUrl}/#/login/${role}`, { waitUntil: 'domcontentloaded' })
@@ -172,40 +150,29 @@ async function inspectViewport({ name, width, height }) {
     })
     await page.getByRole('button', { name: 'Back to login' }).click()
     await page.getByRole('heading', { name: 'Welcome back', exact: true }).waitFor({ state: 'visible' })
+
     await page.goto(`${baseUrl}/#/setup`, { waitUntil: 'domcontentloaded' })
-    await page.locator('.es-signup-form').waitFor({ state: 'visible' })
-    await assertNoHorizontalOverflow(page, `${name} owner setup`)
+    await page.getByRole('heading', { name: 'Get access through the college' }).waitFor({ state: 'visible' })
+    await page.locator('.es-college-access-note').waitFor({ state: 'visible' })
+    assert.equal(await page.locator('.es-signup-form').count(), 0, `${name}: public institution self-registration must not be exposed`)
+    await page.getByRole('button', { name: 'Continue to sign in' }).waitFor({ state: 'visible' })
+    await assertNoHorizontalOverflow(page, `${name} college account access`)
     await page.screenshot({
-      path: `${artifactDir}/${name}-owner-setup.png`,
+      path: `${artifactDir}/${name}-college-account-access.png`,
       fullPage: true,
       animations: 'disabled',
     })
 
-    const publicRoutes = [
-      ['/public/features', 'Explore the platform'],
-      ['/public/features/invoices-payments', 'Fee invoices, payments'],
-      ['/public/solutions', 'The right workspace'],
-      ['/public/analytics', 'See the whole picture'],
-      ['/public/integrations', 'Connected when configured'],
-      ['/public/pricing', 'Clear product information'],
-      ['/public/support', 'A clearer next step'],
-    ]
-    for (const [route, expectedHeading] of publicRoutes) {
+    for (const route of ['/public/features', '/public/solutions', '/public/analytics']) {
       await page.goto(`${baseUrl}/#${route}`, { waitUntil: 'domcontentloaded' })
-      const publicHeading = page.locator('.ep-page-hero h1').first()
-      await publicHeading.waitFor({ state: 'visible' })
-      const actualHeading = (await publicHeading.innerText()).replace(/\\s+/g, ' ').trim()
-      assert.ok(actualHeading.includes(expectedHeading), `${name}: ${route} heading was "${actualHeading}"`)
-      await assertNoHorizontalOverflow(page, `${name} ${route}`)
-      await page.screenshot({
-        path: `${artifactDir}/${name}-public-${route.split('/').filter(Boolean).join('-')}.png`,
-        fullPage: true,
-        animations: 'disabled',
-      })
+      await page.locator('.gic-hero h1').waitFor({ state: 'visible' })
+      const returnedHeading = await page.locator('.gic-hero h1').innerText()
+      assert.match(returnedHeading, /A place to learn/i, `${name}: ${route} should resolve to the college website, not product marketing`)
+      await assertNoHorizontalOverflow(page, `${name} legacy public route ${route}`)
     }
 
     assert.deepEqual(pageErrors, [], `${name}: browser runtime errors detected: ${pageErrors.join('; ')}`)
-    console.log(`PASS ${name} (${width}x${height}): welcome, mobile navigation, owner login and owner setup`)
+    console.log(`PASS ${name} (${width}x${height}): college homepage, mobile navigation, seven role routes, recovery and account guidance`)
   } finally {
     await context.close()
   }
