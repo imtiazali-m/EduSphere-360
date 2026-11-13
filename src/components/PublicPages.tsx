@@ -1,10 +1,10 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import {
   ArrowRight, ArrowUpRight, BarChart3, BookOpen, Building2, Bus, CalendarCheck,
-  Check, CheckCircle2, ChevronDown, ClipboardCheck, FileText, GraduationCap,
-  Headphones, HeartHandshake, Layers3, LifeBuoy, LockKeyhole, Mail, Menu,
-  Monitor, Package, Search, Server, ShieldCheck, Sparkles, Users, Wallet,
-  X, DoorOpen, UserCheck, CircleHelp, Smartphone,
+  CheckCircle2, ChevronDown, ClipboardCheck, FileText, GraduationCap,
+  Headphones, HeartHandshake, Layers3, LifeBuoy, Menu,
+  Monitor, Package, Server, ShieldCheck, Sparkles, Users, Wallet,
+  X, DoorOpen, UserCheck, CircleHelp,
 } from 'lucide-react'
 import type { AppRole } from '../lib/types'
 import '../styles/welcome-marketing.css'
@@ -103,9 +103,9 @@ function PublicHeader({ navigate }: {navigate:Navigate}) {
       </div></div>
       <div className="edm-nav-group"><button className="edm-nav-link" type="button">Solutions <ChevronDown size={13}/></button><div className="edm-nav-dropdown">
         <NavLink href="#/public/solutions" title="Seven role workspaces" detail="Access shaped around responsibility" icon={Users} close={close}/>
-        <NavLink href="#/public/solutions#schools" title="Schools" detail="Learners, classes and families" icon={GraduationCap} close={close}/>
-        <NavLink href="#/public/solutions#colleges" title="Colleges" detail="Departments and programmes" icon={BookOpen} close={close}/>
-        <NavLink href="#/public/solutions#universities" title="Universities" detail="Multi-department coordination" icon={Building2} close={close}/>
+        <NavLink href="#/public/solutions" title="Schools" detail="Learners, classes and families" icon={GraduationCap} close={close}/>
+        <NavLink href="#/public/solutions" title="Colleges" detail="Departments and programmes" icon={BookOpen} close={close}/>
+        <NavLink href="#/public/solutions" title="Universities" detail="Multi-department coordination" icon={Building2} close={close}/>
       </div></div>
       <div className="edm-nav-group"><button className="edm-nav-link" type="button">Explore <ChevronDown size={13}/></button><div className="edm-nav-dropdown">
         <NavLink href="#/public/about" title="About EduSphere" detail="Purpose and product principles" icon={HeartHandshake} close={close}/>
@@ -139,11 +139,11 @@ function PublicFooter({navigate}:{navigate:Navigate}) {
 
 function Eyebrow({children}:{children:string}) { return <span className="edm-section-kicker">{children}</span> }
 
-function PageHero({kicker,title,accent,description,children}:{kicker:string;title:string;accent?:string;description:string;children?:React.ReactNode}) {
+function PageHero({kicker,title,accent,description,children}:{kicker:string;title:string;accent?:string;description:string;children?:ReactNode}) {
   return <section className="ep-page-hero"><div className="ep-hero-orb"/><div className="ep-page-hero-inner"><Eyebrow>{kicker}</Eyebrow><h1>{title}{accent&&<> <em>{accent}</em></>}</h1><p>{description}</p>{children&&<div className="ep-hero-actions">{children}</div>}</div><div className="ep-hero-side"><div className="ep-hero-side-mark"><GraduationCap size={30}/><i>360</i></div><span>EDUCATION MANAGEMENT</span><b>One institution.<br/>Every moving part.</b><small>Cloud-first · Role-aware · Connected</small></div></section>
 }
 
-function ActionLink({href,children,secondary=false}:{href:string;children:React.ReactNode;secondary?:boolean}) {
+function ActionLink({href,children,secondary=false}:{href:string;children:ReactNode;secondary?:boolean}) {
   return <a className={secondary?'edm-button edm-button-outline ep-button-outline':'edm-button edm-button-lime'} href={href}>{children}<ArrowUpRight size={16}/></a>
 }
 
@@ -238,11 +238,12 @@ function CampusServicesPage() {
 }
 
 export function PublicPageScreen({page,navigate}:{page:string;navigate:Navigate}) {
+  useEffect(()=>{window.scrollTo({top:0,behavior:'auto'})},[page])
   const parts=page.split('/').filter(Boolean)
   const pageKey=parts[0]||'features'
   const slug=parts[1]
   const selectedFeature=slug?featureCatalog.find(item=>item.slug===slug):undefined
-  let content:React.ReactNode
+  let content:ReactNode
   if(pageKey==='features'&&selectedFeature) content=<FeatureDetail feature={selectedFeature} navigate={navigate}/>
   else if(pageKey==='features') content=<FeatureCatalogue/>
   else if(pageKey==='solutions') content=<SolutionsPage/>
