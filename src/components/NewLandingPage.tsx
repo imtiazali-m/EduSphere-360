@@ -333,7 +333,7 @@ export function NewLandingPage({ navigate }: LandingProps) {
 
         <section className="nl-features-section" id="features">
           <div className="nl-section-heading">
-            <div><div className="nl-section-kicker">THE EVERYDAY WORK, CONNECTED <span>02 / CAPABILITIES</span></div><h2>Everything has<br/>a place to <em>happen.</em></h2></div>
+            <div><div className="nl-section-kicker">THE EVERYDAY WORK, CONNECTED <span>03 / CAPABILITIES</span></div><h2>Everything has<br/>a place to <em>happen.</em></h2></div>
             <p>From the first application to ongoing teaching, attendance and fee records, explore the core workflows that bring institution operations together.</p>
           </div>
           <div className="nl-capability-grid">
