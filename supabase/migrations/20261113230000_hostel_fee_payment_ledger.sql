@@ -1,3 +1,15 @@
+do $
+begin
+ if not exists (
+  select 1 from pg_constraint
+  where conrelid='public.hostel_fee_charges'::regclass
+    and conname='hostel_fee_charges_id_institution_uq'
+ ) then
+  alter table public.hostel_fee_charges
+   add constraint hostel_fee_charges_id_institution_uq unique(id,institution_id);
+ end if;
+end $;
+
 create table if not exists public.hostel_fee_payments (
  id uuid primary key default gen_random_uuid(),
  institution_id uuid not null references public.institutions(id) on delete cascade,
