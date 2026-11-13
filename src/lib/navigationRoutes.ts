@@ -284,6 +284,7 @@ function institutionOperationsRoute(groupKey:string,itemKey:string):string|undef
 }
 
 function dedicatedRoute(groupKey: string, itemKey: string): string | undefined {
+  if(groupKey==='payments' && ['online-payment-records','failed-and-pending-payments'].includes(itemKey))return 'payment-operations:'+itemKey
   if(groupKey==='receipts' && ['receipt-templates','receipt-numbering','bulk-receipt-generation','receipt-verification'].includes(itemKey))return 'receipt-operations:'+itemKey
   if(groupKey==='library' && ['reading-records','reading-cards','student-reading-history'].includes(itemKey))return 'library-reading:'+itemKey
   if(groupKey==='inventory'){
