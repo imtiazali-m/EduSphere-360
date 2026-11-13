@@ -352,7 +352,7 @@ export function NewLandingPage({ navigate }: LandingProps) {
 
         <section className="nl-expanded-catalog-section" id="more-workflows">
           <div className="nl-section-heading">
-            <div><div className="nl-section-kicker">A BROADER VIEW OF THE PLATFORM <span>03 / MODULES</span></div><h2>Connected records.<br/><em>Clear module boundaries.</em></h2></div>
+            <div><div className="nl-section-kicker">A BROADER VIEW OF THE PLATFORM <span>04 / MODULES</span></div><h2>Connected records.<br/><em>Clear module boundaries.</em></h2></div>
             <p>Explore the main areas of the institution, from people and academics to finance and campus services. Each detailed page explains its current release status and relevant role access.</p>
           </div>
           <div className="nl-module-groups">
@@ -368,7 +368,7 @@ export function NewLandingPage({ navigate }: LandingProps) {
 
         <section className="nl-roles-section" id="solutions">
           <div className="nl-roles-intro">
-            <div className="nl-section-kicker">ONE COMMUNITY, DISTINCT RESPONSIBILITIES <span>03 / WHO IT SERVES</span></div>
+            <div className="nl-section-kicker">ONE COMMUNITY, DISTINCT RESPONSIBILITIES <span>05 / WHO IT SERVES</span></div>
             <h2>Different roles.<br/><em>One shared purpose.</em></h2>
             <p>Every person should see the information and actions relevant to their part in the learning community. EduSphere 360 brings seven distinct role types into a coordinated experience.</p>
             <a href="/#/public/solutions" className="nl-text-link">Explore role-based solutions <ArrowUpRight size={15}/></a>
@@ -385,7 +385,7 @@ export function NewLandingPage({ navigate }: LandingProps) {
         </section>
 
         <section className="nl-workflow-section" id="workflow">
-          <div className="nl-section-kicker">FROM FIRST CONTACT TO EVERY MILESTONE <span>04 / THE JOURNEY</span></div>
+          <div className="nl-section-kicker">FROM FIRST CONTACT TO EVERY MILESTONE <span>06 / THE JOURNEY</span></div>
           <div className="nl-workflow-heading"><h2>See how the pieces<br/><em>move together.</em></h2><p>Follow the connected journey across everyday institutional work—from welcoming new learners to understanding progress.</p></div>
           <div className="nl-workflow-line">
             {workflowSteps.map(step => <article key={step.number}><span className="nl-workflow-number">{step.number}</span><i/><h3>{step.title}</h3><p>{step.description}</p></article>)}
@@ -400,7 +400,7 @@ export function NewLandingPage({ navigate }: LandingProps) {
             <div className="nl-trust-label nl-trust-label-b"><Building2 size={15}/> Institution-scoped records</div>
           </div>
           <div className="nl-trust-copy">
-            <div className="nl-section-kicker">BUILT WITH CLEAR BOUNDARIES <span>05 / TRUST & ACCESS</span></div>
+            <div className="nl-section-kicker">BUILT WITH CLEAR BOUNDARIES <span>07 / TRUST & ACCESS</span></div>
             <h2>Your institution's information deserves <em>careful access.</em></h2>
             <p>The current online release uses role-based permissions and institution-scoped database access. Each workspace is designed around the responsibilities assigned to its users.</p>
             <div className="nl-trust-points">
@@ -415,7 +415,7 @@ export function NewLandingPage({ navigate }: LandingProps) {
 
         <section className="nl-engagement-section" id="engagement">
           <div className="nl-engagement-intro">
-            <div className="nl-section-kicker">KEEP THE LEARNING COMMUNITY CONNECTED <span>05 / COMMUNICATION</span></div>
+            <div className="nl-section-kicker">KEEP THE LEARNING COMMUNITY CONNECTED <span>08 / COMMUNICATION</span></div>
             <h2>More than records.<br/><em>Better coordination.</em></h2>
             <p>Give the people around each learner clearer ways to stay informed, while keeping institution-wide tools and external services clearly distinguished.</p>
           </div>
@@ -429,7 +429,7 @@ export function NewLandingPage({ navigate }: LandingProps) {
 
         <section className="nl-campus-section" id="campus">
           <div className="nl-campus-heading">
-            <div><div className="nl-section-kicker">THE SERVICES AROUND LEARNING <span>06 / CAMPUS</span></div><h2>Campus life has<br/><em>many moving parts.</em></h2></div>
+            <div><div className="nl-section-kicker">THE SERVICES AROUND LEARNING <span>09 / CAMPUS</span></div><h2>Campus life has<br/><em>many moving parts.</em></h2></div>
             <div><p>EduSphere’s catalogue also describes campus-service areas alongside the academic and administrative core. Their availability depends on the institution’s enabled workspace and setup.</p><a href="/#/public/campus-services">Explore campus services <ArrowUpRight size={15}/></a></div>
           </div>
           <div className="nl-campus-grid">
@@ -454,7 +454,7 @@ export function NewLandingPage({ navigate }: LandingProps) {
             <span className="nl-phone-caption"><Monitor size={14}/> Responsive browser preview · Sample content</span>
           </div>
           <div className="nl-mobile-copy">
-            <div className="nl-section-kicker">A WORKSPACE THAT ADAPTS <span>07 / MOBILE</span></div>
+            <div className="nl-section-kicker">A WORKSPACE THAT ADAPTS <span>10 / MOBILE</span></div>
             <h2>Useful on a phone.<br/><em>Clear on a desktop.</em></h2>
             <p>The current EduSphere 360 experience is designed to respond to desktop, tablet and mobile browser sizes. Staff, students and parents can open the online platform through a supported browser and their permitted role access.</p>
             <div className="nl-mobile-points"><span><CheckCircle2 size={17}/> Responsive layouts across screen sizes</span><span><CheckCircle2 size={17}/> Role-appropriate account access</span><span><CheckCircle2 size={17}/> Online access to institution records</span></div>
@@ -464,7 +464,7 @@ export function NewLandingPage({ navigate }: LandingProps) {
         </section>
 
         <section className="nl-getting-started-section" id="getting-started">
-          <div className="nl-section-kicker">A CLEAR FIRST-RUN JOURNEY <span>08 / GETTING STARTED</span></div>
+          <div className="nl-section-kicker">A CLEAR FIRST-RUN JOURNEY <span>11 / GETTING STARTED</span></div>
           <div className="nl-getting-heading"><h2>Start with the basics.<br/><em>Build with confidence.</em></h2><p>Institution onboarding starts with an owner account. From there, establish the institution and give each invited person the access their role needs.</p></div>
           <div className="nl-getting-steps">
             <article><span>01</span><h3>Create the owner account</h3><p>Enter your name, institution name, type and sign-in details.</p></article>
@@ -478,7 +478,7 @@ export function NewLandingPage({ navigate }: LandingProps) {
 
         <section className="nl-availability-section" id="availability">
           <div className="nl-section-heading">
-            <div><div className="nl-section-kicker">KNOW WHAT IS INCLUDED <span>10 / AVAILABILITY</span></div><h2>A clear view of<br/><em>today and what is next.</em></h2></div>
+            <div><div className="nl-section-kicker">KNOW WHAT IS INCLUDED <span>12 / AVAILABILITY</span></div><h2>A clear view of<br/><em>today and what is next.</em></h2></div>
             <p>Understand the current cloud edition, responsive browser access, services that require provider setup and capabilities that are still planned.</p>
           </div>
           <div className="nl-availability-grid">
@@ -492,7 +492,7 @@ export function NewLandingPage({ navigate }: LandingProps) {
 
         <section className="nl-resources-section" id="resources">
           <div className="nl-section-heading">
-            <div><div className="nl-section-kicker">HELP WHEN YOU NEED IT <span>11 / RESOURCES</span></div><h2>Find your next step.<br/><em>Keep moving forward.</em></h2></div>
+            <div><div className="nl-section-kicker">HELP WHEN YOU NEED IT <span>13 / RESOURCES</span></div><h2>Find your next step.<br/><em>Keep moving forward.</em></h2></div>
             <p>Browse practical product information and release details before onboarding or when your team needs help with a workspace.</p>
           </div>
           <div className="nl-resources-grid">
@@ -506,7 +506,7 @@ export function NewLandingPage({ navigate }: LandingProps) {
 
         <section className="nl-faq-section" id="faq">
           <div className="nl-faq-intro">
-            <div className="nl-section-kicker">GOOD TO KNOW <span>09 / FREQUENT QUESTIONS</span></div>
+            <div className="nl-section-kicker">GOOD TO KNOW <span>14 / FREQUENT QUESTIONS</span></div>
             <h2>Clear answers<br/><em>before you begin.</em></h2>
             <p>Understand the current cloud release, mobile-browser access, connected roles and integration boundaries.</p>
             <a href="/#/public/support">Visit the help centre <ArrowUpRight size={15}/></a>
