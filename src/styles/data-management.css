@@ -157,3 +157,15 @@
 .ed360-helpdesk-empty{display:grid;place-content:center;justify-items:center;gap:8px;min-height:260px;color:#75869a;text-align:center}
 .ed360-helpdesk-resolution{display:flex;gap:8px;align-items:center;color:#27704c;padding:12px;background:#f0faf4;border-radius:9px}
 @media(max-width:760px){.ed360-helpdesk-columns{grid-template-columns:1fr}.ed360-helpdesk-list{max-height:360px}.ed360-helpdesk .ed360-data-form>label{min-width:100%}}
+
+
+.ed360-duplicate-workspace{display:grid;gap:16px}
+.ed360-duplicate-workspace .ed360-data-card{display:grid;gap:14px}
+.ed360-duplicate-workspace .ed360-workspace-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.ed360-duplicate-workspace .ed360-workspace-kpis article{padding:13px;border:1px solid #e2e9f0;border-radius:11px;display:grid;gap:5px}
+.ed360-duplicate-workspace .ed360-workspace-kpis article span{font-size:12px;color:#667b90}
+.ed360-duplicate-workspace .ed360-workspace-kpis article strong{font-size:23px;color:#18324e}
+.ed360-duplicate-workspace td input{min-width:130px;max-width:210px;border:1px solid #d5deea;border-radius:7px;padding:7px}
+.ed360-duplicate-actions{display:flex;gap:5px;flex-wrap:wrap}
+.ed360-duplicate-actions .button{font-size:11px;padding:6px 8px}
+@media(max-width:700px){.ed360-duplicate-workspace .ed360-workspace-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
