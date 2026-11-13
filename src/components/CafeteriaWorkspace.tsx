@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { Coffee, Download, Package, RefreshCw, ShoppingBasket, Utensils } from 'lucide-react'
+import { Coffee, Download, RefreshCw } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import '../styles/data-management.css'
@@ -103,7 +103,7 @@ export function CafeteriaWorkspace({workspaceKey,onToast}:{workspaceKey:string;o
    const {error}=await supabase!.from('cafeteria_daily_availability').upsert({
     institution_id:user.institutionId,menu_item_id:availabilityForm.menu_item_id,
     availability_date:availabilityForm.availability_date,quantity_available:Number(availabilityForm.quantity_available),
-    quantity_sold:0,status:'available',updated_by:user.id,updated_at:new Date().toISOString()
+    status:Number(availabilityForm.quantity_available)>0?'available':'unavailable',updated_by:user.id,updated_at:new Date().toISOString()
    },{onConflict:'institution_id,menu_item_id,availability_date'})
    if(error)throw error
    setAvailabilityForm({availability_date:day()})
