@@ -301,3 +301,8 @@
 @media (prefers-reduced-motion: reduce) {
   .gic-site *, .gic-site *::before, .gic-site *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* Give each portal card its own surface so an unused grid cell never appears. */
+.gic-portal-grid { border: 0; background: transparent; gap: 12px; }
+.gic-portal-card { border: 1px solid var(--gic-line); border-radius: 3px; }
+.gic-portal-card:hover { border-color: #b9c8b6; box-shadow: 0 8px 20px rgba(25,61,49,.07); }
