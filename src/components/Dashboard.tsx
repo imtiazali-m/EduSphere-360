@@ -41,6 +41,9 @@ import { PayrollWorkspace } from './PayrollWorkspace'
 import { PeopleHRWorkspace } from './PeopleHRWorkspace'
 import { GovernanceWorkspace } from './GovernanceWorkspace'
 import { InstitutionOperationsWorkspace } from './InstitutionOperationsWorkspace'
+import { DataManagementWorkspace } from './DataManagementWorkspace'
+import { CustomReportsWorkspace } from './CustomReportsWorkspace'
+import { CommunicationWorkspace } from './CommunicationWorkspace'
 import { AcademicManagementWorkspace } from './AcademicManagementWorkspace'
 import { supabase } from '../lib/supabase'
 import { readDisplayPreferences, writeDisplayPreferences, type DashboardDisplayPreferences, type DashboardFontSize } from '../lib/displayPreferences'
@@ -926,6 +929,9 @@ export function Dashboard({ onToast }: Props) {
               {tab.targetKey === 'notifications' ? <NotificationCenter onToast={onToast} onUnreadCountChange={setUnreadAnnouncementCount}/> :
                 tab.targetKey === 'overview' ? <RoleDashboard onNavigate={navigateChild}/> :
                 tab.targetKey === 'institutional' && tab.targetWindow.startsWith('examinations:') ? <AssessmentWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'data-management' ? <DataManagementWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'custom-reports' ? <CustomReportsWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'messaging' ? <CommunicationWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'institutional' && linkedWorkspaceKeys.includes(tab.targetWindow) ? <LinkedOperationsWorkspace workspaceKey={tab.targetWindow} onToast={onToast} onNavigate={navigateChild}/> :
                 tab.targetKey === 'institutional' ? <InstitutionalWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'unavailable' ? <WorkspaceUnavailable groupKey={tab.targetWindow.split(':')[0]} itemKey={tab.targetWindow.split(':').slice(1).join(':')} onNavigate={navigate}/> :
