@@ -1,6 +1,6 @@
 # Migration history
 
-The fifty-three timestamped migration files in this folder match the remote migration history recorded by the linked Supabase project. Keep each 14-digit timestamp unchanged so local and remote migration histories remain aligned.
+The fifty-four timestamped migration files in this folder match the remote migration history recorded by the linked Supabase project. Keep each 14-digit timestamp unchanged so local and remote migration histories remain aligned.
 
 The current online application includes the reviewed schema changes for the existing live schema, Faculty & Employee Management, and Student Management operations (admission lifecycle, linked guardian contacts, class placements, private student documents and audit history for attendance, published results, assignment submissions, guardian policy consolidation and activity indexes). The Student Management and Faculty/Employee migrations have already been applied to the linked project; do not replay them manually.
 
@@ -61,3 +61,6 @@ The college redesign adds three migrations to the linked Supabase project:
 The seven existing membership roles remain the authentication ceiling. Profiles such as Principal, Vice Principal, HOD, Registrar, Admissions Officer, Examination Controller, Invigilator, Accounts Officer, Cashier, HR Manager, Librarian and Receptionist are job/access profiles assigned to a matching active membership role. A profile cannot elevate an account to owner or administrator. An account with any custom assignment is restricted to its active profiles; an account with no custom assignment retains its prior role-based access. Do not seed or assign profiles automatically; the institution owner/authorised administrator must review the employee and scope before assignment.
 
 The current permission guard covers direct RLS-backed access to the listed tables and has explicit database triggers for result and approval status decisions. Review existing SECURITY DEFINER RPCs separately before claiming every RPC-based action has full custom-profile enforcement. The existing project security advisor still reports pre-existing SECURITY DEFINER functions exposed to authenticated users and recommends reviewing them individually.
+
+
+- `20261113175010_college_custom_role_high_impact_rpc_guards.sql` adds the custom-profile checks to question-paper approval, payroll approval and adjustments, transport fee charge creation, and institutional setting approval RPCs. These checks run in addition to the original base membership-role checks.
