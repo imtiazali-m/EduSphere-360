@@ -2,7 +2,7 @@ import { useState } from 'react'
 import {
   Activity, ArrowRight, ArrowUpRight, BarChart3, Bell, BookOpen, Building2,
   CalendarDays, Check, CheckCircle2, ChevronRight, ClipboardCheck,
-  GraduationCap, Layers3, LockKeyhole, Menu, ShieldCheck,
+  GraduationCap, Layers3, LockKeyhole, Menu, Monitor, ShieldCheck,
   Users, Wallet, X, Zap,
 } from 'lucide-react'
 import type { AppRole } from '../lib/types'
