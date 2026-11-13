@@ -58,19 +58,19 @@ using (user_id=(select auth.uid()) or public.has_institution_role(institution_id
 create policy college_user_role_assignments_admin_insert on public.institution_user_role_assignments for insert to authenticated
 with check (
   public.has_institution_role(institution_id,array['owner','admin']::text[])
-  and (campus_id is null or exists(select 1 from public.campuses c where c.id=campus_id and c.institution_id=institution_id))
-  and (department_id is null or exists(select 1 from public.departments d where d.id=department_id and d.institution_id=institution_id))
-  and exists(select 1 from public.memberships m join public.institution_role_profiles p on p.id=role_profile_id and p.institution_id=m.institution_id
-    where m.institution_id=institution_id and m.user_id=user_id and m.status='active' and m.role=p.base_role)
+  and (institution_user_role_assignments.campus_id is null or exists(select 1 from public.campuses c where c.id=institution_user_role_assignments.campus_id and c.institution_id=institution_user_role_assignments.institution_id))
+  and (institution_user_role_assignments.department_id is null or exists(select 1 from public.departments d where d.id=institution_user_role_assignments.department_id and d.institution_id=institution_user_role_assignments.institution_id))
+  and exists(select 1 from public.memberships m join public.institution_role_profiles p on p.id=institution_user_role_assignments.role_profile_id and p.institution_id=m.institution_id
+    where m.institution_id=institution_user_role_assignments.institution_id and m.user_id=institution_user_role_assignments.user_id and m.status='active' and m.role=p.base_role)
 );
 create policy college_user_role_assignments_admin_update on public.institution_user_role_assignments for update to authenticated
 using (public.has_institution_role(institution_id,array['owner','admin']::text[]))
 with check (
   public.has_institution_role(institution_id,array['owner','admin']::text[])
-  and (campus_id is null or exists(select 1 from public.campuses c where c.id=campus_id and c.institution_id=institution_id))
-  and (department_id is null or exists(select 1 from public.departments d where d.id=department_id and d.institution_id=institution_id))
-  and exists(select 1 from public.memberships m join public.institution_role_profiles p on p.id=role_profile_id and p.institution_id=m.institution_id
-    where m.institution_id=institution_id and m.user_id=user_id and m.status='active' and m.role=p.base_role)
+  and (institution_user_role_assignments.campus_id is null or exists(select 1 from public.campuses c where c.id=institution_user_role_assignments.campus_id and c.institution_id=institution_user_role_assignments.institution_id))
+  and (institution_user_role_assignments.department_id is null or exists(select 1 from public.departments d where d.id=institution_user_role_assignments.department_id and d.institution_id=institution_user_role_assignments.institution_id))
+  and exists(select 1 from public.memberships m join public.institution_role_profiles p on p.id=institution_user_role_assignments.role_profile_id and p.institution_id=m.institution_id
+    where m.institution_id=institution_user_role_assignments.institution_id and m.user_id=institution_user_role_assignments.user_id and m.status='active' and m.role=p.base_role)
 );
 
 create or replace function public.college_department_for_student(target_student uuid)
