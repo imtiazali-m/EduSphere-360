@@ -65,6 +65,10 @@ async function inspectViewport({ name, width, height }) {
     assert.equal(response?.status(), 200, `${name}: college homepage did not return HTTP 200`)
     await page.locator('.gic-hero h1').waitFor({ state: 'visible' })
     await page.waitForTimeout(250)
+    await page.waitForFunction(() => {
+      const photos = [...document.querySelectorAll('.gic-photo-frame img, .gic-life-photo img')]
+      return photos.length === 2 && photos.every(image => image instanceof HTMLImageElement && image.complete && image.naturalWidth > 0)
+    }, { timeout: 15000 }, `${name}: both illustrative college photographs should load`)
 
     const heading = (await page.locator('.gic-hero h1').innerText()).replace(/\\s+/g, ' ').trim()
     assert.match(heading, /Learn here/i, `${name}: college homepage headline is missing`)
