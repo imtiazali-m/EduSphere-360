@@ -128,7 +128,7 @@ async function inspectViewport({name,width,height}){
 
 try{
   await waitForPreview()
-  browser=await chromium.launch({headless:true,args:['--no-sandbox']})
+  browser=await chromium.launch({headless:true,executablePath:process.env.PLAYWRIGHT_EXECUTABLE_PATH??(process.platform==='linux'?'/usr/bin/google-chrome':undefined),args:['--no-sandbox']})
   for(const viewport of [
     {name:'desktop',width:1440,height:1000},
     {name:'small-desktop',width:1024,height:900},
