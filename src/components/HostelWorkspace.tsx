@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { BedDouble, Building2, CalendarClock, CheckCircle2, ClipboardList, DoorOpen, Download, RefreshCw, Users, Wrench } from 'lucide-react'
+import { Building2, Download, RefreshCw } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import '../styles/data-management.css'
@@ -53,7 +53,6 @@ export function HostelWorkspace({workspaceKey,onToast}:{workspaceKey:string;onTo
  const [search,setSearch]=useState('')
  const [status,setStatus]=useState('all')
  const [form,setForm]=useState<Record<string,string>>({})
- const [message,setMessage]=useState('')
  async function load(){
   if(!supabase||!user){setLoading(false);setError('The cloud database is not available.');return}
   setLoading(true);setError('')
@@ -80,7 +79,6 @@ export function HostelWorkspace({workspaceKey,onToast}:{workspaceKey:string;onTo
  }
  useEffect(()=>{void load()},[user?.id,user?.institutionId])
  const activeResidents=useMemo(()=>residents.filter(r=>r.status==='active'),[residents])
- const activeBeds=beds.filter(b=>b.status==='available'||b.status==='occupied')
  const availableBeds=beds.filter(b=>b.status==='available')
  const occupiedBeds=beds.filter(b=>b.status==='occupied')
  const visible=useMemo(()=>{
@@ -104,7 +102,7 @@ export function HostelWorkspace({workspaceKey,onToast}:{workspaceKey:string;onTo
  const run=async(action:()=>Promise<void>,success:string)=>{
   if(busy)return
   setBusy(true)
-  try{await action();setMessage(success);onToast(success);setForm({});await load()}
+  try{await action();onToast(success);setForm({});await load()}
   catch(e){onToast(e instanceof Error?e.message:'The operation could not be completed.',true)}
   finally{setBusy(false)}
  }
