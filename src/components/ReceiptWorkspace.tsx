@@ -16,7 +16,7 @@ function printable(row:ReceiptRow,template?:Row){
  return {receipt:row.receipt_number,student:val(snapshot,['student_name','student_full_name','payer_name']),studentId:val(snapshot,['admission_no','student_admission_no']),paymentDate:val(snapshot,['payment_date','paid_at','created_at']),invoice:val(snapshot,['invoice_number','invoice_no']),amount:val(snapshot,['amount','paid_amount','payment_amount'],'0'),method:val(snapshot,['payment_method','method']),reference:val(snapshot,['transaction_reference','reference_number','transaction_id']),templateTitle:String(template?.title??'Official fee receipt')}
 }
 export function ReceiptWorkspace({workspaceKey,onToast}:{workspaceKey:string;onToast:(message:string,error?:boolean)=>void}){
- const {user,mode}=useAuth()
+ const {user}=useAuth()
  const page=workspaceKey.split(':').slice(-1)[0]
  const admin=Boolean(user&&['owner','admin'].includes(user.role))
  const finance=Boolean(user&&['owner','admin','accountant'].includes(user.role))
