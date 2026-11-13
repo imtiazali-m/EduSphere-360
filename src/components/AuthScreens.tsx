@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent, type KeyboardEvent as ReactKeyboardEvent } from 'react'
 import {
   ArrowLeft, ArrowRight, ArrowUpRight, BarChart3, BookOpen, Building2, Bus,
-  CalendarCheck, Check, CheckCircle2, ClipboardCheck, DoorOpen,
+  CalendarCheck, Check, CheckCircle2, ChevronDown, ClipboardCheck, DoorOpen,
   Package, UserCheck,
   GraduationCap, Headphones, HeartHandshake, Layers3, LockKeyhole,
   Eye, EyeOff, Mail, Menu, Monitor, Server, ShieldCheck, Sparkles,
@@ -160,7 +160,7 @@ export function WelcomeScreen({ navigate }: ScreenProps) {
   return (
     <div className="edm-home">
       <header className="edm-header">
-        <a className="edm-brand" href="#top" aria-label="EduSphere 360 home" onClick={closeMenu}>
+        <a className="edm-brand" href="#/" aria-label="EduSphere 360 home" onClick={closeMenu}>
           <span className="edm-brand-symbol"><GraduationCap size={24} strokeWidth={2.1}/><i>360</i></span>
           <span className="edm-brand-copy"><b>EduSphere <em>360</em></b><small>EDUCATION MANAGEMENT</small></span>
         </a>
@@ -169,12 +169,31 @@ export function WelcomeScreen({ navigate }: ScreenProps) {
         </button>
         <nav className={`edm-nav ${mobileOpen ? 'is-open' : ''}`} aria-label="Main navigation">
           <a className="edm-nav-link" href="#top" onClick={closeMenu}>Home</a>
-          <a className="edm-nav-link" href="#features" onClick={closeMenu}>Features</a>
-          <a className="edm-nav-link" href="#solutions" onClick={closeMenu}>Solutions</a>
-          <a className="edm-nav-link" href="#about" onClick={closeMenu}>About</a>
+          <div className="edm-nav-group"><button className="edm-nav-link" type="button">Platform <ChevronDown size={13}/></button><div className="edm-nav-dropdown">
+            <a href="#/public/features" onClick={closeMenu}><Layers3 size={17}/><span><b>Feature catalogue</b><small>Every platform area and release status</small></span></a>
+            <a href="#/public/product-tour" onClick={closeMenu}><Monitor size={17}/><span><b>Product tour</b><small>How institutional workflows connect</small></span></a>
+            <a href="#/public/analytics" onClick={closeMenu}><BarChart3 size={17}/><span><b>Analytics preview</b><small>Enrollment, attendance and finance views</small></span></a>
+            <a href="#/public/campus-services" onClick={closeMenu}><Building2 size={17}/><span><b>Campus services</b><small>Library, transport and facilities</small></span></a>
+          </div></div>
+          <div className="edm-nav-group"><button className="edm-nav-link" type="button">Solutions <ChevronDown size={13}/></button><div className="edm-nav-dropdown">
+            <a href="#/public/solutions" onClick={closeMenu}><Users size={17}/><span><b>Seven role workspaces</b><small>Access shaped by responsibility</small></span></a>
+            <a href="#/public/solutions#schools" onClick={closeMenu}><GraduationCap size={17}/><span><b>Schools</b><small>Learners, classes and families</small></span></a>
+            <a href="#/public/solutions#colleges" onClick={closeMenu}><BookOpen size={17}/><span><b>Colleges</b><small>Departments and programmes</small></span></a>
+            <a href="#/public/solutions#universities" onClick={closeMenu}><Building2 size={17}/><span><b>Universities</b><small>Multi-department coordination</small></span></a>
+          </div></div>
+          <div className="edm-nav-group"><button className="edm-nav-link" type="button">Explore <ChevronDown size={13}/></button><div className="edm-nav-dropdown">
+            <a href="#/public/about" onClick={closeMenu}><HeartHandshake size={17}/><span><b>About EduSphere</b><small>Purpose and product principles</small></span></a>
+            <a href="#/public/integrations" onClick={closeMenu}><Server size={17}/><span><b>Integrations</b><small>What requires provider setup</small></span></a>
+            <a href="#/public/pricing" onClick={closeMenu}><FileText size={17}/><span><b>Plans & availability</b><small>Current edition information</small></span></a>
+            <a href="#/public/mobile" onClick={closeMenu}><Monitor size={17}/><span><b>Mobile access</b><small>Responsive browser experience</small></span></a>
+          </div></div>
+          <div className="edm-nav-group"><button className="edm-nav-link" type="button">Resources <ChevronDown size={13}/></button><div className="edm-nav-dropdown edm-dropdown-right">
+            <a href="#/public/resources" onClick={closeMenu}><BookOpen size={17}/><span><b>Getting started</b><small>A guided first look</small></span></a>
+            <a href="#/public/support" onClick={closeMenu}><Headphones size={17}/><span><b>Help & FAQs</b><small>Practical product answers</small></span></a>
+            <a href="#/public/updates" onClick={closeMenu}><FileText size={17}/><span><b>Release information</b><small>Current scope and availability</small></span></a>
+            <a href="#/public/reviews" onClick={closeMenu}><HeartHandshake size={17}/><span><b>Institution feedback</b><small>Verified stories only</small></span></a>
+          </div></div>
           <a className="edm-nav-link" href="#contact" onClick={closeMenu}>Contact</a>
-          <a className="edm-nav-link" href="#showcase" onClick={closeMenu}>Product tour</a>
-          <a className="edm-nav-link" href="#faq" onClick={closeMenu}>FAQ</a>
         </nav>
         <div className="edm-header-actions"><button className="edm-login-link" onClick={() => go('login')}>Login</button><button className="edm-signup-button" onClick={() => go('setup')}>Get Started <ArrowUpRight size={16}/></button></div>
       </header>
@@ -458,18 +477,18 @@ export function WelcomeScreen({ navigate }: ScreenProps) {
       <footer className="edm-footer">
         <div className="edm-footer-main">
           <div className="edm-footer-brand">
-            <a className="edm-brand edm-brand-footer" href="#top" aria-label="EduSphere 360 home">
+            <a className="edm-brand edm-brand-footer" href="#/" aria-label="EduSphere 360 home">
               <span className="edm-brand-symbol"><GraduationCap size={24}/><i>360</i></span>
               <span className="edm-brand-copy"><b>EduSphere <em>360</em></b><small>EDUCATION MANAGEMENT</small></span>
             </a>
-            <p>One intelligent system for the people, learning and operations of your institution.</p>
-            <div className="edm-footer-free"><Sparkles size={15}/> Online core platform</div>
+            <p>One connected system for the people, learning and operations of your institution.</p>
+            <div className="edm-footer-free"><ShieldCheck size={15}/> Cloud-first institution platform</div>
           </div>
-          <div className="edm-footer-col"><b>Platform</b><a href="#about">About EduSphere</a><a href="#features">Features</a><a href="#solutions">Role-based solutions</a><a href="#institution-types">Institution types</a><a href="#campus-services">Campus services</a></div>
-          <div className="edm-footer-col"><b>Explore</b><a href="#analytics">Analytics preview</a><a href="#workflow">How it works</a><a href="#security">Security & reliability</a><a href="#testimonials">Institution feedback</a><a href="#faq">Frequently asked questions</a></div>
-          <div className="edm-footer-col"><b>Get started</b><a href="#get-started">Create an institution</a><a href="#contact">Contact & help</a><button type="button" onClick={() => go('login')}>Login to your account</button><button type="button" onClick={() => setLegalDocument('privacy')}>Privacy notice</button><button type="button" onClick={() => setLegalDocument('terms')}>Terms & conditions</button><a href="#top">Back to top</a></div>
+          <div className="edm-footer-col"><b>Platform</b><a href="#/public/features">Feature catalogue</a><a href="#/public/solutions">Role-based workspaces</a><a href="#/public/analytics">Analytics preview</a><a href="#/public/campus-services">Campus services</a><a href="#/public/integrations">Integrations</a></div>
+          <div className="edm-footer-col"><b>Discover</b><a href="#/public/about">About EduSphere</a><a href="#/public/product-tour">Product tour</a><a href="#/public/mobile">Mobile access</a><a href="#/public/pricing">Plans & availability</a><a href="#/public/updates">Release information</a></div>
+          <div className="edm-footer-col"><b>Help & access</b><a href="#/public/resources">Getting started</a><a href="#/public/support">Help & FAQs</a><a href="#/public/reviews">Institution feedback</a><button type="button" onClick={() => go('login')}>Login to your account</button><button type="button" onClick={() => setLegalDocument('privacy')}>Privacy notice</button><button type="button" onClick={() => setLegalDocument('terms')}>Terms & conditions</button><button type="button" onClick={() => go('setup')}>Create an institution</button><a href="#top">Back to top</a></div>
         </div>
-        <div className="edm-footer-bottom"><span>© {new Date().getFullYear()} EduSphere 360. All rights reserved.</span><span>Built for schools · colleges · universities</span><a href="#top">Back to top ↑</a></div>
+        <div className="edm-footer-bottom"><span>© {new Date().getFullYear()} EduSphere 360. All rights reserved.</span><span>Schools · colleges · universities</span><a href="#top">Back to top ↑</a></div>
       </footer>
       {legalDocument && <LegalNotice kind={legalDocument} onClose={() => setLegalDocument(null)} />}
     </div>
