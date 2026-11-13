@@ -38,10 +38,10 @@ async function loadAllPages<T>(
 }
 
 const palette:Record<string,{accent:string;soft:string;ink:string}>={
- administration:{accent:'#667d98',soft:'#f0f3f7',ink:'#344a61'},
- library:{accent:'#5368c9',soft:'#eef0ff',ink:'#35458f'},
- inventory:{accent:'#c58b24',soft:'#fff7e8',ink:'#795515'},
- transport:{accent:'#d87831',soft:'#fff1e8',ink:'#8d481d'}
+ administration:{accent:'#55735d',soft:'#edf1e8',ink:'#284a37'},
+ library:{accent:'#55735d',soft:'#e8eee6',ink:'#284a37'},
+ inventory:{accent:'#af793b',soft:'#f6efdf',ink:'#795515'},
+ transport:{accent:'#a65b3b',soft:'#f5eae3',ink:'#763c29'}
 }
 
 export function LinkedOperationsWorkspace({workspaceKey,onToast,onNavigate}:Props){
