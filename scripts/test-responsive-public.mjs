@@ -86,7 +86,7 @@ async function inspectViewport({name,width,height}){
       await page.locator('.es-auth-page').waitFor({state:'visible'})
       await page.locator('.es-auth-form').first().waitFor({state:'visible'})
       const selected=page.locator('.es-account-type button[aria-pressed="true"] b')
-      await page.waitForFunction(expected=>document.querySelector('.es-account-type button[aria-pressed="true"] b')?.textContent?.trim()===expected,category)
+      await page.waitForFunction(expected =>document.querySelector('.es-account-type button[aria-pressed="true"] b')?.textContent?.trim()===expected,category)
       assert.equal((await selected.innerText()).trim(),category,`${name}: ${role} account category does not match its role`)
       await assertNoHorizontalOverflow(page,`${name} ${role} login`)
       await page.screenshot({path:`${artifactDir}/${name}-${role}-login.png`,fullPage:true,animations:'disabled'})
