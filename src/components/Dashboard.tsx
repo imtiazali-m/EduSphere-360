@@ -639,7 +639,42 @@ export function Dashboard({ onToast }: Props) {
 
   const available = useMemo(() => modulesForRole(user!.role), [user?.role])
   const visibleGroups = useMemo(() => roleNavigationGroups(user!.role), [user?.role])
-  const visibleSections = useMemo(() => roleNavigationSections(user!.role,stage7CareAreas), [user?.role,stage7CareAreas])
+  const visibleSections = useMemo(() => {
+    const sections = roleNavigationSections(user!.role,stage7CareAreas)
+    if (!user?.customAccessConfigured || user.role === 'owner') return sections
+    const grants = user.customRolePermissions ?? {}
+    const groupModules: Record<string,string[]> = {
+      dashboard: [],
+      administration: ['departments','campuses','settings','approvals','work_tasks','announcements'],
+      backup: ['institutional_records'],
+      'people-hr': ['students','employees','hr','payroll','certificates'],
+      attendance: ['attendance','employee_attendance'],
+      behaviour: ['institutional_records'],
+      certificates: ['certificates','institutional_records'],
+      'academic-management': ['programs','subjects','assignments'],
+      'question-bank': ['examinations'],
+      examinations: ['examinations'],
+      'class-tests': ['examinations','assignments'],
+      library: ['library'],
+      'accounts-finance': ['fees','payroll'],
+      fees: ['fees'],
+      receivables: ['fees'],
+      payments: ['fees'],
+      receipts: ['fees'],
+      reconciliation: ['fees','payroll'],
+      communication: ['announcements'],
+      transport: ['institutional_records'],
+      inventory: ['institutional_records'],
+      facilities: ['institutional_records'],
+      visitors: ['visitors'],
+      reports: ['students','attendance','examinations','fees','payroll'],
+      ai: ['institutional_records'],
+    }
+    return sections.map(section => ({
+      ...section,
+      groups: section.groups.filter(group => group.key === 'dashboard' || (groupModules[group.key] ?? []).some(moduleKey => (grants[moduleKey] ?? []).includes('view'))),
+    })).filter(section => section.groups.length > 0)
+  }, [user?.role,user?.customAccessConfigured,user?.customRolePermissions,stage7CareAreas])
   const searchResults = useMemo(() => {
     const query = searchText.trim().toLowerCase()
     if (!query) return []
