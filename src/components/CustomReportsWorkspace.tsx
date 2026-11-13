@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { BarChart3, Download, Play, Plus, RefreshCw, Save, Search } from 'lucide-react'
+import { BarChart3, Download, Play, RefreshCw, Save } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { listRecords, createRecord } from '../lib/data'
 import { downloadCsv, type CsvColumn } from '../lib/csv'
