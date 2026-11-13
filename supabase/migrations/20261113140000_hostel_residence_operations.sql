@@ -13,7 +13,7 @@ create table if not exists public.hostel_buildings (
   constraint hostel_buildings_id_institution_uq unique(id,institution_id),
   constraint hostel_buildings_code_uq unique(institution_id,building_code),
   constraint hostel_buildings_warden_fk foreign key (warden_teacher_id,institution_id)
-    references public.teachers(id,institution_id) on delete set null
+    references public.teachers(id,institution_id) on delete restrict
 );
 
 create table if not exists public.hostel_rooms (
@@ -156,7 +156,7 @@ create table if not exists public.hostel_maintenance_requests (
   constraint hostel_maintenance_room_fk foreign key (room_id,institution_id)
     references public.hostel_rooms(id,institution_id) on delete restrict,
   constraint hostel_maintenance_assignee_fk foreign key (assigned_to,institution_id)
-    references public.teachers(id,institution_id) on delete set null
+    references public.teachers(id,institution_id) on delete restrict
 );
 
 create index if not exists hostel_maintenance_status_idx on public.hostel_maintenance_requests(institution_id,status,priority,created_at desc);
@@ -300,7 +300,7 @@ begin
   return resident_row;
 end;
 $$;
-revoke all on function public.transfer_hostel_resident(uuid,uuid,text) from public;
+revoke all on function public.transfer_hostel_resident(uuid,uuid,uuid,text) from public;
 grant execute on function public.transfer_hostel_resident(uuid,uuid,text) to authenticated;
 
 create or replace function public.record_hostel_movement(
