@@ -82,6 +82,7 @@ function shellTarget(route) {
   const customReports = route.startsWith('custom-reports:')
   const messaging = route.startsWith('messaging:')
   const hostel = route.startsWith('hostel:')
+  const procurement = route.startsWith('procurement:')
   const personal = route.startsWith('personal:')
   const assistant = route.startsWith('assistant:')
   const frontOffice = route.startsWith('frontoffice:')
@@ -104,6 +105,7 @@ function shellTarget(route) {
     : customReports ? 'custom-reports'
     : messaging ? 'messaging'
     : hostel ? 'hostel'
+    : procurement ? 'procurement'
     : personal ? 'personal'
     : assistant ? 'assistant'
     : frontOffice ? 'frontoffice'
@@ -126,6 +128,7 @@ function shellTarget(route) {
     : customReports ? route.slice('custom-reports:'.length)
     : messaging ? route.slice('messaging:'.length)
     : hostel ? route.slice('hostel:'.length)
+    : procurement ? route.slice('procurement:'.length)
     : personal ? route.slice('personal:'.length)
     : assistant ? route.slice('assistant:'.length)
     : frontOffice ? route.slice('frontoffice:'.length)
@@ -158,6 +161,10 @@ function checkView(role, route, dispatcher) {
   if (targetKey === 'hostel') {
     const pages = new Set(['hostel-dashboard','hostel-buildings','room-bed-register','resident-allocation','room-transfers','check-in-check-out','hostel-visitor-register','hostel-fees','accommodation-maintenance','occupancy-reports'])
     return { component:'HostelWorkspace', view:targetWindow, status:pages.has(targetWindow)?'Supported':'Unsupported hostel view' }
+  }
+  if(targetKey==='procurement'){
+    const pages=new Set(['supplier-directory','suppliers','purchase-records','purchase-requests','quotation-comparison','purchase-approvals','purchase-orders','goods-receipt','supplier-invoices','procurement-reports'])
+    return {component:'ProcurementWorkspace',view:targetWindow,status:pages.has(targetWindow)?'Supported':'Unsupported procurement view'}
   }
   if (targetKey === 'personal') return { component:'PersonalWorkspace', view:targetWindow, status:new Set(['my-profile','account-settings','notification-settings','my-activity','help-support']).has(targetWindow)?'Supported':'Unsupported personal view' }
   if (targetKey === 'assistant') return { component:'AIAssistantWorkspace', view:targetWindow, status:targetWindow==='chat'?'Supported':'Unsupported AI assistant view' }
@@ -255,6 +262,7 @@ for (const [role, label] of roles) {
         : dashboard.targetKey === 'custom-reports' ? 'CustomReportsWorkspace'
         : dashboard.targetKey === 'messaging' ? 'CommunicationWorkspace'
         : dashboard.targetKey === 'hostel' ? 'HostelWorkspace'
+        : dashboard.targetKey === 'procurement' ? 'ProcurementWorkspace'
         : dashboard.targetKey === 'personal' ? 'PersonalWorkspace'
         : dashboard.targetKey === 'assistant' ? 'AIAssistantWorkspace'
         : dashboard.targetKey === 'frontoffice' ? 'FrontOfficeWorkspace'
