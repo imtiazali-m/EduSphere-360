@@ -4,7 +4,7 @@ import {
   CalendarCheck, Check, CheckCircle2, ChevronDown, ClipboardCheck, DoorOpen,
   Package, UserCheck,
   GraduationCap, Headphones, HeartHandshake, Layers3, LockKeyhole,
-  Eye, EyeOff, Mail, Menu, Monitor, Server, ShieldCheck, Sparkles,
+  Eye, EyeOff, FileText, Mail, Menu, Monitor, Server, ShieldCheck, Sparkles,
   Users, Wallet, X, Zap,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
