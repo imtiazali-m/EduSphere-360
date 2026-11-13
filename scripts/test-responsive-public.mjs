@@ -66,8 +66,9 @@ async function inspectViewport({ name, width, height }) {
     await page.locator('.gic-hero h1').waitFor({ state: 'visible' })
     await page.waitForTimeout(250)
     await page.waitForFunction(() => {
-      const photos = [...document.querySelectorAll('.gic-photo-frame img, .gic-life-photo img')]
-      return photos.length === 2 && photos.every(image => image instanceof HTMLImageElement && image.complete && image.naturalWidth > 0)
+      const hero = document.querySelector('.gic-photo-frame img')
+      const library = document.querySelector('.gic-library-illustration')
+      return hero instanceof HTMLImageElement && hero.complete && hero.naturalWidth > 0 && library instanceof SVGSVGElement
     }, null, { timeout: 15000 })
 
     const heading = (await page.locator('.gic-hero h1').innerText()).replace(/\\s+/g, ' ').trim()
