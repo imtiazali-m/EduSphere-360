@@ -47,6 +47,15 @@ export function CollegeHomePage({ navigate, initialSection }: Props) {
   const [portalOpen, setPortalOpen] = useState(false)
 
   useEffect(() => {
+    if (!portalOpen) return
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setPortalOpen(false)
+    }
+    window.addEventListener('keydown', closeOnEscape)
+    return () => window.removeEventListener('keydown', closeOnEscape)
+  }, [portalOpen])
+
+  useEffect(() => {
     if (!initialSection || initialSection === 'home') return
     const sectionMap: Record<string, string> = {
       about: 'about', features: 'programmes', programmes: 'programmes',
@@ -57,7 +66,7 @@ export function CollegeHomePage({ navigate, initialSection }: Props) {
       integrations: 'official-links', pricing: 'about', updates: 'notices',
       reviews: 'about',
     }
-    const target = sectionMap[initialSection] ?? 'about'
+    const target = sectionMap[initialSection.split('/')[0]] ?? 'about'
     window.setTimeout(() => document.getElementById(target)?.scrollIntoView({ behavior: 'auto', block: 'start' }), 80)
   }, [initialSection])
 
