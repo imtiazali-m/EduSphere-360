@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase'
 import { userFacingError } from '../lib/userErrors'
 import { downloadCsv } from '../lib/csv'
 import { getWorkspaceGroup } from '../lib/institutionalCatalog'
+import { createRecord } from '../lib/data'
 
 type Props={workspaceKey:string;onToast:(message:string,error?:boolean)=>void;onNavigate:(key:string)=>void}
 type Campus={id:string;name:string;campus_code?:string|null;address?:string|null;phone?:string|null;email?:string|null;branch_head_name?:string|null;academic_settings?:Record<string,unknown>;operational_settings?:Record<string,unknown>;is_headquarters:boolean;is_active:boolean}
@@ -16,6 +17,8 @@ type Loan={id:string;book_record_id:string;student_id:string|null;issued_at:stri
 type Movement={id:string;item_record_id:string;movement_type:string;quantity:number;unit_cost?:number|null;movement_date:string;reference_code?:string|null;notes?:string|null}
 type Allocation={id:string;student_id:string;route_record_id:string;stop_record_id?:string|null;vehicle_record_id?:string|null;effective_from:string;effective_to?:string|null;transport_fee:number;status:string;notes?:string|null}
 type TransportEvent={id:string;allocation_id:string;event_type:'boarded'|'alighted'|'absent';occurred_at:string;recorded_by:string;notes?:string|null;source:string}
+type FeeCharge={id:string;allocation_id:string;billing_period:string;amount:number;paid_amount:number;due_date:string;status:string}
+type FeePayment={id:string;charge_id:string;amount:number;payment_method:string;payment_reference?:string|null;received_at:string}
 
 const today=()=>new Date().toLocaleDateString('en-CA')
 const pkMoney=(value:number)=>new Intl.NumberFormat('en-PK',{style:'currency',currency:'PKR',maximumFractionDigits:0}).format(Number(value)||0)
