@@ -921,7 +921,7 @@ export function Dashboard({ onToast }: Props) {
           {workspaceTabs.map(tab => {
             const tabModule = available.find(module => module.key === tab.targetKey)
             const tabAdminKey = tab.targetKey.startsWith('admin:') ? tab.targetKey.slice(6) : undefined
-            const linkedWorkspaceKeys = ['administration:campus-and-branch-management','library:book-issue-and-returns','library:library-reports','inventory:stock-in','inventory:stock-out','inventory:stock-allocation','inventory:stock-adjustments','inventory:inventory-history','inventory:stock-reports','transport:student-transport-allocation','transport:transport-reports']
+            const linkedWorkspaceKeys = ['administration:campus-and-branch-management','library:book-issue-and-returns','library:library-reports','library:reading-records','inventory:stock-in','inventory:stock-out','inventory:stock-allocation','inventory:stock-adjustments','inventory:inventory-history','inventory:stock-reports','transport:student-transport-allocation','transport:transport-reports']
             return <section className="pro-window-panel" key={tab.id} hidden={activeTabId !== tab.id} aria-label={tab.title}>
               {tab.targetKey === 'notifications' ? <NotificationCenter onToast={onToast} onUnreadCountChange={setUnreadAnnouncementCount}/> :
                 tab.targetKey === 'overview' ? <RoleDashboard onNavigate={navigateChild}/> :
