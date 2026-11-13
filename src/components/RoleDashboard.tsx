@@ -356,7 +356,7 @@ export function RoleDashboard({ onNavigate }: Props) {
 
   const headingByRole: Record<AppRole, { eyebrow: string; title: string; subtitle: string }> = {
     owner: { eyebrow: 'COLLEGE-WIDE OVERSIGHT', title: 'College dashboard', subtitle: 'Monitor performance across campuses, review financial health and act on the work that needs attention.' },
-    admin: { eyebrow: 'ADMINISTRATION WORKSPACE', title: 'College operations overview', subtitle: 'Admissions, people, attendance, approvals and the daily running of your institution.' },
+    admin: { eyebrow: 'ADMINISTRATION WORKSPACE', title: 'College operations overview', subtitle: 'Admissions, people, attendance, approvals and the daily running of the college.' },
     accountant: { eyebrow: 'FINANCE WORKSPACE', title: 'Finance overview', subtitle: 'Collections, receivables, receipts and the month’s posted financial activity.' },
     teacher: { eyebrow: 'TEACHING WORKSPACE', title: 'Your teaching day', subtitle: 'Your assigned classes, timetable, attendance work and learning activities.' },
     student: { eyebrow: 'STUDENT WORKSPACE', title: 'My learning dashboard', subtitle: 'Your timetable, attendance, coursework, examinations and account status.' },
@@ -551,7 +551,7 @@ export function RoleDashboard({ onNavigate }: Props) {
           <Panel title="Recent institutional activity" description="Latest recorded audit events." icon={Activity} action={<button type="button" className="rd-text-action" onClick={() => onNavigate('institutional:administration:administrative-audit')}>Open audit</button>}>
             <ActivityList items={get('institutional_audit_events').slice().sort((a, b) => String(b.occurred_at ?? '').localeCompare(String(a.occurred_at ?? '')))} loading={loading || !known('institutional_audit_events')} onNavigate={onNavigate}/>
           </Panel>
-          <Panel title="Institution notices" description="Latest announcements published to your institution." icon={Megaphone}>
+          <Panel title="Institution notices" description="Latest announcements published by the college." icon={Megaphone}>
             <NoticeList items={notices} loading={loading || !known('announcements')}/>
           </Panel>
         </div>
@@ -598,7 +598,7 @@ export function RoleDashboard({ onNavigate }: Props) {
             <button type="button" onClick={() => onNavigate('employees:leave-management')}><span className="rd-alert-icon"><CalendarCheck size={16}/></span><span><strong>{formatCount(leaveRequests.length)} pending leave requests</strong><small>Employee requests awaiting review</small></span></button>
           </div>}
         </Panel>
-        <Panel title="Institution notices" description="Latest published notices." icon={Megaphone}>
+        <Panel title="Institution notices" description="Latest college notices." icon={Megaphone}>
           <NoticeList items={notices} loading={loading || !known('announcements')}/>
         </Panel>
       </div>
@@ -815,7 +815,7 @@ export function RoleDashboard({ onNavigate }: Props) {
         <Panel title="Teacher communication" description="Open the institution’s approved individual messaging workspace." icon={MessageSquare}>
           <div className="rd-communication">
             <span><MessageSquare size={20}/></span>
-            <p>Use the institution communication workspace to contact your child’s teachers through the channels enabled by the school.</p>
+            <p>Use the institution communication workspace to contact your child’s teachers through the channels enabled by the college.</p>
             <button type="button" onClick={() => onNavigate('institutional:communication:individual-messages')}>Open teacher messages</button>
           </div>
         </Panel>
