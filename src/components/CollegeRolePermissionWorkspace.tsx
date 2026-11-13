@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
-import { ArrowDown, ArrowUp, BadgeCheck, BookOpen, Building2, Check, ChevronDown, CircleAlert, Edit3, LockKeyhole, Plus, RefreshCw, Save, ShieldCheck, UserPlus, Users, X } from 'lucide-react'
+import { BadgeCheck, BookOpen, CircleAlert, Edit3, LockKeyhole, Plus, RefreshCw, Save, ShieldCheck, UserPlus, Users, X } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { userFacingError } from '../lib/userErrors'
 import '../styles/college-role-permissions.css'
