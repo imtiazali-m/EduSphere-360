@@ -284,6 +284,12 @@ function institutionOperationsRoute(groupKey:string,itemKey:string):string|undef
 }
 
 function dedicatedRoute(groupKey: string, itemKey: string): string | undefined {
+  if(groupKey==='inventory'){
+    const procurementPages=new Set(['suppliers','supplier-directory','purchase-records','purchase-requests','quotation-comparison','purchase-approvals','purchase-orders','goods-receipt','supplier-invoices','procurement-reports'])
+    const cafeteriaPages=new Set(['cafeteria-dashboard','menu-price-list','daily-availability','sales-transactions','meal-plans','cafeteria-inventory','cafeteria-reports'])
+    if(procurementPages.has(itemKey))return 'procurement:'+(itemKey==='suppliers'?'supplier-directory':itemKey==='purchase-records'?'purchase-orders':itemKey)
+    if(cafeteriaPages.has(itemKey))return 'cafeteria:'+itemKey
+  }
   if(groupKey==='facilities'){
     const hostelPages=new Set(['hostel-dashboard','hostel-buildings','room-bed-register','resident-allocation','room-transfers','check-in-check-out','hostel-visitor-register','hostel-fees','accommodation-maintenance','occupancy-reports'])
     if(hostelPages.has(itemKey))return 'hostel:'+itemKey
