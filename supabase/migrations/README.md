@@ -1,6 +1,6 @@
 # Migration history
 
-The sixty-eight timestamped migration files in this folder match the remote migration history recorded by the linked Supabase project. Keep each 14-digit timestamp unchanged so local and remote migration histories remain aligned.
+The sixty-nine timestamped migration files in this folder match the remote migration history recorded by the linked Supabase project. Keep each 14-digit timestamp unchanged so local and remote migration histories remain aligned.
 
 The current online application includes the reviewed schema changes for the existing live schema, Faculty & Employee Management, and Student Management operations (admission lifecycle, linked guardian contacts, class placements, private student documents and audit history for attendance, published results, assignment submissions, guardian policy consolidation and activity indexes). The Student Management and Faculty/Employee migrations have already been applied to the linked project; do not replay them manually.
 
@@ -78,3 +78,6 @@ Hostel accommodation charges now support separate partial/full payment entries. 
 
 
 Duplicate detection scans real student and teacher identifiers and stores owner/admin review decisions per institution. Possible matches are not merged or deleted automatically; administrators mark confirmed duplicates or false positives after review.
+
+
+The 19 campus/finance workflow files are named with the exact remote applied version prefixes. This is a source filename reconciliation only; the migrations have already been applied to the linked project and must not be replayed. The hostel fee payment ledger and anonymous RPC restriction are included in the reconciled migration inventory.
