@@ -72,11 +72,27 @@ async function inspectViewport({ name, width, height }) {
     const landingTheme = await page.locator('.nl-page').evaluate(element => {
       const pageStyle = getComputedStyle(element)
       const actionStyle = getComputedStyle(element.querySelector('.nl-header-cta'))
-      return { font: pageStyle.fontFamily, canvas: pageStyle.backgroundColor, primary: actionStyle.backgroundColor }
+      const rootStyle = getComputedStyle(document.documentElement)
+      const toRgb = (value) => {
+        const hex = value.trim().replace(/^#/, '')
+        const expanded = hex.length === 3 ? [...hex].map(part => part + part).join('') : hex
+        if (!/^[0-9a-f]{6}$/i.test(expanded)) return value.trim()
+        const number = Number.parseInt(expanded, 16)
+        return `rgb(${(number >> 16) & 255}, ${(number >> 8) & 255}, ${number & 255})`
+      }
+      return {
+        font: pageStyle.fontFamily,
+        displayFont: rootStyle.getPropertyValue('--es-font-display').trim(),
+        canvas: pageStyle.backgroundColor,
+        appCanvas: toRgb(rootStyle.getPropertyValue('--es-canvas')),
+        primary: actionStyle.backgroundColor,
+        appPrimary: toRgb(rootStyle.getPropertyValue('--es-primary-600')),
+      }
     })
-    assert.match(landingTheme.font, /Inter/i, `${name}: landing typography does not match the internal Inter system`)
-    assert.equal(landingTheme.canvas, 'rgb(243, 246, 251)', `${name}: landing canvas does not match the internal app canvas`)
-    assert.equal(landingTheme.primary, 'rgb(49, 111, 224)', `${name}: landing primary action does not match the internal app blue`)
+    assert.match(landingTheme.font, /DM Sans/i, `${name}: landing body typography differs from the internal design system`)
+    assert.match(landingTheme.displayFont, /Manrope/i, `${name}: shared display typography token is missing`)
+    assert.equal(landingTheme.canvas, landingTheme.appCanvas, `${name}: landing canvas must match the final internal app token`)
+    assert.equal(landingTheme.primary, landingTheme.appPrimary, `${name}: landing primary action must match the final internal app token`)
     await assertNoHorizontalOverflow(page, `${name} welcome page`)
 
     await page.locator('#product-tour').waitFor({ state: 'visible' })
