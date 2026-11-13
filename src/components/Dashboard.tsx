@@ -44,6 +44,7 @@ import { InstitutionOperationsWorkspace } from './InstitutionOperationsWorkspace
 import { AcademicManagementWorkspace } from './AcademicManagementWorkspace'
 import { supabase } from '../lib/supabase'
 import { readDisplayPreferences, writeDisplayPreferences, type DashboardDisplayPreferences, type DashboardFontSize } from '../lib/displayPreferences'
+import { displayInstitutionName } from '../lib/collegeIdentity'
 
 interface Props { onToast: (message: string, error?: boolean) => void }
 type Dataset = Record<string, RecordRow[]>
@@ -845,7 +846,7 @@ export function Dashboard({ onToast }: Props) {
         </button>
         <button type="button" className="pro-mobile-close" onClick={() => setSidebarOpen(false)} aria-label="Close navigation"><X size={21}/></button>
       </div>
-      <div className="pro-institution-card"><span className="pro-institution-symbol"><Building2 size={20}/></span><span><b>{user?.institutionName}</b><small>{roleLabels[user!.role]}</small></span></div>
+      <div className="pro-institution-card"><span className="pro-institution-symbol"><Building2 size={20}/></span><span><b>{displayInstitutionName(user?.institutionName)}</b><small>{roleLabels[user!.role]}</small></span></div>
       <nav className="pro-navigation" aria-label="Institution workspace">
         {visibleSections.map(section => <div className="pro-nav-section" key={section.key} aria-label={section.label}>
           <div className="pro-nav-section-label">{section.label}</div>
@@ -913,7 +914,7 @@ export function Dashboard({ onToast }: Props) {
           </div>
           <div className="ed360-topbar-institution"><Building2 size={19}/><span><b>{user?.institutionName}</b><small><i className={'ed360-status-dot ' + (mode === 'cloud' ? 'is-cloud' : 'is-local')}/>{mode === 'cloud' ? 'Online' : 'Local workspace'}</small></span></div>
           <button type="button" className="pro-topbar-bell ed360-topbar-notice" aria-label={`Open notifications${unreadAnnouncementCount ? `, ${unreadAnnouncementCount} unread` : ''}`} title="Open notification centre" onClick={() => navigate('notifications')}><Bell size={18}/>{unreadAnnouncementCount > 0 && <span className="ed360-notification-count">{unreadAnnouncementCount > 99 ? '99+' : unreadAnnouncementCount}</span>}</button>
-          <div className="pro-profile-wrap"><button className="pro-profile-trigger" onClick={() => setProfileOpen(open => !open)} aria-expanded={profileOpen}><span className="pro-profile-avatar">{user?.fullName.slice(0, 1).toUpperCase()}</span><span className="pro-profile-copy"><b>{user?.fullName}</b><small>{roleLabels[user!.role]}</small></span><ChevronDown size={14}/></button>{profileOpen && <div className="pro-profile-menu"><div className="pro-profile-details"><b>{user?.fullName}</b><small>{user?.email}</small><small>{user?.institutionName}</small>{user?.institutionType && <small>Institution type: {user.institutionType.replaceAll('_', ' ')}</small>}<small>Account role: {roleLabels[user!.role]}</small><span className={'pro-profile-mode ' + mode}>Cloud workspace</span></div>{['student', 'parent'].includes(user!.role) && <button type="button" onClick={() => navigate('profile')}><UserRound size={15}/> My Profile</button>}<button type="button" onClick={() => void logout()}><LogOut size={15}/> Sign out</button></div>}</div>
+          <div className="pro-profile-wrap"><button className="pro-profile-trigger" onClick={() => setProfileOpen(open => !open)} aria-expanded={profileOpen}><span className="pro-profile-avatar">{user?.fullName.slice(0, 1).toUpperCase()}</span><span className="pro-profile-copy"><b>{user?.fullName}</b><small>{roleLabels[user!.role]}</small></span><ChevronDown size={14}/></button>{profileOpen && <div className="pro-profile-menu"><div className="pro-profile-details"><b>{user?.fullName}</b><small>{user?.email}</small><small>{displayInstitutionName(user?.institutionName)}</small>{user?.institutionType && <small>Institution type: {user.institutionType.replaceAll('_', ' ')}</small>}<small>Account role: {roleLabels[user!.role]}</small><span className={'pro-profile-mode ' + mode}>Cloud workspace</span></div>{['student', 'parent'].includes(user!.role) && <button type="button" onClick={() => navigate('profile')}><UserRound size={15}/> My Profile</button>}<button type="button" onClick={() => void logout()}><LogOut size={15}/> Sign out</button></div>}</div>
         </div>
       </header>
       <div className="pro-module-stage">
