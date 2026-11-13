@@ -62,15 +62,15 @@ create policy facility_room_reservations_update_requester on public.facility_roo
 create table if not exists public.transport_attendance_events (
   id uuid primary key default gen_random_uuid(),
   institution_id uuid not null references public.institutions(id) on delete cascade,
-  allocation_id uuid not null references public.student_transport_allocations(id) on delete restrict,
+  allocation_id uuid not null,
   event_type text not null check (event_type=any(array['boarded'::text,'alighted'::text,'absent'::text])),
   occurred_at timestamptz not null default now(),
   recorded_by uuid not null references auth.users(id) on delete restrict,
   notes text,
   source text not null default 'manual' check (source=any(array['manual'::text,'device'::text])),
   created_at timestamptz not null default now(),
-  constraint transport_attendance_allocation_institution_fk foreign key (allocation_id,institution_id)
-    references public.student_transport_allocations(id,institution_id) on delete restrict
+  constraint transport_attendance_allocation_fk foreign key (allocation_id)
+    references public.student_transport_allocations(id) on delete restrict
 );
 
 create index if not exists transport_attendance_events_institution_time_idx
