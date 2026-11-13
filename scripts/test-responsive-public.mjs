@@ -70,6 +70,19 @@ async function inspectViewport({ name, width, height }) {
     assert.match(heading, /Bring your whole institution/, `${name}: welcome headline is missing`)
     await assertNoHorizontalOverflow(page, `${name} welcome page`)
 
+    await page.locator('#product-tour').waitFor({ state: 'visible' })
+    assert.equal(await page.locator('.nl-tour-tab').count(), 5, `${name}: product tour should expose five workspace areas`)
+    await page.locator('.nl-tour-tab').nth(2).click()
+    await page.locator('.nl-tour-tab').nth(2).waitFor({ state: 'visible' })
+    assert.equal(await page.locator('.nl-tour-tab').nth(2).getAttribute('aria-selected'), 'true', `${name}: finance tour tab did not activate`)
+    assert.match(await page.locator('.nl-tour-preview h3').innerText(), /fee obligation|records connected/i, `${name}: finance preview content did not update`)
+    assert.equal(await page.locator('.nl-module-group').count(), 4, `${name}: expanded module groups are missing`)
+    assert.equal(await page.locator('.nl-campus-grid article').count(), 5, `${name}: campus service cards are missing`)
+    const faqToggle = page.locator('.nl-faq-list h3 button').nth(1)
+    await faqToggle.click()
+    assert.equal(await faqToggle.getAttribute('aria-expanded'), 'true', `${name}: homepage FAQ did not open`)
+    await page.locator('.nl-mobile-section').waitFor({ state: 'visible' })
+
     await mkdir(artifactDir, { recursive: true })
     await page.screenshot({
       path: `${artifactDir}/${name}-welcome.png`,
@@ -78,7 +91,7 @@ async function inspectViewport({ name, width, height }) {
     })
 
     const menuToggle = page.locator('.nl-mobile-toggle')
-    if (width <= 900) {
+    if (width <= 1040) {
       await menuToggle.waitFor({ state: 'visible' })
       await menuToggle.click()
       await page.locator('.nl-nav.nl-open').waitFor({ state: 'visible' })
@@ -176,6 +189,7 @@ try {
   browser = await chromium.launch({ headless: true, channel: 'chrome' })
   for (const viewport of [
     { name: 'desktop', width: 1440, height: 900 },
+    { name: 'tablet-landscape', width: 1024, height: 768 },
     { name: 'tablet', width: 768, height: 1024 },
     { name: 'mobile', width: 390, height: 844 },
   ]) {
