@@ -47,6 +47,7 @@ create table if not exists public.procurement_request_items (
   estimated_unit_cost numeric(12,2) check(estimated_unit_cost is null or estimated_unit_cost>=0),
   notes text,
   created_at timestamptz not null default now(),
+  constraint procurement_request_items_id_institution_uq unique(id,institution_id),
   constraint procurement_request_items_request_fk foreign key(request_id,institution_id)
     references public.procurement_requests(id,institution_id) on delete cascade,
   constraint procurement_request_items_inventory_fk foreign key(inventory_item_id,institution_id)
@@ -117,6 +118,7 @@ create table if not exists public.purchase_order_items (
   unit_cost numeric(14,2) not null check(unit_cost>=0),
   line_total numeric(14,2) generated always as (round(quantity*unit_cost,2)) stored,
   created_at timestamptz not null default now(),
+  constraint purchase_order_items_id_institution_uq unique(id,institution_id),
   constraint purchase_order_items_order_fk foreign key(purchase_order_id,institution_id)
     references public.purchase_orders(id,institution_id) on delete cascade,
   constraint purchase_order_items_request_item_fk foreign key(request_item_id,institution_id)
