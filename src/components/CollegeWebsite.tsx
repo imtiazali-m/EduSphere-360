@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import {
-  ArrowDownRight, ArrowRight, ArrowUpRight, BookOpen, Building2, CalendarDays,
+  ArrowDownRight, ArrowRight, ArrowUpRight, BookOpen, Building2,
   CheckCircle2, ChevronDown, ClipboardList, ExternalLink, FlaskConical,
   GraduationCap, Landmark, Library, MapPin, Menu, ShieldCheck, Users, X,
 } from 'lucide-react'
@@ -82,7 +82,7 @@ function CollegeMark() {
   )
 }
 
-function OfficialLink({ href, children }: { href: string; children: React.ReactNode }) {
+function OfficialLink({ href, children }: { href: string; children: ReactNode }) {
   return (
     <a className="gic-official-link" href={href} target="_blank" rel="noreferrer">
       {children}<ExternalLink size={14} aria-hidden="true" />
