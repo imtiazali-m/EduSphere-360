@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <rect x="5" y="5" width="118" height="118" rx="28" fill="#f7f1e4" stroke="#18344c" stroke-width="5"/>
+  <path d="M22 28h84v67H22z" rx="8" fill="#e9dfca" stroke="#c99c50" stroke-width="2"/>
+  <path d="M26 31c16-7 28-4 38 5v56c-11-9-23-12-38-5z" fill="#fffdf8" stroke="#18344c" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M102 31c-16-7-28-4-38 5v56c11-9 23-12 38-5z" fill="#fffdf8" stroke="#18344c" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M64 35v57" stroke="#c99c50" stroke-width="2"/>
+  <path d="M34 45c8-3 16-2 23 2M34 56c8-3 16-2 23 2M94 45c-8-3-16-2-23 2M94 56c-8-3-16-2-23 2" fill="none" stroke="#628477" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M20 102h88" stroke="#c99c50" stroke-width="3" stroke-linecap="round"/>
+  <text x="64" y="116" font-family="Georgia,serif" font-size="10" font-weight="bold" text-anchor="middle" fill="#18344c" letter-spacing="1.4">GIDC BADIN</text>
+</svg>
