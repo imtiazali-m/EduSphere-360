@@ -149,7 +149,7 @@ function checkView(role, route, dispatcher) {
     return { component:'CustomReportsWorkspace', view:targetWindow, status:pages.has(targetWindow)?'Supported':'Unsupported custom-report view' }
   }
   if (targetKey === 'messaging') {
-    const pages = new Set(['whatsapp-integration','individual-messages','bulk-messages','class-wise-messaging','employee-notifications','message-templates','email-notifications','delivery-history','communication-logs','communication-reports','parent-communication','internal-messages','complaints-helpdesk'])
+    const pages = new Set(['whatsapp-integration','individual-messages','bulk-messages','class-wise-messaging','employee-notifications','message-templates','email-notifications','delivery-history','communication-logs','communication-reports','parent-communication','internal-messages','complaints-helpdesk','visitor-notifications'])
     return { component:'CommunicationWorkspace', view:targetWindow, status:pages.has(targetWindow)?'Supported':'Unsupported communication view' }
   }
   if (targetKey === 'personal') return { component:'PersonalWorkspace', view:targetWindow, status:new Set(['my-profile','account-settings','notification-settings','my-activity','help-support']).has(targetWindow)?'Supported':'Unsupported personal view' }
