@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { Bell, CheckCheck, Mail, MessageSquare, Plus, RefreshCw, Send, ShieldCheck, Users } from 'lucide-react'
+import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from 'react'
+import { CheckCheck, MessageSquare, Plus, RefreshCw, Send } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { createRecord, listRecords } from '../lib/data'
 import type { RecordRow } from '../lib/types'
+import '../styles/data-management.css'
 import '../styles/data-management.css'
 
 type Member={user_id:string;role:string;full_name:string;email:string}
@@ -50,11 +51,9 @@ export function CommunicationWorkspace({workspaceKey,onToast}:{workspaceKey:stri
  const [templateCategory,setTemplateCategory]=useState('general')
  const [statusFilter,setStatusFilter]=useState('all')
  const [selectedTemplate,setSelectedTemplate]=useState('')
- const [notice,setNotice]=useState('')
  const isProviderPage=itemKey==='whatsapp-integration'||itemKey==='email-notifications'
  const isTemplatePage=itemKey==='message-templates'
  const canCompose=admin&&!isProviderPage&&!isTemplatePage&&['individual-messages','bulk-messages','class-wise-messaging','employee-notifications','parent-communication','internal-messages','complaints-helpdesk'].includes(itemKey)
- const uniqueClasses=useMemo(()=>[...new Set(students.map(x=>x.class_name).filter(Boolean))].sort(),[students])
  async function load(){
   if(!supabase||!user){setLoading(false);return}
   setLoading(true)
@@ -147,7 +146,7 @@ export function CommunicationWorkspace({workspaceKey,onToast}:{workspaceKey:stri
   if(error){onToast(error.message,true);return}
   setMessages(current=>current.map(m=>m.id===row.id?{...m,status:'read',read_at:new Date().toISOString()}:m))
  }
- function applyTemplate(event:React.ChangeEvent<HTMLSelectElement>){templateForForm(event.target.value)}
+ function applyTemplate(event:ChangeEvent<HTMLSelectElement>){templateForForm(event.target.value)}
  if(!user)return null
  return <main className="page-content ed360-module-page ed360-communication-workspace">
   <header className="ed360-workspace-hero"><div className="ed360-workspace-hero-icon"><MessageSquare size={21}/></div><div className="ed360-workspace-hero-copy"><span>COMMUNICATION / IN-APP MESSAGING</span><h1>{title}</h1><p>{description}</p></div><div className="ed360-workspace-hero-tools"><span className="ed360-data-state"><i/> Institution-scoped messages</span><button type="button" className="button button-outline" onClick={()=>void load()}><RefreshCw size={15}/> Refresh</button></div></header>
