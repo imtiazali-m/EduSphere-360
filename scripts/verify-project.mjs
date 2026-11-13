@@ -366,6 +366,8 @@ check('Campus and finance submenu workspaces use their dedicated records and tra
   const helpdesk = read('src/components/HelpdeskWorkspace.tsx')
   assert.ok(helpdesk.includes("rpc('update_institution_helpdesk_ticket'"), 'Helpdesk ticket status and resolution must use the guarded ticket RPC')
   assert.ok(helpdesk.includes('institution_helpdesk_comments'), 'Helpdesk must store threaded ticket conversation comments')
+  const duplicates = read('src/components/DuplicateDetectionWorkspace.tsx')
+  assert.ok(duplicates.includes("rpc('review_possible_duplicate'"), 'Duplicate review decisions must use tenant-checked owner/admin RPC')
   const scheduled = read('src/components/ScheduledReportsWorkspace.tsx')
   assert.ok(scheduled.includes("rpc('log_scheduled_report_execution'"), 'Manual scheduled-report execution must save auditable run history')
   assert.ok(scheduled.includes("createObjectURL"), 'Manual report execution must create a downloadable result file')
@@ -384,6 +386,7 @@ check('Campus and finance submenu workspaces use their dedicated records and tra
     '20261113194000_receipt_payment_status_guard.sql',
     '20261113220000_institution_helpdesk_ticket_lifecycle.sql',
     '20261113230000_hostel_fee_payment_ledger.sql',
+    '20261113240000_duplicate_detection_review_workflow.sql',
     '20261113210000_scheduled_report_execution_history.sql',
     '20261113200000_cafeteria_business_timezone.sql',
     '20261113173000_receipt_rpc_write_privileges.sql',
@@ -1098,8 +1101,8 @@ check('Required database safeguards and Cloudflare redirects remain in the proje
     assert.ok(migrations.includes(migration), `${migration} missing`)
   }
   const timestamped = migrations.filter(name => /^202611\d{8}_.+\.sql$/.test(name))
-  assert.equal(timestamped.length, 67, 'Expected sixty-seven timestamped migrations including hostel fee payment history')
-  assert.ok(read('supabase/migrations/README.md').includes('sixty-seven timestamped migration files'))
+  assert.equal(timestamped.length, 68, 'Expected sixty-eight timestamped migrations including duplicate review history')
+  assert.ok(read('supabase/migrations/README.md').includes('sixty-eight timestamped migration files'))
   assert.equal(read('public/_redirects').trim(), '/* /index.html 200')
   const envExample = read('.env.example')
   const gitignore = read('.gitignore')
