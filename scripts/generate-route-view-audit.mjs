@@ -78,6 +78,9 @@ function shellTarget(route) {
   const finance = route.startsWith('finance:')
   const payroll = route.startsWith('payroll:')
   const peopleHR = route.startsWith('peoplehr:')
+  const dataManagement = route.startsWith('data-management:')
+  const customReports = route.startsWith('custom-reports:')
+  const messaging = route.startsWith('messaging:')
   const personal = route.startsWith('personal:')
   const assistant = route.startsWith('assistant:')
   const frontOffice = route.startsWith('frontoffice:')
@@ -96,6 +99,9 @@ function shellTarget(route) {
     : finance ? 'finance'
     : payroll ? 'payroll'
     : peopleHR ? 'peoplehr'
+    : dataManagement ? 'data-management'
+    : customReports ? 'custom-reports'
+    : messaging ? 'messaging'
     : personal ? 'personal'
     : assistant ? 'assistant'
     : frontOffice ? 'frontoffice'
@@ -114,6 +120,9 @@ function shellTarget(route) {
     : finance ? route.slice('finance:'.length)
     : payroll ? route.slice('payroll:'.length)
     : peopleHR ? route.slice('peoplehr:'.length)
+    : dataManagement ? route.slice('data-management:'.length)
+    : customReports ? route.slice('custom-reports:'.length)
+    : messaging ? route.slice('messaging:'.length)
     : personal ? route.slice('personal:'.length)
     : assistant ? route.slice('assistant:'.length)
     : frontOffice ? route.slice('frontoffice:'.length)
@@ -130,6 +139,18 @@ function checkView(role, route, dispatcher) {
   if (targetKey === 'academic') {
     const supported = new Set(['academic-sessions','classes-sections','subjects-courses','curriculum','lesson-planning','timetable','homework-assignments','study-materials','online-learning','classroom-activities','academic-calendar','learning-progress'])
     return { component:'AcademicManagementWorkspace', view:targetWindow, status:supported.has(targetWindow) ? 'Supported' : 'Unsupported academic workspace' }
+  }
+  if (targetKey === 'data-management') {
+    const pages = new Set(['backup-dashboard','create-backup','scheduled-cloud-backups','backup-history','restore-data','data-recovery','import-data','export-data','bulk-data-import','data-validation','import-history','export-history','data-integrity-reports','duplicate-detection','integration-status'])
+    return { component:'DataManagementWorkspace', view:targetWindow, status:pages.has(targetWindow)?'Supported':'Unsupported data-management view' }
+  }
+  if (targetKey === 'custom-reports') {
+    const pages = new Set(['custom-report-builder','scheduled-reports','report-templates','report-history'])
+    return { component:'CustomReportsWorkspace', view:targetWindow, status:pages.has(targetWindow)?'Supported':'Unsupported custom-report view' }
+  }
+  if (targetKey === 'messaging') {
+    const pages = new Set(['whatsapp-integration','individual-messages','bulk-messages','class-wise-messaging','employee-notifications','message-templates','email-notifications','delivery-history','communication-logs','communication-reports','parent-communication','internal-messages','complaints-helpdesk'])
+    return { component:'CommunicationWorkspace', view:targetWindow, status:pages.has(targetWindow)?'Supported':'Unsupported communication view' }
   }
   if (targetKey === 'personal') return { component:'PersonalWorkspace', view:targetWindow, status:new Set(['my-profile','account-settings','notification-settings','my-activity','help-support']).has(targetWindow)?'Supported':'Unsupported personal view' }
   if (targetKey === 'assistant') return { component:'AIAssistantWorkspace', view:targetWindow, status:targetWindow==='chat'?'Supported':'Unsupported AI assistant view' }
@@ -223,6 +244,9 @@ for (const [role, label] of roles) {
         : dashboard.targetKey === 'finance' ? 'FinanceWorkspace'
         : dashboard.targetKey === 'payroll' ? 'PayrollWorkspace'
         : dashboard.targetKey === 'peoplehr' ? 'PeopleHRWorkspace'
+        : dashboard.targetKey === 'data-management' ? 'DataManagementWorkspace'
+        : dashboard.targetKey === 'custom-reports' ? 'CustomReportsWorkspace'
+        : dashboard.targetKey === 'messaging' ? 'CommunicationWorkspace'
         : dashboard.targetKey === 'personal' ? 'PersonalWorkspace'
         : dashboard.targetKey === 'assistant' ? 'AIAssistantWorkspace'
         : dashboard.targetKey === 'frontoffice' ? 'FrontOfficeWorkspace'
