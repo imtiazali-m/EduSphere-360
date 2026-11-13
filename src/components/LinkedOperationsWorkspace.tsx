@@ -16,8 +16,10 @@ type Loan={id:string;book_record_id:string;student_id:string|null;issued_at:stri
 type ReadingRecord={id:string;student_id:string;book_title:string;reading_date:string;pages_read:number;reading_minutes:number;progress_percent:number|null;rating:number|null;status:string;notes?:string|null;recorded_by:string}
 type Movement={id:string;item_record_id:string;movement_type:string;quantity:number;unit_cost?:number|null;movement_date:string;reference_code?:string|null;notes?:string|null}
 type Allocation={id:string;student_id:string;route_record_id:string;stop_record_id?:string|null;vehicle_record_id?:string|null;effective_from:string;effective_to?:string|null;transport_fee:number;status:string;notes?:string|null}
+type TransportEvent={id:string;allocation_id:string;event_type:'boarded'|'alighted'|'absent';occurred_at:string;recorded_by:string;notes?:string|null;source:'manual'|'device'}
 
 const today=()=>new Date().toLocaleDateString('en-CA')
+const localDateTime=()=>{const date=new Date();return new Date(date.getTime()-date.getTimezoneOffset()*60000).toISOString().slice(0,16)}
 const pkMoney=(value:number)=>new Intl.NumberFormat('en-PK',{style:'currency',currency:'PKR',maximumFractionDigits:0}).format(Number(value)||0)
 const dateLabel=(value:string|null|undefined)=>value?new Date(value+'T00:00:00').toLocaleDateString():'—'
 const statusText=(value:string)=>value.replaceAll('_',' ').replace(/\b\w/g,char=>char.toUpperCase())
@@ -123,13 +125,22 @@ export function LinkedOperationsWorkspace({workspaceKey,onToast,onNavigate}:Prop
  const [transportFee,setTransportFee]=useState('')
  const [allocationNotes,setAllocationNotes]=useState('')
  const [showAllocationForm,setShowAllocationForm]=useState(false)
+ const [transportEvents,setTransportEvents]=useState<TransportEvent[]>([])
+ const [transportAttendanceSearch,setTransportAttendanceSearch]=useState('')
+ const [transportAttendancePage,setTransportAttendancePage]=useState(1)
+ const [transportAttendanceAllocation,setTransportAttendanceAllocation]=useState('')
+ const [transportAttendanceType,setTransportAttendanceType]=useState<'boarded'|'alighted'|'absent'>('boarded')
+ const [transportAttendanceTime,setTransportAttendanceTime]=useState(localDateTime())
+ const [transportAttendanceNotes,setTransportAttendanceNotes]=useState('')
+ const [showTransportAttendanceForm,setShowTransportAttendanceForm]=useState(false)
 
  const isCampus=groupKey==='administration'&&itemKey==='campus-and-branch-management'
  const isLibrary=groupKey==='library'&&['book-issue-and-returns','library-reports'].includes(itemKey)
  const isReading=groupKey==='library'&&itemKey==='reading-records'
  const isLibraryReport=groupKey==='library'&&itemKey==='library-reports'
  const isInventory=groupKey==='inventory'&&['stock-in','stock-out','stock-allocation','stock-adjustments','inventory-history','stock-reports'].includes(itemKey)
- const isTransport=groupKey==='transport'&&['student-transport-allocation','transport-reports'].includes(itemKey)
+ const isTransport=groupKey==='transport'&&['student-transport-allocation','transport-reports','transport-attendance'].includes(itemKey)
+ const isTransportAttendance=groupKey==='transport'&&itemKey==='transport-attendance'
  const isTransportReport=groupKey==='transport'&&itemKey==='transport-reports'
  const canAdmin=Boolean(user&&['owner','admin'].includes(user.role))
  const canLibrary=Boolean(user&&['owner','admin','teacher'].includes(user.role))
@@ -173,17 +184,18 @@ export function LinkedOperationsWorkspace({workspaceKey,onToast,onNavigate}:Prop
     if(itemResult.error)throw itemResult.error
     setItems((itemResult.data??[]) as Item[]);setMovements(movementRows)
    }else if(isTransport){
-    const [studentResult,routeResult,stopResult,vehicleResult,allocationRows]=await Promise.all([
+    const [studentResult,routeResult,stopResult,vehicleResult,allocationRows,transportEventRows]=await Promise.all([
      supabase.from('students').select('id,full_name,admission_no,class_name').eq('institution_id',user.institutionId).eq('status','active').order('full_name'),
      supabase.from('institutional_records').select('id,title,reference_code,payload').eq('institution_id',user.institutionId).eq('module_key','transport').eq('record_type','transport-routes').order('title'),
      supabase.from('institutional_records').select('id,title,reference_code,parent_record_id,payload').eq('institution_id',user.institutionId).eq('module_key','transport').eq('record_type','route-stops').order('title'),
      supabase.from('institutional_records').select('id,title,reference_code,payload').eq('institution_id',user.institutionId).eq('module_key','transport').eq('record_type','vehicle-management').order('title'),
-     loadAllPages<Allocation>((from,to)=>db.from('student_transport_allocations').select('*').eq('institution_id',user.institutionId).order('created_at',{ascending:false}).range(from,to))
+     loadAllPages<Allocation>((from,to)=>db.from('student_transport_allocations').select('*').eq('institution_id',user.institutionId).order('created_at',{ascending:false}).range(from,to)),
+     isTransportAttendance?loadAllPages<TransportEvent>((from,to)=>db.from('transport_attendance_events').select('*').eq('institution_id',user.institutionId).order('occurred_at',{ascending:false}).range(from,to)):Promise.resolve([] as TransportEvent[])
     ])
     for(const result of [studentResult,routeResult,stopResult,vehicleResult])if(result.error)throw result.error
     setStudents((studentResult.data??[]) as Student[]);setRoutes((routeResult.data??[]) as RouteRecord[])
     setStops((stopResult.data??[]) as RouteRecord[]);setVehicles((vehicleResult.data??[]) as RouteRecord[])
-    setAllocations(allocationRows)
+    setAllocations(allocationRows);setTransportEvents(transportEventRows)
    }
   }catch(error){setLoadError(error instanceof Error?error.message:'The operation records could not be loaded.');}
   finally{setLoading(false)}
@@ -260,6 +272,8 @@ export function LinkedOperationsWorkspace({workspaceKey,onToast,onNavigate}:Prop
  const overdueLoans=loans.filter(row=>row.status==='issued'&&row.due_at<today())
  const totalLibraryFines=loans.reduce((sum,row)=>sum+Number(row.fine_amount??0),0)
  const transportActive=allocations.filter(row=>row.status==='active')
+ const visibleTransportEvents=useMemo(()=>transportEvents.filter(event=>{const allocation=allocations.find(row=>row.id===event.allocation_id);const student=allocation?students.find(row=>row.id===allocation.student_id):undefined;const route=allocation?routes.find(row=>row.id===allocation.route_record_id):undefined;const vehicle=allocation?vehicles.find(row=>row.id===allocation.vehicle_record_id):undefined;return matches([student?.full_name,student?.admission_no,student?.class_name,route?.title,vehicle?.title,event.event_type,event.occurred_at,event.notes,event.source],transportAttendanceSearch)}),[transportEvents,allocations,students,routes,vehicles,transportAttendanceSearch])
+ const transportEventCounts=useMemo(()=>({boarded:transportEvents.filter(event=>event.event_type==='boarded').length,alighted:transportEvents.filter(event=>event.event_type==='alighted').length,absent:transportEvents.filter(event=>event.event_type==='absent').length}),[transportEvents])
  const transportFees=transportActive.reduce((sum,row)=>sum+Number(row.transport_fee??0),0)
  const routeAllocationRows=routes.map(route=>{
   const assigned=transportActive.filter(row=>row.route_record_id===route.id)
@@ -400,6 +414,24 @@ export function LinkedOperationsWorkspace({workspaceKey,onToast,onNavigate}:Prop
   setShowAllocationForm(false);setAllocationStudent('');setAllocationRoute('');setAllocationStop('');setAllocationVehicle('');setTransportFee('');setAllocationNotes('');setAllocationFrom(today());setAllocationTo('')
   onToast('Transport allocation created after checking route, stop, date conflicts and available vehicle capacity.');setSaving(false);await load()
  }
+ async function saveTransportAttendance(event:FormEvent){
+  event.preventDefault()
+  if(!supabase||!user||!['owner','admin','teacher'].includes(user.role))return
+  const allocation=allocations.find(row=>row.id===transportAttendanceAllocation&&row.status==='active')
+  const occurredAt=new Date(transportAttendanceTime)
+  if(!allocation||Number.isNaN(occurredAt.getTime())||!['boarded','alighted','absent'].includes(transportAttendanceType)||transportAttendanceNotes.trim().length>2000){
+   onToast('Select an active student transport allocation and enter a valid attendance time and event.',true);return
+  }
+  setSaving(true)
+  const {error}=await supabase.from('transport_attendance_events').insert({
+   institution_id:user.institutionId,allocation_id:allocation.id,event_type:transportAttendanceType,
+   occurred_at:occurredAt.toISOString(),recorded_by:user.id,notes:transportAttendanceNotes.trim()||null,source:'manual'
+  })
+  if(error){onToast(userFacingError(error,'The transport attendance event could not be saved. Confirm that the allocation is active and your role is authorised.'),true);setSaving(false);return}
+  setShowTransportAttendanceForm(false);setTransportAttendanceAllocation('');setTransportAttendanceType('boarded')
+  setTransportAttendanceTime(localDateTime());setTransportAttendanceNotes('')
+  onToast('Transport attendance event recorded.');setSaving(false);await load()
+ }
  async function cancelAllocation(row:Allocation){
   if(!supabase||!user||!canAdmin)return
   const {error}=await supabase.rpc('end_student_transport_allocation',{p_institution_id:user.institutionId,p_allocation_id:row.id})
@@ -408,9 +440,9 @@ export function LinkedOperationsWorkspace({workspaceKey,onToast,onNavigate}:Prop
  }
 
  if(!user||!group)return null
- const specialTitle=isCampus?'Campus and Branch Management':isReading?'Student Reading Records':isLibrary?(isLibraryReport?'Library Circulation Reports':'Book Issue and Returns'):isInventory?(itemKey==='stock-reports'?'Inventory Stock Reports':itemKey==='inventory-history'?'Inventory Movement History':itemKey==='stock-in'?'Stock In':itemKey==='stock-out'?'Stock Out':itemKey==='stock-allocation'?'Stock Allocation':itemKey==='stock-adjustments'?'Stock Adjustments':'Inventory Stock Movements'):isTransport?(isTransportReport?'Transport Allocation Reports':'Student Transport Allocation'):'Institution Operations'
+ const specialTitle=isCampus?'Campus and Branch Management':isReading?'Student Reading Records':isTransportAttendance?'Transport Attendance Register':isLibrary?(isLibraryReport?'Library Circulation Reports':'Book Issue and Returns'):isInventory?(itemKey==='stock-reports'?'Inventory Stock Reports':itemKey==='inventory-history'?'Inventory Movement History':itemKey==='stock-in'?'Stock In':itemKey==='stock-out'?'Stock Out':itemKey==='stock-allocation'?'Stock Allocation':itemKey==='stock-adjustments'?'Stock Adjustments':'Inventory Stock Movements'):isTransport?(isTransportReport?'Transport Allocation Reports':'Student Transport Allocation'):'Institution Operations'
  const nav=<nav className="ed360-operations-window-nav ed360-workspace-tabs" aria-label={group.label+' submenus'}>{group.items.map(menu=><button key={menu.key} className={menu.key===itemKey?'active':''} type="button" onClick={()=>onNavigate('institutional:'+group.key+':'+menu.key)}>{menu.label}</button>)}</nav>
- const header=<header className="ed360-workspace-hero" style={{'--workspace-accent':theme.accent,'--workspace-soft':theme.soft,'--workspace-ink':theme.ink} as CSSProperties}><div className="ed360-workspace-hero-icon">{isCampus?<MapPin size={21}/>:isLibrary||isReading?<BookOpen size={21}/>:isInventory?<Package size={21}/>:<Bus size={21}/>}</div><div className="ed360-workspace-hero-copy"><span>{group.label.toUpperCase()} / LIVE RELATIONAL WORKFLOW</span><h1>{specialTitle}</h1><p>{isCampus?'Manage college campuses and branches with linked institutional records.':isReading?'Track reading activity, pages completed, time spent and progress for students visible to your account.':isLibrary?(isLibraryReport?'Review actual issue, return, overdue and fine activity from the library loan ledger.':'Issue and return books against student records, with due dates and traceable circulation history.'):isInventory?'Record stock movement through an atomic transaction that prevents inventory going below zero.':isTransport?(isTransportReport?'Review active allocations, registered routes, vehicle usage and recorded transport fees.':'Allocate students to registered routes, stops and vehicles with effective dates and transport fees.'):'Institution operations'}</p></div><div className="ed360-workspace-hero-tools"><span className="ed360-data-state"><i/> Live Supabase records</span>{isCampus&&canAdmin&&<button className="button button-primary" onClick={()=>resetCampus()}><Plus size={16}/> Add campus</button>}{isReading&&canLibrary&&<button className="button button-primary" onClick={()=>setShowReadingForm(true)}><Plus size={16}/> Record reading</button>}{isLibrary&&!isLibraryReport&&canLibrary&&<button className="button button-primary" onClick={()=>setShowLoanForm(true)}><Plus size={16}/> Issue book</button>}{isInventory&&!['stock-reports','inventory-history'].includes(itemKey)&&canAdmin&&<button className="button button-primary" onClick={()=>setShowMovementForm(true)}><Plus size={16}/> Record movement</button>}{isTransport&&!isTransportReport&&canAdmin&&<button className="button button-primary" onClick={()=>setShowAllocationForm(true)}><Plus size={16}/> Allocate student</button>}</div></header>
+ const header=<header className="ed360-workspace-hero" style={{'--workspace-accent':theme.accent,'--workspace-soft':theme.soft,'--workspace-ink':theme.ink} as CSSProperties}><div className="ed360-workspace-hero-icon">{isCampus?<MapPin size={21}/>:isLibrary||isReading?<BookOpen size={21}/>:isInventory?<Package size={21}/>:<Bus size={21}/>}</div><div className="ed360-workspace-hero-copy"><span>{group.label.toUpperCase()} / LIVE RELATIONAL WORKFLOW</span><h1>{specialTitle}</h1><p>{isCampus?'Manage college campuses and branches with linked institutional records.':isReading?'Track reading activity, pages completed, time spent and progress for students visible to your account.':isLibrary?(isLibraryReport?'Review actual issue, return, overdue and fine activity from the library loan ledger.':'Issue and return books against student records, with due dates and traceable circulation history.'):isInventory?'Record stock movement through an atomic transaction that prevents inventory going below zero.':isTransport?(isTransportAttendance?'Record student boarding, alighting and absence events against active transport allocations.':isTransportReport?'Review active allocations, registered routes, vehicle usage and recorded transport fees.':'Allocate students to registered routes, stops and vehicles with effective dates and transport fees.'):'Institution operations'}</p></div><div className="ed360-workspace-hero-tools"><span className="ed360-data-state"><i/> Live Supabase records</span>{isCampus&&canAdmin&&<button className="button button-primary" onClick={()=>resetCampus()}><Plus size={16}/> Add campus</button>}{isReading&&canLibrary&&<button className="button button-primary" onClick={()=>setShowReadingForm(true)}><Plus size={16}/> Record reading</button>}{isLibrary&&!isLibraryReport&&canLibrary&&<button className="button button-primary" onClick={()=>setShowLoanForm(true)}><Plus size={16}/> Issue book</button>}{isInventory&&!['stock-reports','inventory-history'].includes(itemKey)&&canAdmin&&<button className="button button-primary" onClick={()=>setShowMovementForm(true)}><Plus size={16}/> Record movement</button>}{isTransportAttendance&&['owner','admin','teacher'].includes(user.role)&&<button className="button button-primary" onClick={()=>setShowTransportAttendanceForm(true)}><Plus size={16}/> Record event</button>}{isTransport&&!isTransportReport&&!isTransportAttendance&&canAdmin&&<button className="button button-primary" onClick={()=>setShowAllocationForm(true)}><Plus size={16}/> Allocate student</button>}</div></header>
 
  return <main className="page-content ed360-module-page ed360-institutional-workspace ed360-linked-operations" style={{'--workspace-accent':theme.accent,'--workspace-soft':theme.soft,'--workspace-ink':theme.ink} as React.CSSProperties}>
   {header}{nav}
@@ -487,6 +519,34 @@ export function LinkedOperationsWorkspace({workspaceKey,onToast,onNavigate}:Prop
   </>}
 
   {isTransport&&<>
+   {isTransportAttendance&&<>
+    <section className="ed360-workspace-kpis">
+     <article><span>Attendance events</span><strong>{transportEvents.length}</strong><small>Recorded campus transport events</small></article>
+     <article><span>Boarded</span><strong>{transportEventCounts.boarded}</strong><small>Students recorded boarding</small></article>
+     <article><span>Alighted</span><strong>{transportEventCounts.alighted}</strong><small>Students recorded leaving the vehicle</small></article>
+     <article><span>Absent</span><strong>{transportEventCounts.absent}</strong><small>Absence events recorded</small></article>
+    </section>
+    <section className="table-card ed360-workspace-record-card">
+     <div className="table-toolbar"><div className="table-count"><strong>{visibleTransportEvents.length}</strong> matching transport attendance events</div><div className="ed360-row-actions">
+      <button type="button" onClick={()=>downloadCsv('college-transport-attendance-'+today()+'.csv',visibleTransportEvents.map(event=>{const allocation=allocations.find(row=>row.id===event.allocation_id);const student=allocation?students.find(row=>row.id===allocation.student_id):undefined;return {student:student?.full_name??'Linked student',admission_no:student?.admission_no??'',class_name:student?.class_name??'',route:allocation?routes.find(row=>row.id===allocation.route_record_id)?.title??'Route':'',vehicle:allocation?vehicles.find(row=>row.id===allocation.vehicle_record_id)?.title??'':'',event:event.event_type,occurred_at:event.occurred_at,source:event.source,notes:event.notes??''}}),[{key:'student',label:'Student'},{key:'admission_no',label:'Admission ID'},{key:'class_name',label:'Class'},{key:'route',label:'Route'},{key:'vehicle',label:'Vehicle'},{key:'event',label:'Event'},{key:'occurred_at',label:'Recorded at'},{key:'source',label:'Source'},{key:'notes',label:'Notes'}])}>Export CSV</button>
+      <button type="button" onClick={()=>void load()}>Refresh <RefreshCw size={13}/></button>
+     </div></div>
+     <label className="ed360-linked-search">Search transport attendance<input aria-label="Search transport attendance" value={transportAttendanceSearch} onChange={e=>{setTransportAttendanceSearch(e.target.value);setTransportAttendancePage(1)}} placeholder="Student, admission ID, route, vehicle or event…"/></label>
+     {visibleTransportEvents.length===0?<div className="ed360-workspace-empty"><strong>No transport attendance has been recorded</strong><span>Use an active transport allocation to record boarding, alighting or an absence event.</span></div>:<div className="table-scroll"><table><thead><tr><th>Student</th><th>Class</th><th>Route</th><th>Vehicle</th><th>Event</th><th>Recorded at</th><th>Source</th><th>Notes</th></tr></thead><tbody>{pageRows(visibleTransportEvents,transportAttendancePage).map(row=>{const allocation=allocations.find(item=>item.id===row.allocation_id);const student=allocation?students.find(item=>item.id===allocation.student_id):undefined;return <tr key={row.id}><td><b>{student?.full_name??'Linked student'}</b><small className="ed360-record-subtitle">{student?.admission_no??''}</small></td><td>{student?.class_name??'—'}</td><td>{allocation?routes.find(item=>item.id===allocation.route_record_id)?.title??'—':'—'}</td><td>{allocation?vehicles.find(item=>item.id===allocation.vehicle_record_id)?.title??'—':'—'}</td><td><span className={'ed360-state-pill '+(row.event_type==='boarded'?'state-approved':row.event_type==='absent'?'state-pending':'')}>{statusText(row.event_type)}</span></td><td>{new Date(row.occurred_at).toLocaleString()}</td><td>{statusText(row.source)}</td><td>{row.notes||'—'}</td></tr>})}</tbody></table></div>}
+     {pageControls(visibleTransportEvents.length,transportAttendancePage,setTransportAttendancePage)}
+    </section>
+    {showTransportAttendanceForm&&<div className="modal-backdrop" role="presentation" onMouseDown={event=>{if(event.target===event.currentTarget)setShowTransportAttendanceForm(false)}}>
+     <section className="modal-card ed360-context-form" role="dialog" aria-modal="true" aria-labelledby="transport-attendance-title">
+      <div className="modal-heading"><div><div className="eyebrow">COLLEGE TRANSPORT / ATTENDANCE</div><h2 id="transport-attendance-title">Record a transport event</h2><p>Only active student transport allocations can receive an attendance event.</p></div><button type="button" className="icon-button" aria-label="Close transport attendance form" onClick={()=>setShowTransportAttendanceForm(false)}><X size={18}/></button></div>
+      <form className="ed360-context-form-grid" onSubmit={saveTransportAttendance}>
+       <label>Student transport allocation *<select required value={transportAttendanceAllocation} onChange={e=>setTransportAttendanceAllocation(e.target.value)}><option value="">Select active allocation</option>{allocations.filter(row=>row.status==='active').map(row=>{const student=students.find(person=>person.id===row.student_id);const route=routes.find(item=>item.id===row.route_record_id);return <option key={row.id} value={row.id}>{student?.full_name??'Student'}{student?.admission_no?' · '+student.admission_no:''} — {route?.title??'Route'}</option>})}</select></label>
+       <div className="ed360-form-row"><label>Event type *<select value={transportAttendanceType} onChange={e=>setTransportAttendanceType(e.target.value as 'boarded'|'alighted'|'absent')}><option value="boarded">Boarded</option><option value="alighted">Alighted</option><option value="absent">Absent</option></select></label><label>Event time *<input required type="datetime-local" value={transportAttendanceTime} onChange={e=>setTransportAttendanceTime(e.target.value)}/></label></div>
+       <label>Notes<textarea rows={2} maxLength={2000} value={transportAttendanceNotes} onChange={e=>setTransportAttendanceNotes(e.target.value)} placeholder="Optional trip or attendance note"/></label>
+       <div className="modal-actions"><button type="button" className="button button-outline" onClick={()=>setShowTransportAttendanceForm(false)}>Cancel</button><button type="submit" className="button button-primary" disabled={saving||!allocations.some(row=>row.status==='active')}>{saving?'Saving…':'Save transport event'}</button></div>
+      </form>
+     </section>
+    </div>}
+   </>}
    <section className="ed360-workspace-kpis"><article><span>Students allocated</span><strong>{allocations.filter(x=>x.status==='active').length}</strong><small>Active transport assignments</small></article><article><span>Routes</span><strong>{routes.length}</strong><small>Registered routes</small></article><article><span>Stops</span><strong>{stops.length}</strong><small>Registered route stops</small></article><article><span>{isTransportReport?'Recorded active fees':'Monthly fee total'}</span><strong>{pkMoney(transportFees)}</strong><small>{isTransportReport?'Fee values on active allocations':'Recorded active allocations'}</small></article></section>
    {isTransportReport&&<section className="table-card ed360-workspace-record-card"><div className="table-toolbar"><div className="table-count"><strong>{visibleRouteRows.length}</strong> matching routes · Active student allocations grouped by route</div></div><label className="ed360-linked-search">Search route utilisation<input aria-label="Search route utilisation" value={routeSearch} onChange={e=>{setRouteSearch(e.target.value);setRoutePage(1)}} placeholder="Route name or utilisation…"/></label><div className="table-scroll"><table><thead><tr><th>Route</th><th>Active students</th><th>Vehicles used</th><th>Recorded fees</th></tr></thead><tbody>{pageRows(visibleRouteRows,routePage).map(row=><tr key={row.route}><td>{row.route}</td><td>{row.students}</td><td>{row.vehicles}</td><td>{pkMoney(row.fees)}</td></tr>)}</tbody></table></div>{pageControls(visibleRouteRows.length,routePage,setRoutePage)}</section>}
    <section className="table-card ed360-workspace-record-card"><div className="table-toolbar"><div className="table-count"><strong>{visibleAllocations.length}</strong> matching student transport allocations</div><div className="ed360-row-actions">{isTransportReport&&<button type="button" onClick={()=>downloadCsv('edusphere-transport-allocations-'+today()+'.csv',allocations.map(row=>({student:allocationMap.get(row.student_id)?.full_name??'Linked student',admission_no:allocationMap.get(row.student_id)?.admission_no??'',route:routes.find(x=>x.id===row.route_record_id)?.title??'Route',stop:stops.find(x=>x.id===row.stop_record_id)?.title??'',vehicle:vehicles.find(x=>x.id===row.vehicle_record_id)?.title??'',effective_from:row.effective_from,effective_to:row.effective_to??'',transport_fee:Number(row.transport_fee??0),status:row.status})),[{key:'student',label:'Student'},{key:'admission_no',label:'Admission ID'},{key:'route',label:'Route'},{key:'stop',label:'Stop'},{key:'vehicle',label:'Vehicle'},{key:'effective_from',label:'From'},{key:'effective_to',label:'To'},{key:'transport_fee',label:'Fee (PKR)'},{key:'status',label:'Status'}])}>Export CSV</button>}<button onClick={()=>void load()}>Refresh <RefreshCw size={13}/></button></div></div>
