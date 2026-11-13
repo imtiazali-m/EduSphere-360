@@ -40,9 +40,9 @@ async function inspectViewport({name,width,height}){
     assert.equal(response?.status(),200,`${name}: college homepage did not return HTTP 200`)
     await page.locator('.gidc-site').waitFor({state:'visible'})
     await page.locator('.gidc-hero h1').waitFor({state:'visible'})
-    const title=(await page.locator('.gidc-brand-copy').first().innerText()).replace(/\\s+/g,' ').trim()
+    const title=(await page.locator('.gidc-brand-copy').first().innerText()).replace(/\s+/g,' ').trim()
     assert.match(title,/Government Islamia.*Degree College Badin/i,`${name}: college identity is missing`)
-    const headline=(await page.locator('.gidc-hero h1').innerText()).replace(/\\s+/g,' ').trim()
+    const headline=(await page.locator('.gidc-hero h1').innerText()).replace(/\s+/g,' ').trim()
     assert.match(headline,/Knowledge opens doors.*Education builds futures/i,`${name}: college homepage headline is missing`)
     for(const id of ['about','programmes','admissions','campus-life','notices','portals','official-links','contact']){
       assert.equal(await page.locator('#'+id).count(),1,`${name}: missing college section #${id}`)
