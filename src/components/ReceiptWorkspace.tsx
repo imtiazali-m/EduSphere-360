@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { CheckCircle2, FileText, Printer, Receipt, RefreshCw, Settings2 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
-import { createRecord, listRecords } from '../lib/data'
 import '../styles/data-management.css'
 
 type Row=Record<string,any>&{id:string}
@@ -41,13 +40,14 @@ export function ReceiptWorkspace({workspaceKey,onToast}:{workspaceKey:string;onT
     supabase.from('fee_payments').select('*').eq('institution_id',user.institutionId).order('created_at',{ascending:false}).limit(2000),
     supabase.from('fee_receipt_ledger').select('*').eq('institution_id',user.institutionId).order('issued_at',{ascending:false}).limit(2000),
     supabase.from('fee_receipt_sequences').select('*').eq('institution_id',user.institutionId).maybeSingle(),
-    listRecords(mode,user,'institutional_records') as Promise<Row[]>
+    supabase.from('institutional_records').select('*').eq('institution_id',user.institutionId).eq('module_key','receipts').eq('record_type','receipt-template')
    ])
    if(p.error)throw p.error;if(r.error)throw r.error;if(s.error)throw s.error
    setPayments((p.data??[]) as Row[])
    setReceipts((r.data??[]) as ReceiptRow[])
    if(s.data)setSequence({prefix:String(s.data.prefix),next_number:String(s.data.next_number)})
-   setTemplates(t.filter(x=>x.module_key==='receipts'&&x.record_type==='receipt-template'))
+   if(t.error)throw t.error
+   setTemplates((t.data??[]) as Row[])
   }catch(e){onToast(e instanceof Error?e.message:'Receipt records could not be loaded.',true)}
   finally{setLoading(false)}
  }
@@ -56,12 +56,12 @@ export function ReceiptWorkspace({workspaceKey,onToast}:{workspaceKey:string;onT
  const eligiblePayments=payments.filter(p=>!receiptsByPayment.has(p.id)&&!['void','cancelled','failed'].includes(String(p.status??'').toLowerCase()))
  const visibleReceipts=receipts.filter(r=>[r.receipt_number,r.payment_snapshot?.student_name,r.payment_snapshot?.invoice_number,r.payment_snapshot?.transaction_reference].join(' ').toLowerCase().includes(search.toLowerCase()))
  const visiblePayments=eligiblePayments.filter(p=>!search||[p.student_name,p.invoice_number,p.receipt_number,p.transaction_reference,p.payment_method,p.status].join(' ').toLowerCase().includes(search.toLowerCase()))
- const activeTemplate=templates.find(t=>t.id===selectedTemplate)
  async function saveTemplate(event:FormEvent){
   event.preventDefault();if(!user||!admin)return
   setBusy(true)
   try{
-   await createRecord(mode,user,'institutional_records',{module_key:'receipts',record_type:'receipt-template',title:templateForm.name.trim(),description:'Institution fee receipt layout',status:'active',approval_status:'not_required',visibility:'staff_only',record_date:new Date().toISOString().slice(0,10),payload:{heading:templateForm.heading,footer:templateForm.footer,show_signature:templateForm.showSignature==='true'}})
+   const {error}=await supabase!.from('institutional_records').insert({institution_id:user.institutionId,module_key:'receipts',record_type:'receipt-template',title:templateForm.name.trim(),description:'Institution fee receipt layout',status:'active',approval_status:'not_required',visibility:'staff_only',record_date:new Date().toISOString().slice(0,10),payload:{heading:templateForm.heading,footer:templateForm.footer,show_signature:templateForm.showSignature==='true'},created_by:user.id})
+   if(error)throw error
    onToast('Receipt template saved.');setTemplateForm({name:'',heading:'Fee Receipt',footer:'Thank you for your payment.',showSignature:'true'});await load()
   }catch(e){onToast(e instanceof Error?e.message:'Receipt template could not be saved.',true)}
   finally{setBusy(false)}
