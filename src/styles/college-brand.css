@@ -212,3 +212,90 @@ table td, table th { border-color: var(--es-line); }
   .es-auth-illustration { height: 220px; min-height: 220px; }
   .es-auth-illustration img { min-height: 220px; }
 }
+
+
+/* Role-specific college dashboards */
+.ed360-role-dashboard { color: var(--es-ink); }
+.rd-heading-icon { border-radius: 9px; background: #e6eadf; color: var(--es-brand-800); }
+.rd-eyebrow { color: var(--es-primary-700); }
+.rd-heading-main h1 { color: var(--es-brand-900); font-family: 'Playfair Display', Georgia, serif; font-weight: 600; letter-spacing: -.025em; }
+.rd-heading-main p { color: var(--es-muted); }
+.rd-role-chip, .rd-session-chip, .rd-date-chip { border-color: var(--es-line); border-radius: 4px; background: #fffdf8; color: var(--es-muted); }
+.rd-role-chip { border-color: #d5dfd0; background: #edf1e8; color: var(--es-brand-800); }
+.rd-metric-card { border-color: var(--es-line); border-radius: 7px; background: var(--es-surface); box-shadow: 0 2px 8px rgba(36,52,45,.035); }
+button.rd-metric-card:hover { border-color: #bbc9b7; box-shadow: 0 8px 18px rgba(36,52,45,.07); }
+.rd-metric-icon { border-radius: 8px; }
+.rd-metric-icon.blue { background: #e8eee6; color: var(--es-brand-800); }
+.rd-metric-icon.green { background: #e6efe5; color: #397452; }
+.rd-metric-icon.violet { background: #efeaf1; color: #75628d; }
+.rd-metric-icon.teal { background: #e3efeb; color: #4e7865; }
+.rd-metric-icon.amber { background: #f7efdf; color: #9b7133; }
+.rd-metric-icon.rose { background: #f6e9e4; color: #a54f41; }
+.rd-metric-copy small { color: var(--es-muted); }
+.rd-metric-copy strong { color: var(--es-brand-900); }
+.rd-metric-copy em, .rd-metric-arrow { color: #899188; }
+.rd-panel { border-color: var(--es-line); border-radius: 7px; background: var(--es-surface); box-shadow: 0 2px 8px rgba(36,52,45,.03); }
+.rd-panel-head { border-bottom-color: var(--es-line-soft); }
+.rd-panel-icon { border-radius: 8px; background: #e8eee6; color: var(--es-brand-800); }
+.rd-panel-title h2 { color: var(--es-brand-900); font-family: 'DM Sans', sans-serif; font-weight: 750; }
+.rd-panel-title p, .rd-empty { color: var(--es-muted); }
+.rd-text-action, .rd-inline-action { color: var(--es-primary-700); }
+.rd-text-action:hover, .rd-inline-action:hover { color: var(--es-brand-800); }
+.rd-list-row { border-bottom-color: var(--es-line-soft); }
+.rd-list-button:hover { background: #f4f3eb; }
+.rd-row-icon { border-radius: 7px; background: #e9eee6; color: var(--es-brand-800); }
+.rd-row-icon.notice, .rd-row-icon.student { background: #e8eee6; color: var(--es-brand-800); }
+.rd-row-icon.approval, .rd-row-icon.overdue { background: #f7efdf; color: #9b7133; }
+.rd-row-icon.activity { background: #e9eee6; color: var(--es-brand-800); }
+.rd-row-icon.receipt { background: #e6efe5; color: #397452; }
+.rd-row-icon.homework { background: #efeaf1; color: #75628d; }
+.rd-row-icon.result { background: #f7efdf; color: #9b7133; }
+.rd-row-copy strong { color: var(--es-brand-900); }
+.rd-row-copy small, .rd-list-row time, .rd-row-date small, .rd-row-time small { color: var(--es-muted); }
+.rd-row-amount { color: var(--es-brand-800); }
+.rd-row-tag { background: #eeeee7; color: var(--es-muted); }
+.rd-row-tag.pending { background: var(--es-warning-bg); color: var(--es-warning); }
+.rd-row-date, .rd-row-time { border-radius: 6px; background: #edf0e8; color: var(--es-brand-800); }
+.rd-performance > strong { color: var(--es-brand-900); }
+.rd-performance > span, .rd-performance > small { color: var(--es-muted); }
+.rd-progress { background: #e8ebe3; }
+.rd-progress i { background: linear-gradient(90deg, #557b62, #9aaf86); }
+.rd-branch-top strong { color: var(--es-brand-900); }
+.rd-branch-top span, .rd-branch-meta { color: var(--es-muted); }
+.rd-branch-bar { background: #e8ebe3; }
+.rd-branch-bar i { background: #66846a; }
+.rd-status-summary > div { border-color: var(--es-line-soft); border-radius: 6px; background: #faf8f1; }
+.rd-status-summary strong, .rd-finance-totals strong, .rd-finance-position strong { color: var(--es-brand-900); }
+.rd-status-summary span, .rd-finance-totals span, .rd-finance-position span { color: var(--es-muted); }
+.rd-alert-list button { border-color: var(--es-line-soft); border-radius: 6px; background: #faf8f1; }
+.rd-alert-list button:hover { border-color: #c7d1c1; background: #f2f2e9; }
+.rd-alert-icon { border-radius: 7px; background: var(--es-warning-bg); color: var(--es-warning); }
+.rd-alert-list strong { color: var(--es-brand-900); }
+.rd-alert-list small { color: var(--es-muted); }
+.rd-finance-chart { border-bottom-color: var(--es-line); }
+.rd-finance-bars .collection, .rd-chart-legend i { background: #64866a; }
+.rd-finance-bars .expense, .rd-chart-legend i.expense { background: #c18e4b; }
+.rd-finance-month small, .rd-chart-legend { color: var(--es-muted); }
+.rd-class-grid article, .rd-child-card { border-color: var(--es-line); border-radius: 7px; background: #faf8f1; }
+.rd-class-grid article > span, .rd-child-card header > span { border-radius: 7px; background: #e8eee6; color: var(--es-brand-800); }
+.rd-class-grid strong, .rd-child-card header strong, .rd-child-card footer strong { color: var(--es-brand-900); }
+.rd-class-grid small, .rd-child-card header small, .rd-child-stats small, .rd-child-card footer { color: var(--es-muted); }
+.rd-child-stats b { color: var(--es-brand-800); }
+.rd-child-card footer { border-top-color: var(--es-line); }
+.rd-communication > span { border-radius: 8px; background: #e8eee6; color: var(--es-brand-800); }
+.rd-communication p { color: var(--es-muted); }
+.rd-communication button { border-color: #d2ddcc; border-radius: 4px; background: #edf1e8; color: var(--es-brand-800); }
+.rd-communication button:hover { background: #e2e9dc; }
+.rd-data-warning { border-color: #ead9b8; border-radius: 6px; background: #fbf5e8; color: #866431; }
+.rd-dashboard-footnote { color: var(--es-muted); }
+.rd-dashboard-footnote svg { color: var(--es-success); }
+.rd-trend-series { border-color: var(--es-line); border-radius: 7px; background: #faf8f1; }
+.rd-trend-series-head span, .rd-trend-note { color: var(--es-muted); }
+.rd-trend-series-head strong { color: var(--es-brand-900); }
+.rd-trend-bars { border-bottom-color: var(--es-line); }
+.rd-trend-track { background: #ecefe7; }
+.rd-trend-track i { background: linear-gradient(180deg, #91a884, #557b62); box-shadow: none; }
+.rd-trend-series.attendance .rd-trend-track i { background: linear-gradient(180deg, #a4b59a, #5b8264); }
+.rd-trend-series.collections .rd-trend-track i { background: linear-gradient(180deg, #d0b27e, #a8783d); }
+.rd-trend-month small { color: var(--es-muted); }
+.rd-trend-unavailable { color: var(--es-muted); }
