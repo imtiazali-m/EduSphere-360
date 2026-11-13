@@ -301,7 +301,7 @@ begin
 end;
 $$;
 revoke all on function public.transfer_hostel_resident(uuid,uuid,uuid,text) from public;
-grant execute on function public.transfer_hostel_resident(uuid,uuid,text) to authenticated;
+grant execute on function public.transfer_hostel_resident(uuid,uuid,uuid,text) to authenticated;
 
 create or replace function public.record_hostel_movement(
   p_institution_id uuid,p_resident_id uuid,p_movement_type text,p_notes text default null
