@@ -85,6 +85,7 @@ function shellTarget(route) {
   const scheduledReports = route.startsWith('scheduled-reports:')
   const helpdesk = route.startsWith('helpdesk:')
   const duplicateDetection = route.startsWith('duplicate-detection:')
+  const certificateForms = route.startsWith('certificate-forms:')
   const personal = route.startsWith('personal:')
   const assistant = route.startsWith('assistant:')
   const frontOffice = route.startsWith('frontoffice:')
@@ -116,6 +117,7 @@ function shellTarget(route) {
     : scheduledReports ? 'scheduled-reports'
     : helpdesk ? 'helpdesk'
     : duplicateDetection ? 'duplicate-detection'
+    : certificateForms ? 'certificate-forms'
     : personal ? 'personal'
     : assistant ? 'assistant'
     : frontOffice ? 'frontoffice'
@@ -147,6 +149,7 @@ function shellTarget(route) {
     : scheduledReports ? route.slice('scheduled-reports:'.length)
     : helpdesk ? route.slice('helpdesk:'.length)
     : duplicateDetection ? route.slice('duplicate-detection:'.length)
+    : certificateForms ? route.slice('certificate-forms:'.length)
     : personal ? route.slice('personal:'.length)
     : assistant ? route.slice('assistant:'.length)
     : frontOffice ? route.slice('frontoffice:'.length)
@@ -183,6 +186,10 @@ function checkView(role, route, dispatcher) {
   if(targetKey==='scheduled-reports')return {component:'ScheduledReportsWorkspace',view:targetWindow,status:targetWindow==='scheduled-reports'?'Supported':'Unsupported scheduled report view'}
   if(targetKey==='helpdesk')return {component:'HelpdeskWorkspace',view:targetWindow,status:targetWindow==='complaints-helpdesk'?'Supported':'Unsupported helpdesk view'}
   if(targetKey==='duplicate-detection')return {component:'DuplicateDetectionWorkspace',view:targetWindow,status:targetWindow==='duplicate-detection'?'Supported':'Unsupported duplicate detection view'}
+  if(targetKey==='certificate-forms'){
+    const pages=new Set(['form-builder','form-submissions','letters-applications'])
+    return {component:'CertificateFormsWorkspace',view:targetWindow,status:pages.has(targetWindow)?'Supported':'Unsupported certificate form view'}
+  }
   if(targetKey==='asset-lifecycle'){
     const pages=new Set(['asset-assignment','asset-transfers','asset-warranty','asset-disposal','asset-reports'])
     return {component:'AssetLifecycleWorkspace',view:targetWindow,status:pages.has(targetWindow)?'Supported':'Unsupported asset lifecycle view'}
@@ -317,6 +324,7 @@ for (const [role, label] of roles) {
         : dashboard.targetKey === 'scheduled-reports' ? 'ScheduledReportsWorkspace'
         : dashboard.targetKey === 'helpdesk' ? 'HelpdeskWorkspace'
         : dashboard.targetKey === 'duplicate-detection' ? 'DuplicateDetectionWorkspace'
+        : dashboard.targetKey === 'certificate-forms' ? 'CertificateFormsWorkspace'
         : dashboard.targetKey === 'personal' ? 'PersonalWorkspace'
         : dashboard.targetKey === 'assistant' ? 'AIAssistantWorkspace'
         : dashboard.targetKey === 'frontoffice' ? 'FrontOfficeWorkspace'
