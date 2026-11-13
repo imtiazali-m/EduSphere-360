@@ -437,10 +437,13 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
  const [payloadData,setPayloadData]=useState<Record<string,unknown>>({})
  const structuredFields=completionItemFields[group.key+':'+item.key]??itemWorkspaceFields[group.key+':'+item.key]??workspaceFields[group.key]??workspaceFields[group.dataModule]??[]
  const preferredFieldKeys=workspaceTableFieldOrder[group.key]??workspaceTableFieldOrder[group.dataModule]??structuredFields.map(field=>field.key)
- const tableFields=preferredFieldKeys.flatMap(key=>{
+ const preferredTableFields=preferredFieldKeys.flatMap(key=>{
   const field=structuredFields.find(candidate=>candidate.key===key)
   return field?[field]:[]
- }).slice(0,4)
+ })
+ // New submenu-specific forms supply their own columns when the broader
+ // legacy workspace does not define an ordering for those field keys.
+ const tableFields=(preferredTableFields.length?preferredTableFields:structuredFields).slice(0,4)
  const canAdmin=Boolean(user&&['owner','admin'].includes(user.role))
  const metaColumnKeys:RecordMetaKey[]=recordMetaColumnPlan[group.key]??recordMetaColumnPlan[group.dataModule]??['reference_code','status','record_date']
  const tableMetaColumns=metaColumnKeys
