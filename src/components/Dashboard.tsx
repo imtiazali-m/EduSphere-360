@@ -41,6 +41,20 @@ import { PayrollWorkspace } from './PayrollWorkspace'
 import { PeopleHRWorkspace } from './PeopleHRWorkspace'
 import { GovernanceWorkspace } from './GovernanceWorkspace'
 import { InstitutionOperationsWorkspace } from './InstitutionOperationsWorkspace'
+import { DataManagementWorkspace } from './DataManagementWorkspace'
+import { CustomReportsWorkspace } from './CustomReportsWorkspace'
+import { CommunicationWorkspace } from './CommunicationWorkspace'
+import { HostelWorkspace } from './HostelWorkspace'
+import { ProcurementWorkspace } from './ProcurementWorkspace'
+import { CafeteriaWorkspace } from './CafeteriaWorkspace'
+import { LibraryReadingWorkspace } from './LibraryReadingWorkspace'
+import { ReceiptWorkspace } from './ReceiptWorkspace'
+import { PaymentOperationsWorkspace } from './PaymentOperationsWorkspace'
+import { AssetLifecycleWorkspace } from './AssetLifecycleWorkspace'
+import { ScheduledReportsWorkspace } from './ScheduledReportsWorkspace'
+import { HelpdeskWorkspace } from './HelpdeskWorkspace'
+import { DuplicateDetectionWorkspace } from './DuplicateDetectionWorkspace'
+import { CertificateFormsWorkspace } from './CertificateFormsWorkspace'
 import { AcademicManagementWorkspace } from './AcademicManagementWorkspace'
 import { supabase } from '../lib/supabase'
 import { readDisplayPreferences, writeDisplayPreferences, type DashboardDisplayPreferences, type DashboardFontSize } from '../lib/displayPreferences'
@@ -710,6 +724,20 @@ export function Dashboard({ onToast }: Props) {
     const assistantWindowRoute = key.startsWith('assistant:')
     const frontOfficeWindowRoute = key.startsWith('frontoffice:')
     const governanceWindowRoute = key.startsWith('governance:')
+    const dataManagementWindowRoute = key.startsWith('data-management:')
+    const customReportsWindowRoute = key.startsWith('custom-reports:')
+    const messagingWindowRoute = key.startsWith('messaging:')
+    const hostelWindowRoute = key.startsWith('hostel:')
+    const procurementWindowRoute = key.startsWith('procurement:')
+    const cafeteriaWindowRoute = key.startsWith('cafeteria:')
+    const libraryReadingWindowRoute = key.startsWith('library-reading:')
+    const receiptOperationsWindowRoute = key.startsWith('receipt-operations:')
+    const paymentOperationsWindowRoute = key.startsWith('payment-operations:')
+    const assetLifecycleWindowRoute = key.startsWith('asset-lifecycle:')
+    const scheduledReportsWindowRoute = key.startsWith('scheduled-reports:')
+    const helpdeskWindowRoute = key.startsWith('helpdesk:')
+    const certificateFormsWindowRoute = key.startsWith('certificate-forms:')
+    const duplicateDetectionWindowRoute = key.startsWith('duplicate-detection:')
     const operationsWindowRoute = key.startsWith('operations:')
     const routeParts = key.split(':')
     const moduleWindowRoute = routeParts.length === 2 && ['fees', 'exams', 'exam_results', 'assignments', 'assignment_submissions', 'timetable', 'announcements', 'work_tasks'].includes(routeParts[0])
@@ -728,6 +756,19 @@ export function Dashboard({ onToast }: Props) {
       : frontOfficeWindowRoute ? 'frontoffice'
       : payrollWindowRoute ? 'payroll'
       : governanceWindowRoute ? 'governance'
+      : dataManagementWindowRoute ? 'data-management'
+      : customReportsWindowRoute ? 'custom-reports'
+      : messagingWindowRoute ? 'messaging'
+      : hostelWindowRoute ? 'hostel'
+      : procurementWindowRoute ? 'procurement'
+      : cafeteriaWindowRoute ? 'cafeteria'
+      : libraryReadingWindowRoute ? 'library-reading'
+      : receiptOperationsWindowRoute ? 'receipt-operations'
+      : paymentOperationsWindowRoute ? 'payment-operations'
+      : assetLifecycleWindowRoute ? 'asset-lifecycle'
+      : scheduledReportsWindowRoute ? 'scheduled-reports'
+      : helpdeskWindowRoute ? 'helpdesk'
+      : duplicateDetectionWindowRoute ? 'duplicate-detection'
       : operationsWindowRoute ? 'operations'
       : moduleWindowRoute ? routeParts[0]
       : key
@@ -746,6 +787,19 @@ export function Dashboard({ onToast }: Props) {
       : frontOfficeWindowRoute ? key.slice('frontoffice:'.length)
       : payrollWindowRoute ? key.slice('payroll:'.length)
       : governanceWindowRoute ? key.slice('governance:'.length)
+      : dataManagementWindowRoute ? key.slice('data-management:'.length)
+      : customReportsWindowRoute ? key.slice('custom-reports:'.length)
+      : messagingWindowRoute ? key.slice('messaging:'.length)
+      : hostelWindowRoute ? key.slice('hostel:'.length)
+      : procurementWindowRoute ? key.slice('procurement:'.length)
+      : cafeteriaWindowRoute ? key.slice('cafeteria:'.length)
+      : libraryReadingWindowRoute ? key.slice('library-reading:'.length)
+      : receiptOperationsWindowRoute ? key.slice('receipt-operations:'.length)
+      : paymentOperationsWindowRoute ? key.slice('payment-operations:'.length)
+      : assetLifecycleWindowRoute ? key.slice('asset-lifecycle:'.length)
+      : scheduledReportsWindowRoute ? key.slice('scheduled-reports:'.length)
+      : helpdeskWindowRoute ? key.slice('helpdesk:'.length)
+      : duplicateDetectionWindowRoute ? key.slice('duplicate-detection:'.length)
       : operationsWindowRoute ? key.slice('operations:'.length)
       : moduleWindowRoute ? routeParts[1]
       : 'overview'
@@ -921,11 +975,59 @@ export function Dashboard({ onToast }: Props) {
           {workspaceTabs.map(tab => {
             const tabModule = available.find(module => module.key === tab.targetKey)
             const tabAdminKey = tab.targetKey.startsWith('admin:') ? tab.targetKey.slice(6) : undefined
-            const linkedWorkspaceKeys = ['administration:campus-and-branch-management','library:book-issue-and-returns','library:library-reports','inventory:stock-in','inventory:stock-out','inventory:stock-allocation','inventory:stock-adjustments','inventory:inventory-history','inventory:stock-reports','transport:student-transport-allocation','transport:transport-reports']
+            const linkedWorkspaceKeys = [
+  'administration:campus-and-branch-management',
+  'library:library-dashboard',
+  'library:book-management',
+  'library:book-catalogue',
+  'library:book-categories',
+  'library:book-registration',
+  'library:book-issue-and-returns',
+  'library:digital-library',
+  'library:learning-materials',
+  'library:resource-downloads',
+  'library:library-reports',
+  'inventory:inventory-dashboard',
+  'inventory:items-management',
+  'inventory:item-catalogue',
+  'inventory:item-categories',
+  'inventory:stock-in',
+  'inventory:stock-out',
+  'inventory:stock-allocation',
+  'inventory:stock-adjustments',
+  'inventory:inventory-history',
+  'inventory:stock-reports',
+  'transport:transport-dashboard',
+  'transport:vehicle-management',
+  'transport:drivers-management',
+  'transport:transport-routes',
+  'transport:route-stops',
+  'transport:student-transport-allocation',
+  'transport:transport-fees',
+  'transport:transport-assignments',
+  'transport:vehicle-maintenance',
+  'transport:transport-attendance',
+  'transport:transport-history',
+  'transport:transport-reports'
+]
             return <section className="pro-window-panel" key={tab.id} hidden={activeTabId !== tab.id} aria-label={tab.title}>
               {tab.targetKey === 'notifications' ? <NotificationCenter onToast={onToast} onUnreadCountChange={setUnreadAnnouncementCount}/> :
                 tab.targetKey === 'overview' ? <RoleDashboard onNavigate={navigateChild}/> :
                 tab.targetKey === 'institutional' && tab.targetWindow.startsWith('examinations:') ? <AssessmentWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'data-management' ? <DataManagementWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'custom-reports' ? <CustomReportsWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'messaging' ? <CommunicationWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'hostel' ? <HostelWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'procurement' ? <ProcurementWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'cafeteria' ? <CafeteriaWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'library-reading' ? <LibraryReadingWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'receipt-operations' ? <ReceiptWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'payment-operations' ? <PaymentOperationsWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'asset-lifecycle' ? <AssetLifecycleWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'scheduled-reports' ? <ScheduledReportsWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'helpdesk' ? <HelpdeskWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'duplicate-detection' ? <DuplicateDetectionWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'certificate-forms' ? <CertificateFormsWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'institutional' && linkedWorkspaceKeys.includes(tab.targetWindow) ? <LinkedOperationsWorkspace workspaceKey={tab.targetWindow} onToast={onToast} onNavigate={navigateChild}/> :
                 tab.targetKey === 'institutional' ? <InstitutionalWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'unavailable' ? <WorkspaceUnavailable groupKey={tab.targetWindow.split(':')[0]} itemKey={tab.targetWindow.split(':').slice(1).join(':')} onNavigate={navigate}/> :

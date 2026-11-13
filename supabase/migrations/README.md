@@ -1,6 +1,6 @@
 # Migration history
 
-The fifty timestamped migration files in this folder match the remote migration history recorded by the linked Supabase project. Keep each 14-digit timestamp unchanged so local and remote migration histories remain aligned.
+The seventy-two timestamped migration files in this folder match the remote migration history recorded by the linked Supabase project. Keep each 14-digit timestamp unchanged so local and remote migration histories remain aligned.
 
 The current online application includes the reviewed schema changes for the existing live schema, Faculty & Employee Management, and Student Management operations (admission lifecycle, linked guardian contacts, class placements, private student documents and audit history for attendance, published results, assignment submissions, guardian policy consolidation and activity indexes). The Student Management and Faculty/Employee migrations have already been applied to the linked project; do not replay them manually.
 
@@ -48,3 +48,45 @@ The atomic transport allocation migration adds database-side creation and end-al
 
 
 The Stage 5 administration, Stage 6 people/HR, Stage 7 attendance/leave/wellbeing, Stage 8 academic-management, and Stage 9 assessment-weight migrations have been restored from the linked Supabase project's recorded migration statements. Filenames use the exact remote migration versions; these files document already-applied schema changes and must not be replayed manually against the linked production database.
+
+
+The residence operations migration adds institution-scoped hostel buildings, rooms, beds, resident allocations, movement history, visitor records, accommodation fee charges and maintenance requests. Bed allocation, transfer and final check-out are transaction-guarded database functions. Student and guardian visibility follows linked student relationships; staff management and finance access remain role-restricted. Accommodation charges are tracked separately and are not automatically posted to the tuition fee ledger.
+
+
+The latest timestamped migrations add institution-scoped in-app messaging, transport attendance, room reservation approval, hostel/residence management, supplier procurement, purchase orders and goods receiving, plus cafeteria menus, daily availability, meal plans and stock-aware sales. Purchase receiving and cafeteria sales update the inventory movement ledger through database transactions; provider-dependent backups, WhatsApp/email delivery and external payment settlement are not represented as completed by these migrations.
+
+
+Library reading progress records are linked to institution students and, when selected, the associated library loan. Student reader cards are derived from the current student profile and actual loan activity. Fee receipt issuance is recorded in a separate tenant-scoped ledger against an existing fee payment; receipt numbers are allocated atomically, stored snapshots support later verification, and batch issuance does not create or alter fee payments.
+
+
+Online payment screens read the existing fee-payment ledger and store separately reviewed gateway references. A provider review is a finance audit note only; it does not charge a card, call a gateway, or automatically change a payment to settled.
+
+
+Facility asset lifecycle actions assign and transfer assets, update warranty information and record authorised disposal. Each action updates the current asset fields and appends an institution-scoped event entry for later lifecycle reports.
+
+
+Receipt issuance validates the current fee-payment record at insertion time and rejects pending, failed, unpaid, void or reversed transactions. A payment snapshot is stored with the issued receipt so later verification reflects the actual record at issuance.
+
+
+Scheduled report definitions can now be run immediately from the institution workspace. A CSV is generated from the selected live tenant-scoped source and the execution history records the report, row count, output filename and requesting user. Saved frequency/recipient preferences are not automatically executed or emailed until a server scheduler and delivery provider are configured.
+
+
+The Helpdesk extension adds institution-scoped requester tickets, priority and status queues, ticket conversation, private staff notes, self-assignment and required resolution notes. Requesters can see only their own tickets, while owners and administrators can manage the institution queue.
+
+
+Hostel accommodation charges now support separate partial/full payment entries. Each payment is recorded in a payment ledger and updates the charge balance under a row lock; overpayments and waived charges are rejected. These payments remain separate from tuition fee invoices.
+
+
+Duplicate detection scans real student and teacher identifiers and stores owner/admin review decisions per institution. Possible matches are not merged or deleted automatically; administrators mark confirmed duplicates or false positives after review.
+
+
+The 19 campus/finance workflow files are named with the exact remote applied version prefixes. This is a source filename reconciliation only; the migrations have already been applied to the linked project and must not be replayed. The hostel fee payment ledger and anonymous RPC restriction are included in the reconciled migration inventory.
+
+
+The timetable teacher-class authorization helper is available only to authenticated callers, and the timetable conflict trigger helper is not directly executable by anonymous or authenticated RPC callers. Its trigger remains responsible for rejecting overlapping class, teacher and room bookings.
+
+
+Transport fees are invoiced by active allocation and billing period and support partial/full collections. Payment entries are retained separately from the monthly allocation amount, with overpayment protection and student/guardian read access limited to linked allocations.
+
+
+Institution form definitions contain validated JSON field schemas and audience roles. Form submissions are requester-scoped, and owner/admin review decisions are recorded with reviewer, timestamp and resolution note.
