@@ -530,14 +530,15 @@ export function InstitutionOperationsWorkspace({workspaceKey,initialWindow,onToa
     </div>:null
   }
 
-  const recordCount=selectedDomain==='question-bank'?questions.length+papers.length:selectedDomain==='curriculum'?curriculum.length:selectedDomain==='behaviour'?behaviour.length:selectedDomain==='certificates'?certificates.length:selectedDomain==='visitors'?visitors.length:assets.length+maintenance.length
+  const recordCount=selectedDomain==='question-bank'?questions.length+papers.length:selectedDomain==='curriculum'?curriculum.length:selectedDomain==='behaviour'?behaviour.length:selectedDomain==='certificates'?certificates.length:selectedDomain==='visitors'?visitors.length:selectedDomain==='facilities'?assets.length+maintenance.length+roomReservations.length:0
   const viewRowCount=selectedDomain==='question-bank'?Math.max(visibleQuestions.length,visiblePapers.length)
     :selectedDomain==='curriculum'?visibleCurriculum.length
-    :selectedDomain==='behaviour'?visibleBehaviour.filter(row=>view==='positive'?row.event_type==='positive':view==='follow-up'?row.follow_up_required===true:view==='register'?row.event_type!=='positive':true).length
-    :selectedDomain==='certificates'?visibleCertificates.length
-    :selectedDomain==='visitors'?visibleVisitors.filter(row=>view==='checked-in'?row.status==='checked_in':view==='history'?['checked_out','denied','cancelled'].includes(String(row.status)):true).length
+    :selectedDomain==='behaviour'?visibleBehaviour.filter(row=>view==='positive'?row.event_type==='positive':view==='follow-up'?row.follow_up_required===true:view==='register'?row.event_type!=='positive':view==='skills'?String(row.category??'').toLowerCase().includes('student-skill'):view==='activities'?String(row.category??'').toLowerCase().includes('co-curricular'):view==='competencies'?String(row.category??'').toLowerCase().includes('competency'):true).length
+    :selectedDomain==='certificates'?view==='templates'?certificateTemplates.length:visibleCertificates.length
+    :selectedDomain==='visitors'?visibleVisitors.filter(row=>view==='checked-in'?row.status==='checked_in':view==='history'?['checked_out','denied','cancelled'].includes(String(row.status)):view==='approvals'?row.status==='expected'&&!row.approved_by:true).length
+    :view==='reservations'?roomReservations.filter(row=>reservationStatus==='all'||row.status===reservationStatus).length
     :view==='history'?maintenance.filter(row=>['completed','cancelled'].includes(String(row.status))).length
-    :view==='assets'?visibleAssets.length:visibleMaintenance.length
+    :view==='assets'?visibleAssets.length:view==='reports'?assets.length+maintenance.length+roomReservations.length:visibleMaintenance.length
 
   return <main className="iop-stage page-content ed360-module-page">
     <header className="iop-heading"><div><span>INSTITUTION OPERATIONS / {selectedDomain.toUpperCase()}</span><h1>{domainTitles[selectedDomain]}</h1><p>{domainDescriptions[selectedDomain]}</p></div><span className="iop-live"><i/> Institution cloud records</span></header>
