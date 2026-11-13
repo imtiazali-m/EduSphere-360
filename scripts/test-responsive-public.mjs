@@ -141,6 +141,29 @@ async function inspectViewport({ name, width, height }) {
       animations: 'disabled',
     })
 
+    const publicRoutes = [
+      ['/public/features', 'Explore the platform'],
+      ['/public/features/invoices-payments', 'Fee invoices, payments'],
+      ['/public/solutions', 'The right workspace'],
+      ['/public/analytics', 'See the whole picture'],
+      ['/public/integrations', 'Connected when configured'],
+      ['/public/pricing', 'Clear product information'],
+      ['/public/support', 'A clearer next step'],
+    ]
+    for (const [route, expectedHeading] of publicRoutes) {
+      await page.goto(`${baseUrl}/#${route}`, { waitUntil: 'domcontentloaded' })
+      const publicHeading = page.locator('.ep-page-hero h1').first()
+      await publicHeading.waitFor({ state: 'visible' })
+      const actualHeading = (await publicHeading.innerText()).replace(/\\s+/g, ' ').trim()
+      assert.ok(actualHeading.includes(expectedHeading), `${name}: ${route} heading was "${actualHeading}"`)
+      await assertNoHorizontalOverflow(page, `${name} ${route}`)
+      await page.screenshot({
+        path: `${artifactDir}/${name}-public-${route.split('/').filter(Boolean).join('-')}.png`,
+        fullPage: true,
+        animations: 'disabled',
+      })
+    }
+
     assert.deepEqual(pageErrors, [], `${name}: browser runtime errors detected: ${pageErrors.join('; ')}`)
     console.log(`PASS ${name} (${width}x${height}): welcome, mobile navigation, owner login and owner setup`)
   } finally {
