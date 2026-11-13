@@ -12,7 +12,7 @@ type Campus={id:string;name:string;campus_code?:string|null;address?:string|null
 type Book={id:string;title:string;reference_code?:string|null;quantity?:number|null;payload?:Record<string,unknown>}
 type Student={id:string;full_name:string;admission_no?:string|null;class_name?:string|null}
 type Item={id:string;title:string;reference_code?:string|null;quantity?:number|null;payload?:Record<string,unknown>}
-type RouteRecord={id:string;title:string;reference_code?:string|null;parent_record_id?:string|null;payload?:Record<string,unknown>}
+type RouteRecord={id:string;title:string;reference_code?:string|null;parent_record_id?:string|null;payload?:Record<string,unknown>;record_type?:string;description?:string|null;status?:string}
 type Loan={id:string;book_record_id:string;student_id:string|null;issued_at:string;due_at:string;returned_at:string|null;status:string;fine_amount:number;notes?:string|null}
 type Movement={id:string;item_record_id:string;movement_type:string;quantity:number;unit_cost?:number|null;movement_date:string;reference_code?:string|null;notes?:string|null}
 type Allocation={id:string;student_id:string;route_record_id:string;stop_record_id?:string|null;vehicle_record_id?:string|null;effective_from:string;effective_to?:string|null;transport_fee:number;status:string;notes?:string|null}
@@ -141,37 +141,49 @@ export function LinkedOperationsWorkspace({workspaceKey,onToast,onNavigate}:Prop
     const {data,error}=await supabase.from('campuses').select('*').eq('institution_id',user.institutionId).order('name')
     if(error)throw error
     setCampuses((data??[]) as Campus[])
-   }else if(isLibrary){
-    const [bookResult,studentResult,loanRows]=await Promise.all([
-     supabase.from('institutional_records').select('id,title,reference_code,quantity,payload').eq('institution_id',user.institutionId).eq('module_key','library').eq('record_type','book-registration').order('title'),
-     supabase.from('students').select('id,full_name,admission_no,class_name').eq('institution_id',user.institutionId).eq('status','active').order('full_name'),
-     loadAllPages<Loan>((from,to)=>db.from('library_loans').select('*').eq('institution_id',user.institutionId).order('issued_at',{ascending:false}).range(from,to))
-    ])
-    if(bookResult.error)throw bookResult.error
-    if(studentResult.error)throw studentResult.error
-    setBooks((bookResult.data??[]) as Book[]);setStudents((studentResult.data??[]) as Student[]);setLoans(loanRows)
+    }else if(isLibrary){
+     const [catalogResult,studentResult,loanRows]=await Promise.all([
+      supabase.from('institutional_records').select('id,title,reference_code,quantity,payload,description,status,record_type,parent_record_id').eq('institution_id',user.institutionId).eq('module_key','library').in('record_type',['book-registration','book-management','book-catalogue','book-categories','digital-library','learning-materials','resource-downloads']).order('title'),
+      supabase.from('students').select('id,full_name,admission_no,class_name').eq('institution_id',user.institutionId).eq('status','active').order('full_name'),
+      loadAllPages<Loan>((from,to)=>db.from('library_loans').select('*').eq('institution_id',user.institutionId).order('issued_at',{ascending:false}).range(from,to))
+     ])
+     if(catalogResult.error)throw catalogResult.error
+     if(studentResult.error)throw studentResult.error
+     const catalog=(catalogResult.data??[]) as RouteRecord[]
+     setBooks(catalog.filter(row=>['book-registration','book-management','book-catalogue'].includes(String(row.record_type??''))) as Book[])
+     setLibraryCategories(catalog.filter(row=>row.record_type==='book-categories'))
+     setLibraryResources(catalog.filter(row=>['digital-library','learning-materials','resource-downloads'].includes(String(row.record_type??''))))
+     setStudents((studentResult.data??[]) as Student[]);setLoans(loanRows)
    }else if(isInventory){
-    const [itemResult,movementRows]=await Promise.all([
-     supabase.from('institutional_records').select('id,title,reference_code,quantity,payload').eq('institution_id',user.institutionId).eq('module_key','inventory').in('record_type',['items-management','item-catalogue']).order('title'),
-     loadAllPages<Movement>((from,to)=>db.from('inventory_movements').select('*').eq('institution_id',user.institutionId).order('movement_date',{ascending:false}).range(from,to))
-    ])
-    if(itemResult.error)throw itemResult.error
-    setItems((itemResult.data??[]) as Item[]);setMovements(movementRows)
+     const [itemResult,categoryResult,movementRows]=await Promise.all([
+      supabase.from('institutional_records').select('id,title,reference_code,quantity,payload').eq('institution_id',user.institutionId).eq('module_key','inventory').in('record_type',['items-management','item-catalogue']).order('title'),
+      supabase.from('institutional_records').select('id,title,reference_code,payload,description,status').eq('institution_id',user.institutionId).eq('module_key','inventory').eq('record_type','item-categories').order('title'),
+      loadAllPages<Movement>((from,to)=>db.from('inventory_movements').select('*').eq('institution_id',user.institutionId).order('movement_date',{ascending:false}).range(from,to))
+     ])
+     if(itemResult.error)throw itemResult.error
+     if(categoryResult.error)throw categoryResult.error
+     setItems((itemResult.data??[]) as Item[]);setInventoryCategories((categoryResult.data??[]) as RouteRecord[]);setMovements(movementRows)
    }else if(isTransport){
-    const [studentResult,routeResult,stopResult,vehicleResult,allocationRows,attendanceRows]=await Promise.all([
-     supabase.from('students').select('id,full_name,admission_no,class_name').eq('institution_id',user.institutionId).eq('status','active').order('full_name'),
-     supabase.from('institutional_records').select('id,title,reference_code,payload').eq('institution_id',user.institutionId).eq('module_key','transport').eq('record_type','transport-routes').order('title'),
-     supabase.from('institutional_records').select('id,title,reference_code,parent_record_id,payload').eq('institution_id',user.institutionId).eq('module_key','transport').eq('record_type','route-stops').order('title'),
-     supabase.from('institutional_records').select('id,title,reference_code,payload').eq('institution_id',user.institutionId).eq('module_key','transport').eq('record_type','vehicle-management').order('title'),
-     loadAllPages<Allocation>((from,to)=>db.from('student_transport_allocations').select('*').eq('institution_id',user.institutionId).order('created_at',{ascending:false}).range(from,to)),
-      loadAllPages<TransportEvent>((from,to)=>db.from('transport_attendance_events').select('*').eq('institution_id',user.institutionId).order('occurred_at',{ascending:false}).range(from,to))
-    ])
-    for(const result of [studentResult,routeResult,stopResult,vehicleResult])if(result.error)throw result.error
-    setStudents((studentResult.data??[]) as Student[]);setRoutes((routeResult.data??[]) as RouteRecord[])
-    setStops((stopResult.data??[]) as RouteRecord[]);setVehicles((vehicleResult.data??[]) as RouteRecord[])
-    setAllocations(allocationRows);setTransportEvents(attendanceRows)
-   }
-  }catch(error){setLoadError(error instanceof Error?error.message:'The operation records could not be loaded.');}
+     const [studentResult,routeResult,stopResult,vehicleResult,extraResult,allocationRows,attendanceRows,feeRows,paymentRows]=await Promise.all([
+      supabase.from('students').select('id,full_name,admission_no,class_name').eq('institution_id',user.institutionId).eq('status','active').order('full_name'),
+      supabase.from('institutional_records').select('id,title,reference_code,payload').eq('institution_id',user.institutionId).eq('module_key','transport').eq('record_type','transport-routes').order('title'),
+      supabase.from('institutional_records').select('id,title,reference_code,parent_record_id,payload').eq('institution_id',user.institutionId).eq('module_key','transport').eq('record_type','route-stops').order('title'),
+      supabase.from('institutional_records').select('id,title,reference_code,payload').eq('institution_id',user.institutionId).eq('module_key','transport').eq('record_type','vehicle-management').order('title'),
+      supabase.from('institutional_records').select('id,title,reference_code,parent_record_id,payload,description,status,record_type').eq('institution_id',user.institutionId).eq('module_key','transport').in('record_type',['drivers-management','vehicle-maintenance']).order('created_at',{ascending:false}),
+      loadAllPages<Allocation>((from,to)=>db.from('student_transport_allocations').select('*').eq('institution_id',user.institutionId).order('created_at',{ascending:false}).range(from,to)),
+      loadAllPages<TransportEvent>((from,to)=>db.from('transport_attendance_events').select('*').eq('institution_id',user.institutionId).order('occurred_at',{ascending:false}).range(from,to)),
+      supabase.from('student_transport_fee_charges').select('*').eq('institution_id',user.institutionId).order('due_date',{ascending:false}),
+      supabase.from('student_transport_fee_payments').select('*').eq('institution_id',user.institutionId).order('received_at',{ascending:false})
+     ])
+     for(const result of [studentResult,routeResult,stopResult,vehicleResult,extraResult,feeRows,paymentRows])if(result.error)throw result.error
+     const extras=(extraResult.data??[]) as RouteRecord[]
+     setStudents((studentResult.data??[]) as Student[]);setRoutes((routeResult.data??[]) as RouteRecord[])
+     setStops((stopResult.data??[]) as RouteRecord[]);setVehicles((vehicleResult.data??[]) as RouteRecord[])
+     setDrivers(extras.filter(row=>row.record_type==='drivers-management'))
+     setVehicleMaintenance(extras.filter(row=>row.record_type==='vehicle-maintenance'))
+     setAllocations(allocationRows);setTransportEvents(attendanceRows)
+     setTransportFeeCharges((feeRows.data??[]) as FeeCharge[]);setTransportFeePayments((paymentRows.data??[]) as FeePayment[])
+    }catch(error){setLoadError(error instanceof Error?error.message:'The operation records could not be loaded.');}
   finally{setLoading(false)}
  },[user?.id,user?.institutionId,isCampus,isLibrary,isInventory,isTransport])
 
