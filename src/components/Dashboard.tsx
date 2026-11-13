@@ -47,6 +47,7 @@ import { CommunicationWorkspace } from './CommunicationWorkspace'
 import { HostelWorkspace } from './HostelWorkspace'
 import { ProcurementWorkspace } from './ProcurementWorkspace'
 import { CafeteriaWorkspace } from './CafeteriaWorkspace'
+import { LibraryReadingWorkspace } from './LibraryReadingWorkspace'
 import { AcademicManagementWorkspace } from './AcademicManagementWorkspace'
 import { supabase } from '../lib/supabase'
 import { readDisplayPreferences, writeDisplayPreferences, type DashboardDisplayPreferences, type DashboardFontSize } from '../lib/displayPreferences'
@@ -722,6 +723,7 @@ export function Dashboard({ onToast }: Props) {
     const hostelWindowRoute = key.startsWith('hostel:')
     const procurementWindowRoute = key.startsWith('procurement:')
     const cafeteriaWindowRoute = key.startsWith('cafeteria:')
+    const libraryReadingWindowRoute = key.startsWith('library-reading:')
     const operationsWindowRoute = key.startsWith('operations:')
     const routeParts = key.split(':')
     const moduleWindowRoute = routeParts.length === 2 && ['fees', 'exams', 'exam_results', 'assignments', 'assignment_submissions', 'timetable', 'announcements', 'work_tasks'].includes(routeParts[0])
@@ -746,6 +748,7 @@ export function Dashboard({ onToast }: Props) {
       : hostelWindowRoute ? 'hostel'
       : procurementWindowRoute ? 'procurement'
       : cafeteriaWindowRoute ? 'cafeteria'
+      : libraryReadingWindowRoute ? 'library-reading'
       : operationsWindowRoute ? 'operations'
       : moduleWindowRoute ? routeParts[0]
       : key
@@ -770,6 +773,7 @@ export function Dashboard({ onToast }: Props) {
       : hostelWindowRoute ? key.slice('hostel:'.length)
       : procurementWindowRoute ? key.slice('procurement:'.length)
       : cafeteriaWindowRoute ? key.slice('cafeteria:'.length)
+      : libraryReadingWindowRoute ? key.slice('library-reading:'.length)
       : operationsWindowRoute ? key.slice('operations:'.length)
       : moduleWindowRoute ? routeParts[1]
       : 'overview'
@@ -956,6 +960,7 @@ export function Dashboard({ onToast }: Props) {
                 tab.targetKey === 'hostel' ? <HostelWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'procurement' ? <ProcurementWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'cafeteria' ? <CafeteriaWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'library-reading' ? <LibraryReadingWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'institutional' && linkedWorkspaceKeys.includes(tab.targetWindow) ? <LinkedOperationsWorkspace workspaceKey={tab.targetWindow} onToast={onToast} onNavigate={navigateChild}/> :
                 tab.targetKey === 'institutional' ? <InstitutionalWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'unavailable' ? <WorkspaceUnavailable groupKey={tab.targetWindow.split(':')[0]} itemKey={tab.targetWindow.split(':').slice(1).join(':')} onNavigate={navigate}/> :
