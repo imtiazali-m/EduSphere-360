@@ -36,8 +36,8 @@ const studentVisibleTabs = {
 }
 const facultyTabs = new Set(['overview','registration','directory','directory-teaching','directory-staff','profile','id-cards','departments','designations','assignments','attendance','leave','workload','documents','qualifications','history','reports'])
 const facultyStaffTabs = new Set(['overview','profile','id-cards','assignments','attendance','leave','workload','documents','qualifications','history'])
-const attendanceWindows = new Set(['students','teachers','staff','history','devices'])
-const reportTabs = new Set(['overview','finance','attendance','academics','students','employees','payroll','examinations','academic','fees','financial','class','comparative','builder','scheduled','templates','history'])
+const attendanceWindows = new Set(['students','teachers','staff','history','devices','qr-scan','biometric','cards-students','cards-teachers','cards-staff'])
+const reportTabs = new Set(['overview','finance','attendance','academics','students','employees','payroll','examinations','academic','fees','financial','class','comparative','builder','scheduled','templates','forms','history'])
 const financeTabs = {
   'accounts-finance': new Set(['overview','accounts','journals','reconciliation']),
   fees: new Set(['overview','structures','invoices','payments','receivables','discounts','refunds','receipts','reconciliation']),

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
-import { Activity, CalendarCheck, Check, Download, Fingerprint, RefreshCw, Search, X } from 'lucide-react'
+import { Activity, CalendarCheck, Check, Download, Fingerprint, RefreshCw, Search, X, ShieldCheck } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { downloadCsv } from '../lib/csv'
@@ -192,7 +192,7 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
   <header className="ed360-attendance-hero">
    <div className="ed360-attendance-icon"><CalendarCheck size={23}/></div>
    <div><span>ACADEMIC & STAFF OPERATIONS / ATTENDANCE</span><h1>Attendance Management</h1><p>Record a complete class, section or employee roster. Mark Present, Absent, Approved Leave or Excused and save one validated register.</p></div>
-   <div className="ed360-attendance-stats"><span><b>{people.length}</b> people in roster</span><span><b>{counts.present}</b> present · <b>{counts.absent}</b> absent · <b>{counts.late}</b> late</span></div>
+   <div className="ed360-attendance-stats"><span><b>{people.length}</b> people in roster</span><span><b>{counts.present}</b> present · <b>{counts.absent}</b> absent · <b>{counts.approved_leave+counts.excused}</b> leave / excused</span></div>
   </header>
   <div className="ed360-attendance-main-tabs">
    <button className={autoTab==='register'?'active':''} onClick={()=>setAutoTab('register')}>Manual register</button>
@@ -241,7 +241,7 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
     </div>
    </div>
    <label className="ed360-attendance-search"><Search size={15}/><input value={historySearch} onChange={e=>setHistorySearch(e.target.value)} placeholder="Search person, ID, status or note"/></label>
-   <div className="ed360-attendance-counts"><div className="count-p"><b>{existing.filter(x=>x.status==='present').length}</b><span>Present</span></div><div className="count-a"><b>{existing.filter(x=>x.status==='absent').length}</b><span>Absent</span></div><div className="count-l"><b>{existing.filter(x=>x.status==='late').length}</b><span>Late</span></div><div><b>{existing.length}</b><span>Entries</span></div></div>
+   <div className="ed360-attendance-counts"><div className="count-p"><b>{existing.filter(x=>x.status==='present').length}</b><span>Present</span></div><div className="count-a"><b>{existing.filter(x=>x.status==='absent').length}</b><span>Absent</span></div><div><b>{existing.length}</b><span>Entries</span></div></div>
    {historyLoading&&<p className="ed360-attendance-empty">Loading attendance history…</p>}
    {!loadingError&&visibleHistory.length>0&&<div className="ed360-attendance-history-list">{visibleHistory.map((entry,index)=>{
     const personId=population==='students'?entry.student_id:entry.teacher_id
