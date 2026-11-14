@@ -45,7 +45,8 @@ const requiredFiles = [
   'supabase/migrations/20261109153658_academic_studentcare_and_campus_operations.sql',
   'supabase/migrations/20261109155028_question_paper_approval_and_line_removal.sql',
   'docs/EDUSPHERE_360_BENCHMARK_AND_GAP_REVIEW.md',
-  '.env.example', 'package-lock.json', 'src/lib/types.ts', 'supabase/migrations/20261108053651_owner_signup_institution_details.sql', 'supabase/migrations/20261109085154_faculty_employee_management.sql', 'supabase/migrations/20261109092734_student_management_operations.sql', 'supabase/migrations/20261109092920_student_management_scope_indexes_and_guardian_portal_read.sql',
+  '.env.example', 'package-lock.json', 'src/lib/types.ts', 'supabase/migrations/20261108053651_owner_signup_institution_details.sql', 'supabase/migrations/20261109085154_faculty_employee_management.sql', 'supabase/migrations/20261109092734_student_management_operations.sql',
+  'supabase/migrations/20261114033957_guard_student_admission_status_transitions.sql', 'supabase/migrations/20261109092920_student_management_scope_indexes_and_guardian_portal_read.sql',
   '.github/workflows/cloudflare-pages-release.yml', 'docs/FINAL_REBUILD_STAGE.md', 'docs/NAVIGATION_RECONCILIATION.md',
 ]
 check('Integrated frontend, authentication, modules and deployment files exist', () => {
@@ -1145,6 +1146,34 @@ check('Student admission is a dedicated, accessible workspace window', () => {
   assert.ok(recordModule.includes('Save student admission') && recordModule.includes('Back to students'), 'The admission window must provide clear save and return actions')
   assert.ok(admissionStyles.includes('.ed360-admission-workspace') && admissionStyles.includes('@media(max-width:680px)'), 'The admission workspace must have dedicated responsive styles')
   assert.ok(mainEntry.includes("import './styles/student-admission-workspace.css'"), 'Dedicated admission styles must be loaded by the application')
+})
+
+check('Admission transitions are enforced by the database and reviewed with trusted identity', () => {
+  const guard = read('supabase/migrations/20261114033957_guard_student_admission_status_transitions.sql')
+  const recordModule = read('src/components/RecordModule.tsx')
+  for (const rule of [
+    "when 'draft' then new.application_status in ('submitted','withdrawn')",
+    "when 'submitted' then new.application_status in ('under_review','documents_required','rejected','withdrawn')",
+    "when 'under_review' then new.application_status in ('documents_required','approved','rejected','withdrawn')",
+    "when 'documents_required' then new.application_status in ('under_review','rejected','withdrawn')",
+    "when 'approved' then new.application_status in ('enrolled','withdrawn')",
+    "when 'enrolled' then new.application_status = 'withdrawn'",
+  ]) assert.ok(guard.includes(rule), 'Missing database admission transition rule: ' + rule)
+  assert.ok(guard.includes('security invoker'), 'Admission guard must run with the authenticated caller privileges')
+  assert.ok(guard.includes("array['owner','admin']::text[]"), 'Only institution owners and administrators may change admission stages')
+  assert.ok(guard.includes('private.has_institution_permission(') && guard.includes("'students'") && guard.includes("'edit'"), 'Custom college role and scope must be checked')
+  assert.ok(guard.includes('new.application_reviewed_by := auth.uid()'), 'Reviewer identity must come from the authenticated session')
+  assert.ok(guard.includes('new.application_reviewed_at := now()'), 'Review timestamp must be assigned by the database')
+  assert.ok(guard.includes("new.status := 'active'") && guard.includes("new.status := 'inactive'") && guard.includes("new.status := 'pending'"), 'Student status must follow the admission stage')
+  assert.ok(guard.includes('before update of application_status on public.students'), 'Admission changes must be guarded on every database update')
+  const updateStart = recordModule.indexOf('async function updateAdmissionStatus')
+  const updateEnd = recordModule.indexOf('async function saveGuardianContact', updateStart)
+  assert.ok(updateStart >= 0 && updateEnd > updateStart, 'Student admission status action must remain present')
+  const updateHandler = recordModule.slice(updateStart, updateEnd)
+  assert.ok(updateHandler.includes('application_review_notes: note.trim() || null'), 'The UI must preserve the admission review note')
+  assert.ok(!updateHandler.includes('application_reviewed_by:'), 'The browser must not choose the reviewer identity')
+  assert.ok(!updateHandler.includes('application_reviewed_at:'), 'The browser must not choose the review timestamp')
+  assert.ok(!updateHandler.includes('application_submitted_at:'), 'The browser must not choose submission timestamps')
 })
 
 console.log('\nRole workspace counts:')
