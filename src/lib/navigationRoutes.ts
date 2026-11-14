@@ -263,23 +263,22 @@ const institutionalOperationsItems: Record<string, Record<string,string>> = {
 }
 
 const administrationGovernanceItems: Record<string,string> = {
-  'overview':'overview',\n  'institute-profile':'profile',\n  'document-access':'documents',
+  'overview':'overview',
+  'institute-profile':'profile',
   'academic-structure-sections':'academic',
   'department-directory':'departments',
   'designation-catalogue':'designations',
-  'departments-designations':'departments',
+  'organisational-structure':'organization',
+  'approval-workflows':'approvals',
   'student-policies':'policies-students',
   'faculty-policies':'policies-faculty',
-  'organisational-structure':'organization',
-  'system-configuration':'system',
-  'approval-workflows':'approvals',
-  'policies-rules':'policies',
   'administrative-audit':'audit',
   'user-access-invitations':'accounts',
   'role-permission-management':'permissions',
   'institute-settings':'settings',
   'branding-document-settings':'branding',
-  'security-access-history':'security',
+  'document-access':'documents',
+  'security-access':'security',
 }
 const institutionConfigurationItems: Record<string,string> = {
   'institution-configuration':'settings','education-system-configuration':'settings','education-levels':'academic',
@@ -452,15 +451,15 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
   if (groupKey === 'academic-management') {
     const academicWindows: Record<string,string> = {
       'academic-sessions':'academic-sessions',
-      'classes-sections':'classes-sections',
-      'subjects-courses':'subjects-courses',
-      'curriculum-syllabus':'curriculum',
-      'lesson-planning':'lesson-planning',
+      'classes':'classes-sections',\n      'sections':'sections',
+      'subjects':'subjects-courses',
+      'curriculum':'curriculum',
+      'lesson-plans':'lesson-planning',
       'timetable':'timetable',
-      'homework-assignments':'homework-assignments',
+      'assignments':'homework-assignments',
       'study-materials':'study-materials',
       'online-learning':'online-learning',
-      'classwork-classroom-activities':'classroom-activities',
+      'class-activities':'classroom-activities',
       'academic-calendar':'academic-calendar',
       'learning-progress':'learning-progress',
     }
@@ -494,9 +493,9 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
     const stage7Routes:Record<string,string>={
       'student-attendance':'attendance:students',
       'teacher-attendance':'attendance:teachers',
-      'staff-attendance':'attendance:staff',
+      'staff-attendance':'attendance:staff',\n      'attendance-history':'attendance:history',\n      'automatic-attendance':'attendance:devices',\n      'attendance-cards':'attendance:cards',\n      'biometric-attendance':'attendance:biometric',
       'leave-management':'care:leave',
-      'attendance-reports':'care:reports',
+      'attendance-reports':'attendance:reports',
       'student-discipline':'care:discipline',
       'student-counselling-wellbeing':'care:counselling',
       'health-emergency-records':'care:health',
