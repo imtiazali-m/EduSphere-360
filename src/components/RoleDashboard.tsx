@@ -350,7 +350,6 @@ export function RoleDashboard({ onNavigate }: Props) {
   const monthName = now.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })
   const todayAttendance = attendance.filter(row => isToday(row, ['attendance_date'], today))
   const todayStaffAttendance = get('employee_attendance').filter(row => isToday(row, ['attendance_date'], today))
-  const totalTodayAttendance = todayAttendance.length + todayStaffAttendance.length
   const presentToday = [...todayAttendance, ...todayStaffAttendance].filter(row => String(row.status ?? '').toLowerCase() === 'present').length
   const studentPresentToday = todayAttendance.filter(row => String(row.status ?? '').toLowerCase() === 'present').length
   const studentAbsentToday = todayAttendance.filter(row => String(row.status ?? '').toLowerCase() === 'absent').length
