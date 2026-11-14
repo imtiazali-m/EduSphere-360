@@ -43,7 +43,6 @@ export function AIAssistantWorkspace({initialWindow='chat'}:{initialWindow?:stri
  const [status,setStatus]=useState<Partial<Record<ProviderKey,ProviderStatus>>>({})
  const [messages,setMessages]=useState<Message[]>([])
  const [selectedAdmission,setSelectedAdmission]=useState('')
- const [selectedAdmission,setSelectedAdmission]=useState('')
  const [prompt,setPrompt]=useState('')
  const [loading,setLoading]=useState(false)
  const [checking,setChecking]=useState(true)
@@ -139,7 +138,7 @@ export function AIAssistantWorkspace({initialWindow='chat'}:{initialWindow?:stri
    </div>
    <aside className="mw-side-column">
     <section className="mw-panel ai-model-panel"><div className="mw-panel-head"><div><span>MODEL ROUTING</span><h2>Choose a provider</h2></div><Sparkles size={18}/></div>
-     {pageKey==='student-analysis'&&<label>Student admission number<input value={selectedAdmission} onChange={e=>setSelectedAdmission(e.target.value)} placeholder="Admission number for this learner"/></label>}{pageKey==='student-analysis'&&<label>Student admission number<input value={selectedAdmission} onChange={e=>setSelectedAdmission(e.target.value)} placeholder="Admission number for this learner"/></label>}<label>AI provider<select value={provider} onChange={e=>setProvider(e.target.value as ProviderKey)}><option value="auto">Auto-select available provider</option>{providers.map(p=><option key={p.key} value={p.key}>{p.name}</option>)}</select></label>
+     {pageKey==='student-analysis'&&<label>Student admission number<input value={selectedAdmission} onChange={e=>setSelectedAdmission(e.target.value)} placeholder="Admission number for this learner"/></label>}<label>AI provider<select value={provider} onChange={e=>setProvider(e.target.value as ProviderKey)}><option value="auto">Auto-select available provider</option>{providers.map(p=><option key={p.key} value={p.key}>{p.name}</option>)}</select></label>
      <label>Model identifier<input value={model} onChange={e=>setModel(e.target.value)} placeholder={provider==='auto'?'Uses the selected provider default model':selectedProvider.hint} disabled={provider==='auto'}/></label>
      <div className="ai-provider-list">{providers.map(p=><div key={p.key}><span>{p.name}</span><b className={status[p.key]?.configured?'configured':''}>{checking?'Checking':status[p.key]?.configured?'Ready':'Key needed'}</b></div>)}</div>
      <p className="ai-secret-note"><ShieldCheck size={14}/> Keys are held in Supabase Edge Function secrets.</p>
