@@ -119,7 +119,7 @@ export function IntegrationManagementWorkspace({initialWindow='overview',onToast
    {(['ai-providers','zoom','google','youtube','biometric'] as PageKey[]).map(key=>{const CardIcon=PageIcon[key];return <article className="ed360-integration-card" key={key}>
     <div className="ed360-integration-card-icon"><CardIcon size={20}/></div><div><span>{pages[key].eyebrow}</span><h2>{pages[key].title}</h2><p>{pages[key].intro}</p></div>
     <div className="ed360-integration-card-foot">{key==='ai-providers'?<b className={configuredCount?'is-ready':'is-pending'}>{checking?'Checking…':configuredCount+' of 7 credentials configured'}</b>:<b className="is-pending">Connection pending</b>}<button type="button" className="button button-outline" onClick={()=>onNavigate('integration:'+key)}>Open workspace <ArrowUpRight size={14}/></button></div>
-   </article>)}
+   </article>})}
   </section>}
   {page==='ai-providers'&&<>
    <div className="ed360-integration-summary"><div><span>VERIFIED CREDENTIALS</span><strong>{checking?'—':configuredCount} / 7</strong><small>Presence check only; not a successful API test</small></div><div><span>LAST CHECKED</span><strong>{lastChecked||'Not checked'}</strong><small>Credentials never leave the server</small></div></div>
