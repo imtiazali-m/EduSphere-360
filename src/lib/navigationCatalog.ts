@@ -129,22 +129,7 @@ export const navigationSectionDefinitions:NavigationSectionDefinition[]=[
   {
     key:'main',
     label:'',
-    groupKeys:[
-      'dashboard',
-      'reports','ai',
-      'administration',
-      'academic-management',
-      'attendance',
-      'examinations',
-      'behaviour',
-      'people-hr',
-      'accounts-finance','fees','receivables','payments','receipts','reconciliation',
-      'communication',
-      'transport','inventory','facilities','visitors',
-      'certificates','timetable','teaching','curriculum','academic-sessions','classes-sections','subjects','question-bank','class-tests','library',
-      'institution-config',
-      'backup',
-    ],
+    groupKeys:navigationMenuOrder,
   },
 ]
 const navigationGroupOrder=new Map<string,number>(
