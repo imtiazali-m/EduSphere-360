@@ -412,6 +412,22 @@ export function CollegeHomePage({ navigate, initialSection }: Props) {
           </PageFrame>
         )}
 
+        {page === 'departments' && (
+          <PageFrame eyebrow="ACADEMIC STRUCTURE" title="Faculty arrangement" lead="Publicly approved faculty grouped using the department information in the internal employee register." icon={Users}>
+            {facultyGroups.length > 0 ? <div className="gidc-public-department-groups">{facultyGroups.map(([department, people]) => (
+              <section className="gidc-public-department-group" key={department}>
+                <div className="gidc-public-department-heading"><div><small>DEPARTMENT</small><h2>{department}</h2></div><span>{people.length} {people.length === 1 ? 'profile' : 'profiles'}</span></div>
+                <div className="gidc-public-faculty-grid">{people.map(person => (
+                  <article className="gidc-public-faculty-card" key={person.id}>
+                    <div className="gidc-public-faculty-photo">{person.public_photo_url ? <img src={person.public_photo_url} alt={person.full_name}/> : <Users size={38}/>}</div>
+                    <div className="gidc-public-faculty-info"><h3>{person.full_name}</h3><b>{person.public_designation || person.subject || 'Faculty member'}</b>{person.public_qualification && <small>{person.public_qualification}</small>}</div>
+                  </article>
+                ))}</div>
+              </section>
+            ))}</div> : <EmptyState icon={Users} title="Faculty arrangement" detail="Published faculty records will be grouped here by their internal department assignment."/>}
+          </PageFrame>
+        )}
+
         {page === 'campus' && (
           <PageFrame eyebrow="CAMPUS INFORMATION" title="Campus & facilities" lead={textValue(content.campusIntro, 'College location and campus information.')} icon={School}>
             <div className="gidc-public-campus-grid">
@@ -426,6 +442,12 @@ export function CollegeHomePage({ navigate, initialSection }: Props) {
               </div>
             </div>
             {galleryItems.filter(item => item.category === 'main-campus' || item.category === 'campus-facility').length > 0 && <div className="gidc-public-subsection"><SectionHeading eyebrow="CAMPUS PHOTOGRAPHS" title="Campus views"/><div className="gidc-public-photo-grid">{galleryItems.filter(item => item.category === 'main-campus' || item.category === 'campus-facility').map(item => <PhotoCard item={item} key={item.id}/>)}</div></div>}
+          </PageFrame>
+        )}
+
+        {page === 'events' && (
+          <PageFrame eyebrow="COLLEGE ACTIVITIES" title="Events & achievements" lead="College events, academic activities, visits and official sessions approved for public display." icon={CalendarDays}>
+            {eventPhotos.length > 0 ? <div className="gidc-public-gallery-grid">{eventPhotos.map(item => <PhotoCard item={item} key={item.id}/>)}</div> : <EmptyState icon={CalendarDays} title="College events" detail="Approved event photographs will appear here when the college publishes them in the website gallery."/>}
           </PageFrame>
         )}
 
@@ -497,6 +519,7 @@ function EmptyState({ icon: Icon, title, detail }: { icon: typeof Users; title: 
 
 function NewsCard({ item }: { item: WebsiteNews }) {
   return <article className="gidc-public-news-card">
+    {item.imageUrl && <img className="gidc-public-news-image" src={item.imageUrl} alt={item.title} loading="lazy"/>}
     <div className="gidc-public-news-icon"><CalendarDays size={22}/></div>
     <div><small>{item.date || 'COLLEGE NOTICE'}</small><h3>{item.title}</h3><p>{item.body}</p>{item.url && <a href={item.url} target="_blank" rel="noreferrer">Open notice <ExternalLink size={14}/></a>}</div>
   </article>
