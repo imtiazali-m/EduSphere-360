@@ -44,10 +44,10 @@ async function assertNoHorizontalOverflow(page,label) {
 const publicPages = [
   ['home','Government Islamia Degree College Badin'],
   ['about','About the college'],
-  ['academics','Academic information'],
+  ['academics','Academics'],
   ['principal','Principal'],
   ['faculty','Faculty directory'],
-  ['departments','Faculty arrangement'],
+  ['departments','Departments'],
   ['campus','Campus & facilities'],
   ['student-life','Student life'],
   ['events','Events & achievements'],
@@ -96,17 +96,16 @@ async function inspectViewport({name,width,height}) {
     await mkdir(artifactDir,{recursive:true})
     await page.screenshot({path:`${artifactDir}/${name}-college-home.png`,fullPage:true,animations:'disabled'})
 
-    if(width<=1180) {
-      const menu=page.locator('.gidc-public-menu-toggle')
-      await menu.waitFor({state:'visible'})
-      await menu.click()
-      await page.locator('.gidc-public-nav.is-open').waitFor({state:'visible'})
-      await page.locator('.gidc-public-nav.is-open a[href="#/public/events"]').click()
-      await page.waitForFunction(()=>location.hash==='#/public/events')
-      await assertNoHorizontalOverflow(page,`${name} mobile navigation`)
-    } else {
-      await page.locator('.gidc-public-nav a[href="#/public/events"]').waitFor({state:'visible'})
-    }
+    const menu=page.locator('.gidc-public-menu-toggle')
+    await menu.waitFor({state:'visible'})
+    await menu.click()
+    const verticalMenu=page.locator('.gidc-public-nav.is-open')
+    await verticalMenu.waitFor({state:'visible'})
+    assert.equal(await verticalMenu.evaluate(element=>getComputedStyle(element).flexDirection),'column',
+      `${name} public navigation is not displayed vertically`)
+    await verticalMenu.locator('a[href="#/public/events"]').click()
+    await page.waitForFunction(()=>location.hash==='#/public/events')
+    await assertNoHorizontalOverflow(page,`${name} vertical navigation`)
 
     for(const [id,expectedTitle] of publicPages.filter(([id])=>id!=='home')) {
       await page.goto(`${baseUrl}/#/public/${id}`,{waitUntil:'domcontentloaded'})
