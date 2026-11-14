@@ -188,7 +188,7 @@ check('The full institutional menu maps every submenu to a working destination',
   assert.equal(getNavigationRoute('dashboard', 'Employee Performance', 'teacher'), 'unavailable:dashboard:employee-performance', 'Employee appraisal must stay unavailable until a review workflow exists')
   assert.equal(getNavigationRoute('dashboard', 'Financial Overview', 'teacher'), 'unavailable:dashboard:financial-overview', 'Teacher navigation must not expose institutional finance totals')
   assert.equal(getNavigationRoute('dashboard', 'Student Behaviour', 'student'), 'unavailable:dashboard:student-behaviour', 'Student dashboard must not expose staff-only behaviour logs')
-  assert.equal(getNavigationRoute('reports', 'Employee Reports'), 'employees:reports', 'Employee report shortcut must open the HR report view')
+  assert.equal(getNavigationRoute('reports', 'Employee Reports'), 'reports:employees', 'Employee report shortcut must open the dedicated employee report workspace')
   assert.equal(getNavigationRoute('reports', 'Payroll Reports'), 'reports:payroll', 'Payroll report shortcut must open the payroll report view')
   assert.equal(getNavigationRoute('library', 'Book Registration'), 'institutional:library:book-registration', 'Library catalogue must use its structured master-record form')
   assert.equal(getNavigationRoute('inventory', 'Items Management'), 'institutional:inventory:items-management', 'Inventory catalogue must use its structured master-record form')
