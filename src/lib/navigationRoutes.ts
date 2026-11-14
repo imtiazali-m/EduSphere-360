@@ -453,7 +453,8 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
   if (groupKey === 'academic-management') {
     const academicWindows: Record<string,string> = {
       'academic-sessions':'academic-sessions',
-      'classes':'classes-sections',\n      'sections':'sections',
+      'classes':'classes-sections',
+      'sections':'sections',
       'subjects':'subjects-courses',
       'curriculum':'curriculum',
       'lesson-plans':'lesson-planning',
@@ -496,10 +497,9 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
       'student-attendance':'attendance:students',
       'teacher-attendance':'attendance:teachers',
       'staff-attendance':'attendance:staff',
-      'attendance-history':'attendance:history',
       'automatic-attendance':'attendance:devices',
       'attendance-cards':'attendance:cards',
-      'biometric-attendance':'attendance:biometric',\n      'attendance-history':'attendance:history',\n      'automatic-attendance':'attendance:devices',\n      'attendance-cards':'attendance:cards',\n      'biometric-attendance':'attendance:biometric',
+      'biometric-attendance':'attendance:biometric',
       'leave-management':'care:leave',
       'attendance-reports':'attendance:reports',
       'student-discipline':'care:discipline',
