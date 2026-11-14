@@ -8,7 +8,7 @@ import type { RecordRow } from '../lib/types'
 import { displayInstitutionName } from '../lib/collegeIdentity'
 import '../styles/governance-workspace.css'
 
-type Section='profile'|'academic'|'departments'|'designations'|'organization'|'system'|'approvals'|'policies'|'policies-students'|'policies-faculty'|'audit'|'accounts'|'permissions'|'settings'|'branding'|'security'
+type Section='overview'|'profile'|'academic'|'departments'|'designations'|'organization'|'system'|'approvals'|'policies'|'policies-students'|'policies-faculty'|'audit'|'accounts'|'permissions'|'settings'|'branding'|'documents'|'security'
 type Props={initialWindow?:string;onToast:(message:string,error?:boolean)=>void;onNavigate:(route:string)=>void}
 type Institution={id:string;name:string;institution_type:string;tagline?:string|null;phone?:string|null;email?:string|null;website?:string|null;address?:string|null;country?:string|null;logo_path?:string|null;created_by?:string|null}
 type Setting=RecordRow & {id:string;category:string;setting_key:string;setting_value:unknown;is_public:boolean}
@@ -22,14 +22,15 @@ type Policy=RecordRow & {id:string;title:string;reference_code?:string|null;desc
 type AcademicRow=RecordRow & {id:string;[key:string]:unknown}
 type InstitutePreferences={timezone:string;date_format:string;currency:string;academic_year_start_month:string;term_structure:string;student_id_prefix:string;employee_id_prefix:string}
 const defaultInstitutePreferences:InstitutePreferences={timezone:'Asia/Karachi',date_format:'dd MMM yyyy',currency:'PKR',academic_year_start_month:'8',term_structure:'annual',student_id_prefix:'GIDC-STU',employee_id_prefix:'GIDC-EMP'}
-const sectionByWindow:Record<string,Section>={profile:'profile',settings:'settings',institution_settings:'settings',approvals:'approvals',audit:'audit',academic:'academic',accounts:'accounts',departments:'departments',designations:'designations',organization:'organization',system:'system',policies:'policies-students','policies-students':'policies-students','policies-faculty':'policies-faculty',policies_students:'policies-students',policies_faculty:'policies-faculty',organization_structure:'organization',permissions:'permissions',branding:'branding',security:'security'}
+const sectionByWindow:Record<string,Section>={overview:'overview',profile:'profile',documents:'documents',settings:'settings',institution_settings:'settings',approvals:'approvals',audit:'audit',academic:'academic',accounts:'accounts',departments:'departments',designations:'designations',organization:'organization',system:'system',policies:'policies-students','policies-students':'policies-students','policies-faculty':'policies-faculty',policies_students:'policies-students',policies_faculty:'policies-faculty',organization_structure:'organization',permissions:'permissions',branding:'branding',security:'security'}
 const dateLabel=(value:unknown)=>value?new Date(String(value)).toLocaleString():'—'
 const label=(value:unknown)=>String(value??'').replaceAll('_',' ').replace(/\b\w/g,c=>c.toUpperCase())
 const jsonObject=(value:unknown):Record<string,unknown>=>value&&typeof value==='object'&&!Array.isArray(value)?value as Record<string,unknown>:{}
 
 export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}:Props){
   const {user}=useAuth()
-  const [section]=useState<Section>(sectionByWindow[initialWindow??'']??'profile')
+  const [section,setSection]=useState<Section>(sectionByWindow[initialWindow??'']??'profile')
+  useEffect(()=>setSection(sectionByWindow[initialWindow??'']??'profile'),[initialWindow])
   const admin=user?.role==='owner'||user?.role==='admin'
   const [loading,setLoading]=useState(true),[saving,setSaving]=useState(false),[error,setError]=useState('')
   const [institution,setInstitution]=useState<Institution|null>(null)
@@ -100,7 +101,7 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
   }),[policies,search,section])
   const filteredAudit=useMemo(()=>audit.filter(row=>[row.action,row.module_key,row.record_type,row.actor_id,row.record_id].join(' ').toLowerCase().includes(search.trim().toLowerCase())),[audit,search])
   const filteredMembers=useMemo(()=>members.filter(row=>[row.full_name,row.email,row.role,row.status].join(' ').toLowerCase().includes(search.trim().toLowerCase())),[members,search])
-  const visibleSettings=useMemo(()=>settings.filter(row=>section==='system'?row.category==='system':section==='branding'?['branding','documents'].includes(row.category):section==='settings'?false:true).filter(row=>[row.category,row.setting_key,JSON.stringify(row.setting_value)].join(' ').toLowerCase().includes(search.trim().toLowerCase())),[settings,section,search])
+  const visibleSettings=useMemo(()=>settings.filter(row=>section==='system'?row.category==='system':section==='branding'?row.category==='branding':section==='documents'?row.category==='documents':section==='settings'?false:true).filter(row=>[row.category,row.setting_key,JSON.stringify(row.setting_value)].join(' ').toLowerCase().includes(search.trim().toLowerCase())),[settings,section,search])
   const orderedSettings=useMemo(()=>[...visibleSettings].sort((a,b)=>{
     const left=settingsSortKey==='is_public'?String(a.is_public):String(a[settingsSortKey]??'')
     const right=settingsSortKey==='is_public'?String(b.is_public):String(b[settingsSortKey]??'')
@@ -269,6 +270,39 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
   function renderSettingRows(rows:Setting[],empty:string){
     return rows.length?<div className="gov-table-wrap"><table className="ed360-admin-table"><thead><tr>{sortHeader('Category','category')}{sortHeader('Key','setting_key')}<th>Value</th>{sortHeader('Visibility','is_public')}<th>Actions</th></tr></thead><tbody>{rows.map(row=><tr key={row.id}><td>{label(row.category)}</td><td><b>{row.setting_key}</b></td><td><code>{JSON.stringify(row.setting_value)}</code></td><td>{row.is_public?'Public':'Private'}</td><td><div className="gov-row-actions"><button className="gov-button" onClick={()=>openSetting(row)}>Edit</button><button className="gov-button danger" onClick={()=>void removeSetting(row)}>Delete</button></div></td></tr>)}</tbody></table></div>:<div className="gov-empty">{empty}</div>
   }
+  function renderOverview(){
+    const activeMembers=members.filter(row=>row.status==='active').length
+    const pending=approvals.filter(row=>row.status==='pending').length
+    const liveDepartments=departments.filter(row=>row.is_active!==false&&row.status!=='inactive').length
+    return <div className="ed360-admin-overview-page">
+      <section className="gov-panel"><header><div><h2>Administration overview</h2><p>Institution identity, organisational setup, governance and access controls.</p></div><Building2 size={22}/></header>
+        <div className="ed360-admin-kpis">
+          <article><small>Institution</small><strong>{institution?.name??'—'}</strong></article>
+          <article><small>Departments</small><strong>{liveDepartments}</strong></article>
+          <article><small>Active memberships</small><strong>{activeMembers}</strong></article>
+          <article><small>Pending approvals</small><strong>{pending}</strong></article>
+        </div>
+      </section>
+      <div className="ed360-admin-overview-grid">
+        <button className="gov-panel" onClick={()=>setSection('profile')}><b>Institute profile</b><span>Identity, contacts, website and college logo</span><ArrowUpRight size={16}/></button>
+        <button className="gov-panel" onClick={()=>setSection('organization')}><b>Organisation structure</b><span>Departments, positions and reporting layers</span><ArrowUpRight size={16}/></button>
+        <button className="gov-panel" onClick={()=>setSection('approvals')}><b>Approval workflows</b><span>{pending} pending requests to review</span><ArrowUpRight size={16}/></button>
+        <button className="gov-panel" onClick={()=>setSection('audit')}><b>Administrative audit</b><span>{audit.length} available institution-scoped events</span><ArrowUpRight size={16}/></button>
+        <button className="gov-panel" onClick={()=>setSection('permissions')}><b>Role permissions</b><span>Manage role-based access to college modules</span><ArrowUpRight size={16}/></button>
+        <button className="gov-panel" onClick={()=>setSection('security')}><b>Security and access</b><span>Review membership and available access evidence</span><ArrowUpRight size={16}/></button>
+      </div>
+    </div>
+  }
+  function renderDocuments(){
+    const rows=settingsPageRows.filter(row=>row.category==='documents')
+    return <section className="gov-panel ed360-admin-documents-page">
+      <header><div><h2>Document access and defaults</h2><p>Institution-level document settings and stored format defaults.</p></div><button className="gov-button primary" onClick={()=>openSetting(undefined,'documents')}><Plus size={14}/> Add document setting</button></header>
+      <label className="ed360-admin-search"><Search size={14}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search document settings…"/></label>
+      {renderSettingRows(rows,'No document access settings have been configured.')}
+      {pageControls(rows.length,settingsCurrentPage,settingsPageCount,setSettingsPage)}
+      <div className="gov-note">Access to private files remains governed by storage policies and the existing document permission checks.</div>
+    </section>
+  }
   function renderProfile(){
     return <div className="ed360-admin-profile">
       <section className="gov-panel"><header><div><h2>Institution identity</h2><p>Update the public institution details used across this tenant.</p></div><span className="gov-readonly">Owner / admin</span></header>
@@ -434,6 +468,7 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
     return <div className="ed360-admin-stage5"><section className="gov-panel"><header><div><h2>Security and access overview</h2><p>Current membership status and available administrative security evidence.</p></div><LockKeyhole size={20}/></header><div className="ed360-admin-security-grid"><article><b>{members.filter(row=>row.status==='active').length} active memberships</b><small>Active institution accounts recorded in memberships.</small></article><article><b>{members.filter(row=>row.status!=='active').length} non-active memberships</b><small>Invited, pending, suspended or inactive states where recorded.</small></article><article><b>{related.length} related audit events</b><small>Operational audit entries with security or access keywords.</small></article></div><div className="ed360-admin-callout warning">Login history, failed sign-in attempts and live session termination are not exposed by the current tenant-facing database API. No invented sign-in events or false zero counts are shown. A privileged, tenant-filtered authentication event feed is required before these controls can be enabled.</div></section><section className="gov-panel"><header><div><h2>Available access audit events</h2><p>Operational audit entries that reference authentication, security, access or memberships.</p></div></header>{related.length?<div className="gov-timeline">{related.slice(0,100).map(row=><article key={row.id}><i/><div><strong>{label(row.action)} · {label(row.module_key)}</strong><small>{dateLabel(row.occurred_at)} · {row.actor_id??'system'}</small></div></article>)}</div>:<div className="gov-empty">No security-labelled administrative events are available in the current feed.</div>}</section></div>
   }
   function renderContent(){
+    if(section==='overview')return renderOverview()
     if(section==='profile')return renderProfile()
     if(section==='academic')return renderAcademic()
     if(section==='departments')return renderDepartments()
@@ -441,6 +476,7 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
     if(section==='organization')return renderOrganization()
     if(section==='settings')return renderInstituteSettings()
     if(['system','branding'].includes(section))return renderSettingsPage()
+    if(section==='documents')return renderDocuments()
     if(section==='approvals')return renderApprovals()
     if(section==='policies-students'||section==='policies-faculty')return renderPolicies()
     if(section==='audit')return renderAudit()
@@ -450,7 +486,7 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
     return null
   }
   if(!admin)return <main className="page-content"><div className="gov-error">Administration is restricted to authorised institution owners and administrators.</div></main>
-  const showTopRefresh=['academic','departments','designations','organization','approvals','policies-students','policies-faculty','audit'].includes(section)
+  const showTopRefresh=['overview','academic','departments','documents','designations','organization','approvals','policies-students','policies-faculty','audit'].includes(section)
   return <main className={"gov-stage page-content ed360-module-page ed360-admin-stage5" + (section === "profile" ? " is-profile" : "")}>
     {showTopRefresh&&<div className="ed360-admin-actions"><button type="button" className="gov-button ed360-admin-top-refresh" onClick={()=>void load()} disabled={loading}><RefreshCw size={14}/> Refresh records</button></div>}
     {error&&<div className="gov-error" role="alert">{error}</div>}
