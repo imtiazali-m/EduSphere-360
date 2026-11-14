@@ -32,7 +32,7 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
   const [loading,setLoading]=useState(true),[saving,setSaving]=useState(false),[error,setError]=useState('')
   const [institution,setInstitution]=useState<Institution|null>(null)
   const [profileDraft,setProfileDraft]=useState({name:'',institution_type:'school',tagline:'',phone:'',email:'',website:'',address:'',country:''})
-  const [logoFile,setLogoFile]=useState<File|null>(null),[logoUrl,setLogoUrl]=useState(''),[showProfileCard,setShowProfileCard]=useState(false)
+  const [logoFile,setLogoFile]=useState<File|null>(null),[logoUrl,setLogoUrl]=useState('')
   const [settings,setSettings]=useState<Setting[]>([]),[approvals,setApprovals]=useState<Approval[]>([]),[audit,setAudit]=useState<Audit[]>([]),[policies,setPolicies]=useState<Policy[]>([])
   const [departments,setDepartments]=useState<Department[]>([]),[designations,setDesignations]=useState<Designation[]>([]),[teachers,setTeachers]=useState<Teacher[]>([]),[members,setMembers]=useState<Member[]>([])
   const [search,setSearch]=useState('')
@@ -228,12 +228,25 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
           <label className="ed360-admin-field full">Address<textarea value={profileDraft.address} onChange={e=>setProfileDraft(v=>({...v,address:e.target.value}))}/></label>
           <label className="ed360-admin-field">Country<input value={profileDraft.country} onChange={e=>setProfileDraft(v=>({...v,country:e.target.value}))}/></label>
           <div className="ed360-admin-field"><span>Institution logo</span><label className="gov-button"><Upload size={14}/> Choose logo<input type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={e=>setLogoFile(e.target.files?.[0]??null)}/></label><small>{logoFile?logoFile.name:'PNG, JPG or WebP · up to 5 MB'}</small></div>
-          <div className="gov-row-actions full"><button className="gov-button primary" disabled={saving}>{saving?'Saving…':'Update Profile'} <Save size={14}/></button><button type="button" className="gov-button" onClick={()=>setShowProfileCard(v=>!v)}>{showProfileCard?'Hide':'View'} Profile Card</button></div>
+          <div className="gov-row-actions full"><button className="gov-button primary" disabled={saving}>{saving?'Saving…':'Update Profile'} <Save size={14}/></button></div>
         </form>
       </section>
       <div className="ed360-admin-stage5">
-        <section className="gov-panel"><div className="ed360-admin-logo">{logoUrl?<img src={logoUrl} alt="Institution logo"/>:<div className="placeholder">{(institution?.name??'E').slice(0,1).toUpperCase()}</div>}<b>{displayInstitutionName(institution?.name)}</b><small>Private institution file · access-controlled</small></div></section>
-        {showProfileCard&&<section className="ed360-admin-profile-preview"><header>{logoUrl&&<img src={logoUrl} alt=""/>}<div><h3>{profileDraft.name||'Institute name'}</h3><p>{profileDraft.tagline||'Institution tagline'}</p></div></header><dl><div><dt>Institution type</dt><dd>{label(profileDraft.institution_type)}</dd></div><div><dt>Phone</dt><dd>{profileDraft.phone||'—'}</dd></div><div><dt>Email</dt><dd>{profileDraft.email||'—'}</dd></div><div><dt>Website</dt><dd>{profileDraft.website||'—'}</dd></div><div><dt>Address</dt><dd>{profileDraft.address||'—'}</dd></div><div><dt>Country</dt><dd>{profileDraft.country||'—'}</dd></div></dl></section>}
+        <section className="ed360-admin-profile-preview gov-panel">
+          <header>
+            {logoUrl?<img src={logoUrl} alt="Institution logo"/>:<div className="ed360-admin-profile-placeholder">{(profileDraft.name||'I').slice(0,1).toUpperCase()}</div>}
+            <div><h3>{profileDraft.name||'Institute name'}</h3><p>{profileDraft.tagline||'Institution tagline'}</p></div>
+          </header>
+          <dl>
+            <div><dt>Institution type</dt><dd>{label(profileDraft.institution_type)}</dd></div>
+            <div><dt>Phone</dt><dd>{profileDraft.phone||'—'}</dd></div>
+            <div><dt>Email</dt><dd>{profileDraft.email||'—'}</dd></div>
+            <div><dt>Website</dt><dd>{profileDraft.website||'—'}</dd></div>
+            <div><dt>Address</dt><dd>{profileDraft.address||'—'}</dd></div>
+            <div><dt>Country</dt><dd>{profileDraft.country||'—'}</dd></div>
+          </dl>
+          <p className="ed360-admin-profile-footnote">Institution identity card · updates when you save the profile</p>
+        </section>
       </div>
     </div>
   }

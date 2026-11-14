@@ -65,3 +65,378 @@ button,input,select,textarea { font:inherit; }
 .loading-brand { color:#18344c; font-family:'Playfair Display',Georgia,serif; } .loading-brand span { color:#a77528; }
 @media (max-width:760px) { .pro-main-shell { min-width:0; } .pro-module-stage { padding-inline:14px; } .pro-topbar { padding-inline:14px; } }
 @media (prefers-reduced-motion:reduce) { *,*:before,*:after { scroll-behavior:auto!important; animation-duration:.01ms!important; transition-duration:.01ms!important; } }
+
+
+/* Internal application — one cohesive plum / violet / rose canvas.
+   Public pages remain on their existing visual theme. */
+.pro-app-shell {
+  --es-brand-950:#241334;
+  --es-brand-900:#351b4b;
+  --es-brand-800:#4c2864;
+  --es-brand-700:#63387d;
+  --es-primary-700:#713b8c;
+  --es-primary-600:#8750a5;
+  --es-primary-500:#a66abb;
+  --es-primary-100:#f2e6f6;
+  --es-primary-050:#fbf6fc;
+  --es-ink:#34233f;
+  --es-muted:#786784;
+  --es-subtle:#94869e;
+  --es-line:#eaddeb;
+  --es-line-soft:#f2eaf4;
+  --es-canvas:transparent;
+  --es-surface:#fffaff;
+  --es-surface-soft:#faf3fc;
+  --es-shadow-sm:0 3px 12px rgba(49,24,65,.055);
+  --es-shadow-md:0 12px 30px rgba(49,24,65,.10);
+  --es-shadow-lg:0 24px 58px rgba(35,16,48,.18);
+  accent-color:#93519f;
+  --pro-ink:#34233f;
+  --pro-muted:#806d89;
+  --pro-line:#eaddeb;
+  --pro-paper:transparent;
+  --pro-green:#63387d;
+  --pro-green2:#89508e;
+  --pro-lime:#f0b8d2;
+  min-height:100vh;
+  color:var(--es-ink);
+  background:linear-gradient(128deg,#321943 0%,#4c245c 48%,#773963 100%) !important;
+}
+.pro-main-shell,
+.pro-workspace,
+.pro-module-stage,
+.pro-window-stack,
+.pro-window-panel {
+  background:transparent !important;
+}
+.pro-main-shell { color:var(--es-ink); }
+.pro-module-stage { padding-top:18px; padding-bottom:30px; }
+.pro-sidebar {
+  background:linear-gradient(180deg,#29143d 0%,#3a1d4e 58%,#4c2457 100%) !important;
+  border-right:1px solid rgba(255,224,244,.13);
+  box-shadow:8px 0 30px rgba(22,8,32,.22);
+}
+.pro-sidebar-brand { border-bottom-color:rgba(255,230,247,.15) !important; }
+.pro-sidebar-brand b { color:#fff; }
+.pro-sidebar-brand small { color:#e1b9d4; }
+.pro-sidebar-mark,
+.pro-nav-group-icon {
+  color:#f7deeb;
+  background:rgba(237,183,216,.13);
+}
+.pro-sidebar-caption,.pro-nav-label,.pro-nav-section-label { color:#e2b9d8; }
+.pro-institution-card { background:rgba(255,255,255,.075); border-color:rgba(255,226,245,.14); }
+.pro-institution-card b { color:#fff; }
+.pro-institution-card small { color:#e2c8dc; }
+.pro-sidebar-search { border-color:rgba(255,230,246,.2); background:rgba(255,255,255,.08); color:#f4deee; }
+.pro-sidebar-search input { color:#fff; }
+.pro-sidebar-search input::placeholder { color:#d8bad0; }
+.pro-nav-group-head,.pro-nav-item { color:#f0dfed; }
+.pro-nav-group-head:hover,.pro-nav-item:hover { background:rgba(255,255,255,.095) !important; color:#fff; }
+.pro-nav-item.active,.pro-nav-group-head.active,.pro-nav-group-head.pro-nav-dashboard-link.active {
+  color:#3c1c4d !important;
+  background:linear-gradient(110deg,#f4c1db,#e8b7ec) !important;
+  box-shadow:0 4px 13px rgba(15,7,25,.16);
+}
+.pro-nav-item.active svg,.pro-nav-group-head.active svg { color:#4a245d !important; }
+.pro-quick-access { border-top-color:rgba(255,224,244,.2) !important; }
+.pro-sidebar .pro-quick-access { background:transparent !important; }
+.pro-sidebar-footer-link { color:#ead1e6; }
+.pro-topbar {
+  border-bottom:1px solid #ead8ed !important;
+  background:rgba(255,250,255,.97) !important;
+  box-shadow:0 4px 18px rgba(40,16,55,.1);
+  backdrop-filter:blur(16px);
+}
+.pro-breadcrumb { color:#8c7b94; }
+.pro-breadcrumb b { color:#472858; }
+.pro-global-search { border-color:#e7d9ee; background:#fbf5fc; color:#7d6988; }
+.pro-global-search input { color:#3e294a; }
+.pro-global-search kbd { border-color:#eadced; color:#907e99; }
+.pro-topbar-bell,.pro-profile-trigger { color:#62406f; }
+.pro-topbar-bell { border-color:#eadced; background:#fffaff; }
+.pro-profile-avatar { color:#552a6c; background:#f1d8ea; }
+.pro-profile-copy b { color:#442653; }
+.pro-profile-copy small { color:#897493; }
+.pro-profile-menu,.pro-search-results,.ed360-display-settings-panel {
+  border-color:#e8d8ed !important;
+  color:#392449 !important;
+  background:#fffaff !important;
+  box-shadow:0 18px 46px rgba(30,11,43,.22) !important;
+}
+.pro-profile-details { border-bottom-color:#f0e5f1; }
+.pro-profile-details b { color:#422651; }
+.pro-profile-details small { color:#806d8b; }
+.pro-profile-menu>button { color:#63387d; background:transparent; }
+.pro-profile-menu>button:hover { background:#f7edf8; }
+.pro-profile-menu>button:last-child { color:#a64e70; }
+.pro-profile-mode { color:#6e3a7b; background:#f4e8f6; }
+.pro-workspace-tabs,.pro-active-workspace-context { border-color:#ead9ed; background:rgba(255,247,253,.12) !important; }
+.pro-workspace-tab { border-color:rgba(255,239,250,.22); color:#f5e9f4; background:rgba(255,255,255,.1); }
+.pro-workspace-tab:hover { background:rgba(255,255,255,.2); }
+.pro-workspace-tab.active,.pro-workspace-tab[aria-selected="true"],.pro-workspace-tab.is-active {
+  border-color:#efc8e5 !important;
+  color:#4b285b !important;
+  background:#fff6fc !important;
+}
+.pro-workspace-tab-main { color:inherit; }
+.pro-active-workspace-context strong { color:#fff1fb; }
+.pro-active-workspace-context small { color:#f0d8e9; }
+.pro-window-panel :is(input,select,textarea),
+.pro-window-panel .ed360-admin-field :is(input,select,textarea),
+.pro-window-panel .ed360-personal-form-card input {
+  border-color:#e3d5e9 !important;
+  color:#382847 !important;
+  background:#fffaff !important;
+}
+.pro-window-panel :is(input,select,textarea):focus {
+  border-color:#a46ab1 !important;
+  box-shadow:0 0 0 3px rgba(164,106,177,.14) !important;
+}
+.pro-window-panel :is(th,.table-head) { color:#60456d; background:#f7eff9 !important; }
+.pro-window-panel :is(td,th) { border-color:#eee4f0 !important; }
+.pro-window-panel :is(h1,h2,h3,h4),
+.pro-window-panel .rd-heading-main h1,
+.pro-window-panel .rd-domain-overview-head h2 { color:#432753; }
+.pro-window-panel :is(p,small,label,dt) { color:inherit; }
+.pro-window-panel :is(button.primary,.primary-button,.button-primary,.gov-button.primary),
+.pro-window-panel .rd-header-cta,
+.pro-window-panel .ed360-personal-form-actions button {
+  border-color:#74408c !important;
+  color:#fff !important;
+  background:linear-gradient(110deg,#754191,#96529f) !important;
+  box-shadow:0 5px 13px rgba(116,64,140,.15);
+}
+.pro-window-panel :is(button.primary,.primary-button,.button-primary,.gov-button.primary):hover,
+.pro-window-panel .rd-header-cta:hover,
+.pro-window-panel .ed360-personal-form-actions button:hover:not(:disabled) {
+  background:linear-gradient(110deg,#633578,#83458f) !important;
+}
+.pro-window-panel .gov-button:not(.primary) {
+  border-color:#e6d7ec !important;
+  color:#674176 !important;
+  background:#fffaff !important;
+}
+.pro-window-panel .gov-button.danger { color:#a64d66 !important; border-color:#eed4df !important; background:#fff5f8 !important; }
+
+/* Existing workspaces share the same single page background; only their cards sit above it. */
+.pro-window-panel :is(
+  .rd-metric-card,.rd-panel,.rd-domain-card,
+  .gov-panel,.gov-context,.gov-card,.ed360-panel,.ed360-module-insights,
+  .ed360-personal-card,.ed360-personal-hero,.ed360-personal-nav,
+  .ed360-admin-profile-preview,.ed360-admin-logo,.table-card,.modal-card,
+  .ed360-workspace-record-card,.ed360-dashboard-scope
+) {
+  border-color:#eaddec !important;
+  color:#3b2947;
+  background:#fffaff !important;
+  box-shadow:0 5px 17px rgba(49,24,65,.065);
+}
+.pro-window-panel .rd-domain-overview { padding:17px; }
+.pro-window-panel .rd-domain-card { overflow:hidden; }
+.pro-window-panel .rd-domain-card-head { border-bottom-color:#f0e5f2; }
+.pro-window-panel .rd-domain-card-head h3,
+.pro-window-panel .rd-panel-title h2,
+.pro-window-panel .rd-metric-copy strong { color:#432753; }
+.pro-window-panel .rd-domain-card-head p,
+.pro-window-panel .rd-panel-title p,
+.pro-window-panel .rd-metric-copy small,
+.pro-window-panel .rd-metric-copy em { color:#81708a; }
+.pro-window-panel .rd-domain-stat-track,
+.pro-window-panel .rd-branch-bar { background:#f1e8f3; }
+.pro-window-panel .rd-domain-stat-track i,
+.pro-window-panel .rd-branch-bar i { background:linear-gradient(90deg,#8650a5,#d07bab); }
+.pro-window-panel .rd-panel-head { border-bottom-color:#f0e6f1; }
+.pro-window-panel .rd-panel-icon { color:#734389; background:#f3e9f6; }
+.pro-window-panel .rd-list-row { border-bottom-color:#f1e8f2; }
+.pro-window-panel .rd-row-copy strong { color:#4c315c; }
+.pro-window-panel .rd-row-copy small { color:#897a91; }
+.pro-window-panel .rd-metric-icon.violet { color:#75418f; background:#f3e8f7; }
+.pro-window-panel .rd-metric-icon.rose { color:#a64c7d; background:#fff0f6; }
+.pro-window-panel .rd-metric-icon.blue { color:#7152a0; background:#f0edfb; }
+.pro-window-panel .rd-metric-icon.teal { color:#7b4d8c; background:#f5eafa; }
+.pro-window-panel .rd-role-chip { border-color:#e5d5ec; color:#673d7b; background:#f7eef9; }
+.pro-window-panel .rd-header-cta { min-height:38px; padding:0 15px; border-radius:9px; font-weight:800; }
+.pro-window-panel .gov-panel>header { border-bottom-color:#f0e5f2; }
+.pro-window-panel .gov-panel h2,
+.pro-window-panel .ed360-admin-profile-preview h3,
+.pro-window-panel .ed360-personal-card h3 { color:#462855; }
+.pro-window-panel .gov-panel p,
+.pro-window-panel .ed360-admin-profile-preview p,
+.pro-window-panel .ed360-personal-card p { color:#806f8b; }
+.pro-window-panel .ed360-personal-nav { border-color:#e9dced; background:#fcf7fd !important; }
+.pro-window-panel .ed360-personal-nav button { color:#775e85; }
+.pro-window-panel .ed360-personal-nav button.active { border-color:#e4c8eb; color:#623578; background:#f3e5f6; box-shadow:inset 0 -2px #a96cba; }
+.pro-window-panel .ed360-personal-id-card { background:#fffaff !important; }
+.pro-window-panel .ed360-personal-avatar,
+.pro-window-panel .ed360-personal-help-icon { color:#fff; background:linear-gradient(145deg,#9253a6,#c17aab); }
+.pro-window-panel .ed360-personal-form-card label { color:#61486d; }
+.pro-window-panel .ed360-personal-form-card input:focus { border-color:#a56bb4 !important; box-shadow:0 0 0 3px rgba(165,107,180,.13); }
+.pro-window-panel .ed360-personal-note { border-color:#eadced; color:#755c80; background:#faf3fc; }
+.pro-window-panel .ed360-personal-current-email {
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  margin:0 0 14px;
+  padding:10px 12px;
+  border:1px solid #eee2f1;
+  border-radius:9px;
+  color:#806c8a;
+  background:#fbf5fc;
+  font-size:11px;
+}
+.pro-window-panel .ed360-personal-current-email b { color:#462855; overflow-wrap:anywhere; }
+.pro-window-panel .ed360-personal-account-grid {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px;
+  align-items:start;
+}
+.pro-window-panel .ed360-personal-account-grid .ed360-personal-card { min-width:0; }
+.pro-window-panel .ed360-personal-account-grid .ed360-personal-form-card form { max-width:none; }
+.pro-window-panel .ed360-admin-profile-preview {
+  display:grid;
+  align-content:start;
+  gap:10px;
+  min-height:100%;
+  padding:20px;
+  background:linear-gradient(160deg,#fffaff 0%,#fbf2fc 100%) !important;
+}
+.pro-window-panel .ed360-admin-profile-preview header { align-items:center; min-width:0; }
+.pro-window-panel .ed360-admin-profile-preview img,
+.pro-window-panel .ed360-admin-profile-placeholder {
+  width:64px;
+  height:64px;
+  flex:0 0 64px;
+  display:grid;
+  place-items:center;
+  object-fit:contain;
+  border:1px solid #eadced;
+  border-radius:15px;
+  color:#623578;
+  background:#f4e8f7;
+  font-size:25px;
+  font-weight:850;
+}
+.pro-window-panel .ed360-admin-profile-preview dl { grid-template-columns:1fr; gap:0; margin:8px 0 0; }
+.pro-window-panel .ed360-admin-profile-preview dl>div { padding:10px 0; border-bottom:1px solid #f0e7f2; }
+.pro-window-panel .ed360-admin-profile-preview dt { color:#8c7a94; }
+.pro-window-panel .ed360-admin-profile-preview dd { color:#4b3159; }
+.pro-window-panel .ed360-admin-profile-footnote { margin:4px 0 0; color:#967fa0; font-size:10px; }
+.pro-window-panel .ed360-admin-profile-form .ed360-admin-field { color:#674f72; }
+.pro-window-panel .ed360-admin-profile-form .ed360-admin-field input,
+.pro-window-panel .ed360-admin-profile-form .ed360-admin-field select,
+.pro-window-panel .ed360-admin-profile-form .ed360-admin-field textarea { background:#fffaff; color:#432b50; }
+.pro-window-panel .ed360-admin-logo { border-style:dashed; background:#fbf5fc !important; }
+.pro-window-panel .ed360-admin-logo .placeholder { color:#704286; background:#f0e4f5; }
+.pro-window-panel .ed360-personal-empty { color:#8e7e98; }
+.pro-window-panel .ed360-personal-error { border-color:#f0d4df; color:#9c4b6b; background:#fff4f8; }
+.pro-window-panel .rd-empty { color:#897994; }
+.pro-window-panel .rd-list-button:hover { background:#fbf5fc; }
+.pro-window-panel .rd-alert-list button { border-color:#eee3f0; background:#fcf7fd; }
+.pro-window-panel .rd-alert-list strong { color:#513362; }
+.pro-window-panel .rd-branch-meta,.pro-window-panel .rd-branch-top strong { color:#796586; }
+.pro-window-panel .gov-footer,.pro-window-panel .gov-table-wrap { border-color:#eee3f0; }
+.pro-window-panel .gov-table-wrap { background:#fffaff; }
+.pro-window-panel :is(.gov-note,.gov-callout,.ed360-admin-callout) {
+  border-color:#e9dced;
+  color:#735d7d;
+  background:#faf3fc;
+}
+.pro-window-panel .ed360-admin-callout.warning { border-color:#ead7e7; color:#85586f; background:#fff3f8; }
+.pro-window-panel .ed360-admin-status { color:#704183; background:#f3e8f7; }
+.pro-window-panel .ed360-admin-status.inactive,.pro-window-panel .ed360-admin-status.suspended { color:#a34f69; background:#fff0f4; }
+.pro-window-panel .ed360-admin-status.invited,.pro-window-panel .ed360-admin-status.pending { color:#95622f; background:#fff6e9; }
+.pro-window-panel .gov-pagination { color:#806d8a; }
+.pro-window-panel .gov-empty { border-color:#e8dcec; color:#8b7894; background:#fcf7fd; }
+.pro-window-panel .gov-sort-header:hover { color:#77418e; }
+.pro-window-panel .gov-panel :is(th,td) { border-color:#eee4f0; }
+.pro-window-panel .gov-panel th { color:#7a6486; background:#f8f0fa; }
+.pro-window-panel .gov-panel td { color:#51375f; }
+.pro-window-panel .gov-shortcuts button { border-color:#eadced; color:#633b78; background:#fcf7fd; }
+.pro-window-panel .gov-shortcuts button:hover { background:#f4e7f7; }
+.pro-window-panel .ed360-personal-form-actions { border-top-color:#eee4f0; }
+.pro-window-panel .ed360-personal-form-actions>span { color:#8b7b94; }
+.pro-window-panel .ed360-display-setting-row select,
+.pro-window-panel .ed360-display-settings-panel select { border-color:#e7d9ed; color:#533261; background:#fbf5fc; }
+.pro-window-panel .ed360-display-setting-row,
+.pro-window-panel .ed360-display-motion { color:#60446c; }
+.pro-window-panel .ed360-display-settings-heading { border-bottom-color:#f0e5f2; }
+.pro-window-panel .ed360-display-settings-heading strong { color:#472856; }
+.pro-window-panel .ed360-display-settings-heading small { color:#8a7893; }
+.pro-window-panel .ed360-display-settings-heading button { border-color:#eadced; color:#654176; background:#fffaff; }
+.pro-window-panel .ed360-display-motion input { accent-color:#8e4ca0; }
+
+/* Preserve a coherent contrast system for the optional dark display setting. */
+.pro-app-shell[data-theme="dark"] {
+  background:linear-gradient(128deg,#1f102d 0%,#32183f 48%,#51223f 100%) !important;
+  --es-ink:#f4eaf8;
+  --es-muted:#cfb8d6;
+  --es-line:#523a60;
+  --es-line-soft:#493450;
+  --es-surface:#342440;
+  --es-surface-soft:#3d2b4a;
+  color:#f4eaf8;
+}
+.pro-app-shell[data-theme="dark"] .pro-main-shell,
+.pro-app-shell[data-theme="dark"] .pro-module-stage,
+.pro-app-shell[data-theme="dark"] .pro-window-stack,
+.pro-app-shell[data-theme="dark"] .pro-window-panel { background:transparent !important; color:#f4eaf8; }
+.pro-app-shell[data-theme="dark"] .pro-topbar { background:rgba(48,30,59,.97) !important; border-color:#513b5d !important; }
+.pro-app-shell[data-theme="dark"] .pro-breadcrumb b,
+.pro-app-shell[data-theme="dark"] .pro-profile-copy b,
+.pro-app-shell[data-theme="dark"] .pro-profile-details b { color:#f7eaf8 !important; }
+.pro-app-shell[data-theme="dark"] .pro-breadcrumb,
+.pro-app-shell[data-theme="dark"] .pro-profile-copy small,
+.pro-app-shell[data-theme="dark"] .pro-profile-details small { color:#d1bad9 !important; }
+.pro-app-shell[data-theme="dark"] .pro-global-search { background:#3b2a49 !important; border-color:#60496b !important; }
+.pro-app-shell[data-theme="dark"] .pro-global-search input { color:#f7eaf8 !important; }
+.pro-app-shell[data-theme="dark"] .pro-profile-menu,
+.pro-app-shell[data-theme="dark"] .pro-search-results,
+.pro-app-shell[data-theme="dark"] .ed360-display-settings-panel { background:#392846 !important; border-color:#5c4267 !important; color:#f6eefa !important; }
+.pro-app-shell[data-theme="dark"] .pro-profile-menu button { color:#edc9e5 !important; }
+.pro-app-shell[data-theme="dark"] .pro-window-panel :is(
+  .rd-metric-card,.rd-panel,.rd-domain-card,.rd-domain-overview,.gov-panel,.gov-context,.gov-card,
+  .ed360-panel,.ed360-module-insights,.ed360-personal-card,.ed360-personal-hero,.ed360-personal-nav,
+  .ed360-admin-profile-preview,.ed360-admin-logo,.table-card,.modal-card,.ed360-workspace-record-card,
+  .ed360-dashboard-scope
+) { background:#352541 !important; border-color:#5b4267 !important; color:#f1e8f5 !important; }
+.pro-app-shell[data-theme="dark"] .pro-window-panel :is(h1,h2,h3,h4,strong,b,dd) { color:#f5eafa; }
+.pro-app-shell[data-theme="dark"] .pro-window-panel :is(p,small,label,dt,em) { color:#d0bdd8; }
+.pro-app-shell[data-theme="dark"] .pro-window-panel :is(input,select,textarea) { background:#281b33 !important; border-color:#5a4268 !important; color:#f5eafa !important; }
+.pro-app-shell[data-theme="dark"] .pro-window-panel :is(th,.table-head) { background:#402c4d !important; color:#ecdff1 !important; }
+.pro-app-shell[data-theme="dark"] .pro-window-panel :is(td,th) { border-color:#543e60 !important; }
+.pro-app-shell[data-theme="dark"] .pro-window-panel .rd-panel-head,
+.pro-app-shell[data-theme="dark"] .pro-window-panel .rd-list-row,
+.pro-app-shell[data-theme="dark"] .pro-window-panel .ed360-admin-profile-preview dl>div { border-color:#543e60 !important; }
+.pro-app-shell[data-theme="dark"] .pro-window-panel .rd-domain-stat-track,
+.pro-app-shell[data-theme="dark"] .pro-window-panel .rd-branch-bar { background:#4b3756 !important; }
+.pro-app-shell[data-theme="dark"] .pro-window-panel .ed360-personal-current-email,
+.pro-app-shell[data-theme="dark"] .pro-window-panel .ed360-personal-note,
+.pro-app-shell[data-theme="dark"] .pro-window-panel .ed360-admin-callout { background:#412d4e !important; border-color:#62496d !important; color:#e2cde9 !important; }
+.pro-app-shell[data-theme="dark"] .pro-window-panel .ed360-personal-current-email b { color:#f4eafa !important; }
+.pro-app-shell[data-theme="dark"] .pro-window-panel .ed360-admin-profile-placeholder { background:#4a3555 !important; color:#f2dff1 !important; border-color:#684d73 !important; }
+.pro-app-shell[data-theme="dark"] .pro-window-panel .ed360-display-setting-row,
+.pro-app-shell[data-theme="dark"] .pro-window-panel .ed360-display-motion { color:#f1e4f5 !important; }
+.pro-app-shell[data-theme="dark"] .pro-window-panel .gov-shortcuts button,
+.pro-app-shell[data-theme="dark"] .pro-window-panel .gov-button:not(.primary) { color:#eddcf3 !important; background:#443052 !important; border-color:#62486e !important; }
+.pro-app-shell[data-theme="dark"] .pro-window-panel .gov-empty { color:#d4c1dc !important; background:#3b2b48 !important; border-color:#684e74 !important; }
+
+/* Responsive profile and account cards. */
+@media(max-width:900px) {
+  .pro-window-panel .ed360-personal-account-grid { grid-template-columns:1fr; }
+  .pro-window-panel .ed360-admin-profile-preview { min-height:0; }
+}
+@media(max-width:620px) {
+  .pro-module-stage { padding-top:12px; }
+  .pro-window-panel .ed360-admin-profile-preview { padding:15px; }
+  .pro-window-panel .ed360-personal-account-grid { gap:11px; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .pro-app-shell *,.pro-app-shell *::before,.pro-app-shell *::after {
+    transition-duration:.01ms !important;
+    animation-duration:.01ms !important;
+  }
+}
+
+.pro-window-panel .ed360-personal-account-name-card { grid-column:1 / -1; }

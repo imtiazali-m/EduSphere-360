@@ -872,7 +872,7 @@ export function Dashboard({ onToast }: Props) {
 
   const compactSidebar = sidebarCollapsed && !isMobileNav
 
-  return <div className={`pro-app-shell ${sidebarOpen ? 'navigation-open' : ''} ${compactSidebar ? 'sidebar-collapsed' : ''}`} data-view-mode={displayPreferences.viewMode} data-theme={displayPreferences.theme} data-font-size={displayPreferences.fontSize} data-reduced-motion={displayPreferences.reducedMotion ? 'true' : 'false'}>
+  return <div className={`pro-app-shell ${sidebarOpen ? 'navigation-open' : ''} ${compactSidebar ? 'sidebar-collapsed' : ''}`} data-view-mode="modern" data-theme={displayPreferences.theme} data-font-size={displayPreferences.fontSize} data-reduced-motion={displayPreferences.reducedMotion ? 'true' : 'false'}>
     <aside className={`pro-sidebar ${sidebarOpen ? 'is-open' : ''} ${compactSidebar ? 'is-collapsed' : ''}`} aria-hidden={isMobileNav && !sidebarOpen}>
       <div className="pro-sidebar-brand">
         <div className="pro-sidebar-mark"><BookOpen size={24}/></div>
@@ -934,10 +934,6 @@ export function Dashboard({ onToast }: Props) {
         <div className="pro-topbar-right">
           {['owner', 'admin'].includes(user!.role) && <button type="button" className="cwm-open-button" onClick={() => navigate('governance:website-content', { title: 'Public Website Content' })}><Globe2 size={16}/> Public website</button>}
           <div className="ed360-display-controls">
-            <div className="ed360-view-switch" role="group" aria-label="Dashboard display mode">
-              <button type="button" aria-pressed={displayPreferences.viewMode === 'modern'} onClick={() => setDisplayPreferences(current => ({ ...current, viewMode: 'modern' }))}>Modern</button>
-              <button type="button" aria-pressed={displayPreferences.viewMode === 'classic'} onClick={() => setDisplayPreferences(current => ({ ...current, viewMode: 'classic' }))}>Classic</button>
-            </div>
             <button ref={displaySettingsTriggerRef} type="button" className="ed360-display-settings-trigger" aria-expanded={displaySettingsOpen} aria-controls="ed360-display-settings" onClick={() => setDisplaySettingsOpen(open => !open)}>
               <Settings size={16}/><span>Display</span>
             </button>
@@ -951,7 +947,7 @@ export function Dashboard({ onToast }: Props) {
           </div>
           <div className="ed360-topbar-institution"><Building2 size={19}/><span><b>{displayInstitutionName(user?.institutionName)}</b><small><i className={'ed360-status-dot ' + (mode === 'cloud' ? 'is-cloud' : 'is-local')}/>{mode === 'cloud' ? 'Online' : 'Local workspace'}</small></span></div>
           <button type="button" className="pro-topbar-bell ed360-topbar-notice" aria-label={`Open notifications${unreadAnnouncementCount ? `, ${unreadAnnouncementCount} unread` : ''}`} title="Open notification centre" onClick={() => navigate('notifications')}><Bell size={18}/>{unreadAnnouncementCount > 0 && <span className="ed360-notification-count">{unreadAnnouncementCount > 99 ? '99+' : unreadAnnouncementCount}</span>}</button>
-          <div className="pro-profile-wrap"><button className="pro-profile-trigger" onClick={() => setProfileOpen(open => !open)} aria-expanded={profileOpen}><span className="pro-profile-avatar">{user?.fullName.slice(0, 1).toUpperCase()}</span><span className="pro-profile-copy"><b>{user?.fullName}</b><small>{roleLabels[user!.role]}</small></span><ChevronDown size={14}/></button>{profileOpen && <div className="pro-profile-menu"><div className="pro-profile-details"><b>{user?.fullName}</b><small>{user?.email}</small><small>{displayInstitutionName(user?.institutionName)}</small>{user?.institutionType && <small>Institution type: {user.institutionType.replaceAll('_', ' ')}</small>}<small>Account role: {roleLabels[user!.role]}</small><span className={'pro-profile-mode ' + mode}>Cloud workspace</span></div>{['student', 'parent'].includes(user!.role) && <button type="button" onClick={() => navigate('profile')}><UserRound size={15}/> My Profile</button>}<button type="button" onClick={() => void logout()}><LogOut size={15}/> Sign out</button></div>}</div>
+          <div className="pro-profile-wrap"><button className="pro-profile-trigger" onClick={() => setProfileOpen(open => !open)} aria-expanded={profileOpen}><span className="pro-profile-avatar">{user?.fullName.slice(0, 1).toUpperCase()}</span><span className="pro-profile-copy"><b>{user?.fullName}</b><small>{roleLabels[user!.role]}</small></span><ChevronDown size={14}/></button>{profileOpen && <div className="pro-profile-menu"><div className="pro-profile-details"><b>{user?.fullName}</b><small>{user?.email}</small><small>{displayInstitutionName(user?.institutionName)}</small>{user?.institutionType && <small>Institution type: {user.institutionType.replaceAll('_', ' ')}</small>}<small>Account role: {roleLabels[user!.role]}</small><span className={'pro-profile-mode ' + mode}>Cloud workspace</span></div><button type="button" onClick={() => navigate('personal:account-settings', { title: 'Account settings' })}><UserRound size={15}/> Account settings</button>{['owner', 'admin'].includes(user!.role) && <button type="button" onClick={() => navigate('governance:profile', { title: 'Institute Profile' })}><Building2 size={15}/> Institute Profile</button>}{['student', 'parent'].includes(user!.role) && <button type="button" onClick={() => navigate('profile')}><UserRound size={15}/> My Profile</button>}<button type="button" onClick={() => void logout()}><LogOut size={15}/> Sign out</button></div>}</div>
         </div>
       </header>
       <div className="pro-module-stage">

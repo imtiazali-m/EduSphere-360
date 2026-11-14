@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import {
-  Activity, Award, BookOpen, CalendarCheck, CalendarDays, CheckCircle2,
+  Award, BookOpen, CalendarCheck, CalendarDays,
   ClipboardCheck, ClipboardList, Clock3, GraduationCap, Megaphone, MessageSquare,
   School, ShieldAlert, TrendingDown, TrendingUp, Users, Wallet, Building2, ReceiptText,
   FileText, BookOpenCheck, CircleAlert,
@@ -14,7 +14,6 @@ import { outstandingInvoiceBalance } from '../lib/finance'
 import { userFacingError } from '../lib/userErrors'
 import { roleLabels } from '../lib/modules'
 import type { AppRole, RecordRow } from '../lib/types'
-import { COLLEGE_LOCATION, displayInstitutionName } from '../lib/collegeIdentity'
 import './role-dashboard.css'
 
 type Dataset = Record<string, RecordRow[]>
@@ -25,7 +24,7 @@ const TABLES_BY_ROLE: Record<AppRole, string[]> = {
   owner: [
     'students', 'teachers', 'campuses', 'attendance', 'employee_attendance',
     'fee_invoices', 'fee_payments', 'exams', 'exam_results', 'workflow_approvals',
-    'announcements', 'institutional_audit_events', 'academic_sessions',
+    'announcements', 'academic_sessions',
     'departments', 'programs', 'classes', 'subjects', 'rooms',
     'assignments', 'assignment_submissions', 'timetable_entries',
     'work_tasks', 'employee_leave_requests',
@@ -34,7 +33,6 @@ const TABLES_BY_ROLE: Record<AppRole, string[]> = {
     'students', 'teachers', 'campuses', 'attendance', 'employee_attendance',
     'fee_invoices', 'fee_payments', 'exams', 'exam_results', 'workflow_approvals',
     'announcements', 'academic_sessions', 'work_tasks', 'employee_leave_requests',
-    'institutional_audit_events',
     'departments', 'programs', 'classes', 'subjects', 'rooms',
     'assignments', 'assignment_submissions', 'timetable_entries',
   ],
@@ -115,11 +113,6 @@ const isPaid = (row: RecordRow) => ['completed', 'paid', 'success', 'succeeded',
 const isPending = (row: RecordRow) => ['pending', 'submitted', 'in_review', 'awaiting_approval'].includes(String(row.status ?? row.approval_status ?? '').toLowerCase())
 const todayWeekday = (date: Date) => date.toLocaleDateString(undefined, { weekday: 'long' }).toLowerCase()
 const normalize = (value: unknown) => String(value ?? '').trim().toLowerCase().replace(/\s+/g, ' ')
-function activeSession(data: Dataset): RecordRow | undefined {
-  const sessions = rows(data, 'academic_sessions')
-  return sessions.find(session => session.is_current === true || session.is_active === true)
-    ?? sessions.find(session => ['active', 'current', 'in_progress'].includes(String(session.status ?? '').toLowerCase()))
-}
 function averageResult(results: RecordRow[]) {
   const eligible = results.filter(result => numberValue(result.total_marks) > 0)
   const maximum = eligible.reduce((sum, result) => sum + numberValue(result.total_marks), 0)
@@ -236,29 +229,6 @@ function ApprovalList({ items, loading, onNavigate }: { items: RecordRow[]; load
     </button>)}
   </div>
 }
-function ActivityList({ items, loading, onNavigate }: { items: RecordRow[]; loading: boolean; onNavigate: (route: string) => void }) {
-  if (loading || !items.length) return <EmptyState loading={loading} message="No tracked database changes have been recorded yet."/>
-  return <div className="rd-list rd-audit-list">
-    {items.slice(0, 7).map(item => {
-      const action = String(item.action ?? '').toLowerCase()
-      const actionLabel = action === 'insert' ? 'Created' : action === 'update' ? 'Updated' : action === 'delete' ? 'Deleted' : 'Changed'
-      const record = textValue(item, ['record_type'], 'Institution record').replace(/[_-]/g, ' ')
-      const module = textValue(item, ['module_key'], 'Institution').replace(/[_-]/g, ' ')
-      const values = (action === 'delete' ? item.old_values : item.new_values) as Record<string, unknown> | null | undefined
-      const subject = values && typeof values === 'object'
-        ? ['name', 'title', 'full_name', 'session_name', 'record_name'].map(key => values[key]).find(value => typeof value === 'string' && value.trim())
-        : undefined
-      return <button type="button" className="rd-list-row rd-list-button" key={item.id} onClick={() => onNavigate('institutional:administration:administrative-audit')}>
-        <span className={'rd-row-icon activity ' + (action === 'delete' ? 'is-delete' : action === 'insert' ? 'is-create' : 'is-update')}><Activity size={15}/></span>
-        <span className="rd-row-copy">
-          <strong>{subject ? String(subject) : record}</strong>
-          <small>{module} · {dateLabel(item.occurred_at)}</small>
-        </span>
-        <span className={'rd-row-tag audit-action ' + action}>{actionLabel}</span>
-      </button>
-    })}
-  </div>
-}
 function TimetableList({ items, loading }: { items: RecordRow[]; loading: boolean }) {
   if (loading || !items.length) return <EmptyState loading={loading} message="No timetable periods are scheduled for today."/>
   return <div className="rd-list">
@@ -287,8 +257,6 @@ export function RoleDashboard({ onNavigate }: Props) {
   const [data, setData] = useState<Dataset>({})
   const [errors, setErrors] = useState<Errors>({})
   const [loading, setLoading] = useState(true)
-  const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(null)
-  const [realtimeStatus, setRealtimeStatus] = useState<'connecting' | 'live' | 'polling'>('connecting')
   const today = localDayKey(new Date())
   const role = user?.role ?? 'student'
 
@@ -313,7 +281,6 @@ export function RoleDashboard({ onNavigate }: Props) {
       setData(Object.fromEntries(entries.map(([table, records]) => [table, records])))
       setErrors(Object.fromEntries(entries.filter(([, , error]) => error).map(([table, , error]) => [table, String(error)])))
       setLoading(false)
-      setLastSyncedAt(new Date())
       loadedOnce = true
     }
     const refreshFromDatabaseEvent = () => {
@@ -332,11 +299,7 @@ export function RoleDashboard({ onNavigate }: Props) {
           filter: 'institution_id=eq.' + activeUser.institutionId,
         }, refreshFromDatabaseEvent)
       })
-      channel.subscribe(status => {
-        if (live) setRealtimeStatus(status === 'SUBSCRIBED' ? 'live' : 'polling')
-      })
-    } else {
-      setRealtimeStatus('polling')
+      channel.subscribe()
     }
 
     // A one-minute fallback keeps the dashboard fresh if Realtime is not enabled
@@ -364,10 +327,6 @@ export function RoleDashboard({ onNavigate }: Props) {
   const submissions = get('assignment_submissions')
   const timetable = get('timetable_entries')
   const notices = get('announcements').slice().sort((a, b) => String(b.created_at ?? '').localeCompare(String(a.created_at ?? '')))
-  const current = activeSession(data)
-  const currentSessionLabel = !known('academic_sessions') ? 'Session unavailable'
-    : current ? textValue(current, ['session_name', 'name', 'code'], 'Active session')
-      : 'No active academic session'
   const now = new Date()
   const monthStart = currentMonthStart()
   const trendMonths = Array.from({ length: 6 }, (_, index) => new Date(now.getFullYear(), now.getMonth() - 5 + index, 1))
@@ -391,9 +350,10 @@ export function RoleDashboard({ onNavigate }: Props) {
   const monthName = now.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })
   const todayAttendance = attendance.filter(row => isToday(row, ['attendance_date'], today))
   const todayStaffAttendance = get('employee_attendance').filter(row => isToday(row, ['attendance_date'], today))
-  const totalTodayAttendance = todayAttendance.length + todayStaffAttendance.length
   const presentToday = [...todayAttendance, ...todayStaffAttendance].filter(row => String(row.status ?? '').toLowerCase() === 'present').length
-  const todayAttendancePercent = totalTodayAttendance ? Math.round(presentToday / totalTodayAttendance * 100) : null
+  const studentPresentToday = todayAttendance.filter(row => String(row.status ?? '').toLowerCase() === 'present').length
+  const studentAbsentToday = todayAttendance.filter(row => String(row.status ?? '').toLowerCase() === 'absent').length
+  const studentAttendancePercent = todayAttendance.length ? Math.round(studentPresentToday / todayAttendance.length * 100) : null
   const todayPayments = payments.filter(row => isToday(row, ['payment_date'], today))
   const collectedToday = todayPayments.reduce((sum, payment) => sum + numberValue(payment.amount), 0)
   const outstanding = unpaidTotal(invoices)
@@ -408,24 +368,17 @@ export function RoleDashboard({ onNavigate }: Props) {
   const publishedResults = results.filter(result => ['published', 'released'].includes(String(result.result_status ?? '').toLowerCase()))
   const performance = averageResult(publishedResults)
 
-  const headingByRole: Record<AppRole, { eyebrow: string; title: string; subtitle: string }> = {
-    owner: { eyebrow: 'GLOBAL INSTITUTION OVERSIGHT', title: 'Institution dashboard', subtitle: 'Monitor performance across campuses, review financial health and act on the work that needs attention.' },
-    admin: { eyebrow: 'ADMINISTRATION WORKSPACE', title: 'Operations overview', subtitle: 'Admissions, people, attendance, approvals and the daily running of your institution.' },
-    accountant: { eyebrow: 'FINANCE WORKSPACE', title: 'Finance overview', subtitle: 'Collections, receivables, receipts and the month’s posted financial activity.' },
-    teacher: { eyebrow: 'TEACHING WORKSPACE', title: 'Your teaching day', subtitle: 'Your assigned classes, timetable, attendance work and learning activities.' },
-    student: { eyebrow: 'STUDENT WORKSPACE', title: 'My learning dashboard', subtitle: 'Your timetable, attendance, coursework, examinations and account status.' },
-    parent: { eyebrow: 'FAMILY WORKSPACE', title: 'Your children’s progress', subtitle: 'A consolidated view of attendance, learning, examination results and fee information for your linked children.' },
-    exam_officer: { eyebrow: 'ASSESSMENT WORKSPACE', title: 'Examination overview', subtitle: 'Assessment schedules, result processing and publication work.' },
+  const headingByRole: Record<AppRole, { title: string; subtitle: string }> = {
+    owner: { title: 'Institution dashboard', subtitle: 'Monitor performance across campuses, review financial health and act on the work that needs attention.' },
+    admin: { title: 'Operations overview', subtitle: 'Admissions, people, attendance, approvals and the daily running of your institution.' },
+    accountant: { title: 'Finance overview', subtitle: 'Collections, receivables, receipts and the month’s posted financial activity.' },
+    teacher: { title: 'Your teaching day', subtitle: 'Your assigned classes, timetable, attendance work and learning activities.' },
+    student: { title: 'My learning dashboard', subtitle: 'Your timetable, attendance, coursework, examinations and account status.' },
+    parent: { title: 'Your children’s progress', subtitle: 'A consolidated view of attendance, learning, examination results and fee information for your linked children.' },
+    exam_officer: { title: 'Examination overview', subtitle: 'Assessment schedules, result processing and publication work.' },
   }
 
   const heading = headingByRole[role]
-  const institutionName = displayInstitutionName(user?.institutionName)
-  const institutionTypeLabel = ({
-    school: 'School',
-    college: 'College / degree college',
-    university: 'University',
-    multi_institution: 'Multi-institution group',
-  } as Record<string, string>)[String(user?.institutionType ?? '').toLowerCase()] ?? 'Institution workspace'
   const primaryAction: Record<AppRole, { label: string; route: string }> = {
     owner: { label: 'Add student', route: 'students:admissions' },
     admin: { label: 'Add student', route: 'students:admissions' },
@@ -435,7 +388,6 @@ export function RoleDashboard({ onNavigate }: Props) {
     parent: { label: 'View attendance', route: 'attendance:students' },
     exam_officer: { label: 'Review results', route: 'exam_results:all' },
   }
-  const sessionCaption = currentSessionLabel
   const pendingDuesCaption = known('fee_invoices') ? formatCount(outstandingCount) + ' invoices with a balance' : 'Invoice data unavailable'
   const metrics: Array<{ label: string; value: string; hint: string; icon: LucideIcon; tone: string; route?: string }> = []
 
@@ -444,7 +396,7 @@ export function RoleDashboard({ onNavigate }: Props) {
       { label: 'Total students', value: knownCount('students'), hint: 'Institution learner records', icon: GraduationCap, tone: 'blue', route: 'students' },
       { label: 'Teachers & staff', value: knownCount('teachers'), hint: 'Institution team records', icon: Users, tone: 'green', route: 'teachers' },
       { label: 'Branches', value: knownCount('campuses'), hint: 'Registered campuses', icon: Building2, tone: 'violet', route: 'institutional:administration:campus-and-branch-management' },
-      { label: 'Today’s attendance', value: known('attendance', 'employee_attendance') ? (todayAttendancePercent === null ? '—' : todayAttendancePercent + '%') : '—', hint: known('attendance', 'employee_attendance') ? (totalTodayAttendance ? formatCount(presentToday) + ' present of ' + formatCount(totalTodayAttendance) + ' student and staff records' : 'No attendance recorded today') : 'Attendance unavailable', icon: CalendarCheck, tone: 'teal', route: 'attendance:students' },
+      { label: 'Students present today', value: known('attendance') ? formatCount(studentPresentToday) + ' / ' + formatCount(todayAttendance.length) : '—', hint: known('attendance') ? (studentAttendancePercent === null ? 'No student attendance recorded today' : studentAttendancePercent + '% of recorded student attendance') : 'Student attendance unavailable', icon: CalendarCheck, tone: 'teal', route: 'attendance:students' },
       { label: 'Collected today', value: known('fee_payments') ? formatMoney(collectedToday) : '—', hint: known('fee_payments') ? formatCount(todayPayments.length) + ' successful receipts' : 'Payment data unavailable', icon: Wallet, tone: 'amber', route: 'finance:fees:payments' },
       { label: 'Outstanding dues', value: known('fee_invoices') ? formatMoney(outstanding) : '—', hint: pendingDuesCaption, icon: ReceiptText, tone: 'rose', route: 'finance:receivables:receivables' },
     )
@@ -462,7 +414,7 @@ export function RoleDashboard({ onNavigate }: Props) {
     metrics.push(
       { label: 'Admissions this month', value: known('students') ? formatCount(admissionCount) : '—', hint: monthName, icon: GraduationCap, tone: 'blue', route: 'students:admissions' },
       { label: 'Active staff', value: known('teachers') ? formatCount(activeStaff) : '—', hint: known('teachers') ? formatCount(teachers.length) + ' total team records' : 'Staff data unavailable', icon: Users, tone: 'green', route: 'teachers' },
-      { label: 'Today’s attendance', value: known('attendance', 'employee_attendance') ? (todayAttendancePercent === null ? '—' : todayAttendancePercent + '%') : '—', hint: known('attendance', 'employee_attendance') ? (totalTodayAttendance ? formatCount(presentToday) + ' present of ' + formatCount(totalTodayAttendance) + ' student and staff records' : 'No attendance recorded today') : 'Attendance unavailable', icon: CalendarCheck, tone: 'teal', route: 'attendance:students' },
+      { label: 'Students present today', value: known('attendance') ? formatCount(studentPresentToday) + ' / ' + formatCount(todayAttendance.length) : '—', hint: known('attendance') ? (studentAttendancePercent === null ? 'No student attendance recorded today' : studentAttendancePercent + '% of recorded student attendance') : 'Student attendance unavailable', icon: CalendarCheck, tone: 'teal', route: 'attendance:students' },
       { label: 'Pending approvals', value: known('workflow_approvals') ? formatCount(pendingApprovals.length) : '—', hint: 'Requests awaiting a decision', icon: ShieldAlert, tone: 'rose', route: 'institutional:administration:approval-and-workflows' },
       { label: 'Operational alerts', value: known('work_tasks', 'employee_leave_requests') ? formatCount(operationalAlerts) : '—', hint: 'Overdue tasks and pending leave', icon: CircleAlert, tone: 'amber', route: 'work_tasks' },
     )
@@ -551,12 +503,6 @@ export function RoleDashboard({ onNavigate }: Props) {
     )
   }
 
-  const auditEvents = get('institutional_audit_events')
-  const auditReady = known('institutional_audit_events')
-  const auditActionCount = (action: string) => auditReady ? auditEvents.filter(event => String(event.action ?? '').toLowerCase() === action).length : null
-  const deleteEvents = auditEvents.filter(event => String(event.action ?? '').toLowerCase() === 'delete')
-  const deletedStudentEvents = auditReady ? deleteEvents.filter(event => /student|learner|admission/i.test(String(event.module_key ?? '') + ' ' + String(event.record_type ?? ''))).length : null
-  const deletedSessionEvents = auditReady ? deleteEvents.filter(event => /session|term|academic.year/i.test(String(event.module_key ?? '') + ' ' + String(event.record_type ?? ''))).length : null
   const openTaskCount = known('work_tasks') ? get('work_tasks').filter(task => !['completed', 'cancelled'].includes(String(task.status ?? '').toLowerCase())).length : null
   const managerOverviewCards: OverviewArea[] = role === 'owner' || role === 'admin' ? [
     {
@@ -596,13 +542,15 @@ export function RoleDashboard({ onNavigate }: Props) {
     },
     {
       title: 'Attendance',
-      description: 'Student and staff attendance',
+      description: 'Student registers and daily attendance coverage',
       icon: CalendarCheck,
       tone: 'teal',
       stats: [
-        { label: 'Student entries', value: knownCount('attendance'), amount: known('attendance') ? attendance.length : null, route: 'attendance:students' },
+        { label: 'Student records', value: knownCount('attendance'), amount: known('attendance') ? attendance.length : null, route: 'attendance:students' },
+        { label: 'Students present today', value: known('attendance') ? formatCount(studentPresentToday) : '—', amount: known('attendance') ? studentPresentToday : null, route: 'attendance:students' },
+        { label: 'Students absent today', value: known('attendance') ? formatCount(studentAbsentToday) : '—', amount: known('attendance') ? studentAbsentToday : null, route: 'attendance:students' },
+        { label: 'Student attendance rate', value: known('attendance') ? (studentAttendancePercent === null ? '—' : studentAttendancePercent + '%') : '—', amount: known('attendance') ? studentAttendancePercent : null, route: 'attendance:students' },
         { label: 'Staff entries', value: knownCount('employee_attendance'), amount: known('employee_attendance') ? get('employee_attendance').length : null, route: 'attendance:faculty' },
-        { label: 'Present today', value: known('attendance', 'employee_attendance') ? formatCount(presentToday) : '—', amount: known('attendance', 'employee_attendance') ? presentToday : null, route: 'attendance:students' },
       ],
     },
     {
@@ -639,19 +587,7 @@ export function RoleDashboard({ onNavigate }: Props) {
         { label: 'Pending approvals', value: known('workflow_approvals') ? formatCount(pendingApprovals.length) : '—', amount: known('workflow_approvals') ? pendingApprovals.length : null, route: 'institutional:administration:approval-and-workflows' },
       ],
     },
-    {
-      title: 'Live database activity',
-      description: 'Tracked writes, edits and removals in the audit trail',
-      icon: Activity,
-      tone: 'violet',
-      stats: [
-        { label: 'Created / written', value: auditActionCount('insert') === null ? '—' : formatCount(auditActionCount('insert')!), amount: auditActionCount('insert'), route: 'institutional:administration:administrative-audit' },
-        { label: 'Updated', value: auditActionCount('update') === null ? '—' : formatCount(auditActionCount('update')!), amount: auditActionCount('update'), route: 'institutional:administration:administrative-audit' },
-        { label: 'Deleted', value: auditActionCount('delete') === null ? '—' : formatCount(auditActionCount('delete')!), amount: auditActionCount('delete'), route: 'institutional:administration:administrative-audit' },
-        { label: 'Student removals', value: deletedStudentEvents === null ? '—' : formatCount(deletedStudentEvents), amount: deletedStudentEvents, route: 'institutional:administration:administrative-audit' },
-        { label: 'Session removals', value: deletedSessionEvents === null ? '—' : formatCount(deletedSessionEvents), amount: deletedSessionEvents, route: 'institutional:administration:administrative-audit' },
-      ],
-    },
+
   ] : []
 
   const rolePanels: Record<AppRole, ReactNode> = {
@@ -712,9 +648,6 @@ export function RoleDashboard({ onNavigate }: Props) {
               </div>)}
             </div> : <EmptyState loading={loading} message="No campuses have been registered yet."/>}
           </Panel>
-          <Panel title="Recent database changes" description="Created, updated and deleted records captured in the available audit trail." icon={Activity} action={<button type="button" className="rd-text-action" onClick={() => onNavigate('institutional:administration:administrative-audit')}>Open audit</button>}>
-            <ActivityList items={get('institutional_audit_events').slice().sort((a, b) => String(b.occurred_at ?? '').localeCompare(String(a.occurred_at ?? '')))} loading={loading || !known('institutional_audit_events')} onNavigate={onNavigate}/>
-          </Panel>
           <Panel title="Institution notices" description="Latest announcements published to your institution." icon={Megaphone}>
             <NoticeList items={notices} loading={loading || !known('announcements')}/>
           </Panel>
@@ -761,9 +694,6 @@ export function RoleDashboard({ onNavigate }: Props) {
             }).length)} overdue tasks</strong><small>Open institutional work past its due date</small></span></button>
             <button type="button" onClick={() => onNavigate('employees:leave-management')}><span className="rd-alert-icon"><CalendarCheck size={16}/></span><span><strong>{formatCount(leaveRequests.length)} pending leave requests</strong><small>Employee requests awaiting review</small></span></button>
           </div>}
-        </Panel>
-        <Panel title="Recent database changes" description="Latest tracked create, update and delete events." icon={Activity} action={<button type="button" className="rd-text-action" onClick={() => onNavigate('institutional:administration:administrative-audit')}>Open audit</button>}>
-          <ActivityList items={auditEvents.slice().sort((a, b) => String(b.occurred_at ?? '').localeCompare(String(a.occurred_at ?? '')))} loading={loading || !auditReady} onNavigate={onNavigate}/>
         </Panel>
         <Panel title="Institution notices" description="Latest published notices." icon={Megaphone}>
           <NoticeList items={notices} loading={loading || !known('announcements')}/>
@@ -1014,19 +944,14 @@ export function RoleDashboard({ onNavigate }: Props) {
   return <main className="ed360-role-dashboard">
     <header className="rd-page-head">
       <div className="rd-heading-main">
-        <span className="rd-institution-logo"><img src="/gidc-badin-official-logo.svg" alt="Government Islamia Degree College Badin logo"/></span>
+        <span className="rd-institution-logo"><img src="/gidc-badin-official-logo.svg" alt="Institution logo"/></span>
         <div className="rd-institution-heading">
-          <span className="rd-eyebrow">{heading.eyebrow}</span>
-          <h1>{institutionName}</h1>
-          <p>{institutionTypeLabel} <span>·</span> {heading.title}</p>
-          <small>{COLLEGE_LOCATION} <span>·</span> {heading.subtitle}</small>
+          <h1>{heading.title}</h1>
+          <p>{heading.subtitle}</p>
         </div>
       </div>
       <div className="rd-heading-meta">
         <span className="rd-role-chip">{roleLabels[role]}</span>
-        <span className="rd-session-chip"><CalendarDays size={14}/>{sessionCaption}</span>
-        <span className="rd-date-chip"><Clock3 size={14}/>{lastSyncedAt ? 'Updated ' + lastSyncedAt.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }) : now.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })}</span>
-        <span className="rd-live-chip" aria-live="polite"><i className={realtimeStatus === 'live' ? 'is-live' : ''}/>{realtimeStatus === 'live' ? 'Live updates' : realtimeStatus === 'connecting' ? 'Connecting' : 'Auto refresh'}</span>
         <button type="button" className="rd-header-cta" onClick={() => onNavigate(primaryAction[role].route)}>{primaryAction[role].label}</button>
       </div>
     </header>
@@ -1039,16 +964,13 @@ export function RoleDashboard({ onNavigate }: Props) {
         <div>
           <span className="rd-eyebrow">INSTITUTION AT A GLANCE</span>
           <h2 id="rd-domain-overview-title">Institution performance</h2>
-          <p>Eight visual summaries show how each area is being used. Charts fill automatically as records are created and updated.</p>
+          <p>Seven visual summaries cover people, academic structure, teaching, attendance, examinations, finance and campus operations.</p>
         </div>
-        <span className="rd-domain-live"><i className={realtimeStatus === 'live' ? 'is-live' : ''}/>{realtimeStatus === 'live' ? 'Live data' : 'Auto-updating'}</span>
       </header>
       <div className="rd-domain-grid">
         {managerOverviewCards.map(card => <OverviewAreaCard key={card.title} card={card} loading={loading} onNavigate={onNavigate}/>)}
       </div>
-      <p className="rd-domain-audit-note"><ShieldAlert size={14}/> Deletion and change figures show events available in the institutional audit trail; they are not a complete audit of every direct database table.</p>
     </section>}
     {rolePanels[role]}
-    <footer className="rd-dashboard-footnote"><CheckCircle2 size={15}/><span>Dashboard figures come from live institution records visible to your signed-in role. Empty states mean no matching records were returned; unavailable figures are not treated as zero. The dashboard does not delete, reset or modify existing institution records.</span></footer>
   </main>
 }

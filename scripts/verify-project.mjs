@@ -1120,21 +1120,39 @@ check('Stage 8 provides all 12 connected academic work areas', () => {
 })
 
 
-check('Modern and Classic dashboard modes preserve role data, workspaces and accessible display preferences', () => {
+check('Single dashboard layout preserves role data and accessible display preferences', () => {
   const dashboard = read('src/components/Dashboard.tsx')
   const preferences = read('src/lib/displayPreferences.js')
   const displayStyles = read('src/styles/dashboard-display-settings.css')
   const displayTests = read('scripts/test-display-preferences.mjs')
   const mainEntry = read('src/main.tsx')
-  assert.ok(dashboard.includes('data-view-mode={displayPreferences.viewMode}') && dashboard.includes('data-theme={displayPreferences.theme}'), 'Display preferences must be applied to the existing signed-in shell')
-  assert.ok(dashboard.includes('aria-label="Dashboard display mode"') && dashboard.includes('Modern') && dashboard.includes('Classic'), 'Top-bar view selector must expose both accessible display modes')
+  assert.ok(dashboard.includes('data-view-mode="modern"') && dashboard.includes('data-theme={displayPreferences.theme}'), 'One consistent dashboard layout and theme preferences must be applied to the signed-in shell')
+  assert.ok(!dashboard.includes('aria-label="Dashboard display mode"') && !dashboard.includes('>Modern</button>') && !dashboard.includes('>Classic</button>'), 'The inactive Modern / Classic selector must be removed')
   assert.ok(dashboard.includes('roleNavigationGroups(user!.role)') && dashboard.includes('modulesForRole(user!.role)'), 'Role-filtered navigation and modules must remain unchanged')
-  assert.ok(dashboard.includes('workspaceTabs.map(tab =>') && dashboard.includes('<RoleDashboard onNavigate={navigateChild}/>'), 'View switches must retain the same current workspace and overview component')
+  assert.ok(dashboard.includes('workspaceTabs.map(tab =>') && dashboard.includes('<RoleDashboard onNavigate={navigateChild}/>'), 'The single layout must retain the same workspace and overview components')
   for (const preference of ['viewMode', 'theme', 'fontSize', 'sidebar', 'reducedMotion']) assert.ok(preferences.includes(preference), 'Preference persistence is missing: ' + preference)
   assert.ok(preferences.includes('localStorage') === false, 'The preference helper must remain storage-adapter based and testable')
   for (const style of ['data-view-mode="classic"', 'data-theme="dark"', 'data-font-size="largest"', 'data-reduced-motion="true"', 'prefers-reduced-motion: reduce', 'focus-visible', 'min-height: 32px']) assert.ok(displayStyles.includes(style), 'Display style/accessibility support is missing: ' + style)
   assert.ok(mainEntry.includes("import './styles/dashboard-display-settings.css'"), 'Dashboard display styles must be loaded in the application')
   assert.ok(displayTests.includes('reads all supported settings') && displayTests.includes('storage write failure is non-fatal'), 'Display preference persistence regressions are missing')
+})
+
+check('Internal account and institute profile controls remain connected to secure owner workflows', () => {
+  const dashboard = read('src/components/Dashboard.tsx')
+  const account = read('src/components/PersonalWorkspace.tsx')
+  const auth = read('src/lib/auth.ts')
+  const institute = read('src/components/AdministrationStage5Workspace.tsx')
+  const roleDashboard = read('src/components/RoleDashboard.tsx')
+  const internalTheme = read('src/styles/college-theme.css')
+  assert.ok(dashboard.includes("navigate('personal:account-settings'") && dashboard.includes("navigate('governance:profile'") && dashboard.includes('void logout()'), 'The profile menu must link account settings, institute profile and sign-out')
+  assert.ok(account.includes('updateAccountName') && account.includes("from('profiles').update({full_name:fullName})"), 'Users must be able to edit their own account name')
+  assert.ok(account.includes("updateUser({email:address}") && account.includes('updatePassword') && account.includes('Request email change'), 'Account settings must include secure email and password changes')
+  assert.ok(auth.includes('supabase.auth.getUser()') && auth.includes('authData.user?.email'), 'The verified Auth email must be used for the signed-in account')
+  assert.ok(institute.includes('ed360-admin-profile-preview') && institute.includes('logoUrl') && !institute.includes('showProfileCard'), 'Institute identity card with its logo must be visible without an extra toggle')
+  for (const item of ['institutional_audit_events', 'Recent database changes', 'Live database activity', 'GLOBAL INSTITUTION OVERSIGHT', 'Live updates']) assert.ok(!roleDashboard.includes(item), 'Dashboard-only audit or live-feed UI should be removed: ' + item)
+  assert.ok(roleDashboard.includes('studentPresentToday') && roleDashboard.includes('studentAbsentToday') && roleDashboard.includes('studentAttendancePercent'), 'Student attendance must be reported separately from staff attendance')
+  assert.ok(internalTheme.includes('linear-gradient(128deg,#321943') && internalTheme.includes('.pro-app-shell'), 'The purple / pink canvas must be scoped to the signed-in internal shell')
+  assert.ok(!internalTheme.includes(':root {') || internalTheme.indexOf(':root {') < internalTheme.indexOf('/* Internal application — one cohesive plum'), 'Internal palette tokens must not overwrite public-page root tokens')
 })
 
 check('Student admission is a dedicated, accessible workspace window', () => {
