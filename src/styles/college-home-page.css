@@ -346,3 +346,29 @@
   .gidc-public-footer-links { gap: 12px 15px; }
   .gidc-public-footer-bottom>div { min-height: 58px; flex-direction: column; justify-content: center; align-items: flex-start; gap: 3px; padding-top: 8px; padding-bottom: 8px; font-size: 8px; }
 }
+
+
+/* Dedicated college events and department-arrangement pages */
+.gidc-public-department-groups { display: grid; gap: 22px; }
+.gidc-public-department-group { padding: 20px; border: 1px solid var(--gidc-line); border-radius: 15px; background: #fff; box-shadow: 0 10px 22px rgba(32,52,39,.035); }
+.gidc-public-department-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; padding-bottom: 13px; border-bottom: 1px solid var(--gidc-line); }
+.gidc-public-department-heading small { color: #9a783b; font-size: 9px; font-weight: 900; letter-spacing: .14em; }
+.gidc-public-department-heading h2 { margin: 5px 0 0; color: var(--gidc-forest-dark); font-size: 21px; line-height: 1.25; }
+.gidc-public-department-heading>span { flex: 0 0 auto; padding: 7px 10px; border-radius: 30px; background: #edf4e9; color: #236342; font-size: 10px; font-weight: 900; }
+.gidc-public-department-group .gidc-public-faculty-grid { grid-template-columns: repeat(3,minmax(0,1fr)); }
+.gidc-public-news-image { width: 116px; min-width: 116px; height: 116px; align-self: center; object-fit: cover; border-radius: 9px; }
+.gidc-public-nav { flex-wrap: nowrap; }
+@media(max-width:1180px) {
+  .gidc-public-nav { gap: 8px; }
+  .gidc-public-nav a { font-size: 10px; }
+  .gidc-public-department-group .gidc-public-faculty-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
+@media(max-width:900px) {
+  .gidc-public-news-image { width: 96px; min-width: 96px; height: 96px; }
+  .gidc-public-department-group .gidc-public-faculty-grid { grid-template-columns: 1fr; }
+}
+@media(max-width:560px) {
+  .gidc-public-department-group { padding: 13px; }
+  .gidc-public-department-heading h2 { font-size: 17px; }
+  .gidc-public-news-image { width: 76px; min-width: 76px; height: 82px; }
+}
