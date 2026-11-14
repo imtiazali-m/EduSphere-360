@@ -8,7 +8,7 @@ import type { RecordRow } from '../lib/types'
 import { displayInstitutionName } from '../lib/collegeIdentity'
 import '../styles/governance-workspace.css'
 
-type Section='profile'|'academic'|'departments'|'organization'|'system'|'approvals'|'policies'|'audit'|'accounts'|'permissions'|'settings'|'branding'|'security'
+type Section='profile'|'academic'|'departments'|'designations'|'organization'|'system'|'approvals'|'policies'|'policies-students'|'policies-faculty'|'audit'|'accounts'|'permissions'|'settings'|'branding'|'security'
 type Props={initialWindow?:string;onToast:(message:string,error?:boolean)=>void;onNavigate:(route:string)=>void}
 type Institution={id:string;name:string;institution_type:string;tagline?:string|null;phone?:string|null;email?:string|null;website?:string|null;address?:string|null;country?:string|null;logo_path?:string|null;created_by?:string|null}
 type Setting=RecordRow & {id:string;category:string;setting_key:string;setting_value:unknown;is_public:boolean}
@@ -19,8 +19,11 @@ type Designation=RecordRow & {id:string;name:string;code?:string|null;department
 type Teacher=RecordRow & {id:string;full_name:string;department?:string|null;department_id?:string|null;designation_id?:string|null;employment_status?:string;campus_id?:string|null}
 type Member=RecordRow & {user_id:string;role:string;status:string;full_name?:string;email?:string}
 type Policy=RecordRow & {id:string;title:string;reference_code?:string|null;description?:string|null;status:string;effective_date?:string|null;payload:Record<string,unknown>}
-const sectionByWindow:Record<string,Section>={profile:'profile',settings:'settings',institution_settings:'settings',approvals:'approvals',audit:'audit',academic:'academic',accounts:'accounts',departments:'departments',organization:'organization',system:'system',policies:'policies',permissions:'permissions',branding:'branding',security:'security'}
-const pageTitle:Record<Section,string>={profile:'Institute Profile',academic:'Academic Structure & Sections',departments:'Departments & Designations',organization:'Organisational Structure',system:'System Configuration',approvals:'Approval Workflows',policies:'Policies & Rules',audit:'Administrative Audit',accounts:'User Access & Invitations',permissions:'Role & Permission Management',settings:'Institute Settings',branding:'Branding & Document Settings',security:'Security & Access History'}
+type AcademicRow=RecordRow & {id:string;[key:string]:unknown}
+type InstitutePreferences={timezone:string;date_format:string;currency:string;academic_year_start_month:string;term_structure:string;student_id_prefix:string;employee_id_prefix:string}
+const defaultInstitutePreferences:InstitutePreferences={timezone:'Asia/Karachi',date_format:'dd MMM yyyy',currency:'PKR',academic_year_start_month:'8',term_structure:'annual',student_id_prefix:'GIDC-STU',employee_id_prefix:'GIDC-EMP'}
+const sectionByWindow:Record<string,Section>={profile:'profile',settings:'settings',institution_settings:'settings',approvals:'approvals',audit:'audit',academic:'academic',accounts:'accounts',departments:'departments',designations:'designations',organization:'organization',system:'system',policies:'policies-students',policies_students:'policies-students',policies_faculty:'policies-faculty',organization_structure:'organization',permissions:'permissions',branding:'branding',security:'security'}
+const pageTitle:Record<Section,string>={profile:'Institute Profile',academic:'Academic Structure & Sections',departments:'Department Directory',designations:'Designation Catalogue',organization:'Institute Reporting Hierarchy',system:'System Configuration',approvals:'Approval Workflows',policies:'Student Policies', 'policies-students':'Student Policies','policies-faculty':'Faculty Policies',audit:'Administrative Audit',accounts:'User Access & Invitations',permissions:'Role & Permission Management',settings:'Institute Settings',branding:'Branding & Document Settings',security:'Security & Access History'}
 const dateLabel=(value:unknown)=>value?new Date(String(value)).toLocaleString():'—'
 const label=(value:unknown)=>String(value??'').replaceAll('_',' ').replace(/\b\w/g,c=>c.toUpperCase())
 const jsonObject=(value:unknown):Record<string,unknown>=>value&&typeof value==='object'&&!Array.isArray(value)?value as Record<string,unknown>:{}
@@ -35,6 +38,8 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
   const [logoFile,setLogoFile]=useState<File|null>(null),[logoUrl,setLogoUrl]=useState('')
   const [settings,setSettings]=useState<Setting[]>([]),[approvals,setApprovals]=useState<Approval[]>([]),[audit,setAudit]=useState<Audit[]>([]),[policies,setPolicies]=useState<Policy[]>([])
   const [departments,setDepartments]=useState<Department[]>([]),[designations,setDesignations]=useState<Designation[]>([]),[teachers,setTeachers]=useState<Teacher[]>([]),[members,setMembers]=useState<Member[]>([])
+  const [academicSessions,setAcademicSessions]=useState<AcademicRow[]>([]),[classes,setClasses]=useState<AcademicRow[]>([]),[programs,setPrograms]=useState<AcademicRow[]>([]),[subjects,setSubjects]=useState<AcademicRow[]>([]),[rooms,setRooms]=useState<AcademicRow[]>([])
+  const [institutePreferences,setInstitutePreferences]=useState<InstitutePreferences>(defaultInstitutePreferences)
   const [search,setSearch]=useState('')
   const [settingsSortKey,setSettingsSortKey]=useState<'category'|'setting_key'|'is_public'>('category')
   const [settingsSortDirection,setSettingsSortDirection]=useState<'asc'|'desc'>('asc')
@@ -49,7 +54,7 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
     if(!supabase||!user){setLoading(false);return}
     if(!silent){setLoading(true);setError('')}
     try{
-      const [institutionResult,settingsResult,approvalResult,auditResult,policyResult,departmentResult,designationResult,teacherResult,membershipResult]=await Promise.all([
+      const [institutionResult,settingsResult,approvalResult,auditResult,policyResult,departmentResult,designationResult,teacherResult,membershipResult,academicSessionResult,classResult,programResult,subjectResult,roomResult]=await Promise.all([
         supabase.from('institutions').select('id,name,institution_type,tagline,phone,email,website,address,country,logo_path,created_by').eq('id',user.institutionId).maybeSingle(),
         admin?supabase.from('institution_settings').select('*').eq('institution_id',user.institutionId).order('category').order('setting_key').limit(1000):Promise.resolve({data:[],error:null}),
         admin?supabase.from('workflow_approvals').select('*').eq('institution_id',user.institutionId).order('requested_at',{ascending:false}).limit(500):Promise.resolve({data:[],error:null}),
@@ -59,8 +64,13 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
         admin?supabase.from('designations').select('*').eq('institution_id',user.institutionId).order('name').limit(500):Promise.resolve({data:[],error:null}),
         admin?supabase.from('teachers').select('id,full_name,department,department_id,designation_id,employment_status,campus_id').eq('institution_id',user.institutionId).order('full_name').limit(1000):Promise.resolve({data:[],error:null}),
         admin?supabase.from('memberships').select('user_id,role,status,created_at').eq('institution_id',user.institutionId).order('created_at').limit(1000):Promise.resolve({data:[],error:null}),
+        admin?supabase.from('academic_sessions').select('*').eq('institution_id',user.institutionId).order('start_date',{ascending:false}).limit(200):Promise.resolve({data:[],error:null}),
+        admin?supabase.from('classes').select('*').eq('institution_id',user.institutionId).order('name').limit(500):Promise.resolve({data:[],error:null}),
+        admin?supabase.from('programs').select('*').eq('institution_id',user.institutionId).order('name').limit(500):Promise.resolve({data:[],error:null}),
+        admin?supabase.from('subjects').select('*').eq('institution_id',user.institutionId).order('name').limit(1000):Promise.resolve({data:[],error:null}),
+        admin?supabase.from('rooms').select('*').eq('institution_id',user.institutionId).order('name').limit(500):Promise.resolve({data:[],error:null}),
       ])
-      for(const result of [institutionResult,settingsResult,approvalResult,auditResult,policyResult,departmentResult,designationResult,teacherResult,membershipResult])if(result.error)throw result.error
+      for(const result of [institutionResult,settingsResult,approvalResult,auditResult,policyResult,departmentResult,designationResult,teacherResult,membershipResult,academicSessionResult,classResult,programResult,subjectResult,roomResult])if(result.error)throw result.error
       const institutionRow=institutionResult.data as Institution|null
       setInstitution(institutionRow)
       if(institutionRow)setProfileDraft({name:institutionRow.name??'',institution_type:institutionRow.institution_type??'school',tagline:institutionRow.tagline??'',phone:institutionRow.phone??'',email:institutionRow.email??'',website:institutionRow.website??'',address:institutionRow.address??'',country:institutionRow.country??''})
@@ -75,16 +85,23 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
       setSettings((settingsResult.data??[]) as Setting[]);setApprovals((approvalResult.data??[]) as Approval[]);setAudit((auditResult.data??[]) as Audit[])
       setPolicies((policyResult.data??[]) as Policy[]);setDepartments((departmentResult.data??[]) as Department[])
       setDesignations((designationResult.data??[]) as Designation[]);setTeachers((teacherResult.data??[]) as Teacher[])
+      setAcademicSessions((academicSessionResult.data??[]) as AcademicRow[]);setClasses((classResult.data??[]) as AcademicRow[]);setPrograms((programResult.data??[]) as AcademicRow[]);setSubjects((subjectResult.data??[]) as AcademicRow[]);setRooms((roomResult.data??[]) as AcademicRow[])
+      const preferenceRow=((settingsResult.data??[]) as Setting[]).find(row=>row.category==='general'&&row.setting_key==='institution_preferences')
+      setInstitutePreferences({...defaultInstitutePreferences,...jsonObject(preferenceRow?.setting_value)} as InstitutePreferences)
       if(institutionRow?.logo_path){const {data:signed}=await supabase.storage.from('institution-files').createSignedUrl(institutionRow.logo_path,3600);setLogoUrl(signed?.signedUrl??'')}else setLogoUrl('')
     }catch(err){const message=userFacingError(err,'Administration records could not be loaded.');setError(message);if(!silent)onToast(message,true)}
     finally{setLoading(false)}
   }
   useEffect(()=>{void load()},[user?.id,user?.institutionId,user?.role])
 
-  const filteredPolicies=useMemo(()=>policies.filter(row=>[row.title,row.reference_code,row.description,row.status,JSON.stringify(row.payload)].join(' ').toLowerCase().includes(search.trim().toLowerCase())),[policies,search])
+  const filteredPolicies=useMemo(()=>policies.filter(row=>{
+    const audience=String(jsonObject(row.payload).category??'').toLowerCase()
+    const audienceMatches=section==='policies-students'?['student','students'].includes(audience):section==='policies-faculty'?['faculty','staff','teacher','teachers'].includes(audience):false
+    return audienceMatches&&[row.title,row.reference_code,row.description,row.status,JSON.stringify(row.payload)].join(' ').toLowerCase().includes(search.trim().toLowerCase())
+  }),[policies,search,section])
   const filteredAudit=useMemo(()=>audit.filter(row=>[row.action,row.module_key,row.record_type,row.actor_id,row.record_id].join(' ').toLowerCase().includes(search.trim().toLowerCase())),[audit,search])
   const filteredMembers=useMemo(()=>members.filter(row=>[row.full_name,row.email,row.role,row.status].join(' ').toLowerCase().includes(search.trim().toLowerCase())),[members,search])
-  const visibleSettings=useMemo(()=>settings.filter(row=>section==='system'?row.category==='system':section==='branding'?['branding','documents'].includes(row.category):section==='settings'?!['system','branding','documents'].includes(row.category):true).filter(row=>[row.category,row.setting_key,JSON.stringify(row.setting_value)].join(' ').toLowerCase().includes(search.trim().toLowerCase())),[settings,section,search])
+  const visibleSettings=useMemo(()=>settings.filter(row=>section==='system'?row.category==='system':section==='branding'?['branding','documents'].includes(row.category):section==='settings'?false:true).filter(row=>[row.category,row.setting_key,JSON.stringify(row.setting_value)].join(' ').toLowerCase().includes(search.trim().toLowerCase())),[settings,section,search])
   const orderedSettings=useMemo(()=>[...visibleSettings].sort((a,b)=>{
     const left=settingsSortKey==='is_public'?String(a.is_public):String(a[settingsSortKey]??'')
     const right=settingsSortKey==='is_public'?String(b.is_public):String(b[settingsSortKey]??'')
