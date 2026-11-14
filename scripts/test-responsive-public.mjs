@@ -96,7 +96,7 @@ async function inspectViewport({name,width,height}) {
     await mkdir(artifactDir,{recursive:true})
     await page.screenshot({path:`${artifactDir}/${name}-college-home.png`,fullPage:true,animations:'disabled'})
 
-    if(width<=960) {
+    if(width<=1180) {
       const menu=page.locator('.gidc-public-menu-toggle')
       await menu.waitFor({state:'visible'})
       await menu.click()
