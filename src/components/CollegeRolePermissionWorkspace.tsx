@@ -80,25 +80,26 @@ const modules = [
   { key: 'data_management', label: 'Data management & duplicate review', actions: ['view','create','edit','delete','approve'] },
   { key: 'helpdesk', label: 'Helpdesk & support tickets', actions: ['view','create','edit','delete','approve'] },
   { key: 'forms', label: 'Dynamic forms & submissions', actions: ['view','create','edit','delete','approve'] },
+  { key: 'communications', label: 'Internal college messaging', actions: ['view','create','edit','delete'] },
   { key: 'ai', label: 'AI and analytics records', actions: ['view','create','edit','delete'] },
   { key: 'institutional_records', label: 'Other institutional records', actions: ['view','create','edit','delete'] },
 ]
 
 const templates: { name: string; base_role: BaseRole; description: string; permissions: Record<string,string[]> }[] = [
   { name:'Principal / Head of College', base_role:'admin', description:'College-wide operational leadership. Ownership and platform security remain with the institution owner.', permissions:{
-    students:['view','create','edit','delete'],employees:['view','create','edit'],administration:['view','create','edit'],academic_setup:['view','create','edit'],admissions:['view','create','edit'],departments:['view','create','edit'],programs:['view','create','edit'],subjects:['view','create','edit'],attendance:['view','create','edit'],employee_attendance:['view','create','edit'],assignments:['view','create','edit'],examinations:['view','create','edit','approve','publish'],fees:['view','create','edit'],hr:['view'],payroll:['view','approve'],library:['view'],certificates:['view','create'],visitors:['view'],approvals:['view','create','approve'],work_tasks:['view','create','edit'],announcements:['view','create','edit'],campuses:['view'],settings:['view'],hostel:['view','create','edit','approve'],procurement:['view','create','edit','approve'],cafeteria:['view','create','edit'],reports:['view','create','edit'],data_management:['view','create','edit','approve'],helpdesk:['view','create','edit','approve'],forms:['view','create','edit','approve']
+    students:['view','create','edit','delete'],employees:['view','create','edit'],administration:['view','create','edit'],academic_setup:['view','create','edit'],admissions:['view','create','edit'],departments:['view','create','edit'],programs:['view','create','edit'],subjects:['view','create','edit'],attendance:['view','create','edit'],employee_attendance:['view','create','edit'],assignments:['view','create','edit'],examinations:['view','create','edit','approve','publish'],fees:['view','create','edit'],hr:['view'],payroll:['view','approve'],library:['view'],certificates:['view','create'],visitors:['view'],approvals:['view','create','approve'],work_tasks:['view','create','edit'],announcements:['view','create','edit'],campuses:['view'],settings:['view'],hostel:['view','create','edit','approve'],procurement:['view','create','edit','approve'],cafeteria:['view','create','edit'],reports:['view','create','edit'],data_management:['view','create','edit','approve'],helpdesk:['view','create','edit','approve'],forms:['view','create','edit','approve'],communications:['view','create','edit']
   }},
   { name:'Vice Principal', base_role:'admin', description:'Delegated campus leadership across student, staff and academic operations.', permissions:{
-    students:['view','create','edit'],employees:['view'],administration:['view','edit'],academic_setup:['view','edit'],departments:['view'],programs:['view'],subjects:['view'],attendance:['view','create','edit'],employee_attendance:['view'],assignments:['view','edit'],examinations:['view','create','edit'],fees:['view'],approvals:['view'],work_tasks:['view','create','edit'],announcements:['view','create','edit'],campuses:['view']
+    students:['view','create','edit'],employees:['view'],administration:['view','edit'],academic_setup:['view','edit'],departments:['view'],programs:['view'],subjects:['view'],attendance:['view','create','edit'],employee_attendance:['view'],assignments:['view','edit'],examinations:['view','create','edit'],fees:['view'],approvals:['view'],work_tasks:['view','create','edit'],announcements:['view','create','edit'],campuses:['view'],communications:['view','create']
   }},
   { name:'Head of Department (HOD)', base_role:'teacher', description:'Department-scoped oversight of assigned faculty, classes, academic work and student progress.', permissions:{
-    students:['view'],employees:['view'],academic_setup:['view','edit','create'],departments:['view'],programs:['view'],subjects:['view'],attendance:['view'],employee_attendance:['view'],assignments:['view','create','edit'],examinations:['view','create','edit'],announcements:['view']
+    students:['view'],employees:['view'],academic_setup:['view','edit','create'],departments:['view'],programs:['view'],subjects:['view'],attendance:['view'],employee_attendance:['view'],assignments:['view','create','edit'],examinations:['view','create','edit'],announcements:['view'],communications:['view','create']
   }},
   { name:'Registrar', base_role:'admin', description:'Student registration, enrolment, academic records and official documentation.', permissions:{
-    students:['view','create','edit'],admissions:['view','create','edit'],administration:['view'],academic_setup:['view'],departments:['view'],programs:['view'],subjects:['view'],attendance:['view'],examinations:['view'],certificates:['view','create','edit'],institutional_records:['view','create','edit'],forms:['view','create','edit'],announcements:['view']
+    students:['view','create','edit'],admissions:['view','create','edit'],administration:['view'],academic_setup:['view'],departments:['view'],programs:['view'],subjects:['view'],attendance:['view'],examinations:['view'],certificates:['view','create','edit'],institutional_records:['view','create','edit'],forms:['view','create','edit'],announcements:['view'],communications:['view','create']
   }},
   { name:'Admissions Officer', base_role:'admin', description:'Admission enquiries, applicant records, document checks and enrolment workflows.', permissions:{
-    students:['view','create','edit'],admissions:['view','create','edit'],academic_setup:['view'],departments:['view'],programs:['view'],subjects:['view'],institutional_records:['view','create','edit'],announcements:['view']
+    students:['view','create','edit'],admissions:['view','create','edit'],academic_setup:['view'],departments:['view'],programs:['view'],subjects:['view'],institutional_records:['view','create','edit'],announcements:['view'],communications:['view','create']
   }},
   { name:'Examination Controller', base_role:'exam_officer', description:'Exam programmes, schedules, moderation, result approval and controlled publication.', permissions:{
     students:['view'],academic_setup:['view'],departments:['view'],programs:['view'],subjects:['view'],assignments:['view'],examinations:['view','create','edit','approve','publish'],approvals:['view','approve'],announcements:['view']
@@ -110,10 +111,10 @@ const templates: { name: string; base_role: BaseRole; description: string; permi
     students:['view'],attendance:['view','create','edit'],examinations:['view'],announcements:['view']
   }},
   { name:'Accounts Officer', base_role:'accountant', description:'Fee invoices, payments, receipts and financial records in the authorised campus scope.', permissions:{
-    students:['view'],fees:['view','create','edit'],payroll:['view','create'],transport:['view','create'],hostel:['view','create'],procurement:['view'],reports:['view'],announcements:['view']
+    students:['view'],fees:['view','create','edit'],payroll:['view','create'],transport:['view','create'],hostel:['view','create'],procurement:['view'],reports:['view'],communications:['view','create'],announcements:['view']
   }},
   { name:'Cashier', base_role:'accountant', description:'Receive and record payments. Cannot change fee structures or delete financial records.', permissions:{
-    students:['view'],fees:['view','create'],hostel:['view','create'],announcements:['view']
+    students:['view'],fees:['view','create'],hostel:['view','create'],communications:['view'],announcements:['view']
   }},
   { name:'HR Manager', base_role:'admin', description:'Employee records, contracts, attendance and leave administration.', permissions:{
     employees:['view','create','edit'],departments:['view'],employee_attendance:['view','create','edit'],hr:['view','create','edit'],approvals:['view','approve'],work_tasks:['view','create','edit']
@@ -133,10 +134,10 @@ const templates: { name: string; base_role: BaseRole; description: string; permi
     visitors:['view','create','edit'],announcements:['view'],work_tasks:['view','create'],helpdesk:['create','view']
   }},
   { name:'Student', base_role:'student', description:'Personal learning, attendance, assignments, published results, fee status and certificates.', permissions:{
-    students:['view'],attendance:['view'],assignments:['view','create'],examinations:['view'],fees:['view'],announcements:['view'],certificates:['view'],library:['view'],behaviour:['view'],forms:['view','create'],helpdesk:['create','view']
+    students:['view'],attendance:['view'],assignments:['view','create'],examinations:['view'],fees:['view'],announcements:['view'],certificates:['view'],library:['view'],behaviour:['view'],forms:['view','create'],helpdesk:['create','view'],communications:['view','create']
   }},
   { name:'Parent / Guardian', base_role:'parent', description:'View information belonging only to verified linked students.', permissions:{
-    students:['view'],attendance:['view'],assignments:['view'],examinations:['view'],fees:['view'],announcements:['view'],certificates:['view'],behaviour:['view'],forms:['view','create'],helpdesk:['create','view']
+    students:['view'],attendance:['view'],assignments:['view'],examinations:['view'],fees:['view'],announcements:['view'],certificates:['view'],behaviour:['view'],forms:['view','create'],helpdesk:['create','view'],communications:['view','create']
   }},
 ]
 
