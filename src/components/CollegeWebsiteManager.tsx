@@ -16,7 +16,7 @@ const GIDC_IDS = [
 type PhotoCategory = 'main-campus' | 'campus-activities' | 'college-events' | 'student-life' | 'campus-facility'
 type Program = { id: string; title: string; detail: string; officialUrl: string }
 type Photo = { id: string; title: string; category: PhotoCategory; imageUrl: string; sourceUrl: string; published: boolean; alt: string }
-type Notice = { id: string; title: string; body: string; date: string; url: string; published: boolean }
+type Notice = { id: string; title: string; body: string; date: string; url: string; imageUrl: string; published: boolean }
 type Magazine = { id: string; title: string; issue: string; year: string; pdfUrl: string; coverUrl: string; published: boolean }
 type SiteContent = {
   heroHeading: string
@@ -325,7 +325,7 @@ export function CollegeWebsiteManager({ onToast }: { onToast: (message: string, 
     set('gallery', content.gallery.map(item => item.id === id ? { ...item, ...changes } : item))
   }
   function addNotice() {
-    set('news', [...content.news, { id: makeId('notice'), title: '', body: '', date: '', url: '', published: false }])
+    set('news', [...content.news, { id: makeId('notice'), title: '', body: '', date: '', url: '', imageUrl: '', published: false }])
   }
   function updateNotice(id: string, changes: Partial<Notice>) {
     set('news', content.news.map(item => item.id === id ? { ...item, ...changes } : item))
@@ -450,6 +450,7 @@ export function CollegeWebsiteManager({ onToast }: { onToast: (message: string, 
             <div className="cwm-fields-two"><TextInput label="Title" value={notice.title} onChange={value => updateNotice(notice.id, { title: value })}/><TextInput label="Publication date" type="date" value={notice.date} onChange={value => updateNotice(notice.id, { date: value })}/></div>
             <TextArea label="Announcement details" value={notice.body} onChange={value => updateNotice(notice.id, { body: value })} rows={3}/>
             <TextInput label="Official notice / source link (optional)" value={notice.url} onChange={value => updateNotice(notice.id, { url: value })}/>
+            <div className="cwm-fields-two"><TextInput label="Announcement image URL (optional)" value={notice.imageUrl || ''} onChange={value => updateNotice(notice.id, { imageUrl: value })}/><label className="cwm-upload cwm-upload-small"><Upload size={15}/><span>Upload notice image</span><input type="file" accept="image/*" disabled={uploading} onChange={event => void handleImageUpload(event, 'news', url => updateNotice(notice.id, { imageUrl: url }))}/></label></div>
             <label className="cwm-check"><input type="checkbox" checked={notice.published} onChange={event => updateNotice(notice.id, { published: event.target.checked })}/> Publish this announcement</label>
           </div>)}
           <button type="button" className="cwm-add" onClick={addNotice}><Plus size={16}/> Add college announcement</button>
