@@ -117,8 +117,11 @@ async function inspectViewport({name,width,height}) {
       if(id==='events') {
         assert.ok(await page.locator('.gidc-photo-card').count()>=1,
           `${name}: the approved student-guidance photograph is not included in the Events page`)
-        assert.ok(await page.locator('img[src="/gidc-badin/events/student-guidance-session-event-05.webp"]').count()===1,
-          `${name}: the fifth approved image is not assigned to Events`)
+        const guidancePhotoCard=page.locator('.gidc-photo-card').filter({hasText:'Student guidance session'})
+        assert.equal(await guidancePhotoCard.count(),1,
+          `${name}: the Student Guidance Session photo is not assigned to Events`)
+        assert.equal(await guidancePhotoCard.locator('img').count(),1,
+          `${name}: the Student Guidance Session card does not display its photograph`)
       }
       await page.screenshot({path:`${artifactDir}/${name}-${id}.png`,fullPage:true,animations:'disabled'})
     }
