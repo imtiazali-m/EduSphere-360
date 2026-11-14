@@ -26,6 +26,9 @@ export function PersonalWorkspace({initialWindow,onToast,onNavigate}:{initialWin
  const [activity,setActivity]=useState<ActivityRow[]>([])
  const [activityLoading,setActivityLoading]=useState(false)
  const [activityError,setActivityError]=useState('')
+ const [emailCurrentPassword,setEmailCurrentPassword]=useState('')
+ const [newEmail,setNewEmail]=useState('')
+ const [savingEmail,setSavingEmail]=useState(false)
  const [currentPassword,setCurrentPassword]=useState('')
  const [newPassword,setNewPassword]=useState('')
  const [confirmPassword,setConfirmPassword]=useState('')
@@ -64,6 +67,24 @@ export function PersonalWorkspace({initialWindow,onToast,onNavigate}:{initialWin
   ['Institution',user?.institutionName??'—'],['Institution type',user?.institutionType?.replaceAll('_',' ')??'—'],
   ['Account ID',user?.id??'—'],
  ],[user])
+
+ async function updateEmail(event:FormEvent){
+  event.preventDefault()
+  if(!supabase||!user)return
+  const address=newEmail.trim().toLowerCase()
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address)){onToast('Enter a valid email address.',true);return}
+  if(address===user.email.trim().toLowerCase()){onToast('That is already your current sign-in email.',true);return}
+  setSavingEmail(true)
+  try{
+   const {data:verified,error:verifyError}=await supabase.auth.signInWithPassword({email:user.email,password:emailCurrentPassword})
+   if(verifyError||verified.user?.id!==user.id)throw new Error('The current password is incorrect. Your email was not changed.')
+   const {error}=await supabase.auth.updateUser({email:address},{emailRedirectTo:window.location.origin})
+   if(error)throw error
+   setEmailCurrentPassword('');setNewEmail('')
+   onToast('Email change requested for '+address+'. Complete the confirmation steps sent by Supabase before using the new address to sign in.')
+  }catch(error){onToast(error instanceof Error?error.message:'Your sign-in email could not be updated.',true)}
+  finally{setSavingEmail(false)}
+ }
 
  async function updatePassword(event:FormEvent){
   event.preventDefault()
@@ -106,12 +127,26 @@ export function PersonalWorkspace({initialWindow,onToast,onNavigate}:{initialWin
     <article className="ed360-personal-card ed360-personal-id-card"><div className="ed360-personal-avatar">{user?.fullName?.slice(0,1).toUpperCase()??'U'}</div><div><h3>{user?.fullName??'Account user'}</h3><p>{user?roleName(user.role):'Institution member'}</p></div><span className="ed360-personal-active"><i/> Active session</span><small>Your access is managed by your institution.</small></article>
     <article className="ed360-personal-card"><h3>Account information</h3><dl>{profileItems.map(([label,value])=><div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl><p className="ed360-personal-note"><ShieldCheck size={15}/> Institution-controlled details are read-only here. Ask an authorised administrator to correct them.</p></article>
    </div>}
-   {section==='account'&&<article className="ed360-personal-card ed360-personal-form-card"><div className="ed360-personal-card-heading"><span><KeyRound size={18}/></span><div><h3>Change password</h3><p>Use a unique password of at least 10 characters.</p></div></div><form onSubmit={updatePassword}>
-    <label>Current password<input type="password" autoComplete="current-password" value={currentPassword} onChange={event=>setCurrentPassword(event.target.value)} required/></label>
-    <label>New password<input type="password" autoComplete="new-password" value={newPassword} onChange={event=>setNewPassword(event.target.value)} minLength={10} required/></label>
-    <label>Confirm new password<input type="password" autoComplete="new-password" value={confirmPassword} onChange={event=>setConfirmPassword(event.target.value)} minLength={10} required/></label>
-    <div className="ed360-personal-form-actions"><span>Changes are saved directly to your signed-in account.</span><button type="submit" disabled={savingPassword}>{savingPassword?'Updating…':'Update password'}</button></div>
-   </form></article>}
+   {section==='account'&&<div className="ed360-personal-account-grid">
+    <article className="ed360-personal-card ed360-personal-form-card">
+     <div className="ed360-personal-card-heading"><span><UserRound size={18}/></span><div><h3>Change sign-in email</h3><p>Update the email address used to access this account.</p></div></div>
+     <p className="ed360-personal-current-email">Current email <b>{user?.email||'Not available'}</b></p>
+     <form onSubmit={updateEmail}>
+      <label>New email address<input type="email" autoComplete="email" value={newEmail} onChange={event=>setNewEmail(event.target.value)} required/></label>
+      <label>Current password<input type="password" autoComplete="current-password" value={emailCurrentPassword} onChange={event=>setEmailCurrentPassword(event.target.value)} required/></label>
+      <div className="ed360-personal-form-actions"><span>Your current email stays active until the new address is confirmed. Secure email change may also require confirmation from your current inbox.</span><button type="submit" disabled={savingEmail}>{savingEmail?'Sending…':'Request email change'}</button></div>
+     </form>
+    </article>
+    <article className="ed360-personal-card ed360-personal-form-card">
+     <div className="ed360-personal-card-heading"><span><KeyRound size={18}/></span><div><h3>Change password</h3><p>Use a unique password of at least 10 characters.</p></div></div>
+     <form onSubmit={updatePassword}>
+      <label>Current password<input type="password" autoComplete="current-password" value={currentPassword} onChange={event=>setCurrentPassword(event.target.value)} required/></label>
+      <label>New password<input type="password" autoComplete="new-password" value={newPassword} onChange={event=>setNewPassword(event.target.value)} minLength={10} required/></label>
+      <label>Confirm new password<input type="password" autoComplete="new-password" value={confirmPassword} onChange={event=>setConfirmPassword(event.target.value)} minLength={10} required/></label>
+      <div className="ed360-personal-form-actions"><span>Changes are saved directly to your signed-in account.</span><button type="submit" disabled={savingPassword}>{savingPassword?'Updating…':'Update password'}</button></div>
+     </form>
+    </article>
+   </div>}
    {section==='notifications'&&<article className="ed360-personal-card"><div className="ed360-personal-card-heading"><span><Bell size={18}/></span><div><h3>Optional notification preferences</h3><p>These preferences are stored on this browser. Required account and security notices remain available.</p></div></div>
     <div className="ed360-personal-preferences">{([['announcements','Announcements'],['attendance','Attendance updates'],['assignments','Assignments and homework'],['examinations','Examination reminders'],['fees','Fee reminders'],['account','Account activity']] as const).map(([key,label])=><label key={key}><span><b>{label}</b><small>Optional alerts for {label.toLowerCase()}.</small></span><input type="checkbox" checked={preferences[key]} onChange={event=>setPreferences(old=>({...old,[key]:event.target.checked}))}/></label>)}</div>
     <div className="ed360-personal-form-actions"><span>Saved locally for this device and browser only.</span><button type="button" onClick={savePreferences} disabled={savingPreferences}><Save size={15}/>{savingPreferences?'Saving…':'Save preferences'}</button></div>
