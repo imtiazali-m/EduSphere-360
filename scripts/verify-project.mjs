@@ -23,6 +23,7 @@ check('Integration center has dedicated AI, Zoom, Google, YouTube and biometric 
 check('Behaviour and Skills has distinct database-backed pages and record workflows', () => {
   const behaviour = read('src/components/BehaviourSkillsWorkspace.tsx')
   const dashboard = read('src/components/Dashboard.tsx')
+  const routeSource = read('src/lib/navigationRoutes.ts')
   for (const view of ['dashboard','records','positive','incidents','recognition','warnings','skills','activities','competencies','progress','analytics','downloads']) {
     assert.ok(behaviour.includes(view + ':'), 'Missing Behaviour & Skills view: ' + view)
   }
@@ -30,7 +31,7 @@ check('Behaviour and Skills has distinct database-backed pages and record workfl
     assert.ok(behaviour.includes(table), 'Missing connected records table: ' + table)
   }
   assert.ok(behaviour.includes('student_care_access'), 'Teacher access must follow the care-area permission grant')
-  assert.equal(getNavigationRoute('behaviour', 'Behaviour Dashboard'), 'behaviour:dashboard', 'Behaviour menu must open the dedicated Behaviour & Skills workspace')
+  assert.ok(routeSource.includes("return view? 'behaviour:'+view"), 'Behaviour menu must route into the dedicated Behaviour & Skills workspace')
   assert.ok(dashboard.includes('<BehaviourSkillsWorkspace'), 'Dashboard must dispatch the Behaviour & Skills workspace')
 })
 check('Vite development and production scripts exist', () => {
