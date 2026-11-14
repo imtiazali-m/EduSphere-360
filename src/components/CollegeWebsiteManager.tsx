@@ -239,7 +239,7 @@ export function CollegeWebsiteManager({ onToast }: { onToast: (message: string, 
             gallery: [
               ...savedGallery.map(item => {
                 const seed = emptyContent.gallery.find(candidate => candidate.id === item.id)
-                return seed ? { ...item, imageUrl: seed.imageUrl, alt: seed.alt } : item
+                return seed ? { ...item, imageUrl: item.imageUrl || seed.imageUrl, alt: item.alt || seed.alt } : item
               }),
               ...emptyContent.gallery.filter(seed => !savedGallery.some(item => item.id === seed.id)),
             ],

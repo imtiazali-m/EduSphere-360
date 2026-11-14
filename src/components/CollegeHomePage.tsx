@@ -181,7 +181,7 @@ export function CollegeHomePage({ navigate, initialSection }: Props) {
           gallery: [
             ...savedGallery.map(item => {
               const seed = (DEFAULT_CONTENT.gallery ?? []).find(candidate => candidate.id === item.id)
-              return seed ? { ...item, imageUrl: seed.imageUrl, alt: seed.alt } : item
+              return seed ? { ...item, imageUrl: item.imageUrl || seed.imageUrl, alt: item.alt || seed.alt } : item
             }),
             ...(DEFAULT_CONTENT.gallery ?? []).filter(seed => !savedGallery.some(item => item.id === seed.id)),
           ],
