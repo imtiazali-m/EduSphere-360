@@ -520,6 +520,7 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
     }
     return intelligenceRoutes[itemKey] ?? 'unavailable:ai:' + itemKey
   }
+  if (groupKey === 'backup' && itemKey === 'integration-status') return 'integration:overview'
   if (groupKey === 'backup') return 'backup:' + itemKey
   if (groupKey === 'timetable' && ['teacher-availability','substitution-management','timetable-publishing','class-coverage','engaged-classes'].includes(itemKey)) return 'unavailable:timetable:'+itemKey
   if (groupKey === 'students' && itemKey === 'student-data-export' && role && !['owner','admin'].includes(role)) {
