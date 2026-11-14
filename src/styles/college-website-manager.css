@@ -165,3 +165,13 @@
   .cwm-bulk-upload { align-items: stretch; flex-direction: column; }
   .cwm-bulk-upload .cwm-upload { width: 100%; min-width: 0; }
 }
+
+
+.cwm-bulk-upload-actions { display: grid; gap: 8px; min-width: 220px; flex: 0 0 auto; }
+.cwm-upload-secondary { background: #fff; border-color: #d6e3d7; color: #44654d; }
+.cwm-announcement-image { display: block; width: min(100%, 240px); max-height: 150px; margin: 10px 0; object-fit: contain; object-position: left center; border: 1px solid #e2e7df; border-radius: 8px; background: #f7f7f2; }
+.cwm-internal-announcement-copy .cwm-upload { width: fit-content; min-height: 34px; padding: 7px 10px; }
+.cwm-internal-announcement-copy .cwm-upload span { font-size: 9px; }
+@media(max-width:720px) {
+  .cwm-bulk-upload-actions { width: 100%; min-width: 0; }
+}
