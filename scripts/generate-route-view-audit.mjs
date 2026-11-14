@@ -52,7 +52,7 @@ const governanceTabs = new Set(['profile','settings','approvals','audit','academ
 const operationTabs = {
   'question-bank': new Set(['pool','papers']),
   curriculum: new Set(['units','coverage']),
-  behaviour: new Set(['register','positive','follow-up']),
+  behaviour: new Set(['register','positive','follow-up','dashboard','incidents','recognition','warnings','skills','activities','competencies','progress','analytics','downloads']),
   certificates: new Set(['verify','issue']),
   visitors: new Set(['log','checked-in','history']),
   facilities: new Set(['assets','maintenance','history']),

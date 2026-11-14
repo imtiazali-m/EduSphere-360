@@ -47,7 +47,7 @@ const domainDescriptions:Record<Domain,string>={
 const views:Record<Domain,View[]>={
   'question-bank':['pool','papers'],
   curriculum:['units','coverage'],
-  behaviour:['register','positive','follow-up'],
+  behaviour:['dashboard','register','positive','follow-up','incidents','recognition','warnings','skills','activities','competencies','progress','analytics','downloads'],
   certificates:['verify','issue'],
   visitors:['log','checked-in','history'],
   facilities:['assets','maintenance','history'],
@@ -227,19 +227,7 @@ export function InstitutionOperationsWorkspace({workspaceKey,initialWindow,onToa
       }else if(dialog==='progress'){
         await insert('student_progress_history',{student_id:v.student_id,progress_type:v.progress_type||'general',title:v.title?.trim(),details:v.details||null,observed_on:v.observed_on||day(),created_by:user!.id})
         onToast('Student progress history entry saved.')
-      }else if(dialog==='skill'){
-      title='Record student skill assessment'
-      fields.push(field('Student','student_id','text',true,studentOptions),field('Skill name','skill_name'),field('Skill category','skill_category','text',true,['communication','leadership','creativity','critical_thinking','digital','teamwork','self_management','sports','arts','general'].map(x=>({label:toLabel(x),value:x}))),field('Proficiency level (1–5)','proficiency_level','number'),field('Evidence / observation','evidence','textarea',false),field('Assessed on','assessed_on','date',false))
-    }else if(dialog==='activity'){
-      title='Record co-curricular participation'
-      fields.push(field('Student','student_id','text',true,studentOptions),field('Activity name','activity_name'),field('Activity category','activity_category','text',true,['sports','arts','science','debate','community_service','club','competition','leadership','general'].map(x=>({label:toLabel(x),value:x}))),field('Participation role','participation_role','text',false),field('Achievement','achievement','textarea',false),field('Points','points','number',false),field('Event date','event_date','date',false))
-    }else if(dialog==='competency'){
-      title='Record competency assessment'
-      fields.push(field('Student','student_id','text',true,studentOptions),field('Competency','competency_name'),field('Competency area','competency_area','text',true,['academic','communication','collaboration','problem_solving','digital_literacy','research','leadership','wellbeing','general'].map(x=>({label:toLabel(x),value:x}))),field('Proficiency level (1–5)','proficiency_level','number'),field('Assessment method','assessment_method','text',true,['teacher_review','rubric','project','portfolio','observation','test'].map(x=>({label:toLabel(x),value:x}))),field('Evidence','evidence','textarea',false),field('Notes','notes','textarea',false),field('Assessed on','assessed_on','date',false))
-    }else if(dialog==='progress'){
-      title='Add student progress history entry'
-      fields.push(field('Student','student_id','text',true,studentOptions),field('Progress area','progress_type','text',true,['academic','attendance','skill','behaviour','wellbeing','general'].map(x=>({label:toLabel(x),value:x}))),field('Title','title'),field('Details','details','textarea',false),field('Observed on','observed_on','date',false))
-    }else if(dialog==='certificate'){
+      }else if(dialog==='certificate'){
         const issue=v.status==='issued'
         await insert('student_certificates',{
           student_id:v.student_id,certificate_no:v.certificate_no||todayCode('CERT'),
@@ -464,6 +452,18 @@ export function InstitutionOperationsWorkspace({workspaceKey,initialWindow,onToa
     }else if(dialog==='behaviour'){
       title='Record student-care event'
       fields.push(field('Student','student_id','text',true,studentOptions),field('Event type','event_type','text',true,['positive','concern','incident','safeguarding'].map(x=>({label:toLabel(x),value:x}))),field('Category','category'),field('Severity','severity','text',true,['low','medium','high','critical'].map(x=>({label:toLabel(x),value:x}))),field('Event date','event_date','date'),field('Summary','summary'),field('Description','description','textarea',false),field('Action taken','action_taken','textarea',false),field('Follow-up required','follow_up_required','text',true,[{label:'No',value:'false'},{label:'Yes',value:'true'}]),field('Follow-up date','follow_up_date','date',false),field('Family visible','family_visible','text',true,[{label:'Staff only',value:'false'},{label:'Share with linked family',value:'true'}]))
+    }else if(dialog==='skill'){
+      title='Record student skill assessment'
+      fields.push(field('Student','student_id','text',true,studentOptions),field('Skill name','skill_name'),field('Skill category','skill_category','text',true,['communication','leadership','creativity','critical_thinking','digital','teamwork','self_management','sports','arts','general'].map(x=>({label:toLabel(x),value:x}))),field('Proficiency level (1–5)','proficiency_level','number'),field('Evidence / observation','evidence','textarea',false),field('Assessed on','assessed_on','date',false))
+    }else if(dialog==='activity'){
+      title='Record co-curricular participation'
+      fields.push(field('Student','student_id','text',true,studentOptions),field('Activity name','activity_name'),field('Activity category','activity_category','text',true,['sports','arts','science','debate','community_service','club','competition','leadership','general'].map(x=>({label:toLabel(x),value:x}))),field('Participation role','participation_role','text',false),field('Achievement','achievement','textarea',false),field('Points','points','number',false),field('Event date','event_date','date',false))
+    }else if(dialog==='competency'){
+      title='Record competency assessment'
+      fields.push(field('Student','student_id','text',true,studentOptions),field('Competency','competency_name'),field('Competency area','competency_area','text',true,['academic','communication','collaboration','problem_solving','digital_literacy','research','leadership','wellbeing','general'].map(x=>({label:toLabel(x),value:x}))),field('Proficiency level (1–5)','proficiency_level','number'),field('Assessment method','assessment_method','text',true,['teacher_review','rubric','project','portfolio','observation','test'].map(x=>({label:toLabel(x),value:x}))),field('Evidence','evidence','textarea',false),field('Notes','notes','textarea',false),field('Assessed on','assessed_on','date',false))
+    }else if(dialog==='progress'){
+      title='Add student progress history entry'
+      fields.push(field('Student','student_id','text',true,studentOptions),field('Progress area','progress_type','text',true,['academic','attendance','skill','behaviour','wellbeing','general'].map(x=>({label:toLabel(x),value:x}))),field('Title','title'),field('Details','details','textarea',false),field('Observed on','observed_on','date',false))
     }else if(dialog==='certificate'){
       title='Create certificate'
       fields.push(field('Student','student_id','text',true,studentOptions),field('Certificate number','certificate_no','text',false),field('Certificate type','certificate_type','text',true,['character','leaving','enrollment','bonafide','achievement','experience'].map(x=>({label:toLabel(x),value:x}))),field('Certificate title','title'),field('Achievement / statement','achievement','textarea',false),field('Issue date','issue_date','date',false),field('Expiry date','expiry_date','date',false),field('Signatory name','signatory_name','text',false),field('Initial state','status','text',true,[{label:'Draft',value:'draft'},{label:'Issue now',value:'issued'}]),field('Remarks','remarks','textarea',false))
