@@ -83,6 +83,7 @@ function shellTarget(route) {
   const frontOffice = route.startsWith('frontoffice:')
   const governance = route.startsWith('governance:')
   const operations = route.startsWith('operations:')
+  const backup = route.startsWith('backup:')
   const parts = route.split(':')
   const moduleWindow = parts.length === 2 && ['fees','exams','exam_results','assignments','assignment_submissions','timetable','announcements','work_tasks'].includes(parts[0])
   const targetKey = academic ? 'academic'
@@ -101,6 +102,7 @@ function shellTarget(route) {
     : frontOffice ? 'frontoffice'
     : governance ? 'governance'
     : operations ? 'operations'
+    : backup ? 'backup'
     : moduleWindow ? parts[0]
     : route
   const targetWindow = academic ? route.slice('academic:'.length)
@@ -119,6 +121,7 @@ function shellTarget(route) {
     : frontOffice ? route.slice('frontoffice:'.length)
     : governance ? route.slice('governance:'.length)
     : operations ? route.slice('operations:'.length)
+    : backup ? route.slice('backup:'.length)
     : moduleWindow ? parts[1]
     : 'overview'
   return { targetKey, targetWindow, moduleWindow }
@@ -127,6 +130,10 @@ function shellTarget(route) {
 function checkView(role, route, dispatcher) {
   const { targetKey, targetWindow, moduleWindow } = shellTarget(route)
   if (targetKey === 'unavailable') return { component: 'WorkspaceUnavailable', view: 'n/a', status: 'Expected unavailable state' }
+  if (targetKey === 'backup') {
+    const supported = new Set(['backup-dashboard','create-backup','scheduled-cloud-backups','backup-history','restore-data','data-recovery','import-data','export-data','bulk-data-import','data-validation','import-history','export-history','data-integrity-reports','duplicate-detection','integration-status'])
+    return { component:'BackupDataWorkspace', view:targetWindow, status:supported.has(targetWindow) ? 'Supported' : 'Unsupported backup/data view' }
+  }
   if (targetKey === 'academic') {
     const supported = new Set(['academic-sessions','classes-sections','subjects-courses','curriculum','lesson-planning','timetable','homework-assignments','study-materials','online-learning','classroom-activities','academic-calendar','learning-progress'])
     return { component:'AcademicManagementWorkspace', view:targetWindow, status:supported.has(targetWindow) ? 'Supported' : 'Unsupported academic workspace' }
@@ -228,6 +235,7 @@ for (const [role, label] of roles) {
         : dashboard.targetKey === 'frontoffice' ? 'FrontOfficeWorkspace'
         : dashboard.targetKey === 'governance' ? 'GovernanceWorkspace'
         : dashboard.targetKey === 'operations' ? 'InstitutionOperationsWorkspace'
+        : dashboard.targetKey === 'backup' ? 'BackupDataWorkspace'
         : dashboard.targetKey.startsWith('admin:') ? 'AdministrationModule'
         : 'RecordModule · ' + dashboard.targetKey
       const resolved = checkView(role, route, dispatcher)
