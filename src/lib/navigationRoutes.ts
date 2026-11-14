@@ -263,7 +263,7 @@ const institutionalOperationsItems: Record<string, Record<string,string>> = {
 }
 
 const administrationGovernanceItems: Record<string,string> = {
-  'institute-profile':'profile',
+  'overview':'overview',\n  'institute-profile':'profile',\n  'document-access':'documents',
   'academic-structure-sections':'academic',
   'department-directory':'departments',
   'designation-catalogue':'designations',
@@ -505,7 +505,7 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
   }
   if (groupKey === 'attendance' && itemKey === 'attendance-analytics') return 'reports:attendance'
   if (groupKey === 'attendance' && itemKey === 'attendance-alerts') return 'unavailable:attendance:attendance-alerts'
-  if (groupKey === 'reports' && ['custom-report-builder','scheduled-reports','report-templates','report-history'].includes(itemKey)) return 'unavailable:reports:'+itemKey
+  // Builder, schedules, templates and history are dedicated report workspaces.
   if (groupKey === 'question-bank' && ['question-bank-import-and-export','question-paper-version-history'].includes(itemKey)) return 'unavailable:question-bank:'+itemKey
   if (groupKey === 'curriculum' && ['teaching-resources','learning-materials','resource-downloads','chapter-wise-learning-resources','learning-progress-tracking'].includes(itemKey)) return 'unavailable:curriculum:'+itemKey
   if (groupKey === 'behaviour' && ['student-progress-history','behaviour-analytics','downloadable-behaviour-reports'].includes(itemKey)) return 'unavailable:behaviour:'+itemKey
