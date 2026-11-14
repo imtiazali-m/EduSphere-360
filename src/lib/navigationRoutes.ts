@@ -519,7 +519,7 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
   if (groupKey === 'behaviour') {
     const behaviourWindows:Record<string,string>={'behaviour-dashboard':'dashboard','behaviour-records':'register','positive-behaviour':'positive','disciplinary-incidents':'incidents','rewards-and-recognition':'recognition','warnings':'warnings','student-skills':'skills','co-curricular-activities':'activities','competency-tracking':'competencies','student-progress-history':'progress','behaviour-analytics':'analytics','downloadable-behaviour-reports':'downloads'}
     const view=behaviourWindows[itemKey]
-    return view? 'operations:behaviour:'+view:undefined
+    return view? 'operations:behaviour:'+view:'unavailable:behaviour:'+itemKey
   }
   if (groupKey === 'certificates' && ['experience-certificate','id-card-designer','certificate-templates','editable-document-templates','bulk-certificate-generation'].includes(itemKey)) return 'unavailable:certificates:'+itemKey
   if (groupKey === 'library' && ['reading-records','reading-cards','student-reading-history'].includes(itemKey)) return 'unavailable:library:'+itemKey
