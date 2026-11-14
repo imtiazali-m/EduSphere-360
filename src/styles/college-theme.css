@@ -687,3 +687,25 @@ button,input,select,textarea { font:inherit; }
 @media(max-width:820px) {
   .pro-sidebar { background:#ffffff !important; }
 }
+
+
+/* Administration: remove repeated title bands and keep refresh controls discreet. */
+.ed360-admin-actions { display:flex; justify-content:flex-end; align-items:center; min-height:34px; margin:0 0 12px; }
+.ed360-admin-top-refresh { min-height:34px; }
+.ed360-admin-audit-page { display:grid; gap:17px; }
+.ed360-admin-audit-page .ed360-admin-kpis { grid-template-columns:repeat(4,minmax(0,1fr)); }
+.ed360-admin-audit-feed { min-height:450px; padding:22px; }
+.ed360-admin-search-row { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.ed360-admin-search-row .ed360-admin-search { flex:1; }
+.ed360-admin-audit-feed .gov-timeline { padding:8px 4px 10px; }
+.ed360-admin-audit-feed .gov-timeline>article { padding:13px 0; }
+.ed360-admin-approval-panel>header,
+.ed360-admin-policy-page>header { min-height:0; padding-bottom:12px; }
+@media(max-width:780px) {
+  .ed360-admin-audit-page .ed360-admin-kpis { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .ed360-admin-audit-feed { padding:14px; }
+}
+@media(max-width:480px) {
+  .ed360-admin-audit-page .ed360-admin-kpis { grid-template-columns:1fr; }
+  .ed360-admin-search-row { align-items:stretch; flex-direction:column; }
+}
