@@ -367,12 +367,15 @@ check('Teacher account provisioning verifies and links one employee identity wit
   assert.ok(accountForm.includes('Teacher login creation verifies and links that employee record'), 'Account form does not explain the employee-first teacher login flow')
 })
 
-check('Cloudflare production deployment remains manual-only', () => {
+check('College production deployment runs only from main after the verified build', () => {
   const releaseWorkflow = read('.github/workflows/cloudflare-pages-release.yml')
   const productionJob = releaseWorkflow.slice(releaseWorkflow.indexOf('  deploy-production:'))
-  assert.ok(productionJob.includes("github.event_name == 'workflow_dispatch'"), 'Production deployment must require workflow dispatch')
-  assert.ok(productionJob.includes('inputs.deploy_production == true'), 'Production deployment must require explicit approval')
-  assert.ok(!productionJob.includes("github.event_name == 'push'"), 'Production deployment must never run automatically on push')
+  assert.ok(productionJob.includes("github.ref == 'refs/heads/main'"), 'Production deployment must be restricted to main')
+  assert.ok(productionJob.includes("github.event_name == 'push'"), 'A verified merge to main must deploy the college production site')
+  assert.ok(productionJob.includes("github.event_name == 'workflow_dispatch'") && productionJob.includes('inputs.deploy_production == true'), 'A manual, explicitly approved redeploy must remain available')
+  assert.ok(productionJob.includes('Ensure the college-named Cloudflare Pages project exists'), 'The college Pages project must be created idempotently when missing')
+  assert.ok(productionJob.includes('pages deploy dist --project-name=gidcbadin --branch=main'), 'Production must deploy to the college-named Pages project')
+  assert.ok(!releaseWorkflow.includes('deploy-preview'), 'Pull requests must not publish a separate Cloudflare preview')
 })
 
 const authScreens = read('src/components/AuthScreens.tsx')
@@ -965,16 +968,16 @@ check('Teacher reporting routes expose only the teacher-permitted report dataset
   assert.ok(reports.includes("const wantsResults = ['owner', 'admin', 'teacher', 'exam_officer'].includes(role)"))
 })
  
-check('GitHub-hosted release pipeline builds assets and keeps production deploy manual', () => {
+check('College GitHub release pipeline verifies and deploys the dedicated public website', () => {
   const workflow = read('.github/workflows/cloudflare-pages-release.yml')
-  for (const phrase of ['workflow_dispatch', 'npm ci --no-audit --no-fund', 'npm run verify:project', 'npm run test:user-errors', 'npm run test:finance', 'npm run test:file-access', 'npm run build', 'edusphere360-cloudflare-direct-upload.zip', 'cloudflare/wrangler-action@v4']) {
+  for (const phrase of ['workflow_dispatch', 'npm ci --no-audit --no-fund', 'npm run verify:project', 'npm run test:user-errors', 'npm run test:finance', 'npm run test:file-access', 'npm run build', 'gidcbadin-cloudflare-direct-upload.zip', 'cloudflare/wrangler-action@v4']) {
     assert.ok(workflow.includes(phrase), `Release workflow is missing ${phrase}`)
   }
-  assert.ok(workflow.includes('inputs.deploy_production == true'), 'Production deployment must require an explicit manual approval input')
-  assert.ok(workflow.includes('Generate responsive source coverage audit') && workflow.includes('edusphere360-responsive-source-audit'), 'Responsive source evidence must be generated and uploaded in CI')
-  const previewJob = workflow.slice(workflow.indexOf('  deploy-preview:'), workflow.indexOf('  deploy-production:'))
-  assert.ok(previewJob.includes('Publish isolated pull-request preview') && previewJob.includes('--branch=pr-') && previewJob.includes("github.event_name == 'pull_request'") && previewJob.includes('github.event.pull_request.head.repo.full_name == github.repository') && previewJob.includes('available=false'), 'Only same-repository PRs may deploy to an isolated preview alias, and missing credentials must skip safely')
-  assert.ok(workflow.includes("github.event_name == 'workflow_dispatch'"), 'Production deployment must not run on normal pushes or pull requests')
+  assert.ok(workflow.includes('inputs.deploy_production == true'), 'Manual production redeployment must require explicit approval')
+  assert.ok(workflow.includes('Generate responsive source coverage audit') && workflow.includes('gidcbadin-responsive-source-audit'), 'Responsive source evidence must be generated and uploaded in CI')
+  assert.ok(workflow.includes('gidcbadin-dist') && workflow.includes('gidcbadin-exact-route-audit') && workflow.includes('gidcbadin-route-view-audit'), 'College production and audit artifacts must use the college project name')
+  assert.ok(!workflow.includes('deploy-preview'), 'Pull requests must not create a Cloudflare preview deployment')
+  assert.ok(workflow.includes("github.event_name == 'push'") && workflow.includes("github.ref == 'refs/heads/main'"), 'Only a verified main-branch merge may trigger production deployment')
   assert.ok(workflow.includes('secrets.CLOUDFLARE_API_TOKEN') && workflow.includes('secrets.CLOUDFLARE_ACCOUNT_ID'))
   assert.ok(workflow.includes('vars.VITE_SUPABASE_URL') && workflow.includes('vars.VITE_SUPABASE_PUBLISHABLE_KEY'))
   assert.ok(!workflow.includes('SUPABASE_SERVICE_ROLE_KEY'), 'A Supabase service-role key must never be a frontend build variable')
