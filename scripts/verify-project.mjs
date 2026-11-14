@@ -104,7 +104,7 @@ check('The full institutional menu maps every submenu to a working destination',
   assert.deepEqual(administration?.items.map(item => item.label), [
     'Institute Profile','Campus and Branch Management','Academic Structure & Sections','Department Directory','Designation Catalogue',
     'Organisational Structure','Approval Workflows','Student Policies','Faculty Policies','Administrative Audit',
-    'User Access & Invitations','Role & Permission Management','Institute Settings','Branding & Document Settings','Security & Access History',
+    'User Access & Invitations','Role & Permission Management','Institute Settings','Branding & Document Settings','Document Access','Security & Access History',
   ], 'Administration must retain the requested dedicated submenus in order')
   assert.ok(!navigationCatalog.some(group => ['institution-config','academic-sessions','classes-sections','subjects','curriculum','timetable','teaching'].includes(group.key)), 'Nested setup and academic workspaces must not remain separate top-level menus')
   const permittedLinkedRoutes = new Set([
