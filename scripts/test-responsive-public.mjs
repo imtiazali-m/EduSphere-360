@@ -49,16 +49,20 @@ async function inspectViewport({name,width,height}){
     }
     assert.ok(await page.locator('.gidc-image-disclaimer').innerText().then(value=>/representative education imagery/i.test(value)),`${name}: stock-photo disclosure is missing`)
     assert.equal(await page.locator('.gidc-crest-image').first().getAttribute('src'),'/gidc-badin-official-logo.svg',`${name}: supplied college emblem is not in the page identity`)
-    assert.equal(await page.locator('.gidc-gallery-slide').count(),7,`${name}: the seven-image gallery is incomplete`)
+    assert.equal(await page.locator('.gidc-gallery-slide').count(),8,`${name}: the eight-image gallery is incomplete`)
     assert.equal(await page.locator('.gidc-affiliation-grid .gidc-affiliation-card').count(),3,`${name}: college and institutional logos are missing`)
     assert.equal(await page.locator('.gidc-portal-card').count(),6,`${name}: role-specific portal entry points are missing`)
-    assert.equal(await page.locator('.gidc-link-grid > a').count(),3,`${name}: official education-resource links are missing`)
+    assert.equal(await page.locator('.gidc-link-grid > a').count(),4,`${name}: official education-resource links are missing`)
     assert.equal(await page.locator('.gidc-directory-link a').count(),1,`${name}: the official Government Colleges directory link is missing`)
+    assert.equal(await page.locator('.gidc-complaint-form').count(),1,`${name}: the college complaint form is missing`)
+    assert.equal(await page.locator('.gidc-complaint-form input[type="email"][required]').count(),1,`${name}: the complaint form must collect a reply email`)
+    assert.equal(await page.locator('.gidc-complaint-form textarea[required]').count(),1,`${name}: the complaint form must collect a message`)
+    assert.ok(await page.locator('.gidc-contact-card a[href^="mailto:gidcbadin@gmail.com"]').count()>0,`${name}: the public college email is missing`)
     await page.locator('.gidc-gallery-pause').click()
     const galleryBefore = await page.locator('.gidc-gallery-track').getAttribute('style')
     await page.locator('.gidc-gallery-controls button[aria-label="Next gallery image"]').click()
     await page.waitForFunction(previous => document.querySelector('.gidc-gallery-track')?.getAttribute('style') !== previous, galleryBefore)
-    assert.equal(await page.locator('.gidc-gallery-slide').count(),7,`${name}: the gallery slider lost its slides`)
+    assert.equal(await page.locator('.gidc-gallery-slide').count(),8,`${name}: the gallery slider lost its slides`)
     await assertNoHorizontalOverflow(page,`${name} college homepage`)
     await mkdir(artifactDir,{recursive:true})
     await page.screenshot({path:`${artifactDir}/${name}-college-home.png`,fullPage:true,animations:'disabled'})
@@ -120,7 +124,7 @@ async function inspectViewport({name,width,height}){
       ['/public/features/invoices-payments','ACADEMIC PATHWAYS'],
       ['/public/solutions','COLLEGE DIGITAL SERVICES'],
       ['/public/analytics','NOTICE BOARD'],
-      ['/public/support','GET IN TOUCH'],
+      ['/public/support','COMPLAINTS'],
     ]
     for(const [route,expected] of publicRoutes){
       await page.goto(`${baseUrl}/#${route}`,{waitUntil:'domcontentloaded'})
