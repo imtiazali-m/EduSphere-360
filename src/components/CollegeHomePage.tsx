@@ -82,13 +82,6 @@ const DEFAULT_CONTENT: WebsiteContent = {
   approvedFacebookPhotoIds: [],
 }
 
-const FACEBOOK_COVER_CANDIDATES = [
-  { id: 'gidc-facebook-photo-1', label: 'Choice 1', url: 'https://www.facebook.com/photo.php?fbid=1563832945546004&set=pb.100057579394832.-2207520000&type=3' },
-  { id: 'gidc-facebook-photo-2', label: 'Choice 2', url: 'https://www.facebook.com/photo.php?fbid=1560229795906319&set=pb.100057579394832.-2207520000&type=3' },
-  { id: 'gidc-facebook-photo-3', label: 'Choice 3', url: 'https://www.facebook.com/photo.php?fbid=1560219495907349&set=pb.100057579394832.-2207520000&type=3' },
-  { id: 'gidc-facebook-photo-4', label: 'Choice 4', url: 'https://www.facebook.com/photo.php?fbid=1557434519519180&set=pb.100057579394832.-2207520000&type=3' },
-]
-
 const pages = [
   { id: 'home', label: 'Home', icon: Landmark },
   { id: 'about', label: 'About', icon: Building2 },
