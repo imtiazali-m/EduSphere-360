@@ -15,6 +15,8 @@ type Student = { id:string; full_name:string; admission_no:string; class_name:st
 type Employee = { id:string; user_id?:string|null; full_name:string; employee_no:string; employee_type:string; department?:string|null; campus_id?:string|null }
 type CareGrant = { area:'discipline'|'counselling'|'health'; can_read:boolean; can_write:boolean }
 type LeaveRow = RecordRow & { person_type?:'student'|'employee' }
+type LeaveBalanceRow = RecordRow & { person_type:string; person_id:string; leave_type:string; leave_year:number|string; entitled_days:number|string; carried_forward_days?:number|string }
+type AcademicSessionOption = { id:string; session_name?:string|null; name?:string|null; start_date?:string|null; end_date?:string|null; is_current?:boolean|null; is_active?:boolean|null }
 type GuardianLink = { student_id:string; parent_user_id:string; relationship?:string|null }
 type AttendanceReportRow = RecordRow & {
   student_id?:string|null; student_name?:string|null; class_name?:string|null; attendance_date?:string
@@ -46,8 +48,8 @@ export function Stage7CareWorkspace({initialWindow='leave',onToast}:{initialWind
   const [loadError,setLoadError]=useState('')
   const [refreshKey,setRefreshKey]=useState(0)
   const [leaveRows,setLeaveRows]=useState<LeaveRow[]>([])
-  const [leaveBalances,setLeaveBalances]=useState<RecordRow[]>([])
-   const [academicSessions,setAcademicSessions]=useState<RecordRow[]>([])
+  const [leaveBalances,setLeaveBalances]=useState<LeaveBalanceRow[]>([])
+   const [academicSessions,setAcademicSessions]=useState<AcademicSessionOption[]>([])
    const [leavePeriod,setLeavePeriod]=useState<'week'|'month'|'year'|'session'>('month')
    const [leaveSessionId,setLeaveSessionId]=useState('')
   const [leaveKind,setLeaveKind]=useState<'student'|'employee'>(isStudentOrParent?'student':'employee')
@@ -182,8 +184,8 @@ export function Stage7CareWorkspace({initialWindow='leave',onToast}:{initialWind
       ...((studentResult.data??[]).map(row=>({...row,person_type:'student' as const}))),
       ...((employeeResult.data??[]).map(row=>({...row,person_type:'employee' as const}))),
     ] as LeaveRow[])
-    setLeaveBalances((balanceResult.data??[]) as RecordRow[])
-    setAcademicSessions((sessionResult.data??[]) as RecordRow[])
+    setLeaveBalances((balanceResult.data??[]) as LeaveBalanceRow[])
+    setAcademicSessions((sessionResult.data??[]) as unknown as AcademicSessionOption[])
   },[user?.id,user?.institutionId,isAdmin])
 
   const loadReports=useCallback(async()=>{
@@ -525,7 +527,7 @@ export function Stage7CareWorkspace({initialWindow='leave',onToast}:{initialWind
   })
   const exportLeaveReport=()=>{
     const rows=leaveReportRows.map(row=>({applicant:row.person_type==='student'?(students.find(s=>s.id===row.student_id)?.full_name??'Student'):(employees.find(e=>e.id===row.teacher_id)?.full_name??'Employee'),person_type:row.person_type,leave_type:row.leave_type,start_date:row.start_date,end_date:row.end_date,days_in_period:leaveDaysInRange(row),status:row.status,reason:row.reason,review_notes:row.review_notes}))
-    downloadCsv('edusphere-leave-'+leavePeriod+'-'+leavePeriodRange.from+'-'+leavePeriodRange.to+'.csv',rows)
+    downloadCsv('edusphere-leave-'+leavePeriod+'-'+leavePeriodRange.from+'-'+leavePeriodRange.to+'.csv',rows,[{key:'applicant',label:'Applicant'},{key:'person_type',label:'Person Type'},{key:'leave_type',label:'Leave Type'},{key:'start_date',label:'Start Date'},{key:'end_date',label:'End Date'},{key:'days_in_period',label:'Days in Period'},{key:'status',label:'Status'},{key:'reason',label:'Reason'},{key:'review_notes',label:'Review Notes'}])
     if(rows.length)onToast('Leave report exported.')
   }
   const accessBlocked=(activeWindow==='discipline'&&!canRead('discipline'))||(activeWindow==='counselling'&&!isAdmin&&!canRead('counselling')&&!isStudentOrParent)||(activeWindow==='health'&&!canRead('health')&&!isStudentOrParent)
