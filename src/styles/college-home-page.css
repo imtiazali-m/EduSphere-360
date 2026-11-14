@@ -383,3 +383,16 @@
   .gidc-public-nav a { padding: 12px 4px; font-size: 12px; border-bottom: 1px solid #eef0e8; }
   .gidc-public-nav a:after { display: none; }
 }
+
+
+/* Public announcement posters preserve their original layout and can be opened full size. */
+.gidc-public-news-image-link { display: flex; flex: 0 0 190px; width: 190px; min-height: 142px; align-self: center; align-items: center; justify-content: center; overflow: hidden; border: 1px solid var(--gidc-line); border-radius: 9px; background: #f6f3e9; }
+.gidc-public-news-image { width: 100%; height: auto; max-height: 170px; min-width: 0; object-fit: contain; border-radius: 8px; }
+@media(max-width:900px) {
+  .gidc-public-news-image-link { flex-basis: 150px; width: 150px; min-height: 116px; }
+  .gidc-public-news-image { max-height: 140px; }
+}
+@media(max-width:560px) {
+  .gidc-public-news-image-link { flex-basis: 104px; width: 104px; min-height: 100px; }
+  .gidc-public-news-image { max-height: 100px; }
+}
