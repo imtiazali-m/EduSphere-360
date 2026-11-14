@@ -3,14 +3,15 @@ import { Activity, CalendarCheck, Check, Download, Fingerprint, RefreshCw, Searc
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { downloadCsv } from '../lib/csv'
+import { exportXlsx, exportDocx, exportExcelXml, exportWordXml, printOfficeReport } from '../lib/officeExport'
 import type { RecordRow } from '../lib/types'
 
-type AttendanceMark='present'|'absent'|'late'|'approved_leave'|'excused'|'unmarked'
-type Person={id:string;full_name:string;admission_no?:string|null;employee_no?:string|null;class_name?:string|null;employment_status?:string|null;employee_type?:string|null;department?:string|null;campus_id?:string|null}
+type AttendanceMark='present'|'absent'|'late'|'approved_leave'|'leave_pending'|'excused'|'unmarked'
+type Person={id:string;full_name:string;admission_no?:string|null;employee_no?:string|null;class_name?:string|null;section_name?:string|null;class_id?:string|null;father_name?:string|null;guardian_name?:string|null;employment_status?:string|null;employee_type?:string|null;department?:string|null;campus_id?:string|null}
 type AttendanceEntry={id?:string;student_id?:string;teacher_id?:string;status:string;notes?:string|null;attendance_date:string;period_label?:string;arrival_time?:string|null;departure_time?:string|null;check_in_time?:string|null;check_out_time?:string|null;minutes_late?:number;early_departure_minutes?:number}
 type Props={initialWindow?:string;onToast:(message:string,error?:boolean)=>void}
 const today=()=>new Date().toLocaleDateString('en-CA')
-const statusLabel=(value:string)=>({present:'P',absent:'A',late:'L',approved_leave:'LV',excused:'EX',unmarked:'—'} as Record<string,string>)[value]??'—'
+const statusLabel=(value:string)=>({present:'P',absent:'A',late:'L',approved_leave:'LV',leave_pending:'UL',excused:'EX',unmarked:'—'} as Record<string,string>)[value]??'—'
 
 export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
  const {user}=useAuth()
@@ -18,6 +19,13 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
  const [date,setDate]=useState(today())
  const [period,setPeriod]=useState('Daily')
  const [className,setClassName]=useState('')
+ const [sectionName,setSectionName]=useState('')
+ const [classRecords,setClassRecords]=useState<{id:string;name:string;section:string|null;campus_id:string|null}[]>([])
+ const [scanValue,setScanValue]=useState('')
+ const [scannedNames,setScannedNames]=useState<string[]>([])
+ const [scanError,setScanError]=useState('')
+ const [cardPopulation,setCardPopulation]=useState<'students'|'teachers'|'staff'>('students')
+ const [reportFormat,setReportFormat]=useState<'csv'|'xlsx'|'xls'|'docx'|'doc'|'pdf'>('xlsx')
  const [department,setDepartment]=useState('')
  const [campusId,setCampusId]=useState('')
  const [campuses,setCampuses]=useState<{id:string;name:string}[]>([])
@@ -43,7 +51,8 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
  const [saving,setSaving]=useState(false)
  const [loadingError,setLoadingError]=useState('')
  const [lastSaved,setLastSaved]=useState('')
- const [autoTab,setAutoTab]=useState<'register'|'history'|'devices'>(initialWindow==='history'?'history':initialWindow==='devices'?'devices':'register')
+ const [autoTab,setAutoTab]=useState<'register'|'history'|'devices'|'cards'|'biometric'|'reports'>(['history','devices','cards','biometric','reports'].includes(initialWindow??'')?initialWindow as any:'register')
+ useEffect(()=>{if(['history','devices','cards','biometric','reports'].includes(initialWindow??''))setAutoTab(initialWindow as any);else if(['students','teachers','staff'].includes(initialWindow??'')){setPopulation(initialWindow as 'students'|'teachers'|'staff');setAutoTab('register')}},[initialWindow])
  const [devices,setDevices]=useState<RecordRow[]>([])
  const [deviceName,setDeviceName]=useState('')
  const [deviceType,setDeviceType]=useState('qr')
@@ -52,8 +61,9 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
  const canManageStudents=Boolean(user&&['owner','admin','teacher'].includes(user.role))
  const canManageStaff=Boolean(user&&['owner','admin'].includes(user.role))
  const isEmployeeSelf=Boolean(user?.role==='teacher')
- const people=population==='students'?students.filter(person=>(!className||person.class_name===className)&&(!campusId||person.campus_id===campusId)):staff.filter(person=>(population==='teachers'?String(person.employee_type??'').toLowerCase()==='teaching':String(person.employee_type??'').toLowerCase()!=='teaching')&&(!department||person.department===department)&&(!campusId||person.campus_id===campusId))
+ const people=population==='students'?students.filter(person=>(!className||person.class_name===className)&&(!sectionName||person.section_name===sectionName)&&(!campusId||person.campus_id===campusId)):staff.filter(person=>(population==='teachers'?String(person.employee_type??'').toLowerCase()==='teaching':String(person.employee_type??'').toLowerCase()!=='teaching')&&(!department||person.department===department)&&(!campusId||person.campus_id===campusId))
  const classes=useMemo(()=>[...new Set(students.map(s=>s.class_name).filter((x):x is string=>Boolean(x)))].sort(),[students])
+ const sections=useMemo(()=>[...new Set(students.filter(s=>!className||s.class_name===className).map(s=>s.section_name).filter((x):x is string=>Boolean(x)))].sort(),[students,className])
  const visiblePeople=useMemo(()=>people.filter(p=>{
   const q=search.trim().toLowerCase()
   return !q||p.full_name.toLowerCase().includes(q)||String(p.admission_no??p.employee_no??'').toLowerCase().includes(q)
@@ -76,7 +86,17 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
    ])
    if(studentResult.error && population==='students')throw studentResult.error
    if(staffResult.error && population!=='students' && (canManageStaff||isEmployeeSelf))throw staffResult.error
-   setStudents((studentResult.data??[]) as Person[])
+   const [classResult,placementResult]=await Promise.all([
+    supabase.from('classes').select('id,name,section,campus_id').eq('institution_id',user.institutionId).eq('is_active',true),
+    supabase.from('student_placements').select('student_id,class_id,effective_from,effective_to,status,campus_id').eq('institution_id',user.institutionId).eq('status','active').is('effective_to',null)
+   ])
+   if(classResult.error)throw classResult.error
+   if(placementResult.error)throw placementResult.error
+   const classMap=new Map((classResult.data??[]).map(row=>[String(row.id),row]))
+   const placementMap=new Map((placementResult.data??[]).map(row=>[String(row.student_id),row]))
+   setClassRecords((classResult.data??[]) as {id:string;name:string;section:string|null;campus_id:string|null}[])
+   const roster=(studentResult.data??[]).map(row=>{const placement=placementMap.get(String(row.id));const linked=placement?classMap.get(String(placement.class_id)):undefined;return {...row,class_name:row.class_name??linked?.name??null,section_name:linked?.section??null,class_id:linked?.id??null} as Person})
+   setStudents(roster)
    setStaff((staffResult.data??[]) as Person[])
    const campusResult=await supabase.from('campuses').select('id,name').eq('institution_id',user.institutionId).order('name')
    if(campusResult.error)throw campusResult.error
@@ -104,7 +124,7 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
    const noteMap:Record<string,string>={}
    values.forEach(row=>{
     const id=population==='students'?row.student_id:row.teacher_id
-    if(id&&['present','absent','late','approved_leave','excused'].includes(row.status))initial[id]=row.status as AttendanceMark
+    if(id&&['present','absent','late','approved_leave','leave_pending','excused'].includes(row.status))initial[id]=row.status as AttendanceMark
     if(id&&row.arrival_time)setArrivalTimes(v=>({...v,[id]:String(row.arrival_time).slice(0,5)}))
     if(id&&row.departure_time)setDepartureTimes(v=>({...v,[id]:String(row.departure_time).slice(0,5)}))
     if(id&&row.check_in_time)setArrivalTimes(v=>({...v,[id]:String(row.check_in_time).slice(0,5)}))
@@ -130,7 +150,7 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
  useEffect(()=>{void loadDevices()},[loadDevices])
 
  const effectiveMarks=useMemo(()=>Object.fromEntries(people.map(person=>[person.id,marks[person.id]??'unmarked'])) as Record<string,AttendanceMark>,[people,marks])
- const counts=useMemo(()=>{const tally={present:0,absent:0,late:0,approved_leave:0,excused:0,unmarked:0};Object.values(effectiveMarks).forEach(status=>{tally[status]+=1});return tally},[effectiveMarks])
+ const counts=useMemo(()=>{const tally={present:0,absent:0,late:0,approved_leave:0,leave_pending:0,excused:0,unmarked:0};Object.values(effectiveMarks).forEach(status=>{tally[status]+=1});return tally},[effectiveMarks])
  function markOne(id:string,value:AttendanceMark){setMarks(current=>({...current,[id]:value}))}
  function markAll(value:AttendanceMark){setMarks(Object.fromEntries(people.map(person=>[person.id,value])))}
  async function createShift(event:FormEvent){event.preventDefault();if(!supabase||!user||!canManageStaff)return;if(!shiftName.trim()||shiftEnd<=shiftStart){onToast('Enter a shift name and a valid start/end time.',true);return}const {error}=await supabase.from('employee_shifts').insert({institution_id:user.institutionId,name:shiftName.trim(),start_time:shiftStart,end_time:shiftEnd,grace_minutes:Number(shiftGrace)||0,created_by:user.id});if(error){onToast(error.message,true);return}setShiftName('');setShowShiftForm(false);onToast('Employee shift saved.');void loadRoster()}
@@ -139,7 +159,7 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
   if(!supabase||!user)return
   if(population==='students'&&!canManageStudents){onToast('You do not have permission to record student attendance.',true);return}
   if(population!=='students'&&!canManageStaff){onToast('Only owner and administrators can record employee attendance.',true);return}
-  if(population==='students'&&!className){onToast('Choose a class before saving attendance.',true);return}
+  if(population==='students'&&!className){onToast('Choose a class before saving attendance.',true);return}\n  if(population==='students'&&sectionName&&!classRecords.some(row=>row.name===className&&row.section===sectionName)){onToast('The selected section does not belong to the selected class.',true);return}
   if(!people.length){onToast('There are no active people in this roster.',true);return}
   if(people.some(person=>effectiveMarks[person.id]==='unmarked')){onToast('Complete every attendance mark before saving. Unmarked people will not be treated as present.',true);return}
   setSaving(true)
@@ -148,7 +168,7 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
    :{teacher_id:person.id,status:effectiveMarks[person.id],notes:notes[person.id]??null,check_in_time:arrivalTimes[person.id]??null,check_out_time:departureTimes[person.id]??null})
   try{
    const result=population==='students'
-    ?await supabase.rpc('save_student_attendance_register',{p_institution_id:user.institutionId,p_attendance_date:date,p_class_name:className,p_section_name:null,p_campus_id:campusId||null,p_period_label:period,p_rows:rows,p_late_after:'08:00'})
+    ?await supabase.rpc('save_student_attendance_register',{p_institution_id:user.institutionId,p_attendance_date:date,p_class_name:className,p_section_name:sectionName||null,p_campus_id:campusId||null,p_period_label:period,p_rows:rows,p_late_after:'08:00'})
     :await supabase.rpc('save_employee_attendance_register',{p_institution_id:user.institutionId,p_attendance_date:date,p_population:population==='teachers'?'teacher':'staff',p_campus_id:campusId||null,p_shift_id:shiftId||null,p_rows:rows})
    if(result.error)throw result.error
    const saved=result.data as {total:number;present:number;absent:number;late:number}
@@ -186,7 +206,7 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
   <header className="ed360-attendance-hero">
    <div className="ed360-attendance-icon"><CalendarCheck size={23}/></div>
    <div><span>ACADEMIC & STAFF OPERATIONS / ATTENDANCE</span><h1>Attendance Management</h1><p>Record the whole class or staff roster together. Mark P, A or L and save one validated register.</p></div>
-   <div className="ed360-attendance-stats"><span><b>{people.length}</b> people in roster</span><span><b>{counts.present}</b> present · <b>{counts.absent}</b> absent · <b>{counts.late}</b> late</span></div>
+   <div className="ed360-attendance-stats"><span><b>{people.length}</b> people in selected roster</span></div>
   </header>
   <div className="ed360-attendance-main-tabs">
    <button className={autoTab==='register'?'active':''} onClick={()=>setAutoTab('register')}>Manual register</button>
@@ -198,7 +218,7 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
     <div className="ed360-attendance-filter">
      <label>Attendance type<select value={population} onChange={e=>{setPopulation(e.target.value as 'students'|'teachers'|'staff');setSearch('')}} disabled={readOnly}><option value="students">Student attendance</option>{canManageStaff?<><option value="teachers">Teacher attendance</option><option value="staff">Staff attendance</option></>:user?.role==='teacher'?<option value="teachers">My teacher attendance</option>:null}</select></label>
      <label>Branch / campus<select value={campusId} onChange={e=>setCampusId(e.target.value)}><option value="">All permitted branches</option>{campuses.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
-     {population==='students'&&canManageStudents&&<label>Class / section<select value={className} onChange={e=>setClassName(e.target.value)}><option value="">Select class</option>{classes.map(c=><option key={c} value={c}>{c}</option>)}</select></label>}
+     {population==='students'&&canManageStudents&&<><label>Class<select value={className} onChange={e=>{setClassName(e.target.value);setSectionName('')}}><option value="">Select class</option>{classes.map(c=><option key={c} value={c}>{c}</option>)}</select></label><label>Section<select value={sectionName} onChange={e=>setSectionName(e.target.value)}><option value="">All sections</option>{sections.map(s=><option key={s} value={s}>{s}</option>)}</select></label></>}
      {population!=='students'&&canManageStaff&&<label>Department<select value={department} onChange={e=>setDepartment(e.target.value)}><option value="">All departments</option>{[...new Set(staff.map(s=>s.department).filter(Boolean))].sort().map(d=><option key={d}>{d}</option>)}</select></label>}
      {population!=='students'&&canManageStaff&&<label>Shift<select value={shiftId} onChange={e=>setShiftId(e.target.value)}><option value="">No shift selected</option>{shifts.map(s=><option key={s.id} value={s.id}>{String(s.name)} · {String(s.start_time).slice(0,5)}–{String(s.end_time).slice(0,5)}</option>)}</select></label>}
      <label>Date<input type="date" value={date} max={today()} onChange={e=>setDate(e.target.value)} /></label>
@@ -206,23 +226,23 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
      {canManageStaff&&population!=='students'&&<button type="button" className="button button-outline" onClick={()=>setShowShiftForm(v=>!v)}>Manage shifts</button>}
      <label className="ed360-attendance-search"><Search size={15}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Find name or ID"/></label>
     </div>
-    <div className="ed360-attendance-roster-meta"><div><strong>{population==='students'?className||'Choose a class':'Employee register'}</strong><span>{date} · {population==='students'?period:'Daily'}{shiftId?' · '+String(shifts.find(s=>s.id===shiftId)?.name??'Shift'):''}</span></div><div className="ed360-attendance-bulk">{!readOnly&&<><button type="button" onClick={()=>markAll('present')}><i className="mark-p">P</i> All present</button><button type="button" onClick={()=>markAll('absent')}><i className="mark-a">A</i> All absent</button><button type="button" onClick={()=>markAll('late')}><i className="mark-l">L</i> All late</button></>}</div></div>
+    <div className="ed360-attendance-roster-meta"><div><strong>{population==='students'?className||'Choose a class':'Employee register'}</strong><span>{date} · {population==='students'?period:'Daily'}{shiftId?' · '+String(shifts.find(s=>s.id===shiftId)?.name??'Shift'):''}</span></div><div className="ed360-attendance-bulk">{!readOnly&&<><button type="button" onClick={()=>markAll('present')}><i className="mark-p">P</i> All present</button><button type="button" onClick={()=>markAll('absent')}><i className="mark-a">A</i> All absent</button><button type="button" onClick={()=>markAll('approved_leave')}><i className="mark-leave">LV</i> All leave</button></>}</div></div>
    </section>
    <section className="ed360-attendance-board">
     <div className="ed360-attendance-board-head"><div><span>REGISTER CHART</span><h2>{population==='students'?'Class attendance register':population==='teachers'?'Teacher attendance register':'Staff attendance register'}</h2><p>Each row is one person. Use the status controls in the row or bulk-mark the whole roster above.</p></div><button type="button" onClick={()=>{void loadRoster();void loadAttendance()}}><RefreshCw size={14}/> Refresh roster</button></div>
-    <div className="ed360-attendance-counts"><div className="count-p"><b>{counts.present}</b><span>Present</span></div><div className="count-a"><b>{counts.absent}</b><span>Absent</span></div><div className="count-l"><b>{counts.late}</b><span>Late</span></div><div><b>{people.length}</b><span>Total</span></div></div>
+    
     {loading?<div className="ed360-attendance-empty">Loading the institution roster…</div>:loadingError?<div className="ed360-attendance-empty error">{loadingError}</div>:visiblePeople.length===0?<div className="ed360-attendance-empty">{people.length?'No matching names. Clear your search.':'No active people were found in this roster.'}</div>:
     <div className="ed360-attendance-grid-table"><div className="attendance-grid-head"><span>Roll / Employee ID</span><span>Name</span><span>Class / Department</span><span>Attendance mark</span><span>Note (optional)</span></div>
      {visiblePeople.map((person,index)=><div className="attendance-grid-row" key={person.id}><span className="attendance-grid-id">{person.admission_no??person.employee_no??String(index+1).padStart(2,'0')}</span><strong>{person.full_name}</strong><span>{person.class_name??person.department??(population==='teachers'?'Teacher':'Employee')}</span>
       <div className="attendance-mark-options">
-       {(['present','absent','late','approved_leave','excused'] as AttendanceMark[]).map(s=><button type="button" disabled={readOnly} key={s} aria-pressed={effectiveMarks[person.id]===s} className={'attendance-mark-button mark-'+(s==='approved_leave'?'leave':s==='excused'?'excused':s.charAt(0))} onClick={()=>markOne(person.id,s)}>{statusLabel(s)}</button>)}
+       {(['present','absent','approved_leave','leave_pending'] as AttendanceMark[]).map(s=><button type="button" disabled={readOnly} key={s} aria-pressed={effectiveMarks[person.id]===s} className={'attendance-mark-button mark-'+(s==='approved_leave'?'leave':s==='excused'?'excused':s.charAt(0))} onClick={()=>markOne(person.id,s)}>{statusLabel(s)}</button>)}
       </div>
       <div className="attendance-time-fields"><input aria-label="Arrival or check-in time" type="time" value={arrivalTimes[person.id]??''} onChange={e=>setArrivalTimes(v=>({...v,[person.id]:e.target.value}))} disabled={readOnly} title="Arrival / check-in"/><input aria-label="Departure or check-out time" type="time" value={departureTimes[person.id]??''} onChange={e=>setDepartureTimes(v=>({...v,[person.id]:e.target.value}))} disabled={readOnly} title="Departure / check-out"/>{population==='students'&&<input aria-label="Early departure minutes" type="number" min="0" max="1440" value={earlyMinutes[person.id]??'0'} onChange={e=>setEarlyMinutes(v=>({...v,[person.id]:e.target.value}))} disabled={readOnly} placeholder="Early min"/>}<input className="attendance-note-input" value={notes[person.id]??''} onChange={e=>setNotes(current=>({...current,[person.id]:e.target.value}))} disabled={readOnly} placeholder="Reason / note"/></div>
      </div>)}
     </div>}
-    <div className="ed360-attendance-board-footer"><div><span className="attendance-legend"><i className="mark-p">P</i> Present</span><span className="attendance-legend"><i className="mark-a">A</i> Absent</span><span className="attendance-legend"><i className="mark-l">L</i> Late</span><span className="attendance-legend"><i className="mark-leave">LV</i> Approved leave</span></div><div>{lastSaved&&<span className="ed360-last-saved"><Check size={13}/> Last saved {lastSaved}</span>}<button type="button" className="button button-outline" onClick={exportRegister}><Download size={15}/> Export register</button>{!readOnly&&<button type="button" className="button button-primary" disabled={saving||loading||!people.length||(population==='students'&&!canManageStudents)||(population==='staff'&&!canManageStaff)} onClick={()=>void saveRegister()}>{saving?'Saving whole register…':'Save whole register'}</button>}</div></div>
+    <div className="ed360-attendance-board-footer"><div><span className="attendance-legend"><i className="mark-p">P</i> Present</span><span className="attendance-legend"><i className="mark-a">A</i> Absent</span><span className="attendance-legend"><i className="mark-leave">LV</i> Leave</span><span className="attendance-legend"><i className="mark-leave">UL</i> Leave not approved</span></div><div>{lastSaved&&<span className="ed360-last-saved"><Check size={13}/> Last saved {lastSaved}</span>}<button type="button" className="button button-outline" onClick={exportRegister}><Download size={15}/> Export register</button>{!readOnly&&<button type="button" className="button button-primary" disabled={saving||loading||!people.length||(population==='students'&&!canManageStudents)||(population==='staff'&&!canManageStaff)} onClick={()=>void saveRegister()}>{saving?'Saving whole register…':'Save whole register'}</button>}</div></div>
    </section>
-   <p className="ed360-attendance-method-note">Unmarked people remain pending and must be assigned a status before the register can be saved. Record arrival/check-in and departure/check-out times for late-arrival and early-departure reporting. No person is silently marked present. This follows the common register-first pattern documented by established school ERP systems. <a href="https://fedena.freshdesk.com/support/solutions/articles/211464-how-can-i-mark-student-attendance-daily-" target="_blank" rel="noreferrer">Attendance register workflow reference</a>.</p>
+   <p className="ed360-attendance-method-note">Unmarked people remain pending. Select Present, Absent, Leave or Leave not approved for every person before saving the register. Existing historical late-arrival records remain preserved for reporting.</p>
   </>}
   {autoTab==='history'&&<section className="ed360-attendance-board">
    <div className="ed360-attendance-board-head">
