@@ -43,7 +43,7 @@ async function assertNoHorizontalOverflow(page,label) {
 
 const publicPages = [
   ['home','Government Islamia Degree College Badin'],
-  ['about','About Government Islamia Degree College Badin'],
+  ['about','About the college'],
   ['academics','Academic information'],
   ['principal','Principal'],
   ['faculty','Faculty directory'],
