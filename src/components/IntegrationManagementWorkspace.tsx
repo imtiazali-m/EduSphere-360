@@ -61,7 +61,7 @@ const requiredSecrets:Record<Exclude<PageKey,'overview'|'ai-providers'>,string[]
 }
 const PageIcon:Record<PageKey,typeof Cloud>={overview:Cloud,'ai-providers':Activity,zoom:Video,google:Cloud,youtube:Youtube,biometric:Fingerprint}
 
-export function IntegrationManagementWorkspace({initialWindow='overview',onToast,onNavigate}:{initialWindow='overview',onToast:(message:string,error?:boolean)=>void;onNavigate:(route:string)=>void}){
+export function IntegrationManagementWorkspace({initialWindow='overview',onToast,onNavigate}:{initialWindow?:string;onToast:(message:string,error?:boolean)=>void;onNavigate:(route:string)=>void}){
  const {user}=useAuth()
  const page=(initialWindow in pages?initialWindow:'overview') as PageKey
  const meta=pages[page]
