@@ -87,8 +87,8 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
    if(studentResult.error && population==='students')throw studentResult.error
    if(staffResult.error && population!=='students' && (canManageStaff||isEmployeeSelf))throw staffResult.error
    const [classResult,placementResult]=await Promise.all([
-    supabase.from('classes').select('id,name,section,campus_id').eq('institution_id',user.institutionId),
-    supabase.from('student_placements').select('student_id,class_id,effective_from,effective_to,status,campus_id').eq('institution_id',user.institutionId).lte('effective_from',date).or('effective_to.is.null,effective_to.gte.'+date).order('effective_from',{ascending:false})
+    supabase.from('classes').select('id,name,section,campus_id').eq('institution_id',user.institutionId).eq('is_active',true),
+    supabase.from('student_placements').select('student_id,class_id,effective_from,effective_to,status,campus_id').eq('institution_id',user.institutionId).eq('status','active').lte('effective_from',date).or('effective_to.is.null,effective_to.gte.'+date).order('effective_from',{ascending:false})
    ])
    if(classResult.error)throw classResult.error
    if(placementResult.error)throw placementResult.error
