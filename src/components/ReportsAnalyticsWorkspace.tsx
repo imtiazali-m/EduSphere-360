@@ -53,10 +53,10 @@ function exportData(name:string,rows:ReportRow[],columns:{key:string;label:strin
  if(format==='doc'){exportWordXml(safe+'-'+stamp+'.doc',name,rows,columns);return}
  if(format==='json'){saveBlob(safe+'-'+stamp+'.json',JSON.stringify(rows,null,2),'application/json');return}
  const values=[columns.map(c=>c.label),...rows.map(row=>columns.map(c=>String(row[c.key]??'')))]
-  const delimiter=format==='tsv'?'\\t':','
+  const delimiter=format==='tsv'?'\t':','
   const quote=(v:string)=>'"'+v.replace(/"/g,'""')+'"'
-  const body=values.map(line=>line.map(v=>quote(v)).join(delimiter)).join('\\n')
-  saveBlob(safe+'-'+stamp+'.'+format,'\\ufeff'+body,format==='tsv'?'text/tab-separated-values;charset=utf-8':'text/csv;charset=utf-8')
+  const body=values.map(line=>line.map(v=>quote(v)).join(delimiter)).join('\n')
+  saveBlob(safe+'-'+stamp+'.'+format,'\ufeff'+body,format==='tsv'?'text/tab-separated-values;charset=utf-8':'text/csv;charset=utf-8')
 }
 function Stat({label,value}:{label:string;value:string}){return <article className="ra-stat"><small>{label}</small><strong>{value}</strong></article>}
 
