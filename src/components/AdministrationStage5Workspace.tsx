@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { ArrowUpRight, BookOpen, Building2, CalendarDays, CheckCircle2, FileText, LockKeyhole, Palette, Plus, RefreshCw, Save, Search, ShieldCheck, Upload, Users, X } from 'lucide-react'
+import { ArrowUpRight, Building2, CheckCircle2, FileText, LockKeyhole, Palette, Plus, RefreshCw, Save, Search, ShieldCheck, Upload, Users, X } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { userFacingError } from '../lib/userErrors'
@@ -8,7 +8,7 @@ import type { RecordRow } from '../lib/types'
 import { displayInstitutionName } from '../lib/collegeIdentity'
 import '../styles/governance-workspace.css'
 
-type Section='profile'|'academic'|'departments'|'organization'|'system'|'approvals'|'policies'|'audit'|'accounts'|'permissions'|'settings'|'branding'|'security'
+type Section='profile'|'academic'|'departments'|'designations'|'organization'|'system'|'approvals'|'policies'|'policies-students'|'policies-faculty'|'audit'|'accounts'|'permissions'|'settings'|'branding'|'security'
 type Props={initialWindow?:string;onToast:(message:string,error?:boolean)=>void;onNavigate:(route:string)=>void}
 type Institution={id:string;name:string;institution_type:string;tagline?:string|null;phone?:string|null;email?:string|null;website?:string|null;address?:string|null;country?:string|null;logo_path?:string|null;created_by?:string|null}
 type Setting=RecordRow & {id:string;category:string;setting_key:string;setting_value:unknown;is_public:boolean}
@@ -19,8 +19,11 @@ type Designation=RecordRow & {id:string;name:string;code?:string|null;department
 type Teacher=RecordRow & {id:string;full_name:string;department?:string|null;department_id?:string|null;designation_id?:string|null;employment_status?:string;campus_id?:string|null}
 type Member=RecordRow & {user_id:string;role:string;status:string;full_name?:string;email?:string}
 type Policy=RecordRow & {id:string;title:string;reference_code?:string|null;description?:string|null;status:string;effective_date?:string|null;payload:Record<string,unknown>}
-const sectionByWindow:Record<string,Section>={profile:'profile',settings:'settings',institution_settings:'settings',approvals:'approvals',audit:'audit',academic:'academic',accounts:'accounts',departments:'departments',organization:'organization',system:'system',policies:'policies',permissions:'permissions',branding:'branding',security:'security'}
-const pageTitle:Record<Section,string>={profile:'Institute Profile',academic:'Academic Structure & Sections',departments:'Departments & Designations',organization:'Organisational Structure',system:'System Configuration',approvals:'Approval Workflows',policies:'Policies & Rules',audit:'Administrative Audit',accounts:'User Access & Invitations',permissions:'Role & Permission Management',settings:'Institute Settings',branding:'Branding & Document Settings',security:'Security & Access History'}
+type AcademicRow=RecordRow & {id:string;[key:string]:unknown}
+type InstitutePreferences={timezone:string;date_format:string;currency:string;academic_year_start_month:string;term_structure:string;student_id_prefix:string;employee_id_prefix:string}
+const defaultInstitutePreferences:InstitutePreferences={timezone:'Asia/Karachi',date_format:'dd MMM yyyy',currency:'PKR',academic_year_start_month:'8',term_structure:'annual',student_id_prefix:'GIDC-STU',employee_id_prefix:'GIDC-EMP'}
+const sectionByWindow:Record<string,Section>={profile:'profile',settings:'settings',institution_settings:'settings',approvals:'approvals',audit:'audit',academic:'academic',accounts:'accounts',departments:'departments',designations:'designations',organization:'organization',system:'system',policies:'policies-students','policies-students':'policies-students','policies-faculty':'policies-faculty',policies_students:'policies-students',policies_faculty:'policies-faculty',organization_structure:'organization',permissions:'permissions',branding:'branding',security:'security'}
+const pageTitle:Record<Section,string>={profile:'Institute Profile',academic:'Academic Structure & Sections',departments:'Department Directory',designations:'Designation Catalogue',organization:'Institute Reporting Hierarchy',system:'System Configuration',approvals:'Approval Workflows',policies:'Student Policies', 'policies-students':'Student Policies','policies-faculty':'Faculty Policies',audit:'Administrative Audit',accounts:'User Access & Invitations',permissions:'Role & Permission Management',settings:'Institute Settings',branding:'Branding & Document Settings',security:'Security & Access History'}
 const dateLabel=(value:unknown)=>value?new Date(String(value)).toLocaleString():'—'
 const label=(value:unknown)=>String(value??'').replaceAll('_',' ').replace(/\b\w/g,c=>c.toUpperCase())
 const jsonObject=(value:unknown):Record<string,unknown>=>value&&typeof value==='object'&&!Array.isArray(value)?value as Record<string,unknown>:{}
@@ -35,6 +38,8 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
   const [logoFile,setLogoFile]=useState<File|null>(null),[logoUrl,setLogoUrl]=useState('')
   const [settings,setSettings]=useState<Setting[]>([]),[approvals,setApprovals]=useState<Approval[]>([]),[audit,setAudit]=useState<Audit[]>([]),[policies,setPolicies]=useState<Policy[]>([])
   const [departments,setDepartments]=useState<Department[]>([]),[designations,setDesignations]=useState<Designation[]>([]),[teachers,setTeachers]=useState<Teacher[]>([]),[members,setMembers]=useState<Member[]>([])
+  const [academicSessions,setAcademicSessions]=useState<AcademicRow[]>([]),[classes,setClasses]=useState<AcademicRow[]>([]),[programs,setPrograms]=useState<AcademicRow[]>([]),[subjects,setSubjects]=useState<AcademicRow[]>([]),[rooms,setRooms]=useState<AcademicRow[]>([])
+  const [institutePreferences,setInstitutePreferences]=useState<InstitutePreferences>(defaultInstitutePreferences)
   const [search,setSearch]=useState('')
   const [settingsSortKey,setSettingsSortKey]=useState<'category'|'setting_key'|'is_public'>('category')
   const [settingsSortDirection,setSettingsSortDirection]=useState<'asc'|'desc'>('asc')
@@ -49,7 +54,7 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
     if(!supabase||!user){setLoading(false);return}
     if(!silent){setLoading(true);setError('')}
     try{
-      const [institutionResult,settingsResult,approvalResult,auditResult,policyResult,departmentResult,designationResult,teacherResult,membershipResult]=await Promise.all([
+      const [institutionResult,settingsResult,approvalResult,auditResult,policyResult,departmentResult,designationResult,teacherResult,membershipResult,academicSessionResult,classResult,programResult,subjectResult,roomResult]=await Promise.all([
         supabase.from('institutions').select('id,name,institution_type,tagline,phone,email,website,address,country,logo_path,created_by').eq('id',user.institutionId).maybeSingle(),
         admin?supabase.from('institution_settings').select('*').eq('institution_id',user.institutionId).order('category').order('setting_key').limit(1000):Promise.resolve({data:[],error:null}),
         admin?supabase.from('workflow_approvals').select('*').eq('institution_id',user.institutionId).order('requested_at',{ascending:false}).limit(500):Promise.resolve({data:[],error:null}),
@@ -59,8 +64,13 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
         admin?supabase.from('designations').select('*').eq('institution_id',user.institutionId).order('name').limit(500):Promise.resolve({data:[],error:null}),
         admin?supabase.from('teachers').select('id,full_name,department,department_id,designation_id,employment_status,campus_id').eq('institution_id',user.institutionId).order('full_name').limit(1000):Promise.resolve({data:[],error:null}),
         admin?supabase.from('memberships').select('user_id,role,status,created_at').eq('institution_id',user.institutionId).order('created_at').limit(1000):Promise.resolve({data:[],error:null}),
+        admin?supabase.from('academic_sessions').select('*').eq('institution_id',user.institutionId).order('start_date',{ascending:false}).limit(200):Promise.resolve({data:[],error:null}),
+        admin?supabase.from('classes').select('*').eq('institution_id',user.institutionId).order('name').limit(500):Promise.resolve({data:[],error:null}),
+        admin?supabase.from('programs').select('*').eq('institution_id',user.institutionId).order('name').limit(500):Promise.resolve({data:[],error:null}),
+        admin?supabase.from('subjects').select('*').eq('institution_id',user.institutionId).order('name').limit(1000):Promise.resolve({data:[],error:null}),
+        admin?supabase.from('rooms').select('*').eq('institution_id',user.institutionId).order('name').limit(500):Promise.resolve({data:[],error:null}),
       ])
-      for(const result of [institutionResult,settingsResult,approvalResult,auditResult,policyResult,departmentResult,designationResult,teacherResult,membershipResult])if(result.error)throw result.error
+      for(const result of [institutionResult,settingsResult,approvalResult,auditResult,policyResult,departmentResult,designationResult,teacherResult,membershipResult,academicSessionResult,classResult,programResult,subjectResult,roomResult])if(result.error)throw result.error
       const institutionRow=institutionResult.data as Institution|null
       setInstitution(institutionRow)
       if(institutionRow)setProfileDraft({name:institutionRow.name??'',institution_type:institutionRow.institution_type??'school',tagline:institutionRow.tagline??'',phone:institutionRow.phone??'',email:institutionRow.email??'',website:institutionRow.website??'',address:institutionRow.address??'',country:institutionRow.country??''})
@@ -75,16 +85,23 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
       setSettings((settingsResult.data??[]) as Setting[]);setApprovals((approvalResult.data??[]) as Approval[]);setAudit((auditResult.data??[]) as Audit[])
       setPolicies((policyResult.data??[]) as Policy[]);setDepartments((departmentResult.data??[]) as Department[])
       setDesignations((designationResult.data??[]) as Designation[]);setTeachers((teacherResult.data??[]) as Teacher[])
+      setAcademicSessions((academicSessionResult.data??[]) as AcademicRow[]);setClasses((classResult.data??[]) as AcademicRow[]);setPrograms((programResult.data??[]) as AcademicRow[]);setSubjects((subjectResult.data??[]) as AcademicRow[]);setRooms((roomResult.data??[]) as AcademicRow[])
+      const preferenceRow=((settingsResult.data??[]) as Setting[]).find(row=>row.category==='general'&&row.setting_key==='institution_preferences')
+      setInstitutePreferences({...defaultInstitutePreferences,...jsonObject(preferenceRow?.setting_value)} as InstitutePreferences)
       if(institutionRow?.logo_path){const {data:signed}=await supabase.storage.from('institution-files').createSignedUrl(institutionRow.logo_path,3600);setLogoUrl(signed?.signedUrl??'')}else setLogoUrl('')
     }catch(err){const message=userFacingError(err,'Administration records could not be loaded.');setError(message);if(!silent)onToast(message,true)}
     finally{setLoading(false)}
   }
   useEffect(()=>{void load()},[user?.id,user?.institutionId,user?.role])
 
-  const filteredPolicies=useMemo(()=>policies.filter(row=>[row.title,row.reference_code,row.description,row.status,JSON.stringify(row.payload)].join(' ').toLowerCase().includes(search.trim().toLowerCase())),[policies,search])
+  const filteredPolicies=useMemo(()=>policies.filter(row=>{
+    const audience=String(jsonObject(row.payload).category??'').toLowerCase()
+    const audienceMatches=section==='policies-students'?['student','students'].includes(audience):section==='policies-faculty'?['faculty','staff','teacher','teachers'].includes(audience):false
+    return audienceMatches&&[row.title,row.reference_code,row.description,row.status,JSON.stringify(row.payload)].join(' ').toLowerCase().includes(search.trim().toLowerCase())
+  }),[policies,search,section])
   const filteredAudit=useMemo(()=>audit.filter(row=>[row.action,row.module_key,row.record_type,row.actor_id,row.record_id].join(' ').toLowerCase().includes(search.trim().toLowerCase())),[audit,search])
   const filteredMembers=useMemo(()=>members.filter(row=>[row.full_name,row.email,row.role,row.status].join(' ').toLowerCase().includes(search.trim().toLowerCase())),[members,search])
-  const visibleSettings=useMemo(()=>settings.filter(row=>section==='system'?row.category==='system':section==='branding'?['branding','documents'].includes(row.category):section==='settings'?!['system','branding','documents'].includes(row.category):true).filter(row=>[row.category,row.setting_key,JSON.stringify(row.setting_value)].join(' ').toLowerCase().includes(search.trim().toLowerCase())),[settings,section,search])
+  const visibleSettings=useMemo(()=>settings.filter(row=>section==='system'?row.category==='system':section==='branding'?['branding','documents'].includes(row.category):section==='settings'?false:true).filter(row=>[row.category,row.setting_key,JSON.stringify(row.setting_value)].join(' ').toLowerCase().includes(search.trim().toLowerCase())),[settings,section,search])
   const orderedSettings=useMemo(()=>[...visibleSettings].sort((a,b)=>{
     const left=settingsSortKey==='is_public'?String(a.is_public):String(a[settingsSortKey]??'')
     const right=settingsSortKey==='is_public'?String(b.is_public):String(b[settingsSortKey]??'')
@@ -169,7 +186,7 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
 
   function openPolicy(row?:Policy){
     setPolicyEditing(row??null);setPolicyTitle(row?.title??'');setPolicyCode(row?.reference_code??'')
-    setPolicyCategory(String(jsonObject(row?.payload).category??'general'));setPolicyDescription(row?.description??'')
+    setPolicyCategory(String(jsonObject(row?.payload).category??(section==='policies-faculty'?'faculty':'student')));setPolicyDescription(row?.description??'')
     setPolicyStatus(row?.status??'draft');setPolicyEffectiveDate(row?.effective_date??'');setPolicyForm(true)
   }
   async function savePolicy(event:FormEvent){
@@ -212,6 +229,44 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
     setSaving(false)
   }
 
+  async function saveInstitutePreferences(event:FormEvent){
+    event.preventDefault()
+    if(!supabase||!admin)return
+    setSaving(true)
+    const values={category:'general',setting_key:'institution_preferences',setting_value:institutePreferences,is_public:false,updated_by:user!.id,updated_at:new Date().toISOString()}
+    try{
+      const {data:existing,error:lookupError}=await supabase.from('institution_settings').select('id').eq('institution_id',user!.institutionId).eq('category','general').eq('setting_key','institution_preferences').is('campus_id',null).maybeSingle()
+      if(lookupError)throw lookupError
+      const result=existing
+        ?await supabase.from('institution_settings').update(values).eq('institution_id',user!.institutionId).eq('id',existing.id)
+        :await supabase.from('institution_settings').insert({...values,institution_id:user!.institutionId})
+      if(result.error)throw result.error
+      onToast('Institute settings saved.')
+      await load(true)
+    }catch(err){onToast(userFacingError(err,'Institute settings could not be saved.'),true)}
+    finally{setSaving(false)}
+  }
+
+  function renderInstituteSettings(){
+    const update=(key:keyof InstitutePreferences,value:string)=>setInstitutePreferences(current=>({...current,[key]:value}))
+    return <div className="ed360-admin-settings-page">
+      <section className="gov-panel ed360-admin-settings-card">
+        <header><div><h2>Institute preferences</h2><p>Set the defaults used by this college’s internal registers and generated records.</p></div><Building2 size={22}/></header>
+        <form className="ed360-admin-preferences-form" onSubmit={saveInstitutePreferences}>
+          <label>Time zone<select value={institutePreferences.timezone} onChange={e=>update('timezone',e.target.value)}><option value="Asia/Karachi">Pakistan Standard Time · Asia/Karachi</option><option value="UTC">Coordinated Universal Time · UTC</option></select></label>
+          <label>Date format<select value={institutePreferences.date_format} onChange={e=>update('date_format',e.target.value)}><option value="dd MMM yyyy">14 Nov 2026</option><option value="dd/MM/yyyy">14/11/2026</option><option value="yyyy-MM-dd">2026-11-14</option></select></label>
+          <label>Currency<select value={institutePreferences.currency} onChange={e=>update('currency',e.target.value)}><option value="PKR">Pakistani Rupee · PKR</option><option value="USD">US Dollar · USD</option><option value="GBP">Pound Sterling · GBP</option></select></label>
+          <label>Academic year starts<select value={institutePreferences.academic_year_start_month} onChange={e=>update('academic_year_start_month',e.target.value)}>{['January','February','March','April','May','June','July','August','September','October','November','December'].map((month,index)=><option key={month} value={String(index+1)}>{month}</option>)}</select></label>
+          <label>Academic term structure<select value={institutePreferences.term_structure} onChange={e=>update('term_structure',e.target.value)}><option value="annual">Annual session</option><option value="semester">Two semesters</option><option value="trimester">Three terms</option><option value="quarter">Four terms</option></select></label>
+          <label>Student ID prefix<input maxLength={16} value={institutePreferences.student_id_prefix} onChange={e=>update('student_id_prefix',e.target.value.toUpperCase())}/></label>
+          <label>Employee ID prefix<input maxLength={16} value={institutePreferences.employee_id_prefix} onChange={e=>update('employee_id_prefix',e.target.value.toUpperCase())}/></label>
+          <div className="ed360-admin-preferences-footer"><span>These defaults are private to the college and do not publish website settings.</span><button className="gov-button primary" disabled={saving}><Save size={14}/>{saving?'Saving…':'Save institute settings'}</button></div>
+        </form>
+      </section>
+      <section className="ed360-admin-preferences-note"><span><ShieldCheck size={18}/></span><div><strong>College defaults</strong><p>New forms can use these settings as defaults. Existing academic, finance and staff records are not modified by changing preferences.</p></div></section>
+    </div>
+  }
+
   function renderSettingRows(rows:Setting[],empty:string){
     return rows.length?<div className="gov-table-wrap"><table className="ed360-admin-table"><thead><tr>{sortHeader('Category','category')}{sortHeader('Key','setting_key')}<th>Value</th>{sortHeader('Visibility','is_public')}<th>Actions</th></tr></thead><tbody>{rows.map(row=><tr key={row.id}><td>{label(row.category)}</td><td><b>{row.setting_key}</b></td><td><code>{JSON.stringify(row.setting_value)}</code></td><td>{row.is_public?'Public':'Private'}</td><td><div className="gov-row-actions"><button className="gov-button" onClick={()=>openSetting(row)}>Edit</button><button className="gov-button danger" onClick={()=>void removeSetting(row)}>Delete</button></div></td></tr>)}</tbody></table></div>:<div className="gov-empty">{empty}</div>
   }
@@ -251,56 +306,106 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
     </div>
   }
   function renderDepartments(){
-    const q=search.trim().toLowerCase(),departmentRows=departments.filter(row=>[row.name,row.department_code,row.head_name,row.email].join(' ').toLowerCase().includes(q)),designationRows=designations.filter(row=>[row.name,row.code].join(' ').toLowerCase().includes(q))
-    return <div className="ed360-admin-stage5">
-      <section className="gov-panel"><header><div><h2>Department directory</h2><p>Department codes, leadership contacts and active state.</p></div><button className="gov-button primary" onClick={()=>onNavigate('admin:departments')}>Open Department Manager <ArrowUpRight size={14}/></button></header>
-        <div className="ed360-admin-kpis"><article><small>Departments</small><strong>{departments.length}</strong></article><article><small>Active</small><strong>{departments.filter(d=>d.is_active!==false&&d.status!=='inactive').length}</strong></article><article><small>Department heads</small><strong>{departments.filter(d=>Boolean(d.head_name)).length}</strong></article><article><small>Designations</small><strong>{designations.length}</strong></article></div>
-        {departmentRows.length?<div className="gov-table-wrap"><table className="ed360-admin-table"><thead><tr><th>Code</th><th>Department</th><th>Head</th><th>Contact</th><th>Status</th></tr></thead><tbody>{departmentRows.map(row=><tr key={row.id}><td>{String(row.department_code??row.code??'—')}</td><td><b>{row.name}</b></td><td>{String(row.head_name??'Not assigned')}</td><td>{String(row.email??row.phone??'—')}</td><td><span className={'ed360-admin-status '+(row.is_active===false||row.status==='inactive'?'inactive':'')}>{row.is_active===false||row.status==='inactive'?'Inactive':'Active'}</span></td></tr>)}</tbody></table></div>:<div className="gov-empty">No department records are available.</div>}
-      </section>
-      <section className="gov-panel"><header><div><h2>Designation catalogue</h2><p>Position titles and department relationships used by employee assignment.</p></div><button className="gov-button primary" onClick={()=>onNavigate('employees:designations')}>Open Designation Manager <ArrowUpRight size={14}/></button></header>
-        {designationRows.length?<div className="gov-table-wrap"><table className="ed360-admin-table"><thead><tr><th>Designation</th><th>Code</th><th>Department</th><th>Status</th></tr></thead><tbody>{designationRows.map(row=><tr key={row.id}><td><b>{row.name}</b></td><td>{row.code??'—'}</td><td>{departments.find(d=>d.id===row.department_id)?.name??'Institution-wide'}</td><td><span className={'ed360-admin-status '+(!row.is_active?'inactive':'')}>{row.is_active?'Active':'Inactive'}</span></td></tr>)}</tbody></table></div>:<div className="gov-empty">No designation records are available.</div>}
+    const q=search.trim().toLowerCase()
+    const departmentRows=departments.filter(row=>[row.name,row.department_code,row.head_name,row.email,row.phone].join(' ').toLowerCase().includes(q))
+    return <div className="ed360-admin-directory-page">
+      <section className="gov-panel ed360-admin-directory-card">
+        <header><div><h2>Department records</h2><p>Manage the college’s academic and administrative departments.</p></div><button className="gov-button primary" onClick={()=>onNavigate('admin:departments')}>Open Department Manager <ArrowUpRight size={14}/></button></header>
+        <div className="ed360-admin-kpis"><article><small>Departments</small><strong>{departments.length}</strong></article><article><small>Active departments</small><strong>{departments.filter(d=>d.is_active!==false&&d.status!=='inactive').length}</strong></article><article><small>Department heads</small><strong>{departments.filter(d=>Boolean(d.head_name)).length}</strong></article></div>
+        <label className="ed360-admin-search"><Search size={14}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search department, code, head or contact…"/></label>
+        {departmentRows.length?<div className="gov-table-wrap"><table className="ed360-admin-table"><thead><tr><th>Code</th><th>Department</th><th>Department head</th><th>Contact</th><th>Status</th></tr></thead><tbody>{departmentRows.map(row=><tr key={row.id}><td>{String(row.department_code??row.code??'—')}</td><td><b>{row.name}</b></td><td>{String(row.head_name??'Not assigned')}</td><td>{String(row.email??row.phone??'—')}</td><td><span className={'ed360-admin-status '+(row.is_active===false||row.status==='inactive'?'inactive':'')}>{row.is_active===false||row.status==='inactive'?'Inactive':'Active'}</span></td></tr>)}</tbody></table></div>:<div className="gov-empty">No departments have been recorded yet.</div>}
       </section>
     </div>
   }
+  function renderDesignations(){
+    const q=search.trim().toLowerCase()
+    const designationRows=designations.filter(row=>[row.name,row.code,departments.find(d=>d.id===row.department_id)?.name].join(' ').toLowerCase().includes(q))
+    return <div className="ed360-admin-directory-page">
+      <section className="gov-panel ed360-admin-directory-card">
+        <header><div><h2>Position records</h2><p>Maintain faculty and staff positions, with the department relationships used for assignments.</p></div><button className="gov-button primary" onClick={()=>onNavigate('employees:designations')}>Open Designation Manager <ArrowUpRight size={14}/></button></header>
+        <div className="ed360-admin-kpis"><article><small>Designations</small><strong>{designations.length}</strong></article><article><small>Active positions</small><strong>{designations.filter(row=>row.is_active).length}</strong></article><article><small>Department-linked</small><strong>{designations.filter(row=>Boolean(row.department_id)).length}</strong></article></div>
+        <label className="ed360-admin-search"><Search size={14}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search designation, code or department…"/></label>
+        {designationRows.length?<div className="gov-table-wrap"><table className="ed360-admin-table"><thead><tr><th>Designation</th><th>Code</th><th>Department</th><th>Status</th></tr></thead><tbody>{designationRows.map(row=><tr key={row.id}><td><b>{row.name}</b></td><td>{row.code??'—'}</td><td>{departments.find(d=>d.id===row.department_id)?.name??'Institution-wide'}</td><td><span className={'ed360-admin-status '+(!row.is_active?'inactive':'')}>{row.is_active?'Active':'Inactive'}</span></td></tr>)}</tbody></table></div>:<div className="gov-empty">No designations have been recorded yet.</div>}
+      </section>
+    </div>
+  }
+
   function renderOrganization(){
     const ownerMembers=members.filter(row=>row.role==='owner'),adminMembers=members.filter(row=>row.role==='admin')
-    return <div className="ed360-admin-stage5"><section className="gov-panel"><header><div><h2>Institution reporting hierarchy</h2><p>Live owner/admin memberships, department leadership and staff assignments.</p></div><span className="gov-readonly">Live records</span></header>
-      <div className="ed360-admin-kpis"><article><small>Departments</small><strong>{departments.length}</strong></article><article><small>Staff profiles</small><strong>{teachers.length}</strong></article><article><small>Designations</small><strong>{designations.length}</strong></article><article><small>Admin accounts</small><strong>{adminMembers.length}</strong></article></div>
-      <div className="ed360-admin-org"><div className="ed360-admin-org-root"><b>{ownerMembers.map(row=>row.full_name).join(', ')||'Institution Owner'}</b><small>Institution owner · highest authority</small></div>
-        <div className="ed360-admin-org-admins">{adminMembers.map(row=><span key={row.user_id}><b>{row.full_name}</b><br/>Administrator</span>)}</div>
-        <div className="ed360-admin-org-departments">{departments.map(department=>{const people=teachers.filter(person=>person.department_id===department.id||(person.department_id==null&&person.department===department.name));return <article className="ed360-admin-org-department" key={department.id}><header><div><h3>{department.name}</h3><p>{String(department.department_code??department.code??'No code')} · {String(department.head_name??'Head not assigned')}</p></div><span className="ed360-admin-status">{people.length} staff</span></header><div className="ed360-admin-org-staff">{people.map(person=><span key={person.id}>{person.full_name} · {designations.find(d=>d.id===person.designation_id)?.name??'Position unassigned'}</span>)}{!people.length&&<span>No staff linked to this department</span>}</div></article>})}</div>
-      </div></section><div className="ed360-admin-callout warning">Direct supervisor links and approved vacancy positions are not stored in the current schema; this view only displays recorded memberships, department head names and employee department/designation assignments.</div></div>
+    return <div className="ed360-admin-organization-page">
+      <section className="gov-panel ed360-admin-organization-card">
+        <header><div><h2>Reporting layers</h2><p>College authority, administration, department leadership and employee assignments.</p></div><span className="gov-readonly">Current records</span></header>
+        <div className="ed360-admin-kpis"><article><small>Departments</small><strong>{departments.length}</strong></article><article><small>Faculty & staff records</small><strong>{teachers.length}</strong></article><article><small>Designations</small><strong>{designations.length}</strong></article><article><small>Administrators</small><strong>{adminMembers.length}</strong></article></div>
+        <div className="ed360-admin-org">
+          <div className="ed360-admin-org-root"><span>COLLEGE AUTHORITY</span><b>{ownerMembers.map(row=>row.full_name).join(', ')||'Institution Owner'}</b><small>Institute owner · highest authority</small></div>
+          <div className="ed360-admin-org-connector" aria-hidden="true"/>
+          <div className="ed360-admin-org-admins">{adminMembers.map(row=><span key={row.user_id}><b>{row.full_name}</b><br/>Administrator</span>)}</div>
+          <div className="ed360-admin-org-departments">{departments.map(department=>{const people=teachers.filter(person=>person.department_id===department.id||(person.department_id==null&&person.department===department.name));return <article className="ed360-admin-org-department" key={department.id}><header><div><h3>{department.name}</h3><p>{String(department.department_code??department.code??'Department')} · {String(department.head_name??'Head not assigned')}</p></div><span className="ed360-admin-status">{people.length} staff</span></header><div className="ed360-admin-org-staff">{people.length?people.map(person=><span key={person.id}><b>{person.full_name}</b><small>{designations.find(d=>d.id===person.designation_id)?.name??'Position not assigned'}</small></span>):<span className="ed360-admin-org-empty">No employee records are assigned to this department yet.</span>}</div></article>})}</div>
+        </div>
+      </section>
+      <section className="gov-panel ed360-admin-organization-roster"><header><div><h2>Faculty and staff roster</h2><p>All loaded employee records, organised by department and designation.</p></div></header>
+        {teachers.length?<div className="gov-table-wrap"><table className="ed360-admin-table"><thead><tr><th>Employee</th><th>Department</th><th>Designation</th><th>Employment status</th></tr></thead><tbody>{teachers.map(person=><tr key={person.id}><td><b>{person.full_name}</b></td><td>{departments.find(d=>d.id===person.department_id)?.name??person.department??'Not assigned'}</td><td>{designations.find(d=>d.id===person.designation_id)?.name??'Not assigned'}</td><td>{label(person.employment_status??'not recorded')}</td></tr>)}</tbody></table></div>:<div className="gov-empty">No faculty or staff profiles have been recorded yet.</div>}
+      </section>
+    </div>
   }
   function renderAcademic(){
-    return <div className="ed360-admin-stage5"><section className="gov-panel"><header><div><h2>Academic structure and session relationships</h2><p>Open each connected register in its own working window.</p></div></header><div className="gov-shortcuts"><button onClick={()=>onNavigate('admin:academic_sessions')}><CalendarDays size={18}/> Academic sessions <ArrowUpRight size={14}/></button><button onClick={()=>onNavigate('admin:classes')}><Users size={18}/> Classes and sections <ArrowUpRight size={14}/></button><button onClick={()=>onNavigate('admin:programs')}><BookOpen size={18}/> Programmes <ArrowUpRight size={14}/></button><button onClick={()=>onNavigate('admin:subjects')}><BookOpen size={18}/> Subjects <ArrowUpRight size={14}/></button><button onClick={()=>onNavigate('admin:rooms')}><Building2 size={18}/> Rooms and facilities <ArrowUpRight size={14}/></button><button onClick={()=>onNavigate('students:classes')}><Users size={18}/> Student class assignments <ArrowUpRight size={14}/></button></div></section><div className="ed360-admin-callout">Academic session, class, programme, subject and room registers remain tenant-scoped and keep their existing add/edit forms and permission checks.</div></div>
+    const currentSessions=academicSessions.filter(row=>Boolean(row.is_current)||String(row.status??'').toLowerCase()==='active')
+    return <div className="ed360-admin-academic-page">
+      <section className="ed360-admin-kpis">
+        <article><small>Academic sessions</small><strong>{academicSessions.length}</strong><em>{currentSessions.length} current / active</em></article>
+        <article><small>Classes & sections</small><strong>{classes.length}</strong><em>College class register</em></article>
+        <article><small>Programmes</small><strong>{programs.length}</strong><em>Programme catalogue</em></article>
+        <article><small>Subjects</small><strong>{subjects.length}</strong><em>Subject catalogue</em></article>
+        <article><small>Rooms</small><strong>{rooms.length}</strong><em>Teaching and campus spaces</em></article>
+      </section>
+      <div className="ed360-admin-academic-grid">
+        <section className="gov-panel"><header><div><h2>Academic sessions</h2><p>Saved academic years and their current status.</p></div></header>
+          {academicSessions.length?<div className="gov-table-wrap"><table className="ed360-admin-table"><thead><tr><th>Session</th><th>Start</th><th>End</th><th>Status</th></tr></thead><tbody>{academicSessions.map(row=><tr key={row.id}><td><b>{String(row.session_name??row.name??'Academic session')}</b></td><td>{dateLabel(row.start_date)}</td><td>{dateLabel(row.end_date)}</td><td>{label(row.status??(row.is_current?'current':'active'))}</td></tr>)}</tbody></table></div>:<div className="gov-empty">No academic sessions have been saved yet.</div>}
+        </section>
+        <section className="gov-panel"><header><div><h2>Classes and sections</h2><p>Classes, grade levels and section names currently on file.</p></div></header>
+          {classes.length?<div className="gov-table-wrap"><table className="ed360-admin-table"><thead><tr><th>Class</th><th>Grade / level</th><th>Section</th><th>Status</th></tr></thead><tbody>{classes.map(row=><tr key={row.id}><td><b>{String(row.name??'Class')}</b></td><td>{String(row.grade_level??'—')}</td><td>{String(row.section??'—')}</td><td>{row.is_active===false?'Inactive':'Active'}</td></tr>)}</tbody></table></div>:<div className="gov-empty">No classes or sections have been saved yet.</div>}
+        </section>
+        <section className="gov-panel"><header><div><h2>Programmes</h2><p>Institution programmes with their connected departments.</p></div></header>
+          {programs.length?<div className="ed360-admin-academic-list">{programs.map(row=><article key={row.id}><b>{String(row.name??'Programme')}</b><span>{String(row.code??'No programme code')}</span><small>{departments.find(d=>d.id===row.department_id)?.name??'Department not assigned'}</small></article>)}</div>:<div className="gov-empty">No programmes have been saved yet.</div>}
+        </section>
+        <section className="gov-panel"><header><div><h2>Subjects</h2><p>Registered subjects and their available department links.</p></div></header>
+          {subjects.length?<div className="ed360-admin-academic-list">{subjects.map(row=><article key={row.id}><b>{String(row.name??'Subject')}</b><span>{String(row.code??'No subject code')}</span><small>{departments.find(d=>d.id===row.department_id)?.name??'Department not assigned'}</small></article>)}</div>:<div className="gov-empty">No subjects have been saved yet.</div>}
+        </section>
+        <section className="gov-panel"><header><div><h2>Rooms and teaching spaces</h2><p>Rooms available in the college facilities register.</p></div></header>
+          {rooms.length?<div className="ed360-admin-academic-list">{rooms.map(row=><article key={row.id}><b>{String(row.name??row.room_number??'Room')}</b><span>{String(row.code??row.room_type??'Teaching space')}</span><small>{String(row.building??row.location??'College campus')}</small></article>)}</div>:<div className="gov-empty">No rooms have been saved yet.</div>}
+        </section>
+      </div>
+    </div>
   }
+
   function renderSettingsPage(){
-    const heading=section==='system'?'Institution-wide system configuration':section==='branding'?'Brand and document defaults':'Institute settings'
-    const description=section==='system'?'Operating preferences and system-level configuration values.':section==='branding'?'Institution colours, document headers and reusable template defaults.':'Academic defaults, region, dates, time, language and institution preferences.'
     return <div className="ed360-admin-stage5">
-      {section==='branding'&&<section className="gov-panel"><header><div><h2>Brand preview</h2><p>Stored branding defaults. Private logo is managed in Institute Profile.</p></div><Palette size={20}/></header><div className="ed360-admin-brand-preview"><span className="ed360-admin-brand-swatch" style={{background:primaryColor}}/><span><b>{displayInstitutionName(institution?.name)}</b><small style={{display:'block',color:'#859287',fontSize:10}}>Primary brand colour · {primaryColor}</small></span><span className="ed360-admin-brand-swatch" style={{background:accentColor}}/><small>Accent · {accentColor}</small></div></section>}
-      <section className="gov-panel"><header><div><h2>{heading}</h2><p>{description}</p></div><div className="gov-row-actions">{section==='branding'?<><button className="gov-button primary" onClick={()=>openSetting(undefined,'branding')}><Plus size={14}/> Add brand setting</button><button className="gov-button" onClick={()=>openSetting(undefined,'documents')}><FileText size={14}/> Add document setting</button></>:<button className="gov-button primary" onClick={()=>openSetting(undefined,section==='system'?'system':'general')}><Plus size={14}/> Add setting</button>}</div></header>
-        {section==='branding'&&<p className="gov-note">Store colour tokens and document header/footer defaults as institution-scoped settings. Generated receipts and certificates must consume these keys before their appearance changes.</p>}
-        <label className="ed360-admin-search"><Search size={14}/><input value={search} onChange={e=>{setSearch(e.target.value);setSettingsPage(1);setApprovalPage(1)}} placeholder="Search category, key or value…"/></label>
-        {renderSettingRows(settingsPageRows,section==='system'?'No system-level settings have been saved.':section==='branding'?'No branding or document settings have been saved.':'No institution settings have been saved.')}
+      {section==='branding'&&<section className="gov-panel"><header><div><h2>Brand preview</h2><p>Stored branding defaults. The private college logo is managed in Institute Profile.</p></div><Palette size={20}/></header><div className="ed360-admin-brand-preview"><span className="ed360-admin-brand-swatch" style={{background:primaryColor}}/><span><b>{displayInstitutionName(institution?.name)}</b><small style={{display:'block',color:'#859287',fontSize:10}}>Primary brand colour · {primaryColor}</small></span><span className="ed360-admin-brand-swatch" style={{background:accentColor}}/><small>Accent · {accentColor}</small></div></section>}
+      <section className="gov-panel ed360-admin-settings-table-panel"><header><div><h2>{section==='system'?'System settings register':'Brand and document defaults'}</h2></div><div className="gov-row-actions">{section==='branding'?<><button className="gov-button primary" onClick={()=>openSetting(undefined,'branding')}><Plus size={14}/> Add brand setting</button><button className="gov-button" onClick={()=>openSetting(undefined,'documents')}><FileText size={14}/> Add document setting</button></>:<button className="gov-button primary" onClick={()=>openSetting(undefined,'system')}><Plus size={14}/> Add system setting</button>}</div></header>
+        <label className="ed360-admin-search"><Search size={14}/><input value={search} onChange={e=>{setSearch(e.target.value);setSettingsPage(1)}} placeholder="Search settings…"/></label>
+        {renderSettingRows(settingsPageRows,section==='system'?'No system settings have been configured.':'No branding or document settings have been configured.')}
         {pageControls(orderedSettings.length,settingsCurrentPage,settingsPageCount,setSettingsPage)}
       </section>
     </div>
   }
   function renderApprovals(){
     const rows=orderedApprovals
-    return <section className="gov-panel"><header><div><h2>Approval queue</h2><p>Requests, responsible approvers, decisions and history. Setting changes are applied by the database approval function.</p></div><div className="gov-header-actions"><span className="gov-pending">{pendingApprovals} pending</span><button className="gov-button primary" onClick={()=>setApprovalForm(true)}><Plus size={14}/> Request setting change</button></div></header>
-      <label className="ed360-admin-search"><Search size={14}/><input value={search} onChange={e=>{setSearch(e.target.value);setSettingsPage(1);setApprovalPage(1)}} placeholder="Search workflow, status or target…"/></label>
-      {rows.length?<div className="gov-approval-list">{approvalPageRows.map(row=><article key={row.id}><div className="gov-approval-heading"><div><small>{label(row.workflow_key)}</small><strong>{label(row.target_type)}</strong></div><span className={'gov-status '+row.status}>{label(row.status)}</span></div><dl><div><dt>Requested</dt><dd>{dateLabel(row.requested_at)}</dd></div><div><dt>Requester</dt><dd>{String(row.requested_by??'Institution member')}</dd></div><div><dt>Target</dt><dd className="gov-mono">{String(row.target_id)}</dd></div></dl>{row.workflow_key==='institution_setting_change'&&<div className="gov-payload"><b>{String(row.payload.category??'general')} / {String(row.payload.setting_key??'setting')}</b><pre>{JSON.stringify(row.payload.setting_value??{},null,2)}</pre></div>}{row.decision_notes&&<p className="gov-decision-note">{row.decision_notes}</p>}{admin&&row.status==='pending'&&<div className="gov-row-actions"><button className="gov-button primary" disabled={saving} onClick={()=>void decideApproval(row,'approved')}><CheckCircle2 size={13}/> Approve and apply</button><button className="gov-button danger" disabled={saving} onClick={()=>void decideApproval(row,'rejected')}>Reject</button></div>}</article>)}</div>:<div className="gov-empty">No approval requests match this view.</div>}
-      {pageControls(orderedApprovals.length,approvalsCurrentPage,approvalsPageCount,setApprovalPage)}
-    </section>
+    return <div className="ed360-admin-approval-page">
+      <section className="gov-panel ed360-admin-approval-panel"><header><div><h2>Approval queue</h2></div><div className="gov-header-actions"><span className="gov-pending">{pendingApprovals} pending</span><button className="gov-button primary" onClick={()=>setApprovalForm(true)}><Plus size={14}/> Request approval</button></div></header>
+        <label className="ed360-admin-search"><Search size={14}/><input value={search} onChange={e=>{setSearch(e.target.value);setSettingsPage(1);setApprovalPage(1)}} placeholder="Search workflow, status or target…"/></label>
+        {rows.length?<div className="gov-approval-list">{approvalPageRows.map(row=><article key={row.id}><div className="gov-approval-heading"><div><small>{label(row.workflow_key)}</small><strong>{label(row.target_type)}</strong></div><span className={'gov-status '+row.status}>{label(row.status)}</span></div><dl><div><dt>Requested</dt><dd>{dateLabel(row.requested_at)}</dd></div><div><dt>Requester</dt><dd>{String(row.requested_by??'Institution member')}</dd></div><div><dt>Target</dt><dd className="gov-mono">{String(row.target_id)}</dd></div></dl>{row.workflow_key==='institution_setting_change'&&<div className="gov-payload"><b>{String(row.payload.category??'general')} / {String(row.payload.setting_key??'setting')}</b><pre>{JSON.stringify(row.payload.setting_value??{},null,2)}</pre></div>}{row.decision_notes&&<p className="gov-decision-note">{row.decision_notes}</p>}{admin&&row.status==='pending'&&<div className="gov-row-actions"><button className="gov-button primary" disabled={saving} onClick={()=>void decideApproval(row,'approved')}><CheckCircle2 size={13}/> Approve and apply</button><button className="gov-button danger" disabled={saving} onClick={()=>void decideApproval(row,'rejected')}>Reject</button></div>}</article>)}</div>:<div className="gov-empty">No approval requests match this view.</div>}
+        {pageControls(orderedApprovals.length,approvalsCurrentPage,approvalsPageCount,setApprovalPage)}
+      </section>
+    </div>
   }
   function renderPolicies(){
-    return <section className="gov-panel"><header><div><h2>Policy and rule register</h2><p>Institution policies, publication status, effective dates and recorded revisions.</p></div><button className="gov-button primary" onClick={()=>openPolicy()}><Plus size={14}/> Add policy</button></header><label className="ed360-admin-search"><Search size={14}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search policy title, reference or category…"/></label>
-      {filteredPolicies.length?<div className="ed360-admin-policy-list">{filteredPolicies.map(row=>{const revisions=audit.filter(event=>event.record_id===row.id).sort((a,b)=>String(b.occurred_at).localeCompare(String(a.occurred_at)));return <article className="ed360-admin-policy-card" key={row.id}><header><div><h3>{row.title}</h3><div className="ed360-admin-policy-meta"><span>{row.reference_code??'No reference'}</span><span>{label(row.payload?.category??'general')}</span><span>Revision {Number(row.payload?.revision??1)}</span><span>Effective {row.effective_date??'Not set'}</span></div></div><span className={'ed360-admin-status '+row.status}>{label(row.status)}</span></header>{row.description&&<p>{row.description}</p>}<div className="gov-row-actions"><button className="gov-button" onClick={()=>openPolicy(row)}>Edit / revise</button><button className="gov-button danger" onClick={()=>void removePolicy(row)}>Delete</button></div><details><summary>Revision and audit history ({revisions.length} events)</summary>{revisions.length?revisions.map(event=><p key={event.id}>{dateLabel(event.occurred_at)} · {label(event.action)} by {event.actor_id??'system'}</p>):<p>No prior revisions have been captured in the audit feed.</p>}</details></article>})}</div>:<div className="gov-empty">No policies or rules have been recorded yet.</div>}
-      <div className="gov-note">Policies are stored in the institution-scoped Administration record set. Existing database audit triggers record insert, update and delete events.</div>
+    const audience=section==='policies-faculty'?'Faculty':'Student'
+    return <section className="gov-panel ed360-admin-policy-page"><header><div><h2>{audience} policy catalogue</h2></div><button className="gov-button primary" onClick={()=>openPolicy()}><Plus size={14}/> Add {audience.toLowerCase()} policy</button></header>
+      <label className="ed360-admin-search"><Search size={14}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder={'Search '+audience.toLowerCase()+' policy title, reference or text…'}/></label>
+      {filteredPolicies.length?<div className="ed360-admin-policy-list">{filteredPolicies.map(row=>{const revisions=audit.filter(event=>event.record_id===row.id).sort((a,b)=>String(b.occurred_at).localeCompare(String(a.occurred_at)));return <article className="ed360-admin-policy-card" key={row.id}><header><div><h3>{row.title}</h3><div className="ed360-admin-policy-meta"><span>{row.reference_code??'No reference'}</span><span>Revision {Number(row.payload?.revision??1)}</span><span>Effective {row.effective_date??'Not set'}</span></div></div><span className={'ed360-admin-status '+row.status}>{label(row.status)}</span></header>{row.description&&<p>{row.description}</p>}<div className="gov-row-actions"><button className="gov-button" onClick={()=>openPolicy(row)}>Edit / revise</button><button className="gov-button danger" onClick={()=>void removePolicy(row)}>Delete</button></div><details><summary>Revision and audit history ({revisions.length} events)</summary>{revisions.length?revisions.map(event=><p key={event.id}>{dateLabel(event.occurred_at)} · {label(event.action)} by {event.actor_id??'system'}</p>):<p>No previous revisions are linked to this policy.</p>}</details></article>})}</div>:<div className="gov-empty">No {audience.toLowerCase()} policies have been added yet. Create the first policy for this audience.</div>}
     </section>
   }
+
   function renderPermissions(){
     if(!admin)return <div className="ed360-admin-callout warning">Role profiles can only be administered by the college owner or an authorised administrator.</div>
     return <div className="ed360-admin-stage5"><CollegeRolePermissionWorkspace institutionId={user!.institutionId} currentUserId={user!.id} members={members} onToast={onToast}/></div>
@@ -319,10 +424,12 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
     if(section==='profile')return renderProfile()
     if(section==='academic')return renderAcademic()
     if(section==='departments')return renderDepartments()
+    if(section==='designations')return renderDesignations()
     if(section==='organization')return renderOrganization()
-    if(['system','settings','branding'].includes(section))return renderSettingsPage()
+    if(section==='settings')return renderInstituteSettings()
+    if(['system','branding'].includes(section))return renderSettingsPage()
     if(section==='approvals')return renderApprovals()
-    if(section==='policies')return renderPolicies()
+    if(section==='policies-students'||section==='policies-faculty')return renderPolicies()
     if(section==='audit')return renderAudit()
     if(section==='accounts')return renderAccounts()
     if(section==='permissions')return renderPermissions()
@@ -330,14 +437,14 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
     return null
   }
   if(!admin)return <main className="page-content"><div className="gov-error">Administration is restricted to authorised institution owners and administrators.</div></main>
+  const showTopRefresh=['academic','departments','designations','organization','system','approvals','policies-students','policies-faculty'].includes(section)
   return <main className={"gov-stage page-content ed360-module-page ed360-admin-stage5" + (section === "profile" ? " is-profile" : "")}>
-    <header className="gov-heading"><div><span>ADMINISTRATION / INSTITUTION CONTROL</span><h1>{pageTitle[section]}</h1><p>Institution-scoped controls, operational registers and role-protected changes.</p></div></header>
-    <section className="gov-context"><div><small>{section === "profile" ? "INSTITUTE IDENTITY & CONTACT" : "ADMINISTRATION WORKSPACE"}</small><h2>{pageTitle[section]}</h2><p>{displayInstitutionName(institution?.name??user?.institutionName)} · {label(user?.role)} · Institution-scoped record</p></div><div><strong>{section==='settings'||section==='system'||section==='branding'?visibleSettings.length:section==='approvals'?approvals.length:section==='audit'?audit.length:section==='policies'?policies.length:section==='departments'?departments.length:section==='organization'?teachers.length:section==='accounts'||section==='security'?members.length:section==='profile'?(institution?1:0):'—'}</strong><small>{['settings','system','branding'].includes(section)?'Saved values':section==='approvals'?'Approval requests':section==='audit'?'Audit events':section==='policies'?'Policies':section==='departments'?'Departments':section==='organization'?'Staff records':section==='accounts'||section==='security'?'Memberships':'Institution record'}</small></div></section>
+    <header className="gov-heading"><div><span>ADMINISTRATION / {displayInstitutionName(institution?.name??user?.institutionName).toUpperCase()}</span><h1>{pageTitle[section]}</h1></div>{showTopRefresh&&<button type="button" className="gov-button ed360-admin-top-refresh" onClick={()=>void load()} disabled={loading}><RefreshCw size={14}/> Refresh records</button>}</header>
     {error&&<div className="gov-error" role="alert">{error}</div>}
     {loading?<div className="gov-empty"><RefreshCw size={18}/> Loading Administration records…</div>:renderContent()}
-    <footer className="gov-footer"><span><ShieldCheck size={14}/> Institution data remains scoped by the signed-in membership and database policies.</span><button className="gov-button" onClick={()=>void load()}><RefreshCw size={13}/> Refresh</button></footer>
+    {section==='system'&&<footer className="gov-footer ed360-admin-system-refresh"><button type="button" className="gov-button" onClick={()=>void load()} disabled={loading}><RefreshCw size={13}/> Refresh system settings</button></footer>}
     {settingForm&&<div className="modal-backdrop"><section className="modal-card gov-modal" role="dialog" aria-modal="true"><div className="modal-heading"><div><div className="eyebrow">INSTITUTION CONFIGURATION</div><h2>{settingEditing?'Edit setting':'Create setting'}</h2><p>Save an institution-scoped value. Public visibility is off by default.</p></div><button className="icon-button" onClick={()=>setSettingForm(false)}><X size={18}/></button></div><form className="gov-form" onSubmit={saveSetting}><label>Category *<input required value={settingCategory} onChange={e=>setSettingCategory(e.target.value)}/></label><label>Setting key *<input required value={settingKey} onChange={e=>setSettingKey(e.target.value)}/></label><label>Value (JSON) *<textarea rows={6} required value={settingValue} onChange={e=>setSettingValue(e.target.value)}/></label><label className="gov-check"><input type="checkbox" checked={settingPublic} onChange={e=>setSettingPublic(e.target.checked)}/> Publicly visible to unauthenticated visitors</label><div className="modal-actions"><button type="button" className="gov-button" onClick={()=>setSettingForm(false)}>Cancel</button><button className="gov-button primary" disabled={saving}><Save size={14}/> Save setting</button></div></form></section></div>}
     {approvalForm&&<div className="modal-backdrop"><section className="modal-card gov-modal" role="dialog" aria-modal="true"><div className="modal-heading"><div><div className="eyebrow">APPROVAL REQUEST</div><h2>Request an institute setting change</h2><p>The owner/administrator decision applies the saved value atomically.</p></div><button className="icon-button" onClick={()=>setApprovalForm(false)}><X size={18}/></button></div><form className="gov-form" onSubmit={submitApproval}><label>Setting key *<input required value={approvalKey} onChange={e=>setApprovalKey(e.target.value)}/></label><label>Requested value (JSON) *<textarea rows={6} required value={approvalValue} onChange={e=>setApprovalValue(e.target.value)}/></label><label className="gov-check"><input type="checkbox" checked={approvalPublic} onChange={e=>setApprovalPublic(e.target.checked)}/> Request public visibility</label><label>Request notes<input value={approvalNotes} onChange={e=>setApprovalNotes(e.target.value)} placeholder="Optional context"/></label><div className="modal-actions"><button type="button" className="gov-button" onClick={()=>setApprovalForm(false)}>Cancel</button><button className="gov-button primary" disabled={saving}>Submit request</button></div></form></section></div>}
-    {policyForm&&<div className="modal-backdrop"><section className="modal-card gov-modal" role="dialog" aria-modal="true"><div className="modal-heading"><div><div className="eyebrow">INSTITUTIONAL POLICY</div><h2>{policyEditing?'Revise policy':'Create policy or rule'}</h2><p>Each save increments the revision and is included in the audit feed.</p></div><button className="icon-button" onClick={()=>setPolicyForm(false)} aria-label="Close"><X size={18}/></button></div><form className="gov-form" onSubmit={savePolicy}><label>Policy title *<input required value={policyTitle} onChange={e=>setPolicyTitle(e.target.value)}/></label><label>Reference code<input value={policyCode} onChange={e=>setPolicyCode(e.target.value)}/></label><label>Category<input value={policyCategory} onChange={e=>setPolicyCategory(e.target.value)}/></label><label>Description / guideline<textarea rows={5} value={policyDescription} onChange={e=>setPolicyDescription(e.target.value)}/></label><label>Effective date<input type="date" value={policyEffectiveDate} onChange={e=>setPolicyEffectiveDate(e.target.value)}/></label><label>Publication status<select value={policyStatus} onChange={e=>setPolicyStatus(e.target.value)}><option value="draft">Draft</option><option value="published">Published</option><option value="archived">Archived</option></select></label><div className="modal-actions"><button type="button" className="gov-button" onClick={()=>setPolicyForm(false)}>Cancel</button><button className="gov-button primary" disabled={saving}>{policyEditing?'Save revision':'Create policy'}</button></div></form></section></div>}
+    {policyForm&&<div className="modal-backdrop"><section className="modal-card gov-modal" role="dialog" aria-modal="true"><div className="modal-heading"><div><div className="eyebrow">INSTITUTIONAL POLICY</div><h2>{policyEditing?'Revise policy':'Create policy or rule'}</h2><p>Each save increments the revision and is included in the audit feed.</p></div><button className="icon-button" onClick={()=>setPolicyForm(false)} aria-label="Close"><X size={18}/></button></div><form className="gov-form" onSubmit={savePolicy}><label>Policy title *<input required value={policyTitle} onChange={e=>setPolicyTitle(e.target.value)}/></label><label>Reference code<input value={policyCode} onChange={e=>setPolicyCode(e.target.value)}/></label><label>Policy audience<select value={policyCategory} onChange={e=>setPolicyCategory(e.target.value)}><option value="student">Students</option><option value="faculty">Faculty & staff</option></select></label><label>Description / guideline<textarea rows={5} value={policyDescription} onChange={e=>setPolicyDescription(e.target.value)}/></label><label>Effective date<input type="date" value={policyEffectiveDate} onChange={e=>setPolicyEffectiveDate(e.target.value)}/></label><label>Publication status<select value={policyStatus} onChange={e=>setPolicyStatus(e.target.value)}><option value="draft">Draft</option><option value="published">Published</option><option value="archived">Archived</option></select></label><div className="modal-actions"><button type="button" className="gov-button" onClick={()=>setPolicyForm(false)}>Cancel</button><button className="gov-button primary" disabled={saving}>{policyEditing?'Save revision':'Create policy'}</button></div></form></section></div>}
   </main>
 }

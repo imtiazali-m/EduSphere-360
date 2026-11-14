@@ -206,6 +206,11 @@ function payrollRoute(itemKey: string): string {
 
 const governanceRoutes: Record<string,string> = {
   'institute-profile': 'profile',
+  'academic-structure-and-sections': 'academic',
+  'department-directory': 'departments',
+  'designation-catalogue': 'designations',
+  'student-policies': 'policies-students',
+  'faculty-policies': 'policies-faculty',
   'institution-settings': 'settings',
   'branding-and-document-settings': 'settings',
   'system-configuration': 'settings',
@@ -256,7 +261,11 @@ const institutionalOperationsItems: Record<string, Record<string,string>> = {
 const administrationGovernanceItems: Record<string,string> = {
   'institute-profile':'profile',
   'academic-structure-sections':'academic',
+  'department-directory':'departments',
+  'designation-catalogue':'designations',
   'departments-designations':'departments',
+  'student-policies':'policies-students',
+  'faculty-policies':'policies-faculty',
   'organisational-structure':'organization',
   'system-configuration':'system',
   'approval-workflows':'approvals',
@@ -558,7 +567,7 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
   const operationsDestination=institutionOperationsRoute(groupKey,itemKey)
   if (operationsDestination) return operationsDestination
   if (groupKey === 'payroll') return payrollRoute(itemKey)
-  if (groupKey === 'administration' && governanceRoutes[itemKey] && !['campus-and-branch-management','departments','designations','academic-structure-and-sections'].includes(itemKey)) {
+  if (groupKey === 'administration' && governanceRoutes[itemKey] && itemKey !== 'campus-and-branch-management') {
     return `governance:${governanceRoutes[itemKey]}`
   }
   if (groupKey === 'institution-config' && governanceRoutes[itemKey]) return `governance:${governanceRoutes[itemKey]}`

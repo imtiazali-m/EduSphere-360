@@ -26,7 +26,7 @@ export const institutionalMenu:WorkspaceMenuGroup[]=[
   'Institutional Overview'
  ]),
  group('administration','Administration','Institution identity, organisational structure, policies, approvals and access control.','Building2','slate','administration',management,[
-  'Institute Profile','Campus and Branch Management','Academic Structure & Sections','Departments & Designations','Organisational Structure','System Configuration','Approval Workflows','Policies & Rules','Administrative Audit','User Access & Invitations','Role & Permission Management','Institute Settings','Branding & Document Settings','Security & Access History'
+  'Institute Profile','Campus and Branch Management','Academic Structure & Sections','Department Directory','Designation Catalogue','Organisational Structure','System Configuration','Approval Workflows','Student Policies','Faculty Policies','Administrative Audit','User Access & Invitations','Role & Permission Management','Institute Settings','Branding & Document Settings','Security & Access History'
  ]),
  group('institution-config','Institutional Systems and Configuration','Education levels, institution/campus settings, invitations, role rights, module rights and security.','Settings','slate','institution_config',management,[
   'Institution Configuration','Education System Configuration','Education Levels','Grade and Academic Level Configuration','Institution Settings','Campus Settings','Academic Settings','General System Settings','Invitations and Access','User Management','Role Management','User Permissions','Module Permissions','Approval Permissions','Security Configuration'

@@ -370,7 +370,6 @@ export function LinkedOperationsWorkspace({workspaceKey,onToast,onNavigate}:Prop
   {isCampus&&<div className="ed360-campus-actions">
    {canAdmin&&<button type="button" className="button button-primary" onClick={()=>resetCampus()}><Plus size={18}/> Add campus</button>}
    <button type="button" className="button button-outline" onClick={()=>void load()} disabled={loading}><RefreshCw size={16}/> Refresh records</button>
-   <span>Changes remain inside {user?.institutionName??'this institution'}.</span>
   </div>}
   {!isCampus&&nav}
   {loadError&&<div className="ed360-workspace-error" role="alert">{loadError}</div>}
@@ -387,7 +386,6 @@ export function LinkedOperationsWorkspace({workspaceKey,onToast,onNavigate}:Prop
    <section className="table-card ed360-workspace-record-card ed360-campus-record-card">
     <div className="table-toolbar">
      <div className="table-count"><strong>{visibleCampuses.length.toLocaleString()}</strong> matching campuses <span>·</span> Institution register</div>
-     <span className="ed360-campus-scope-label">Scoped to {user?.institutionName??'your institution'}</span>
     </div>
     <label className="ed360-linked-search">Search campuses<input aria-label="Search campuses" value={campusSearch} onChange={e=>{setCampusSearch(e.target.value);setCampusPage(1)}} placeholder="Search campus name, code, branch head, address or contact…"/></label>
     {visibleCampuses.length===0

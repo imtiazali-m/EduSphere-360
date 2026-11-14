@@ -252,13 +252,87 @@ function FinanceBars({ months, collections, expenses }: { months: Date[]; collec
   </div>
 }
 
+function weatherLabel(code:number){
+  if(code===0)return 'Clear sky'
+  if([1,2,3].includes(code))return code===1?'Mainly clear':code===2?'Partly cloudy':'Overcast'
+  if([45,48].includes(code))return 'Foggy'
+  if([51,53,55,56,57].includes(code))return 'Drizzle'
+  if([61,63,65,66,67].includes(code))return 'Rain'
+  if([71,73,75,77].includes(code))return 'Snow'
+  if([80,81,82].includes(code))return 'Rain showers'
+  if([85,86].includes(code))return 'Snow showers'
+  if([95,96,99].includes(code))return 'Thunderstorm'
+  return 'Current conditions'
+}
+function CampusIllustration(){
+  return <svg className="rd-campus-illustration" viewBox="0 0 720 420" role="img" aria-label="Illustration of a college campus building" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="campus-sky" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stopColor="#f4dff7"/><stop offset="1" stopColor="#f7c8d9"/></linearGradient>
+      <linearGradient id="campus-wall" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="#fffaf5"/><stop offset="1" stopColor="#e8d9ea"/></linearGradient>
+      <linearGradient id="campus-roof" x1="0" x2="1"><stop offset="0" stopColor="#6f4285"/><stop offset="1" stopColor="#a65d97"/></linearGradient>
+    </defs>
+    <rect x="0" y="0" width="720" height="420" rx="26" fill="url(#campus-sky)"/>
+    <circle cx="585" cy="75" r="42" fill="#fff4c5" opacity=".88"/>
+    <path d="M0 285 Q160 220 310 280 T720 255 V420 H0Z" fill="#c7d7b8"/>
+    <path d="M0 325 Q170 275 360 332 T720 302 V420 H0Z" fill="#9fbd9c"/>
+    <path d="M145 335 L185 220 Q360 178 535 220 L575 335Z" fill="#d8c3d8"/>
+    <rect x="180" y="186" width="360" height="165" rx="7" fill="url(#campus-wall)" stroke="#9d7ca8" strokeWidth="4"/>
+    <path d="M155 194 L355 95 L565 194Z" fill="url(#campus-roof)" stroke="#57356f" strokeWidth="5"/>
+    <path d="M255 149 H470 V190 H255Z" fill="#f4dce9" opacity=".95"/>
+    <rect x="318" y="110" width="82" height="47" rx="5" fill="#fdf6ed" stroke="#7b528e" strokeWidth="3"/>
+    <text x="359" y="140" fill="#58346c" textAnchor="middle" fontSize="20" fontWeight="800">GIDC</text>
+    <rect x="205" y="215" width="310" height="20" rx="3" fill="#b889ad"/>
+    {Array.from({length:5},(_,n)=><g key={n}><rect x={210+n*62} y="240" width="42" height="67" rx="4" fill="#7f91a7" stroke="#725482" strokeWidth="3"/><path d={'M'+(231+n*62)+' 240 V307'} stroke="#e9ebee" strokeWidth="3"/></g>)}
+    <rect x="326" y="269" width="68" height="82" rx="4" fill="#754a7f"/>
+    <rect x="342" y="286" width="36" height="65" rx="3" fill="#e6cbe3"/>
+    <path d="M360 269 V351" stroke="#5a3969" strokeWidth="3"/>
+    <path d="M90 348 H630" stroke="#f5e8ee" strokeWidth="13" strokeLinecap="round"/>
+    <path d="M120 355 L170 285 L200 355Z" fill="#71966f"/><rect x="156" y="352" width="10" height="37" fill="#815b4e"/>
+    <path d="M520 358 L554 278 L590 358Z" fill="#759b72"/><rect x="550" y="355" width="10" height="35" fill="#815b4e"/>
+    <path d="M0 392 Q170 360 340 389 T720 380" fill="none" stroke="#f9e4ef" strokeWidth="5"/>
+    <g fill="#fff6fb" opacity=".8"><circle cx="92" cy="90" r="6"/><circle cx="125" cy="67" r="4"/><circle cx="650" cy="157" r="6"/><circle cx="625" cy="188" r="4"/></g>
+  </svg>
+}
+
 export function RoleDashboard({ onNavigate }: Props) {
   const { user, mode } = useAuth()
+  const [welcomeNow,setWelcomeNow]=useState(()=>Date.now())
+  const [welcomeWeather,setWelcomeWeather]=useState<{temperature:number;feelsLike:number;humidity:number;wind:number;code:number}|null>(null)
+  const [weatherUnavailable,setWeatherUnavailable]=useState(false)
   const [data, setData] = useState<Dataset>({})
   const [errors, setErrors] = useState<Errors>({})
   const [loading, setLoading] = useState(true)
   const today = localDayKey(new Date())
   const role = user?.role ?? 'student'
+
+  useEffect(()=>{
+    const timer=window.setInterval(()=>setWelcomeNow(Date.now()),1000)
+    return ()=>window.clearInterval(timer)
+  },[])
+
+  useEffect(()=>{
+    let active=true
+    const controller=new AbortController()
+    const loadWeather=async()=>{
+      try{
+        const url='https://api.open-meteo.com/v1/forecast?latitude=24.65&longitude=68.84&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m&temperature_unit=celsius&wind_speed_unit=kmh&timezone=Asia%2FKarachi'
+        const response=await window.fetch(url,{signal:controller.signal,headers:{Accept:'application/json'}})
+        if(!response.ok)throw new Error('Weather service unavailable')
+        const result=await response.json() as {current?:{temperature_2m?:number;apparent_temperature?:number;relative_humidity_2m?:number;weather_code?:number;wind_speed_10m?:number}}
+        const current=result.current
+        if(!current||typeof current.temperature_2m!=='number'||typeof current.weather_code!=='number')throw new Error('Weather data incomplete')
+        if(active){
+          setWelcomeWeather({temperature:current.temperature_2m,feelsLike:Number(current.apparent_temperature??current.temperature_2m),humidity:Number(current.relative_humidity_2m??0),wind:Number(current.wind_speed_10m??0),code:current.weather_code})
+          setWeatherUnavailable(false)
+        }
+      }catch{
+        if(active&&!controller.signal.aborted)setWeatherUnavailable(true)
+      }
+    }
+    void loadWeather()
+    const interval=window.setInterval(()=>{if(active)void loadWeather()},10*60*1000)
+    return ()=>{active=false;controller.abort();window.clearInterval(interval)}
+  },[])
 
   useEffect(() => {
     if (!user) return
@@ -955,6 +1029,34 @@ export function RoleDashboard({ onNavigate }: Props) {
         <button type="button" className="rd-header-cta" onClick={() => onNavigate(primaryAction[role].route)}>{primaryAction[role].label}</button>
       </div>
     </header>
+    {role==='owner'||role==='admin' ? <section className="rd-welcome-panel" aria-label="College welcome and current conditions">
+      <div className="rd-welcome-copy">
+        <div className="rd-welcome-kicker"><span className="rd-welcome-kicker-dot"/> COLLEGE PORTAL · BADIN, SINDH</div>
+        <h2>Welcome</h2>
+        <h3>Government Islamia Degree College, Badin</h3>
+        <p className="rd-welcome-intro">Your college at a glance — today’s conditions, campus information and institutional performance.</p>
+        <div className="rd-welcome-logo-row">
+          <span className="rd-welcome-logo"><img src="/gidc-badin-official-logo.svg" alt="Government Islamia Degree College logo"/></span>
+          <span><strong>Government Islamia Degree College</strong><small>Badin · Sindh · Pakistan</small></span>
+        </div>
+        <div className="rd-welcome-facts">
+          <div className="rd-welcome-fact"><small>DATE</small><strong>{new Intl.DateTimeFormat('en-PK',{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:'Asia/Karachi'}).format(new Date(welcomeNow))}</strong></div>
+          <div className="rd-welcome-fact"><small>LOCAL TIME · PAKISTAN</small><strong>{new Intl.DateTimeFormat('en-PK',{hour:'numeric',minute:'2-digit',second:'2-digit',hour12:true,timeZone:'Asia/Karachi'}).format(new Date(welcomeNow))}</strong></div>
+          <div className="rd-welcome-fact rd-welcome-weather">
+            <small><span className="rd-weather-pulse"/> BADIN WEATHER · LIVE</small>
+            {welcomeWeather?<><strong>{Math.round(welcomeWeather.temperature)}°C <span>{weatherLabel(welcomeWeather.code)}</span></strong><em>Feels like {Math.round(welcomeWeather.feelsLike)}° · Humidity {Math.round(welcomeWeather.humidity)}% · Wind {Math.round(welcomeWeather.wind)} km/h</em></>:<strong className="rd-weather-unavailable">{weatherUnavailable?'Weather temporarily unavailable':'Loading current weather…'}</strong>}
+          </div>
+        </div>
+      </div>
+      <div className="rd-welcome-visual">
+        <div className="rd-welcome-visual-glow"/>
+        <div className="rd-welcome-visual-label"><span>GIDC</span><span>LEARNING · COMMUNITY · FUTURE</span></div>
+        <CampusIllustration/>
+        <div className="rd-welcome-visual-caption"><span className="rd-illustration-badge">Campus illustration</span><span>Official campus front photograph can replace this illustration when supplied.</span></div>
+      </div>
+      <div className="rd-welcome-decoration rd-welcome-decoration-one"/>
+      <div className="rd-welcome-decoration rd-welcome-decoration-two"/>
+    </section>:null}
     {errors && Object.keys(errors).length > 0 && <div className="rd-data-warning" role="status"><CircleAlert size={16}/><span>Some live sections could not be loaded. Unavailable figures are shown as a dash rather than being reported as zero.</span></div>}
     <section className="rd-metric-grid" aria-label={roleLabels[role] + ' dashboard summary'}>
       {metrics.map(metric => <MetricCard key={metric.label} icon={metric.icon} label={metric.label} value={loading ? '—' : metric.value} hint={metric.hint} tone={metric.tone} onClick={metric.route ? () => onNavigate(metric.route!) : undefined}/>)}
