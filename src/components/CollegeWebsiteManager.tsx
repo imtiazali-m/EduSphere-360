@@ -1,11 +1,13 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
+import type { ReactNode } from 'react'
 import type { ChangeEvent } from 'react'
 import {
-  AlertCircle, BookMarked, Check, CheckCircle2, ExternalLink, FileImage, Globe2,
+  AlertCircle, BookMarked, Check, CheckCircle2, ExternalLink, Globe2,
   ImagePlus, Megaphone, Plus, Save, ShieldCheck, Trash2, Upload, Users, X,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
+import '../styles/college-website-manager.css'
 
 const GIDC_IDS = [
   '20b0493c-1e73-421f-91f0-6868eeadd838',
@@ -98,7 +100,7 @@ function TextInput({ label, value, onChange, placeholder = '', type = 'text' }: 
 function TextArea({ label, value, onChange, placeholder = '', rows = 4 }: { label: string; value: string; onChange: (value: string) => void; placeholder?: string; rows?: number }) {
   return <label className="cwm-field"><span>{label}</span><textarea rows={rows} value={value} onChange={event => onChange(event.target.value)} placeholder={placeholder}/></label>
 }
-function AdminSection({ icon: Icon, title, description, children }: { icon: typeof Globe2; title: string; description: string; children: React.ReactNode }) {
+function AdminSection({ icon: Icon, title, description, children }: { icon: typeof Globe2; title: string; description: string; children: ReactNode }) {
   return <section className="cwm-section"><div className="cwm-section-heading"><span><Icon size={21}/></span><div><h2>{title}</h2><p>{description}</p></div></div><div className="cwm-section-body">{children}</div></section>
 }
 
