@@ -9,14 +9,14 @@ import type { RecordRow } from '../lib/types'
 import '../styles/institution-operations.css'
 
 type Domain = 'question-bank'|'curriculum'|'behaviour'|'certificates'|'visitors'|'facilities'
-type View = 'pool'|'papers'|'units'|'coverage'|'register'|'positive'|'follow-up'|'issue'|'verify'|'log'|'checked-in'|'history'|'assets'|'maintenance'
+type View = 'pool'|'papers'|'units'|'coverage'|'register'|'positive'|'follow-up'|'dashboard'|'incidents'|'recognition'|'warnings'|'skills'|'activities'|'competencies'|'progress'|'analytics'|'downloads'|'issue'|'verify'|'log'|'checked-in'|'history'|'assets'|'maintenance'
 type Row = RecordRow & { id:string; [key:string]:unknown }
 type Props = { workspaceKey:string; initialWindow?:string; onToast:(message:string,error?:boolean)=>void }
 type Draft = Record<string,string>
 
 const viewLabels:Record<View,string>={
   pool:'Question bank',papers:'Question papers',units:'Curriculum units',coverage:'Curriculum coverage',
-  register:'Behaviour register',positive:'Positive recognition', 'follow-up':'Follow-up cases',
+  register:'Behaviour records',positive:'Positive behaviour', 'follow-up':'Follow-up cases',dashboard:'Behaviour dashboard',incidents:'Disciplinary incidents',recognition:'Rewards & recognition',warnings:'Warnings',skills:'Student skills',activities:'Co-curricular activities',competencies:'Competency tracking',progress:'Student progress history',analytics:'Behaviour analytics',downloads:'Downloadable behaviour reports',
   issue:'Issue certificate',verify:'Certificate register',log:'Visitor log','checked-in':'Currently on site',
   history:'Visit history',assets:'Asset register',maintenance:'Maintenance queue',
 }
@@ -76,6 +76,11 @@ export function InstitutionOperationsWorkspace({workspaceKey,initialWindow,onToa
   const [curriculum,setCurriculum]=useState<Row[]>([])
   const [students,setStudents]=useState<Row[]>([])
   const [behaviour,setBehaviour]=useState<Row[]>([])
+  const [skillRecords,setSkillRecords]=useState<Row[]>([])
+  const [activityRecords,setActivityRecords]=useState<Row[]>([])
+  const [competencyRecords,setCompetencyRecords]=useState<Row[]>([])
+  const [progressRecords,setProgressRecords]=useState<Row[]>([])
+  const [behaviourTemplate,setBehaviourTemplate]=useState('summary')
   const [certificates,setCertificates]=useState<Row[]>([])
   const [visitors,setVisitors]=useState<Row[]>([])
   const [teachers,setTeachers]=useState<Row[]>([])
@@ -125,8 +130,8 @@ export function InstitutionOperationsWorkspace({workspaceKey,initialWindow,onToa
         ])
         setCurriculum(unitRows);setSubjects(subjectRows);setClasses(classRows);setSessions(sessionRows)
       }else if(selectedDomain==='behaviour'){
-        const [rows,studentRows]=await Promise.all([fetchRows('student_behaviour_events'),listRecords(mode,user!,'students') as Promise<Row[]>])
-        setBehaviour(rows);setStudents(studentRows)
+        const [rows,studentRows,skillRows,activityRows,competencyRows,progressRows]=await Promise.all([fetchRows('student_behaviour_events'),listRecords(mode,user!,'students') as Promise<Row[]>,fetchRows('student_skill_records'),fetchRows('student_cocurricular_activities'),fetchRows('student_competency_records'),fetchRows('student_progress_history')])
+        setBehaviour(rows);setStudents(studentRows);setSkillRecords(skillRows);setActivityRecords(activityRows);setCompetencyRecords(competencyRows);setProgressRecords(progressRows)
       }else if(selectedDomain==='certificates'){
         const [rows,studentRows]=await Promise.all([fetchRows('student_certificates'),listRecords(mode,user!,'students') as Promise<Row[]>])
         setCertificates(rows);setStudents(studentRows)
@@ -210,7 +215,31 @@ export function InstitutionOperationsWorkspace({workspaceKey,initialWindow,onToa
           family_visible:familyVisible,status:follow?'follow_up':'open',created_by:user!.id,
         })
         onToast('Student care record saved with its current privacy setting.')
-      }else if(dialog==='certificate'){
+      }else if(dialog==='skill'){
+        await insert('student_skill_records',{student_id:v.student_id,skill_name:v.skill_name?.trim(),skill_category:v.skill_category||'general',proficiency_level:Number(v.proficiency_level||1),evidence:v.evidence||null,assessed_on:v.assessed_on||day(),created_by:user!.id})
+        onToast('Student skill record saved.')
+      }else if(dialog==='activity'){
+        await insert('student_cocurricular_activities',{student_id:v.student_id,activity_name:v.activity_name?.trim(),activity_category:v.activity_category||'general',participation_role:v.participation_role||null,achievement:v.achievement||null,points:Number(v.points||0),event_date:v.event_date||day(),created_by:user!.id})
+        onToast('Co-curricular participation saved.')
+      }else if(dialog==='competency'){
+        await insert('student_competency_records',{student_id:v.student_id,competency_name:v.competency_name?.trim(),competency_area:v.competency_area||'general',proficiency_level:Number(v.proficiency_level||1),assessment_method:v.assessment_method||'teacher_review',evidence:v.evidence||null,notes:v.notes||null,assessed_on:v.assessed_on||day(),created_by:user!.id})
+        onToast('Competency assessment saved.')
+      }else if(dialog==='progress'){
+        await insert('student_progress_history',{student_id:v.student_id,progress_type:v.progress_type||'general',title:v.title?.trim(),details:v.details||null,observed_on:v.observed_on||day(),created_by:user!.id})
+        onToast('Student progress history entry saved.')
+      }else if(dialog==='skill'){
+      title='Record student skill assessment'
+      fields.push(field('Student','student_id','text',true,studentOptions),field('Skill name','skill_name'),field('Skill category','skill_category','text',true,['communication','leadership','creativity','critical_thinking','digital','teamwork','self_management','sports','arts','general'].map(x=>({label:toLabel(x),value:x}))),field('Proficiency level (1–5)','proficiency_level','number'),field('Evidence / observation','evidence','textarea',false),field('Assessed on','assessed_on','date',false))
+    }else if(dialog==='activity'){
+      title='Record co-curricular participation'
+      fields.push(field('Student','student_id','text',true,studentOptions),field('Activity name','activity_name'),field('Activity category','activity_category','text',true,['sports','arts','science','debate','community_service','club','competition','leadership','general'].map(x=>({label:toLabel(x),value:x}))),field('Participation role','participation_role','text',false),field('Achievement','achievement','textarea',false),field('Points','points','number',false),field('Event date','event_date','date',false))
+    }else if(dialog==='competency'){
+      title='Record competency assessment'
+      fields.push(field('Student','student_id','text',true,studentOptions),field('Competency','competency_name'),field('Competency area','competency_area','text',true,['academic','communication','collaboration','problem_solving','digital_literacy','research','leadership','wellbeing','general'].map(x=>({label:toLabel(x),value:x}))),field('Proficiency level (1–5)','proficiency_level','number'),field('Assessment method','assessment_method','text',true,['teacher_review','rubric','project','portfolio','observation','test'].map(x=>({label:toLabel(x),value:x}))),field('Evidence','evidence','textarea',false),field('Notes','notes','textarea',false),field('Assessed on','assessed_on','date',false))
+    }else if(dialog==='progress'){
+      title='Add student progress history entry'
+      fields.push(field('Student','student_id','text',true,studentOptions),field('Progress area','progress_type','text',true,['academic','attendance','skill','behaviour','wellbeing','general'].map(x=>({label:toLabel(x),value:x}))),field('Title','title'),field('Details','details','textarea',false),field('Observed on','observed_on','date',false))
+    }else if(dialog==='certificate'){
         const issue=v.status==='issued'
         await insert('student_certificates',{
           student_id:v.student_id,certificate_no:v.certificate_no||todayCode('CERT'),
@@ -356,8 +385,42 @@ export function InstitutionOperationsWorkspace({workspaceKey,initialWindow,onToa
   }
 
   function renderBehaviour(){
-    const rows=visibleBehaviour.filter(row=>view==='positive'?row.event_type==='positive':view==='follow-up'?row.follow_up_required===true:view==='register'?row.event_type!=='positive':true)
-    return <div className="iop-panel"><header><div><h2>{view==='positive'?'Positive behaviour and recognition':view==='follow-up'?'Student care follow-up queue':'Student behaviour register'}</h2><p>Private student-care records. Family visibility is explicit and off by default; safeguarding notes remain staff-only unless authorised to share.</p></div>{teacher&&<button className="iop-button primary" onClick={()=>openDialog('behaviour')}><Plus size={14}/> Record event</button>}</header><div className="iop-kpis"><article><small>Total records</small><b>{behaviour.length}</b></article><article><small>Positive</small><b>{behaviour.filter(row=>row.event_type==='positive').length}</b></article><article><small>Concerns / incidents</small><b>{behaviour.filter(row=>['concern','incident','safeguarding'].includes(String(row.event_type))).length}</b></article><article><small>Follow-up due</small><b>{behaviour.filter(row=>row.follow_up_required&&row.status!=='resolved'&&row.status!=='closed').length}</b></article></div><label className="iop-search">Search student-care records<input value={search} onChange={e=>{setSearch(e.target.value);setListPage(1)}} placeholder="Student, category or event…"/></label>{rows.length?<div className="iop-table-wrap"><table><thead><tr><th>Student</th><th>Date</th><th>Type / category</th><th>Summary</th><th>Severity</th><th>Family visibility</th><th>Follow-up</th><th>Status</th></tr></thead><tbody>{pageRows(rows).map(row=><tr key={row.id}><td>{String(students.find(x=>x.id===row.student_id)?.full_name??'Student')}</td><td>{prettyDate(row.event_date)}</td><td>{toLabel(row.event_type)}<small>{String(row.category)}</small></td><td>{String(row.summary)}</td><td>{toLabel(row.severity)}</td><td>{row.family_visible?'Visible':'Staff only'}</td><td>{row.follow_up_required?prettyDate(row.follow_up_date):'—'}</td><td><span className={'iop-status '+String(row.status)}>{toLabel(row.status)}</span></td></tr>)}</tbody></table></div>:<div className="iop-empty">No records in this behaviour view.</div>}</div>
+    const selectedName=(id:unknown)=>String(students.find(student=>student.id===id)?.full_name??'Student record')
+    const exportCare=(name:string,rows:Row[],columns:{key:string;label:string}[])=>exportRows('student-'+name,rows,columns)
+    if(view==='dashboard'){
+      const positive=behaviour.filter(row=>row.event_type==='positive').length
+      const incidents=behaviour.filter(row=>['incident','safeguarding'].includes(String(row.event_type))).length
+      const open=behaviour.filter(row=>row.status!=='resolved'&&row.status!=='closed').length
+      const followups=behaviour.filter(row=>row.follow_up_required&&row.status!=='resolved'&&row.status!=='closed').length
+      const levels=behaviour.reduce<Record<string,number>>((acc,row)=>{const label=toLabel(row.severity);acc[label]=(acc[label]??0)+1;return acc},{})
+      return <div className="iop-panel iop-care-dashboard"><header><div><h2>Student behaviour and development</h2><p>One controlled overview of recorded behaviour, skills, co-curricular development, competencies and follow-up. Empty indicators remain zero until records are entered.</p></div><button className="iop-button" onClick={()=>setView('downloads')}><Download size={14}/> Behaviour reports</button></header>
+       <div className="iop-kpis"><article><small>Behaviour records</small><b>{behaviour.length}</b></article><article><small>Positive recognition</small><b>{positive}</b></article><article><small>Incidents</small><b>{incidents}</b></article><article><small>Open follow-up</small><b>{followups}</b></article><article><small>Skill assessments</small><b>{skillRecords.length}</b></article><article><small>Competencies tracked</small><b>{competencyRecords.length}</b></article></div>
+       <div className="iop-care-shortcuts">{(['register','incidents','positive','skills','activities','competencies','progress','analytics','downloads'] as View[]).map(key=><button key={key} onClick={()=>setView(key)}><span>{viewLabels[key]}</span><small>Open dedicated workspace</small></button>)}</div>
+       <div className="iop-care-summary"><section><h3>Behaviour severity distribution</h3>{Object.entries(levels).length?Object.entries(levels).map(([label,count])=><div key={label}><span>{label}</span><b>{count}</b></div>):<p className="iop-muted">No severity records have been saved.</p>}</section><section><h3>Student development activity</h3><div><span>Co-curricular records</span><b>{activityRecords.length}</b></div><div><span>Progress history entries</span><b>{progressRecords.length}</b></div><div><span>Follow-up cases</span><b>{behaviour.filter(row=>row.follow_up_required).length}</b></div></section></div>
+      </div>
+    }
+    if(view==='skills'||view==='activities'||view==='competencies'||view==='progress'){
+      const isSkill=view==='skills',isActivity=view==='activities',isCompetency=view==='competencies'
+      const records=isSkill?skillRecords:isActivity?activityRecords:isCompetency?competencyRecords:progressRecords
+      const heading=isSkill?'Student skills':isActivity?'Co-curricular activities':isCompetency?'Competency tracking':'Student progress history'
+      const dialogKey=isSkill?'skill':isActivity?'activity':isCompetency?'competency':'progress'
+      const columns=isSkill?[{key:'skill_name',label:'Skill'},{key:'skill_category',label:'Category'},{key:'proficiency_level',label:'Level'},{key:'assessed_on',label:'Assessed'}]:isActivity?[{key:'activity_name',label:'Activity'},{key:'activity_category',label:'Category'},{key:'participation_role',label:'Role'},{key:'achievement',label:'Achievement'},{key:'event_date',label:'Date'}]:isCompetency?[{key:'competency_name',label:'Competency'},{key:'competency_area',label:'Area'},{key:'proficiency_level',label:'Level'},{key:'assessment_method',label:'Method'},{key:'assessed_on',label:'Assessed'}]:[{key:'progress_type',label:'Progress area'},{key:'title',label:'Entry'},{key:'details',label:'Details'},{key:'observed_on',label:'Observed'}]
+      return <div className="iop-panel"><header><div><h2>{heading}</h2><p>{isSkill?'Record a learner’s practical and personal skills with a dated proficiency assessment.':isActivity?'Record clubs, sports, societies, projects, events, participation and achievements.':isCompetency?'Record competency evidence and a proficiency level against the institution’s learning expectations.':'Maintain a dated learner development timeline across academic, attendance, skill, behaviour and wellbeing areas.'}</p></div><div className="iop-actions"><button className="iop-button" onClick={()=>exportCare(dialogKey,records,columns)}><Download size={14}/> Export</button>{teacher&&<button className="iop-button primary" onClick={()=>openDialog(dialogKey)}><Plus size={14}/> Add record</button>}</div></header>
+       <div className="iop-kpis"><article><small>Total records</small><b>{records.length}</b></article><article><small>Students covered</small><b>{new Set(records.map(row=>String(row.student_id))).size}</b></article><article><small>This session</small><b>{records.filter(row=>String(row.created_at??'').slice(0,4)===String(new Date().getFullYear())).length}</b></article></div>
+       <label className="iop-search">Search {heading.toLowerCase()}<input value={search} onChange={e=>{setSearch(e.target.value);setListPage(1)}} placeholder="Student, record, category or evidence…"/></label>
+       {records.length?<div className="iop-table-wrap"><table><thead><tr><th>Student</th>{columns.map(col=><th key={col.key}>{col.label}</th>)}</tr></thead><tbody>{pageRows(records.filter(row=>queryMatch(row,['student_id',...columns.map(col=>col.key),'evidence','notes']))).map(row=><tr key={row.id}><td><b>{selectedName(row.student_id)}</b></td>{columns.map(col=><td key={col.key}>{String(row[col.key]??'—')}</td>)}</tr>)}</tbody></table></div>:<div className="iop-empty"><BookOpen size={22}/><b>No {heading.toLowerCase()} recorded</b><span>Create the first institution record to start a dated register.</span></div>}
+      </div>
+    }
+    if(view==='analytics'||view==='downloads'){
+      const grouped=behaviour.reduce<Record<string,number>>((acc,row)=>{const key=toLabel(row.event_type);acc[key]=(acc[key]??0)+1;return acc},{})
+      const reportRows=behaviour.map(row=>({...row,student_name:selectedName(row.student_id)}))
+      const reportColumns=[{key:'student_name',label:'Student'},{key:'event_date',label:'Date'},{key:'event_type',label:'Record type'},{key:'category',label:'Category'},{key:'summary',label:'Summary'},{key:'severity',label:'Severity'},{key:'status',label:'Status'}]
+      return <div className="iop-panel"><header><div><h2>{view==='analytics'?'Behaviour analytics':'Downloadable behaviour reports'}</h2><p>{view==='analytics'?'Explore institution-recorded event patterns without treating correlations as causes.':'Choose an export presentation for the authorised behaviour register.'}</p></div>{view==='downloads'&&<button className="iop-button primary" onClick={()=>window.print()}><Printer size={14}/> Print selected report</button>}</header>
+       {view==='analytics'?<><div className="iop-kpis"><article><small>Total records</small><b>{behaviour.length}</b></article><article><small>Positive</small><b>{behaviour.filter(row=>row.event_type==='positive').length}</b></article><article><small>Concerns</small><b>{behaviour.filter(row=>row.event_type==='concern').length}</b></article><article><small>Incidents</small><b>{behaviour.filter(row=>row.event_type==='incident').length}</b></article><article><small>Safeguarding</small><b>{behaviour.filter(row=>row.event_type==='safeguarding').length}</b></article></div><div className="iop-care-summary"><section><h3>Records by type</h3>{Object.entries(grouped).length?Object.entries(grouped).map(([label,count])=><div key={label}><span>{label}</span><b>{count}</b></div>):<p className="iop-muted">No behaviour records available to analyse.</p>}</section><section><h3>Student development evidence</h3><div><span>Skills</span><b>{skillRecords.length}</b></div><div><span>Co-curricular</span><b>{activityRecords.length}</b></div><div><span>Competencies</span><b>{competencyRecords.length}</b></div><div><span>Progress entries</span><b>{progressRecords.length}</b></div></section></div></>:<><div className="iop-report-templates"><label>Report template<select value={behaviourTemplate} onChange={e=>setBehaviourTemplate(e.target.value)}><option value="summary">Behaviour summary</option><option value="incident">Incident register</option><option value="positive">Positive recognition register</option><option value="follow-up">Follow-up list</option><option value="student">Student development record</option></select></label><span>{reportRows.length} authorised records available</span></div><div className="iop-actions"><button className="iop-button" onClick={()=>exportCare('behaviour-'+behaviourTemplate,reportRows.filter(row=>behaviourTemplate==='incident'?['incident','safeguarding'].includes(String(row.event_type)):behaviourTemplate==='positive'?row.event_type==='positive':behaviourTemplate==='follow-up'?row.follow_up_required:true),reportColumns)}><Download size={14}/> Download CSV</button><button className="iop-button" onClick={()=>window.print()}><Printer size={14}/> Print / PDF</button></div><p className="iop-muted">The selected output follows your institution’s report permissions and does not include internal safeguarding details for audiences without access.</p></>}
+      </div>
+    }
+    const rows=visibleBehaviour.filter(row=>view==='positive'||view==='recognition'?row.event_type==='positive':view==='incidents'?['incident','safeguarding'].includes(String(row.event_type)):view==='warnings'?row.event_type==='concern'||String(row.category??'').toLowerCase().includes('warning'):view==='follow-up'?row.follow_up_required===true:view==='register'?row.event_type!=='positive':true)
+    return <div className="iop-panel"><header><div><h2>{view==='positive'?'Positive behaviour':view==='recognition'?'Rewards and recognition':view==='incidents'?'Disciplinary incidents':view==='warnings'?'Warnings':view==='follow-up'?'Student care follow-up queue':'Student behaviour records'}</h2><p>Private student-care records. Family visibility is explicit and off by default; safeguarding notes remain staff-only unless authorised to share.</p></div>{teacher&&<button className="iop-button primary" onClick={()=>openDialog('behaviour')}><Plus size={14}/> Record event</button>}</header><div className="iop-kpis"><article><small>Total records</small><b>{behaviour.length}</b></article><article><small>Positive</small><b>{behaviour.filter(row=>row.event_type==='positive').length}</b></article><article><small>Concerns / incidents</small><b>{behaviour.filter(row=>['concern','incident','safeguarding'].includes(String(row.event_type))).length}</b></article><article><small>Follow-up due</small><b>{behaviour.filter(row=>row.follow_up_required&&row.status!=='resolved'&&row.status!=='closed').length}</b></article></div><label className="iop-search">Search student-care records<input value={search} onChange={e=>{setSearch(e.target.value);setListPage(1)}} placeholder="Student, category or event…"/></label>{rows.length?<div className="iop-table-wrap"><table><thead><tr><th>Student</th><th>Date</th><th>Type / category</th><th>Summary</th><th>Severity</th><th>Family visibility</th><th>Follow-up</th><th>Status</th></tr></thead><tbody>{pageRows(rows).map(row=><tr key={row.id}><td>{selectedName(row.student_id)}</td><td>{prettyDate(row.event_date)}</td><td>{toLabel(row.event_type)}<small>{String(row.category)}</small></td><td>{String(row.summary)}</td><td>{toLabel(row.severity)}</td><td>{row.family_visible?'Visible':'Staff only'}</td><td>{row.follow_up_required?prettyDate(row.follow_up_date):'—'}</td><td><span className={'iop-status '+String(row.status)}>{toLabel(row.status)}</span></td></tr>)}</tbody></table></div>:<div className="iop-empty">No records in this behaviour view.</div>}</div>
   }
 
   function renderCertificates(){

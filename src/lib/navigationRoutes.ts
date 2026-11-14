@@ -516,9 +516,11 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
   if (groupKey === 'administration' && itemKey === 'document-access') return 'files'
   if (groupKey === 'question-bank' && ['question-bank-import-and-export','question-paper-version-history'].includes(itemKey)) return 'unavailable:question-bank:'+itemKey
   if (groupKey === 'curriculum' && ['teaching-resources','learning-materials','resource-downloads','chapter-wise-learning-resources','learning-progress-tracking'].includes(itemKey)) return 'unavailable:curriculum:'+itemKey
-  if (groupKey === 'behaviour' && ['student-progress-history'].includes(itemKey)) return 'care:discipline'
-  if (groupKey === 'behaviour' && ['behaviour-analytics','downloadable-behaviour-reports'].includes(itemKey)) return 'care:reports'
-  if (groupKey === 'behaviour' && ['student-skills','co-curricular-activities','competency-tracking'].includes(itemKey)) return 'operations:behaviour:register'
+  if (groupKey === 'behaviour') {
+    const behaviourWindows:Record<string,string>={'behaviour-dashboard':'dashboard','behaviour-records':'register','positive-behaviour':'positive','disciplinary-incidents':'incidents','rewards-and-recognition':'recognition','warnings':'warnings','student-skills':'skills','co-curricular-activities':'activities','competency-tracking':'competencies','student-progress-history':'progress','behaviour-analytics':'analytics','downloadable-behaviour-reports':'downloads'}
+    const view=behaviourWindows[itemKey]
+    return view? 'operations:behaviour:'+view:undefined
+  }
   if (groupKey === 'certificates' && ['experience-certificate','id-card-designer','certificate-templates','editable-document-templates','bulk-certificate-generation'].includes(itemKey)) return 'unavailable:certificates:'+itemKey
   if (groupKey === 'library' && ['reading-records','reading-cards','student-reading-history'].includes(itemKey)) return 'unavailable:library:'+itemKey
   if (groupKey === 'transport' && itemKey === 'transport-attendance') return 'unavailable:transport:transport-attendance'

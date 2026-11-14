@@ -50,7 +50,7 @@ export const institutionalMenu:WorkspaceMenuGroup[]=[
  group('attendance','Attendance','Class, section and period registers, QR/barcode check-in, staff attendance, leave and student support.','CalendarCheck','rose','attendance',staff.concat(['student','parent']),[
   'Student Attendance','Teacher Attendance','Staff Attendance','QR / Barcode Check-in','Biometric Verification','Student Attendance Cards','Teacher Attendance Cards','Staff Attendance Cards','Leave Management','Attendance Reports','Student Discipline','Student Counselling & Wellbeing','Health & Emergency Records'
  ]),
- group('behaviour','Behaviour and Skills','Positive recognition, safeguarding-aware behaviour logs, incidents, skills and competency tracking.','HeartHandshake','pink','behaviour',staff.concat(['student','parent']),[
+ group('behaviour','Behaviour & Skills','Behaviour, safeguarding-aware incidents, student skills, co-curricular development and competency evidence.','HeartHandshake','pink','behaviour',staff,[
   'Behaviour Dashboard','Behaviour Records','Positive Behaviour','Disciplinary Incidents','Rewards and Recognition','Warnings','Student Skills','Co-curricular Activities','Competency Tracking','Student Progress History','Behaviour Analytics','Downloadable Behaviour Reports'
  ]),
  group('certificates','Certificates and Documentation','Template-driven institutional documents, certificates, ID cards, signatures, serial numbers and verification.','Award','gold','certificates',management.concat(['teacher','student','parent']),[

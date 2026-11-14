@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
-import { Activity, ArrowUpRight, BrainCircuit, CheckCircle2, ChevronDown, CircleAlert, FileBarChart2, GraduationCap, LoaderCircle, MessageCircle, Plus, Send, ShieldCheck, Sparkles, WandSparkles } from 'lucide-react'
+import { Activity, ArrowUpRight, BrainCircuit, CheckCircle2, ChevronDown, CircleAlert, FileBarChart2, GraduationCap, LoaderCircle, MessageCircle, Send, ShieldCheck, Sparkles, WandSparkles } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { listRecords } from '../lib/data'
 import { supabase } from '../lib/supabase'
