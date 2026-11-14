@@ -872,7 +872,7 @@ export function Dashboard({ onToast }: Props) {
 
   const compactSidebar = sidebarCollapsed && !isMobileNav
 
-  return <div className={`pro-app-shell ${sidebarOpen ? 'navigation-open' : ''} ${compactSidebar ? 'sidebar-collapsed' : ''}`} data-view-mode={displayPreferences.viewMode} data-theme={displayPreferences.theme} data-font-size={displayPreferences.fontSize} data-reduced-motion={displayPreferences.reducedMotion ? 'true' : 'false'}>
+  return <div className={`pro-app-shell ${sidebarOpen ? 'navigation-open' : ''} ${compactSidebar ? 'sidebar-collapsed' : ''}`} data-theme={displayPreferences.theme} data-font-size={displayPreferences.fontSize} data-reduced-motion={displayPreferences.reducedMotion ? 'true' : 'false'}>
     <aside className={`pro-sidebar ${sidebarOpen ? 'is-open' : ''} ${compactSidebar ? 'is-collapsed' : ''}`} aria-hidden={isMobileNav && !sidebarOpen}>
       <div className="pro-sidebar-brand">
         <div className="pro-sidebar-mark"><BookOpen size={24}/></div>
