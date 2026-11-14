@@ -744,12 +744,12 @@ export function Dashboard({ onToast }: Props) {
       ...section,
       groups: section.groups.flatMap(group => {
         if (group.key === 'dashboard') return [group]
-        const groupAllowed = (groupModules[group.key] ?? []).some(moduleKey => (grants[moduleKey] ?? []).includes('view'))
+        const groupAllowed = (groupModules[group.key] ?? []).some(moduleKey => ['view','create'].some(action => (grants[moduleKey] ?? []).includes(action)))
         if (!groupAllowed) return []
         const items = group.items.filter(title => {
           const route = getNavigationRoute(group.key,title,user!.role) ?? ''
           const moduleKey = customPermissionModuleForRoute(route)
-          return !moduleKey || (grants[moduleKey] ?? []).includes('view')
+          return !moduleKey || ['view','create'].some(action => (grants[moduleKey] ?? []).includes(action))
         })
         return items.length ? [{ ...group, items }] : []
       }),
