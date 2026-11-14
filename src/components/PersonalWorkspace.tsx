@@ -99,7 +99,7 @@ export function PersonalWorkspace({initialWindow,onToast,onNavigate}:{initialWin
   try{
    const {data:verified,error:verifyError}=await supabase.auth.signInWithPassword({email:user.email,password:emailCurrentPassword})
    if(verifyError||verified.user?.id!==user.id)throw new Error('The current password is incorrect. Your email was not changed.')
-   const {error}=await supabase.auth.updateUser({email:address},{emailRedirectTo:window.location.origin})
+   const {error}=await supabase.auth.updateUser({email:address})
    if(error)throw error
    setEmailCurrentPassword('');setNewEmail('')
    onToast('Email change requested for '+address+'. Complete the confirmation steps sent by Supabase before using the new address to sign in.')
