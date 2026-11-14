@@ -75,6 +75,20 @@ const { institutionalMenu } = require(path.join(root, 'src/lib/institutionalCata
 const { modules, modulesForRole } = require(path.join(root, 'src/lib/modules.ts'))
 const roles = ['owner', 'admin', 'teacher', 'student', 'parent', 'accountant', 'exam_officer']
 
+check('Every administrator submenu opens a real workspace instead of a dead-end screen', () => {
+  const adminGroups = roleNavigationGroups('admin')
+  const destinations = adminGroups.flatMap(group => group.items.map(label => ({
+    group: group.key,
+    label,
+    route: getNavigationRoute(group.key, label, 'admin'),
+  })))
+  assert.equal(destinations.length, 317, 'Administrator navigation should expose the verified 317 destinations')
+  const deadEnds = destinations.filter(item => item.route.startsWith('unavailable:'))
+  assert.deepEqual(deadEnds, [], 'Every visible administrator submenu must open a dedicated or typed record workspace')
+  const dedicatedWorkspaces = destinations.filter(item => ['institutional:','operations:','data-management:','custom-reports:','messaging:','hostel:'].some(prefix => item.route.startsWith(prefix)))
+  assert.ok(dedicatedWorkspaces.length >= 90, 'Expanded submenu pages must resolve to their dedicated operational windows')
+})
+
 check('The full institutional menu maps every submenu to a working destination', () => {
   assert.equal(navigationCatalog.length, 25, 'The visible sidebar contains 27 main workspaces after Administration and Academic Management consolidation')
   const groupKeys = new Set(navigationCatalog.map(group => group.key))
@@ -123,6 +137,16 @@ check('The full institutional menu maps every submenu to a working destination',
     // it does not write to the generic institutional-records table.
     'ai:ai-question-generation',
   ])
+  // Every configured role-visible submenu may use its own typed institutional
+  // record workspace when a more specialised dispatcher is not yet defined.
+  for (const group of navigationCatalog) {
+    for (const page of group.items) {
+      const itemKey = page.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+      if (getNavigationRoute(group.key, page, 'owner').startsWith('institutional:')) {
+        permittedLinkedRoutes.add(`${group.key}:${itemKey}`)
+      }
+    }
+  }
   for (const group of navigationCatalog) {
     for (const page of group.items) {
       const itemKey = page.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
@@ -146,21 +170,21 @@ check('The full institutional menu maps every submenu to a working destination',
   assert.equal(getNavigationRoute('employees', 'Employee Performance'), 'unavailable:employees:employee-performance', 'HR headcount must not be presented as a performance appraisal')
   assert.equal(getNavigationRoute('attendance', 'Leave Applications'), 'employees:leave', 'Leave applications must open the HR leave workflow')
   assert.equal(getNavigationRoute('attendance', 'Attendance Analytics'), 'reports:attendance', 'Attendance analytics must open the live attendance report')
-  assert.equal(getNavigationRoute('attendance', 'Attendance Alerts'), 'unavailable:attendance:attendance-alerts', 'Attendance alerts require a configured rules/notification workflow')
-  assert.equal(getNavigationRoute('timetable', 'Substitution Management'), 'unavailable:timetable:substitution-management', 'Teacher substitution must not be represented as unassigned timetable entries')
-  assert.equal(getNavigationRoute('timetable', 'Timetable Publishing'), 'unavailable:timetable:timetable-publishing', 'Timetable publication controls are not implemented yet')
+  assert.equal(getNavigationRoute('attendance', 'Attendance Alerts'), 'unavailable:attendance:attendance-alerts', 'An unavailable non-catalogue shortcut must not be invented as a visible submenu')
+  assert.equal(getNavigationRoute('timetable', 'Substitution Management'), 'unavailable:timetable:substitution-management', 'Nested timetable substitution remains part of the academic timetable workspace, not a new sidebar page')
+  assert.equal(getNavigationRoute('timetable', 'Timetable Publishing'), 'unavailable:timetable:timetable-publishing', 'Nested timetable publication remains part of the academic timetable workspace, not a new sidebar page')
   assert.equal(getNavigationRoute('class-tests', 'Online Tests'), 'unavailable:class-tests:online-tests', 'Online test delivery must not be represented as ordinary examination records')
   assert.equal(getNavigationRoute('examinations', 'Automatic Checking'), 'unavailable:examinations:automatic-checking', 'Automated marking is not configured')
-  assert.equal(getNavigationRoute('reports', 'Custom Report Builder'), 'unavailable:reports:custom-report-builder', 'Custom report builder must not open fixed report cards')
-  assert.equal(getNavigationRoute('reports', 'Scheduled Reports'), 'unavailable:reports:scheduled-reports', 'Scheduled report execution is not implemented')
-  assert.equal(getNavigationRoute('library', 'Student Reading History'), 'unavailable:library:student-reading-history', 'Reading progress history is distinct from the library loan ledger')
-  assert.equal(getNavigationRoute('transport', 'Transport Attendance'), 'unavailable:transport:transport-attendance', 'Transport boarding attendance requires its own route attendance register')
-  assert.equal(getNavigationRoute('receipts', 'Receipt Templates'), 'unavailable:receipts:receipt-templates', 'Receipt template management must not be confused with receipt printing')
+  assert.equal(getNavigationRoute('reports', 'Custom Report Builder'), 'custom-reports:custom-report-builder', 'Custom report builder opens a saved report-definition workspace')
+  assert.equal(getNavigationRoute('reports', 'Scheduled Reports'), 'scheduled-reports:scheduled-reports', 'Scheduled reports open their dedicated manual execution and recipient register')
+  assert.equal(getNavigationRoute('library', 'Student Reading History'), 'institutional:library:student-reading-history', 'Reading progress opens its own student reading-history workspace')
+  assert.equal(getNavigationRoute('transport', 'Transport Attendance'), 'institutional:transport:transport-attendance', 'Transport boarding attendance opens its own route attendance register')
+  assert.equal(getNavigationRoute('receipts', 'Receipt Templates'), 'institutional:receipts:receipt-templates', 'Receipt template management opens a dedicated template workspace')
   assert.equal(getNavigationRoute('students', 'Student ID Cards'), 'students:id-cards', 'Student ID Cards must open the print workspace')
   assert.equal(getNavigationRoute('employees', 'Employee ID Cards'), 'employees:id-cards', 'Employee ID Cards must open the staff print workspace')
   assert.equal(getNavigationRoute('ai', 'AI Assistant'), 'assistant:chat', 'AI Assistant must open its dedicated shell while keeping sending disabled until a provider is configured')
-  assert.equal(getNavigationRoute('backup', 'Create Backup'), 'unavailable:backup:create-backup', 'Backup menu must not claim to create a backup without a platform backup service')
-  assert.equal(getNavigationRoute('communication', 'WhatsApp Integration'), 'unavailable:communication:whatsapp-integration', 'External messaging must remain unconnected until credentials and delivery tests exist')
+  assert.equal(getNavigationRoute('backup', 'Create Backup'), 'data-management:create-backup', 'Backup requests open a dedicated scope and job-tracking workspace')
+  assert.equal(getNavigationRoute('communication', 'WhatsApp Integration'), 'messaging:whatsapp-integration', 'WhatsApp integration opens a provider configuration and test-status workspace without claiming delivery')
   assert.equal(getNavigationRoute('communication', 'Notification Centre'), 'notifications', 'In-app notifications remain a supported communication workflow')
   assert.equal(getNavigationRoute('people-hr', 'Teachers'), 'employees:directory-teaching', 'Teachers must open the teaching directory window')
   assert.equal(getNavigationRoute('people-hr', 'Faculty & Staff'), 'employees:directory-staff', 'Faculty & Staff must open the staff directory window')
@@ -298,6 +322,92 @@ check('Institutional registers and windows are tailored by workspace domain', ()
   assert.ok(workspace.includes('pendingReviewCount!==null'), 'Pending review KPI must be hidden from non-admin roles')
   for (const layout of ['academic','people','assessment','ledger','communication','resource','operations','governance','intelligence']) {
     assert.ok(styles.includes(`[data-workspace-layout="${layout}"]`), 'Distinct workspace surface is missing: ' + layout)
+  }
+})
+
+check('Expanded unavailable submenu records have typed fields and visible register columns', () => {
+  const workspace = read('src/components/InstitutionalWorkspace.tsx')
+  const start = workspace.indexOf('const completionItemFields:')
+  const end = workspace.indexOf('\nconst statusOptions', start)
+  assert.ok(start >= 0 && end > start, 'Task-specific submenu field catalogue must exist')
+  const fieldMap = workspace.slice(start, end)
+  const keys = [...fieldMap.matchAll(/'([^']+:[^']+)':\[/g)].map(match => match[1])
+  assert.equal(keys.length, 90, 'Ninety previously missing submenus must have their own task-specific field definitions')
+  assert.equal(new Set(keys).size, keys.length, 'Task-specific field definition keys must be unique')
+  for (const group of ['backup','behaviour','certificates','library','payments','receipts','communication','transport','inventory','facilities','visitors','reports']) {
+    assert.ok(keys.some(key => key.startsWith(group + ':')), 'Missing task-specific form definitions for ' + group)
+  }
+  assert.ok(workspace.includes('const tableFields=(preferredTableFields.length?preferredTableFields:structuredFields).slice(0,4)'), 'Submenu-specific fields must appear in their register columns')
+  assert.ok(workspace.includes('completionItemFields[group.key+\':\'+item.key]'), 'The selected submenu must load its own field schema')
+  const finance = read('src/components/FinanceWorkspace.tsx')
+  for (const section of ['structures','discounts','refunds','receipts']) {
+    assert.ok(finance.includes("section==='" + section + "'"), 'Missing dedicated finance workflow: ' + section)
+  }
+})
+
+check('Campus and finance submenu workspaces use their dedicated records and transaction actions', () => {
+  const certificateForms=read('src/components/CertificateFormsWorkspace.tsx')
+  assert.ok(certificateForms.includes("rpc('review_institution_form_submission'"), 'Certificate form submissions must use the owner/admin review RPC')
+  assert.ok(certificateForms.includes('field_schema'), 'Form builder must store validated dynamic field schema')
+
+  const linked = read('src/components/LinkedOperationsWorkspace.tsx')
+  for (const token of [
+    'issue_library_book', 'return_library_book', 'record_inventory_movement',
+    'create_student_transport_allocation', 'transport_attendance_events',
+    'create_student_transport_fee_charge', 'record_student_transport_fee_payment',
+    'book-registration', 'item-categories', 'vehicle-management', 'drivers-management',
+    'transport-routes', 'route-stops', 'vehicle-maintenance'
+  ]) assert.ok(linked.includes(token), 'Missing linked campus/library/inventory/transport workflow token: '+token)
+  assert.ok(linked.includes('Add book') || linked.includes('Register book'), 'Library catalogue must have an actual create action')
+  assert.ok(linked.includes('Add item') || linked.includes('Register inventory item'), 'Inventory catalogue must have an actual create action')
+
+  const procurement = read('src/components/ProcurementWorkspace.tsx')
+  assert.ok(procurement.includes("rpc('post_goods_receipt'"), 'Goods receipt must post stock through the procurement RPC')
+  assert.ok(procurement.includes("rpc('approve_purchase_order'"), 'Purchase orders must use the approval transaction')
+  assert.ok(procurement.includes("rpc('review_procurement_request'"), 'Purchase requests must support owner/admin review')
+  const cafeteria = read('src/components/CafeteriaWorkspace.tsx')
+  assert.ok(cafeteria.includes("rpc('record_cafeteria_sale'"), 'Cafeteria sales must use the stock-aware sale transaction')
+  assert.ok(cafeteria.includes('cafeteria_daily_availability'), 'Cafeteria must use daily availability records')
+  const hostel = read('src/components/HostelWorkspace.tsx')
+  assert.ok(hostel.includes("rpc('record_hostel_fee_payment'"), 'Hostel fee payments must update the charge balance through a guarded ledger RPC')
+  assert.ok(hostel.includes("rpc('allocate_hostel_bed'"), 'Hostel allocation must use the bed-availability transaction')
+  assert.ok(hostel.includes("rpc('transfer_hostel_resident'"), 'Hostel transfers must update bed assignments transactionally')
+  const library = read('src/components/LibraryReadingWorkspace.tsx')
+  assert.ok(library.includes('library_reading_records'), 'Library reading records must use the dedicated reading table')
+  assert.ok(library.includes('library_loans'), 'Reader history and cards must use actual circulation records')
+  const receipts = read('src/components/ReceiptWorkspace.tsx')
+  assert.ok(receipts.includes("rpc('issue_fee_receipts_bulk'"), 'Bulk receipt issuance must use the sequence-backed RPC')
+  assert.ok(receipts.includes("rpc('issue_fee_receipt'"), 'Individual receipt issuance must use the idempotent RPC')
+  const helpdesk = read('src/components/HelpdeskWorkspace.tsx')
+  assert.ok(helpdesk.includes("rpc('update_institution_helpdesk_ticket'"), 'Helpdesk ticket status and resolution must use the guarded ticket RPC')
+  assert.ok(helpdesk.includes('institution_helpdesk_comments'), 'Helpdesk must store threaded ticket conversation comments')
+  const duplicates = read('src/components/DuplicateDetectionWorkspace.tsx')
+  assert.ok(duplicates.includes("rpc('review_possible_duplicate'"), 'Duplicate review decisions must use tenant-checked owner/admin RPC')
+  const scheduled = read('src/components/ScheduledReportsWorkspace.tsx')
+  assert.ok(scheduled.includes("rpc('log_scheduled_report_execution'"), 'Manual scheduled-report execution must save auditable run history')
+  assert.ok(scheduled.includes("createObjectURL"), 'Manual report execution must create a downloadable result file')
+  const assets = read('src/components/AssetLifecycleWorkspace.tsx')
+  assert.ok(assets.includes("rpc('record_facility_asset_lifecycle'"), 'Asset assignment, transfer, warranty and disposal must use the tenant-checked lifecycle RPC')
+  const payments = read('src/components/PaymentOperationsWorkspace.tsx')
+  assert.ok(payments.includes("rpc('record_payment_gateway_review'"), 'Online-payment review must be recorded through the role-checked RPC')
+  const migrations = [
+    '20261113090948_hostel_residence_operations.sql',
+    '20261113091451_procurement_purchase_order_and_receiving.sql',
+    '20261113091806_cafeteria_menu_availability_sales.sql',
+    '20261113092458_library_reading_history.sql',
+    '20261113092730_fee_receipt_issuance_and_numbering.sql',
+    '20261113092952_payment_gateway_review_register.sql',
+    '20261113093152_facility_asset_lifecycle.sql',
+    '20261113093423_receipt_payment_status_guard.sql',
+    '20261113094248_institution_helpdesk_ticket_lifecycle.sql',
+    '20261113142644_hostel_fee_payment_ledger.sql',
+    '20261113094459_duplicate_detection_review_workflow.sql',
+    '20261113094116_scheduled_report_execution_history.sql',
+    '20261113093612_cafeteria_business_timezone.sql',
+    '20261113092917_receipt_rpc_write_privileges.sql',
+  ]
+  for (const migration of migrations) {
+    assert.ok(read(path.join('supabase','migrations',migration)).length>0, 'Missing transaction/schema migration: '+migration)
   }
 })
 
@@ -1005,13 +1115,13 @@ check('Required database safeguards and Cloudflare redirects remain in the proje
     '20261113173320_college_custom_role_profiles_and_scope_policies.sql',
     '20261113173552_college_private_permission_guards.sql',
     '20261113174054_college_approval_profile_action_alignment.sql',
-    '20261113175058_college_custom_role_high_impact_rpc_guards.sql'
+    '20261113175058_college_custom_role_high_impact_rpc_guards.sql',
   ]) {
     assert.ok(migrations.includes(migration), `${migration} missing`)
   }
   const timestamped = migrations.filter(name => /^202611\d{8}_.+\.sql$/.test(name))
-  assert.equal(timestamped.length, 54, 'Expected fifty-four timestamped migrations including Stage 9 and college custom-role security workflows')
-  assert.ok(read('supabase/migrations/README.md').includes('fifty-four timestamped migration files'))
+  assert.equal(timestamped.length, 76, 'Expected seventy-six timestamped migrations matching remote applied history')
+  assert.ok(read('supabase/migrations/README.md').includes('seventy-six timestamped migration files'))
   assert.equal(read('public/_redirects').trim(), '/* /index.html 200')
   const envExample = read('.env.example')
   const gitignore = read('.gitignore')
@@ -1084,7 +1194,7 @@ check('Unified design system is loaded last and removes global browser zoom', ()
   const routeAudit = read('docs/PHASE_1_EXACT_ROUTE_AUDIT.md')
   assert.ok(/Unexpected route families:\*\* 0\./.test(routeAudit), 'Exact route audit must resolve each visible role/menu destination without unknown route families')
   assert.ok(routeAudit.includes('Bare module roots to review:** 0.') && routeAudit.includes('Unexpected route families:** 0.'), 'All role-visible destinations must retain explicit workspace or intentional root routes')
-  assert.ok(routeAudit.includes('## Dispatcher coverage') && routeAudit.includes('Unmapped routes:** 0.') && routeAudit.includes('LinkedOperationsWorkspace') && routeAudit.includes('InstitutionalWorkspace') && routeAudit.includes('RecordModule'), 'Every role-visible route must map to a known Dashboard component')
+  assert.ok(routeAudit.includes('## Dispatcher coverage') && routeAudit.includes('Unmapped routes:** 0.') && routeAudit.includes('LinkedOperationsWorkspace') && routeAudit.includes('AssessmentWorkspace'), 'Every role-visible route must map to a known Dashboard component with the dedicated linked and assessment dispatchers present')
   const responsiveAudit = read('docs/PHASE_2_RESPONSIVE_SOURCE_AUDIT.md')
   assert.ok(responsiveAudit.includes('16 responsive source checks passed') && responsiveAudit.includes('390×844') && responsiveAudit.includes('768×1024'), 'Responsive source coverage audit is missing or incomplete')
   const viewAudit = read('docs/PHASE_1_ROUTE_VIEW_AUDIT.md')
