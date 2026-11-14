@@ -428,6 +428,7 @@ function dedicatedRoute(groupKey: string, itemKey: string): string | undefined {
  */
 export function getNavigationRoute(groupKey: string, itemLabel: string, role?: string): string {
   const itemKey = slug(itemLabel)
+  if (groupKey === 'dashboard' && itemKey === 'dashboard') return 'overview'
   if (groupKey === 'people-hr') {
     const destinations: Record<string,string> = {
       'students':role==='student'||role==='parent'?'students:profile':'students:directory',
