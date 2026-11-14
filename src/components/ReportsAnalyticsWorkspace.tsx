@@ -96,6 +96,9 @@ export function ReportsAnalyticsWorkspace({initialWindow='overview',onToast}:{in
  const [scheduleNextRun,setScheduleNextRun]=useState(()=>new Date(Date.now()+86400000).toISOString().slice(0,16))
  const [templateName,setTemplateName]=useState('')
  const [templateScope,setTemplateScope]=useState('college')
+ const [templateSource,setTemplateSource]=useState<DatasetKey>('exam_results')
+ const [templateSearch,setTemplateSearch]=useState('')
+ const [templatePage,setTemplatePage]=useState(1)
  const [persistentLoading,setPersistentLoading]=useState(false)
 
  useEffect(()=>{let live=true;setLoading(true);const keys:DatasetKey[]=['students','teachers','attendance','exam_results','fee_invoices','assignments','assignment_submissions'];Promise.all(keys.map(async key=>{try{return [key,await listRecords(mode,user!,key)] as const}catch(e){if(live)setErrors(v=>[...v,userFacingError(e,'Some report records could not be loaded.')]);return [key,[]] as const}})).then(async pairs=>{if(!live)return;const next:Record<DatasetKey,ReportRow[]>={students:[],teachers:[],attendance:[],exam_results:[],fee_invoices:[],payroll:[],assignments:[],assignment_submissions:[]};pairs.forEach(([key,rows])=>{next[key]=rows as ReportRow[]});if(supabase){try{const [items,runs]=await Promise.all([supabase.from('payroll_items').select('*').eq('institution_id',user!.institutionId).order('created_at',{ascending:false}).limit(2000),supabase.from('payroll_runs').select('*').eq('institution_id',user!.institutionId).limit(250)]);if(items.error)throw items.error;if(runs.error)throw runs.error;const runMap=new Map((runs.data??[]).map(run=>[String(run.id),run]));next.payroll=(items.data??[]).map(item=>{const run=runMap.get(String(item.payroll_run_id));return {...item,employee_name:String(item.employee_name??'Employee record'),period_start:run?.period_start??'',period_end:run?.period_end??''} as ReportRow})}catch(e){if(live)setErrors(v=>[...v,userFacingError(e,'Payroll report data could not be loaded.')])}}setData(next);setLoading(false)});return()=>{live=false}},[mode,user?.id,user?.institutionId,refresh])
@@ -154,12 +157,12 @@ export function ReportsAnalyticsWorkspace({initialWindow='overview',onToast}:{in
   setSelectedDefinition(id);const found=savedDefinitions.find(item=>item.id===id);if(!found)return;
   const source=String(found.source_module) as DatasetKey
   if(COLUMNS[source]){setCustomSource(source);setCustomFields(Array.isArray(found.selected_fields)?found.selected_fields:COLUMNS[source].map(x=>x.key))}
-  const filters=found.filters??{};setFrom(filters.from??'');setTo(filters.to??'');setClassName(filters.className??'all');setSection(filters.section??'all');setQuery(filters.query??'');if(found.export_format)setExportFormat(String(found.export_format).toLowerCase() as ExportFormat);onToast('Saved report definition loaded.')
+  const filters=found.filters??{};setFrom(filters.from??'');setTo(filters.to??'');setClassName(filters.className??'all');setSection(filters.section??'all');setQuery(filters.query??'');if(filters.scope)setTemplateScope(String(filters.scope));if(filters.template_name)setTemplateName(String(filters.template_name));if(found.export_format)setExportFormat(String(found.export_format).toLowerCase() as ExportFormat);onToast('Saved report definition loaded.')
  }
  async function saveTemplate(){
   if(!templateName.trim()){onToast('Enter a template name.',true);return}
   if(!supabase||!user)return
-  try{const result=await supabase.from('institution_report_definitions').insert({institution_id:user.institutionId,name:templateName.trim(),source_module:customSource,template_key:examTemplate,selected_fields:customFields,filters:{scope:templateScope,template:examTemplate},export_format:exportFormat,created_by:user.id,updated_by:user.id}).select('*').single();if(result.error)throw result.error;setSavedDefinitions(v=>[result.data,...v]);setTemplateName('');onToast('Report template saved in the institution template library.')}catch(e){onToast(userFacingError(e,'The report template could not be saved.'),true)}
+  try{const result=await supabase.from('institution_report_definitions').insert({institution_id:user.institutionId,name:templateName.trim(),source_module:templateSource,template_key:templateName.trim(),selected_fields:COLUMNS[templateSource].map(column=>column.key),filters:{scope:templateScope,template_name:templateName.trim()},export_format:exportFormat,created_by:user.id,updated_by:user.id}).select('*').single();if(result.error)throw result.error;setSavedDefinitions(v=>[result.data,...v]);setTemplateName('');onToast('Report template saved in the institution template library.')}catch(e){onToast(userFacingError(e,'The report template could not be saved.'),true)}
  }
  async function saveSchedule(event:FormEvent<HTMLFormElement>){
   event.preventDefault();if(!supabase||!user)return
@@ -168,6 +171,23 @@ export function ReportsAnalyticsWorkspace({initialWindow='overview',onToast}:{in
  }
  const templates=['Whole-college performance','Class-wise result summary','Section-wise result summary','Subject-wise result analysis','Individual student report card','Exam-wise marks register','Grade distribution report','Merit and position list','Pass/fail analysis','Attendance and result correlation','Top performers report','Improvement required report','Missing marks register','Result publication summary','Examination comparison report']
  const templateValues=['whole-college-performance','class-wise-result-summary','section-wise-result-summary','subject-wise-result-analysis','individual-student-report-card','exam-wise-marks-register','grade-distribution-report','merit-and-position-list','pass-fail-analysis','attendance-result-correlation','top-performers-report','improvement-required-report','missing-marks-register','result-publication-summary','examination-comparison-report']
+ const genericTemplateSeeds=[
+  'Student master register','Student demographic directory','Admission and withdrawal register','Class-wise student strength','Section-wise student register',
+  'Employee service and posting record','Faculty department summary','Staff attendance and leave summary','Monthly attendance statement','Daily attendance register',
+  'Subject-wise teaching progress','Lesson completion register','Homework issue and submission','Assignment grading register','Study material distribution',
+  'Learning course enrolment','Online learning progress','Curriculum coverage register','Academic session comparison','Academic calendar activity report',
+  'Fee invoice and receipt statement','Outstanding balance ageing','Fee concession and waiver report','Payroll salary register','Payroll deduction summary',
+  'Institution asset and facilities register','Department and designation directory','Student support and counselling summary','Health emergency incident register',
+  'Behaviour and positive recognition register','Disciplinary incident and follow-up','Student skills and competency evidence','Co-curricular participation summary',
+  'Student progress and learning support','Visitor and front-office register','Exam marks and grade analysis','Exam attendance and missing marks',
+  'Subject result comparison','Merit and position list','Pass and fail analysis','Parent communication activity','Custom field data extract'
+ ]
+ const templateScopes=['college','class','section','subject','exam','student']
+ const templateLibrary=[...templates,...genericTemplateSeeds].flatMap((name,index)=>Object.keys(COLUMNS).flatMap(source=>templateScopes.map(scope=>({id:name.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-'+source+'-'+scope,name,source:source as DatasetKey,scope,index}))))
+ const visibleTemplateLibrary=templateLibrary.filter(item=>(templateSource==='exam_results'?true:item.source===templateSource)&&(templateScope==='college'?true:item.scope===templateScope)&&(!templateSearch.trim()||[item.name,item.source,item.scope].join(' ').toLowerCase().includes(templateSearch.toLowerCase())))
+ const templatePageSize=36
+ const templatePageCount=Math.max(1,Math.ceil(visibleTemplateLibrary.length/templatePageSize))
+ const visibleTemplates=visibleTemplateLibrary.slice((Math.min(templatePage,templatePageCount)-1)*templatePageSize,Math.min(templatePage,templatePageCount)*templatePageSize)
  if(loading)return <div className="ra-loading">Loading authorised report records…</div>
  return <main className="ra-workspace">
   <header className="ra-heading"><div><span>GIDC BADIN · REPORTING</span><h1>{meta.title}</h1><p>{meta.description}</p></div><button className="ra-refresh" onClick={()=>{setErrors([]);setRefresh(v=>v+1)}}><RefreshCw size={15}/> Refresh records</button></header>
