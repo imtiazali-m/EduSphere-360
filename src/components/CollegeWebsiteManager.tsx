@@ -301,6 +301,7 @@ export function CollegeWebsiteManager({ onToast }: { onToast: (message: string, 
     const failures: string[] = []
     let skipped = 0
     let importedPoster = false
+    let approvedHeroImage = ''
     try {
       for (const file of files) {
         const fileName = file.name.toLowerCase()
@@ -351,6 +352,7 @@ export function CollegeWebsiteManager({ onToast }: { onToast: (message: string, 
           else if (relativePath.includes('05_events') || /student-guidance|recognition|meeting|flag-event|navy-awareness|staff-|student-staff/.test(fileName)) category = 'college-events'
           const isFeaturedFifth = fileName.includes('student-guidance-session-event-05')
           const imageUrl = await uploadImage(file, 'gallery')
+          if (fileName.includes('college-entrance-and-assembly')) approvedHeroImage = imageUrl
           const titleMap: Record<string, string> = {
             'classroom-board-03.jpg': 'Classroom board lesson',
             'classroom-lecture-02.jpg': 'Classroom lecture',
@@ -389,7 +391,11 @@ export function CollegeWebsiteManager({ onToast }: { onToast: (message: string, 
         if (index >= 0) gallery[index] = { ...gallery[index], ...item }
         else gallery.push(item)
       })
-      const nextContent = { ...content, gallery }
+      const nextContent = {
+        ...content,
+        gallery,
+        ...(approvedHeroImage ? { heroPhotoUrl: approvedHeroImage } : {}),
+      }
       setContent(nextContent)
       const doneCount = photoItems.length + (importedPoster ? 1 : 0)
       const summary = `Imported ${doneCount} approved college image(s). ${skipped} logo/identity reference image(s) were skipped. The fifth teacher-guidance photograph was placed under Events.`
