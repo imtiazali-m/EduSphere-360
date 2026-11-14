@@ -93,6 +93,7 @@ const pages = [
   { id: 'faculty', label: 'Faculty', icon: Users },
   { id: 'departments', label: 'Faculty arrangement', icon: Users },
   { id: 'campus', label: 'Campus', icon: School },
+  { id: 'student-life', label: 'Student life', icon: Users },
   { id: 'events', label: 'Events', icon: CalendarDays },
   { id: 'content', label: 'News & announcements', icon: Newspaper },
   { id: 'gallery', label: 'Gallery', icon: ImageIcon },
@@ -390,6 +391,7 @@ export function CollegeHomePage({ navigate, initialSection }: Props) {
                 <a href="https://seccap.ced.gos.pk/" target="_blank" rel="noreferrer">Open SECCAP <ExternalLink size={14}/></a>
               </article>
             </div>
+            {galleryItems.filter(item => item.category === 'academic-learning').length > 0 && <div className="gidc-public-subsection"><SectionHeading eyebrow="CLASSROOMS & TEACHING" title="Learning in action"/><div className="gidc-public-photo-grid">{galleryItems.filter(item => item.category === 'academic-learning').map(item => <PhotoCard item={item} key={item.id}/>)}</div></div>}
             <div className="gidc-public-source-note">The Government of Sindh directory currently lists Science for Government Islamia Degree College Badin. <a href="https://college.sindh.gov.pk/government-colleges" target="_blank" rel="noreferrer">View the official directory <ExternalLink size={13}/></a></div>
           </PageFrame>
         )}
@@ -444,6 +446,12 @@ export function CollegeHomePage({ navigate, initialSection }: Props) {
               </div>
             </div>
             {galleryItems.filter(item => item.category === 'main-campus' || item.category === 'campus-facility').length > 0 && <div className="gidc-public-subsection"><SectionHeading eyebrow="CAMPUS PHOTOGRAPHS" title="Campus views"/><div className="gidc-public-photo-grid">{galleryItems.filter(item => item.category === 'main-campus' || item.category === 'campus-facility').map(item => <PhotoCard item={item} key={item.id}/>)}</div></div>}
+          </PageFrame>
+        )}
+
+        {page === 'student-life' && (
+          <PageFrame eyebrow="STUDENT COMMUNITY" title="Student life" lead="Student participation and campus gatherings published by the college." icon={Users}>
+            {galleryItems.filter(item => item.category === 'student-life').length > 0 ? <div className="gidc-public-gallery-grid">{galleryItems.filter(item => item.category === 'student-life').map(item => <PhotoCard item={item} key={item.id}/>)}</div> : <EmptyState icon={Users} title="Student life" detail="Student-life photographs will appear here when they are approved and published by the college."/>}
           </PageFrame>
         )}
 
