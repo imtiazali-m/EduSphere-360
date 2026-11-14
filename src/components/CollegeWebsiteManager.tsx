@@ -444,7 +444,7 @@ export function CollegeWebsiteManager({ onToast }: { onToast: (message: string, 
     if (!supabase || !user) throw new Error('The college media service is not available.')
     if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) throw new Error('Choose a PDF magazine issue.')
     if (file.size > 30 * 1024 * 1024) throw new Error('The PDF must be 30 MB or smaller.')
-    const safeName = file.name.replace(/\\.pdf$/i, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '').slice(0, 48) || 'college-magazine'
+    const safeName = file.name.replace(/\.pdf$/i, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '').slice(0, 48) || 'college-magazine'
     const storagePath = user.institutionId + '/website/magazines/' + Date.now() + '-' + safeName + '.pdf'
     const { error } = await supabase.storage.from('gidc-public-media').upload(storagePath, file, {
       cacheControl: '3600',
