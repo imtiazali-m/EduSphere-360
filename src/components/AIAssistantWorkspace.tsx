@@ -1,63 +1,143 @@
-import { useState } from 'react'
-import { BrainCircuit, Clock3, FileText, MessageSquare, PanelLeftClose, Send, ShieldCheck, Sparkles } from 'lucide-react'
-import '../styles/ai-assistant-workspace.css'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { Activity, BarChart3, BrainCircuit, CalendarDays, CircleAlert, FileText, GraduationCap, LoaderCircle, RefreshCw, Send, Settings2, ShieldCheck, Sparkles, TrendingUp, Users, Wallet } from 'lucide-react'
+import { supabase } from '../lib/supabase'
+import { useAuth } from '../context/AuthContext'
+import '../styles/modern-workspace-refresh.css'
 
-const suggestions=[
- {title:'Summarise a report',description:'Explain a permitted institution report in plain language.',icon:FileText},
- {title:'Prepare a notice',description:'Draft a clear notice for an institution audience.',icon:MessageSquare},
- {title:'Review attendance trends',description:'Help interpret attendance patterns and limitations.',icon:Clock3},
- {title:'Plan a lesson',description:'Create a lesson outline for a class and subject.',icon:Sparkles},
+type ProviderKey='openai'|'anthropic'|'gemini'|'deepseek'|'xai'|'meta'|'perplexity'
+type ProviderStatus={configured:boolean;secretName:string}
+type Message={role:'user'|'assistant';content:string;time:string}
+const providers:{key:ProviderKey;name:string;secret:string;hint:string;model:string}[]=[
+ {key:'openai',name:'OpenAI',secret:'OPENAI_API_KEY',hint:'Model ID',model:'gpt-6'},
+ {key:'anthropic',name:'Claude',secret:'ANTHROPIC_API_KEY',hint:'Model ID',model:'claude-sonnet-4-5'},
+ {key:'gemini',name:'Gemini',secret:'GEMINI_API_KEY',hint:'Model ID',model:'gemini-3-pro-preview'},
+ {key:'deepseek',name:'DeepSeek',secret:'DEEPSEEK_API_KEY',hint:'Model ID',model:'deepseek-chat'},
+ {key:'xai',name:'Grok · xAI',secret:'XAI_API_KEY',hint:'Model ID',model:'grok-4'},
+ {key:'meta',name:'Meta Model API',secret:'META_MODEL_API_KEY',hint:'Model ID',model:'muse-spark-1.3'},
+ {key:'perplexity',name:'Perplexity',secret:'PERPLEXITY_API_KEY',hint:'Model ID',model:'perplexity/sonar'},
 ]
-
-const intelligencePages:Record<string,{title:string;eyebrow:string;description:string;prompt:string}>={
- chat:{title:'AI Assistant',eyebrow:'INSTITUTION AI ASSISTANT',description:'Ask questions about permitted institutional records, draft notices and plan academic work.',prompt:'Ask about an institutional task…'},
- 'smart-reports':{title:'Smart Reports',eyebrow:'AI REPORT INTERPRETATION',description:'Prepare plain-language explanations of selected reports, trends and anomalies with source references.',prompt:'Describe the report you want interpreted…'},
- 'student-performance-prediction':{title:'Student Performance Prediction',eyebrow:'LEARNER RISK & PROGRESS',description:'Review historical marks, attendance and assessment evidence. Any forecast must disclose its data window and uncertainty.',prompt:'Select the class, term and prediction question…'},
- 'student-analysis':{title:'Student Analysis',eyebrow:'INDIVIDUAL LEARNER INSIGHTS',description:'Bring together authorised attendance, assessment and enrolment context for a student review.',prompt:'Enter a student or admission number…'},
- 'fee-collection-prediction':{title:'Fee Collection Prediction',eyebrow:'RECEIVABLES FORECAST',description:'Analyse invoice ageing and recorded payment history. Forecasts require sufficient historical data and an enabled AI provider.',prompt:'Choose the fee period and forecast horizon…'},
- 'examination-analysis':{title:'Examination Analysis',eyebrow:'EXAMINATION INTELLIGENCE',description:'Review class, section, subject and exam-level performance, grade distribution and missing marks.',prompt:'Select an examination to analyse…'},
- 'ai-timetable-suggestions':{title:'AI Timetable Suggestions',eyebrow:'SCHEDULING ASSISTANT',description:'Evaluate teacher availability, room capacity and timetable conflicts before proposing a schedule.',prompt:'Describe the timetable constraints…'},
- 'ai-question-generation':{title:'AI Question Generation',eyebrow:'ASSESSMENT AUTHORING',description:'Prepare question-generation instructions by subject, class, learning outcome and difficulty.',prompt:'Describe the subject and learning outcomes…'},
- 'ai-document-assistant':{title:'AI Document Assistant',eyebrow:'INSTITUTION DOCUMENTS',description:'Assist with authorised document summaries, notices, letters and policy drafts.',prompt:'Describe the document task…'},
- 'ai-learning-recommendations':{title:'AI Learning Recommendations',eyebrow:'PERSONALISED LEARNING',description:'Create evidence-led learning recommendations from published results and available learning progress.',prompt:'Select a learner and learning goal…'},
- 'academic-performance-insights':{title:'Academic Performance Insights',eyebrow:'ACADEMIC INTELLIGENCE',description:'Compare academic outcomes across classes, sections, subjects and examination periods.',prompt:'Choose the academic comparison…'},
- 'attendance-and-behaviour-insights':{title:'Attendance & Behaviour Insights',eyebrow:'STUDENT ENGAGEMENT',description:'Review attendance patterns and authorised behaviour records without treating correlation as causation.',prompt:'Choose a date range and cohort…'},
- 'institutional-intelligence':{title:'Institutional Intelligence',eyebrow:'COLLEGE-WIDE INSIGHTS',description:'Bring together approved academic, attendance, staffing and financial indicators for institutional review.',prompt:'What institutional question should be explored…'}
+const pages:Record<string,{title:string;category:string;description:string;prompt:string;icon:any}>={
+ chat:{title:'AI Assistant',category:'ASSISTANT',description:'Ask a question or prepare a college task using the selected model.',prompt:'What would you like to work on?',icon:BrainCircuit},
+ 'smart-reports':{title:'Smart Reports',category:'REPORT INTELLIGENCE',description:'Explain report patterns, exceptions and changes using permitted college records.',prompt:'Which report should be interpreted, and what should be highlighted?',icon:BarChart3},
+ 'student-performance-prediction':{title:'Student Performance Prediction',category:'STUDENT OUTLOOK',description:'Estimate class-level academic outlook from past marks and attendance. Predictions are guidance, not decisions.',prompt:'Which class, subject or assessment period should be forecast?',icon:TrendingUp},
+ 'student-analysis':{title:'Student Analysis',category:'LEARNER REVIEW',description:'Review a learner’s authorised academic and attendance context and identify useful support actions.',prompt:'Enter an admission number or describe the cohort to review.',icon:GraduationCap},
+ 'fee-collection-prediction':{title:'Fee Collection Prediction',category:'FINANCE OUTLOOK',description:'Estimate collection trends using recorded invoices, receipts and outstanding balances.',prompt:'Which fee period and forecast horizon should be analysed?',icon:Wallet},
+ 'examination-analysis':{title:'Examination Analysis',category:'EXAMINATION INTELLIGENCE',description:'Compare marks, grade distributions, pass rates and subject performance from saved results.',prompt:'Which exam, class or subject should be analysed?',icon:BarChart3},
+ 'ai-timetable-suggestions':{title:'AI Timetable Suggestions',category:'SCHEDULING',description:'Suggest schedule improvements from saved timetable, teacher and room allocations.',prompt:'Describe the scheduling objective or constraints.',icon:CalendarDays},
+ 'ai-question-generation':{title:'AI Question Generation',category:'ASSESSMENT AUTHORING',description:'Draft questions by subject, class, topic, learning outcome, marks and difficulty.',prompt:'Specify subject, class, topic, question count and difficulty.',icon:FileText},
+ 'ai-document-assistant':{title:'AI Document Assistant',category:'DOCUMENT WORKSPACE',description:'Draft or review college notices, letters, meeting notes and policy documents.',prompt:'Describe the document and required format.',icon:FileText},
+ 'ai-learning-recommendations':{title:'AI Learning Recommendations',category:'LEARNING SUPPORT',description:'Suggest learning steps from available class-level progress and curriculum evidence.',prompt:'Which learner, class or learning goal should be considered?',icon:GraduationCap},
+ 'academic-performance-insights':{title:'Academic Performance Insights',category:'ACADEMIC INTELLIGENCE',description:'Identify strengths and improvement areas across sessions, classes and subjects.',prompt:'Which academic period or classes should be compared?',icon:TrendingUp},
+ 'attendance-and-behaviour-insights':{title:'Attendance & Behaviour Insights',category:'STUDENT ENGAGEMENT',description:'Review attendance patterns and recorded behaviour categories without assuming causation.',prompt:'Which date range, class or behaviour category should be reviewed?',icon:Users},
+ 'institutional-intelligence':{title:'Institutional Intelligence',category:'COLLEGE INTELLIGENCE',description:'Combine approved academic, attendance, staffing and finance summaries for leadership review.',prompt:'What college-level question should the analysis answer?',icon:Activity},
 }
+const statusCount=(rows:any[],key:string)=>rows.reduce((out:Record<string,number>,row:any)=>{const k=String(row[key]??'Unspecified');out[k]=(out[k]??0)+1;return out},{})
+const groupAverage=(rows:any[],key:string)=>{const groups:Record<string,{count:number;sum:number}>={};for(const row of rows){const label=String(row[key]??'Unspecified');groups[label]??={count:0,sum:0};groups[label].count++;groups[label].sum+=Number(row.total_marks)>0?Number(row.marks_obtained)/Number(row.total_marks)*100:0}return Object.entries(groups).map(([label,value])=>({label,count:value.count,average:Math.round(value.sum/value.count*10)/10}))}
+
 export function AIAssistantWorkspace({initialWindow='chat'}:{initialWindow?:string}){
- const page=intelligencePages[initialWindow]??intelligencePages.chat
+ const {user}=useAuth()
+ const pageKey=initialWindow in pages?initialWindow:'chat'
+ const page=pages[pageKey]
+ const [provider,setProvider]=useState<ProviderKey>('openai')
+ const [model,setModel]=useState('gpt-6')
+ const [status,setStatus]=useState<Partial<Record<ProviderKey,ProviderStatus>>>({})
+ const [messages,setMessages]=useState<Message[]>([])
  const [prompt,setPrompt]=useState('')
- const [historyOpen,setHistoryOpen]=useState(true)
- const [showReadiness,setShowReadiness]=useState(false)
- return <main className="ed360-ai-workspace">
-  <header className="ed360-ai-header">
-   <div className="ed360-ai-brand"><span><BrainCircuit size={21}/></span><div><small>EDUSPHERE 360 INTELLIGENCE</small><h1>{page.title}</h1><p>{page.description}</p></div></div>
-   <div className="ed360-ai-status"><i/> Private AI workspace</div>
+ const [loading,setLoading]=useState(false)
+ const [checking,setChecking]=useState(true)
+ const [error,setError]=useState('')
+ const [showProviders,setShowProviders]=useState(false)
+ const [contextSummary,setContextSummary]=useState('No database context loaded')
+ const [includeData,setIncludeData]=useState(true)
+ const selectedProvider=providers.find(item=>item.key===provider)!
+ const available=Boolean(status[provider]?.configured)
+ const PageIcon=page.icon
+
+ useEffect(()=>{setModel(providers.find(p=>p.key===provider)?.model??'')},[provider])
+ useEffect(()=>{let active=true;(async()=>{if(!supabase||!user){setChecking(false);return}const {data,error:invokeError}=await supabase.functions.invoke('ai-assistant',{body:{action:'status',institutionId:user.institutionId}});if(!active)return;if(invokeError){setError('AI gateway is unavailable.');setChecking(false);return}if(data?.providers)setStatus(data.providers as Partial<Record<ProviderKey,ProviderStatus>>);setChecking(false)})();return()=>{active=false}},[user?.id,user?.institutionId])
+
+ async function loadContext(){
+  if(!supabase||!user)return {}
+  const institutionId=user.institutionId
+  const read=(table:string,columns:string)=>supabase!.from(table).select(columns).eq('institution_id',institutionId).limit(1500)
+  const needExam=['student-performance-prediction','student-analysis','academic-performance-insights','examination-analysis','smart-reports','institutional-intelligence'].includes(pageKey)
+  const needAttendance=['student-performance-prediction','student-analysis','attendance-and-behaviour-insights','institutional-intelligence','smart-reports'].includes(pageKey)
+  const needFees=['fee-collection-prediction','institutional-intelligence']
+  const needPeople=pageKey==='institutional-intelligence'
+  const [exam,attendance,fees,students,teachers]=await Promise.all([
+   needExam?read('exam_results','exam_title,subject,class_name,marks_obtained,total_marks,result_status,is_absent,created_at'):Promise.resolve({data:[],error:null}),
+   needAttendance?read('attendance','class_name,status,attendance_date,period_label'):Promise.resolve({data:[],error:null}),
+   needFees?read('fee_invoices','total_amount,paid_amount,due_date,status,created_at'):Promise.resolve({data:[],error:null}),
+   needPeople?read('students','class_name,status'):Promise.resolve({data:[],error:null}),
+   needPeople?read('teachers','department,employment_status,employee_type'):Promise.resolve({data:[],error:null}),
+  ])
+  for(const result of [exam,attendance,fees,students,teachers])if(result.error)throw result.error
+  const context:Record<string,unknown>={}
+  if(needExam){const rows=exam.data??[];context.examination={recordCount:rows.length,publishedCount:rows.filter(r=>r.result_status==='published').length,byClass:groupAverage(rows,'class_name'),bySubject:groupAverage(rows,'subject'),byExam:statusCount(rows,'exam_title')}}
+  if(needAttendance){const rows=attendance.data??[];context.attendance={recordCount:rows.length,byStatus:statusCount(rows,'status'),byClass:statusCount(rows,'class_name'),dateRange:rows.length?{from:rows.reduce((a:string,r:any)=>r.attendance_date<a?a:r.attendance_date,rows[0].attendance_date),to:rows.reduce((a:string,r:any)=>r.attendance_date>a?a:r.attendance_date,rows[0].attendance_date)}:null}}
+  if(needFees){const rows=fees.data??[];context.fees={invoiceCount:rows.length,invoiced:rows.reduce((n:number,r:any)=>n+Number(r.total_amount??0),0),received:rows.reduce((n:number,r:any)=>n+Number(r.paid_amount??0),0),byStatus:statusCount(rows,'status')}}
+  if(needPeople){context.people={students:(students.data??[]).length,employees:(teachers.data??[]).length,studentsByClass:statusCount(students.data??[],'class_name'),employeesByDepartment:statusCount(teachers.data??[],'department')}}
+  return context
+ }
+
+ async function sendMessage(event:FormEvent){
+  event.preventDefault()
+  if(!prompt.trim()||loading||!available||!supabase||!user)return
+  const currentPrompt=prompt.trim()
+  const nextMessages=[...messages.slice(-8),{role:'user' as const,content:currentPrompt,time:new Date().toLocaleTimeString()}]
+  setMessages(nextMessages);setPrompt('');setLoading(true);setError('')
+  try{
+   const databaseContext=includeData?await loadContext():{}
+   setContextSummary(includeData?'Institution-authorised summary data attached':'No college data attached')
+   const history=nextMessages.map(m=>({role:m.role,content:m.content}))
+   const {data,error:invokeError}=await supabase.functions.invoke('ai-assistant',{body:{action:'generate',institutionId:user.institutionId,provider,model,page:pageKey,messages:history,context:databaseContext}})
+   if(invokeError)throw invokeError
+   if(!data?.text)throw new Error(data?.error??'The provider did not return a response.')
+   setMessages(current=>[...current,{role:'assistant',content:data.text,time:new Date().toLocaleTimeString()}])
+  }catch(e){setError('The request could not be completed. Check the model ID, provider key and available balance, then try again.')}
+  finally{setLoading(false)}
+ }
+ const suggestions=useMemo(()=>({
+  chat:['Summarise current priorities','Draft an official college notice'],
+  'smart-reports':['Explain the strongest and weakest indicators','Highlight unusual changes in the report'],
+  'student-performance-prediction':['Estimate class-level subject trends','Identify learning-support priorities'],
+  'student-analysis':['Review a learner’s progress','Suggest evidence-based support steps'],
+  'fee-collection-prediction':['Estimate collection trends by period','Identify outstanding fee patterns'],
+  'examination-analysis':['Compare subject performance','Explain grade and pass-rate patterns'],
+  'ai-timetable-suggestions':['Find timetable conflicts','Suggest balanced period allocation'],
+  'ai-question-generation':['Draft a class-level question set','Create a marking guide'],
+  'ai-document-assistant':['Draft a formal letter','Summarise a policy document'],
+  'ai-learning-recommendations':['Suggest next learning topics','Create a short revision plan'],
+  'academic-performance-insights':['Compare subjects and classes','Summarise learning progress'],
+  'attendance-and-behaviour-insights':['Review attendance by class','Highlight recorded behaviour patterns'],
+  'institutional-intelligence':['Prepare a leadership summary','Highlight cross-college indicators'],
+ } as Record<string,string[]>)[pageKey]??[],[pageKey])
+ return <main className="mw-page ai-modern-page">
+  <header className="mw-hero">
+   <div className="mw-hero-mark"><BrainCircuit size={24}/></div>
+   <div className="mw-hero-copy"><span>{page.category}</span><h1>{page.title}</h1><p>{page.description}</p></div>
+   <div className="mw-hero-actions"><span className={'mw-status '+(available?'is-live':'is-pending')}>{checking?'Checking providers':available?'Provider ready':'Provider key needed'}</span><button className="mw-secondary" onClick={()=>setShowProviders(v=>!v)}><Settings2 size={15}/> Providers</button></div>
   </header>
-  <div className="ed360-ai-layout">
-   <aside className={historyOpen?'ed360-ai-history':'ed360-ai-history is-collapsed'}>
-    <div className="ed360-ai-history-head"><b>Conversations</b><button type="button" onClick={()=>setHistoryOpen(false)} aria-label="Collapse conversations"><PanelLeftClose size={16}/></button></div>
-    <div className="ed360-ai-history-empty"><MessageSquare size={21}/><b>No conversations yet</b><p>Conversation history appears here when an AI provider is connected and conversation storage is enabled.</p></div>
-    {!historyOpen&&<button type="button" className="ed360-ai-expand-history" onClick={()=>setHistoryOpen(true)} aria-label="Expand conversations"><PanelLeftClose size={16}/></button>}
+  <section className="mw-two-column">
+   <div className="mw-main-column">
+    <section className="mw-panel ai-conversation-panel">
+     <div className="mw-panel-head"><div><span>WORKSPACE</span><h2>Analysis and responses</h2></div><small>{messages.length} messages</small></div>
+     {messages.length===0?<div className="ai-welcome"><div className="ai-welcome-icon"><PageIcon size={25}/></div><h2>{page.title}</h2><p>{contextSummary}</p><div className="ai-suggestion-grid">{suggestions.map(s=><button key={s} onClick={()=>setPrompt(s)}><Sparkles size={15}/>{s}</button>)}</div></div>:<div className="ai-message-list">{messages.map((m,i)=><article className={'ai-message '+m.role} key={i}><span>{m.role==='assistant'?'AI':'You'} · {m.time}</span><p>{m.content}</p></article>)}{loading&&<article className="ai-message assistant pending"><span>AI</span><p><LoaderCircle size={15} className="mw-spin"/> Preparing your analysis…</p></article>}</div>}
+     <form className="ai-composer" onSubmit={sendMessage}><textarea value={prompt} onChange={e=>setPrompt(e.target.value)} placeholder={page.prompt} rows={3} disabled={loading}/><div><label className="ai-context-toggle"><input type="checkbox" checked={includeData} onChange={e=>setIncludeData(e.target.checked)}/> Include permitted college summaries</label><button className="mw-primary" type="submit" disabled={!available||loading||!prompt.trim()}>{loading?<LoaderCircle size={15}/>:<Send size={15}/>} {loading?'Working…':'Generate'}</button></div></form>
+    </section>
+   </div>
+   <aside className="mw-side-column">
+    <section className="mw-panel ai-model-panel"><div className="mw-panel-head"><div><span>MODEL ROUTING</span><h2>Choose a provider</h2></div><Sparkles size={18}/></div>
+     <label>AI provider<select value={provider} onChange={e=>setProvider(e.target.value as ProviderKey)}>{providers.map(p=><option key={p.key} value={p.key}>{p.name}</option>)}</select></label>
+     <label>Model identifier<input value={model} onChange={e=>setModel(e.target.value)} placeholder={selectedProvider.hint}/></label>
+     <div className="ai-provider-list">{providers.map(p=><div key={p.key}><span>{p.name}</span><b className={status[p.key]?.configured?'configured':''}>{checking?'Checking':status[p.key]?.configured?'Ready':'Key needed'}</b></div>)}</div>
+     <p className="ai-secret-note"><ShieldCheck size={14}/> Keys are held in Supabase Edge Function secrets.</p>
+     <button className="mw-secondary block" onClick={()=>setShowProviders(v=>!v)}><Settings2 size={14}/> Provider setup</button>
+    </section>
+    <section className="mw-panel ai-data-panel"><div className="mw-panel-head"><div><span>DATA SCOPE</span><h2>College records</h2></div><Activity size={18}/></div><p>{contextSummary}</p><button className="mw-secondary block" onClick={()=>void loadContext().then(()=>setContextSummary('Institution-authorised summaries are available for the next request.')).catch(()=>setError('Permitted records could not be read.'))}><RefreshCw size={14}/> Refresh data context</button></section>
+    {showProviders&&<section className="mw-panel ai-setup-panel"><div className="mw-panel-head"><div><span>INTEGRATIONS</span><h2>Provider credentials</h2></div></div>{providers.map(p=><div className="ai-provider-detail" key={p.key}><div><b>{p.name}</b><small>{p.secret}</small></div><span className={status[p.key]?.configured?'configured':''}>{status[p.key]?.configured?'Key configured':'Missing key'}</span></div>)}<p>Add server-side keys in Supabase → Edge Functions → Secrets, then refresh this page.</p></section>}
    </aside>
-   <section className="ed360-ai-chat">
-    <div className="ed360-ai-chat-top"><span><Sparkles size={15}/> Assistant workspace</span><small>Role permissions continue to apply to any connected data.</small></div>
-    <div className="ed360-ai-chat-body">
-     <div className="ed360-ai-welcome">
-      <span className="ed360-ai-welcome-mark"><BrainCircuit size={28}/></span>
-      <span className="ed360-ai-eyebrow">{page.eyebrow}</span>
-      <h2>{page.title}</h2>
-      <p>{page.description} Any AI-generated conclusion must cite its source records and disclose its assumptions and limitations.</p>
-     </div>
-     <div className="ed360-ai-suggestions">{suggestions.map(item=>{const Icon=item.icon;return <button type="button" key={item.title} onClick={()=>{setPrompt(item.title+': ');setShowReadiness(true)}}><span><Icon size={17}/></span><div><b>{item.title}</b><small>{item.description}</small></div></button>})}</div>
-     {showReadiness&&<div className="ed360-ai-readiness" role="status"><ShieldCheck size={17}/><div><b>Your request has not been sent.</b><p>The AI provider endpoint and institution-approved API secret have not been configured in this deployment. Your request remains on this page; no private college records are sent to an unconfigured service.</p></div></div>}
-    </div>
-    <form className="ed360-ai-composer" onSubmit={event=>{event.preventDefault();setShowReadiness(true)}}>
-     <label htmlFor="ed360-ai-prompt">Message the assistant</label>
-     <div><textarea id="ed360-ai-prompt" value={prompt} onChange={event=>setPrompt(event.target.value)} rows={2} placeholder={page.prompt} disabled aria-describedby="ed360-ai-provider-note"/><button type="submit" disabled title="Connect an AI provider to send messages"><Send size={17}/><span>Send</span></button></div>
-     <small id="ed360-ai-provider-note">AI generation remains safely paused until an approved provider endpoint and server-side secret are configured. Do not enter confidential personal data here yet.</small>
-    </form>
-   </section>
-  </div>
+  </section>
+  {error&&<div className="mw-alert error"><CircleAlert size={16}/>{error}</div>}
  </main>
 }
