@@ -133,7 +133,7 @@ export function Stage7CareWorkspace({initialWindow='leave',onToast}:{initialWind
   const canRead=(area:CareGrant['area'])=>isAdmin||Boolean(grantFor(area)?.can_read)
   const canWrite=(area:CareGrant['area'])=>isAdmin||Boolean(grantFor(area)?.can_write)
   const currentStudents=students
-  const selectedLeavePeople=leaveKind==='student'?currentStudents:employees
+  const selectedLeavePeople=leaveKind==='student'?currentStudents:user?.role==='teacher'?employees.filter(employee=>employee.user_id===user.id):employees
   const leaveTypeOptions=leaveKind==='student'
     ?['sick','family','personal','other']
     :['annual','sick','casual','unpaid','maternity','paternity','other']
