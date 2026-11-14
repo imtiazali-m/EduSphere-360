@@ -98,6 +98,8 @@ export function ReportsAnalyticsWorkspace({initialWindow='overview',onToast}:{in
  const [templateScope,setTemplateScope]=useState('college')
  const [templateSource,setTemplateSource]=useState<DatasetKey>('exam_results')
  const [templateSearch,setTemplateSearch]=useState('')
+ const [templateSourceFilter,setTemplateSourceFilter]=useState('all')
+ const [templateScopeFilter,setTemplateScopeFilter]=useState('all')
  const [templatePage,setTemplatePage]=useState(1)
  const [persistentLoading,setPersistentLoading]=useState(false)
 
@@ -184,7 +186,7 @@ export function ReportsAnalyticsWorkspace({initialWindow='overview',onToast}:{in
  ]
  const templateScopes=['college','class','section','subject','exam','student']
  const templateLibrary=[...templates,...genericTemplateSeeds].flatMap((name,index)=>Object.keys(COLUMNS).flatMap(source=>templateScopes.map(scope=>({id:name.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-'+source+'-'+scope,name,source:source as DatasetKey,scope,index}))))
- const visibleTemplateLibrary=templateLibrary.filter(item=>(templateSource==='exam_results'?true:item.source===templateSource)&&(templateScope==='college'?true:item.scope===templateScope)&&(!templateSearch.trim()||[item.name,item.source,item.scope].join(' ').toLowerCase().includes(templateSearch.toLowerCase())))
+ const visibleTemplateLibrary=templateLibrary.filter(item=>(templateSourceFilter==='all'||item.source===templateSourceFilter)&&(templateScopeFilter==='all'||item.scope===templateScopeFilter)&&(!templateSearch.trim()||[item.name,item.source,item.scope].join(' ').toLowerCase().includes(templateSearch.toLowerCase())))
  const templatePageSize=36
  const templatePageCount=Math.max(1,Math.ceil(visibleTemplateLibrary.length/templatePageSize))
  const visibleTemplates=visibleTemplateLibrary.slice((Math.min(templatePage,templatePageCount)-1)*templatePageSize,Math.min(templatePage,templatePageCount)*templatePageSize)
@@ -204,11 +206,19 @@ export function ReportsAnalyticsWorkspace({initialWindow='overview',onToast}:{in
     <details className="ra-integrations"><summary>Connected data sources and integrations</summary><p>Data reads use the institution’s existing role-scoped record services. Integration details stay in this secondary panel; authorised results appear in the report preview below.</p><div className="ra-integrations-grid">{Object.keys(COLUMNS).map(key=><span key={key}><b>{key.replaceAll('_',' ')}</b><small>{data[key as DatasetKey]?.length??0} accessible records · {COLUMNS[key as DatasetKey].length} fields</small></span>)}</div></details>
    </section>}
    {pageKey==='templates'&&<section className="ra-panel ra-template-library">
-    <div className="ra-panel-head"><div><h2>Report template library</h2><p>Reusable examination, academic, attendance, fee, payroll and institutional layouts.</p></div><span className="ra-count">{templates.length+12} layouts</span></div>
-    <div className="ra-form-grid"><label>Template name<input value={templateName} onChange={e=>setTemplateName(e.target.value)} placeholder="Name this saved template"/></label><label>Scope<select value={templateScope} onChange={e=>setTemplateScope(e.target.value)}><option value="college">Whole college</option><option value="class">Class</option><option value="section">Section</option><option value="subject">Subject</option><option value="exam">Examination</option><option value="student">Individual student</option></select></label></div>
-    <label>Examination layout<select value={examTemplate} onChange={e=>setExamTemplate(e.target.value)}>{templates.map((name,i)=><option key={templateValues[i]} value={templateValues[i]}>{name}</option>)}</select></label>
-    <div className="ra-template-grid">{[...templates,'Student admission register','Employee service register','Daily attendance register','Monthly attendance summary','Fee collection statement','Outstanding dues list','Payroll register','Class strength statement','Department directory','Academic session register','Assignment completion summary','Student support summary'].map((name,i)=><button key={name} className={i<templates.length&&examTemplate===templateValues[i]?'selected':''} onClick={()=>{if(i<templates.length)setExamTemplate(templateValues[i]);setTemplateName(name)}}><b>{String(i+1).padStart(2,'0')}</b><span>{name}</span></button>)}</div>
-    <div className="ra-action-row"><button className="ra-primary" onClick={()=>void saveTemplate()}><FileText size={15}/> Save template</button></div>
+    <div className="ra-panel-head"><div><h2>Report template library</h2><p>Browse reusable templates generated across the college’s connected datasets and reporting scopes.</p></div><span className="ra-count">{visibleTemplateLibrary.length.toLocaleString()} matches · {templateLibrary.length.toLocaleString()} available</span></div>
+    <label>Save template as<input value={templateName} onChange={e=>setTemplateName(e.target.value)} placeholder="Name this template or keep the selected layout name"/></label>
+    <div className="ra-form-grid">
+     <label>Data source filter<select value={templateSourceFilter} onChange={e=>{setTemplateSourceFilter(e.target.value);setTemplatePage(1)}}><option value="all">All data sources</option>{Object.keys(COLUMNS).map(source=><option key={source} value={source}>{source.replaceAll('_',' ')}</option>)}</select></label>
+     <label>Report scope filter<select value={templateScopeFilter} onChange={e=>{setTemplateScopeFilter(e.target.value);setTemplatePage(1)}}><option value="all">All scopes</option><option value="college">Whole college</option><option value="class">Class</option><option value="section">Section</option><option value="subject">Subject</option><option value="exam">Examination</option><option value="student">Individual student</option></select></label>
+    </div>
+    <label>Search templates<input value={templateSearch} onChange={e=>{setTemplateSearch(e.target.value);setTemplatePage(1)}} placeholder="Search layout, module or scope…"/></label>
+    <div className="ra-template-grid">{visibleTemplates.map((item,i)=><button key={item.id} className={templateName===item.name&&templateSource===item.source&&templateScope===item.scope?'selected':''} onClick={()=>{
+      setTemplateName(item.name);setTemplateSource(item.source);setTemplateScope(item.scope);setCustomSource(item.source);setCustomFields(COLUMNS[item.source].map(column=>column.key));
+      const index=templates.indexOf(item.name);if(index>=0)setExamTemplate(templateValues[index]);
+     }}><b>{String((Math.min(templatePage,templatePageCount)-1)*templatePageSize+i+1).padStart(3,'0')}</b><span>{item.name}<small className="ra-template-meta">{item.source.replaceAll('_',' ')} · {item.scope.replaceAll('_',' ')}</small></span></button>)}</div>
+    <div className="ra-template-pager"><span>Showing {(Math.min(templatePage,templatePageCount)-1)*templatePageSize+1}–{Math.min(Math.min(templatePage,templatePageCount)*templatePageSize,visibleTemplateLibrary.length)} of {visibleTemplateLibrary.length.toLocaleString()} templates</span><div><button disabled={templatePage<=1} onClick={()=>setTemplatePage(v=>Math.max(1,v-1))}>Previous</button><b>Page {Math.min(templatePage,templatePageCount)} of {templatePageCount}</b><button disabled={templatePage>=templatePageCount} onClick={()=>setTemplatePage(v=>Math.min(templatePageCount,v+1))}>Next</button></div></div>
+    <div className="ra-action-row"><button className="ra-primary" onClick={()=>void saveTemplate()}><FileText size={15}/> Save selected template</button><button className="ra-refresh" onClick={()=>{setCustomSource(templateSource);setCustomFields(COLUMNS[templateSource].map(column=>column.key));onToast('Selected template fields loaded into Custom Report Builder.')}}>Load into report builder</button></div>
     <h3>Saved institution templates</h3>{savedDefinitions.filter(item=>Boolean(item.template_key)).length?savedDefinitions.filter(item=>Boolean(item.template_key)).map(item=><div className="ra-saved-item" key={item.id}><span><b>{item.name}</b><small>{item.source_module} · {item.template_key} · {Array.isArray(item.selected_fields)?item.selected_fields.length:0} fields</small></span><button className="ra-refresh" onClick={()=>{loadDefinition(item.id);onToast('Template loaded into the custom report builder.')}}>Load</button></div>):<p className="ra-empty">No saved templates yet.</p>}
    </section>}
    {pageKey==='scheduled'&&<section className="ra-panel ra-schedule-panel">
