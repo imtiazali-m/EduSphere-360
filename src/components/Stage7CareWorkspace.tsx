@@ -463,9 +463,13 @@ export function Stage7CareWorkspace({initialWindow='leave',onToast}:{initialWind
 
   if(!user)return null
   if(loading)return <main className="page-content s7-page"><div className="s7-empty">Loading your permitted student care workspace…</div></main>
-  const pageTitle:Record<WindowKey,string>={leave:'Leave Management',reports:'Attendance Reports','reports-students':'Student Attendance Reports','reports-teachers':'Teacher Attendance Reports','reports-staff':'Staff Attendance Reports',discipline:'Student Discipline',counselling:'Student Counselling & Wellbeing',health:'Health & Emergency Records'}
+  const pageTitle:Record<WindowKey,string>={leave:'Leave Applications','leave-applications':'Leave Applications','leave-approvals':'Leave Review & Approvals','leave-balances':'Leave Balances','leave-reports':'Leave Reports',reports:'Attendance Reports','reports-students':'Student Attendance Reports','reports-teachers':'Teacher Attendance Reports','reports-staff':'Staff Attendance Reports',discipline:'Student Discipline',counselling:'Student Counselling & Wellbeing',health:'Health & Emergency Records'}
   const pageIntro:Record<WindowKey,string>={
     leave:'Submit, review and track student and employee leave applications.',
+    'leave-applications':'Submit student or employee leave requests, attach supporting documents and monitor review status.',
+    'leave-approvals':'Review pending applications, inspect supporting documents and record an approval or rejection with notes.',
+    'leave-balances':'Manage yearly entitlements and review approved days used and remaining by person and leave type.',
+    'leave-reports':'Analyse leave by week, month, calendar year or academic session and export the filtered register.',
     reports:'Review date-wise, class-wise, student-wise and employee-wise attendance summaries.',
     'reports-students':'Review student attendance by class, section and date, with status distribution and export.',
     'reports-teachers':'Review teacher attendance records, daily coverage and status distribution.',
@@ -488,6 +492,42 @@ export function Stage7CareWorkspace({initialWindow='leave',onToast}:{initialWind
   const reportPercent=(value:number)=>reportTotal?Math.round(value/reportTotal*100):0
   const reportDonut=reportTotal?`conic-gradient(#2b7650 0 ${reportPercent(reportPresent)}%, #d65c56 ${reportPercent(reportPresent)}% ${reportPercent(reportPresent)+reportPercent(reportAbsent)}%, #d5a84a ${reportPercent(reportPresent)+reportPercent(reportAbsent)}% ${reportPercent(reportPresent)+reportPercent(reportAbsent)+reportPercent(reportLeave)}%, #e8ede9 ${reportPercent(reportPresent)+reportPercent(reportAbsent)+reportPercent(reportLeave)}% 100%)`:'conic-gradient(#e8ede9 0 100%)'
   const classOptions=[...new Set(students.map(s=>s.class_name).filter(Boolean))].sort()
+  const localDate=(value:Date)=>value.toLocaleDateString('en-CA')
+  const leaveSession=academicSessions.find(row=>String(row.id)===leaveSessionId)
+  const leavePeriodRange=(()=>{
+    const now=new Date()
+    if(leavePeriod==='session')return {from:String(leaveSession?.start_date??''),to:String(leaveSession?.end_date??'')}
+    if(leavePeriod==='year')return {from:localDate(new Date(now.getFullYear(),0,1)),to:localDate(new Date(now.getFullYear(),11,31))}
+    if(leavePeriod==='week'){
+      const monday=new Date(now);monday.setHours(0,0,0,0);monday.setDate(monday.getDate()-((monday.getDay()+6)%7))
+      const sunday=new Date(monday);sunday.setDate(sunday.getDate()+6)
+      return {from:localDate(monday),to:localDate(sunday)}
+    }
+    return {from:localDate(new Date(now.getFullYear(),now.getMonth(),1)),to:localDate(new Date(now.getFullYear(),now.getMonth()+1,0))}
+  })()
+  const leaveReportRows=leaveRows.filter(row=>overlapDays(row.start_date,row.end_date,leavePeriodRange.from,leavePeriodRange.to)>0)
+  const leaveDaysInRange=(row:LeaveRow)=>overlapDays(row.start_date,row.end_date,leavePeriodRange.from,leavePeriodRange.to)
+  const leaveRequestedDays=leaveReportRows.reduce((sum,row)=>sum+leaveDaysInRange(row),0)
+  const leaveApprovedDays=leaveReportRows.filter(row=>row.status==='approved').reduce((sum,row)=>sum+leaveDaysInRange(row),0)
+  const leavePendingCount=leaveReportRows.filter(row=>row.status==='pending').length
+  const leaveSummaryByType=[...new Set(leaveReportRows.map(row=>String(row.leave_type??'Other')))].sort().map(type=>{
+    const rows=leaveReportRows.filter(row=>String(row.leave_type??'Other')===type)
+    return {type,requests:rows.length,days:rows.reduce((sum,row)=>sum+leaveDaysInRange(row),0),approved:rows.filter(row=>row.status==='approved').reduce((sum,row)=>sum+leaveDaysInRange(row),0),pending:rows.filter(row=>row.status==='pending').length}
+  })
+  const leaveBalanceView=leaveBalances.map(row=>{
+    const year=Number(row.leave_year),from=String(year)+'-01-01',to=String(year)+'-12-31'
+    const personId=String(row.person_id??''),personType=String(row.person_type??'')
+    const used=leaveRows.filter(item=>item.status==='approved'&&String(item.person_type)===personType&&String(item.student_id??item.teacher_id??'')===personId&&String(item.leave_type)===String(row.leave_type))
+      .reduce((sum,item)=>sum+overlapDays(item.start_date,item.end_date,from,to),0)
+    const entitled=Number(row.entitled_days??0),carry=Number(row.carried_forward_days??0)
+    const person=personType==='student'?students.find(item=>item.id===personId)?.full_name:employees.find(item=>item.id===personId)?.full_name
+    return {...row,person:person??(personType==='employee'?'Employee':'Student'),used,remaining:Math.max(0,entitled+carry-used)}
+  })
+  const exportLeaveReport=()=>{
+    const rows=leaveReportRows.map(row=>({applicant:row.person_type==='student'?(students.find(s=>s.id===row.student_id)?.full_name??'Student'):(employees.find(e=>e.id===row.teacher_id)?.full_name??'Employee'),person_type:row.person_type,leave_type:row.leave_type,start_date:row.start_date,end_date:row.end_date,days_in_period:leaveDaysInRange(row),status:row.status,reason:row.reason,review_notes:row.review_notes}))
+    downloadCsv('edusphere-leave-'+leavePeriod+'-'+leavePeriodRange.from+'-'+leavePeriodRange.to+'.csv',rows)
+    if(rows.length)onToast('Leave report exported.')
+  }
   const accessBlocked=(activeWindow==='discipline'&&!canRead('discipline'))||(activeWindow==='counselling'&&!isAdmin&&!canRead('counselling')&&!isStudentOrParent)||(activeWindow==='health'&&!canRead('health')&&!isStudentOrParent)
   return <main className="page-content s7-page">
     <header className="s7-hero">
