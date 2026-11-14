@@ -9,7 +9,7 @@ type ProviderKey = 'openai'|'anthropic'|'gemini'|'deepseek'|'xai'|'meta'|'perple
 type ProviderState = Record<string,{configured:boolean}>
 const providers:{key:ProviderKey;name:string;model:string;secret:string;purpose:string}[]=[
  {key:'openai',name:'OpenAI',model:'gpt-6.1-sol',secret:'OPENAI_API_KEY',purpose:'Reasoning, document assistance and institutional insights'},
- {key:'anthropic',name:'Anthropic Claude',model:'claude-sonnet-5-5',secret:'ANTHROPIC_API_KEY',purpose:'Long-form analysis, policy and document review'},
+ {key:'anthropic',name:'Anthropic Claude',model:'claude-sonnet-5',secret:'ANTHROPIC_API_KEY',purpose:'Long-form analysis, policy and document review'},
  {key:'gemini',name:'Google Gemini',model:'gemini-3.8-flash',secret:'GEMINI_API_KEY',purpose:'Multimodal learning assistance and analysis'},
  {key:'deepseek',name:'DeepSeek',model:'deepseek-flash',secret:'DEEPSEEK_API_KEY',purpose:'Cost-conscious analytical and coding tasks'},
  {key:'xai',name:'xAI Grok',model:'grok-4.7',secret:'XAI_API_KEY',purpose:'Research and reasoning tasks'},
