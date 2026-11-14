@@ -286,7 +286,7 @@ export function CollegeHomePage({ navigate, initialSection }: Props) {
   )
 
   return (
-    <div className="gidc-public-site" style={{ '--gidc-accent': content.accentColor || '#176342' } as React.CSSProperties}>
+    <div className="gidc-public-site" style={{ '--gidc-accent': content.accentColor || '#176342' } as CSSProperties}>
       {header}
       <main>
         {loadError && <div className="gidc-public-shell"><p className="gidc-public-error" role="status">{loadError}</p></div>}
@@ -487,7 +487,7 @@ function SectionHeading({ eyebrow, title, intro, action }: { eyebrow: string; ti
   return <div className="gidc-public-section-heading"><div><small>{eyebrow}</small><h2>{title}</h2>{intro && <p>{intro}</p>}</div>{action && <button type="button" onClick={action}>View all <ArrowRight size={16}/></button>}</div>
 }
 
-function PageFrame({ eyebrow, title, lead, icon: Icon, children }: { eyebrow: string; title: string; lead: string; icon: typeof Landmark; children: React.ReactNode }) {
+function PageFrame({ eyebrow, title, lead, icon: Icon, children }: { eyebrow: string; title: string; lead: string; icon: typeof Landmark; children: ReactNode }) {
   return <section className="gidc-public-page">
     <div className="gidc-public-page-hero"><div className="gidc-public-shell gidc-public-page-hero-inner"><div><span>{eyebrow}</span><h1>{title}</h1><p>{lead}</p></div><div className="gidc-public-page-icon"><Icon size={40}/></div></div></div>
     <div className="gidc-public-shell gidc-public-page-content">{children}</div>
