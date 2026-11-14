@@ -106,7 +106,7 @@ export function BehaviourSkillsWorkspace({initialWindow='dashboard',onToast}:{in
  const eventCount=filteredEvents.length
 
  function openForm(kind:'event'|'competency'|'activity'){
-  if(!canWrite&&!(isTeacher&&canWrite)){onToast('Your account does not have permission to create these records. Ask the administrator to grant Behaviour & Skills access.',true);return}
+  const allowed=kind==='activity'?Boolean(user&&['owner','admin','teacher'].includes(user.role)):canWrite;if(!allowed){onToast('Your account does not have permission to create this record. Ask the administrator to grant the required module access.',true);return}
   setFormKind(kind)
   setForm(old=>({...old,student_id:students[0]?.id??'',event_type:eventTypes[view]??'positive',event_date:today(),assessed_on:today(),activity_date:today(),title:''}))
   setShowForm(true)
@@ -136,7 +136,7 @@ export function BehaviourSkillsWorkspace({initialWindow='dashboard',onToast}:{in
     if(!form.class_id||!form.title.trim()){onToast('Select a class and enter an activity title.',true);return}
     const {error:saveError}=await supabase.from('classroom_activities').insert({
      institution_id:user.institutionId,class_id:form.class_id,activity_date:form.activity_date,activity_type:form.activity_type,
-     title:form.title.trim(),description:form.description.trim()||null,visibility:form.visibility,created_by:user.id,teacher_id:user.id,
+     title:form.title.trim(),description:form.description.trim()||null,visibility:form.visibility,created_by:user.id,
     })
     if(saveError)throw saveError
    }
@@ -159,7 +159,7 @@ export function BehaviourSkillsWorkspace({initialWindow='dashboard',onToast}:{in
   downloadCsv('gidc-student-competencies.csv',rows);if(rows.length)onToast('Competency report exported.')
  }
 
- if(isTeacher&&!canRead&&!grantLoading)return <main className="page-content ed360-behaviour-workspace"><header className="ed360-behaviour-header"><span>BEHAVIOUR & SKILLS</span><h1>{meta.title}</h1><p>Access to student behaviour and competency records has not been granted to this teacher account.</p></header><div className="ed360-behaviour-empty"><ShieldAlert size={24}/><b>Permission required</b><p>An owner or administrator must grant read/write access in Student Care Access before this workspace can display confidential records.</p></div></main>
+ if(isTeacher&&!canRead&&!grantLoading&&view!=='activities')return <main className="page-content ed360-behaviour-workspace"><header className="ed360-behaviour-header"><span>BEHAVIOUR & SKILLS</span><h1>{meta.title}</h1><p>Access to student behaviour and competency records has not been granted to this teacher account.</p></header><div className="ed360-behaviour-empty"><ShieldAlert size={24}/><b>Permission required</b><p>An owner or administrator must grant read/write access in Student Care Access before this workspace can display confidential records.</p></div></main>
 
  return <main className="page-content ed360-behaviour-workspace" data-behaviour-view={view}>
   <header className="ed360-behaviour-header"><div><span>STUDENT DEVELOPMENT / BEHAVIOUR & SKILLS</span><h1>{meta.title}</h1><p>{meta.subtitle}</p></div><div className="ed360-behaviour-header-actions"><button type="button" className="button button-outline" onClick={()=>void load()} disabled={loading}><RefreshCw size={14}/> Refresh</button>{['events','competencies','activities'].includes(meta.kind)&&<button type="button" className="button button-primary" onClick={()=>openForm(meta.kind==='activities'?'activity':meta.kind==='competencies'?'competency':'event')}><FilePlus2 size={15}/> Add record</button>}</div></header>
@@ -184,6 +184,6 @@ export function BehaviourSkillsWorkspace({initialWindow='dashboard',onToast}:{in
  </main>
 }
 function EventTable({rows,studentsById,onResolve,canWrite}:{rows:EventRow[];studentsById:Map<string,Student>;onResolve:(row:EventRow)=>void;canWrite:boolean}){
- return <div className="ed360-behaviour-table-wrap"><table><thead><tr><th>Date</th><th>Student</th><th>Type / category</th><th>Severity</th><th>Summary</th><th>Status</th><th>Action</th></tr></thead><tbody>{rows.map(row=><tr key={row.id}><td>{dateLabel(row.event_date)}</td><td>{studentsById.get(row.student_id)?.full_name??'Restricted student'}<small>{studentsById.get(row.student_id)?.admission_no??''}</small></td><td>{row.event_type}<small>{row.category}</small></td><td><span className={'ed360-severity severity-'+row.severity}>{row.severity}</span></td><td>{row.summary}<small>{row.description??''}</small></td><td>{row.status}</td><td>{canWrite&&row.status==='open'?<button type="button" className="ed360-resolve" onClick={()=>onResolve(row)}><CheckCircle2 size={13}/> Resolve</button>:'—'}</td></tr>)}{!rows.length&&<EmptyRow text="No records match these filters."/ >}</tbody></table></div>
+ return <div className="ed360-behaviour-table-wrap"><table><thead><tr><th>Date</th><th>Student</th><th>Type / category</th><th>Severity</th><th>Summary</th><th>Status</th><th>Action</th></tr></thead><tbody>{rows.map(row=><tr key={row.id}><td>{dateLabel(row.event_date)}</td><td>{studentsById.get(row.student_id)?.full_name??'Restricted student'}<small>{studentsById.get(row.student_id)?.admission_no??''}</small></td><td>{row.event_type}<small>{row.category}</small></td><td><span className={'ed360-severity severity-'+row.severity}>{row.severity}</span></td><td>{row.summary}<small>{row.description??''}</small></td><td>{row.status}</td><td>{canWrite&&row.status==='open'?<button type="button" className="ed360-resolve" onClick={()=>onResolve(row)}><CheckCircle2 size={13}/> Resolve</button>:'—'}</td></tr>)}{!rows.length&&<EmptyRow text="No records match these filters." />}</tbody></table></div>
 }
 function EmptyRow({text}:{text:string}){return <tr><td colSpan={7} className="ed360-behaviour-no-rows">{text}</td></tr>}
