@@ -48,11 +48,11 @@ const financeTabs = {
 }
 const payrollTabs = new Set(['overview','salary','components','adjustments','runs','payslips'])
 const peopleHRTabs = new Set(['admissions','recruitment','contracts','performance','alumni'])
-const governanceTabs = new Set(['profile','settings','approvals','audit','academic','accounts','departments','designations','organization','system','policies','policies-students','policies-faculty','permissions','branding','security'])
+const governanceTabs = new Set(['overview','profile','settings','approvals','audit','academic','accounts','departments','designations','organization','system','policies','policies-students','policies-faculty','permissions','branding','documents','security'])
 const operationTabs = {
   'question-bank': new Set(['pool','papers']),
   curriculum: new Set(['units','coverage']),
-  behaviour: new Set(['register','positive','follow-up']),
+  behaviour: new Set(['register','positive','follow-up','skills','activities','competencies','progress','analytics','reports']),
   certificates: new Set(['verify','issue']),
   visitors: new Set(['log','checked-in','history']),
   facilities: new Set(['assets','maintenance','history']),
