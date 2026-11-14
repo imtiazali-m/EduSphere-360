@@ -36,7 +36,7 @@ const studentVisibleTabs = {
 }
 const facultyTabs = new Set(['overview','registration','directory','directory-teaching','directory-staff','profile','id-cards','departments','designations','assignments','attendance','leave','workload','documents','qualifications','history','reports'])
 const facultyStaffTabs = new Set(['overview','profile','id-cards','assignments','attendance','leave','workload','documents','qualifications','history'])
-const attendanceWindows = new Set(['students','teachers','staff','history','devices','cards','student-cards','teacher-cards','staff-cards','biometric','reports'])
+const attendanceWindows = new Set(['students','teachers','staff','history','devices','cards','student-cards','teacher-cards','staff-cards','biometric','reports','student-reports','teacher-reports','staff-reports'])
 const reportTabs = new Set(['overview','finance','attendance','academics','students','employees','payroll','examinations','academic','fees','financial','class','comparative','builder','scheduled','templates','history'])
 const financeTabs = {
   'accounts-finance': new Set(['overview','accounts','journals','reconciliation']),
