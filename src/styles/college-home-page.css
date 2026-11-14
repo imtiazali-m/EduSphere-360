@@ -372,3 +372,14 @@
   .gidc-public-department-heading h2 { font-size: 17px; }
   .gidc-public-news-image { width: 76px; min-width: 76px; height: 82px; }
 }
+
+
+/* The extended public page menu collapses before desktop widths become crowded. */
+@media (max-width: 1180px) {
+  .gidc-public-menu-toggle { display: inline-grid; place-items: center; order: 3; }
+  .gidc-public-header-actions { margin-left: auto; }
+  .gidc-public-nav { display: none; position: absolute; left: 0; right: 0; top: 100%; padding: 14px 20px 20px; background: white; border-bottom: 1px solid var(--gidc-line); box-shadow: 0 18px 22px rgba(18,45,31,.09); }
+  .gidc-public-nav.is-open { display: grid; grid-template-columns: repeat(3,1fr); gap: 0 22px; }
+  .gidc-public-nav a { padding: 12px 4px; font-size: 12px; border-bottom: 1px solid #eef0e8; }
+  .gidc-public-nav a:after { display: none; }
+}
