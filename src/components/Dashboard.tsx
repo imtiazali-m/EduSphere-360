@@ -1,3 +1,4 @@
+import '../styles/modern-dedicated-workspaces.css'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   Activity, ArrowRight, BookOpen, Building2, CalendarCheck, CalendarDays, Globe2,
