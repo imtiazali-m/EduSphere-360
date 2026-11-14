@@ -253,3 +253,234 @@ button.rd-metric-card:hover { border-color: #bfd2bc; box-shadow: 0 9px 20px rgba
   .rd-domain-overview-head h2 { font-size:23px; }
   .rd-domain-grid { grid-template-columns:1fr; }
 }
+
+
+/* Institution-first executive dashboard: soft surfaces, larger type and chart-led cards. */
+.ed360-role-dashboard {
+  --rd-ink: #173c2b;
+  --rd-green: #176342;
+  --rd-gold: #b88734;
+  display: grid;
+  gap: 21px;
+  min-width: 0;
+  padding: clamp(12px,1.5vw,22px);
+  border: 1px solid rgba(224,231,217,.82);
+  border-radius: 25px;
+  background:
+    radial-gradient(ellipse at 8% 0%,rgba(219,235,211,.46),transparent 28%),
+    radial-gradient(ellipse at 98% 12%,rgba(243,229,192,.33),transparent 24%),
+    linear-gradient(145deg,#f9fbf5 0%,#f5f7f0 48%,#faf9f2 100%);
+  color: var(--rd-ink);
+  font-size: 14px;
+}
+.rd-page-head { align-items: center; gap: 18px; padding: 7px 5px 14px; }
+.rd-heading-main { align-items: center; gap: 16px; }
+.rd-institution-logo {
+  display: grid;
+  place-items: center;
+  width: 76px;
+  height: 76px;
+  flex: 0 0 76px;
+  padding: 8px;
+  border: 1px solid #e4e7d9;
+  border-radius: 20px;
+  background: linear-gradient(145deg,#fff,#f2f6eb);
+  box-shadow: 0 9px 24px rgba(29,68,42,.09);
+}
+.rd-institution-logo img { display:block; width:100%; height:100%; object-fit:contain; }
+.rd-institution-heading { min-width:0; }
+.rd-institution-heading h1 {
+  margin: 1px 0 4px;
+  color: #103f2d;
+  font: 700 clamp(25px,2.5vw,35px)/1.12 'Playfair Display',Georgia,serif;
+  letter-spacing: -.55px;
+  overflow-wrap:anywhere;
+}
+.rd-institution-heading p { margin:0; color:#41634c; font-size:14px; font-weight:800; line-height:1.5; }
+.rd-institution-heading p span,.rd-institution-heading>small span { padding:0 4px; color:#b58a40; }
+.rd-institution-heading>small { display:block; margin-top:4px; color:#849082; font-size:11px; line-height:1.55; }
+.rd-page-head .rd-heading-meta { max-width:48%; gap:8px; }
+.rd-role-chip,.rd-session-chip,.rd-date-chip,.rd-live-chip { min-height:35px; border-radius:18px; font-size:11px; padding:8px 12px; }
+.rd-header-cta { min-height:39px; padding:9px 15px; border-radius:18px; font-size:12px; font-weight:850; }
+.rd-eyebrow { font-size:11px; letter-spacing:1.55px; }
+.rd-heading-main h1 { font-size:30px; }
+.rd-heading-main p { font-size:14px; }
+.rd-metric-grid { gap:13px; }
+.rd-metric-card { min-height:101px; padding:16px; border-radius:18px; }
+.rd-metric-icon { width:43px; height:43px; flex-basis:43px; border-radius:14px; }
+.rd-metric-copy small { font-size:12px; }
+.rd-metric-copy strong { font-size:23px; }
+.rd-metric-copy em { font-size:10px; }
+.rd-panel { border-radius:20px; box-shadow:0 9px 26px rgba(28,58,38,.045); }
+.rd-panel-head { min-height:68px; padding:15px 17px; }
+.rd-panel-icon { width:39px; height:39px; flex-basis:39px; border-radius:13px; }
+.rd-panel-title h2 { font-size:14px; }
+.rd-panel-title p { font-size:11px; }
+.rd-panel-body { padding:16px 17px; }
+.rd-text-action,.rd-inline-action { font-size:11px; }
+.rd-empty { min-height:124px; border-radius:15px; }
+.rd-empty strong { font-size:12px; }
+.rd-empty small { font-size:10px; }
+
+.rd-domain-overview {
+  display:grid;
+  gap:15px;
+  padding:clamp(16px,2vw,23px);
+  border:1px solid #e0e8da;
+  border-radius:24px;
+  background:linear-gradient(145deg,rgba(255,255,252,.97),rgba(244,248,238,.96));
+  box-shadow:0 12px 30px rgba(27,61,37,.055);
+}
+.rd-domain-overview-head { display:flex; align-items:flex-end; justify-content:space-between; gap:18px; }
+.rd-domain-overview-head h2 { margin:4px 0 6px; color:#103f2d; font:700 clamp(22px,2.2vw,29px)/1.12 'Playfair Display',Georgia,serif; letter-spacing:-.4px; }
+.rd-domain-overview-head p { max-width:720px; margin:0; color:#718071; font-size:13px; line-height:1.65; }
+.rd-domain-live { display:inline-flex; align-items:center; gap:8px; flex:0 0 auto; padding:9px 13px; border:1px solid #dce8d7; border-radius:24px; color:#55745a; background:#fff; font-size:11px; font-weight:850; }
+.rd-domain-live i { width:8px; height:8px; border-radius:50%; background:#b5a16f; }
+.rd-domain-live i.is-live { background:#268454; box-shadow:0 0 0 4px rgba(38,132,84,.12); }
+.rd-domain-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:13px; }
+.rd-domain-card {
+  position:relative;
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:15px;
+  padding:16px;
+  border:1px solid #e5e9df;
+  border-radius:19px;
+  background:linear-gradient(155deg,#fff 0%,#fbfcf8 100%);
+  box-shadow:0 8px 20px rgba(32,57,37,.04);
+  overflow:hidden;
+  transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;
+}
+.rd-domain-card::after {
+  content:"";
+  position:absolute;
+  right:-36px;
+  top:-48px;
+  width:116px;
+  height:116px;
+  border:1px solid rgba(36,102,62,.07);
+  border-radius:50%;
+  box-shadow:0 0 0 18px rgba(36,102,62,.025),0 0 0 38px rgba(36,102,62,.018);
+  pointer-events:none;
+}
+.rd-domain-card:hover { transform:translateY(-2px); border-color:#c6d9c2; box-shadow:0 14px 28px rgba(29,65,39,.085); }
+.rd-domain-card-head { position:relative; z-index:1; display:flex; align-items:flex-start; gap:11px; min-width:0; }
+.rd-domain-icon { width:42px; height:42px; display:grid; place-items:center; flex:0 0 42px; border-radius:14px; }
+.rd-domain-icon.blue { color:#176342; background:#eaf2e6; }
+.rd-domain-icon.green { color:#27764d; background:#eaf5ed; }
+.rd-domain-icon.violet { color:#8d713d; background:#f2efe4; }
+.rd-domain-icon.teal { color:#28745e; background:#e7f3ef; }
+.rd-domain-icon.amber { color:#a77929; background:#faf1df; }
+.rd-domain-icon.rose { color:#a65f4b; background:#f9ece7; }
+.rd-domain-card-head>div { min-width:0; }
+.rd-domain-card-head h3 { margin:1px 0 4px; color:#244b35; font-size:14px; font-weight:900; line-height:1.35; }
+.rd-domain-card-head p { margin:0; color:#889387; font-size:10px; line-height:1.5; }
+.rd-domain-stats { position:relative; z-index:1; display:grid; gap:10px; margin-top:auto; }
+.rd-domain-stats button {
+  display:grid;
+  gap:6px;
+  min-width:0;
+  padding:0;
+  border:0;
+  background:transparent;
+  text-align:left;
+  cursor:pointer;
+}
+.rd-domain-stat-head { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.rd-domain-stat-head small { color:#6f806f; font-size:10px; font-weight:800; line-height:1.35; }
+.rd-domain-stat-head strong { flex:0 0 auto; color:#17452f; font-size:14px; font-weight:950; font-variant-numeric:tabular-nums; }
+.rd-domain-stat-track { display:block; width:100%; height:8px; overflow:hidden; border-radius:20px; background:#edf2e9; box-shadow:inset 0 1px 2px rgba(31,67,42,.04); }
+.rd-domain-stat-track i { display:block; height:100%; min-width:0; border-radius:20px; background:linear-gradient(90deg,#7caf87,#176342); box-shadow:0 1px 5px rgba(23,99,66,.13); transition:width .28s ease; }
+.rd-domain-card.tone-violet .rd-domain-stat-track i { background:linear-gradient(90deg,#d8bd81,#a77929); }
+.rd-domain-card.tone-green .rd-domain-stat-track i { background:linear-gradient(90deg,#83c5a0,#27764d); }
+.rd-domain-card.tone-teal .rd-domain-stat-track i { background:linear-gradient(90deg,#88c7b5,#28745e); }
+.rd-domain-card.tone-amber .rd-domain-stat-track i { background:linear-gradient(90deg,#e9c783,#a77929); }
+.rd-domain-card.tone-rose .rd-domain-stat-track i { background:linear-gradient(90deg,#e0a999,#a65f4b); }
+.rd-domain-stat-head strong { text-align:right; }
+.rd-domain-stats button:hover .rd-domain-stat-head small { color:#17452f; }
+.rd-domain-stats button:focus-visible { outline:3px solid rgba(23,99,66,.22); outline-offset:4px; border-radius:7px; }
+.rd-domain-card-empty { padding-top:5px; color:#91a08f; font-size:10px; font-weight:750; }
+.rd-domain-audit-note { display:flex; align-items:flex-start; gap:8px; margin:0; padding:10px 12px; border:1px solid #eadfc6; border-radius:12px; color:#876d3c; background:#fffaf0; font-size:10px; line-height:1.6; }
+.rd-domain-audit-note svg { flex:0 0 14px; margin-top:1px; }
+
+.rd-audit-list .rd-row-tag { min-width:67px; justify-content:center; }
+.rd-audit-list .audit-action.insert { color:#2b7650; background:#eaf6ec; }
+.rd-audit-list .audit-action.update { color:#8a682c; background:#faf1df; }
+.rd-audit-list .audit-action.delete { color:#9d4b44; background:#f9ece8; }
+.rd-row-icon.activity.is-create { background:#eaf6ec; color:#2b7650; }
+.rd-row-icon.activity.is-update { background:#faf1df; color:#8a682c; }
+.rd-row-icon.activity.is-delete { background:#f9ece8; color:#9d4b44; }
+.rd-domain-audit-note svg { color:#a77929; }
+
+.rd-data-warning { border-radius:14px; font-size:12px; padding:12px 15px; }
+.rd-dashboard-footnote { font-size:11px; gap:9px; }
+.rd-performance>strong { font-size:39px; }
+.rd-branch-top strong { font-size:12px; }
+.rd-branch-top span,.rd-branch-meta { font-size:10px; }
+.rd-status-summary>div { border-radius:14px; }
+.rd-status-summary strong { font-size:25px; }
+.rd-status-summary span { font-size:10px; }
+.rd-row-copy strong { font-size:12px; }
+.rd-row-copy small { font-size:10px; }
+.rd-list-row time { font-size:10px; }
+.rd-row-tag { font-size:9px; border-radius:20px; }
+.rd-finance-position span { font-size:11px; }
+.rd-finance-position strong { font-size:16px; }
+.rd-communication p { font-size:12px; }
+.rd-communication button { font-size:11px; border-radius:18px; padding:10px 14px; }
+
+.pro-app-shell[data-view-mode="modern"] .ed360-role-dashboard .rd-domain-card,
+.pro-app-shell[data-view-mode="modern"] .ed360-role-dashboard .rd-panel {
+  border-radius:22px;
+  box-shadow:0 10px 28px rgba(28,58,38,.065);
+}
+.pro-app-shell[data-view-mode="modern"] .ed360-role-dashboard .rd-domain-card {
+  background:linear-gradient(155deg,#fff 0%,#f8fbf4 100%);
+}
+.pro-app-shell[data-view-mode="classic"] .ed360-role-dashboard {
+  background:#f6f8f2;
+  border-color:#e4e8dc;
+}
+.pro-app-shell[data-view-mode="classic"] .ed360-role-dashboard .rd-domain-card,
+.pro-app-shell[data-view-mode="classic"] .ed360-role-dashboard .rd-panel {
+  border-radius:15px;
+  box-shadow:0 3px 10px rgba(28,58,38,.035);
+  background:#fff;
+}
+.pro-app-shell[data-view-mode="classic"] .ed360-role-dashboard .rd-domain-stat-track {
+  height:7px;
+  background:#eef1e9;
+}
+.pro-app-shell[data-font-size="large"] .ed360-role-dashboard { font-size:15px; }
+.pro-app-shell[data-font-size="large"] .ed360-role-dashboard .rd-domain-card-head h3 { font-size:15px; }
+.pro-app-shell[data-font-size="large"] .ed360-role-dashboard .rd-domain-stat-head small { font-size:11px; }
+.pro-app-shell[data-font-size="large"] .ed360-role-dashboard .rd-panel-title h2 { font-size:15px; }
+.pro-app-shell[data-font-size="largest"] .ed360-role-dashboard { font-size:16px; }
+.pro-app-shell[data-font-size="largest"] .ed360-role-dashboard .rd-domain-card-head h3 { font-size:16px; }
+.pro-app-shell[data-font-size="largest"] .ed360-role-dashboard .rd-domain-stat-head small { font-size:12px; }
+.pro-app-shell[data-font-size="largest"] .ed360-role-dashboard .rd-domain-stat-head strong { font-size:16px; }
+.pro-app-shell[data-font-size="largest"] .ed360-role-dashboard .rd-panel-title h2 { font-size:16px; }
+
+@media(max-width:1120px) {
+  .rd-domain-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .rd-page-head .rd-heading-meta { max-width:55%; }
+}
+@media(max-width:850px) {
+  .rd-page-head { align-items:flex-start; flex-direction:column; }
+  .rd-page-head .rd-heading-meta { max-width:none; justify-content:flex-start; }
+  .rd-domain-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media(max-width:620px) {
+  .ed360-role-dashboard { padding:10px; border-radius:19px; gap:16px; }
+  .rd-domain-overview { padding:14px; border-radius:18px; }
+  .rd-domain-overview-head { align-items:flex-start; flex-direction:column; gap:9px; }
+  .rd-domain-grid { grid-template-columns:1fr; }
+  .rd-institution-logo { width:62px; height:62px; flex-basis:62px; border-radius:17px; }
+  .rd-institution-heading h1 { font-size:25px; }
+  .rd-institution-heading p { font-size:12px; }
+  .rd-institution-heading>small { font-size:10px; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .ed360-role-dashboard *, .ed360-role-dashboard *::before, .ed360-role-dashboard *::after { transition:none!important; scroll-behavior:auto!important; }
+}

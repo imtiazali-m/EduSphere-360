@@ -14,6 +14,7 @@ import { outstandingInvoiceBalance } from '../lib/finance'
 import { userFacingError } from '../lib/userErrors'
 import { roleLabels } from '../lib/modules'
 import type { AppRole, RecordRow } from '../lib/types'
+import { COLLEGE_LOCATION, displayInstitutionName } from '../lib/collegeIdentity'
 import './role-dashboard.css'
 
 type Dataset = Record<string, RecordRow[]>
@@ -33,6 +34,7 @@ const TABLES_BY_ROLE: Record<AppRole, string[]> = {
     'students', 'teachers', 'campuses', 'attendance', 'employee_attendance',
     'fee_invoices', 'fee_payments', 'exams', 'exam_results', 'workflow_approvals',
     'announcements', 'academic_sessions', 'work_tasks', 'employee_leave_requests',
+    'institutional_audit_events',
     'departments', 'programs', 'classes', 'subjects', 'rooms',
     'assignments', 'assignment_submissions', 'timetable_entries',
   ],
@@ -140,6 +142,33 @@ function currentMonthStart() {
   return new Date(now.getFullYear(), now.getMonth(), 1)
 }
 
+type OverviewAreaStat = { label: string; value: string; amount: number | null; route: string }
+type OverviewArea = { title: string; description: string; icon: LucideIcon; tone: string; stats: OverviewAreaStat[] }
+
+function OverviewAreaCard({ card, loading, onNavigate }: {
+  card: OverviewArea; loading: boolean; onNavigate: (route: string) => void
+}) {
+  const maxValue = Math.max(1, ...card.stats.map(stat => stat.amount ?? 0))
+  const hasRecords = card.stats.some(stat => (stat.amount ?? 0) > 0)
+  return <article className={'rd-domain-card tone-' + card.tone}>
+    <header className="rd-domain-card-head">
+      <span className={'rd-domain-icon ' + card.tone}><card.icon size={21}/></span>
+      <div><h3>{card.title}</h3><p>{card.description}</p></div>
+    </header>
+    <div className="rd-domain-stats" role="group" aria-label={card.title + ' chart'}>
+      {card.stats.map(stat => {
+        const width = stat.amount === null || stat.amount <= 0 ? 0 : Math.max(4, stat.amount / maxValue * 100)
+        return <button type="button" key={stat.label} onClick={() => onNavigate(stat.route)}
+          aria-label={stat.label + ': ' + (loading ? 'loading' : stat.value) + '. Open related workspace.'}>
+          <span className="rd-domain-stat-head"><small>{stat.label}</small><strong>{loading ? '—' : stat.value}</strong></span>
+          <span className="rd-domain-stat-track"><i style={{ width: loading ? '0%' : width + '%' }}/></span>
+        </button>
+      })}
+    </div>
+    {!loading && !hasRecords && <div className="rd-domain-card-empty">Waiting for the first records</div>}
+  </article>
+}
+
 function MetricCard({ icon: Icon, label, value, hint, tone, onClick }: {
   icon: LucideIcon; label: string; value: string; hint: string; tone: string; onClick?: () => void
 }) {
@@ -208,13 +237,26 @@ function ApprovalList({ items, loading, onNavigate }: { items: RecordRow[]; load
   </div>
 }
 function ActivityList({ items, loading, onNavigate }: { items: RecordRow[]; loading: boolean; onNavigate: (route: string) => void }) {
-  if (loading || !items.length) return <EmptyState loading={loading} message="No institutional audit activity has been recorded yet."/>
-  return <div className="rd-list">
-    {items.slice(0, 6).map(item => <button type="button" className="rd-list-row rd-list-button" key={item.id} onClick={() => onNavigate('institutional:administration:administrative-audit')}>
-      <span className="rd-row-icon activity"><Activity size={15}/></span>
-      <span className="rd-row-copy"><strong>{textValue(item, ['action', 'record_type'], 'Institutional update').replace(/[_-]/g, ' ')}</strong><small>{textValue(item, ['module_key', 'record_type'], 'Institution record').replace(/[_-]/g, ' ')}</small></span>
-      <time>{dateLabel(item.occurred_at)}</time>
-    </button>)}
+  if (loading || !items.length) return <EmptyState loading={loading} message="No tracked database changes have been recorded yet."/>
+  return <div className="rd-list rd-audit-list">
+    {items.slice(0, 7).map(item => {
+      const action = String(item.action ?? '').toLowerCase()
+      const actionLabel = action === 'insert' ? 'Created' : action === 'update' ? 'Updated' : action === 'delete' ? 'Deleted' : 'Changed'
+      const record = textValue(item, ['record_type'], 'Institution record').replace(/[_-]/g, ' ')
+      const module = textValue(item, ['module_key'], 'Institution').replace(/[_-]/g, ' ')
+      const values = (action === 'delete' ? item.old_values : item.new_values) as Record<string, unknown> | null | undefined
+      const subject = values && typeof values === 'object'
+        ? ['name', 'title', 'full_name', 'session_name', 'record_name'].map(key => values[key]).find(value => typeof value === 'string' && value.trim())
+        : undefined
+      return <button type="button" className="rd-list-row rd-list-button" key={item.id} onClick={() => onNavigate('institutional:administration:administrative-audit')}>
+        <span className={'rd-row-icon activity ' + (action === 'delete' ? 'is-delete' : action === 'insert' ? 'is-create' : 'is-update')}><Activity size={15}/></span>
+        <span className="rd-row-copy">
+          <strong>{subject ? String(subject) : record}</strong>
+          <small>{module} · {dateLabel(item.occurred_at)}</small>
+        </span>
+        <span className={'rd-row-tag audit-action ' + action}>{actionLabel}</span>
+      </button>
+    })}
   </div>
 }
 function TimetableList({ items, loading }: { items: RecordRow[]; loading: boolean }) {
@@ -377,6 +419,13 @@ export function RoleDashboard({ onNavigate }: Props) {
   }
 
   const heading = headingByRole[role]
+  const institutionName = displayInstitutionName(user?.institutionName)
+  const institutionTypeLabel = ({
+    school: 'School',
+    college: 'College / degree college',
+    university: 'University',
+    multi_institution: 'Multi-institution group',
+  } as Record<string, string>)[String(user?.institutionType ?? '').toLowerCase()] ?? 'Institution workspace'
   const primaryAction: Record<AppRole, { label: string; route: string }> = {
     owner: { label: 'Add student', route: 'students:admissions' },
     admin: { label: 'Add student', route: 'students:admissions' },
@@ -502,98 +551,105 @@ export function RoleDashboard({ onNavigate }: Props) {
     )
   }
 
-  const managerOverviewCards = role === 'owner' || role === 'admin' ? [
+  const auditEvents = get('institutional_audit_events')
+  const auditReady = known('institutional_audit_events')
+  const auditActionCount = (action: string) => auditReady ? auditEvents.filter(event => String(event.action ?? '').toLowerCase() === action).length : null
+  const deleteEvents = auditEvents.filter(event => String(event.action ?? '').toLowerCase() === 'delete')
+  const deletedStudentEvents = auditReady ? deleteEvents.filter(event => /student|learner|admission/i.test(String(event.module_key ?? '') + ' ' + String(event.record_type ?? ''))).length : null
+  const deletedSessionEvents = auditReady ? deleteEvents.filter(event => /session|term|academic.year/i.test(String(event.module_key ?? '') + ' ' + String(event.record_type ?? ''))).length : null
+  const openTaskCount = known('work_tasks') ? get('work_tasks').filter(task => !['completed', 'cancelled'].includes(String(task.status ?? '').toLowerCase())).length : null
+  const managerOverviewCards: OverviewArea[] = role === 'owner' || role === 'admin' ? [
     {
       title: 'People & admissions',
-      description: 'Learners and your institution team',
+      description: 'Learners and institution workforce',
       icon: Users,
       tone: 'blue',
       stats: [
-        { label: 'Students', value: knownCount('students'), route: 'students' },
-        { label: 'Faculty & staff', value: knownCount('teachers'), route: 'teachers' },
-        { label: 'New this month', value: known('students') ? formatCount(students.filter(student => {
-          const date = recordDate(student, ['admission_date', 'created_at'])
-          return date && date >= monthStart
-        }).length) : '—', route: 'students:admissions' },
+        { label: 'Students', value: knownCount('students'), amount: known('students') ? students.length : null, route: 'students' },
+        { label: 'Faculty & staff', value: knownCount('teachers'), amount: known('teachers') ? teachers.length : null, route: 'teachers' },
+        { label: 'New this month', value: known('students') ? formatCount(students.filter(student => { const date = recordDate(student, ['admission_date', 'created_at']); return date && date >= monthStart }).length) : '—', amount: known('students') ? students.filter(student => { const date = recordDate(student, ['admission_date', 'created_at']); return date && date >= monthStart }).length : null, route: 'students:admissions' },
       ],
     },
     {
       title: 'Academic structure',
-      description: 'The institution’s academic foundation',
+      description: 'Sessions, departments and classes',
       icon: School,
       tone: 'violet',
       stats: [
-        { label: 'Sessions', value: knownCount('academic_sessions'), route: 'admin:academic_sessions' },
-        { label: 'Departments', value: knownCount('departments'), route: 'admin:departments' },
-        { label: 'Classes', value: knownCount('classes'), route: 'admin:classes' },
-        { label: 'Subjects', value: knownCount('subjects'), route: 'admin:subjects' },
-        { label: 'Programmes', value: knownCount('programs'), route: 'admin:programs' },
+        { label: 'Sessions', value: knownCount('academic_sessions'), amount: known('academic_sessions') ? get('academic_sessions').length : null, route: 'admin:academic_sessions' },
+        { label: 'Departments', value: knownCount('departments'), amount: known('departments') ? get('departments').length : null, route: 'admin:departments' },
+        { label: 'Classes', value: knownCount('classes'), amount: known('classes') ? get('classes').length : null, route: 'admin:classes' },
+        { label: 'Subjects', value: knownCount('subjects'), amount: known('subjects') ? get('subjects').length : null, route: 'admin:subjects' },
+        { label: 'Programmes', value: knownCount('programs'), amount: known('programs') ? get('programs').length : null, route: 'admin:programs' },
       ],
     },
     {
       title: 'Teaching & learning',
-      description: 'Coursework, submissions and class schedules',
+      description: 'Coursework, submissions and timetable',
       icon: BookOpen,
       tone: 'green',
       stats: [
-        { label: 'Assignments', value: knownCount('assignments'), route: 'assignments' },
-        { label: 'Submissions', value: knownCount('assignment_submissions'), route: 'assignments:submissions' },
-        { label: 'Timetable periods', value: knownCount('timetable_entries'), route: 'timetable:week' },
+        { label: 'Assignments', value: knownCount('assignments'), amount: known('assignments') ? assignments.length : null, route: 'assignments' },
+        { label: 'Submissions', value: knownCount('assignment_submissions'), amount: known('assignment_submissions') ? submissions.length : null, route: 'assignments:submissions' },
+        { label: 'Timetable periods', value: knownCount('timetable_entries'), amount: known('timetable_entries') ? timetable.length : null, route: 'timetable:week' },
       ],
     },
     {
       title: 'Attendance',
-      description: 'Student and employee attendance registers',
+      description: 'Student and staff attendance',
       icon: CalendarCheck,
       tone: 'teal',
       stats: [
-        { label: 'Student entries', value: knownCount('attendance'), route: 'attendance:students' },
-        { label: 'Staff entries', value: knownCount('employee_attendance'), route: 'attendance:faculty' },
-        { label: 'Present today', value: known('attendance', 'employee_attendance') ? formatCount(presentToday) : '—', route: 'attendance:students' },
+        { label: 'Student entries', value: knownCount('attendance'), amount: known('attendance') ? attendance.length : null, route: 'attendance:students' },
+        { label: 'Staff entries', value: knownCount('employee_attendance'), amount: known('employee_attendance') ? get('employee_attendance').length : null, route: 'attendance:faculty' },
+        { label: 'Present today', value: known('attendance', 'employee_attendance') ? formatCount(presentToday) : '—', amount: known('attendance', 'employee_attendance') ? presentToday : null, route: 'attendance:students' },
       ],
     },
     {
       title: 'Examinations & results',
-      description: 'Assessment schedules and recorded outcomes',
+      description: 'Assessment schedules and outcomes',
       icon: ClipboardCheck,
       tone: 'amber',
       stats: [
-        { label: 'Examinations', value: knownCount('exams'), route: 'exams:calendar' },
-        { label: 'Result records', value: knownCount('exam_results'), route: 'exam_results:all' },
-        { label: 'Published results', value: known('exam_results') ? formatCount(publishedResults.length) : '—', route: 'exam_results:published' },
+        { label: 'Examinations', value: knownCount('exams'), amount: known('exams') ? exams.length : null, route: 'exams:calendar' },
+        { label: 'Result records', value: knownCount('exam_results'), amount: known('exam_results') ? results.length : null, route: 'exam_results:all' },
+        { label: 'Published results', value: known('exam_results') ? formatCount(publishedResults.length) : '—', amount: known('exam_results') ? publishedResults.length : null, route: 'exam_results:published' },
       ],
     },
     {
       title: 'Fees & payments',
-      description: 'Invoices, collections and outstanding balances',
+      description: 'Invoices, collections and balances',
       icon: Wallet,
       tone: 'rose',
       stats: [
-        { label: 'Invoices', value: knownCount('fee_invoices'), route: 'finance:fees:invoices' },
-        { label: 'Successful payments', value: knownCount('fee_payments'), route: 'finance:fees:payments' },
-        { label: 'Outstanding', value: known('fee_invoices') ? formatMoney(outstanding) : '—', route: 'finance:receivables:receivables' },
+        { label: 'Invoices', value: knownCount('fee_invoices'), amount: known('fee_invoices') ? invoices.length : null, route: 'finance:fees:invoices' },
+        { label: 'Successful payments', value: knownCount('fee_payments'), amount: known('fee_payments') ? payments.length : null, route: 'finance:fees:payments' },
+        { label: 'Outstanding dues', value: known('fee_invoices') ? formatMoney(outstanding) : '—', amount: known('fee_invoices') ? outstanding : null, route: 'finance:receivables:receivables' },
       ],
     },
     {
       title: 'Campus & operations',
-      description: 'Campuses, facilities, tasks and approvals',
+      description: 'Campuses, facilities and live work',
       icon: Building2,
       tone: 'teal',
       stats: [
-        { label: 'Campuses', value: knownCount('campuses'), route: 'institutional:administration:campus-and-branch-management' },
-        { label: 'Rooms & facilities', value: knownCount('rooms'), route: 'admin:rooms' },
-        { label: 'Open tasks', value: known('work_tasks') ? formatCount(get('work_tasks').filter(task => !['completed', 'cancelled'].includes(String(task.status ?? '').toLowerCase())).length) : '—', route: 'work_tasks' },
-        { label: 'Pending approvals', value: knownCount('workflow_approvals') === '—' ? '—' : formatCount(pendingApprovals.length), route: 'institutional:administration:approval-and-workflows' },
+        { label: 'Campuses', value: knownCount('campuses'), amount: known('campuses') ? get('campuses').length : null, route: 'institutional:administration:campus-and-branch-management' },
+        { label: 'Rooms & facilities', value: knownCount('rooms'), amount: known('rooms') ? get('rooms').length : null, route: 'admin:rooms' },
+        { label: 'Open tasks', value: openTaskCount === null ? '—' : formatCount(openTaskCount), amount: openTaskCount, route: 'work_tasks' },
+        { label: 'Pending approvals', value: known('workflow_approvals') ? formatCount(pendingApprovals.length) : '—', amount: known('workflow_approvals') ? pendingApprovals.length : null, route: 'institutional:administration:approval-and-workflows' },
       ],
     },
     {
-      title: 'Communication & records',
-      description: 'Notices and recorded institutional activity',
-      icon: Megaphone,
+      title: 'Live database activity',
+      description: 'Tracked writes, edits and removals in the audit trail',
+      icon: Activity,
       tone: 'violet',
       stats: [
-        { label: 'Announcements', value: knownCount('announcements'), route: 'announcements' },
-        { label: 'Audit events', value: knownCount('institutional_audit_events'), route: 'institutional:administration:administrative-audit' },
+        { label: 'Created / written', value: auditActionCount('insert') === null ? '—' : formatCount(auditActionCount('insert')!), amount: auditActionCount('insert'), route: 'institutional:administration:administrative-audit' },
+        { label: 'Updated', value: auditActionCount('update') === null ? '—' : formatCount(auditActionCount('update')!), amount: auditActionCount('update'), route: 'institutional:administration:administrative-audit' },
+        { label: 'Deleted', value: auditActionCount('delete') === null ? '—' : formatCount(auditActionCount('delete')!), amount: auditActionCount('delete'), route: 'institutional:administration:administrative-audit' },
+        { label: 'Student removals', value: deletedStudentEvents === null ? '—' : formatCount(deletedStudentEvents), amount: deletedStudentEvents, route: 'institutional:administration:administrative-audit' },
+        { label: 'Session removals', value: deletedSessionEvents === null ? '—' : formatCount(deletedSessionEvents), amount: deletedSessionEvents, route: 'institutional:administration:administrative-audit' },
       ],
     },
   ] : []
@@ -656,7 +712,7 @@ export function RoleDashboard({ onNavigate }: Props) {
               </div>)}
             </div> : <EmptyState loading={loading} message="No campuses have been registered yet."/>}
           </Panel>
-          <Panel title="Recent institutional activity" description="Latest recorded audit events." icon={Activity} action={<button type="button" className="rd-text-action" onClick={() => onNavigate('institutional:administration:administrative-audit')}>Open audit</button>}>
+          <Panel title="Recent database changes" description="Created, updated and deleted records captured in the available audit trail." icon={Activity} action={<button type="button" className="rd-text-action" onClick={() => onNavigate('institutional:administration:administrative-audit')}>Open audit</button>}>
             <ActivityList items={get('institutional_audit_events').slice().sort((a, b) => String(b.occurred_at ?? '').localeCompare(String(a.occurred_at ?? '')))} loading={loading || !known('institutional_audit_events')} onNavigate={onNavigate}/>
           </Panel>
           <Panel title="Institution notices" description="Latest announcements published to your institution." icon={Megaphone}>
@@ -705,6 +761,9 @@ export function RoleDashboard({ onNavigate }: Props) {
             }).length)} overdue tasks</strong><small>Open institutional work past its due date</small></span></button>
             <button type="button" onClick={() => onNavigate('employees:leave-management')}><span className="rd-alert-icon"><CalendarCheck size={16}/></span><span><strong>{formatCount(leaveRequests.length)} pending leave requests</strong><small>Employee requests awaiting review</small></span></button>
           </div>}
+        </Panel>
+        <Panel title="Recent database changes" description="Latest tracked create, update and delete events." icon={Activity} action={<button type="button" className="rd-text-action" onClick={() => onNavigate('institutional:administration:administrative-audit')}>Open audit</button>}>
+          <ActivityList items={auditEvents.slice().sort((a, b) => String(b.occurred_at ?? '').localeCompare(String(a.occurred_at ?? '')))} loading={loading || !auditReady} onNavigate={onNavigate}/>
         </Panel>
         <Panel title="Institution notices" description="Latest published notices." icon={Megaphone}>
           <NoticeList items={notices} loading={loading || !known('announcements')}/>
@@ -955,8 +1014,13 @@ export function RoleDashboard({ onNavigate }: Props) {
   return <main className="ed360-role-dashboard">
     <header className="rd-page-head">
       <div className="rd-heading-main">
-        <span className="rd-heading-icon"><GraduationCap size={23}/></span>
-        <div><span className="rd-eyebrow">{heading.eyebrow}</span><h1>{heading.title}</h1><p>{heading.subtitle}</p></div>
+        <span className="rd-institution-logo"><img src="/gidc-badin-official-logo.svg" alt="Government Islamia Degree College Badin logo"/></span>
+        <div className="rd-institution-heading">
+          <span className="rd-eyebrow">{heading.eyebrow}</span>
+          <h1>{institutionName}</h1>
+          <p>{institutionTypeLabel} <span>·</span> {heading.title}</p>
+          <small>{COLLEGE_LOCATION} <span>·</span> {heading.subtitle}</small>
+        </div>
       </div>
       <div className="rd-heading-meta">
         <span className="rd-role-chip">{roleLabels[role]}</span>
@@ -974,27 +1038,17 @@ export function RoleDashboard({ onNavigate }: Props) {
       <header className="rd-domain-overview-head">
         <div>
           <span className="rd-eyebrow">INSTITUTION AT A GLANCE</span>
-          <h2 id="rd-domain-overview-title">All key areas</h2>
-          <p>Every core area stays visible, even before its first record is added. Figures refresh as your institution’s records are saved.</p>
+          <h2 id="rd-domain-overview-title">Institution performance</h2>
+          <p>Eight visual summaries show how each area is being used. Charts fill automatically as records are created and updated.</p>
         </div>
-        <span className="rd-domain-live"><i className={realtimeStatus === 'live' ? 'is-live' : ''}/>{realtimeStatus === 'live' ? 'Live overview' : 'Auto-updating overview'}</span>
+        <span className="rd-domain-live"><i className={realtimeStatus === 'live' ? 'is-live' : ''}/>{realtimeStatus === 'live' ? 'Live data' : 'Auto-updating'}</span>
       </header>
       <div className="rd-domain-grid">
-        {managerOverviewCards.map(card => <article className="rd-domain-card" key={card.title}>
-          <header className="rd-domain-card-head">
-            <span className={'rd-domain-icon ' + card.tone}><card.icon size={18}/></span>
-            <div><h3>{card.title}</h3><p>{card.description}</p></div>
-          </header>
-          <div className="rd-domain-stats">
-            {card.stats.map(stat => <button type="button" key={stat.label} onClick={() => onNavigate(stat.route)} aria-label={stat.label + ': ' + stat.value + '. Open related workspace.'}>
-              <strong>{loading ? '—' : stat.value}</strong>
-              <small>{stat.label}</small>
-            </button>)}
-          </div>
-        </article>)}
+        {managerOverviewCards.map(card => <OverviewAreaCard key={card.title} card={card} loading={loading} onNavigate={onNavigate}/>)}
       </div>
+      <p className="rd-domain-audit-note"><ShieldAlert size={14}/> Deletion and change figures show events available in the institutional audit trail; they are not a complete audit of every direct database table.</p>
     </section>}
     {rolePanels[role]}
-    <footer className="rd-dashboard-footnote"><CheckCircle2 size={15}/><span>Dashboard figures come from live institution records visible to your signed-in role. Empty states mean no matching records were returned; unavailable figures are not treated as zero.</span></footer>
+    <footer className="rd-dashboard-footnote"><CheckCircle2 size={15}/><span>Dashboard figures come from live institution records visible to your signed-in role. Empty states mean no matching records were returned; unavailable figures are not treated as zero. The dashboard does not delete, reset or modify existing institution records.</span></footer>
   </main>
 }
