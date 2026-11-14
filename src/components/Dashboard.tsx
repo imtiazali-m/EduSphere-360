@@ -134,6 +134,63 @@ function sumOutstanding(rows: RecordRow[]) {
   return rows.reduce((total, row) => total + outstandingInvoiceBalance(row), 0)
 }
 
+function customPermissionModuleForRoute(groupKey: string, route: string): string | undefined {
+  const prefix = route.split(':')[0]
+  const dedicated: Record<string,string> = {
+    hostel: 'hostel',
+    procurement: 'procurement',
+    cafeteria: 'cafeteria',
+    messaging: 'communications',
+    helpdesk: 'helpdesk',
+    'duplicate-detection': 'data_management',
+    'data-management': 'data_management',
+    'scheduled-reports': 'reports',
+    'custom-reports': 'reports',
+    'asset-lifecycle': 'facilities',
+    'payment-operations': 'fees',
+    'receipt-operations': 'fees',
+    'library-reading': 'library',
+    'certificate-forms': 'forms',
+  }
+  if (dedicated[prefix]) return dedicated[prefix]
+  const parts = route.split(':')
+  if (prefix === 'institutional') {
+    const workspace = parts[1]
+    const mapped: Record<string,string> = {
+      library: 'library',
+      inventory: 'inventory',
+      transport: 'transport',
+      examinations: 'examinations',
+      administration: 'administration',
+    }
+    return mapped[workspace]
+  }
+  if (prefix === 'operations') {
+    const workspace = parts[1]
+    const mapped: Record<string,string> = {
+      facilities: 'facilities',
+      certificates: 'certificates',
+      reports: 'reports',
+      curriculum: 'academic_setup',
+    }
+    return mapped[workspace]
+  }
+  if (prefix === 'finance' || prefix === 'fees') return 'fees'
+  if (prefix === 'students') return 'students'
+  if (prefix === 'employees' || prefix === 'peoplehr') return 'employees'
+  if (prefix === 'attendance' || prefix === 'care') return 'attendance'
+  if (prefix === 'exams' || prefix === 'exam_results' || prefix === 'examinations') return 'examinations'
+  if (prefix === 'assignments' || prefix === 'assignment_submissions') return 'assignments'
+  if (prefix === 'timetable') return 'timetable'
+  if (prefix === 'transport') return 'transport'
+  if (prefix === 'inventory') return 'inventory'
+  if (prefix === 'reports') return 'reports'
+  if (prefix === 'announcements' || prefix === 'notifications') return 'announcements'
+  if (prefix === 'frontoffice') return 'announcements'
+  if (prefix === 'admin') return 'administration'
+  return undefined
+}
+
 function buildStats(role: AppRole, data: Dataset) {
   const students = getRows(data, 'students')
   const teachers = getRows(data, 'teachers')
@@ -652,7 +709,6 @@ export function Dashboard({ onToast }: Props) {
   }, [activeNavigationTab.groupKey])
 
   const available = useMemo(() => modulesForRole(user!.role), [user?.role])
-  const visibleGroups = useMemo(() => roleNavigationGroups(user!.role), [user?.role])
   const visibleSections = useMemo(() => {
     const sections = roleNavigationSections(user!.role,stage7CareAreas)
     if (!user?.customAccessConfigured || user.role === 'owner') return sections
@@ -686,18 +742,28 @@ export function Dashboard({ onToast }: Props) {
     }
     return sections.map(section => ({
       ...section,
-      groups: section.groups.filter(group => group.key === 'dashboard' || (groupModules[group.key] ?? []).some(moduleKey => (grants[moduleKey] ?? []).includes('view'))),
+      groups: section.groups.flatMap(group => {
+        if (group.key === 'dashboard') return [group]
+        const groupAllowed = (groupModules[group.key] ?? []).some(moduleKey => (grants[moduleKey] ?? []).includes('view'))
+        if (!groupAllowed) return []
+        const items = group.items.filter(title => {
+          const route = getNavigationRoute(group.key,title,user!.role) ?? ''
+          const moduleKey = customPermissionModuleForRoute(group.key,route)
+          return !moduleKey || (grants[moduleKey] ?? []).includes('view')
+        })
+        return items.length ? [{ ...group, items }] : []
+      }),
     })).filter(section => section.groups.length > 0)
   }, [user?.role,user?.customAccessConfigured,user?.customRolePermissions,stage7CareAreas])
   const searchResults = useMemo(() => {
     const query = searchText.trim().toLowerCase()
     if (!query) return []
-    const items = visibleGroups.flatMap(group => (group.key === 'dashboard' ? ['Dashboard'] : group.items).map(title => {
+    const items = visibleSections.flatMap(section => section.groups).flatMap(group => (group.key === 'dashboard' ? ['Dashboard'] : group.items).map(title => {
       const itemKey = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
       return { title, group: group.label, groupKey: group.key, itemKey, route: getNavigationRoute(group.key, title, user!.role) }
     }))
     return items.filter(item => item.route && `${item.title} ${item.group}`.toLowerCase().includes(query)).slice(0, 8)
-  }, [searchText, visibleGroups])
+  }, [searchText, visibleSections])
 
   useEffect(() => {
     const media = window.matchMedia('(max-width: 820px)')
