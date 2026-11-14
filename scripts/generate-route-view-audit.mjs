@@ -37,7 +37,7 @@ const studentVisibleTabs = {
 const facultyTabs = new Set(['overview','registration','directory','directory-teaching','directory-staff','profile','id-cards','departments','designations','assignments','attendance','leave','workload','documents','qualifications','history','reports'])
 const facultyStaffTabs = new Set(['overview','profile','id-cards','assignments','attendance','leave','workload','documents','qualifications','history'])
 const attendanceWindows = new Set(['students','teachers','staff','history','devices'])
-const reportTabs = new Set(['overview','finance','attendance','academics','students','employees','payroll'])
+const reportTabs = new Set(['overview','finance','attendance','academics','students','employees','payroll','examinations','academic','fees','financial','class','comparative','builder','scheduled','templates','history'])
 const financeTabs = {
   'accounts-finance': new Set(['overview','accounts','journals','reconciliation']),
   fees: new Set(['overview','structures','invoices','payments','receivables','discounts','refunds','receipts','reconciliation']),
@@ -139,7 +139,7 @@ function checkView(role, route, dispatcher) {
     return { component:'AcademicManagementWorkspace', view:targetWindow, status:supported.has(targetWindow) ? 'Supported' : 'Unsupported academic workspace' }
   }
   if (targetKey === 'personal') return { component:'PersonalWorkspace', view:targetWindow, status:new Set(['my-profile','account-settings','notification-settings','my-activity','help-support']).has(targetWindow)?'Supported':'Unsupported personal view' }
-  if (targetKey === 'assistant') return { component:'AIAssistantWorkspace', view:targetWindow, status:targetWindow==='chat'?'Supported':'Unsupported AI assistant view' }
+  if (targetKey === 'assistant') return { component:'AIAssistantWorkspace', view:targetWindow, status:new Set(['chat','smart-reports','student-performance-prediction','student-analysis','fee-collection-prediction','examination-analysis','ai-timetable-suggestions','ai-question-generation','ai-document-assistant','ai-learning-recommendations','academic-performance-insights','attendance-and-behaviour-insights','institutional-intelligence']).has(targetWindow)?'Supported':'Unsupported AI assistant view' }
   if (targetKey === 'frontoffice') return { component:'FrontOfficeWorkspace', view:targetWindow, status:new Set(['enquiries','announcements','events']).has(targetWindow)?'Supported':'Unsupported front-office view' }
   if (targetKey === 'overview') return { component: 'RoleDashboard', view: 'overview', status: 'Supported' }
   if (targetKey === 'notifications') return { component: 'NotificationCenter', view: 'notifications', status: 'Supported' }

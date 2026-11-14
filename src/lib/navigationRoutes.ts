@@ -97,13 +97,17 @@ const reportViews: Record<string, string> = {
   'student-reports': 'students',
   'employee-reports': 'employees',
   'attendance-reports': 'attendance',
-  'examination-reports': 'academics',
-  'academic-reports': 'academics',
-  'fee-reports': 'finance',
+  'examination-reports': 'examinations',
+  'academic-reports': 'academic',
+  'fee-reports': 'fees',
   'payroll-reports': 'payroll',
-  'financial-reports': 'finance',
-  'class-reports': 'academics',
-  'comparative-analytics': 'overview',
+  'financial-reports': 'financial',
+  'class-reports': 'class',
+  'comparative-analytics': 'comparative',
+  'custom-report-builder': 'builder',
+  'scheduled-reports': 'scheduled',
+  'report-templates': 'templates',
+  'report-history': 'history',
 }
 
 const financeSections: Record<string, string> = {
@@ -408,7 +412,6 @@ function dedicatedRoute(groupKey: string, itemKey: string): string | undefined {
   }
   if (groupKey === 'reports') {
     const view = reportViews[itemKey]
-    if (view === 'employees') return 'employees:reports'
     return view ? `reports:${view}` : undefined
   }
   if (groupKey === 'administration') {
@@ -466,18 +469,18 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
   if (groupKey === 'ai') {
     const intelligenceRoutes: Record<string, string> = {
       'ai-assistant': 'assistant:chat',
-      'smart-reports': 'reports:overview',
-      'student-performance-prediction': 'reports:academics',
-      'student-analysis': 'reports:students',
-      'fee-collection-prediction': 'finance:fees:overview',
-      'examination-analysis': 'reports:academics',
-      'ai-timetable-suggestions': 'timetable:conflicts',
-      'ai-question-generation': 'institutional:examinations:question-bank',
-      'ai-document-assistant': 'files',
-      'ai-learning-recommendations': 'academic:learning-progress',
-      'academic-performance-insights': 'reports:academics',
-      'attendance-and-behaviour-insights': 'reports:attendance',
-      'institutional-intelligence': 'reports:overview',
+      'smart-reports': 'assistant:smart-reports',
+      'student-performance-prediction': 'assistant:student-performance-prediction',
+      'student-analysis': 'assistant:student-analysis',
+      'fee-collection-prediction': 'assistant:fee-collection-prediction',
+      'examination-analysis': 'assistant:examination-analysis',
+      'ai-timetable-suggestions': 'assistant:ai-timetable-suggestions',
+      'ai-question-generation': 'assistant:ai-question-generation',
+      'ai-document-assistant': 'assistant:ai-document-assistant',
+      'ai-learning-recommendations': 'assistant:ai-learning-recommendations',
+      'academic-performance-insights': 'assistant:academic-performance-insights',
+      'attendance-and-behaviour-insights': 'assistant:attendance-and-behaviour-insights',
+      'institutional-intelligence': 'assistant:institutional-intelligence',
     }
     return intelligenceRoutes[itemKey] ?? 'unavailable:ai:' + itemKey
   }

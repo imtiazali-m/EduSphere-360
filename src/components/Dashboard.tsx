@@ -988,7 +988,7 @@ export function Dashboard({ onToast }: Props) {
                 tab.targetKey === 'governance' && tab.targetWindow === 'website-content' ? <CollegeWebsiteManager onToast={onToast}/> :
                 tab.targetKey === 'governance' ? <GovernanceWorkspace initialWindow={tab.targetWindow} onToast={onToast} onNavigate={navigateChild}/> :
                 tab.targetKey === 'operations' ? <InstitutionOperationsWorkspace workspaceKey={tab.targetWindow} initialWindow={tab.targetWindow.split(':')[1]} onToast={onToast}/> :
-                tab.targetKey === 'assistant' ? <AIAssistantWorkspace/> :
+                tab.targetKey === 'assistant' ? <AIAssistantWorkspace initialWindow={tab.targetWindow || 'chat'}/> :
                 tab.targetKey === 'frontoffice' ? <FrontOfficeWorkspace initialView={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'personal' ? <PersonalWorkspace initialWindow={tab.targetWindow} onToast={onToast} onNavigate={navigateChild}/> :
                 tab.targetKey === 'profile' ? <ProfileModule/> :
