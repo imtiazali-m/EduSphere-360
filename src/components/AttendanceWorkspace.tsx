@@ -187,10 +187,15 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
  }
 
  if(!user)return null
+ const attendanceTitles:Record<string,string>={students:'Student Attendance',teachers:'Teacher Attendance',staff:'Staff Attendance',devices:'Automatic Attendance',history:'Attendance History','qr-scan':'QR / Barcode Attendance',biometric:'Biometric Attendance','cards-students':'Student Attendance Cards','cards-teachers':'Teacher Attendance Cards','cards-staff':'Staff Attendance Cards'}
+ const attendanceDescriptions:Record<string,string>={students:'Mark student attendance by campus, class, section, period and date.',teachers:'Record and review teacher attendance using the institution register.',staff:'Record and review non-teaching staff attendance using the institution register.',devices:'Review automatic attendance device sources and connection readiness.',history:'Review saved attendance registers and export historical records.','qr-scan':'Record attendance from an authorised QR or barcode scanner.',biometric:'Manage supported biometric verification readiness without exposing fingerprint data.','cards-students':'Prepare student attendance identity cards with scannable identifiers.','cards-teachers':'Prepare teacher attendance identity cards with scannable identifiers.','cards-staff':'Prepare staff attendance identity cards with scannable identifiers.'}
+ const pageWindow=attendanceTitles[initialWindow]?'':population
+ const attendanceTitle=attendanceTitles[initialWindow]??(population==='students'?'Student Attendance':population==='teachers'?'Teacher Attendance':'Staff Attendance')
+ const attendanceDescription=attendanceDescriptions[initialWindow]??attendanceDescriptions[population]
  return <main className="page-content ed360-module-page ed360-attendance-workspace">
   <header className="ed360-attendance-hero">
    <div className="ed360-attendance-icon"><CalendarCheck size={23}/></div>
-   <div><span>ACADEMIC & STAFF OPERATIONS / ATTENDANCE</span><h1>Attendance Management</h1><p>Record a complete class, section or employee roster. Mark Present, Absent, Approved Leave or Leave Not Approved and save one validated register.</p></div>
+   <div><span>GIDC BADIN · ATTENDANCE</span><h1>{attendanceTitle}</h1><p>{attendanceDescription}</p></div>
   </header>
   <div className="ed360-attendance-main-tabs">
    <button className={autoTab==='register'?'active':''} onClick={()=>setAutoTab('register')}>Manual register</button>
