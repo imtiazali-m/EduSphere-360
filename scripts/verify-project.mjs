@@ -100,8 +100,8 @@ check('The full institutional menu maps every submenu to a working destination',
   const peopleHR = institutionalMenu.find(group => group.key === 'people-hr')
   assert.deepEqual(peopleHR?.items.map(item => item.label), ['Students','Admissions & Enrollment','Teachers','Faculty & Staff','Parents & Guardians','HR & Recruitment','Employee Contracts & Documents','Employee Performance','Payroll & Salary Records','Alumni'], 'People & HR must contain the ten approved Stage 6 destinations')
   assert.deepEqual(administration?.items.map(item => item.label), [
-    'Institute Profile','Campus and Branch Management','Academic Structure & Sections','Departments & Designations',
-    'Organisational Structure','System Configuration','Approval Workflows','Policies & Rules','Administrative Audit',
+    'Institute Profile','Campus and Branch Management','Academic Structure & Sections','Department Directory','Designation Catalogue',
+    'Organisational Structure','System Configuration','Approval Workflows','Student Policies','Faculty Policies','Administrative Audit',
     'User Access & Invitations','Role & Permission Management','Institute Settings','Branding & Document Settings','Security & Access History',
   ], 'Administration must contain exactly the 14 specified submenus in order')
   assert.ok(!navigationCatalog.some(group => ['institution-config','academic-sessions','classes-sections','subjects','curriculum','timetable','teaching'].includes(group.key)), 'Nested setup and academic workspaces must not remain separate top-level menus')
@@ -852,6 +852,11 @@ check('Administration settings, approvals and audit are connected to governance 
   assert.equal(getNavigationRoute('administration', 'Institute Profile'), 'governance:profile')
   assert.equal(getNavigationRoute('administration', 'Institute Settings'), 'governance:settings')
   assert.equal(getNavigationRoute('administration', 'Approval Workflows'), 'governance:approvals')
+  assert.equal(getNavigationRoute('administration', 'Department Directory'), 'governance:departments')
+  assert.equal(getNavigationRoute('administration', 'Designation Catalogue'), 'governance:designations')
+  assert.equal(getNavigationRoute('administration', 'Student Policies'), 'governance:policies-students')
+  assert.equal(getNavigationRoute('administration', 'Faculty Policies'), 'governance:policies-faculty')
+  assert.equal(getNavigationRoute('administration', 'Academic Structure & Sections'), 'governance:academic')
   assert.equal(getNavigationRoute('administration', 'Administrative Audit'), 'governance:audit')
   const administration = read('src/components/AdministrationStage5Workspace.tsx')
   for (const value of ['institution_settings', 'workflow_approvals', 'institutional_audit_events', 'decide_institution_setting_approval']) {
@@ -1155,6 +1160,19 @@ check('Internal account and institute profile controls remain connected to secur
   assert.ok(!internalTheme.includes(':root {') || internalTheme.indexOf(':root {') < internalTheme.indexOf('/* Internal application — one cohesive plum'), 'Internal palette tokens must not overwrite public-page root tokens')
 })
 
+check('Administration pages are dedicated, audience-aware and scoped to existing college records', () => {
+  const adminWorkspace = read('src/components/AdministrationStage5Workspace.tsx')
+  const roleDashboard = read('src/components/RoleDashboard.tsx')
+  const operations = read('src/components/LinkedOperationsWorkspace.tsx')
+  assert.ok(adminWorkspace.includes('renderDesignations') && adminWorkspace.includes('Designation Catalogue'), 'Designation Catalogue must be a dedicated Administration page')
+  assert.ok(adminWorkspace.includes('policies-students') && adminWorkspace.includes('policies-faculty') && adminWorkspace.includes("category:'student'") && adminWorkspace.includes("category:'faculty'"), 'Student and faculty policies must use separate audience categories')
+  assert.ok(adminWorkspace.includes('renderInstituteSettings') && adminWorkspace.includes('institution_preferences'), 'Institute Settings must use the dedicated preference form rather than raw website key/value rows')
+  assert.ok(adminWorkspace.includes('academicSessionResult') && adminWorkspace.includes('classResult') && adminWorkspace.includes('programResult') && adminWorkspace.includes('subjectResult') && adminWorkspace.includes('roomResult'), 'Academic Structure must read the actual academic registers')
+  assert.ok(!adminWorkspace.includes('Institution data remains scoped by the signed-in membership') && !adminWorkspace.includes('Direct supervisor links and approved vacancy positions are not stored'), 'Remove redundant scope and schema-explanation statements from Administration views')
+  assert.ok(!operations.includes('Changes remain inside {user?.institutionName') && !operations.includes('Scoped to {user?.institutionName'), 'Campus workspace must not repeat institution-scope statements')
+  assert.ok(roleDashboard.includes('Government Islamia Degree College, Badin') && roleDashboard.includes('Badin weather') || roleDashboard.includes('BADIN WEATHER · LIVE'), 'College welcome panel must identify the college and show live Badin conditions')
+  assert.ok(roleDashboard.includes('timeZone:\'Asia/Karachi\'') && roleDashboard.includes('CampusIllustration'), 'Welcome panel must use Pakistan local date/time and a campus visual')
+})
 check('Student admission is a dedicated, accessible workspace window', () => {
   const recordModule = read('src/components/RecordModule.tsx')
   const admissionStyles = read('src/styles/student-admission-workspace.css')
