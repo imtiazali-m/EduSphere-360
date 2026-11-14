@@ -61,7 +61,7 @@ const requiredSecrets:Record<Exclude<PageKey,'overview'|'ai-providers'>,string[]
 }
 const PageIcon:Record<PageKey,typeof Cloud>={overview:Cloud,'ai-providers':Activity,zoom:Video,google:Cloud,youtube:Youtube,biometric:Fingerprint}
 
-export function IntegrationManagementWorkspace({initialWindow='overview',onToast}:{initialWindow?:string;onToast:(message:string,error?:boolean)=>void}){
+export function IntegrationManagementWorkspace({initialWindow='overview',onToast,onNavigate}:{initialWindow='overview',onToast:(message:string,error?:boolean)=>void;onNavigate:(route:string)=>void}){
  const {user}=useAuth()
  const page=(initialWindow in pages?initialWindow:'overview') as PageKey
  const meta=pages[page]
@@ -118,7 +118,7 @@ export function IntegrationManagementWorkspace({initialWindow='overview',onToast
   {page==='overview'&&<section className="ed360-integration-grid">
    {(['ai-providers','zoom','google','youtube','biometric'] as PageKey[]).map(key=><article className="ed360-integration-card" key={key}>
     <div className="ed360-integration-card-icon"><PageIcon size={20}/></div><div><span>{pages[key].eyebrow}</span><h2>{pages[key].title}</h2><p>{pages[key].intro}</p></div>
-    <div className="ed360-integration-card-foot">{key==='ai-providers'?<b className={configuredCount?'is-ready':'is-pending'}>{checking?'Checking…':configuredCount+' of 7 credentials configured'}</b>:<b className="is-pending">Connection pending</b>}<button type="button" onClick={()=>{window.location.hash='#';onToast('Open this section from the Integrations & Devices menu.') }}> </button></div>
+    <div className="ed360-integration-card-foot">{key==='ai-providers'?<b className={configuredCount?'is-ready':'is-pending'}>{checking?'Checking…':configuredCount+' of 7 credentials configured'}</b>:<b className="is-pending">Connection pending</b>}<button type="button" className="button button-outline" onClick={()=>onNavigate('integration:'+key)}>Open workspace <ArrowUpRight size={14}/></button></div>
    </article>)}
   </section>}
   {page==='ai-providers'&&<>
