@@ -1,6 +1,6 @@
 # Migration history
 
-The seventy-six timestamped migration files in this folder match the remote migration history recorded by the linked Supabase project. Keep each 14-digit timestamp unchanged so local and remote migration histories remain aligned.
+The seventy-seven timestamped migration files in this folder match the remote migration history recorded by the linked Supabase project. Keep each 14-digit timestamp unchanged so local and remote migration histories remain aligned.
 
 The current online application includes the reviewed schema changes for the existing live schema, Faculty & Employee Management, and Student Management operations (admission lifecycle, linked guardian contacts, class placements, private student documents and audit history for attendance, published results, assignment submissions, guardian policy consolidation and activity indexes). The Student Management and Faculty/Employee migrations have already been applied to the linked project; do not replay them manually.
 
@@ -105,3 +105,4 @@ The current permission guard covers direct RLS-backed access to the listed table
 
 
 - `20261113175058_college_custom_role_high_impact_rpc_guards.sql` adds the custom-profile checks to question-paper approval, payroll approval and adjustments, transport fee charge creation, and institutional setting approval RPCs. These checks run in addition to the original base membership-role checks.
+- `20261114032847_college_operations_custom_permission_guards.sql` adds custom-profile action checks to receipts, scheduled report execution, facilities, hostel fee payments, gateway review, transport fee payments, forms review, duplicate review, and helpdesk ticket updates. It also adds restrictive RLS policies over the new operational tables; campus/department scope is derived where the related records contain that scope, and is conservatively unavailable for global operational tables without scope columns.
