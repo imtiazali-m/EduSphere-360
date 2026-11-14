@@ -41,6 +41,20 @@ import { PayrollWorkspace } from './PayrollWorkspace'
 import { PeopleHRWorkspace } from './PeopleHRWorkspace'
 import { GovernanceWorkspace } from './GovernanceWorkspace'
 import { InstitutionOperationsWorkspace } from './InstitutionOperationsWorkspace'
+import { DataManagementWorkspace } from './DataManagementWorkspace'
+import { CustomReportsWorkspace } from './CustomReportsWorkspace'
+import { CommunicationWorkspace } from './CommunicationWorkspace'
+import { HostelWorkspace } from './HostelWorkspace'
+import { ProcurementWorkspace } from './ProcurementWorkspace'
+import { CafeteriaWorkspace } from './CafeteriaWorkspace'
+import { LibraryReadingWorkspace } from './LibraryReadingWorkspace'
+import { ReceiptWorkspace } from './ReceiptWorkspace'
+import { PaymentOperationsWorkspace } from './PaymentOperationsWorkspace'
+import { AssetLifecycleWorkspace } from './AssetLifecycleWorkspace'
+import { ScheduledReportsWorkspace } from './ScheduledReportsWorkspace'
+import { HelpdeskWorkspace } from './HelpdeskWorkspace'
+import { DuplicateDetectionWorkspace } from './DuplicateDetectionWorkspace'
+import { CertificateFormsWorkspace } from './CertificateFormsWorkspace'
 import { AcademicManagementWorkspace } from './AcademicManagementWorkspace'
 import { supabase } from '../lib/supabase'
 import { readDisplayPreferences, writeDisplayPreferences, type DashboardDisplayPreferences, type DashboardFontSize } from '../lib/displayPreferences'
@@ -961,6 +975,20 @@ export function Dashboard({ onToast }: Props) {
             return <section className="pro-window-panel" key={tab.id} hidden={activeTabId !== tab.id} aria-label={tab.title}>
               {tab.targetKey === 'notifications' ? <NotificationCenter onToast={onToast} onUnreadCountChange={setUnreadAnnouncementCount}/> :
                 tab.targetKey === 'overview' ? <RoleDashboard onNavigate={navigateChild}/> :
+                tab.targetKey === 'data-management' ? <DataManagementWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'custom-reports' ? <CustomReportsWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'messaging' ? <CommunicationWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'hostel' ? <HostelWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'procurement' ? <ProcurementWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'cafeteria' ? <CafeteriaWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'library-reading' ? <LibraryReadingWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'receipt-operations' ? <ReceiptWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'payment-operations' ? <PaymentOperationsWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'asset-lifecycle' ? <AssetLifecycleWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'scheduled-reports' ? <ScheduledReportsWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'helpdesk' ? <HelpdeskWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'duplicate-detection' ? <DuplicateDetectionWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'certificate-forms' ? <CertificateFormsWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'institutional' && tab.targetWindow.startsWith('examinations:') ? <AssessmentWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'institutional' && linkedWorkspaceKeys.includes(tab.targetWindow) ? <LinkedOperationsWorkspace workspaceKey={tab.targetWindow} onToast={onToast} onNavigate={navigateChild}/> :
                 tab.targetKey === 'institutional' ? <InstitutionalWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
