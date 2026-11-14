@@ -1,10 +1,10 @@
-# EduSphere 360 — Online-only application source
+# Government Islamia Degree College Badin — College Website & Management Portal
 
-EduSphere 360 is an online education-management application for schools, colleges and universities.
+An online public website and role-based management portal for Government Islamia Degree College Badin. The public home page is college-specific; the private workspace serves the college's approved staff, students and families.
 
 ## Production architecture
 
-- **Frontend hosting:** Cloudflare Pages (Direct Upload deployment of the freshly built `dist/` folder).
+- **Frontend hosting:** Cloudflare Pages (Direct Upload project `gidcbadin`; freshly built `dist/` folder).
 - **Backend:** the existing Supabase project `edusphere360-dev` (`osqhgsqrqhollxxtwrgy`).
 - **Authentication:** Supabase Auth with active institution membership and role validation.
 - **Data:** Supabase PostgreSQL with Row Level Security.
@@ -74,3 +74,10 @@ Production deployment is **manual only**: start the workflow from the configured
 The workflow has been added to this source package but has not yet been committed to a repository or executed. The local workspace still cannot complete a fresh npm dependency installation, so `npm run build` remains blocked here by missing React/Babel/Estree type declarations. Do not label this source ZIP as a deployable Cloudflare artifact.
 
 See `docs/FINAL_REBUILD_STAGE.md` for the launch acceptance gates and `docs/NAVIGATION_RECONCILIATION.md` for the verified active-menu counts and historical-source discrepancy.
+
+
+## College production URL
+
+The new college-only production Pages project is named `gidcbadin`. Its Pages address will be `https://gidcbadin.pages.dev`. The previous `edusphere360.pages.dev` project is retained as a separate legacy project; the new deployment does not delete or overwrite it.
+
+Preferred permanent domain: `gidcbadin.edu.pk`. PKNIC's own WHOIS/lookup endpoint currently reports this candidate as unregistered and potentially available. A .edu.pk domain remains inactive until PKNIC verifies the college's original-letterhead authorization from the Principal/Head, proof of registered active educational status, and the signing authority's CNIC. Add the domain to Cloudflare Pages after PKNIC activation and DNS delegation. Do not represent the .edu.pk address as live before that is complete.
