@@ -181,14 +181,22 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
  }
 
  function exportRegister(){
-  const rows=people.map(p=>({
-   identifier:p.admission_no??p.employee_no??'',name:p.full_name,class_name:p.class_name??(population==='staff'?'Staff':''),
-   date,period,status:effectiveMarks[p.id],notes:notes[p.id]??''
+  const rows=people.map(person=>({
+   identifier:person.admission_no??person.employee_no??'',name:person.full_name,guardian:person.guardian_name??'',
+   class_name:person.class_name??(population==='staff'?'Staff':''),section:person.section_name??'',
+   date,period,status:effectiveMarks[person.id],notes:notes[person.id]??''
   }))
-  downloadCsv('edusphere-attendance-'+population+'-'+date+'.csv',rows,[
-   {key:'identifier',label:'ID'},{key:'name',label:'Name'},{key:'class_name',label:'Class / Department'},
-   {key:'date',label:'Date'},{key:'period',label:'Period'},{key:'status',label:'Status'},{key:'notes',label:'Notes'}
-  ])
+  const columns=[{key:'identifier',label:'ID'},{key:'name',label:'Name'},{key:'guardian',label:'Guardian'},{key:'class_name',label:'Class / Department'},{key:'section',label:'Section'},{key:'date',label:'Date'},{key:'period',label:'Period'},{key:'status',label:'Status'},{key:'notes',label:'Notes'}]
+  const filename='ed360-attendance-'+population+'-'+date
+  try{
+   if(reportFormat==='xlsx')exportXlsx(filename+'.xlsx','Attendance Register',rows,columns)
+   else if(reportFormat==='xls')exportExcelXml(filename+'.xls','Attendance Register',rows,columns)
+   else if(reportFormat==='docx')exportDocx(filename+'.docx','Attendance Register',rows,columns)
+   else if(reportFormat==='doc')exportWordXml(filename+'.doc','Attendance Register',rows,columns)
+   else if(reportFormat==='pdf')printOfficeReport('Attendance Register',rows,columns,'Government Islamia Degree College, Badin')
+   else downloadCsv(filename+'.csv',rows,columns)
+   onToast('Attendance register export prepared.')
+  }catch(error){onToast(error instanceof Error?error.message:'Attendance export failed.',true)}
  }
 
  async function recordQrScan(event:FormEvent){
