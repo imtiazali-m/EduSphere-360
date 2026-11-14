@@ -168,8 +168,56 @@ export function BehaviourSkillsWorkspace({initialWindow='dashboard',onToast}:{in
    <div className="ed360-behaviour-toolbar"><label><Search size={15}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search this page"/></label><label><Filter size={15}/><select value={studentFilter} onChange={e=>setStudentFilter(e.target.value)}><option value="">All students</option>{students.map(s=><option key={s.id} value={s.id}>{s.full_name} · {s.admission_no}</option>)}</select></label>{meta.kind==='events'&&view==='records'&&<label><Filter size={15}/><select value={typeFilter} onChange={e=>setTypeFilter(e.target.value)}><option value="all">All record types</option>{['positive','incident','recognition','warning'].map(v=><option key={v} value={v}>{v}</option>)}</select></label>}</div>
    {meta.kind==='dashboard'&&<><div className="ed360-behaviour-kpis"><article><span>Student behaviour records</span><strong>{events.length}</strong><small>Across the available institution period</small></article><article><span>Open follow-ups</span><strong>{unresolved}</strong><small>Require review or action</small></article><article><span>Competency assessments</span><strong>{competencies.length}</strong><small>Evidence-based assessments</small></article><article><span>Classroom activities</span><strong>{activities.length}</strong><small>Recorded co-curricular / classwork</small></article></div><section className="ed360-behaviour-panel"><div className="ed360-behaviour-section-title"><div><span>RECENT ACTIVITY</span><h2>Latest behaviour records</h2></div><button type="button" className="button button-outline" onClick={exportEvents}><Download size={14}/> Export</button></div><EventTable rows={events.slice(0,8)} studentsById={studentsById} onResolve={resolve} canWrite={canWrite}/></section></>}
    {meta.kind==='events'&&<section className="ed360-behaviour-panel"><div className="ed360-behaviour-section-title"><div><span>REGISTER</span><h2>{meta.title}</h2></div><div className="ed360-behaviour-count">{eventCount} matching records</div></div><EventTable rows={filteredEvents} studentsById={studentsById} onResolve={resolve} canWrite={canWrite}/></section>}
-   {meta.kind==='competencies'&&<section className="ed360-behaviour-panel"><div className="ed360-behaviour-section-title"><div><span>STUDENT DEVELOPMENT</span><h2>{meta.title}</h2></div><button type="button" className="button button-outline" onClick={exportCompetencies}><Download size={14}/> Export</button></div><div className="ed360-behaviour-table-wrap"><table><thead><tr><th>Student</th><th>Competency</th><th>Area</th><th>Level</th><th>Method</th><th>Assessed</th></tr></thead><tbody>{filteredCompetencies.map(row=><tr key={row.id}><td>{studentsById.get(row.student_id)?.full_name??'Restricted student'}</td><td>{row.competency_name}</td><td>{row.competency_area}</td><td><span className="ed360-level">{row.proficiency_level}/5</span></td><td>{String(row.assessment_method).replaceAll('_',' ')}</td><td>{dateLabel(row.assessed_on)}</td></tr>)}{!filteredCompetencies.length&&<EmptyRow text="No competency assessments match these filters."/></tbody></table></div></section>}
-   {meta.kind==='activities'&&<section className="ed360-behaviour-panel"><div className="ed360-behaviour-section-title"><div><span>CLASSROOM & CO-CURRICULAR</span><h2>Activity register</h2></div></div><div className="ed360-behaviour-table-wrap"><table><thead><tr><th>Activity</th><th>Type</th><th>Class</th><th>Date</th><th>Visibility</th></tr></thead><tbody>{filteredActivities.map(row=><tr key={row.id}><td><b>{row.title}</b><small>{row.description??''}</small></td><td>{row.activity_type}</td><td>{classes.find(c=>c.id===row.class_id)?.name??'Class'}</td><td>{dateLabel(row.activity_date)}</td><td>{row.visibility?.replaceAll('_',' ')}</td></tr>)}{!filteredActivities.length&&<EmptyRow text="No activities match these filters."/></tbody></table></div></section>}
+   {meta.kind==='competencies' && (
+    <section className="ed360-behaviour-panel">
+     <div className="ed360-behaviour-section-title">
+      <div><span>STUDENT DEVELOPMENT</span><h2>{meta.title}</h2></div>
+      <button type="button" className="button button-outline" onClick={exportCompetencies}><Download size={14}/> Export</button>
+     </div>
+     <div className="ed360-behaviour-table-wrap">
+      <table>
+       <thead><tr><th>Student</th><th>Competency</th><th>Area</th><th>Level</th><th>Method</th><th>Assessed</th></tr></thead>
+       <tbody>
+        {filteredCompetencies.map(row => (
+         <tr key={row.id}>
+          <td>{studentsById.get(row.student_id)?.full_name ?? 'Restricted student'}</td>
+          <td>{row.competency_name}</td>
+          <td>{row.competency_area}</td>
+          <td><span className="ed360-level">{row.proficiency_level}/5</span></td>
+          <td>{String(row.assessment_method).replaceAll('_', ' ')}</td>
+          <td>{dateLabel(row.assessed_on)}</td>
+         </tr>
+        ))}
+        {!filteredCompetencies.length && <EmptyRow text="No competency assessments match these filters." />}
+       </tbody>
+      </table>
+     </div>
+    </section>
+   )}
+   {meta.kind==='activities' && (
+    <section className="ed360-behaviour-panel">
+     <div className="ed360-behaviour-section-title">
+      <div><span>CLASSROOM & CO-CURRICULAR</span><h2>Activity register</h2></div>
+     </div>
+     <div className="ed360-behaviour-table-wrap">
+      <table>
+       <thead><tr><th>Activity</th><th>Type</th><th>Class</th><th>Date</th><th>Visibility</th></tr></thead>
+       <tbody>
+        {filteredActivities.map(row => (
+         <tr key={row.id}>
+          <td><b>{row.title}</b><small>{row.description ?? ''}</small></td>
+          <td>{row.activity_type}</td>
+          <td>{classes.find(item => item.id === row.class_id)?.name ?? 'Class'}</td>
+          <td>{dateLabel(row.activity_date)}</td>
+          <td>{row.visibility?.replaceAll('_', ' ')}</td>
+         </tr>
+        ))}
+        {!filteredActivities.length && <EmptyRow text="No activities match these filters." />}
+       </tbody>
+      </table>
+     </div>
+    </section>
+   )}
    {meta.kind==='progress'&&<section className="ed360-behaviour-panel"><div className="ed360-behaviour-section-title"><div><span>STUDENT TIMELINE</span><h2>Progress history</h2></div><button type="button" className="button button-outline" onClick={()=>{exportEvents();exportCompetencies()}}><Download size={14}/> Export history</button></div><div className="ed360-behaviour-timeline">{[...events.filter(r=>!studentFilter||r.student_id===studentFilter).map(r=>({id:r.id,date:r.event_date,title:r.summary,detail:r.event_type+' · '+r.category,student:r.student_id})),...competencies.filter(r=>!studentFilter||r.student_id===studentFilter).map(r=>({id:r.id,date:r.assessed_on,title:r.competency_name,detail:'Competency · '+r.competency_area+' · '+r.proficiency_level+'/5',student:r.student_id}))].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,100).map(row=><article key={row.id}><i/><div><span>{dateLabel(row.date)} · {studentsById.get(row.student)?.full_name??'Student'}</span><b>{row.title}</b><small>{row.detail}</small></div></article>)}{!events.length&&!competencies.length&&<div className="ed360-behaviour-empty">No progress history has been recorded.</div>}</div></section>}
    {meta.kind==='analytics'&&<div className="ed360-behaviour-analytics"><section className="ed360-behaviour-panel"><div className="ed360-behaviour-section-title"><div><span>INCIDENT SEVERITY</span><h2>Recorded incident levels</h2></div></div>{severityCounts.map(s=><div className="ed360-behaviour-bar" key={s.level}><span>{s.level}</span><div><i style={{width:(Math.max(2,s.count/Math.max(1,events.filter(e=>e.event_type==='incident').length)*100))+'%'}}/></div><b>{s.count}</b></div>)}</section><section className="ed360-behaviour-panel"><div className="ed360-behaviour-section-title"><div><span>RECORD MIX</span><h2>Events by type</h2></div></div>{['positive','incident','recognition','warning'].map(type=>{const count=events.filter(e=>e.event_type===type).length;return <div className="ed360-behaviour-bar" key={type}><span>{type}</span><div><i style={{width:(Math.max(2,count/Math.max(1,events.length)*100))+'%'}}/></div><b>{count}</b></div>})}</section></div>}
    {meta.kind==='downloads'&&<section className="ed360-behaviour-panel"><div className="ed360-behaviour-section-title"><div><span>REPORT EXPORTS</span><h2>Download authorised data</h2></div></div><div className="ed360-behaviour-downloads"><article><Activity size={20}/><b>Behaviour and incident register</b><p>Current search, type and student filters are applied to this export.</p><button type="button" className="button button-primary" onClick={exportEvents}><Download size={14}/> Download CSV</button></article><article><Award size={20}/><b>Skills and competency register</b><p>Exports proficiency levels, assessment methods and available evidence notes.</p><button type="button" className="button button-primary" onClick={exportCompetencies}><Download size={14}/> Download CSV</button></article></div></section>}
