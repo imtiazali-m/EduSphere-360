@@ -252,8 +252,8 @@ export function CollegeWebsiteManager({ onToast }: { onToast: (message: string, 
           }
           let category: PhotoCategory = 'academic-learning'
           if (relativePath.includes('03_facilities') || /book-shelves|study-room/.test(fileName)) category = 'campus-facility'
-          else if (relativePath.includes('04_campus') || /college-entrance/.test(fileName)) category = 'main-campus'
           else if (/student-assembly/.test(fileName)) category = 'student-life'
+          else if (relativePath.includes('04_campus') || /college-entrance/.test(fileName)) category = 'main-campus'
           else if (relativePath.includes('05_events') || /student-guidance|recognition|meeting|flag-event|navy-awareness|staff-|student-staff/.test(fileName)) category = 'college-events'
           const isFeaturedFifth = fileName.includes('student-guidance-session-event-05')
           const imageUrl = isFeaturedFifth
