@@ -133,3 +133,6 @@
   .cwm-bottom-save { flex-direction: column; align-items: stretch; }
   .cwm-bottom-save .cwm-save { width: 100%; }
 }
+
+.cwm-cover-image-link { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 15px; padding: 18px; text-align: center; background: linear-gradient(135deg,#e4efe1,#f7eedb); }
+.cwm-cover-image-link>b { max-width: 190px; color: #315e43; font-size: 12px; line-height: 1.55; }
