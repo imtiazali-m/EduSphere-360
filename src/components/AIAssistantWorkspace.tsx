@@ -9,11 +9,11 @@ type ProviderStatus={configured:boolean;secretName:string}
 type Message={role:'user'|'assistant';content:string;time:string;provider?:string;model?:string}
 const providers:{key:ProviderKey;name:string;secret:string;hint:string;model:string}[]=[
  {key:'openai',name:'OpenAI',secret:'OPENAI_API_KEY',hint:'Model ID',model:'gpt-6-astra'},
- {key:'anthropic',name:'Claude',secret:'ANTHROPIC_API_KEY',hint:'Model ID',model:'claude-sonnet-5'},
+ {key:'anthropic',name:'Claude',secret:'ANTHROPIC_API_KEY',hint:'Model ID',model:'claude-sonnet-5.5'},
  {key:'gemini',name:'Gemini',secret:'GEMINI_API_KEY',hint:'Model ID',model:'gemini-3.8-flash'},
  {key:'deepseek',name:'DeepSeek',secret:'DEEPSEEK_API_KEY',hint:'Model ID',model:'deepseek-flash'},
  {key:'xai',name:'Grok · xAI',secret:'XAI_API_KEY',hint:'Model ID',model:'grok-4.7'},
- {key:'meta',name:'Meta Model API',secret:'META_MODEL_API_KEY',hint:'Enter model ID from the Meta Model API dashboard',model:''},
+ {key:'meta',name:'Meta Model API',secret:'META_MODEL_API_KEY',hint:'Meta Model API model ID',model:'muse-spark-1.3'},
  {key:'perplexity',name:'Perplexity',secret:'PERPLEXITY_API_KEY',hint:'Agent preset: fast, low, medium, high, xhigh',model:'fast'},
 ]
 const pages:Record<string,{title:string;category:string;description:string;prompt:string;icon:any}>={
