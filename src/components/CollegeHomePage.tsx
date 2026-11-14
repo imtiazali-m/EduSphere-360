@@ -379,10 +379,10 @@ export function CollegeHomePage({ navigate, initialSection }: Props) {
               <div className="gidc-public-rich-copy">
                 <span className="gidc-public-about-kicker">GOVERNMENT DEGREE COLLEGE · BADIN</span>
                 <h2>Learning, opportunity and community</h2>
-                <p>{content.aboutText.trim() ? content.aboutText : DEFAULT_CONTENT.aboutText}</p>
+                <p>{textValue(content.aboutText).trim() ? textValue(content.aboutText) : DEFAULT_CONTENT.aboutText}</p>
                 <div className="gidc-public-mission">
                   <span>OUR EDUCATIONAL PURPOSE</span>
-                  <p>{content.aboutMission.trim() ? content.aboutMission : DEFAULT_CONTENT.aboutMission}</p>
+                  <p>{textValue(content.aboutMission).trim() ? textValue(content.aboutMission) : DEFAULT_CONTENT.aboutMission}</p>
                 </div>
                 <div className="gidc-public-about-official-links">
                   <a className="gidc-public-inline-link" href="https://college.sindh.gov.pk/government-colleges" target="_blank" rel="noreferrer">Government of Sindh college directory <ExternalLink size={15}/></a>
