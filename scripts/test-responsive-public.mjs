@@ -147,7 +147,7 @@ async function inspectViewport({name,width,height}) {
       await page.locator('.es-auth-page').waitFor({state:'visible'})
       await page.locator('.es-auth-form').first().waitFor({state:'visible'})
       const selected=page.locator('.es-account-type button[aria-pressed="true"] b')
-      await page.waitForFunction(expected=>
+      await page.waitForFunction(expected =>
         document.querySelector('.es-account-type button[aria-pressed="true"] b')?.textContent?.trim()===expected,
         category,
       )
@@ -161,6 +161,7 @@ async function inspectViewport({name,width,height}) {
 
     await page.goto(`${baseUrl}/#/login/owner`,{waitUntil:'domcontentloaded'})
     await page.locator('.es-auth-page').waitFor({state:'visible'})
+    await page.getByRole('heading', { name: 'Welcome back', exact: true }).waitFor({state:'visible'})
     await page.getByRole('button',{name:'Forgot your password?'}).click()
     await page.getByRole('heading',{name:'Reset your password'}).waitFor({state:'visible'})
     await page.getByRole('button',{name:'Send password-reset link'}).waitFor({state:'visible'})
