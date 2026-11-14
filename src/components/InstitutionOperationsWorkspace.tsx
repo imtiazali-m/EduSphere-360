@@ -64,6 +64,7 @@ export function InstitutionOperationsWorkspace({workspaceKey,initialWindow,onToa
   const teacher=['owner','admin','teacher'].includes(user!.role)
   const firstView=(views[selectedDomain] as string[]).includes(initialWindow??'')?initialWindow as View:initialViews[selectedDomain] as View
   const [view,setView]=useState<View>(firstView)
+  useEffect(()=>{setView(firstView);setSearch('');setListPage(1)},[initialWindow,selectedDomain])
   const [loading,setLoading]=useState(true)
   const [busy,setBusy]=useState(false)
   const [error,setError]=useState('')
@@ -444,7 +445,7 @@ export function InstitutionOperationsWorkspace({workspaceKey,initialWindow,onToa
   const recordCount=selectedDomain==='question-bank'?questions.length+papers.length:selectedDomain==='curriculum'?curriculum.length:selectedDomain==='behaviour'?behaviour.length:selectedDomain==='certificates'?certificates.length:selectedDomain==='visitors'?visitors.length:assets.length+maintenance.length
   const viewRowCount=selectedDomain==='question-bank'?Math.max(visibleQuestions.length,visiblePapers.length)
     :selectedDomain==='curriculum'?visibleCurriculum.length
-    :selectedDomain==='behaviour'?visibleBehaviour.filter(row=>view==='positive'?row.event_type==='positive':view==='follow-up'?row.follow_up_required===true:view==='register'?row.event_type!=='positive':true).length
+    :selectedDomain==='behaviour'?visibleBehaviour.filter(row=>view==='positive'?row.event_type==='positive':view==='follow-up'?row.follow_up_required===true:view==='skills'?String(row.category??'').toLowerCase().includes('skill'):view==='activities'?String(row.category??'').toLowerCase().includes('activity')||String(row.category??'').toLowerCase().includes('co-curricular'):view==='competencies'?String(row.category??'').toLowerCase().includes('competenc'):view==='register'?row.event_type!=='positive':true).length
     :selectedDomain==='certificates'?visibleCertificates.length
     :selectedDomain==='visitors'?visibleVisitors.filter(row=>view==='checked-in'?row.status==='checked_in':view==='history'?['checked_out','denied','cancelled'].includes(String(row.status)):true).length
     :view==='history'?maintenance.filter(row=>['completed','cancelled'].includes(String(row.status))).length
