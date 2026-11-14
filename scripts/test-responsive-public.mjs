@@ -44,12 +44,21 @@ async function inspectViewport({name,width,height}){
     assert.match(title,/Government Islamia.*Degree College Badin/i,`${name}: college identity is missing`)
     const headline=(await page.locator('.gidc-hero h1').innerText()).replace(/\s+/g,' ').trim()
     assert.match(headline,/Knowledge opens doors.*Education builds futures/i,`${name}: college homepage headline is missing`)
-    for(const id of ['about','programmes','admissions','campus-life','notices','portals','official-links','contact']){
+    for(const id of ['about','programmes','admissions','campus-life','gallery','notices','portals','official-links','affiliations','contact']){
       assert.equal(await page.locator('#'+id).count(),1,`${name}: missing college section #${id}`)
     }
     assert.ok(await page.locator('.gidc-image-disclaimer').innerText().then(value=>/representative education imagery/i.test(value)),`${name}: stock-photo disclosure is missing`)
+    assert.equal(await page.locator('.gidc-crest-image').first().getAttribute('src'),'/gidc-badin-official-logo.svg',`${name}: supplied college emblem is not in the page identity`)
+    assert.equal(await page.locator('.gidc-gallery-slide').count(),7,`${name}: the seven-image gallery is incomplete`)
+    assert.equal(await page.locator('.gidc-affiliation-grid .gidc-affiliation-card').count(),3,`${name}: college and institutional logos are missing`)
     assert.equal(await page.locator('.gidc-portal-card').count(),6,`${name}: role-specific portal entry points are missing`)
     assert.equal(await page.locator('.gidc-link-grid > a').count(),3,`${name}: official education-resource links are missing`)
+    assert.equal(await page.locator('.gidc-directory-link a').count(),1,`${name}: the official Government Colleges directory link is missing`)
+    await page.locator('.gidc-gallery-pause').click()
+    const galleryBefore = await page.locator('.gidc-gallery-track').getAttribute('style')
+    await page.locator('.gidc-gallery-controls button[aria-label="Next gallery image"]').click()
+    await page.waitForFunction(previous => document.querySelector('.gidc-gallery-track')?.getAttribute('style') !== previous, galleryBefore)
+    assert.equal(await page.locator('.gidc-gallery-slide').count(),7,`${name}: the gallery slider lost its slides`)
     await assertNoHorizontalOverflow(page,`${name} college homepage`)
     await mkdir(artifactDir,{recursive:true})
     await page.screenshot({path:`${artifactDir}/${name}-college-home.png`,fullPage:true,animations:'disabled'})
