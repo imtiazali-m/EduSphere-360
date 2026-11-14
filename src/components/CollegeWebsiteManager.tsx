@@ -383,19 +383,24 @@ export function CollegeWebsiteManager({ onToast }: { onToast: (message: string, 
           failures.push(file.name + ': ' + (error instanceof Error ? error.message : 'upload failed'))
         }
       }
-      setContent(current => {
-        const gallery = [...current.gallery]
-        photoItems.forEach(item => {
-          const index = gallery.findIndex(existing => existing.id === item.id || existing.title === item.title)
-          if (index >= 0) gallery[index] = { ...gallery[index], ...item }
-          else gallery.push(item)
-        })
-        return { ...current, gallery }
+      const gallery = [...content.gallery]
+      photoItems.forEach(item => {
+        const index = gallery.findIndex(existing => existing.id === item.id || existing.title === item.title)
+        if (index >= 0) gallery[index] = { ...gallery[index], ...item }
+        else gallery.push(item)
       })
+      const nextContent = { ...content, gallery }
+      setContent(nextContent)
       const doneCount = photoItems.length + (importedPoster ? 1 : 0)
       const summary = `Imported ${doneCount} approved college image(s). ${skipped} logo/identity reference image(s) were skipped. The fifth teacher-guidance photograph was placed under Events.`
-      setStatusMessage(failures.length ? summary + ' Some files failed: ' + failures.join('; ') : summary)
-      onToast(failures.length ? 'Some college images could not be uploaded.' : summary, failures.length > 0)
+      if (doneCount > 0) {
+        await persistWebsiteContent(nextContent, true)
+        setStatusMessage(failures.length ? summary + ' Some files failed: ' + failures.join('; ') : summary + ' The public website has been saved and published.')
+        onToast(failures.length ? 'Images imported; some files need attention.' : 'College photographs and the approved poster are published.', failures.length > 0)
+      } else {
+        setStatusMessage(failures.length ? summary + ' ' + failures.join('; ') : summary)
+        onToast(failures.length ? 'No images were imported.' : summary, failures.length > 0)
+      }
     } finally {
       if (!uploadAlreadyActive) setUploading(false)
     }
@@ -453,27 +458,32 @@ export function CollegeWebsiteManager({ onToast }: { onToast: (message: string, 
     }
   }
 
+  async function persistWebsiteContent(nextContent: SiteContent, makePublic: boolean) {
+    if (!supabase || !user) throw new Error('The public website service is not available.')
+    const payload = {
+      institution_id: user.institutionId,
+      category: 'website',
+      setting_key: 'public_site',
+      setting_value: nextContent,
+      is_public: makePublic,
+      updated_by: user.id,
+    }
+    if (recordId) {
+      const { error } = await supabase.from('institution_settings').update(payload).eq('id', recordId)
+      if (error) throw error
+    } else {
+      const { data, error } = await supabase.from('institution_settings').insert(payload).select('id').single()
+      if (error) throw error
+      setRecordId(String(data.id))
+    }
+    setPublished(makePublic)
+  }
+
   async function saveWebsite() {
-    if (!supabase || !user) return
     setSaving(true)
     setStatusMessage('')
     try {
-      const payload = {
-        institution_id: user.institutionId,
-        category: 'website',
-        setting_key: 'public_site',
-        setting_value: content,
-        is_public: published,
-        updated_by: user.id,
-      }
-      if (recordId) {
-        const { error } = await supabase.from('institution_settings').update(payload).eq('id', recordId)
-        if (error) throw error
-      } else {
-        const { data, error } = await supabase.from('institution_settings').insert(payload).select('id').single()
-        if (error) throw error
-        setRecordId(String(data.id))
-      }
+      await persistWebsiteContent(content, published)
       setStatusMessage(published ? 'Website content saved and published.' : 'Draft saved. Public visitors will not see these changes until publication is enabled.')
       onToast(published ? 'Public website updated.' : 'Website draft saved.')
     } catch (error) {
