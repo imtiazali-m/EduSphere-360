@@ -68,9 +68,9 @@ const roleItemAllow:Record<string,Partial<Record<string,string[]>>>={
     parent:['Fees Dashboard','Fee Invoices','Payment Collection','Fee Receipts','Outstanding Dues'],
   },
   attendance:{
-    student:['Student Attendance','Leave Management','Student Counselling & Wellbeing','Health & Emergency Records'],
-    parent:['Student Attendance','Leave Management','Student Counselling & Wellbeing','Health & Emergency Records'],
-    teacher:['Student Attendance','Teacher Attendance','QR / Barcode Check-in','Leave Management','Attendance Reports'],
+    student:['Student Attendance','Leave Applications','Student Counselling & Wellbeing','Health & Emergency Records'],
+    parent:['Student Attendance','Leave Applications','Student Counselling & Wellbeing','Health & Emergency Records'],
+    teacher:['Student Attendance','Teacher Attendance','QR / Barcode Check-in','Leave Applications','Leave Balances','Leave Reports','Attendance Reports'],
   },
   timetable:{
     student:['Timetable Dashboard','Class Timetable','Period Timetable','Timetable History'],

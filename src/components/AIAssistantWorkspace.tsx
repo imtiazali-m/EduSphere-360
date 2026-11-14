@@ -11,7 +11,7 @@ type ProviderStatus=Record<ProviderKey,{configured:boolean}>
 type Message={id:string;role:'user'|'assistant';content:string;provider?:string;sources?:{title?:string;url?:string;snippet?:string}[]}
 const providers:{key:ProviderKey;label:string;model:string}[]=[
  {key:'openai',label:'ChatGPT / OpenAI',model:'gpt-6.1-sol'},
- {key:'anthropic',label:'Claude',model:'claude-sonnet-5-5'},
+ {key:'anthropic',label:'Claude',model:'claude-sonnet-5'},
  {key:'gemini',label:'Gemini',model:'gemini-3.8-flash'},
  {key:'deepseek',label:'DeepSeek',model:'deepseek-flash'},
  {key:'xai',label:'Grok',model:'grok-4.7'},

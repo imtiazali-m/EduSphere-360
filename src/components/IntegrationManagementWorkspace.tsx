@@ -9,7 +9,7 @@ type ProviderKey = 'openai'|'anthropic'|'gemini'|'deepseek'|'xai'|'meta'|'perple
 type ProviderState = Record<string,{configured:boolean}>
 const providers:{key:ProviderKey;name:string;model:string;secret:string;purpose:string}[]=[
  {key:'openai',name:'OpenAI',model:'gpt-6.1-sol',secret:'OPENAI_API_KEY',purpose:'Reasoning, document assistance and institutional insights'},
- {key:'anthropic',name:'Anthropic Claude',model:'claude-sonnet-5-5',secret:'ANTHROPIC_API_KEY',purpose:'Long-form analysis, policy and document review'},
+ {key:'anthropic',name:'Anthropic Claude',model:'claude-sonnet-5',secret:'ANTHROPIC_API_KEY',purpose:'Long-form analysis, policy and document review'},
  {key:'gemini',name:'Google Gemini',model:'gemini-3.8-flash',secret:'GEMINI_API_KEY',purpose:'Multimodal learning assistance and analysis'},
  {key:'deepseek',name:'DeepSeek',model:'deepseek-flash',secret:'DEEPSEEK_API_KEY',purpose:'Cost-conscious analytical and coding tasks'},
  {key:'xai',name:'xAI Grok',model:'grok-4.7',secret:'XAI_API_KEY',purpose:'Research and reasoning tasks'},
@@ -46,18 +46,19 @@ const steps:Record<Exclude<PageKey,'overview'|'ai-providers'>,{number:string;hea
   {number:'04',heading:'Add lessons to the learning library',detail:'Teachers select an approved video, map it to subject, class and chapter, then publish it as a learning resource. Student progress is recorded by EduSphere, not inferred from a public video view.'},
  ],
  biometric:[
-  {number:'01',heading:'Choose a supported reader first',detail:'Select a fingerprint scanner/terminal that explicitly supports Android integration, a documented SDK/API, device identity and server/event export. A generic camera or phone power-button fingerprint sensor is not a student scanner.'},
-  {number:'02',heading:'Set up a supervised enrolment station',detail:'An authorised staff member verifies the student’s identity and records consent/notice. Enrol two fingers where supported and provide an accessible non-biometric alternative.'},
-  {number:'03',heading:'Keep fingerprint templates on the reader',detail:'The reader should create and match biometric templates locally. The college system stores a student-to-reader template reference, not raw fingerprint images or reusable fingerprint templates.'},
-  {number:'04',heading:'Send signed attendance events',detail:'A trusted Android companion app or device gateway sends a signed event containing student ID, device ID, timestamp, event type and match result to a protected Supabase Edge Function. Duplicate events are rejected.'},
-  {number:'05',heading:'Verify, reconcile and audit',detail:'Test multiple students, failed matches, offline queue/resync, duplicate scans, device clock drift and manual override. Keep a full audit trail and allow manual/QR attendance if a reader fails.'},
+  {number:'01',heading:'Use the teacher’s phone biometric for staff verification',detail:'Register a passkey/WebAuthn credential for every owner, administrator and teacher. When that staff member opens attendance or submits the register, the phone may ask for its enrolled fingerprint, face or device PIN. This proves the staff account holder is present; it does not identify a student.'},
+  {number:'02',heading:'Add a separate student fingerprint reader',detail:'To identify students one by one, pair a supported USB-C OTG or Bluetooth fingerprint reader with the teacher’s Android phone, or use a fixed attendance terminal. The phone’s built-in power-button sensor is controlled by Android and cannot be used by the website to enrol or scan other people.'},
+  {number:'03',heading:'Confirm identity and enrol each student',detail:'An authorised enrolment operator checks the student against the admission record, records the required student/parent notice and consent, then enrols the agreed fingers using the reader vendor’s SDK. Provide a manual or QR alternative for students who cannot or do not use biometrics.'},
+  {number:'04',heading:'Match locally and keep templates protected',detail:'The reader/approved companion app must perform 1:N student matching and return a student ID plus a match result. Keep encrypted biometric templates inside the reader or its approved secure device store; do not upload fingerprint photos or reusable templates to the college database.'},
+  {number:'05',heading:'Send a signed attendance event to EduSphere',detail:'The companion app sends institution ID, student ID, reader/device ID, class/section, period, timestamp and match result to a protected Supabase Edge Function. The server validates the roster and attendance session, rejects replay/duplicate events and writes the attendance record.'},
+   {number:'06',heading:'Test online, offline and exception handling',detail:'Test false rejects, duplicate scans, device clock changes, lost phones, offline event queues and secure resynchronisation. Keep a complete audit trail and a teacher-controlled manual correction path.'},
  ],
 }
 const requiredSecrets:Record<Exclude<PageKey,'overview'|'ai-providers'>,string[]> = {
  zoom:['ZOOM_ACCOUNT_ID','ZOOM_CLIENT_ID','ZOOM_CLIENT_SECRET','ZOOM_WEBHOOK_SECRET_TOKEN'],
- google:['GOOGLE_CLIENT_ID','GOOGLE_CLIENT_SECRET','GOOGLE_TOKEN_ENCRYPTION_KEY'],
+ google:['GOOGLE_CLIENT_ID','GOOGLE_CLIENT_SECRET','GOOGLE_REDIRECT_URI','GOOGLE_TOKEN_ENCRYPTION_KEY'],
  youtube:['YOUTUBE_DATA_API_KEY (only for search/metadata)','GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET (only for channel OAuth)'],
- biometric:['No student fingerprint image/template secret belongs in the browser. Device SDK credentials and webhook signing key are server-side.'],
+ biometric:['BIOMETRIC_EVENT_SIGNING_SECRET','Vendor Android SDK / device registration credentials (stored securely by the trusted companion app)','WebAuthn/passkey credentials are public-key registrations; no raw staff fingerprint is stored in EduSphere.'],
 }
 const PageIcon:Record<PageKey,LucideIcon>={overview:Cloud,'ai-providers':Activity,zoom:Video,google:Cloud,youtube:Youtube,biometric:Fingerprint}
 
