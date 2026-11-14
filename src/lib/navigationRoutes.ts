@@ -247,6 +247,8 @@ const institutionalOperationsItems: Record<string, Record<string,string>> = {
   behaviour: {
     'behaviour-dashboard':'register','behaviour-records':'register','positive-behaviour':'positive',
     'disciplinary-incidents':'register','rewards-and-recognition':'positive','warnings':'register',
+    'student-skills':'skills','co-curricular-activities':'activities','competency-tracking':'competencies',
+    'student-progress-history':'progress','behaviour-analytics':'analytics','downloadable-behaviour-reports':'reports',
   },
   certificates: {
     'certificate-dashboard':'verify','character-certificate':'issue','leaving-certificate':'issue',
@@ -493,7 +495,11 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
     const stage7Routes:Record<string,string>={
       'student-attendance':'attendance:students',
       'teacher-attendance':'attendance:teachers',
-      'staff-attendance':'attendance:staff',\n      'attendance-history':'attendance:history',\n      'automatic-attendance':'attendance:devices',\n      'attendance-cards':'attendance:cards',\n      'biometric-attendance':'attendance:biometric',
+      'staff-attendance':'attendance:staff',
+      'attendance-history':'attendance:history',
+      'automatic-attendance':'attendance:devices',
+      'attendance-cards':'attendance:cards',
+      'biometric-attendance':'attendance:biometric',\n      'attendance-history':'attendance:history',\n      'automatic-attendance':'attendance:devices',\n      'attendance-cards':'attendance:cards',\n      'biometric-attendance':'attendance:biometric',
       'leave-management':'care:leave',
       'attendance-reports':'attendance:reports',
       'student-discipline':'care:discipline',
