@@ -438,3 +438,5 @@ button,input,select,textarea { font:inherit; }
     animation-duration:.01ms !important;
   }
 }
+
+.pro-window-panel .ed360-personal-account-name-card { grid-column:1 / -1; }
