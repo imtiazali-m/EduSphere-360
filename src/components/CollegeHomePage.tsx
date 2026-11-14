@@ -164,7 +164,7 @@ export function CollegeHomePage({ navigate, initialSection }: Props) {
             .order('public_profile_order', { ascending: true })
             .order('full_name', { ascending: true }),
           supabase.from('announcements')
-            .select('id,title,body,created_at,published_at')
+            .select('id,title,body,created_at,published_at,image_url')
             .in('institution_id', PUBLIC_INSTITUTION_IDS)
             .eq('is_public', true)
             .order('created_at', { ascending: false })
@@ -190,6 +190,7 @@ export function CollegeHomePage({ navigate, initialSection }: Props) {
           body: String(item.body),
           date: new Date(item.published_at || item.created_at).toLocaleDateString('en-PK', { day: 'numeric', month: 'short', year: 'numeric' }),
           published: true,
+          imageUrl: item.image_url || undefined,
         }))
         if (live) {
           setContent(merged)
@@ -537,7 +538,7 @@ function EmptyState({ icon: Icon, title, detail }: { icon: typeof Users; title: 
 
 function NewsCard({ item }: { item: WebsiteNews }) {
   return <article className="gidc-public-news-card">
-    {item.imageUrl && <img className="gidc-public-news-image" src={item.imageUrl} alt={item.title} loading="lazy"/>}
+    {item.imageUrl && <a className="gidc-public-news-image-link" href={item.imageUrl} target="_blank" rel="noreferrer" aria-label={'Open poster image for ' + item.title}><img className="gidc-public-news-image" src={item.imageUrl} alt={item.title + ' poster'} loading="lazy"/></a>}
     <div className="gidc-public-news-icon"><CalendarDays size={22}/></div>
     <div><small>{item.date || 'COLLEGE NOTICE'}</small><h3>{item.title}</h3><p>{item.body}</p>{item.url && <a href={item.url} target="_blank" rel="noreferrer">Open notice <ExternalLink size={14}/></a>}</div>
   </article>
