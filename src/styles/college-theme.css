@@ -709,3 +709,5 @@ button,input,select,textarea { font:inherit; }
   .ed360-admin-audit-page .ed360-admin-kpis { grid-template-columns:1fr; }
   .ed360-admin-search-row { align-items:stretch; flex-direction:column; }
 }
+
+.pro-nav-dashboard-link .pro-nav-chevron { display:none !important; }
