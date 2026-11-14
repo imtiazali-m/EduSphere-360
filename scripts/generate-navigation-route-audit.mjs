@@ -43,6 +43,7 @@ const classify = (route) => {
     'employees', 'exam_results', 'exams', 'fees', 'finance', 'files', 'governance',
     'academic', 'care', 'peoplehr', 'notifications', 'operations', 'overview', 'payroll', 'reports', 'students',
     'timetable', 'work_tasks', 'personal', 'assistant', 'frontoffice',
+    'data-management', 'custom-reports', 'messaging', 'hostel', 'procurement', 'cafeteria', 'library-reading','receipt-operations','payment-operations','asset-lifecycle','scheduled-reports','helpdesk','duplicate-detection','certificate-forms',
   ])
   if (!known.has(workspace)) return 'Unexpected route family · investigate'
   if (rootRoute && !intentionalRootRoutes.has(route)) return 'Bare module root · confirm the intended default window'
@@ -50,13 +51,8 @@ const classify = (route) => {
 }
 
 const dashboardSource = fs.readFileSync(path.join(root, 'src/components/Dashboard.tsx'), 'utf8')
-const linkedWorkspaceKeys = [
-  'administration:campus-and-branch-management',
-  'library:book-issue-and-returns', 'library:library-reports',
-  'inventory:stock-in', 'inventory:stock-out', 'inventory:stock-allocation',
-  'inventory:stock-adjustments', 'inventory:inventory-history', 'inventory:stock-reports',
-  'transport:student-transport-allocation', 'transport:transport-reports',
-]
+const linkedWorkspaceKeys = ["administration:campus-and-branch-management","library:library-dashboard","library:book-management","library:book-catalogue","library:book-categories","library:book-registration","library:book-issue-and-returns","library:digital-library","library:learning-materials","library:resource-downloads","library:library-reports","inventory:inventory-dashboard","inventory:items-management","inventory:item-catalogue","inventory:item-categories","inventory:stock-in","inventory:stock-out","inventory:stock-allocation","inventory:stock-adjustments","inventory:inventory-history","inventory:stock-reports","transport:transport-dashboard","transport:vehicle-management","transport:drivers-management","transport:transport-routes","transport:route-stops","transport:student-transport-allocation","transport:transport-fees","transport:transport-assignments","transport:vehicle-maintenance","transport:transport-attendance","transport:transport-history","transport:transport-reports"]
+
 for (const key of linkedWorkspaceKeys) {
   if (!dashboardSource.includes("'" + key + "'")) {
     throw new Error('Workspace dispatch allow-list is out of sync for ' + key)
@@ -70,6 +66,7 @@ for (const token of [
   '<FinanceWorkspace ', '<PayrollWorkspace ', '<PeopleHRWorkspace ', '<GovernanceWorkspace ',
   '<InstitutionOperationsWorkspace ', '<LinkedOperationsWorkspace ',
   '<InstitutionalWorkspace ', '<AssessmentWorkspace ', '<AcademicManagementWorkspace ', '<FacultyWorkspace ', '<RecordModule ',
+  '<DataManagementWorkspace ', '<CustomReportsWorkspace ', '<CommunicationWorkspace ', '<HostelWorkspace ', '<ProcurementWorkspace ', '<CafeteriaWorkspace ', '<LibraryReadingWorkspace ', '<ReceiptWorkspace ', '<PaymentOperationsWorkspace ', '<AssetLifecycleWorkspace ', '<ScheduledReportsWorkspace ', '<HelpdeskWorkspace ', '<DuplicateDetectionWorkspace ', '<CertificateFormsWorkspace ',
 ]) {
   if (!dashboardSource.includes(token)) throw new Error('Dashboard dispatcher no longer contains ' + token)
 }
@@ -80,6 +77,20 @@ const resolveDispatcher = (route) => {
   if (route === 'accounts') return 'AccountsModule'
   if (route === 'files') return 'FilesModule'
   if (route === 'profile') return 'ProfileModule'
+  if (route.startsWith('data-management:')) return 'DataManagementWorkspace'
+  if (route.startsWith('custom-reports:')) return 'CustomReportsWorkspace'
+  if (route.startsWith('messaging:')) return 'CommunicationWorkspace'
+  if (route.startsWith('hostel:')) return 'HostelWorkspace'
+  if (route.startsWith('procurement:')) return 'ProcurementWorkspace'
+  if (route.startsWith('cafeteria:')) return 'CafeteriaWorkspace'
+  if (route.startsWith('library-reading:')) return 'LibraryReadingWorkspace'
+  if (route.startsWith('receipt-operations:')) return 'ReceiptWorkspace'
+  if (route.startsWith('payment-operations:')) return 'PaymentOperationsWorkspace'
+  if (route.startsWith('asset-lifecycle:')) return 'AssetLifecycleWorkspace'
+  if (route.startsWith('scheduled-reports:')) return 'ScheduledReportsWorkspace'
+  if (route.startsWith('helpdesk:')) return 'HelpdeskWorkspace'
+  if (route.startsWith('duplicate-detection:')) return 'DuplicateDetectionWorkspace'
+  if (route.startsWith('certificate-forms:')) return 'CertificateFormsWorkspace'
   if (route.startsWith('personal:')) return 'PersonalWorkspace'
   if (route.startsWith('frontoffice:')) return 'FrontOfficeWorkspace'
   if (route.startsWith('assistant:')) return 'AIAssistantWorkspace'

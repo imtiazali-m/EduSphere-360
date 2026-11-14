@@ -41,6 +41,20 @@ import { PayrollWorkspace } from './PayrollWorkspace'
 import { PeopleHRWorkspace } from './PeopleHRWorkspace'
 import { GovernanceWorkspace } from './GovernanceWorkspace'
 import { InstitutionOperationsWorkspace } from './InstitutionOperationsWorkspace'
+import { DataManagementWorkspace } from './DataManagementWorkspace'
+import { CustomReportsWorkspace } from './CustomReportsWorkspace'
+import { CommunicationWorkspace } from './CommunicationWorkspace'
+import { HostelWorkspace } from './HostelWorkspace'
+import { ProcurementWorkspace } from './ProcurementWorkspace'
+import { CafeteriaWorkspace } from './CafeteriaWorkspace'
+import { LibraryReadingWorkspace } from './LibraryReadingWorkspace'
+import { ReceiptWorkspace } from './ReceiptWorkspace'
+import { PaymentOperationsWorkspace } from './PaymentOperationsWorkspace'
+import { AssetLifecycleWorkspace } from './AssetLifecycleWorkspace'
+import { ScheduledReportsWorkspace } from './ScheduledReportsWorkspace'
+import { HelpdeskWorkspace } from './HelpdeskWorkspace'
+import { DuplicateDetectionWorkspace } from './DuplicateDetectionWorkspace'
+import { CertificateFormsWorkspace } from './CertificateFormsWorkspace'
 import { AcademicManagementWorkspace } from './AcademicManagementWorkspace'
 import { supabase } from '../lib/supabase'
 import { readDisplayPreferences, writeDisplayPreferences, type DashboardDisplayPreferences, type DashboardFontSize } from '../lib/displayPreferences'
@@ -118,6 +132,63 @@ function money(value: number) {
 function getRows(data: Dataset, key: string) { return data[key] ?? [] }
 function sumOutstanding(rows: RecordRow[]) {
   return rows.reduce((total, row) => total + outstandingInvoiceBalance(row), 0)
+}
+
+function customPermissionModuleForRoute(route: string): string | undefined {
+  const prefix = route.split(':')[0]
+  const dedicated: Record<string,string> = {
+    hostel: 'hostel',
+    procurement: 'procurement',
+    cafeteria: 'cafeteria',
+    messaging: 'communications',
+    helpdesk: 'helpdesk',
+    'duplicate-detection': 'data_management',
+    'data-management': 'data_management',
+    'scheduled-reports': 'reports',
+    'custom-reports': 'reports',
+    'asset-lifecycle': 'facilities',
+    'payment-operations': 'fees',
+    'receipt-operations': 'fees',
+    'library-reading': 'library',
+    'certificate-forms': 'forms',
+  }
+  if (dedicated[prefix]) return dedicated[prefix]
+  const parts = route.split(':')
+  if (prefix === 'institutional') {
+    const workspace = parts[1]
+    const mapped: Record<string,string> = {
+      library: 'library',
+      inventory: 'inventory',
+      transport: 'transport',
+      examinations: 'examinations',
+      administration: 'administration',
+    }
+    return mapped[workspace]
+  }
+  if (prefix === 'operations') {
+    const workspace = parts[1]
+    const mapped: Record<string,string> = {
+      facilities: 'facilities',
+      certificates: 'certificates',
+      reports: 'reports',
+      curriculum: 'academic_setup',
+    }
+    return mapped[workspace]
+  }
+  if (prefix === 'finance' || prefix === 'fees') return 'fees'
+  if (prefix === 'students') return 'students'
+  if (prefix === 'employees' || prefix === 'peoplehr') return 'employees'
+  if (prefix === 'attendance' || prefix === 'care') return 'attendance'
+  if (prefix === 'exams' || prefix === 'exam_results' || prefix === 'examinations') return 'examinations'
+  if (prefix === 'assignments' || prefix === 'assignment_submissions') return 'assignments'
+  if (prefix === 'timetable') return 'timetable'
+  if (prefix === 'transport') return 'transport'
+  if (prefix === 'inventory') return 'inventory'
+  if (prefix === 'reports') return 'reports'
+  if (prefix === 'announcements' || prefix === 'notifications') return 'announcements'
+  if (prefix === 'frontoffice') return 'announcements'
+  if (prefix === 'admin') return 'administration'
+  return undefined
 }
 
 function buildStats(role: AppRole, data: Dataset) {
@@ -638,7 +709,6 @@ export function Dashboard({ onToast }: Props) {
   }, [activeNavigationTab.groupKey])
 
   const available = useMemo(() => modulesForRole(user!.role), [user?.role])
-  const visibleGroups = useMemo(() => roleNavigationGroups(user!.role), [user?.role])
   const visibleSections = useMemo(() => {
     const sections = roleNavigationSections(user!.role,stage7CareAreas)
     if (!user?.customAccessConfigured || user.role === 'owner') return sections
@@ -646,11 +716,11 @@ export function Dashboard({ onToast }: Props) {
     const groupModules: Record<string,string[]> = {
       dashboard: [],
       administration: ['administration','departments','campuses','settings','approvals','work_tasks','announcements'],
-      backup: ['institutional_records'],
+      backup: ['institutional_records','data_management'],
       'people-hr': ['students','employees','hr','payroll','certificates'],
       attendance: ['attendance','employee_attendance'],
       behaviour: ['behaviour'],
-      certificates: ['certificates'],
+      certificates: ['certificates','forms'],
       'academic-management': ['academic_setup','programs','subjects','assignments'],
       'question-bank': ['examinations'],
       examinations: ['examinations'],
@@ -662,28 +732,38 @@ export function Dashboard({ onToast }: Props) {
       payments: ['fees'],
       receipts: ['fees'],
       reconciliation: ['fees','payroll'],
-      communication: ['announcements'],
+      communication: ['announcements','communications','helpdesk'],
       transport: ['transport'],
-      inventory: ['inventory'],
-      facilities: ['facilities'],
+      inventory: ['inventory','procurement','cafeteria'],
+      facilities: ['facilities','hostel'],
       visitors: ['visitors'],
-      reports: ['students','attendance','examinations','fees','payroll'],
+      reports: ['students','attendance','examinations','fees','payroll','reports','data_management'],
       ai: ['ai'],
     }
     return sections.map(section => ({
       ...section,
-      groups: section.groups.filter(group => group.key === 'dashboard' || (groupModules[group.key] ?? []).some(moduleKey => (grants[moduleKey] ?? []).includes('view'))),
+      groups: section.groups.flatMap(group => {
+        if (group.key === 'dashboard') return [group]
+        const groupAllowed = (groupModules[group.key] ?? []).some(moduleKey => ['view','create'].some(action => (grants[moduleKey] ?? []).includes(action)))
+        if (!groupAllowed) return []
+        const items = group.items.filter(title => {
+          const route = getNavigationRoute(group.key,title,user!.role) ?? ''
+          const moduleKey = customPermissionModuleForRoute(route)
+          return !moduleKey || ['view','create'].some(action => (grants[moduleKey] ?? []).includes(action))
+        })
+        return items.length ? [{ ...group, items }] : []
+      }),
     })).filter(section => section.groups.length > 0)
   }, [user?.role,user?.customAccessConfigured,user?.customRolePermissions,stage7CareAreas])
   const searchResults = useMemo(() => {
     const query = searchText.trim().toLowerCase()
     if (!query) return []
-    const items = visibleGroups.flatMap(group => (group.key === 'dashboard' ? ['Dashboard'] : group.items).map(title => {
+    const items = visibleSections.flatMap(section => section.groups).flatMap(group => (group.key === 'dashboard' ? ['Dashboard'] : group.items).map(title => {
       const itemKey = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
       return { title, group: group.label, groupKey: group.key, itemKey, route: getNavigationRoute(group.key, title, user!.role) }
     }))
     return items.filter(item => item.route && `${item.title} ${item.group}`.toLowerCase().includes(query)).slice(0, 8)
-  }, [searchText, visibleGroups])
+  }, [searchText, visibleSections])
 
   useEffect(() => {
     const media = window.matchMedia('(max-width: 820px)')
@@ -957,10 +1037,24 @@ export function Dashboard({ onToast }: Props) {
           {workspaceTabs.map(tab => {
             const tabModule = available.find(module => module.key === tab.targetKey)
             const tabAdminKey = tab.targetKey.startsWith('admin:') ? tab.targetKey.slice(6) : undefined
-            const linkedWorkspaceKeys = ['administration:campus-and-branch-management','library:book-issue-and-returns','library:library-reports','inventory:stock-in','inventory:stock-out','inventory:stock-allocation','inventory:stock-adjustments','inventory:inventory-history','inventory:stock-reports','transport:student-transport-allocation','transport:transport-reports']
+            const linkedWorkspaceKeys = ['administration:campus-and-branch-management','library:library-dashboard','library:book-management','library:book-catalogue','library:book-categories','library:book-registration','library:book-issue-and-returns','library:digital-library','library:learning-materials','library:resource-downloads','library:library-reports','inventory:inventory-dashboard','inventory:items-management','inventory:item-catalogue','inventory:item-categories','inventory:stock-in','inventory:stock-out','inventory:stock-allocation','inventory:stock-adjustments','inventory:inventory-history','inventory:stock-reports','transport:transport-dashboard','transport:vehicle-management','transport:drivers-management','transport:transport-routes','transport:route-stops','transport:student-transport-allocation','transport:transport-fees','transport:transport-assignments','transport:vehicle-maintenance','transport:transport-attendance','transport:transport-history','transport:transport-reports']
             return <section className="pro-window-panel" key={tab.id} hidden={activeTabId !== tab.id} aria-label={tab.title}>
               {tab.targetKey === 'notifications' ? <NotificationCenter onToast={onToast} onUnreadCountChange={setUnreadAnnouncementCount}/> :
                 tab.targetKey === 'overview' ? <RoleDashboard onNavigate={navigateChild}/> :
+                tab.targetKey === 'data-management' ? <DataManagementWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'custom-reports' ? <CustomReportsWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'messaging' ? <CommunicationWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'hostel' ? <HostelWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'procurement' ? <ProcurementWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'cafeteria' ? <CafeteriaWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'library-reading' ? <LibraryReadingWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'receipt-operations' ? <ReceiptWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'payment-operations' ? <PaymentOperationsWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'asset-lifecycle' ? <AssetLifecycleWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'scheduled-reports' ? <ScheduledReportsWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'helpdesk' ? <HelpdeskWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'duplicate-detection' ? <DuplicateDetectionWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'certificate-forms' ? <CertificateFormsWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'institutional' && tab.targetWindow.startsWith('examinations:') ? <AssessmentWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'institutional' && linkedWorkspaceKeys.includes(tab.targetWindow) ? <LinkedOperationsWorkspace workspaceKey={tab.targetWindow} onToast={onToast} onNavigate={navigateChild}/> :
                 tab.targetKey === 'institutional' ? <InstitutionalWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
