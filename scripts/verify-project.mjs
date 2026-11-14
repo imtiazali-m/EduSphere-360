@@ -25,7 +25,7 @@ check('Vite development and production scripts exist', () => {
 })
 
 const requiredFiles = [
-  'index.html', 'src/main.tsx', 'src/App.tsx', 'src/components/Dashboard.tsx', 'src/components/RoleDashboard.tsx', 'src/components/role-dashboard.css', 'src/components/WorkspaceUnavailable.tsx',
+  'index.html', 'src/main.tsx', 'src/App.tsx', 'src/components/Dashboard.tsx', 'src/components/RoleDashboard.tsx', 'src/components/role-dashboard.css', 'src/components/WorkspaceUnavailable.tsx', 'src/components/BackupDataWorkspace.tsx', 'src/components/backup-data-workspace.css',
   'src/components/FinanceWorkspace.tsx', 'src/styles/finance-workspace.css', 'src/styles/student-promotion-workspace.css', 'src/styles/navigation-refinement.css',
   'src/components/PayrollWorkspace.tsx', 'src/styles/payroll-workspace.css',
   'src/components/GovernanceWorkspace.tsx', 'src/components/AdministrationStage5Workspace.tsx', 'src/components/PeopleHRWorkspace.tsx', 'src/components/EmployeeQualificationsPanel.tsx', 'src/styles/people-hr-workspace.css', 'src/styles/governance-workspace.css',
@@ -101,9 +101,9 @@ check('The full institutional menu maps every submenu to a working destination',
   assert.deepEqual(peopleHR?.items.map(item => item.label), ['Students','Admissions & Enrollment','Teachers','Faculty & Staff','Parents & Guardians','HR & Recruitment','Employee Contracts & Documents','Employee Performance','Payroll & Salary Records','Alumni'], 'People & HR must contain the ten approved Stage 6 destinations')
   assert.deepEqual(administration?.items.map(item => item.label), [
     'Institute Profile','Campus and Branch Management','Academic Structure & Sections','Department Directory','Designation Catalogue',
-    'Organisational Structure','System Configuration','Approval Workflows','Student Policies','Faculty Policies','Administrative Audit',
+    'Organisational Structure','Approval Workflows','Student Policies','Faculty Policies','Administrative Audit',
     'User Access & Invitations','Role & Permission Management','Institute Settings','Branding & Document Settings','Security & Access History',
-  ], 'Administration must contain exactly the 14 specified submenus in order')
+  ], 'Administration must retain the requested dedicated submenus in order')
   assert.ok(!navigationCatalog.some(group => ['institution-config','academic-sessions','classes-sections','subjects','curriculum','timetable','teaching'].includes(group.key)), 'Nested setup and academic workspaces must not remain separate top-level menus')
   const permittedLinkedRoutes = new Set([
     'administration:campus-and-branch-management',
@@ -160,7 +160,7 @@ check('The full institutional menu maps every submenu to a working destination',
   assert.equal(getNavigationRoute('students', 'Student ID Cards'), 'students:id-cards', 'Student ID Cards must open the print workspace')
   assert.equal(getNavigationRoute('employees', 'Employee ID Cards'), 'employees:id-cards', 'Employee ID Cards must open the staff print workspace')
   assert.equal(getNavigationRoute('ai', 'AI Assistant'), 'assistant:chat', 'AI Assistant must open its dedicated shell while keeping sending disabled until a provider is configured')
-  assert.equal(getNavigationRoute('backup', 'Create Backup'), 'unavailable:backup:create-backup', 'Backup menu must not claim to create a backup without a platform backup service')
+  assert.equal(getNavigationRoute('backup', 'Create Backup'), 'backup:create-backup', 'Create Backup must open the dedicated logical export snapshot workspace')
   assert.equal(getNavigationRoute('communication', 'WhatsApp Integration'), 'unavailable:communication:whatsapp-integration', 'External messaging must remain unconnected until credentials and delivery tests exist')
   assert.equal(getNavigationRoute('communication', 'Notification Centre'), 'notifications', 'In-app notifications remain a supported communication workflow')
   assert.equal(getNavigationRoute('people-hr', 'Teachers'), 'employees:directory-teaching', 'Teachers must open the teaching directory window')
@@ -205,11 +205,9 @@ check('The full institutional menu maps every submenu to a working destination',
 
 
 check('Sidebar workspaces follow the approved parent-section sequence for every role', () => {
-  const expectedGroupOrder = ["dashboard","administration","backup","people-hr","attendance","behaviour","certificates","academic-management","question-bank","examinations","class-tests","library","accounts-finance","fees","receivables","payments","receipts","reconciliation","communication","transport","inventory","facilities","visitors","reports","ai"]
+  const expectedGroupOrder = ["dashboard","reports","ai","administration","academic-management","attendance","examinations","behaviour","people-hr","certificates","question-bank","class-tests","library","accounts-finance","fees","receivables","payments","receipts","reconciliation","communication","transport","inventory","facilities","visitors","backup"]
   const completeCatalogOrder = ["dashboard","administration","institution-config","academic-sessions","classes-sections","subjects","backup","people-hr","attendance","behaviour","certificates","academic-management","curriculum","timetable","teaching","question-bank","examinations","class-tests","library","accounts-finance","fees","receivables","payments","receipts","reconciliation","communication","transport","inventory","facilities","visitors","reports","ai"]
-  assert.deepEqual(navigationSectionDefinitions.map(section => section.key), [
-    'overview','setup','people','academics','finance','communication','campus','intelligence',
-  ])
+  assert.deepEqual(navigationSectionDefinitions.map(section => section.key), ['main'], 'The sidebar must use one continuous, unlabelled navigation list')
   assert.deepEqual(navigationSectionDefinitions.flatMap(section => section.groupKeys), expectedGroupOrder)
   assert.deepEqual(navigationCatalog.map(group => group.key), expectedGroupOrder)
   assert.deepEqual(institutionalMenu.map(group => group.key), completeCatalogOrder, 'Nested administration and academic destinations remain in the full route catalogue')
