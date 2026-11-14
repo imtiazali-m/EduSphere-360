@@ -1,6 +1,6 @@
 # Migration history
 
-The seventy-seven timestamped migration files in this folder match the remote migration history recorded by the linked Supabase project. Keep each 14-digit timestamp unchanged so local and remote migration histories remain aligned.
+The seventy-eight timestamped migration files in this folder match the remote migration history recorded by the linked Supabase project. Keep each 14-digit timestamp unchanged so local and remote migration histories remain aligned.
 
 The current online application includes the reviewed schema changes for the existing live schema, Faculty & Employee Management, and Student Management operations (admission lifecycle, linked guardian contacts, class placements, private student documents and audit history for attendance, published results, assignment submissions, guardian policy consolidation and activity indexes). The Student Management and Faculty/Employee migrations have already been applied to the linked project; do not replay them manually.
 
@@ -106,3 +106,5 @@ The current permission guard covers direct RLS-backed access to the listed table
 
 - `20261113175058_college_custom_role_high_impact_rpc_guards.sql` adds the custom-profile checks to question-paper approval, payroll approval and adjustments, transport fee charge creation, and institutional setting approval RPCs. These checks run in addition to the original base membership-role checks.
 - `20261114032847_college_operations_custom_permission_guards.sql` adds custom-profile action checks to receipts, scheduled report execution, facilities, hostel fee payments, gateway review, transport fee payments, forms review, duplicate review, and helpdesk ticket updates. It also adds restrictive RLS policies over the new operational tables; campus/department scope is derived where the related records contain that scope, and is conservatively unavailable for global operational tables without scope columns.
+
+- `20261114033300_college_permission_role_variable_fix.sql` corrects the custom permission helper's PL/pgSQL variable name so profile base-role comparisons use the authenticated member's role, not PostgreSQL's `CURRENT_ROLE` special expression. A transaction-only test verified that explicitly granted module/actions are allowed and an unlisted module/action is denied; all test rows were rolled back.
