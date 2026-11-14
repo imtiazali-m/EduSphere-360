@@ -174,7 +174,15 @@ export function CollegeHomePage({ navigate, initialSection }: Props) {
         if (facultyResult.error) throw facultyResult.error
         if (announcementsResult.error) throw announcementsResult.error
         const saved = (settingsResult.data?.setting_value ?? {}) as WebsiteContent
-        const merged = { ...DEFAULT_CONTENT, ...saved }
+        const savedGallery = Array.isArray(saved.gallery) ? saved.gallery : []
+        const merged = {
+          ...DEFAULT_CONTENT,
+          ...saved,
+          gallery: [
+            ...savedGallery,
+            ...(DEFAULT_CONTENT.gallery ?? []).filter(seed => !savedGallery.some(item => item.id === seed.id)),
+          ],
+        }
         const profiles = (facultyResult.data ?? []) as FacultyProfile[]
         const publicNotices: WebsiteNews[] = (announcementsResult.data ?? []).map(item => ({
           id: 'internal-' + item.id,
