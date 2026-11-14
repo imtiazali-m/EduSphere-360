@@ -43,3 +43,14 @@
 .s7-chart-legend>span>i.absent{background:#d65c56}.s7-chart-legend>span>i.leave{background:#d5a84a}.s7-chart-legend>span>i.other{background:#aebbb1}
 .s7-chart-legend>span>strong{margin-left:auto;color:#17221a}
 @media(max-width:600px){.s7-chart-row{align-items:flex-start;flex-direction:column}.s7-attendance-donut{width:120px;height:120px;flex-basis:120px}}
+
+.s7-leave-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:14px 0 18px}
+.s7-leave-kpis article{display:grid;gap:6px;min-width:0;padding:14px 15px;border:1px solid var(--border,#e5eae6);border-radius:11px;background:var(--surface,#fff)}
+.s7-leave-kpis span{font-size:11px;color:#68796f}
+.s7-leave-kpis strong{font-size:23px;line-height:1.15;color:var(--text,#1e2b23)}
+.s7-period-range{display:grid;align-content:center;gap:4px;min-width:170px;padding:8px 11px;border:1px solid var(--border,#e5eae6);border-radius:9px;background:var(--surface,#fff)}
+.s7-period-range small{font-size:9px;letter-spacing:.09em;font-weight:800;color:#718078}
+.s7-period-range b{font-size:11px;color:var(--text,#1e2b23)}
+@media(max-width:760px){.s7-leave-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.s7-period-range{min-width:0}}
+@media(max-width:480px){.s7-leave-kpis{grid-template-columns:1fr 1fr}.s7-leave-kpis article{padding:11px}.s7-leave-kpis strong{font-size:20px}}
+[data-theme=dark] .s7-leave-kpis article,[data-theme=dark] .s7-period-range{background:var(--surface,#17221c)}
