@@ -84,7 +84,6 @@ const attendanceViews: Record<string, string> = {
   'faculty-and-staff-attendance': 'staff',
   'bulk-staff-attendance': 'staff',
   'attendance-corrections': 'history',
-  'leave-applications': 'leave',
   'late-arrival': 'history',
   'early-departure': 'staff',
   'attendance-calendar': 'history',
@@ -343,7 +342,21 @@ function dedicatedRoute(groupKey: string, itemKey: string): string | undefined {
     return view && view !== 'unavailable' ? `employees:${view}` : undefined
   }
   if (groupKey === 'attendance') {
-    if (itemKey === 'leave-applications') return 'employees:leave'
+    const careRoutes:Record<string,string> = {
+      'leave-management':'care:leave-applications',
+      'leave-applications':'care:leave-applications',
+      'leave-review-approvals':'care:leave-approvals',
+      'leave-balances':'care:leave-balances',
+      'leave-reports':'care:leave-reports',
+      'attendance-reports':'care:reports',
+      'student-attendance-reports':'care:reports-students',
+      'teacher-attendance-reports':'care:reports-teachers',
+      'staff-attendance-reports':'care:reports-staff',
+      'student-discipline':'care:discipline',
+      'student-counselling-wellbeing':'care:counselling',
+      'health-emergency-records':'care:health',
+    }
+    if(careRoutes[itemKey])return careRoutes[itemKey]
     const view = attendanceViews[itemKey]
     return view ? `attendance:${view}` : undefined
   }
@@ -527,22 +540,6 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
     return 'unavailable:students:student-data-export'
   }
   if (groupKey === 'students' && itemKey === 'student-data-export') return 'students:directory'
-  if(groupKey==='attendance'){
-    const stage7Routes:Record<string,string>={
-      'student-attendance':'attendance:students',
-      'teacher-attendance':'attendance:teachers',
-      'staff-attendance':'attendance:staff',
-      'leave-management':'care:leave-applications','leave-applications':'care:leave-applications','leave-review-approvals':'care:leave-approvals','leave-balances':'care:leave-balances','leave-reports':'care:leave-reports',
-      'attendance-reports':'care:reports',
-      'student-attendance-reports':'care:reports-students',
-      'teacher-attendance-reports':'care:reports-teachers',
-      'staff-attendance-reports':'care:reports-staff',
-      'student-discipline':'care:discipline',
-      'student-counselling-wellbeing':'care:counselling',
-      'health-emergency-records':'care:health',
-    }
-    if(stage7Routes[itemKey])return stage7Routes[itemKey]
-  }
   if (groupKey === 'attendance' && itemKey === 'attendance-analytics') return 'reports:attendance'
   if (groupKey === 'attendance' && itemKey === 'attendance-alerts') return 'unavailable:attendance:attendance-alerts'
   if (groupKey === 'certificates' && itemKey === 'form-builder') return 'reports:forms'
