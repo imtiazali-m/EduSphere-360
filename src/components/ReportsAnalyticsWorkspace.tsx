@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { CalendarDays, Download, RefreshCw, Search } from 'lucide-react'
 import '../styles/reports-analytics-workspace.css'
 import { useAuth } from '../context/AuthContext'
@@ -159,9 +159,9 @@ export function ReportsAnalyticsWorkspace({initialWindow='overview',onToast}:{in
  async function saveTemplate(){
   if(!templateName.trim()){onToast('Enter a template name.',true);return}
   if(!supabase||!user)return
-  try{const result=await supabase.from('institution_report_definitions').insert({institution_id:user.institutionId,name:templateName.trim(),source_module:pageKey==='templates'?'exam_results':customSource,template_key:examTemplate,selected_fields:pageKey==='templates'?COLUMNS.exam_results.map(c=>c.key):customFields,filters:{scope:templateScope,template:examTemplate},export_format:exportFormat,created_by:user.id,updated_by:user.id}).select('*').single();if(result.error)throw result.error;setSavedDefinitions(v=>[result.data,...v]);setTemplateName('');onToast('Report template saved in the institution template library.')}catch(e){onToast(userFacingError(e,'The report template could not be saved.'),true)}
+  try{const result=await supabase.from('institution_report_definitions').insert({institution_id:user.institutionId,name:templateName.trim(),source_module:customSource,template_key:examTemplate,selected_fields:customFields,filters:{scope:templateScope,template:examTemplate},export_format:exportFormat,created_by:user.id,updated_by:user.id}).select('*').single();if(result.error)throw result.error;setSavedDefinitions(v=>[result.data,...v]);setTemplateName('');onToast('Report template saved in the institution template library.')}catch(e){onToast(userFacingError(e,'The report template could not be saved.'),true)}
  }
- async function saveSchedule(event:React.FormEvent<HTMLFormElement>){
+ async function saveSchedule(event:FormEvent<HTMLFormElement>){
   event.preventDefault();if(!supabase||!user)return
   if(!scheduleName.trim()){onToast('Enter a schedule name.',true);return}
   try{const result=await supabase.from('institution_report_schedules').insert({institution_id:user.institutionId,name:scheduleName.trim(),report_name:scheduleReportName,source_module:scheduleSource,cadence:scheduleFrequency,delivery_channel:scheduleDelivery,timezone:'Asia/Karachi',next_run_at:new Date(scheduleNextRun).toISOString(),is_enabled:false,paused_reason:'Scheduler worker not configured. This schedule is saved but will not execute automatically.',created_by:user.id,updated_by:user.id}).select('*').single();if(result.error)throw result.error;setSavedSchedules(v=>[result.data,...v]);setScheduleName('');onToast('Schedule saved. It is paused until the institution report scheduler is configured.')}catch(e){onToast(userFacingError(e,'The report schedule could not be saved.'),true)}
