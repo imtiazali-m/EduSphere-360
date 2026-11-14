@@ -26,6 +26,8 @@ export function PersonalWorkspace({initialWindow,onToast,onNavigate}:{initialWin
  const [activity,setActivity]=useState<ActivityRow[]>([])
  const [activityLoading,setActivityLoading]=useState(false)
  const [activityError,setActivityError]=useState('')
+ const [accountName,setAccountName]=useState(user?.fullName??'')
+ const [savingName,setSavingName]=useState(false)
  const [emailCurrentPassword,setEmailCurrentPassword]=useState('')
  const [newEmail,setNewEmail]=useState('')
  const [savingEmail,setSavingEmail]=useState(false)
@@ -34,6 +36,8 @@ export function PersonalWorkspace({initialWindow,onToast,onNavigate}:{initialWin
  const [confirmPassword,setConfirmPassword]=useState('')
  const [savingPassword,setSavingPassword]=useState(false)
  const [savingPreferences,setSavingPreferences]=useState(false)
+
+ useEffect(()=>{setAccountName(user?.fullName??'')},[user?.fullName])
 
  useEffect(()=>{
   try{
@@ -67,6 +71,23 @@ export function PersonalWorkspace({initialWindow,onToast,onNavigate}:{initialWin
   ['Institution',user?.institutionName??'—'],['Institution type',user?.institutionType?.replaceAll('_',' ')??'—'],
   ['Account ID',user?.id??'—'],
  ],[user])
+
+ async function updateAccountName(event:FormEvent){
+  event.preventDefault()
+  if(!supabase||!user)return
+  const fullName=accountName.trim()
+  if(fullName.length<2){onToast('Enter a name with at least two characters.',true);return}
+  if(fullName===user.fullName.trim())return
+  setSavingName(true)
+  try{
+   const {error:profileError}=await supabase.from('profiles').update({full_name:fullName}).eq('id',user.id)
+   if(profileError)throw profileError
+   const {error:authError}=await supabase.auth.updateUser({data:{full_name:fullName}})
+   if(authError)throw new Error('Your name was saved, but the account view could not be refreshed. Sign out and back in to reload it.')
+   onToast('Your account name was updated.')
+  }catch(error){onToast(error instanceof Error?error.message:'Your account name could not be updated.',true)}
+  finally{setSavingName(false)}
+ }
 
  async function updateEmail(event:FormEvent){
   event.preventDefault()
@@ -128,6 +149,13 @@ export function PersonalWorkspace({initialWindow,onToast,onNavigate}:{initialWin
     <article className="ed360-personal-card"><h3>Account information</h3><dl>{profileItems.map(([label,value])=><div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl><p className="ed360-personal-note"><ShieldCheck size={15}/> Institution-controlled details are read-only here. Ask an authorised administrator to correct them.</p></article>
    </div>}
    {section==='account'&&<div className="ed360-personal-account-grid">
+    <article className="ed360-personal-card ed360-personal-form-card ed360-personal-account-name-card">
+     <div className="ed360-personal-card-heading"><span><UserRound size={18}/></span><div><h3>Account information</h3><p>Keep your personal display name up to date.</p></div></div>
+     <form onSubmit={updateAccountName}>
+      <label>Full name<input type="text" autoComplete="name" value={accountName} onChange={event=>setAccountName(event.target.value)} minLength={2} maxLength={120} required/></label>
+      <div className="ed360-personal-form-actions"><span>This changes your own account profile only.</span><button type="submit" disabled={savingName||accountName.trim()===user?.fullName.trim()}>{savingName?'Saving…':'Save name'}</button></div>
+     </form>
+    </article>
     <article className="ed360-personal-card ed360-personal-form-card">
      <div className="ed360-personal-card-heading"><span><UserRound size={18}/></span><div><h3>Change sign-in email</h3><p>Update the email address used to access this account.</p></div></div>
      <p className="ed360-personal-current-email">Current email <b>{user?.email||'Not available'}</b></p>
