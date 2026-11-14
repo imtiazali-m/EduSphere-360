@@ -63,7 +63,7 @@ async function callProvider(provider:string,key:string,model:string,system:strin
     const url="https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent?key="+encodeURIComponent(key);
     data=await requestJson(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({systemInstruction:{parts:[{text:system}]},contents:[{role:"user",parts:[{text:combined}]}],generationConfig:{maxOutputTokens:1800}})});
   }else if(provider==="deepseek"||provider==="xai"||provider==="meta"){
-    const base=provider==="deepseek"?"https://api.deepseek.com":provider==="xai"?"https://api.x.ai":"https://api.meta.ai";
+    const base=provider==="deepseek"?"https://api.deepseek.com":provider==="xai"?"https://api.x.ai":"https://api.meta.ai/v1";
     data=await requestJson(base+"/chat/completions",{method:"POST",headers:{"Authorization":"Bearer "+key,"Content-Type":"application/json"},body:JSON.stringify({model,messages:[{role:"system",content:system},{role:"user",content:combined}],max_tokens:1800,stream:false})});
   }else if(provider==="perplexity"){
     data=await requestJson("https://api.perplexity.ai/v1/agent",{method:"POST",headers:{"Authorization":"Bearer "+key,"Content-Type":"application/json"},body:JSON.stringify({model:model||"perplexity/sonar",input:system+"\n\n"+combined,tools:[{type:"web_search"}],max_output_tokens:1800,stream:false})});
