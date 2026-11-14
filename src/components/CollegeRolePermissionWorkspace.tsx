@@ -134,10 +134,10 @@ const templates: { name: string; base_role: BaseRole; description: string; permi
     visitors:['view','create','edit'],announcements:['view'],work_tasks:['view','create'],helpdesk:['create','view']
   }},
   { name:'Student', base_role:'student', description:'Personal learning, attendance, assignments, published results, fee status and certificates.', permissions:{
-    students:['view'],attendance:['view'],assignments:['view','create'],examinations:['view'],fees:['view'],announcements:['view'],certificates:['view'],library:['view'],behaviour:['view'],forms:['view','create'],helpdesk:['create','view'],communications:['view','create']
+    students:['view'],attendance:['view'],assignments:['view','create'],examinations:['view'],fees:['view'],announcements:['view'],certificates:['view'],library:['view'],behaviour:['view'],forms:['view','create'],helpdesk:['create','view'],communications:['view','create','edit']
   }},
   { name:'Parent / Guardian', base_role:'parent', description:'View information belonging only to verified linked students.', permissions:{
-    students:['view'],attendance:['view'],assignments:['view'],examinations:['view'],fees:['view'],announcements:['view'],certificates:['view'],behaviour:['view'],forms:['view','create'],helpdesk:['create','view'],communications:['view','create']
+    students:['view'],attendance:['view'],assignments:['view'],examinations:['view'],fees:['view'],announcements:['view'],certificates:['view'],behaviour:['view'],forms:['view','create'],helpdesk:['create','view'],communications:['view','create','edit']
   }},
 ]
 
