@@ -13,7 +13,7 @@ const GIDC_IDS = [
   '20b0493c-1e73-421f-91f0-6868eeadd838',
   '1df694ac-22c1-4b5c-a2c3-a176382511bf',
 ]
-type PhotoCategory = 'main-campus' | 'campus-activities' | 'college-events' | 'student-life' | 'campus-facility'
+type PhotoCategory = 'main-campus' | 'academic-learning' | 'campus-activities' | 'college-events' | 'student-life' | 'campus-facility'
 type Program = { id: string; title: string; detail: string; officialUrl: string }
 type Photo = { id: string; title: string; category: PhotoCategory; imageUrl: string; sourceUrl: string; published: boolean; alt: string }
 type Notice = { id: string; title: string; body: string; date: string; url: string; imageUrl: string; published: boolean }
@@ -95,6 +95,7 @@ const emptyContent: SiteContent = {
 
 const categories: { value: PhotoCategory; label: string }[] = [
   { value: 'main-campus', label: 'Main campus' },
+  { value: 'academic-learning', label: 'Academics & classrooms' },
   { value: 'campus-activities', label: 'Campus activities' },
   { value: 'college-events', label: 'College events' },
   { value: 'student-life', label: 'Student life' },
@@ -212,6 +213,78 @@ export function CollegeWebsiteManager({ onToast }: { onToast: (message: string, 
       const message = error instanceof Error ? error.message : 'Image upload failed.'
       setStatusMessage(message)
       onToast(message, true)
+    } finally {
+      setUploading(false)
+      event.target.value = ''
+    }
+  }
+
+  async function handleBulkPhotoUpload(event: ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(event.target.files ?? [])
+    if (!files.length) return
+    setUploading(true)
+    setStatusMessage('Importing college photographs…')
+    const photoItems: Photo[] = []
+    const noticeItems: Notice[] = []
+    const failures: string[] = []
+    let skipped = 0
+    try {
+      for (const file of files) {
+        const fileName = file.name.toLowerCase()
+        const relativePath = (file.webkitRelativePath || file.name).toLowerCase()
+        if (/office-holder|identity-unconfirmed|principal-portrait|college-logo|logo-reference/.test(fileName)) {
+          skipped += 1
+          continue
+        }
+        try {
+          if (/pakistan-navy-recruitment-awareness-poster|announcement-poster/.test(fileName)) {
+            const imageUrl = await uploadImage(file, 'news')
+            noticeItems.push({
+              id: makeId('notice'),
+              title: 'Pakistan Navy Recruitment & Awareness Session',
+              body: 'Official college poster supplied for the News & Announcements section.',
+              date: '',
+              url: '',
+              imageUrl,
+              published: true,
+            })
+            continue
+          }
+          let category: PhotoCategory = 'academic-learning'
+          if (relativePath.includes('03_facilities') || /book-shelves|study-room/.test(fileName)) category = 'campus-facility'
+          else if (relativePath.includes('04_campus') || /college-entrance/.test(fileName)) category = 'main-campus'
+          else if (/student-assembly/.test(fileName)) category = 'student-life'
+          else if (relativePath.includes('05_events') || /student-guidance|recognition|meeting|flag-event|navy-awareness|staff-|student-staff/.test(fileName)) category = 'college-events'
+          const isFeaturedFifth = fileName.includes('student-guidance-session-event-05')
+          const imageUrl = isFeaturedFifth
+            ? '/gidc-badin/events/student-guidance-session-event-05.webp'
+            : await uploadImage(file, 'gallery')
+          photoItems.push({
+            id: isFeaturedFifth ? 'gidc-event-guidance-05' : makeId('photo'),
+            title: file.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ').replace(/\b\w/g, letter => letter.toUpperCase()),
+            category,
+            imageUrl,
+            sourceUrl: '',
+            published: true,
+            alt: file.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' '),
+          })
+        } catch (error) {
+          failures.push(file.name + ': ' + (error instanceof Error ? error.message : 'upload failed'))
+        }
+      }
+      setContent(current => {
+        const gallery = [...current.gallery]
+        photoItems.forEach(item => {
+          const index = gallery.findIndex(existing => existing.id === item.id || existing.title === item.title)
+          if (index >= 0) gallery[index] = { ...gallery[index], ...item }
+          else gallery.push(item)
+        })
+        return { ...current, gallery, news: [...current.news, ...noticeItems] }
+      })
+      const doneCount = photoItems.length + noticeItems.length
+      const summary = `Imported ${doneCount} approved image(s). ${skipped} identity/logo reference image(s) skipped.`
+      setStatusMessage(failures.length ? summary + ' Some files failed: ' + failures.join('; ') : summary)
+      onToast(failures.length ? 'Some college images could not be uploaded.' : summary, failures.length > 0)
     } finally {
       setUploading(false)
       event.target.value = ''
@@ -433,7 +506,11 @@ export function CollegeWebsiteManager({ onToast }: { onToast: (message: string, 
         </AdminSection>
 
         <AdminSection icon={ImagePlus} title="Campus photographs & gallery" description="Upload or link authentic college photographs and assign each one to its correct gallery category.">
-          <p className="cwm-help">Placement guide: campus/building views go under Main campus; room and shelf photographs under Campus facilities; student-only assemblies under Student life; staff presentations, mixed student-and-teacher group photographs, guest visits and sessions under College events or Campus activities. The mixed student/staff group photo belongs in Events, not Student life.</p>
+          <div className="cwm-bulk-upload">
+            <div><b>Import the sorted college photo folder</b><span>Extract the supplied ZIP, then select its GIDC_Badin_Images_Sorted folder. Images are assigned by their folder and filenames; the unidentified office portrait and logo reference are skipped.</span></div>
+            <label className="cwm-upload"><Upload size={17}/><span>{uploading ? 'Importing photographs…' : 'Select sorted image folder'}</span><input type="file" accept="image/*" multiple {...({ webkitdirectory: true } as Record<string, boolean>)} disabled={uploading} onChange={event => void handleBulkPhotoUpload(event)}/></label>
+          </div>
+          <p className="cwm-help">Placement guide: campus/building views go under Main campus; classroom photos under Academics & classrooms; room and shelf photographs under Campus facilities; student-only assemblies under Student life; staff presentations, mixed student-and-teacher group photographs, guest visits and sessions under College events. The fifth image is classified as an Event, not Student life.</p>
           {content.gallery.map((photo, index) => <div className="cwm-repeat-card" key={photo.id}>
             <div className="cwm-repeat-top"><b>Photograph {index + 1}</b><button type="button" aria-label="Remove photograph" onClick={() => set('gallery', content.gallery.filter(item => item.id !== photo.id))}><Trash2 size={15}/></button></div>
             <div className="cwm-fields-two"><TextInput label="Photo title" value={photo.title} onChange={value => updatePhoto(photo.id, { title: value })}/><label className="cwm-field"><span>Category</span><select value={photo.category} onChange={event => updatePhoto(photo.id, { category: event.target.value as PhotoCategory })}>{categories.map(item => <option value={item.value} key={item.value}>{item.label}</option>)}</select></label></div>
