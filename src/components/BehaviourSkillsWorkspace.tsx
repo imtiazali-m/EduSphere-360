@@ -117,7 +117,8 @@ export function BehaviourSkillsWorkspace({initialWindow='dashboard',onToast}:{in
   setSaving(true)
   try{
    if(formKind==='event'){
-    if(!form.student_id||!form.summary.trim()||!form.category.trim()){onToast('Select a student and enter a category and summary.',true);return}\n     if(form.follow_up_required&&!form.follow_up_date){onToast('Choose a follow-up date or clear Follow-up required.',true);return}
+    if(!form.student_id||!form.summary.trim()||!form.category.trim()){onToast('Select a student and enter a category and summary.',true);return}
+     if(form.follow_up_required&&!form.follow_up_date){onToast('Choose a follow-up date or clear Follow-up required.',true);return}
     const {error:saveError}=await supabase.from('student_behaviour_events').insert({
      institution_id:user.institutionId,student_id:form.student_id,event_type:form.event_type,category:form.category,severity:form.severity,
      event_date:form.event_date,summary:form.summary.trim(),description:form.description.trim()||null,action_taken:form.action_taken.trim()||null,
