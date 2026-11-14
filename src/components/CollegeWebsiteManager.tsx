@@ -440,6 +440,40 @@ export function CollegeWebsiteManager({ onToast }: { onToast: (message: string, 
     }
   }
 
+  async function uploadMagazinePdf(file: File) {
+    if (!supabase || !user) throw new Error('The college media service is not available.')
+    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) throw new Error('Choose a PDF magazine issue.')
+    if (file.size > 30 * 1024 * 1024) throw new Error('The PDF must be 30 MB or smaller.')
+    const safeName = file.name.replace(/\\.pdf$/i, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '').slice(0, 48) || 'college-magazine'
+    const storagePath = user.institutionId + '/website/magazines/' + Date.now() + '-' + safeName + '.pdf'
+    const { error } = await supabase.storage.from('gidc-public-media').upload(storagePath, file, {
+      cacheControl: '3600',
+      upsert: false,
+      contentType: 'application/pdf',
+    })
+    if (error) throw error
+    return supabase.storage.from('gidc-public-media').getPublicUrl(storagePath).data.publicUrl
+  }
+
+  async function handleMagazinePdfUpload(event: ChangeEvent<HTMLInputElement>, issue: Magazine) {
+    const file = event.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    try {
+      const pdfUrl = await uploadMagazinePdf(file)
+      updateMagazine(issue.id, { pdfUrl })
+      setStatusMessage('PDF uploaded. Save and publish the website to make this magazine issue public.')
+      onToast('Magazine PDF uploaded.')
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'The magazine PDF could not be uploaded.'
+      setStatusMessage(message)
+      onToast(message, true)
+    } finally {
+      setUploading(false)
+      event.target.value = ''
+    }
+  }
+
   async function handleAnnouncementImageUpload(event: ChangeEvent<HTMLInputElement>, item: InternalAnnouncement) {
     const file = event.target.files?.[0]
     if (!file || !supabase || !user) return
@@ -721,6 +755,7 @@ export function CollegeWebsiteManager({ onToast }: { onToast: (message: string, 
             <div className="cwm-repeat-top"><b>Magazine issue {index + 1}</b><button type="button" aria-label="Remove magazine issue" onClick={() => set('magazines', content.magazines.filter(item => item.id !== issue.id))}><Trash2 size={15}/></button></div>
             <div className="cwm-fields-two"><TextInput label="Magazine title" value={issue.title} onChange={value => updateMagazine(issue.id, { title: value })}/><TextInput label="Issue / volume" value={issue.issue} onChange={value => updateMagazine(issue.id, { issue: value })}/></div>
             <div className="cwm-fields-two"><TextInput label="Year" value={issue.year} onChange={value => updateMagazine(issue.id, { year: value })}/><TextInput label="PDF issue URL" value={issue.pdfUrl} onChange={value => updateMagazine(issue.id, { pdfUrl: value })}/></div>
+            <label className="cwm-upload cwm-upload-small"><Upload size={15}/><span>{uploading ? 'Uploading PDF…' : 'Upload PDF issue'}</span><input type="file" accept="application/pdf,.pdf" disabled={uploading} onChange={event => void handleMagazinePdfUpload(event, issue)}/></label>
             <div className="cwm-fields-two"><TextInput label="Cover image URL" value={issue.coverUrl} onChange={value => updateMagazine(issue.id, { coverUrl: value })}/><label className="cwm-upload cwm-upload-small"><Upload size={15}/><span>Upload cover</span><input type="file" accept="image/*" disabled={uploading} onChange={event => void handleImageUpload(event, 'magazine-covers', url => updateMagazine(issue.id, { coverUrl: url }))}/></label></div>
             <label className="cwm-check"><input type="checkbox" checked={issue.published} onChange={event => updateMagazine(issue.id, { published: event.target.checked })}/> Publish this magazine issue</label>
           </div>)}
