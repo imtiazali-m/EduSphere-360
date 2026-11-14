@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import '../styles/modern-workspace-refresh.css'
 
-type ProviderKey='openai'|'anthropic'|'gemini'|'deepseek'|'xai'|'meta'|'perplexity'
+type ProviderKey='auto'|'openai'|'anthropic'|'gemini'|'deepseek'|'xai'|'meta'|'perplexity'
 type ProviderStatus={configured:boolean;secretName:string}
 type Message={role:'user'|'assistant';content:string;time:string}
 const providers:{key:ProviderKey;name:string;secret:string;hint:string;model:string}[]=[
@@ -42,6 +42,7 @@ export function AIAssistantWorkspace({initialWindow='chat'}:{initialWindow?:stri
  const [model,setModel]=useState('gpt-6')
  const [status,setStatus]=useState<Partial<Record<ProviderKey,ProviderStatus>>>({})
  const [messages,setMessages]=useState<Message[]>([])
+ const [selectedAdmission,setSelectedAdmission]=useState('')
  const [prompt,setPrompt]=useState('')
  const [loading,setLoading]=useState(false)
  const [checking,setChecking]=useState(true)
@@ -49,11 +50,11 @@ export function AIAssistantWorkspace({initialWindow='chat'}:{initialWindow?:stri
  const [showProviders,setShowProviders]=useState(false)
  const [contextSummary,setContextSummary]=useState('No database context loaded')
  const [includeData,setIncludeData]=useState(true)
- const selectedProvider=providers.find(item=>item.key===provider)!
- const available=Boolean(status[provider]?.configured)
+ const selectedProvider=providers.find(item=>item.key===provider)??providers[0]
+ const available=provider==='auto'?providers.some(item=>status[item.key]?.configured===true):Boolean(status[provider]?.configured)
  const PageIcon=page.icon
 
- useEffect(()=>{setModel(providers.find(p=>p.key===provider)?.model??'')},[provider])
+ useEffect(()=>{setModel(provider==='auto'?'':providers.find(p=>p.key===provider)?.model??'')},[provider])
  useEffect(()=>{let active=true;(async()=>{if(!supabase||!user){setChecking(false);return}const {data,error:invokeError}=await supabase.functions.invoke('ai-assistant',{body:{action:'status',institutionId:user.institutionId}});if(!active)return;if(invokeError){setError('AI gateway is unavailable.');setChecking(false);return}if(data?.providers)setStatus(data.providers as Partial<Record<ProviderKey,ProviderStatus>>);setChecking(false)})();return()=>{active=false}},[user?.id,user?.institutionId])
 
  async function loadContext(){
@@ -128,8 +129,8 @@ export function AIAssistantWorkspace({initialWindow='chat'}:{initialWindow?:stri
    </div>
    <aside className="mw-side-column">
     <section className="mw-panel ai-model-panel"><div className="mw-panel-head"><div><span>MODEL ROUTING</span><h2>Choose a provider</h2></div><Sparkles size={18}/></div>
-     <label>AI provider<select value={provider} onChange={e=>setProvider(e.target.value as ProviderKey)}>{providers.map(p=><option key={p.key} value={p.key}>{p.name}</option>)}</select></label>
-     <label>Model identifier<input value={model} onChange={e=>setModel(e.target.value)} placeholder={selectedProvider.hint}/></label>
+     {pageKey==='student-analysis'&&<label>Student admission number<input value={selectedAdmission} onChange={e=>setSelectedAdmission(e.target.value)} placeholder="Admission number for this learner"/></label>}<label>AI provider<select value={provider} onChange={e=>setProvider(e.target.value as ProviderKey)}><option value="auto">Auto-select available provider</option>{providers.map(p=><option key={p.key} value={p.key}>{p.name}</option>)}</select></label>
+     <label>Model identifier<input value={model} onChange={e=>setModel(e.target.value)} placeholder={provider==='auto'?'Uses the selected provider default model':selectedProvider.hint} disabled={provider==='auto'}/></label>
      <div className="ai-provider-list">{providers.map(p=><div key={p.key}><span>{p.name}</span><b className={status[p.key]?.configured?'configured':''}>{checking?'Checking':status[p.key]?.configured?'Ready':'Key needed'}</b></div>)}</div>
      <p className="ai-secret-note"><ShieldCheck size={14}/> Keys are held in Supabase Edge Function secrets.</p>
      <button className="mw-secondary block" onClick={()=>setShowProviders(v=>!v)}><Settings2 size={14}/> Provider setup</button>
