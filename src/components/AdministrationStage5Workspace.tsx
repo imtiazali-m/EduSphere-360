@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { ArrowUpRight, BookOpen, Building2, CalendarDays, CheckCircle2, FileText, LockKeyhole, Palette, Plus, RefreshCw, Save, Search, ShieldCheck, Upload, Users, X } from 'lucide-react'
+import { ArrowUpRight, Building2, CheckCircle2, FileText, LockKeyhole, Palette, Plus, RefreshCw, Save, Search, ShieldCheck, Upload, Users, X } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { userFacingError } from '../lib/userErrors'
@@ -379,8 +379,6 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
   }
 
   function renderSettingsPage(){
-    const heading=section==='system'?'System configuration':'Brand and document defaults'
-    const description=section==='system'?'Manage the college’s internal system-level configuration values.':'Manage approved brand tokens and document template defaults.'
     return <div className="ed360-admin-stage5">
       {section==='branding'&&<section className="gov-panel"><header><div><h2>Brand preview</h2><p>Stored branding defaults. The private college logo is managed in Institute Profile.</p></div><Palette size={20}/></header><div className="ed360-admin-brand-preview"><span className="ed360-admin-brand-swatch" style={{background:primaryColor}}/><span><b>{displayInstitutionName(institution?.name)}</b><small style={{display:'block',color:'#859287',fontSize:10}}>Primary brand colour · {primaryColor}</small></span><span className="ed360-admin-brand-swatch" style={{background:accentColor}}/><small>Accent · {accentColor}</small></div></section>}
       <section className="gov-panel ed360-admin-settings-table-panel"><header><div><h2>{section==='system'?'System settings register':'Brand and document defaults'}</h2></div><div className="gov-row-actions">{section==='branding'?<><button className="gov-button primary" onClick={()=>openSetting(undefined,'branding')}><Plus size={14}/> Add brand setting</button><button className="gov-button" onClick={()=>openSetting(undefined,'documents')}><FileText size={14}/> Add document setting</button></>:<button className="gov-button primary" onClick={()=>openSetting(undefined,'system')}><Plus size={14}/> Add system setting</button>}</div></header>
@@ -424,6 +422,7 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
   }
   function renderContent(){
     if(section==='profile')return renderProfile()
+    if(section==='academic')return renderAcademic()
     if(section==='departments')return renderDepartments()
     if(section==='designations')return renderDesignations()
     if(section==='organization')return renderOrganization()
