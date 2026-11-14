@@ -166,7 +166,16 @@ export function CollegeWebsiteManager({ onToast }: { onToast: (message: string, 
         if (announcementsResult.error) throw announcementsResult.error
         if (settingsResult.data) {
           setRecordId(String(settingsResult.data.id))
-          setContent({ ...emptyContent, ...(settingsResult.data.setting_value as Partial<SiteContent>) })
+          const savedContent = settingsResult.data.setting_value as Partial<SiteContent>
+          const savedGallery = Array.isArray(savedContent.gallery) ? savedContent.gallery : []
+          setContent({
+            ...emptyContent,
+            ...savedContent,
+            gallery: [
+              ...savedGallery,
+              ...emptyContent.gallery.filter(seed => !savedGallery.some(item => item.id === seed.id)),
+            ],
+          })
           setPublished(Boolean(settingsResult.data.is_public))
         }
         setTeachers((teachersResult.data ?? []) as Teacher[])
