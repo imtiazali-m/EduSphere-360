@@ -508,6 +508,9 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
       'teacher-attendance':'attendance:teachers',
       'staff-attendance':'attendance:staff',
       'attendance-history':'attendance:history',
+      'student-attendance-reports':'attendance:student-reports',
+      'teacher-attendance-reports':'attendance:teacher-reports',
+      'staff-attendance-reports':'attendance:staff-reports',
       'automatic-attendance':'attendance:devices',
       'student-cards':'attendance:student-cards',
       'teacher-cards':'attendance:teacher-cards',
@@ -527,7 +530,7 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
   // Builder, schedules, templates and history are dedicated report workspaces.
   if (groupKey === 'question-bank' && ['question-bank-import-and-export','question-paper-version-history'].includes(itemKey)) return 'unavailable:question-bank:'+itemKey
   if (groupKey === 'curriculum' && ['teaching-resources','learning-materials','resource-downloads','chapter-wise-learning-resources','learning-progress-tracking'].includes(itemKey)) return 'unavailable:curriculum:'+itemKey
-  if (groupKey === 'behaviour' && ['student-progress-history','behaviour-analytics','downloadable-behaviour-reports'].includes(itemKey)) return 'unavailable:behaviour:'+itemKey
+  // Behaviour analytics, progress history and reports are handled by the dedicated behaviour workspace.
   if (groupKey === 'certificates' && ['experience-certificate','id-card-designer','certificate-templates','editable-document-templates','bulk-certificate-generation'].includes(itemKey)) return 'unavailable:certificates:'+itemKey
   if (groupKey === 'library' && ['reading-records','reading-cards','student-reading-history'].includes(itemKey)) return 'unavailable:library:'+itemKey
   if (groupKey === 'transport' && itemKey === 'transport-attendance') return 'unavailable:transport:transport-attendance'
