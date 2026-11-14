@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
-  Activity, ArrowRight, BookOpen, Building2, CalendarCheck, CalendarDays,
+  Activity, ArrowRight, BookOpen, Building2, CalendarCheck, CalendarDays, Globe2,
   ChevronDown, ChevronLeft, ChevronRight, ClipboardCheck, ClipboardList, DoorOpen, FileText,
   GraduationCap, LayoutDashboard, LogOut, Menu, Megaphone, PieChart, Search,
   School, Settings, ShieldCheck, Users, Wallet, X, UserRound, BrainCircuit,
@@ -42,6 +42,7 @@ import { PeopleHRWorkspace } from './PeopleHRWorkspace'
 import { GovernanceWorkspace } from './GovernanceWorkspace'
 import { InstitutionOperationsWorkspace } from './InstitutionOperationsWorkspace'
 import { AcademicManagementWorkspace } from './AcademicManagementWorkspace'
+import { CollegeWebsiteManager } from './CollegeWebsiteManager'
 import { supabase } from '../lib/supabase'
 import { readDisplayPreferences, writeDisplayPreferences, type DashboardDisplayPreferences, type DashboardFontSize } from '../lib/displayPreferences'
 import { displayInstitutionName } from '../lib/collegeIdentity'
@@ -931,6 +932,7 @@ export function Dashboard({ onToast }: Props) {
         </div>
 
         <div className="pro-topbar-right">
+          {['owner', 'admin'].includes(user!.role) && <button type="button" className="cwm-open-button" onClick={() => navigate('governance:website-content', { title: 'Public Website Content' })}><Globe2 size={16}/> Public website</button>}
           <div className="ed360-display-controls">
             <div className="ed360-view-switch" role="group" aria-label="Dashboard display mode">
               <button type="button" aria-pressed={displayPreferences.viewMode === 'modern'} onClick={() => setDisplayPreferences(current => ({ ...current, viewMode: 'modern' }))}>Modern</button>
@@ -975,6 +977,7 @@ export function Dashboard({ onToast }: Props) {
                 tab.targetKey === 'finance' ? <FinanceWorkspace workspaceKey={tab.targetWindow} initialWindow={tab.targetWindow.split(':')[1]} onToast={onToast}/> :
                 tab.targetKey === 'payroll' ? <PayrollWorkspace initialWindow={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'peoplehr' ? <PeopleHRWorkspace initialWindow={tab.targetWindow} onToast={onToast} onNavigate={navigateChild}/> :
+                tab.targetKey === 'governance' && tab.targetWindow === 'website-content' ? <CollegeWebsiteManager onToast={onToast}/> :
                 tab.targetKey === 'governance' ? <GovernanceWorkspace initialWindow={tab.targetWindow} onToast={onToast} onNavigate={navigateChild}/> :
                 tab.targetKey === 'operations' ? <InstitutionOperationsWorkspace workspaceKey={tab.targetWindow} initialWindow={tab.targetWindow.split(':')[1]} onToast={onToast}/> :
                 tab.targetKey === 'assistant' ? <AIAssistantWorkspace/> :
