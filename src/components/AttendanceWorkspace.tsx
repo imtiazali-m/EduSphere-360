@@ -81,19 +81,19 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
   setLoading(true);setLoadingError('')
   try{
    const [studentResult,staffResult]=await Promise.all([
-    supabase.from('students').select('id,full_name,admission_no,class_name,status,campus_id').eq('institution_id',user.institutionId).eq('status','active').order('class_name').order('full_name'),
+    supabase.from('students').select('id,full_name,admission_no,guardian_name,class_name,status,campus_id').eq('institution_id',user.institutionId).eq('status','active').order('class_name').order('full_name'),
     supabase.from('teachers').select('id,full_name,employee_no,employment_status,employee_type,department,campus_id').eq('institution_id',user.institutionId).eq('employment_status','active').order('full_name')
    ])
    if(studentResult.error && population==='students')throw studentResult.error
    if(staffResult.error && population!=='students' && (canManageStaff||isEmployeeSelf))throw staffResult.error
    const [classResult,placementResult]=await Promise.all([
     supabase.from('classes').select('id,name,section,campus_id').eq('institution_id',user.institutionId).eq('is_active',true),
-    supabase.from('student_placements').select('student_id,class_id,effective_from,effective_to,status,campus_id').eq('institution_id',user.institutionId).eq('status','active').is('effective_to',null)
+    supabase.from('student_placements').select('student_id,class_id,effective_from,effective_to,status,campus_id').eq('institution_id',user.institutionId).lte('effective_from',date).or('effective_to.is.null,effective_to.gte.'+date).order('effective_from',{ascending:false})
    ])
    if(classResult.error)throw classResult.error
    if(placementResult.error)throw placementResult.error
    const classMap=new Map((classResult.data??[]).map(row=>[String(row.id),row]))
-   const placementMap=new Map((placementResult.data??[]).map(row=>[String(row.student_id),row]))
+   const placementMap=new Map<string,typeof placementResult.data[number]>();for(const row of placementResult.data??[])if(!placementMap.has(String(row.student_id)))placementMap.set(String(row.student_id),row)
    setClassRecords((classResult.data??[]) as {id:string;name:string;section:string|null;campus_id:string|null}[])
    const roster=(studentResult.data??[]).map(row=>{const placement=placementMap.get(String(row.id));const linked=placement?classMap.get(String(placement.class_id)):undefined;return {...row,class_name:row.class_name??linked?.name??null,section_name:linked?.section??null,class_id:linked?.id??null} as Person})
    setStudents(roster)
