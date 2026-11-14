@@ -77,13 +77,15 @@ const { modules, modulesForRole } = require(path.join(root, 'src/lib/modules.ts'
 const roles = ['owner', 'admin', 'teacher', 'student', 'parent', 'accountant', 'exam_officer']
 
 check('The full institutional menu maps every submenu to a working destination', () => {
-  assert.equal(navigationCatalog.length, 25, 'The visible sidebar contains 27 main workspaces after Administration and Academic Management consolidation')
+  assert.equal(navigationCatalog.length, 25, 'The visible sidebar contains 25 main workspaces after Administration and academic consolidation')
   const groupKeys = new Set(navigationCatalog.map(group => group.key))
   assert.equal(groupKeys.size, 25, 'Visible main workspace keys must be unique')
   for (const group of navigationCatalog) {
-    assert.ok(group.items.length > 0, group.label + ' must have its own operational submenus')
+    assert.ok(group.items.length > 0 || group.key === 'dashboard', group.label + ' must have its own operational submenus unless it is the direct Dashboard link')
     for (const page of group.items) assert.ok(navigationRoutes[page], 'No route is connected for ' + group.label + '/' + page)
   }
+  assert.equal(navigationCatalog.find(group=>group.key==='dashboard')?.items.length,0,'Dashboard must open directly without an Institute Overview submenu')
+  assert.equal(getNavigationRoute('dashboard','Dashboard','owner'),'overview','Dashboard must route to the dashboard page itself')
   for (const group of institutionalMenu) {
     for (const item of group.items) assert.ok(navigationRoutes[item.label], 'No route is connected for ' + group.label + '/' + item.label)
   }
@@ -1162,7 +1164,7 @@ check('Administration pages are dedicated, audience-aware and scoped to existing
   const adminWorkspace = read('src/components/AdministrationStage5Workspace.tsx')
   const roleDashboard = read('src/components/RoleDashboard.tsx')
   const operations = read('src/components/LinkedOperationsWorkspace.tsx')
-  assert.ok(adminWorkspace.includes('renderDesignations') && adminWorkspace.includes('Designation Catalogue'), 'Designation Catalogue must be a dedicated Administration page')
+  assert.ok(adminWorkspace.includes('renderDesignations') && adminWorkspace.includes('Designation Catalogue') && adminWorkspace.includes('designationRows'), 'Designation Catalogue must be a dedicated Administration page')
   assert.ok(adminWorkspace.includes('policies-students') && adminWorkspace.includes('policies-faculty') && adminWorkspace.includes("section==='policies-faculty'?'faculty':'student'") && adminWorkspace.includes('category:policyCategory'), 'Student and faculty policies must use separate audience categories')
   assert.ok(adminWorkspace.includes('renderInstituteSettings') && adminWorkspace.includes('institution_preferences'), 'Institute Settings must use the dedicated preference form rather than raw website key/value rows')
   assert.ok(adminWorkspace.includes('academicSessionResult') && adminWorkspace.includes('classResult') && adminWorkspace.includes('programResult') && adminWorkspace.includes('subjectResult') && adminWorkspace.includes('roomResult'), 'Academic Structure must read the actual academic registers')
