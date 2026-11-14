@@ -120,6 +120,22 @@ const academicSections: AcademicSection[] = [
     ],
   },
   {
+    key: 'sections', title: 'Sections', short: 'Sections',
+    description: 'Maintain the section register attached to each class and academic session.',
+    icon: Layers3,
+    modes: [
+      { key: 'sections', title: 'Section register', table: 'classes', description: 'Create and maintain section labels on the institution class register.',
+        writeRoles: admins,
+        fields: [
+          f('name','Class name','text',true),f('section','Section name','text',true),
+          f('grade_level','Grade / academic level'),f('academic_session_id','Academic session','select',false,'sessions'),
+          f('capacity','Section capacity','number'),f('description','Description','textarea'),f('is_active','Active section','boolean'),
+        ],
+        columns: [c('name','Class'),c('section','Section'),c('grade_level','Grade'),c('academic_session_id','Academic session','sessions'),c('capacity','Capacity'),c('is_active','Active')],
+      },
+    ],
+  },
+  {
     key: 'subjects-courses', title: 'Subjects & Courses', short: 'Subjects',
     description: 'Subject catalogue, course information, credits and teacher / class allocations.',
     icon: BookOpen,
@@ -709,7 +725,7 @@ export function AcademicManagementWorkspace({ initialWindow = 'academic-sessions
       <header className="ed360-academic-heading">
         <div className="ed360-academic-heading-copy">
           <span>STAGE 08 · ACADEMIC OPERATIONS</span>
-          <h1>Academic Management & Learning</h1>
+          <h1>Academic Management</h1>
           <p>{section.description}</p>
         </div>
         <div className="ed360-academic-heading-tools">
