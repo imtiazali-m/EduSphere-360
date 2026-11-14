@@ -287,7 +287,7 @@ const academicSections: AcademicSection[] = [
           f('is_optional','Optional digital course','boolean'),f('start_date','Start date','date'),f('end_date','End date','date'),
           f('status','Status','select',true,undefined,select(['draft','published','archived'])),
         ],
-        columns: [c('title','Course'),c('course_code','Code'),c('class_id','Class','classes'),c('subject_id','Subject','subjects'),c('meeting_provider','Live class'),c('youtube_url','YouTube link'),c('is_optional','Optional'),c('status','Status')],
+        columns: [c('title','Course'),c('course_code','Code'),c('class_id','Class','classes'),c('subject_id','Subject','subjects'),c('meeting_provider','Live class'),c('meeting_url','Join link'),c('youtube_url','YouTube link'),c('is_optional','Optional'),c('status','Status')],
       },
       { key: 'units', title: 'Learning units', table: 'learning_course_units', description: 'Add lessons, text content, video links and required learning activities to a course.',
         writeRoles: manager,
@@ -792,7 +792,7 @@ export function AcademicManagementWorkspace({ initialWindow = 'academic-sessions
                 {filteredRows.map(row => <tr key={row.id}>
                   {activeMode.columns.map(column => <td key={column.key}>{column.key === 'status' || column.key === 'progress_status' || column.key === 'visibility' ?
                     <span className={'ed360-academic-status status-' + String(row[column.key] ?? '').toLowerCase().replace(/[^a-z0-9]+/g,'-')}>{displayCell(row,column)}</span> :
-                    <span title={String(row[column.key] ?? '')}>{displayCell(row,column)}</span>}</td>)}
+                    {['meeting_url','youtube_url','resource_url'].includes(column.key)&&String(row[column.key]??'').startsWith('https://')?<a className="ed360-academic-external-link" href={String(row[column.key])} target="_blank" rel="noreferrer"><ExternalLink size={12}/> Open link</a>:<span title={String(row[column.key] ?? '')}>{displayCell(row,column)}</span>}}</td>)}
                   <td className="ed360-academic-row-actions">
                     {activeMode.table === 'study_materials' && (row.storage_path || row.external_url) ? <button type="button" aria-label="Open learning resource" title="Open resource" onClick={() => void openMaterial(row)}><ExternalLink size={15}/></button> : null}
                     {canEditRow() ? <button type="button" aria-label="Edit record" title="Edit record" onClick={() => openEdit(row)}><Pencil size={15}/></button> : null}
