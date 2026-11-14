@@ -538,7 +538,7 @@ export function Stage7CareWorkspace({initialWindow='leave',onToast}:{initialWind
     {loadError&&<div className="s7-alert" role="alert"><AlertTriangle size={16}/>{loadError}</div>}
     {accessBlocked&&<section className="s7-panel s7-locked"><LockKeyhole size={26}/><h2>Restricted workspace</h2><p>This record category is not included in your account permissions. An institution owner or administrator must grant access to the appropriate student-care area.</p></section>}
 
-    {activeWindow==='leave'&&<>
+    {(activeWindow==='leave'||activeWindow==='leave-applications')&&<>
       <section className="s7-panel">
         <div className="s7-panel-title"><div><span>LEAVE WORKFLOW</span><h2>Apply for leave</h2><p>Applications are saved as pending until reviewed by an authorised administrator.</p></div></div>
         <form className="s7-form" onSubmit={applyLeave}>
@@ -558,16 +558,44 @@ export function Stage7CareWorkspace({initialWindow='leave',onToast}:{initialWind
           const student=students.find(s=>s.id===row.student_id),employee=employees.find(e=>e.id===row.teacher_id)
           const applicant=row.person_type==='student'?student?.full_name??'Student':employee?.full_name??'Employee'
           const path=String(row.supporting_document_path??'')
-          return <tr key={row.id}><td><b>{applicant}</b><small>{row.person_type==='student'?student?.class_name??'Student':'Employee'}</small></td><td>{String(row.leave_type??'').replaceAll('_',' ')}</td><td>{String(row.start_date)} – {String(row.end_date)}</td><td>{String(row.day_count??'—')}</td><td><span className={'s7-status '+String(row.status)}>{String(row.status)}</span></td><td>{path&&<button className="s7-text-button" type="button" onClick={()=>void openPrivateDocument(path)}><FileText size={14}/> Open file</button>}{Boolean(row.review_notes)&&<small>{String(row.review_notes)}</small>}{isAdmin&&row.status==='pending'&&<div className="s7-review"><input aria-label="Review notes" value={reviewNotes[String(row.id)]??''} onChange={e=>setReviewNotes(v=>({...v,[String(row.id)]:e.target.value}))} placeholder="Review note"/><button type="button" onClick={()=>void reviewLeave(row,'approved')} disabled={saving}>Approve</button><button type="button" className="danger" onClick={()=>void reviewLeave(row,'rejected')} disabled={saving}>Reject</button></div>}</td></tr>
+          return <tr key={row.id}><td><b>{applicant}</b><small>{row.person_type==='student'?student?.class_name??'Student':'Employee'}</small></td><td>{String(row.leave_type??'').replaceAll('_',' ')}</td><td>{String(row.start_date)} – {String(row.end_date)}</td><td>{String(row.day_count??'—')}</td><td><span className={'s7-status '+String(row.status)}>{String(row.status)}</span></td><td>{path&&<button className="s7-text-button" type="button" onClick={()=>void openPrivateDocument(path)}><FileText size={14}/> Open file</button>}{Boolean(row.review_notes)&&<small>{String(row.review_notes)}</small>}</td></tr>
         })}</tbody></table></div>}
       </section>
+    </>}
+    {activeWindow==='leave-approvals'&&<>
+      {!isAdmin?<section className="s7-panel s7-locked"><LockKeyhole size={22}/><h2>Administrator review only</h2><p>Leave approvals are restricted to institution owners and authorised administrators.</p></section>:<section className="s7-panel">
+        <div className="s7-panel-title"><div><span>ADMINISTRATIVE QUEUE</span><h2>Pending leave approvals</h2><p>Review evidence and record a decision with a note. Each decision is retained in the request history.</p></div><strong>{leaveRows.filter(row=>row.status==='pending').length} pending</strong></div>
+        {leaveRows.filter(row=>row.status==='pending').length===0?<div className="s7-empty">There are no pending leave requests.</div>:<div className="s7-table-wrap"><table><thead><tr><th>Applicant</th><th>Type</th><th>Dates</th><th>Days</th><th>Reason</th><th>Supporting document</th><th>Decision</th></tr></thead><tbody>{leaveRows.filter(row=>row.status==='pending').map(row=>{
+          const student=students.find(s=>s.id===row.student_id),employee=employees.find(e=>e.id===row.teacher_id)
+          const applicant=row.person_type==='student'?student?.full_name??'Student':employee?.full_name??'Employee'
+          const path=String(row.supporting_document_path??'')
+          return <tr key={row.id}><td><b>{applicant}</b><small>{row.person_type==='student'?student?.class_name??'Student':'Employee'}</small></td><td>{String(row.leave_type??'').replaceAll('_',' ')}</td><td>{String(row.start_date)} – {String(row.end_date)}</td><td>{String(row.day_count??'—')}</td><td>{String(row.reason??'—')}</td><td>{path?<button className="s7-text-button" type="button" onClick={()=>void openPrivateDocument(path)}><FileText size={14}/> Open file</button>:'—'}</td><td><div className="s7-review"><input aria-label="Review notes" value={reviewNotes[String(row.id)]??''} onChange={e=>setReviewNotes(v=>({...v,[String(row.id)]:e.target.value}))} placeholder="Review note"/><button type="button" onClick={()=>void reviewLeave(row,'approved')} disabled={saving}>Approve</button><button type="button" className="danger" onClick={()=>void reviewLeave(row,'rejected')} disabled={saving}>Reject</button></div></td></tr>
+        })}</tbody></table></div>}
+      </section>}
+    </>}
+    {activeWindow==='leave-balances'&&<>
       <section className="s7-panel">
-        <div className="s7-panel-title"><div><span>LEAVE BALANCES</span><h2>Entitlements and remaining days</h2><p>Balances are institution-controlled; used days are calculated from approved requests.</p></div></div>
+        <div className="s7-panel-title"><div><span>LEAVE ENTITLEMENTS</span><h2>Balances and remaining days</h2><p>Used days are calculated from approved requests within each leave year.</p></div></div>
         {isAdmin&&<form className="s7-form s7-balance-form" onSubmit={saveBalance}><label>Person<select value={balancePerson} onChange={e=>setBalancePerson(e.target.value)}><option value="">Select person</option>{students.map(s=><option key={s.id} value={s.id}>{s.full_name} · Student</option>)}{employees.map(e=><option key={e.id} value={e.id}>{e.full_name} · Employee</option>)}</select></label><label>Leave type<input value={balanceType} onChange={e=>setBalanceType(e.target.value)}/></label><label>Year<input type="number" min="2000" max="2200" value={balanceYear} onChange={e=>setBalanceYear(e.target.value)}/></label><label>Entitled days<input type="number" min="0" step="0.5" value={balanceEntitlement} onChange={e=>setBalanceEntitlement(e.target.value)}/></label><button className="button button-primary" type="submit">Save balance</button></form>}
-        {leaveBalances.length>0&&<div className="s7-table-wrap"><table><thead><tr><th>Person ID</th><th>Type</th><th>Year</th><th>Entitled</th><th>Carried forward</th></tr></thead><tbody>{leaveBalances.map(row=><tr key={row.id}><td>{String(row.person_id)}</td><td>{String(row.leave_type)}</td><td>{String(row.leave_year)}</td><td>{String(row.entitled_days)}</td><td>{String(row.carried_forward_days??0)}</td></tr>)}</tbody></table></div>}
+        {leaveBalanceView.length>0?<div className="s7-table-wrap"><table><thead><tr><th>Person</th><th>Type</th><th>Year</th><th>Entitled</th><th>Carried forward</th><th>Used (approved)</th><th>Remaining</th></tr></thead><tbody>{leaveBalanceView.map(row=><tr key={row.id}><td>{row.person}</td><td>{String(row.leave_type).replaceAll('_',' ')}</td><td>{String(row.leave_year)}</td><td>{String(row.entitled_days??0)}</td><td>{String(row.carried_forward_days??0)}</td><td>{row.used}</td><td><b>{row.remaining}</b></td></tr>)}</tbody></table></div>:<div className="s7-empty">No leave entitlements have been configured.</div>}
       </section>
     </>}
-
+    {activeWindow==='leave-reports'&&<>
+      <section className="s7-panel">
+        <div className="s7-panel-title"><div><span>LEAVE ANALYTICS</span><h2>Period-based leave report</h2><p>Only the days overlapping the selected period are counted for requests that cross reporting boundaries.</p></div></div>
+        <div className="s7-filters">
+          <label>Reporting period<select value={leavePeriod} onChange={e=>setLeavePeriod(e.target.value as 'week'|'month'|'year'|'session')}><option value="week">Current week</option><option value="month">Current month</option><option value="year">Current calendar year</option><option value="session">Academic session</option></select></label>
+          {leavePeriod==='session'&&<label>Academic session<select value={leaveSessionId} onChange={e=>setLeaveSessionId(e.target.value)}><option value="">Select session</option>{academicSessions.map(session=><option key={session.id} value={String(session.id)}>{String(session.session_name??session.name??'Academic session')} · {String(session.start_date)} – {String(session.end_date)}</option>)}</select></label>}
+          <div className="s7-period-range"><small>REPORT RANGE</small><b>{leavePeriodRange.from||'Select an academic session'}{leavePeriodRange.to?' – '+leavePeriodRange.to:''}</b></div>
+          <button type="button" className="button button-outline" onClick={exportLeaveReport} disabled={!leaveReportRows.length}><Download size={15}/> Export CSV</button>
+        </div>
+        <div className="s7-leave-kpis"><article><span>Requests in period</span><strong>{leaveReportRows.length}</strong></article><article><span>Days requested</span><strong>{leaveRequestedDays}</strong></article><article><span>Approved days</span><strong>{leaveApprovedDays}</strong></article><article><span>Pending requests</span><strong>{leavePendingCount}</strong></article></div>
+        <div className="s7-panel-title"><div><span>LEAVE TYPE BREAKDOWN</span><h2>Requests by leave type</h2></div></div>
+        {leaveSummaryByType.length?<div className="s7-table-wrap"><table><thead><tr><th>Leave type</th><th>Requests</th><th>Days requested</th><th>Approved days</th><th>Pending</th></tr></thead><tbody>{leaveSummaryByType.map(row=><tr key={row.type}><td>{row.type.replaceAll('_',' ')}</td><td>{row.requests}</td><td>{row.days}</td><td>{row.approved}</td><td>{row.pending}</td></tr>)}</tbody></table></div>:<div className="s7-empty">{leavePeriod==='session'&&!leavePeriodRange.from?'Choose an academic session to view its leave report.':'No leave requests overlap this reporting period.'}</div>}
+        <div className="s7-panel-title"><div><span>REQUEST REGISTER</span><h2>Included applications</h2></div></div>
+        {leaveReportRows.length>0&&<div className="s7-table-wrap"><table><thead><tr><th>Applicant</th><th>Type</th><th>Dates</th><th>Days in period</th><th>Status</th></tr></thead><tbody>{leaveReportRows.map(row=>{const name=row.person_type==='student'?(students.find(s=>s.id===row.student_id)?.full_name??'Student'):(employees.find(e=>e.id===row.teacher_id)?.full_name??'Employee');return <tr key={row.id}><td>{name}</td><td>{String(row.leave_type??'').replaceAll('_',' ')}</td><td>{String(row.start_date)} – {String(row.end_date)}</td><td>{leaveDaysInRange(row)}</td><td><span className={'s7-status '+String(row.status)}>{String(row.status)}</span></td></tr>})}</tbody></table></div>}
+      </section>
+    </>}
     {activeWindow.startsWith('reports')&&<>
       <section className="s7-panel">
         <div className="s7-panel-title"><div><span>ATTENDANCE ANALYTICS</span><h2>Attendance summary</h2><p>Records are limited by the signed-in user’s institution and row-level permissions.</p></div></div>
