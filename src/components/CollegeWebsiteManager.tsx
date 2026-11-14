@@ -75,8 +75,8 @@ const emptyContent: SiteContent = {
   heroText: 'A government degree college serving the Badin community.',
   heroPhotoUrl: '',
   heroPhotoSource: '',
-  aboutText: 'Government Islamia Degree College Badin is listed in the Government of Sindh district-wise directory of government colleges.',
-  aboutMission: '',
+  aboutText: 'Government Islamia Degree College Badin is a public higher-education institution serving the Badin community. The Government of Sindh district-wise directory of government colleges includes the college and lists Science as its stream. This website brings together institutional information, academic references, leadership and faculty details, approved photographs, public notices and college publications.',
+  aboutMission: 'To support accessible, purposeful learning through a respectful academic environment, clear guidance and opportunities for continued study.',
   principalMessage: '',
   campusIntro: '',
   facilities: [],
@@ -237,7 +237,10 @@ export function CollegeWebsiteManager({ onToast }: { onToast: (message: string, 
             ...emptyContent,
             ...savedContent,
             gallery: [
-              ...savedGallery,
+              ...savedGallery.map(item => {
+                const seed = emptyContent.gallery.find(candidate => candidate.id === item.id)
+                return seed ? { ...item, imageUrl: seed.imageUrl, alt: seed.alt } : item
+              }),
               ...emptyContent.gallery.filter(seed => !savedGallery.some(item => item.id === seed.id)),
             ],
           })

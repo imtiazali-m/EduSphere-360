@@ -72,8 +72,8 @@ const PUBLIC_INSTITUTION_IDS = [
 const DEFAULT_CONTENT: WebsiteContent = {
   heroHeading: 'Government Islamia Degree College Badin',
   heroText: 'A government degree college serving the Badin community.',
-  aboutText: 'Government Islamia Degree College Badin is listed in the Government of Sindh district-wise directory of government colleges. The directory lists Science as the stream for the college.',
-  aboutMission: '',
+  aboutText: 'Government Islamia Degree College Badin is a public higher-education institution serving the Badin community. The Government of Sindh district-wise directory of government colleges includes the college and lists Science as its stream. This website brings together institutional information, academic references, leadership and faculty details, approved photographs, public notices and college publications.',
+  aboutMission: 'To support accessible, purposeful learning through a respectful academic environment, clear guidance and opportunities for continued study.',
   campusIntro: '',
   facilities: [],
   programs: [{ id: 'science', title: 'Science', detail: 'Listed for Government Islamia Degree College Badin in the Government of Sindh government-colleges directory.', officialUrl: 'https://college.sindh.gov.pk/government-colleges' }],
@@ -91,8 +91,8 @@ const pages = [
   { id: 'academics', label: 'Academics', icon: BookOpen },
   { id: 'principal', label: 'Principal', icon: Award },
   { id: 'faculty', label: 'Faculty', icon: Users },
-  { id: 'departments', label: 'Faculty arrangement', icon: Users },
-  { id: 'campus', label: 'Campus', icon: School },
+  { id: 'departments', label: 'Departments', icon: Users },
+  { id: 'campus', label: 'Campus & facilities', icon: School },
   { id: 'student-life', label: 'Student life', icon: Users },
   { id: 'events', label: 'Events', icon: CalendarDays },
   { id: 'content', label: 'News & announcements', icon: Newspaper },
@@ -179,7 +179,10 @@ export function CollegeHomePage({ navigate, initialSection }: Props) {
           ...DEFAULT_CONTENT,
           ...saved,
           gallery: [
-            ...savedGallery,
+            ...savedGallery.map(item => {
+              const seed = (DEFAULT_CONTENT.gallery ?? []).find(candidate => candidate.id === item.id)
+              return seed ? { ...item, imageUrl: seed.imageUrl, alt: seed.alt } : item
+            }),
             ...(DEFAULT_CONTENT.gallery ?? []).filter(seed => !savedGallery.some(item => item.id === seed.id)),
           ],
         }
@@ -371,37 +374,70 @@ export function CollegeHomePage({ navigate, initialSection }: Props) {
         )}
 
         {page === 'about' && (
-          <PageFrame eyebrow="THE INSTITUTION" title="About the college" lead="Government Islamia Degree College Badin" icon={Landmark}>
-            <div className="gidc-public-about-layout">
+          <PageFrame eyebrow="THE INSTITUTION" title="About the college" lead="A public degree college serving the Badin community." icon={Landmark}>
+            <div className="gidc-public-about-layout gidc-public-about-layout-updated">
               <div className="gidc-public-rich-copy">
-                <p>{textValue(content.aboutText, textValue(DEFAULT_CONTENT.aboutText))}</p>
-                {content.aboutMission && <blockquote>{content.aboutMission}</blockquote>}
-                <a className="gidc-public-inline-link" href="https://college.sindh.gov.pk/government-colleges" target="_blank" rel="noreferrer">Government of Sindh college directory <ExternalLink size={15}/></a>
-                <a className="gidc-public-inline-link" href="https://usindh.edu.pk/colleges" target="_blank" rel="noreferrer">University of Sindh colleges directory <ExternalLink size={15}/></a>
+                <span className="gidc-public-about-kicker">GOVERNMENT DEGREE COLLEGE · BADIN</span>
+                <h2>Learning, opportunity and community</h2>
+                <p>{content.aboutText.trim() ? content.aboutText : DEFAULT_CONTENT.aboutText}</p>
+                <div className="gidc-public-mission">
+                  <span>OUR EDUCATIONAL PURPOSE</span>
+                  <p>{content.aboutMission.trim() ? content.aboutMission : DEFAULT_CONTENT.aboutMission}</p>
+                </div>
+                <div className="gidc-public-about-official-links">
+                  <a className="gidc-public-inline-link" href="https://college.sindh.gov.pk/government-colleges" target="_blank" rel="noreferrer">Government of Sindh college directory <ExternalLink size={15}/></a>
+                  <a className="gidc-public-inline-link" href="https://usindh.edu.pk/colleges" target="_blank" rel="noreferrer">University of Sindh colleges directory <ExternalLink size={15}/></a>
+                </div>
               </div>
-              <div className="gidc-public-about-side">
+              <aside className="gidc-public-about-side" aria-label="College facts">
                 <div><span><Landmark size={22}/></span><small>INSTITUTION TYPE</small><b>Government degree college</b></div>
                 <div><span><MapPin size={22}/></span><small>LOCATION</small><b>Badin, Sindh, Pakistan</b></div>
                 <div><span><BookOpen size={22}/></span><small>OFFICIAL STREAM LISTING</small><b>Science</b></div>
+              </aside>
+            </div>
+            <div className="gidc-public-about-explore">
+              <SectionHeading eyebrow="EXPLORE THE COLLEGE" title="Continue exploring GIDC Badin" intro="Move directly to the academic, people and campus information you need."/>
+              <div className="gidc-public-about-link-grid">
+                {[
+                  { id: 'academics', title: 'Academic information', detail: 'Official stream listing and admission resources.', icon: BookOpen },
+                  { id: 'faculty', title: 'Faculty directory', detail: 'Published teaching and academic staff profiles.', icon: Users },
+                  { id: 'campus', title: 'Campus & facilities', detail: 'Campus information and approved photographs.', icon: School },
+                ].map(item => <button type="button" key={item.id} onClick={() => goToPage(item.id)}>
+                  <span><item.icon size={22}/></span><b>{item.title}</b><small>{item.detail}</small><em>Explore page <ArrowUpRight size={14}/></em>
+                </button>)}
               </div>
             </div>
           </PageFrame>
         )}
 
         {page === 'academics' && (
-          <PageFrame eyebrow="LEARNING & ADMISSIONS" title="Academic information" lead="Academic pathways and official admission resources." icon={BookOpen}>
+          <PageFrame eyebrow="LEARNING & ADMISSIONS" title="Academics" lead="Verified academic-stream information, classroom learning and current admission resources." icon={BookOpen}>
+            <div className="gidc-public-academic-intro">
+              <div>
+                <span>ACADEMIC INFORMATION</span>
+                <h2>Academic pathways at GIDC Badin</h2>
+                <p>Explore the stream information currently listed in the Government of Sindh directory, see approved classroom photographs and use official admission resources for current instructions.</p>
+              </div>
+              <div className="gidc-public-academic-highlight">
+                <small>OFFICIAL STREAM LISTING</small>
+                <strong>Science</strong>
+                <a href="https://college.sindh.gov.pk/government-colleges" target="_blank" rel="noreferrer">Check the government directory <ExternalLink size={14}/></a>
+              </div>
+            </div>
+            <SectionHeading eyebrow="STREAM & ADMISSION RESOURCES" title="Academic information" intro="Programme details remain limited to information verified in the official college listing and current notices."/>
             <div className="gidc-public-academic-grid">
               {programmeList.map(program => <article className="gidc-public-academic-card" key={program.id}>
                 <span><Microscope size={28}/></span><small>ACADEMIC STREAM</small><h3>{program.title}</h3><p>{program.detail}</p>
                 {program.officialUrl && <a href={program.officialUrl} target="_blank" rel="noreferrer">Official information <ExternalLink size={14}/></a>}
               </article>)}
               <article className="gidc-public-academic-card gidc-academic-admission">
-                <span><GraduationCap size={28}/></span><small>ADMISSIONS</small><h3>Admission notices</h3><p>Use the current college announcement and official admission instructions for dates, eligibility and required documents.</p>
+                <span><GraduationCap size={28}/></span><small>ADMISSION GUIDANCE</small><h3>Admissions & notices</h3><p>For application dates, eligibility, required documents and session-specific instructions, consult the latest college announcement and the official admissions portal.</p>
                 <a href="https://seccap.ced.gos.pk/" target="_blank" rel="noreferrer">Open SECCAP <ExternalLink size={14}/></a>
+                <button type="button" onClick={() => goToPage('content')}>View college notices <ArrowRight size={14}/></button>
               </article>
             </div>
-            {galleryItems.filter(item => item.category === 'academic-learning').length > 0 && <div className="gidc-public-subsection"><SectionHeading eyebrow="CLASSROOMS & TEACHING" title="Learning in action"/><div className="gidc-public-photo-grid">{galleryItems.filter(item => item.category === 'academic-learning').map(item => <PhotoCard item={item} key={item.id}/>)}</div></div>}
-            <div className="gidc-public-source-note">The Government of Sindh directory currently lists Science for Government Islamia Degree College Badin. <a href="https://college.sindh.gov.pk/government-colleges" target="_blank" rel="noreferrer">View the official directory <ExternalLink size={13}/></a></div>
+            {galleryItems.filter(item => item.category === 'academic-learning').length > 0 && <div className="gidc-public-subsection"><SectionHeading eyebrow="CLASSROOMS & TEACHING" title="Learning in action" intro="Approved photographs from classroom and teaching activities."/><div className="gidc-public-photo-grid">{galleryItems.filter(item => item.category === 'academic-learning').map(item => <PhotoCard item={item} key={item.id}/>)}</div></div>}
+            <div className="gidc-public-source-note">The Government of Sindh directory currently lists Science for Government Islamia Degree College Badin. Confirm session-specific programme and admission details through current official notices. <a href="https://college.sindh.gov.pk/government-colleges" target="_blank" rel="noreferrer">View the official directory <ExternalLink size={13}/></a></div>
           </PageFrame>
         )}
 
@@ -426,7 +462,7 @@ export function CollegeHomePage({ navigate, initialSection }: Props) {
         )}
 
         {page === 'departments' && (
-          <PageFrame eyebrow="ACADEMIC STRUCTURE" title="Faculty arrangement" lead="Publicly approved faculty grouped using the department information in the internal employee register." icon={Users}>
+          <PageFrame eyebrow="DEPARTMENT DIRECTORY" title="Departments" lead="Approved faculty grouped by the department information maintained in the college staff register." icon={Users}>
             {facultyGroups.length > 0 ? <div className="gidc-public-department-groups">{facultyGroups.map(([department, people]) => (
               <section className="gidc-public-department-group" key={department}>
                 <div className="gidc-public-department-heading"><div><small>DEPARTMENT</small><h2>{department}</h2></div><span>{people.length} {people.length === 1 ? 'profile' : 'profiles'}</span></div>
@@ -537,9 +573,26 @@ function EmptyState({ icon: Icon, title, detail }: { icon: typeof Users; title: 
 }
 
 function NewsCard({ item }: { item: WebsiteNews }) {
-  return <article className="gidc-public-news-card">
-    {item.imageUrl && <a className="gidc-public-news-image-link" href={item.imageUrl} target="_blank" rel="noreferrer" aria-label={'Open poster image for ' + item.title}><img className="gidc-public-news-image" src={item.imageUrl} alt={item.title + ' poster'} loading="lazy"/></a>}
-    <div className="gidc-public-news-icon"><CalendarDays size={22}/></div>
-    <div><small>{item.date || 'COLLEGE NOTICE'}</small><h3>{item.title}</h3><p>{item.body}</p>{item.url && <a href={item.url} target="_blank" rel="noreferrer">Open notice <ExternalLink size={14}/></a>}</div>
-  </article>
+  return (
+    <article className="gidc-public-news-card">
+      <div className="gidc-public-news-media">
+        {item.imageUrl ? (
+          <a className="gidc-public-news-image-link" href={item.imageUrl} target="_blank" rel="noreferrer" aria-label={'Open poster image for ' + item.title}>
+            <img className="gidc-public-news-image" src={item.imageUrl} alt={item.title + ' official poster'} loading="lazy"/>
+          </a>
+        ) : (
+          <span className="gidc-public-news-placeholder"><Newspaper size={30}/></span>
+        )}
+      </div>
+      <div className="gidc-public-news-copy">
+        <div className="gidc-public-news-meta"><span><Newspaper size={13}/> OFFICIAL COLLEGE NOTICE</span><time>{item.date || 'COLLEGE NOTICE'}</time></div>
+        <h3>{item.title}</h3>
+        <p>{item.body}</p>
+        {(item.url || item.imageUrl) && <div className="gidc-public-news-actions">
+          {item.url && <a href={item.url} target="_blank" rel="noreferrer">Open notice <ExternalLink size={14}/></a>}
+          {item.imageUrl && <a href={item.imageUrl} target="_blank" rel="noreferrer">View official poster <ArrowUpRight size={14}/></a>}
+        </div>}
+      </div>
+    </article>
+  )
 }
