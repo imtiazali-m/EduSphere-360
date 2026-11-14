@@ -30,3 +30,16 @@
 .s7-confidential-label{display:inline-flex;align-items:center;gap:5px;color:#86570b!important;background:#fff5df;border-radius:18px;padding:5px 8px;letter-spacing:0!important}
 .s7-grant-list{display:grid;gap:8px;margin-top:14px}.s7-grant-list>div{display:flex;align-items:center;gap:12px;padding:10px;border:1px solid var(--border,#e5eaee);border-radius:9px;font-size:11px}.s7-grant-list>div>span:first-child{flex:1}.s7-grant-list small{display:block;color:var(--muted,#718096);margin-top:3px}
 @media(max-width:760px){.s7-hero{align-items:flex-start;flex-wrap:wrap;padding:17px}.s7-refresh{margin-left:64px}.s7-panel{padding:15px}.s7-form,.s7-balance-form{grid-template-columns:1fr}.s7-wide,.s7-form-actions{grid-column:1}.s7-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.s7-filters{display:grid;grid-template-columns:1fr 1fr}.s7-filters button{grid-column:1/-1}.s7-form-actions{align-items:flex-start;flex-direction:column}}
+
+.s7-chart-row{display:flex;align-items:center;gap:22px;padding:16px 18px;border:1px solid #e5eae6;border-radius:12px;background:#fff}
+.s7-attendance-donut{display:grid;place-items:center;width:138px;height:138px;flex:0 0 138px;border-radius:50%;position:relative}
+.s7-attendance-donut:before{content:"";position:absolute;inset:17px;border-radius:50%;background:#fff}
+.s7-attendance-donut>span{position:relative;display:grid;justify-items:center;font-size:22px;font-weight:850;color:#17221a}
+.s7-attendance-donut small{font-size:10px;font-weight:700;color:#68736c}
+.s7-chart-legend{display:grid;gap:10px;min-width:190px}
+.s7-chart-legend>b{font-size:13px;color:#17221a}
+.s7-chart-legend>span{display:flex;align-items:center;gap:8px;color:#68736c;font-size:11px}
+.s7-chart-legend>span>i{width:9px;height:9px;border-radius:50%;background:#2b7650}
+.s7-chart-legend>span>i.absent{background:#d65c56}.s7-chart-legend>span>i.leave{background:#d5a84a}.s7-chart-legend>span>i.other{background:#aebbb1}
+.s7-chart-legend>span>strong{margin-left:auto;color:#17221a}
+@media(max-width:600px){.s7-chart-row{align-items:flex-start;flex-direction:column}.s7-attendance-donut{width:120px;height:120px;flex-basis:120px}}

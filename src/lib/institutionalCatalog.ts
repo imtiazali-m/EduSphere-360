@@ -24,7 +24,7 @@ const group=(key:string,label:string,description:string,icon:string,theme:string
 export const institutionalMenu:WorkspaceMenuGroup[]=[
  group('dashboard','Dashboard','Your single overview for live KPIs, campus performance, approvals, audit activity and institutional health.','LayoutDashboard','blue','',all,[]),
  group('administration','Administration','Institution identity, organisational structure, policies, approvals and access control.','Building2','slate','administration',management,[
-  'Institute Profile','Campus and Branch Management','Academic Structure & Sections','Department Directory','Designation Catalogue','Organisational Structure','Approval Workflows','Student Policies','Faculty Policies','Administrative Audit','User Access & Invitations','Role & Permission Management','Institute Settings','Branding & Document Settings','Security & Access History'
+  'Institute Profile','Campus and Branch Management','Academic Structure & Sections','Department Directory','Designation Catalogue','Organisational Structure','Approval Workflows','Student Policies','Faculty Policies','Administrative Audit','User Access & Invitations','Role & Permission Management','Institute Settings','Branding & Document Settings','Document Access','Security & Access History'
  ]),
  group('institution-config','Institutional Systems and Configuration','Education levels, institution/campus settings, invitations, role rights, module rights and security.','Settings','slate','institution_config',management,[
   'Institution Configuration','Education System Configuration','Education Levels','Grade and Academic Level Configuration','Institution Settings','Campus Settings','Academic Settings','General System Settings','Invitations and Access','User Management','Role Management','User Permissions','Module Permissions','Approval Permissions','Security Configuration'
@@ -48,7 +48,7 @@ export const institutionalMenu:WorkspaceMenuGroup[]=[
   'HR & Recruitment','Employee Contracts & Documents','Employee Performance','Payroll & Salary Records','Alumni'
  ]),
  group('attendance','Attendance','Class, section and period registers, QR/barcode check-in, staff attendance, leave and student support.','CalendarCheck','rose','attendance',staff.concat(['student','parent']),[
-  'Student Attendance','Teacher Attendance','Staff Attendance','QR / Barcode Check-in','Biometric Verification','Student Attendance Cards','Teacher Attendance Cards','Staff Attendance Cards','Leave Management','Attendance Reports','Student Discipline','Student Counselling & Wellbeing','Health & Emergency Records'
+  'Student Attendance','Teacher Attendance','Staff Attendance','Automatic Attendance','Attendance History','QR / Barcode Check-in','Biometric Verification','Student Attendance Cards','Teacher Attendance Cards','Staff Attendance Cards','Leave Management','Attendance Reports','Student Attendance Reports','Teacher Attendance Reports','Staff Attendance Reports','Student Discipline','Student Counselling & Wellbeing','Health & Emergency Records'
  ]),
  group('behaviour','Behaviour & Skills','Behaviour, safeguarding-aware incidents, student skills, co-curricular development and competency evidence.','HeartHandshake','pink','behaviour',staff,[
   'Behaviour Dashboard','Behaviour Records','Positive Behaviour','Disciplinary Incidents','Rewards and Recognition','Warnings','Student Skills','Co-curricular Activities','Competency Tracking','Student Progress History','Behaviour Analytics','Downloadable Behaviour Reports'

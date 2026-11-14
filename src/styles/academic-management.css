@@ -111,3 +111,13 @@
 @media(max-width:800px){.ed360-academic-heading{align-items:flex-start;flex-direction:column}.ed360-academic-heading-tools{width:100%;justify-content:space-between}.ed360-academic-nav{grid-template-columns:repeat(2,minmax(0,1fr))}.ed360-academic-toolbar{align-items:flex-start;flex-direction:column}.ed360-academic-toolbar-actions{width:100%;justify-content:flex-start}.ed360-academic-search{flex:1}.ed360-academic-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.ed360-academic-workspace-top{flex-direction:column}.ed360-academic-online-control{justify-content:flex-start}}
 @media(max-width:540px){.ed360-academic-page{gap:9px}.ed360-academic-heading-copy h1{font-size:20px}.ed360-academic-workspace{padding:10px}.ed360-academic-nav{grid-template-columns:1fr 1fr;gap:5px}.ed360-academic-nav button{min-height:45px;padding:6px;font-size:8px}.ed360-academic-mode-tabs button{padding:0 8px}.ed360-academic-toolbar-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.ed360-academic-search{grid-column:1/-1;min-width:0}.ed360-academic-toolbar-actions .ed360-academic-primary{grid-column:1/-1}.ed360-academic-foot{align-items:flex-start}.ed360-academic-form-grid{grid-template-columns:1fr}.ed360-academic-field.is-wide{grid-column:auto}.ed360-academic-modal-backdrop{padding:8px}.ed360-academic-modal{max-height:94vh}}
 @media print{.ed360-academic-heading-tools,.ed360-academic-nav,.ed360-academic-mode-tabs,.ed360-academic-toolbar-actions,.ed360-academic-row-actions,.ed360-academic-online-control{display:none!important}.ed360-academic-page{max-width:none}.ed360-academic-workspace{border:0;box-shadow:none;padding:0}.ed360-academic-table-wrap{overflow:visible}.ed360-academic-table{min-width:0}.ed360-academic-table th,.ed360-academic-table td{font-size:9px}.ed360-academic-table tr{break-inside:avoid}}
+
+/* Shared GIDC modern workspace styling */
+.ed360-academic-page{color:#171b19}
+.ed360-academic-heading{padding:4px 0 14px;border-bottom:1px solid #e8ece9}
+.ed360-academic-heading-copy>span,.ed360-academic-kicker{color:#34734d}
+.ed360-academic-heading-copy h1{color:#101512;font-size:24px;letter-spacing:-.7px}
+.ed360-academic-heading-copy p{color:#68736c}
+.ed360-academic-live{border-color:#e4e9e5;background:#f8faf8;color:#536157;border-radius:8px}
+.ed360-academic-live i{background:#2b7650;box-shadow:0 0 0 3px #edf5ef}
+.ed360-academic-icon-button{border-color:#dce5de;color:#205b43}

@@ -511,7 +511,7 @@ export function InstitutionOperationsWorkspace({workspaceKey,initialWindow,onToa
     :view==='assets'?visibleAssets.length:visibleMaintenance.length
 
   return <main className="iop-stage page-content ed360-module-page">
-    <header className="iop-heading"><div><span>INSTITUTION OPERATIONS / {selectedDomain.toUpperCase()}</span><h1>{domainTitles[selectedDomain]}</h1><p>{domainDescriptions[selectedDomain]}</p></div><span className="iop-live"><i/> Institution cloud records</span></header>
+    <header className="iop-heading"><div><span>GIDC BADIN · {domainTitles[selectedDomain].toUpperCase()}</span><h1>{viewLabels[view]}</h1><p>{domainDescriptions[selectedDomain]}</p></div><button type="button" className="iop-button" onClick={()=>void load()}><RefreshCw size={14}/> Refresh</button></header>
     <nav className="iop-nav" aria-label={domainTitles[selectedDomain]+' workspace windows'}>{tabItems.map(key=><button type="button" key={key} className={view===key?'active':''} aria-current={view===key?'page':undefined} onClick={()=>setView(key)}>{viewLabels[key]}</button>)}</nav>
     <section className="iop-context"><div><small>ACTIVE DOMAIN WINDOW</small><h2>{viewLabels[view]}</h2><p>{domainDescriptions[selectedDomain]}</p></div><div><strong>{recordCount}</strong><small>Visible records</small></div></section>
     {error&&<div className="iop-error" role="alert">{error}</div>}

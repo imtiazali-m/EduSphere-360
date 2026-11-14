@@ -10,7 +10,7 @@ import { userFacingError } from '../lib/userErrors'
 import type { RecordRow } from '../lib/types'
 import '../styles/stage7-workspace.css'
 
-type WindowKey = 'leave'|'reports'|'discipline'|'counselling'|'health'
+type WindowKey = 'leave'|'reports'|'reports-students'|'reports-teachers'|'reports-staff'|'discipline'|'counselling'|'health'
 type Student = { id:string; full_name:string; admission_no:string; class_name:string; campus_id?:string|null }
 type Employee = { id:string; user_id?:string|null; full_name:string; employee_no:string; employee_type:string; department?:string|null; campus_id?:string|null }
 type CareGrant = { area:'discipline'|'counselling'|'health'; can_read:boolean; can_write:boolean }
@@ -29,7 +29,7 @@ const message = (error:unknown,fallback:string) => userFacingError(error,fallbac
 
 export function Stage7CareWorkspace({initialWindow='leave',onToast}:{initialWindow?:string;onToast:(message:string,error?:boolean)=>void}) {
   const {user}=useAuth()
-  const activeWindow=(['leave','reports','discipline','counselling','health'].includes(initialWindow)?initialWindow:'leave') as WindowKey
+  const activeWindow=(['leave','reports','reports-students','reports-teachers','reports-staff','discipline','counselling','health'].includes(initialWindow)?initialWindow:'leave') as WindowKey
   const isAdmin=Boolean(user&&['owner','admin'].includes(user.role))
   const isStudentOrParent=Boolean(user&&['student','parent'].includes(user.role))
   const [students,setStudents]=useState<Student[]>([])
@@ -234,7 +234,7 @@ export function Stage7CareWorkspace({initialWindow='leave',onToast}:{initialWind
     const run=async()=>{
       try{
         if(activeWindow==='leave')await loadLeave()
-        if(activeWindow==='reports')await loadReports()
+        if(activeWindow.startsWith('reports'))await loadReports()
         if(activeWindow==='discipline'&&canRead('discipline'))await loadDiscipline()
         if(activeWindow==='counselling')await loadCounselling()
         if(activeWindow==='health')await loadHealth()
@@ -444,24 +444,35 @@ export function Stage7CareWorkspace({initialWindow='leave',onToast}:{initialWind
 
   if(!user)return null
   if(loading)return <main className="page-content s7-page"><div className="s7-empty">Loading your permitted student care workspace…</div></main>
-  const pageTitle:Record<WindowKey,string>={leave:'Leave Management',reports:'Attendance Reports',discipline:'Student Discipline',counselling:'Student Counselling & Wellbeing',health:'Health & Emergency Records'}
+  const pageTitle:Record<WindowKey,string>={leave:'Leave Management',reports:'Attendance Reports','reports-students':'Student Attendance Reports','reports-teachers':'Teacher Attendance Reports','reports-staff':'Staff Attendance Reports',discipline:'Student Discipline',counselling:'Student Counselling & Wellbeing',health:'Health & Emergency Records'}
   const pageIntro:Record<WindowKey,string>={
     leave:'Submit, review and track student and employee leave applications.',
     reports:'Review date-wise, class-wise, student-wise and employee-wise attendance summaries.',
+    'reports-students':'Review student attendance by class, section and date, with status distribution and export.',
+    'reports-teachers':'Review teacher attendance records, daily coverage and status distribution.',
+    'reports-staff':'Review non-teaching staff attendance, daily coverage and status distribution.',
     discipline:'Restricted incident records, documented actions, parent communication and follow-up.',
     counselling:'Appointment requests, schedules and confidential counsellor notes.',
     health:'Emergency contacts, authorised health information, clinic visits and follow-up records.',
   }
-  const reportRows=[
+  const reportRowsAll=[
     ...studentAttendance.filter(row=>!reportClass||String(row.class_name??'')===reportClass).map(row=>({...row,group:'Student',person:String(row.student_name??'Student'),id:String(row.student_id??'')})),
-    ...employeeAttendance.map(row=>{const employee=employees.find(e=>e.id===row.teacher_id);return {...row,group:'Employee',person:employee?.full_name??'Employee',id:String(row.teacher_id??'')}}),
+    ...employeeAttendance.map(row=>{const employee=employees.find(e=>e.id===row.teacher_id);const group=String(employee?.employee_type??'').toLowerCase()==='teaching'?'Teacher':'Staff';return {...row,group,person:employee?.full_name??group,id:String(row.teacher_id??'')}}),
   ]
+  const reportRows=activeWindow==='reports-students'?reportRowsAll.filter(row=>row.group==='Student'):activeWindow==='reports-teachers'?reportRowsAll.filter(row=>row.group==='Teacher'):activeWindow==='reports-staff'?reportRowsAll.filter(row=>row.group==='Staff'):reportRowsAll
   const reportCounts=reportRows.reduce((acc,row)=>{const status=String(row.status??'');acc.total++;acc[status]=(acc[status]??0)+1;return acc},{total:0} as Record<string,number>)
+  const reportPresent=reportCounts.present??0
+  const reportAbsent=reportCounts.absent??0
+  const reportLeave=(reportCounts.approved_leave??0)+(reportCounts.leave_pending??0)
+  const reportOther=Math.max(0,(reportCounts.total??0)-reportPresent-reportAbsent-reportLeave)
+  const reportTotal=reportCounts.total??0
+  const reportPercent=(value:number)=>reportTotal?Math.round(value/reportTotal*100):0
+  const reportDonut=reportTotal?`conic-gradient(#2b7650 0 ${reportPercent(reportPresent)}%, #d65c56 ${reportPercent(reportPresent)}% ${reportPercent(reportPresent)+reportPercent(reportAbsent)}%, #d5a84a ${reportPercent(reportPresent)+reportPercent(reportAbsent)}% ${reportPercent(reportPresent)+reportPercent(reportAbsent)+reportPercent(reportLeave)}%, #e8ede9 ${reportPercent(reportPresent)+reportPercent(reportAbsent)+reportPercent(reportLeave)}% 100%)`:'conic-gradient(#e8ede9 0 100%)'
   const classOptions=[...new Set(students.map(s=>s.class_name).filter(Boolean))].sort()
   const accessBlocked=(activeWindow==='discipline'&&!canRead('discipline'))||(activeWindow==='counselling'&&!isAdmin&&!canRead('counselling')&&!isStudentOrParent)||(activeWindow==='health'&&!canRead('health')&&!isStudentOrParent)
   return <main className="page-content s7-page">
     <header className="s7-hero">
-      <div className="s7-hero-icon">{activeWindow==='health'?<HeartPulse size={23}/>:activeWindow==='discipline'?<ShieldCheck size={23}/>:activeWindow==='counselling'?<MessageSquare size={23}/>:activeWindow==='reports'?<Activity size={23}/>:<CalendarDays size={23}/>}</div>
+      <div className="s7-hero-icon">{activeWindow==='health'?<HeartPulse size={23}/>:activeWindow==='discipline'?<ShieldCheck size={23}/>:activeWindow==='counselling'?<MessageSquare size={23}/>:activeWindow.startsWith('reports')?<Activity size={23}/>:<CalendarDays size={23}/>}</div>
       <div><span>STUDENT CARE & WELLBEING</span><h1>{pageTitle[activeWindow]}</h1><p>{pageIntro[activeWindow]}</p></div>
       <button type="button" className="s7-refresh" onClick={()=>setRefreshKey(v=>v+1)}><RefreshCw size={15}/> Refresh</button>
     </header>
@@ -498,13 +509,13 @@ export function Stage7CareWorkspace({initialWindow='leave',onToast}:{initialWind
       </section>
     </>}
 
-    {activeWindow==='reports'&&<>
+    {activeWindow.startsWith('reports')&&<>
       <section className="s7-panel">
         <div className="s7-panel-title"><div><span>ATTENDANCE ANALYTICS</span><h2>Attendance summary</h2><p>Records are limited by the signed-in user’s institution and row-level permissions.</p></div></div>
         <div className="s7-filters"><label>From<input type="date" value={reportFrom} max={reportTo} onChange={e=>setReportFrom(e.target.value)}/></label><label>To<input type="date" value={reportTo} min={reportFrom} max={today()} onChange={e=>setReportTo(e.target.value)}/></label><label>Class<select value={reportClass} onChange={e=>setReportClass(e.target.value)}><option value="">All visible classes</option>{classOptions.map(c=><option key={c}>{c}</option>)}</select></label><button type="button" className="button button-outline" onClick={()=>void loadReports()}><RefreshCw size={14}/> Apply filters</button></div>
-        <div className="s7-metrics"><div><b>{reportCounts.total??0}</b><span>Total records</span></div><div><b>{reportCounts.present??0}</b><span>Present</span></div><div><b>{reportCounts.absent??0}</b><span>Absent</span></div><div><b>{reportCounts.late??0}</b><span>Late</span></div><div><b>{reportCounts.approved_leave??0}</b><span>Approved leave</span></div></div>
+        <div className="s7-chart-row"><div className="s7-attendance-donut" role="img" aria-label={`${reportPercent(reportPresent)} percent present, ${reportPercent(reportAbsent)} percent absent, ${reportPercent(reportLeave)} percent on leave`} style={{background:reportDonut}}><span>{reportPercent(reportPresent)}%<small>Present</small></span></div><div className="s7-chart-legend"><b>{reportTotal.toLocaleString()} attendance records</b><span><i className="present"/>Present <strong>{reportPresent.toLocaleString()}</strong></span><span><i className="absent"/>Absent <strong>{reportAbsent.toLocaleString()}</strong></span><span><i className="leave"/>Leave <strong>{reportLeave.toLocaleString()}</strong></span>{reportOther>0&&<span><i className="other"/>Other recorded statuses <strong>{reportOther.toLocaleString()}</strong></span>}</div></div>
         <div className="s7-panel-actions"><button type="button" className="button button-outline" onClick={()=>downloadCsv('edusphere-attendance-report-'+reportFrom+'-'+reportTo+'.csv',reportRows,[{key:'group',label:'Group'},{key:'person',label:'Person'},{key:'class_name',label:'Class'},{key:'attendance_date',label:'Date'},{key:'status',label:'Status'},{key:'minutes_late',label:'Minutes late'},{key:'early_departure_minutes',label:'Early departure minutes'}])}><Download size={15}/> Export CSV</button></div>
-        <div className="s7-table-wrap"><table><thead><tr><th>Person</th><th>Class / type</th><th>Date</th><th>Status</th><th>Late (min)</th><th>Early (min)</th></tr></thead><tbody>{reportRows.slice(0,500).map((row,index)=><tr key={String(row.id??index)}><td>{String(row.person)}</td><td>{String(row.class_name??row.group)}</td><td>{String(row.attendance_date)}</td><td><span className={'s7-status '+String(row.status)}>{String(row.status)}</span></td><td>{String(row.minutes_late??0)}</td><td>{String(row.early_departure_minutes??0)}</td></tr>)}</tbody></table>{reportRows.length===0&&<div className="s7-empty">No attendance records match this date range and class filter.</div>}</div>
+        <div className="s7-table-wrap"><table><thead><tr><th>Person</th><th>Class / type</th><th>Date</th><th>Status</th><th>Arrival variance</th><th>Early (min)</th></tr></thead><tbody>{reportRows.slice(0,500).map((row,index)=><tr key={String(row.id??index)}><td>{String(row.person)}</td><td>{String(row.class_name??row.group)}</td><td>{String(row.attendance_date)}</td><td><span className={'s7-status '+String(row.status)}>{String(row.status)}</span></td><td>{String(row.minutes_late??0)}</td><td>{String(row.early_departure_minutes??0)}</td></tr>)}</tbody></table>{reportRows.length===0&&<div className="s7-empty">No attendance records match this date range and class filter.</div>}</div>
       </section>
     </>}
 

@@ -158,7 +158,7 @@ function checkView(role, route, dispatcher) {
     return { component: 'AttendanceWorkspace', view: targetWindow, status: attendanceWindows.has(targetWindow) ? 'Supported' : 'Unsupported attendance view' }
   }
   if (targetKey === 'care') {
-    const careWindows = new Set(['leave','reports','discipline','counselling','health'])
+    const careWindows = new Set(['leave','reports','reports-students','reports-teachers','reports-staff','discipline','counselling','health'])
     return { component: 'Stage7CareWorkspace', view: targetWindow, status: careWindows.has(targetWindow) ? 'Supported' : 'Unsupported care view' }
   }
   if (targetKey === 'reports') {

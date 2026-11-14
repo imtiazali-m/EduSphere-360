@@ -136,7 +136,6 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
  useEffect(()=>{void loadDevices()},[loadDevices])
 
  const effectiveMarks=useMemo(()=>Object.fromEntries(people.map(person=>[person.id,marks[person.id]??'unmarked'])) as Record<string,AttendanceMark>,[people,marks])
- const counts=useMemo(()=>{const tally={present:0,absent:0,late:0,approved_leave:0,leave_pending:0,excused:0,unmarked:0};Object.values(effectiveMarks).forEach(status=>{tally[status]+=1});return tally},[effectiveMarks])
  function markOne(id:string,value:AttendanceMark){setMarks(current=>({...current,[id]:value}))}
  function markAll(value:AttendanceMark){setMarks(Object.fromEntries(people.map(person=>[person.id,value])))}
  async function createShift(event:FormEvent){event.preventDefault();if(!supabase||!user||!canManageStaff)return;if(!shiftName.trim()||shiftEnd<=shiftStart){onToast('Enter a shift name and a valid start/end time.',true);return}const {error}=await supabase.from('employee_shifts').insert({institution_id:user.institutionId,name:shiftName.trim(),start_time:shiftStart,end_time:shiftEnd,grace_minutes:Number(shiftGrace)||0,created_by:user.id});if(error){onToast(error.message,true);return}setShiftName('');setShowShiftForm(false);onToast('Employee shift saved.');void loadRoster()}
@@ -188,11 +187,14 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
  }
 
  if(!user)return null
+ const attendanceTitles:Record<string,string>={students:'Student Attendance',teachers:'Teacher Attendance',staff:'Staff Attendance',devices:'Automatic Attendance',history:'Attendance History','qr-scan':'QR / Barcode Attendance',biometric:'Biometric Attendance','cards-students':'Student Attendance Cards','cards-teachers':'Teacher Attendance Cards','cards-staff':'Staff Attendance Cards'}
+ const attendanceDescriptions:Record<string,string>={students:'Mark student attendance by campus, class, section, period and date.',teachers:'Record and review teacher attendance using the institution register.',staff:'Record and review non-teaching staff attendance using the institution register.',devices:'Review automatic attendance device sources and connection readiness.',history:'Review saved attendance registers and export historical records.','qr-scan':'Record attendance from an authorised QR or barcode scanner.',biometric:'Manage supported biometric verification readiness without exposing fingerprint data.','cards-students':'Prepare student attendance identity cards with scannable identifiers.','cards-teachers':'Prepare teacher attendance identity cards with scannable identifiers.','cards-staff':'Prepare staff attendance identity cards with scannable identifiers.'}
+ const attendanceTitle=attendanceTitles[initialWindow]??(population==='students'?'Student Attendance':population==='teachers'?'Teacher Attendance':'Staff Attendance')
+ const attendanceDescription=attendanceDescriptions[initialWindow]??attendanceDescriptions[population]
  return <main className="page-content ed360-module-page ed360-attendance-workspace">
   <header className="ed360-attendance-hero">
    <div className="ed360-attendance-icon"><CalendarCheck size={23}/></div>
-   <div><span>ACADEMIC & STAFF OPERATIONS / ATTENDANCE</span><h1>Attendance Management</h1><p>Record a complete class, section or employee roster. Mark Present, Absent, Approved Leave or Leave Not Approved and save one validated register.</p></div>
-   <div className="ed360-attendance-stats"><span><b>{people.length}</b> people in roster</span><span><b>{counts.present}</b> present · <b>{counts.absent}</b> absent · <b>{counts.approved_leave}</b> approved leave · <b>{counts.leave_pending}</b> unapproved leave</span></div>
+   <div><span>GIDC BADIN · ATTENDANCE</span><h1>{attendanceTitle}</h1><p>{attendanceDescription}</p></div>
   </header>
   <div className="ed360-attendance-main-tabs">
    <button className={autoTab==='register'?'active':''} onClick={()=>setAutoTab('register')}>Manual register</button>
@@ -218,7 +220,6 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
    </section>
    <section className="ed360-attendance-board">
     <div className="ed360-attendance-board-head"><div><span>REGISTER CHART</span><h2>{population==='students'?'Class attendance register':population==='teachers'?'Teacher attendance register':'Staff attendance register'}</h2><p>Each row is one person. Use the status controls in the row or bulk-mark the whole roster above.</p></div><button type="button" onClick={()=>{void loadRoster();void loadAttendance()}}><RefreshCw size={14}/> Refresh roster</button></div>
-    <div className="ed360-attendance-counts"><div className="count-p"><b>{counts.present}</b><span>Present</span></div><div className="count-a"><b>{counts.absent}</b><span>Absent</span></div><div><b>{people.length}</b><span>Total</span></div></div>
     {loading?<div className="ed360-attendance-empty">Loading the institution roster…</div>:loadingError?<div className="ed360-attendance-empty error">{loadingError}</div>:visiblePeople.length===0?<div className="ed360-attendance-empty">{people.length?'No matching names. Clear your search.':'No active people were found in this roster.'}</div>:
     <div className="ed360-attendance-grid-table"><div className="attendance-grid-head"><span>Roll / Employee ID</span><span>Name</span><span>Father / Guardian</span><span>Section / Department</span><span>Attendance mark</span><span>Note (optional)</span></div>
      {visiblePeople.map((person,index)=><div className="attendance-grid-row" key={person.id}><span className="attendance-grid-id">{person.admission_no??person.employee_no??String(index+1).padStart(2,'0')}</span><strong>{person.full_name}</strong><span>{person.guardian_name??'—'}</span><span>{[person.class_name,person.section_name,person.department].filter(Boolean).join(' / ')||(population==='teachers'?'Teacher':'Employee')}</span>
@@ -243,7 +244,6 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
     </div>
    </div>
    <label className="ed360-attendance-search"><Search size={15}/><input value={historySearch} onChange={e=>setHistorySearch(e.target.value)} placeholder="Search person, ID, status or note"/></label>
-   <div className="ed360-attendance-counts"><div className="count-p"><b>{existing.filter(x=>x.status==='present').length}</b><span>Present</span></div><div className="count-a"><b>{existing.filter(x=>x.status==='absent').length}</b><span>Absent</span></div><div><b>{existing.length}</b><span>Entries</span></div></div>
    {historyLoading&&<p className="ed360-attendance-empty">Loading attendance history…</p>}
    {!loadingError&&visibleHistory.length>0&&<div className="ed360-attendance-history-list">{visibleHistory.map((entry,index)=>{
     const personId=population==='students'?entry.student_id:entry.teacher_id

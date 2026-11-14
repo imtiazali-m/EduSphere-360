@@ -709,7 +709,7 @@ export function AcademicManagementWorkspace({ initialWindow = 'academic-sessions
       <header className="ed360-academic-heading">
         <div className="ed360-academic-heading-copy">
           <span>STAGE 08 · ACADEMIC OPERATIONS</span>
-          <h1>Academic Management & Learning</h1>
+          <h1>{section.title}</h1>
           <p>{section.description}</p>
         </div>
         <div className="ed360-academic-heading-tools">
