@@ -168,19 +168,22 @@ export function Stage7CareWorkspace({initialWindow='leave',onToast}:{initialWind
 
   const loadLeave=useCallback(async()=>{
     if(!supabase||!user)return
-    const [studentResult,employeeResult,balanceResult]=await Promise.all([
-      supabase.from('student_leave_requests').select('*').eq('institution_id',user.institutionId).order('created_at',{ascending:false}).limit(500),
-      supabase.from('employee_leave_requests').select('*').eq('institution_id',user.institutionId).order('created_at',{ascending:false}).limit(500),
-      supabase.from('leave_balances').select('*').eq('institution_id',user.institutionId).order('leave_year',{ascending:false}).limit(500),
+    const [studentResult,employeeResult,balanceResult,sessionResult]=await Promise.all([
+      supabase.from('student_leave_requests').select('*').eq('institution_id',user.institutionId).order('created_at',{ascending:false}).limit(2000),
+      supabase.from('employee_leave_requests').select('*').eq('institution_id',user.institutionId).order('created_at',{ascending:false}).limit(2000),
+      supabase.from('leave_balances').select('*').eq('institution_id',user.institutionId).order('leave_year',{ascending:false}).limit(2000),
+      supabase.from('academic_sessions').select('id,session_name,name,start_date,end_date,is_current,is_active').eq('institution_id',user.institutionId).order('start_date',{ascending:false}).limit(100),
     ])
     if(studentResult.error)throw studentResult.error
     if(employeeResult.error&&isAdmin)throw employeeResult.error
     if(balanceResult.error)throw balanceResult.error
+    if(sessionResult.error&&isAdmin)throw sessionResult.error
     setLeaveRows([
       ...((studentResult.data??[]).map(row=>({...row,person_type:'student' as const}))),
       ...((employeeResult.data??[]).map(row=>({...row,person_type:'employee' as const}))),
     ] as LeaveRow[])
     setLeaveBalances((balanceResult.data??[]) as RecordRow[])
+    setAcademicSessions((sessionResult.data??[]) as RecordRow[])
   },[user?.id,user?.institutionId,isAdmin])
 
   const loadReports=useCallback(async()=>{
@@ -243,7 +246,7 @@ export function Stage7CareWorkspace({initialWindow='leave',onToast}:{initialWind
     if(!user||!supabase)return
     const run=async()=>{
       try{
-        if(activeWindow==='leave')await loadLeave()
+        if(activeWindow.startsWith('leave'))await loadLeave()
         if(activeWindow.startsWith('reports'))await loadReports()
         if(activeWindow==='discipline'&&canRead('discipline'))await loadDiscipline()
         if(activeWindow==='counselling')await loadCounselling()
@@ -256,6 +259,12 @@ export function Stage7CareWorkspace({initialWindow='leave',onToast}:{initialWind
   useEffect(()=>{
     if(!leavePerson&&selectedLeavePeople[0])setLeavePerson(selectedLeavePeople[0].id)
   },[leavePerson,selectedLeavePeople])
+  useEffect(()=>{
+    if(!leaveSessionId&&academicSessions.length){
+      const current=academicSessions.find(row=>row.is_current||row.is_active)||academicSessions[0]
+      setLeaveSessionId(String(current.id))
+    }
+  },[leaveSessionId,academicSessions])
   useEffect(()=>{if(!selectedStudent&&students[0])setSelectedStudent(students[0].id)},[selectedStudent,students])
   useEffect(()=>{if(!healthStudent&&students[0])setHealthStudent(students[0].id)},[healthStudent,students])
   useEffect(()=>{if(!appointmentStudent&&students[0])setAppointmentStudent(students[0].id)},[appointmentStudent,students])
