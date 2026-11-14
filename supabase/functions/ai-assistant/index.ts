@@ -119,7 +119,7 @@ Deno.serve(async(req:Request)=>{
     const allowed=roleAccess[page]??[];
     const {data:pageAllowed}=await client.rpc("has_institution_role",{target_institution:institutionId,allowed_roles:allowed});
     if(!allowed.length||pageAllowed!==true)return json({error:"This AI workspace is not available to your role."},403);
-    const defaultModels:Record<string,string>={openai:"gpt-6-astra",anthropic:"claude-sonnet-5",gemini:"gemini-3.8-flash",deepseek:"deepseek-flash",xai:"grok-4.7",meta:"muse-spark-1.3",perplexity:"fast-search"};
+    const defaultModels:Record<string,string>={openai:"gpt-6.1-sol",anthropic:"claude-sonnet-5-5",gemini:"gemini-3.8-flash",deepseek:"deepseek-flash",xai:"grok-4.7",meta:"muse-spark-1.3",perplexity:"fast-search"};
     const model=String(body.model??"").trim()||defaultModels[provider]||"";
     if(!model||model.length>160)return json({error:"Enter a valid model identifier."},400);
     const sourceMessages=Array.isArray(body.messages)?body.messages.slice(-9):[];
