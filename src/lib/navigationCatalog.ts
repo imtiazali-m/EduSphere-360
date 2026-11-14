@@ -120,14 +120,26 @@ export type RoleNavigationGroup = Omit<WorkspaceMenuGroup,'items'> & { items:str
 export interface RoleNavigationSection { key:string; label:string; groups:RoleNavigationGroup[] }
 
 export const navigationSectionDefinitions:NavigationSectionDefinition[]=[
-  {key:'overview',label:'Overview',groupKeys:['dashboard']},
-  {key:'setup',label:'Institute Setup',groupKeys:['administration','backup']},
-  {key:'people',label:'People & Human Resources',groupKeys:['people-hr','attendance','behaviour','certificates']},
-  {key:'academics',label:'Academic Delivery',groupKeys:['academic-management','question-bank','examinations','class-tests','library']},
-  {key:'finance',label:'Finance & Payroll',groupKeys:['accounts-finance','fees','receivables','payments','receipts','reconciliation']},
-  {key:'communication',label:'Communication',groupKeys:['communication']},
-  {key:'campus',label:'Campus Operations',groupKeys:['transport','inventory','facilities','visitors']},
-  {key:'intelligence',label:'Reports & Intelligence',groupKeys:['reports','ai']},
+  {
+    key:'main',
+    label:'',
+    groupKeys:[
+      'dashboard',
+      'reports','ai',
+      'administration',
+      'academic-management',
+      'attendance',
+      'examinations',
+      'behaviour',
+      'people-hr',
+      'accounts-finance','fees','receivables','payments','receipts','reconciliation',
+      'communication',
+      'transport','inventory','facilities','visitors',
+      'certificates','timetable','teaching','curriculum','academic-sessions','classes-sections','subjects','question-bank','class-tests','library',
+      'institution-config',
+      'backup',
+    ],
+  },
 ]
 const navigationGroupOrder=new Map<string,number>(
   navigationSectionDefinitions.flatMap(section=>section.groupKeys).map((key,index)=>[key,index] as const)
