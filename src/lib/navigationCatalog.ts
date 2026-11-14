@@ -5,11 +5,17 @@ export interface NavigationCatalogGroup { key:string; label:string; icon:string;
 
 const nestedAdministrationGroups=new Set(['institution-config','academic-sessions','classes-sections','subjects'])
 const nestedAcademicGroups=new Set(['curriculum','timetable','teaching'])
-
-export const navigationCatalog:NavigationCatalogGroup[]=institutionalMenu.filter(group=>!nestedAdministrationGroups.has(group.key)&&!nestedAcademicGroups.has(group.key)).map(group=>({
-  key:group.key,label:group.label,icon:group.icon,description:group.description,theme:group.theme,
-  items:group.items.map(item=>item.label),
-}))
+const navigationMenuOrder=[
+  'dashboard','reports','ai','administration','academic-management','attendance','examinations',
+  'behaviour','people-hr','certificates','question-bank','class-tests','library',
+  'accounts-finance','fees','receivables','payments','receipts','reconciliation','communication',
+  'transport','inventory','facilities','visitors','backup',
+]
+const navigationMenuRank=new Map(navigationMenuOrder.map((key,index)=>[key,index] as const))
+export const navigationCatalog:NavigationCatalogGroup[]=institutionalMenu
+  .filter(group=>!nestedAdministrationGroups.has(group.key)&&!nestedAcademicGroups.has(group.key))
+  .map(group=>({key:group.key,label:group.label,icon:group.icon,description:group.description,theme:group.theme,items:group.items.map(item=>item.label)}))
+  .sort((left,right)=>(navigationMenuRank.get(left.key)??Number.MAX_SAFE_INTEGER)-(navigationMenuRank.get(right.key)??Number.MAX_SAFE_INTEGER))
 
 const roleItemAllow:Record<string,Partial<Record<string,string[]>>>={
   'communication':{
