@@ -1,0 +1,36 @@
+.ra-workspace{display:grid;gap:18px;padding:4px 2px 28px;color:#171b19;background:transparent;min-height:100%;font-family:inherit}
+.ra-heading{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:4px 0 14px;border-bottom:1px solid #e8ece9}
+.ra-heading>div>span{font-size:9px;font-weight:900;letter-spacing:1.5px;color:#34734d}
+.ra-heading h1{margin:5px 0;color:#101512;font-size:clamp(23px,2.2vw,31px);font-weight:850;letter-spacing:-.7px}
+.ra-heading p{margin:0;color:#68736c;font-size:12px;line-height:1.6}
+.ra-refresh,.ra-primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:38px;padding:0 13px;border:1px solid #d8e1db;border-radius:9px;background:#fff;color:#17221a;font-size:11px;font-weight:800;cursor:pointer}
+.ra-primary{border-color:#1e633a;background:#1e633a;color:#fff}
+.ra-refresh:hover{background:#f3f7f4}.ra-primary:hover{background:#174f2e}
+.ra-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px}
+.ra-stat{display:grid;gap:7px;min-height:84px;padding:14px 15px;border:1px solid #e5eae6;border-radius:12px;background:#fff}
+.ra-stat small{color:#657168;font-size:10px;font-weight:700}.ra-stat strong{color:#111813;font-size:clamp(18px,1.8vw,25px);font-weight:850;letter-spacing:-.5px;overflow-wrap:anywhere}
+.ra-panel{display:grid;gap:15px;padding:18px;border:1px solid #e4e9e5;border-radius:14px;background:#fff;box-shadow:0 4px 16px rgba(18,35,23,.035)}
+.ra-panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.ra-panel-head h2{margin:0;color:#151c17;font-size:16px;font-weight:850}.ra-panel-head p{margin:5px 0 0;color:#68746c;font-size:11px;line-height:1.55}
+.ra-export-tools{display:flex;gap:8px;align-items:center}.ra-export-tools select,.ra-form-grid select{min-height:38px;padding:0 10px;border:1px solid #dce4de;border-radius:8px;background:#fff;color:#202a23;font-size:11px}
+.ra-filters{display:flex;align-items:end;gap:10px;flex-wrap:wrap;padding:12px;border:1px solid #e9edea;border-radius:10px;background:#f8faf8}
+.ra-filters label,.ra-form-grid label{display:grid;gap:5px;color:#58655c;font-size:10px;font-weight:800}
+.ra-filters label input,.ra-filters label select{min-width:118px;min-height:34px;padding:0 8px;border:1px solid #dce4de;border-radius:7px;background:#fff;color:#202a23;font-size:11px}
+.ra-filters .ra-search{display:flex;align-items:center;gap:6px;min-height:34px;padding:0 8px;border:1px solid #dce4de;border-radius:7px;background:#fff}
+.ra-filters .ra-search input{min-width:150px;border:0;outline:0}
+.ra-table-wrap{overflow:auto;border:1px solid #e8ece9;border-radius:10px}
+.ra-table-wrap table{width:100%;border-collapse:collapse;white-space:nowrap;font-size:11px}
+.ra-table-wrap th{padding:11px 12px;text-align:left;color:#3c4b41;background:#f4f7f5;border-bottom:1px solid #e5ebe6;font-size:10px;font-weight:850}
+.ra-table-wrap td{padding:10px 12px;color:#354139;border-bottom:1px solid #edf0ed}
+.ra-table-wrap tbody tr:last-child td{border-bottom:0}.ra-table-wrap tbody tr:hover{background:#fafcfb}
+.ra-empty,.ra-loading{padding:20px;color:#68746c;font-size:12px}.ra-warning{padding:11px 13px;border:1px solid #eadfbd;border-radius:9px;background:#fffcf2;color:#765b1e;font-size:11px;line-height:1.55}
+.ra-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.ra-form-grid label select{width:100%}
+.ra-template-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:8px}
+.ra-template-grid button{display:flex;align-items:center;gap:10px;min-height:54px;padding:10px;border:1px solid #e4eae5;border-radius:9px;background:#fff;color:#29352d;text-align:left;font-size:10px;cursor:pointer}
+.ra-template-grid button b{display:grid;place-items:center;width:27px;height:27px;flex:0 0 27px;border-radius:7px;background:#edf5ef;color:#27613a;font-size:9px}
+.ra-template-grid button.selected{border-color:#43845a;background:#f5faf6;box-shadow:0 0 0 2px rgba(45,119,69,.08)}
+.ra-field-picker{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:9px}
+.ra-field-picker label{display:flex;align-items:center;gap:8px;padding:9px;border:1px solid #e7ece8;border-radius:8px;color:#344138;font-size:11px}
+.ra-field-picker input{accent-color:#23653c}
+@media(max-width:700px){.ra-heading{align-items:flex-start;flex-direction:column}.ra-heading .ra-refresh{width:100%}.ra-form-grid{grid-template-columns:1fr}.ra-panel{padding:13px}.ra-export-tools{width:100%}.ra-export-tools select{flex:1}.ra-filters>*{flex:1 1 140px}}
+@media print{.ra-heading .ra-refresh,.ra-filters,.ra-export-tools,.ra-template-grid,.ra-field-picker{display:none!important}.ra-workspace{padding:0}.ra-panel{break-inside:avoid;box-shadow:none}}
