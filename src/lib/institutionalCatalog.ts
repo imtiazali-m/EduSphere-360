@@ -47,8 +47,8 @@ export const institutionalMenu:WorkspaceMenuGroup[]=[
   'Students','Admissions & Enrollment','Teachers','Faculty & Staff','Parents & Guardians',
   'HR & Recruitment','Employee Contracts & Documents','Employee Performance','Payroll & Salary Records','Alumni'
  ]),
- group('attendance','Attendance & Leave','Daily attendance registers, leave decisions, reporting and restricted student-care records.','CalendarCheck','rose','attendance',staff.concat(['student','parent']),[
-  'Student Attendance','Teacher Attendance','Staff Attendance','Leave Management','Attendance Reports','Student Discipline','Student Counselling & Wellbeing','Health & Emergency Records'
+ group('attendance','Attendance','Class, section and period registers, QR/barcode check-in, staff attendance, leave and student support.','CalendarCheck','rose','attendance',staff.concat(['student','parent']),[
+  'Student Attendance','Teacher Attendance','Staff Attendance','QR / Barcode Check-in','Biometric Verification','Student Attendance Cards','Teacher Attendance Cards','Staff Attendance Cards','Leave Management','Attendance Reports','Student Discipline','Student Counselling & Wellbeing','Health & Emergency Records'
  ]),
  group('behaviour','Behaviour and Skills','Positive recognition, safeguarding-aware behaviour logs, incidents, skills and competency tracking.','HeartHandshake','pink','behaviour',staff.concat(['student','parent']),[
   'Behaviour Dashboard','Behaviour Records','Positive Behaviour','Disciplinary Incidents','Rewards and Recognition','Warnings','Student Skills','Co-curricular Activities','Competency Tracking','Student Progress History','Behaviour Analytics','Downloadable Behaviour Reports'
@@ -61,8 +61,8 @@ export const institutionalMenu:WorkspaceMenuGroup[]=[
   'Letters & Applications',
   'Document Verification'
  ]),
- group('academic-management','Academic Management & Learning','Plan sessions, classes, subjects, curriculum, lesson delivery, timetables, homework, learning materials, digital courses, classroom work, calendar and learner progress.','GraduationCap','blue','academic-management',academic.concat(['student','parent']),[
-  'Academic Sessions','Classes & Sections','Subjects & Courses','Curriculum & Syllabus','Lesson Planning','Timetable','Homework & Assignments','Study Materials','Online Learning','Classwork & Classroom Activities','Academic Calendar','Learning Progress'
+ group('academic-management','Academics','Sessions, classes, subjects, curriculum, lesson delivery, timetables, homework, digital learning and progress.','GraduationCap','blue','academic-management',academic.concat(['student','parent']),[
+  'Academic Sessions','Classes & Sections','Subjects','Curriculum','Lesson Plans','Timetable','Homework','Learning Materials','Online Learning','Classroom Activities','Academic Calendar','Learning Progress'
  ]),
  group('curriculum','Curriculum and Learning Resources','Curriculum maps, syllabus, outcomes, teaching resources, chapter materials and progress analytics.','BookOpen','teal','curriculum',family,[
   'Curriculum Dashboard','Curriculum Map','Syllabus Management','Learning Outcomes','Lesson Plans','Teaching Resources','Learning Materials','Resource Downloads','Subject-wise Curriculum','Chapter-wise Learning Resources','Curriculum Coverage','Learning Progress Tracking','Curriculum Reports'
@@ -164,10 +164,10 @@ export const institutionalMenu:WorkspaceMenuGroup[]=[
  group('visitors','Visitor Management','Visitor registration, passes, approvals, entry/exit records, notifications and history.','UserRound','slate','visitors',management.concat(['teacher']),[
   'Visitor Dashboard','Visitor Registration','Visitor Information','Visitor Passes','Entry and Exit Records','Visitor Approvals','Visit History','Visitor Notifications','Visitor Reports'
  ]),
- group('reports','Reports and Analytics','Role-scoped live reports, custom builders, comparisons, scheduled runs and export history.','BarChart3','blue','reports',management.concat(['teacher','accountant','exam_officer']),[
-  'Reports Dashboard','Student Reports','Employee Reports','Attendance Reports','Examination Reports','Academic Reports','Fee Reports','Payroll Reports','Financial Reports','Class Reports','Comparative Analytics','Custom Report Builder','Scheduled Reports','Report Templates','Report History'
+ group('reports','Reports & Analytics','Live institutional reporting, reusable templates, connected forms, scheduled runs and persistent history.','BarChart3','blue','reports',management.concat(['teacher','accountant','exam_officer']),[
+  'Reports Dashboard','Student Reports','Employee Reports','Attendance Reports','Examination Reports','Academic Reports','Fee Reports','Payroll Reports','Financial Reports','Class Reports','Comparative Analytics','Custom Report Builder','Scheduled Reports','Report Templates','Form Templates','Report History'
  ]),
- group('ai','AI Intelligence','Evidence-grounded assistance and explainable insights. Predictions must disclose source data, assumptions and uncertainty.','BrainCircuit','violet','ai',management,[
+ group('ai','AI Intelligence','Connected model assistance and evidence-grounded institutional insights with transparent assumptions and uncertainty.','BrainCircuit','violet','ai',management.concat(['teacher','accountant','exam_officer']),[
   'AI Assistant','Smart Reports','Student Performance Prediction','Student Analysis','Fee Collection Prediction','Examination Analysis','AI Timetable Suggestions','AI Question Generation','AI Document Assistant','AI Learning Recommendations','Academic Performance Insights','Attendance and Behaviour Insights','Institutional Intelligence'
  ]),
 ]

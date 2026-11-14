@@ -6,7 +6,7 @@ export interface NavigationCatalogGroup { key:string; label:string; icon:string;
 const nestedAdministrationGroups=new Set(['institution-config','academic-sessions','classes-sections','subjects'])
 const nestedAcademicGroups=new Set(['curriculum','timetable','teaching'])
 const navigationMenuOrder=[
-  'dashboard','reports','ai','administration','academic-management','attendance','examinations',
+  'dashboard','attendance','academic-management','examinations','reports','ai','administration',
   'behaviour','people-hr','certificates','question-bank','class-tests','library',
   'accounts-finance','fees','receivables','payments','receipts','reconciliation','communication',
   'transport','inventory','facilities','visitors','backup',
@@ -18,6 +18,11 @@ export const navigationCatalog:NavigationCatalogGroup[]=institutionalMenu
   .sort((left,right)=>(navigationMenuRank.get(left.key)??Number.MAX_SAFE_INTEGER)-(navigationMenuRank.get(right.key)??Number.MAX_SAFE_INTEGER))
 
 const roleItemAllow:Record<string,Partial<Record<string,string[]>>>={
+  'ai':{
+    teacher:['AI Assistant','Smart Reports','Student Performance Prediction','Student Analysis','Examination Analysis','AI Timetable Suggestions','AI Question Generation','AI Document Assistant','AI Learning Recommendations','Academic Performance Insights','Attendance and Behaviour Insights'],
+    accountant:['AI Assistant','Smart Reports','Fee Collection Prediction','Institutional Intelligence'],
+    exam_officer:['AI Assistant','Smart Reports','Student Performance Prediction','Examination Analysis','AI Question Generation','Academic Performance Insights','Institutional Intelligence'],
+  },
   'communication':{
     teacher:['Communication Dashboard','Individual Messages','Class-wise Messaging','Employee Notifications','Assignment Notifications','Email Notifications','Delivery History','Communication Logs','Notification Centre','Communication Reports','Parent Communication','Internal Messages','Circulars & Notices','Events & Activities','Complaints & Helpdesk','Sports & Extracurricular Activities','Sports & Clubs','Teams & Members','Coaches & Supervisors','Activity Schedules','Participation Records','Competitions & Results','Achievements','Activity Reports'],
     student:['Communication Dashboard','Assignment Notifications','Notification Centre','Circulars & Notices','Events & Activities','Complaints & Helpdesk','Sports & Extracurricular Activities','Sports & Clubs','Activity Schedules','Participation Records','Competitions & Results','Achievements'],
@@ -38,7 +43,7 @@ const roleItemAllow:Record<string,Partial<Record<string,string[]>>>={
     exam_officer:[],
   },
   'academic-management': {
-    student:['Academic Sessions','Classes & Sections','Subjects & Courses','Curriculum & Syllabus','Lesson Planning','Timetable','Homework & Assignments','Study Materials','Online Learning','Classwork & Classroom Activities','Academic Calendar','Learning Progress'],
+    student:['Academic Sessions','Classes & Sections','Subjects','Curriculum','Lesson Plans','Timetable','Homework','Learning Materials','Online Learning','Classroom Activities','Academic Calendar','Learning Progress'],
     parent:['Academic Sessions','Classes & Sections','Subjects & Courses','Curriculum & Syllabus','Lesson Planning','Timetable','Homework & Assignments','Study Materials','Online Learning','Classwork & Classroom Activities','Academic Calendar','Learning Progress'],
     teacher:['Academic Sessions','Classes & Sections','Subjects & Courses','Curriculum & Syllabus','Lesson Planning','Timetable','Homework & Assignments','Study Materials','Online Learning','Classwork & Classroom Activities','Academic Calendar','Learning Progress'],
     exam_officer:['Academic Sessions','Classes & Sections','Subjects & Courses','Timetable','Academic Calendar','Learning Progress'],
@@ -65,7 +70,7 @@ const roleItemAllow:Record<string,Partial<Record<string,string[]>>>={
   attendance:{
     student:['Student Attendance','Leave Management','Student Counselling & Wellbeing','Health & Emergency Records'],
     parent:['Student Attendance','Leave Management','Student Counselling & Wellbeing','Health & Emergency Records'],
-    teacher:['Student Attendance','Teacher Attendance','Leave Management','Attendance Reports'],
+    teacher:['Student Attendance','Teacher Attendance','QR / Barcode Check-in','Leave Management','Attendance Reports'],
   },
   timetable:{
     student:['Timetable Dashboard','Class Timetable','Period Timetable','Timetable History'],
@@ -93,7 +98,7 @@ const roleItemAllow:Record<string,Partial<Record<string,string[]>>>={
     accountant:['Transport Dashboard','Transport Fees','Transport Reports'],
   },
   reports:{
-    teacher:['Reports Dashboard','Student Reports','Attendance Reports','Examination Reports','Academic Reports','Class Reports','Comparative Analytics','Report Templates','Report History'],
+    teacher:['Reports Dashboard','Student Reports','Attendance Reports','Examination Reports','Academic Reports','Class Reports','Comparative Analytics','Report Templates','Form Templates','Report History'],
     accountant:['Reports Dashboard','Fee Reports','Payroll Reports','Financial Reports','Comparative Analytics','Report Templates','Report History'],
     exam_officer:['Reports Dashboard','Examination Reports','Academic Reports','Class Reports','Comparative Analytics','Report Templates','Report History'],
   }
