@@ -1137,6 +1137,24 @@ check('Single dashboard layout preserves role data and accessible display prefer
   assert.ok(displayTests.includes('reads all supported settings') && displayTests.includes('storage write failure is non-fatal'), 'Display preference persistence regressions are missing')
 })
 
+check('Internal account and institute profile controls remain connected to secure owner workflows', () => {
+  const dashboard = read('src/components/Dashboard.tsx')
+  const account = read('src/components/PersonalWorkspace.tsx')
+  const auth = read('src/lib/auth.ts')
+  const institute = read('src/components/AdministrationStage5Workspace.tsx')
+  const roleDashboard = read('src/components/RoleDashboard.tsx')
+  const internalTheme = read('src/styles/college-theme.css')
+  assert.ok(dashboard.includes("navigate('personal:account-settings'") && dashboard.includes("navigate('governance:profile'") && dashboard.includes('void logout()'), 'The profile menu must link account settings, institute profile and sign-out')
+  assert.ok(account.includes('updateAccountName') && account.includes("from('profiles').update({full_name:fullName})"), 'Users must be able to edit their own account name')
+  assert.ok(account.includes("updateUser({email:address}") && account.includes('updatePassword') && account.includes('Request email change'), 'Account settings must include secure email and password changes')
+  assert.ok(auth.includes('supabase.auth.getUser()') && auth.includes('authData.user?.email'), 'The verified Auth email must be used for the signed-in account')
+  assert.ok(institute.includes('ed360-admin-profile-preview') && institute.includes('logoUrl') && !institute.includes('showProfileCard'), 'Institute identity card with its logo must be visible without an extra toggle')
+  for (const item of ['institutional_audit_events', 'Recent database changes', 'Live database activity', 'GLOBAL INSTITUTION OVERSIGHT', 'Live updates']) assert.ok(!roleDashboard.includes(item), 'Dashboard-only audit or live-feed UI should be removed: ' + item)
+  assert.ok(roleDashboard.includes('studentPresentToday') && roleDashboard.includes('studentAbsentToday') && roleDashboard.includes('studentAttendancePercent'), 'Student attendance must be reported separately from staff attendance')
+  assert.ok(internalTheme.includes('linear-gradient(128deg,#321943') && internalTheme.includes('.pro-app-shell'), 'The purple / pink canvas must be scoped to the signed-in internal shell')
+  assert.ok(!internalTheme.includes(':root {') || internalTheme.indexOf(':root {') < internalTheme.indexOf('/* Internal application — one cohesive plum'), 'Internal palette tokens must not overwrite public-page root tokens')
+})
+
 check('Student admission is a dedicated, accessible workspace window', () => {
   const recordModule = read('src/components/RecordModule.tsx')
   const admissionStyles = read('src/styles/student-admission-workspace.css')
