@@ -370,3 +370,340 @@ body:has(.es-auth-page) .build-corner { display: none !important; }
 @media (prefers-reduced-motion: reduce) {
   .es-auth-page *, .es-auth-page *::before, .es-auth-page *::after { scroll-behavior: auto !important; }
 }
+
+
+/* GIDC login visual system — matched to the public college website. */
+.gidc-login-page {
+  --es-forest: #0f4f36;
+  --es-forest-deep: #093c2a;
+  --es-mint: #edf4e9;
+  --es-lime: #e5bd68;
+  --es-ink: #172b26;
+  --es-muted: #66756e;
+  --es-line: #e7e6dc;
+  grid-template-columns: minmax(370px,.92fr) minmax(520px,1.08fr);
+  background: #fbfaf5;
+  color: #172b26;
+  font-family: 'DM Sans', 'Manrope', Inter, ui-sans-serif, system-ui, sans-serif;
+}
+.gidc-login-page .es-auth-visual {
+  background:
+    radial-gradient(ellipse at 12% 78%, rgba(216,163,60,.17), transparent 34%),
+    radial-gradient(ellipse at 92% 15%, rgba(232,244,224,.16), transparent 29%),
+    linear-gradient(145deg,#093c2a 0%,#0f4f36 49%,#236b49 100%);
+  color: #f8fbf5;
+}
+.gidc-login-page .es-auth-visual::before,
+.gidc-login-page .es-auth-visual::after {
+  border-color: rgba(241,222,174,.18);
+}
+.gidc-login-page .es-auth-visual::before {
+  box-shadow: 0 0 0 34px rgba(241,222,174,.035), 0 0 0 72px rgba(241,222,174,.022);
+}
+.gidc-login-page .es-auth-visual::after {
+  box-shadow: 0 0 0 28px rgba(241,222,174,.03), 0 0 0 60px rgba(241,222,174,.018);
+}
+.gidc-login-page .es-auth-brand { color: #fff; }
+.gidc-login-page .es-auth-brand-mark.es-auth-brand-crest {
+  width: 49px;
+  height: 52px;
+  flex-basis: 49px;
+  padding: 5px;
+  border: 1px solid rgba(255,255,255,.54);
+  border-radius: 11px;
+  background: rgba(255,255,255,.96);
+  box-shadow: 0 8px 22px rgba(0,0,0,.13);
+}
+.gidc-login-page .es-auth-brand-crest img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.gidc-login-page .es-auth-brand-copy b {
+  color: #fff;
+  font-family: 'Manrope', sans-serif;
+  letter-spacing: -.45px;
+}
+.gidc-login-page .es-auth-brand-copy small {
+  color: #ead8ac;
+  letter-spacing: 1.45px;
+}
+.gidc-login-page .es-auth-visual-label {
+  color: rgba(248,244,231,.68);
+}
+.gidc-login-page .es-auth-kicker {
+  color: #f0d89d;
+}
+.gidc-login-page .es-auth-kicker i {
+  background: #e0ad49;
+  box-shadow: 0 0 0 5px rgba(224,173,73,.16);
+}
+.gidc-login-page .es-auth-visual-copy h1 {
+  color: #fffdf7;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(42px,4.2vw,62px);
+  font-weight: 700;
+  letter-spacing: -1.9px;
+  line-height: 1.05;
+}
+.gidc-login-page .es-auth-visual-copy h1 em {
+  color: #f0d28b;
+}
+.gidc-login-page .es-auth-visual-copy p {
+  color: rgba(245,248,240,.78);
+  font-family: 'DM Sans', sans-serif;
+}
+.gidc-login-page .es-auth-illustration-glow {
+  background: rgba(221,183,104,.16);
+}
+.gidc-login-page .es-auth-orbit {
+  border-color: rgba(246,226,180,.22);
+}
+.gidc-login-page .es-campus-roof {
+  border-bottom-color: #d8a33c;
+}
+.gidc-login-page .es-campus-top {
+  background: #b58a43;
+  border-color: rgba(74,52,19,.25);
+}
+.gidc-login-page .es-campus-top span {
+  background: #87652f;
+}
+.gidc-login-page .es-campus-columns {
+  background: linear-gradient(90deg,#e7e7d7,#fffdf0 50%,#d9e3d3);
+  border-color: rgba(16,64,42,.2);
+}
+.gidc-login-page .es-campus-columns i {
+  background: linear-gradient(90deg,#a8b39c,#f5f0d9 50%,#8da18b);
+}
+.gidc-login-page .es-campus-base {
+  background: #d8c49b;
+  color: #254b36;
+  border-color: rgba(74,52,19,.2);
+}
+.gidc-login-page .es-auth-float {
+  border-color: rgba(255,255,255,.84);
+  background: rgba(255,255,250,.97);
+  color: #173d2b;
+  box-shadow: 0 15px 35px rgba(5,31,20,.2);
+}
+.gidc-login-page .es-auth-float>span {
+  color: #14563a;
+  background: #e5efe2;
+}
+.gidc-login-page .es-auth-float small {
+  color: #748177;
+}
+.gidc-login-page .es-auth-float>svg {
+  color: #b18432;
+}
+.gidc-login-page .es-auth-visual-foot {
+  border-top-color: rgba(245,231,194,.24);
+}
+.gidc-login-page .es-auth-foot-symbol {
+  color: #f0d28b;
+  background: rgba(240,210,139,.13);
+}
+.gidc-login-page .es-auth-visual-foot b {
+  color: #fffdf6;
+}
+.gidc-login-page .es-auth-visual-foot small {
+  color: rgba(245,248,240,.67);
+}
+.gidc-login-page .es-auth-foot-dots i:first-child {
+  background: #e3b85d;
+}
+
+.gidc-login-page .es-auth-main {
+  background:
+    radial-gradient(circle at 86% 5%, rgba(216,163,60,.10), transparent 27%),
+    radial-gradient(circle at 4% 90%, rgba(23,99,66,.055), transparent 34%),
+    #fbfaf5;
+}
+.gidc-login-page .es-auth-back {
+  color: #537060;
+}
+.gidc-login-page .es-auth-back:hover {
+  color: #0f4f36;
+}
+.gidc-login-page .es-auth-topline p {
+  color: #6e7c71;
+}
+.gidc-login-page .es-auth-topline p button {
+  color: #176342;
+}
+.gidc-login-page .es-auth-form-wrap {
+  max-width: 520px;
+}
+.gidc-login-page .es-auth-card {
+  border-color: #e8e6da;
+  border-radius: 21px;
+  background: rgba(255,255,253,.96);
+  box-shadow: 0 24px 62px rgba(28,53,35,.09), 0 3px 10px rgba(28,53,35,.025);
+}
+.gidc-login-page .gidc-login-avatar {
+  width: 66px;
+  height: 66px;
+  padding: 7px;
+  border: 1px solid #e5e1d3;
+  border-radius: 17px;
+  color: #176342;
+  background: linear-gradient(145deg,#fff,#f1f5e9);
+  box-shadow: 0 9px 22px rgba(23,99,66,.08);
+}
+.gidc-login-page .gidc-login-avatar>span {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+}
+.gidc-login-page .gidc-login-avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.gidc-login-page .gidc-login-avatar>i {
+  border-color: #fff;
+  color: #fff;
+  background: #176342;
+}
+.gidc-login-page .es-auth-overline {
+  color: #987330;
+  letter-spacing: 1.55px;
+}
+.gidc-login-page .es-auth-form-heading h2 {
+  color: #103f2d;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(29px,2.5vw,35px);
+  font-weight: 700;
+  letter-spacing: -.6px;
+}
+.gidc-login-page .es-auth-form-heading p {
+  color: #68776d;
+}
+.gidc-login-page .es-account-type {
+  border-color: #e5e9df;
+  border-radius: 13px;
+  background: #f1f5ed;
+}
+.gidc-login-page .es-account-type button {
+  color: #68786c;
+}
+.gidc-login-page .es-account-type button>span {
+  color: #54725e;
+  background: #e4ebdf;
+}
+.gidc-login-page .es-account-type button.is-active {
+  color: #0f4f36;
+  border-color: #b7cdb7;
+  background: #fff;
+  box-shadow: 0 4px 13px rgba(20,80,51,.1);
+}
+.gidc-login-page .es-account-type button.is-active>span {
+  color: #fff;
+  background: #176342;
+}
+.gidc-login-page .es-auth-field {
+  color: #344c3e;
+}
+.gidc-login-page .es-auth-input {
+  border-color: #dfe5d9;
+  border-radius: 10px;
+  color: #66806d;
+  background: #fbfcf8;
+}
+.gidc-login-page .es-auth-input:focus-within {
+  border-color: #6d9b79;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(23,99,66,.13);
+}
+.gidc-login-page .es-auth-input input {
+  color: #173c2b;
+}
+.gidc-login-page .es-auth-input input::placeholder {
+  color: #a1aaa0;
+}
+.gidc-login-page .es-password-toggle {
+  color: #62806b;
+}
+.gidc-login-page .es-auth-check {
+  color: #647469;
+}
+.gidc-login-page .es-check-box {
+  border-color: #cbd8c9;
+}
+.gidc-login-page .es-auth-check input:checked + .es-check-box {
+  border-color: #176342;
+  background: #176342;
+}
+.gidc-login-page .es-auth-check input:focus-visible + .es-check-box {
+  outline-color: rgba(23,99,66,.25);
+}
+.gidc-login-page .es-auth-text-button,
+.gidc-login-page .es-auth-inline-switch button {
+  color: #176342;
+}
+.gidc-login-page .es-auth-text-button:hover,
+.gidc-login-page .es-auth-inline-switch button:hover {
+  color: #0f4f36;
+}
+.gidc-login-page .es-auth-submit {
+  border-radius: 10px;
+  color: #fff;
+  background: linear-gradient(110deg,#176342,#0f4f36);
+  box-shadow: 0 10px 22px rgba(15,79,54,.2);
+}
+.gidc-login-page .es-auth-submit:hover:not(:disabled) {
+  background: linear-gradient(110deg,#1c714b,#0d442e);
+  box-shadow: 0 14px 28px rgba(15,79,54,.24);
+}
+.gidc-login-page .es-auth-error {
+  border-color: #efd6d0;
+  color: #9d453b;
+  background: #fff5f2;
+}
+.gidc-login-page .es-auth-notice {
+  border-color: #d6e5d5;
+  color: #386249;
+  background: #f0f7ed;
+}
+.gidc-login-page .es-auth-session-hint {
+  color: #7c897d;
+}
+.gidc-login-page .es-auth-secure-note {
+  border-top-color: #e8eadf;
+  color: #728174;
+}
+.gidc-login-page .es-auth-secure-note svg {
+  color: #176342;
+}
+.gidc-login-page .es-auth-main-foot {
+  color: #829084;
+}
+.gidc-login-page .es-auth-main-foot span:first-child {
+  color: #577260;
+}
+@media (max-width: 1050px) {
+  .gidc-login-page { grid-template-columns: minmax(0,.92fr) minmax(0,1.08fr); }
+  .gidc-login-page .es-auth-visual { padding-left: 27px; padding-right: 27px; }
+}
+@media (max-width: 760px) {
+  .gidc-login-page { display: flex; flex-direction: column; }
+  .gidc-login-page .es-auth-visual {
+    min-height: 0;
+    padding: 22px 22px 16px;
+  }
+  .gidc-login-page .es-auth-visual-copy { margin: 26px 0 0; }
+  .gidc-login-page .es-auth-visual-copy h1 { font-size: 35px; letter-spacing: -1px; }
+  .gidc-login-page .es-auth-illustration { height: 176px; min-height: 176px; }
+  .gidc-login-page .es-auth-main { min-height: auto; padding: 18px 18px 20px; }
+  .gidc-login-page .es-auth-form-wrap { max-width: 540px; padding: 28px 0; }
+}
+@media (max-width: 420px) {
+  .gidc-login-page .es-auth-visual { padding-left: 17px; padding-right: 17px; }
+  .gidc-login-page .es-auth-visual-copy h1 { font-size: 31px; }
+  .gidc-login-page .es-auth-main { padding-left: 13px; padding-right: 13px; }
+  .gidc-login-page .es-auth-topline { flex-wrap: wrap; }
+}

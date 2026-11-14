@@ -131,8 +131,14 @@ async function inspectViewport({name,width,height}) {
     assert.match(imageResponse.headers()['content-type']??'',/image\/webp/i,`${name}: the Events image asset is not served as WebP`)
 
     await page.locator('.gidc-public-login').click()
-    await page.locator('.es-auth-page').waitFor({state:'visible'})
+    await page.locator('.gidc-login-page').waitFor({state:'visible'})
     await page.locator('.es-auth-form').first().waitFor({state:'visible'})
+    assert.equal(await page.locator('.gidc-login-page .es-auth-brand-crest img').getAttribute('src'),'/gidc-badin-official-logo.svg',
+      `${name} login page does not use the official GIDC crest in its brand`)
+    assert.equal(await page.locator('.gidc-login-page .gidc-login-avatar img').count(),1,
+      `${name} login form does not display the GIDC crest`)
+    assert.equal(await page.locator('.gidc-login-page .es-account-type button').count(),4,
+      `${name} login account-type choices are missing`)
     await assertNoHorizontalOverflow(page,`${name} owner login`)
 
     const roleCases=[

@@ -30,7 +30,7 @@ const portals: { role: AppRole; title: string; description: string; icon: typeof
 
 function Brand() {
   return <div className="es-auth-brand" aria-label="Government Islamia Degree College Badin">
-    <span className="es-auth-brand-mark"><GraduationCap size={23} strokeWidth={2.1} /></span>
+    <span className="es-auth-brand-mark es-auth-brand-crest"><img src="/gidc-badin-official-logo.svg" alt="" /></span>
     <span className="es-auth-brand-copy"><b>Government Islamia</b><small>DEGREE COLLEGE BADIN</small></span>
   </div>
 }
@@ -613,13 +613,13 @@ export function LoginScreen({ navigate, initialRole }: ScreenProps & { initialRo
   }
 
   return (
-    <div className="es-auth-page">
+    <div className="es-auth-page gidc-login-page">
       <AuthVisualPanel variant="login" />
       <main className="es-auth-main">
         <AuthTopline navigate={navigate} mode="login" />
         <div className="es-auth-form-wrap">
           <section className="es-auth-card es-login-card">
-            <div className="es-auth-avatar"><span><GraduationCap size={23}/></span><i><Check size={11}/></i></div>
+            <div className="es-auth-avatar gidc-login-avatar"><span><img src="/gidc-badin-official-logo.svg" alt="Government Islamia Degree College Badin crest"/></span><i><Check size={11}/></i></div>
             <div className="es-auth-form-heading">
               <span className="es-auth-overline">GOVERNMENT ISLAMIA DEGREE COLLEGE BADIN</span>
               <h2>{resetMode ? 'Reset your password' : 'Welcome back'}</h2>
