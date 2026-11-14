@@ -6,7 +6,7 @@ import '../styles/modern-workspace-refresh.css'
 
 type ProviderKey='auto'|'openai'|'anthropic'|'gemini'|'deepseek'|'xai'|'meta'|'perplexity'
 type ProviderStatus={configured:boolean;secretName:string}
-type Message={role:'user'|'assistant';content:string;time:string}
+type Message={role:'user'|'assistant';content:string;time:string;provider?:string;model?:string}
 const providers:{key:ProviderKey;name:string;secret:string;hint:string;model:string}[]=[
  {key:'openai',name:'OpenAI',secret:'OPENAI_API_KEY',hint:'Model ID',model:'gpt-6-astra'},
  {key:'anthropic',name:'Claude',secret:'ANTHROPIC_API_KEY',hint:'Model ID',model:'claude-sonnet-5'},
@@ -43,6 +43,7 @@ export function AIAssistantWorkspace({initialWindow='chat'}:{initialWindow?:stri
  const [status,setStatus]=useState<Partial<Record<ProviderKey,ProviderStatus>>>({})
  const [messages,setMessages]=useState<Message[]>([])
  const [selectedAdmission,setSelectedAdmission]=useState('')
+ const [selectedAdmission,setSelectedAdmission]=useState('')
  const [prompt,setPrompt]=useState('')
  const [loading,setLoading]=useState(false)
  const [checking,setChecking]=useState(true)
@@ -57,7 +58,7 @@ export function AIAssistantWorkspace({initialWindow='chat'}:{initialWindow?:stri
  useEffect(()=>{setModel(provider==='auto'?'':providers.find(p=>p.key===provider)?.model??'')},[provider])
  useEffect(()=>{let active=true;(async()=>{if(!supabase||!user){setChecking(false);return}const {data,error:invokeError}=await supabase.functions.invoke('ai-assistant',{body:{action:'status',institutionId:user.institutionId}});if(!active)return;if(invokeError){setError('AI gateway is unavailable.');setChecking(false);return}if(data?.providers)setStatus(data.providers as Partial<Record<ProviderKey,ProviderStatus>>);setChecking(false)})();return()=>{active=false}},[user?.id,user?.institutionId])
 
- async function loadContext(){
+ async function loadContext(admissionNo=''){
   if(!supabase||!user)return {}
   const institutionId=user.institutionId
   const read=(table:string,columns:string)=>supabase!.from(table).select(columns).eq('institution_id',institutionId).limit(1500)
@@ -65,15 +66,23 @@ export function AIAssistantWorkspace({initialWindow='chat'}:{initialWindow?:stri
   const needAttendance=['student-performance-prediction','student-analysis','attendance-and-behaviour-insights','institutional-intelligence','smart-reports'].includes(pageKey)
   const needFees=['fee-collection-prediction','institutional-intelligence']
   const needPeople=pageKey==='institutional-intelligence'
+  const needIndividual=pageKey==='student-analysis'
+  const learner=needIndividual&&admissionNo.trim()?await supabase.from('students').select('id,class_name,status').eq('institution_id',institutionId).eq('admission_no',admissionNo.trim()).maybeSingle():{data:null,error:null}
+  if(learner.error)throw learner.error
+  const learnerId=learner.data?.id??null
+  if(needIndividual&&!learnerId)return {learner:{found:false,notice:'No active student matched the supplied admission number. Check the number or access permission.'}}
+  const examQuery=needExam?(needIndividual?supabase.from('exam_results').select('student_id,exam_title,subject,class_name,marks_obtained,total_marks,result_status,is_absent,created_at').eq('institution_id',institutionId).eq('student_id',learnerId).limit(1000):read('exam_results','exam_title,subject,class_name,marks_obtained,total_marks,result_status,is_absent,created_at')):Promise.resolve({data:[],error:null})
+  const attendanceQuery=needAttendance?(needIndividual?supabase.from('attendance').select('student_id,class_name,status,attendance_date,period_label').eq('institution_id',institutionId).eq('student_id',learnerId).limit(1000):read('attendance','class_name,status,attendance_date,period_label')):Promise.resolve({data:[],error:null})
   const [exam,attendance,fees,students,teachers]=await Promise.all([
-   needExam?read('exam_results','exam_title,subject,class_name,marks_obtained,total_marks,result_status,is_absent,created_at'):Promise.resolve({data:[],error:null}),
-   needAttendance?read('attendance','class_name,status,attendance_date,period_label'):Promise.resolve({data:[],error:null}),
+   examQuery,
+   attendanceQuery,
    needFees?read('fee_invoices','total_amount,paid_amount,due_date,status,created_at'):Promise.resolve({data:[],error:null}),
    needPeople?read('students','class_name,status'):Promise.resolve({data:[],error:null}),
    needPeople?read('teachers','department,employment_status,employee_type'):Promise.resolve({data:[],error:null}),
   ])
   for(const result of [exam,attendance,fees,students,teachers])if(result.error)throw result.error
   const context:Record<string,unknown>={}
+  if(needIndividual){const examRows=exam.data??[];const attendanceRows=attendance.data??[];context.learner={found:true,className:learner.data?.class_name??'Unassigned',examRecords:examRows.length,publishedResults:examRows.filter(r=>r.result_status==='published').length,averageScore:examRows.length?Math.round(examRows.reduce((sum,r)=>sum+(Number(r.total_marks)>0?Number(r.marks_obtained??0)/Number(r.total_marks)*100:0),0)/examRows.length*10)/10:null,attendanceRecords:attendanceRows.length,attendanceByStatus:statusCount(attendanceRows,'status'),dateRange:attendanceRows.length?{from:attendanceRows.reduce((x:string,r:any)=>r.attendance_date<x? r.attendance_date:x,attendanceRows[0].attendance_date),to:attendanceRows.reduce((x:string,r:any)=>r.attendance_date>x? r.attendance_date:x,attendanceRows[0].attendance_date)}:null}}
   if(needExam){const rows=exam.data??[];context.examination={recordCount:rows.length,publishedCount:rows.filter(r=>r.result_status==='published').length,byClass:groupAverage(rows,'class_name'),bySubject:groupAverage(rows,'subject'),byExam:statusCount(rows,'exam_title')}}
   if(needAttendance){const rows=attendance.data??[];context.attendance={recordCount:rows.length,byStatus:statusCount(rows,'status'),byClass:statusCount(rows,'class_name'),dateRange:rows.length?{from:rows.reduce((a:string,r:any)=>r.attendance_date<a?a:r.attendance_date,rows[0].attendance_date),to:rows.reduce((a:string,r:any)=>r.attendance_date>a?a:r.attendance_date,rows[0].attendance_date)}:null}}
   if(needFees){const rows=fees.data??[];context.fees={invoiceCount:rows.length,invoiced:rows.reduce((n:number,r:any)=>n+Number(r.total_amount??0),0),received:rows.reduce((n:number,r:any)=>n+Number(r.paid_amount??0),0),byStatus:statusCount(rows,'status')}}
@@ -84,17 +93,18 @@ export function AIAssistantWorkspace({initialWindow='chat'}:{initialWindow?:stri
  async function sendMessage(event:FormEvent){
   event.preventDefault()
   if(!prompt.trim()||loading||!available||!supabase||!user)return
+  if(pageKey==='student-analysis'&&!selectedAdmission.trim()){setError('Enter the student admission number before analysing an individual learner.');return}
   const currentPrompt=prompt.trim()
   const nextMessages=[...messages.slice(-8),{role:'user' as const,content:currentPrompt,time:new Date().toLocaleTimeString()}]
   setMessages(nextMessages);setPrompt('');setLoading(true);setError('')
   try{
-   const databaseContext=includeData?await loadContext():{}
+   const databaseContext=includeData?await loadContext(selectedAdmission):{}
    setContextSummary(includeData?'Institution-authorised summary data attached':'No college data attached')
    const history=nextMessages.map(m=>({role:m.role,content:m.content}))
    const {data,error:invokeError}=await supabase.functions.invoke('ai-assistant',{body:{action:'generate',institutionId:user.institutionId,provider,model,page:pageKey,messages:history,context:databaseContext}})
    if(invokeError)throw invokeError
    if(!data?.text)throw new Error(data?.error??'The provider did not return a response.')
-   setMessages(current=>[...current,{role:'assistant',content:data.text,time:new Date().toLocaleTimeString()}])
+   setMessages(current=>[...current,{role:'assistant',content:data.text,time:new Date().toLocaleTimeString(),provider:data.provider,model:data.model}])
   }catch(e){setError('The request could not be completed. Check the model ID, provider key and available balance, then try again.')}
   finally{setLoading(false)}
  }
@@ -123,13 +133,13 @@ export function AIAssistantWorkspace({initialWindow='chat'}:{initialWindow?:stri
    <div className="mw-main-column">
     <section className="mw-panel ai-conversation-panel">
      <div className="mw-panel-head"><div><span>WORKSPACE</span><h2>Analysis and responses</h2></div><small>{messages.length} messages</small></div>
-     {messages.length===0?<div className="ai-welcome"><div className="ai-welcome-icon"><PageIcon size={25}/></div><h2>{page.title}</h2><p>{contextSummary}</p><div className="ai-suggestion-grid">{suggestions.map(s=><button key={s} onClick={()=>setPrompt(s)}><Sparkles size={15}/>{s}</button>)}</div></div>:<div className="ai-message-list">{messages.map((m,i)=><article className={'ai-message '+m.role} key={i}><span>{m.role==='assistant'?'AI':'You'} · {m.time}</span><p>{m.content}</p></article>)}{loading&&<article className="ai-message assistant pending"><span>AI</span><p><LoaderCircle size={15} className="mw-spin"/> Preparing your analysis…</p></article>}</div>}
+     {messages.length===0?<div className="ai-welcome"><div className="ai-welcome-icon"><PageIcon size={25}/></div><h2>{page.title}</h2><p>{contextSummary}</p><div className="ai-suggestion-grid">{suggestions.map(s=><button key={s} onClick={()=>setPrompt(s)}><Sparkles size={15}/>{s}</button>)}</div></div>:<div className="ai-message-list">{messages.map((m,i)=><article className={'ai-message '+m.role} key={i}><span>{m.role==='assistant'?'AI':'You'} · {m.time}{m.role==='assistant'&&m.provider?' · '+(providers.find(p=>p.key===m.provider)?.name??m.provider)+' / '+(m.model??''):''}</span><p>{m.content}</p></article>)}{loading&&<article className="ai-message assistant pending"><span>AI</span><p><LoaderCircle size={15} className="mw-spin"/> Preparing your analysis…</p></article>}</div>}
      <form className="ai-composer" onSubmit={sendMessage}><textarea value={prompt} onChange={e=>setPrompt(e.target.value)} placeholder={page.prompt} rows={3} disabled={loading}/><div><label className="ai-context-toggle"><input type="checkbox" checked={includeData} onChange={e=>setIncludeData(e.target.checked)}/> Include permitted college summaries</label><button className="mw-primary" type="submit" disabled={!available||loading||!prompt.trim()}>{loading?<LoaderCircle size={15}/>:<Send size={15}/>} {loading?'Working…':'Generate'}</button></div></form>
     </section>
    </div>
    <aside className="mw-side-column">
     <section className="mw-panel ai-model-panel"><div className="mw-panel-head"><div><span>MODEL ROUTING</span><h2>Choose a provider</h2></div><Sparkles size={18}/></div>
-     {pageKey==='student-analysis'&&<label>Student admission number<input value={selectedAdmission} onChange={e=>setSelectedAdmission(e.target.value)} placeholder="Admission number for this learner"/></label>}<label>AI provider<select value={provider} onChange={e=>setProvider(e.target.value as ProviderKey)}><option value="auto">Auto-select available provider</option>{providers.map(p=><option key={p.key} value={p.key}>{p.name}</option>)}</select></label>
+     {pageKey==='student-analysis'&&<label>Student admission number<input value={selectedAdmission} onChange={e=>setSelectedAdmission(e.target.value)} placeholder="Admission number for this learner"/></label>}{pageKey==='student-analysis'&&<label>Student admission number<input value={selectedAdmission} onChange={e=>setSelectedAdmission(e.target.value)} placeholder="Admission number for this learner"/></label>}<label>AI provider<select value={provider} onChange={e=>setProvider(e.target.value as ProviderKey)}><option value="auto">Auto-select available provider</option>{providers.map(p=><option key={p.key} value={p.key}>{p.name}</option>)}</select></label>
      <label>Model identifier<input value={model} onChange={e=>setModel(e.target.value)} placeholder={provider==='auto'?'Uses the selected provider default model':selectedProvider.hint} disabled={provider==='auto'}/></label>
      <div className="ai-provider-list">{providers.map(p=><div key={p.key}><span>{p.name}</span><b className={status[p.key]?.configured?'configured':''}>{checking?'Checking':status[p.key]?.configured?'Ready':'Key needed'}</b></div>)}</div>
      <p className="ai-secret-note"><ShieldCheck size={14}/> Keys are held in Supabase Edge Function secrets.</p>
