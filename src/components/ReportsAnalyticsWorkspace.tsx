@@ -25,9 +25,9 @@ const PAGE_META: Record<string,{title:string;description:string;dataset:DatasetK
  class:{title:'Class Reports',description:'Class-wise enrolment, attendance and examination performance.',dataset:'students'},
  comparative:{title:'Comparative Analytics',description:'Compare available student, attendance, examination and fee indicators across the selected period.',dataset:'students'},
  builder:{title:'Custom Report Builder',description:'Choose a source, fields and filters to prepare a reusable report extract.',dataset:'students'},
- scheduled:{title:'Scheduled Reports',description:'Review report scheduling capability and configure a schedule when the server-side scheduler is enabled.',dataset:'students'},
- templates:{title:'Report Templates',description:'Choose a structured report layout and export it in the required document format.',dataset:'students'},
- history:{title:'Report History',description:'Exports created during this browser session. Persistent cross-device history requires a server-side report-jobs service.',dataset:'students'},
+ scheduled:{title:'Scheduled Reports',description:'Create and manage institution report schedules, cadence, delivery preference and intended run dates.',dataset:'students'},
+ templates:{title:'Report Templates',description:'Search thousands of dataset, scope and layout combinations, then save institution-specific templates.',dataset:'students'},
+ history:{title:'Report History',description:'Review institution-persisted report export and execution records, formats, row counts and timestamps.',dataset:'students'},
 }
 const COLUMNS: Record<DatasetKey,{key:string;label:string}[]> = {
  students:[{key:'admission_no',label:'Admission No.'},{key:'full_name',label:'Student'},{key:'class_name',label:'Class'},{key:'section_name',label:'Section'},{key:'guardian_name',label:'Guardian'},{key:'status',label:'Status'},{key:'admission_date',label:'Admission Date'}],
