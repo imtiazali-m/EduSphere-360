@@ -14,7 +14,7 @@ const providers:{key:ProviderKey;name:string;secret:string;hint:string;model:str
  {key:'deepseek',name:'DeepSeek',secret:'DEEPSEEK_API_KEY',hint:'Model ID',model:'deepseek-flash'},
  {key:'xai',name:'Grok · xAI',secret:'XAI_API_KEY',hint:'Model ID',model:'grok-4.7'},
  {key:'meta',name:'Meta Model API',secret:'META_MODEL_API_KEY',hint:'Enter model ID from the Meta Model API dashboard',model:''},
- {key:'perplexity',name:'Perplexity',secret:'PERPLEXITY_API_KEY',hint:'Model ID',model:'perplexity/sonar'},
+ {key:'perplexity',name:'Perplexity',secret:'PERPLEXITY_API_KEY',hint:'Agent preset: fast, low, medium, high, xhigh',model:'fast'},
 ]
 const pages:Record<string,{title:string;category:string;description:string;prompt:string;icon:any}>={
  chat:{title:'AI Assistant',category:'ASSISTANT',description:'Ask a question or prepare a college task using the selected model.',prompt:'What would you like to work on?',icon:BrainCircuit},
