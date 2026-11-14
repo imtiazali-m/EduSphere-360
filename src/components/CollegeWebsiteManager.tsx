@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { ChangeEvent } from 'react'
 import {
-  AlertCircle, BookMarked, Check, CheckCircle2, ExternalLink, Globe2,
+  AlertCircle, BookMarked, Building2, Check, CheckCircle2, ExternalLink, Facebook, Globe2,
   ImagePlus, Megaphone, Plus, Save, ShieldCheck, Trash2, Upload, Users, X,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
@@ -253,7 +253,6 @@ export function CollegeWebsiteManager({ onToast }: { onToast: (message: string, 
       const nextIds = approve
         ? Array.from(new Set([...current.approvedFacebookPhotoIds, id]))
         : current.approvedFacebookPhotoIds.filter(item => item !== id)
-      const selected = nextIds.map(item => coverChoices.find(photo => photo.id === item)).find(Boolean)
       return { ...current, approvedFacebookPhotoIds: nextIds }
     })
   }
