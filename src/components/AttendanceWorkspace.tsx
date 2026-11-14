@@ -159,7 +159,8 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
   if(!supabase||!user)return
   if(population==='students'&&!canManageStudents){onToast('You do not have permission to record student attendance.',true);return}
   if(population!=='students'&&!canManageStaff){onToast('Only owner and administrators can record employee attendance.',true);return}
-  if(population==='students'&&!className){onToast('Choose a class before saving attendance.',true);return}\n  if(population==='students'&&sectionName&&!classRecords.some(row=>row.name===className&&row.section===sectionName)){onToast('The selected section does not belong to the selected class.',true);return}
+  if(population==='students'&&!className){onToast('Choose a class before saving attendance.',true);return}
+  if(population==='students'&&sectionName&&!classRecords.some(row=>row.name===className&&row.section===sectionName)){onToast('The selected section does not belong to the selected class.',true);return}
   if(!people.length){onToast('There are no active people in this roster.',true);return}
   if(people.some(person=>effectiveMarks[person.id]==='unmarked')){onToast('Complete every attendance mark before saving. Unmarked people will not be treated as present.',true);return}
   setSaving(true)
@@ -189,6 +190,49 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
    {key:'date',label:'Date'},{key:'period',label:'Period'},{key:'status',label:'Status'},{key:'notes',label:'Notes'}
   ])
  }
+
+ async function recordQrScan(event:FormEvent){
+  event.preventDefault()
+  if(!supabase||!user||!canManageStudents){setScanError('Student scan attendance is restricted to authorised attendance staff.');return}
+  const raw=scanValue.trim()
+  if(!raw){setScanError('Scan or enter the student admission number.');return}
+  const payload=raw.match(/(?:admission(?:_no)?[=:][/]*|student[:=]|gidc[:=])([^?&/]+)/i)
+  const admission=decodeURIComponent((payload?.[1]??raw).trim())
+  const student=students.find(row=>String(row.admission_no??'').toLowerCase()===admission.toLowerCase()||row.id===admission)
+  if(!student?.class_name){setScanError('No active student matches this admission number.');return}
+  setScanError('')
+  try{
+   const {data,error}=await supabase.rpc('record_student_attendance_scan',{p_institution_id:user.institutionId,p_admission_no:student.admission_no??admission,p_attendance_date:date,p_period_label:period,p_class_name:student.class_name,p_section_name:student.section_name??null,p_campus_id:student.campus_id??null})
+   if(error)throw error
+   setPopulation('students');setClassName(student.class_name);setSectionName(student.section_name??'');setCampusId(student.campus_id??'')
+   setMarks(current=>({...current,[student.id]:'present'}));setScannedNames(names=>[student.full_name,...names].slice(0,12))
+   setScanValue('')
+   if(data?.duplicate)onToast(student.full_name+' already has an attendance entry for this date and period.',true)
+   else onToast('Attendance recorded for '+student.full_name+'.')
+  }catch(error){setScanError(error instanceof Error?error.message:'The QR/barcode scan could not be recorded.')}
+ }
+ function exportAttendanceReport(format=reportFormat){
+  const rows=existing.map(entry=>{const id=population==='students'?entry.student_id:entry.teacher_id;const person=people.find(row=>row.id===id);return {identifier:person?.admission_no??person?.employee_no??'',name:person?.full_name??'Person record',class_or_department:person?.class_name??person?.department??'',date:entry.attendance_date,period:entry.period_label??period,status:entry.status,notes:entry.notes??''}})
+  if(!rows.length){onToast('No saved attendance records are available for this report.',true);return}
+  const name='attendance-'+population+'-'+date
+  const cols=[{key:'identifier',label:'ID'},{key:'name',label:'Name'},{key:'class_or_department',label:'Class / Department'},{key:'date',label:'Date'},{key:'period',label:'Period'},{key:'status',label:'Status'},{key:'notes',label:'Notes'}]
+  try{
+   if(format==='xlsx')exportXlsx(name+'.xlsx','Attendance Report',rows,cols)
+   else if(format==='xls')exportExcelXml(name+'.xls','Attendance Report',rows,cols)
+   else if(format==='docx')exportDocx(name+'.docx','Attendance Report',rows,cols)
+   else if(format==='doc')exportWordXml(name+'.doc','Attendance Report',rows,cols)
+   else if(format==='pdf')printOfficeReport('Attendance Report',rows,cols,'Government Islamia Degree College, Badin')
+   else downloadCsv(name+'.csv',rows,cols)
+   onToast('Attendance report prepared.')
+  }catch(error){onToast(error instanceof Error?error.message:'Attendance export failed.',true)}
+ }
+ const cardPeople=cardPopulation==='students'?students:staff.filter(person=>cardPopulation==='teachers'?String(person.employee_type??'').toLowerCase()==='teaching':String(person.employee_type??'').toLowerCase()!=='teaching')
+ const reportTotal=existing.length
+ const reportPresent=existing.filter(row=>['present','late'].includes(row.status)).length
+ const reportAbsent=existing.filter(row=>row.status==='absent').length
+ const reportLeave=existing.filter(row=>['approved_leave','excused'].includes(row.status)).length
+ const reportPending=existing.filter(row=>row.status==='leave_pending').length
+ const presentRate=reportTotal?Math.round(reportPresent/reportTotal*1000)/10:0
 
  async function createDevice(event:FormEvent){
   event.preventDefault()
