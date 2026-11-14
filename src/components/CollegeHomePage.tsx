@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import {
-  ArrowDown, ArrowRight, ArrowUpRight, BookOpen, CalendarDays, CheckCircle2,
+  ArrowDown, ArrowLeft, ArrowRight, ArrowUpRight, BookOpen, CalendarDays, CheckCircle2,
   ExternalLink, GraduationCap, Landmark, LibraryBig, Menu,
-  Microscope, Newspaper, ShieldCheck, Users, X,
+  Microscope, Newspaper, Pause, Play, ShieldCheck, Users, X,
 } from 'lucide-react'
 import type { AppRole } from '../lib/types'
 import '../styles/college-home-page.css'
@@ -18,6 +18,7 @@ const navigation = [
   { label: 'Programmes', href: '#programmes' },
   { label: 'Admissions', href: '#admissions' },
   { label: 'Campus life', href: '#campus-life' },
+  { label: 'Gallery', href: '#gallery' },
   { label: 'Notices', href: '#notices' },
   { label: 'Contact', href: '#contact' },
 ]
@@ -32,10 +33,67 @@ const portalLinks: { role: AppRole; title: string; note: string }[] = [
 ]
 
 const photo = {
-  students: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1200&q=85',
-  library: 'https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&w=900&q=85',
-  science: 'https://images.unsplash.com/photo-1532094349884-543bc11b234d?auto=format&fit=crop&w=900&q=85',
+  students: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1400&q=85',
+  library: 'https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&w=1400&q=85',
+  science: 'https://images.unsplash.com/photo-1532094349884-543bc11b234d?auto=format&fit=crop&w=1400&q=85',
+  classroom: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1400&q=85',
+  graduates: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1400&q=85',
+  study: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1400&q=85',
+  collegeDirectory: 'https://lh5.googleusercontent.com/p/AF1QipOUOOw-XvK3g8WEHRnrrxkXQq4VnEgx0DW4ufDF=w1080-k-no',
 }
+
+const gallerySlides = [
+  {
+    src: photo.collegeDirectory,
+    alt: 'A courtyard and building shown in a public directory photo associated with Government Islamia Degree College Badin.',
+    title: 'A photograph associated with the college',
+    label: 'PUBLIC DIRECTORY IMAGE',
+    note: 'This image appears on a third-party public listing. Its date and the present condition of the campus have not been independently confirmed.',
+    source: 'https://pk.worldorgs.com/catalog/badin/college/government-islamia-degree-college-badin',
+  },
+  {
+    src: photo.students,
+    alt: 'Students collaborating around a table in a representative education photograph.',
+    title: 'Learning through collaboration',
+    label: 'REPRESENTATIVE EDUCATION IMAGE',
+    note: 'An illustrative image of students learning together; not a photograph of this college.',
+  },
+  {
+    src: photo.classroom,
+    alt: 'A bright classroom in a representative education photograph.',
+    title: 'A focused place to learn',
+    label: 'REPRESENTATIVE EDUCATION IMAGE',
+    note: 'An illustrative classroom scene; actual college facilities should be confirmed with the administration.',
+  },
+  {
+    src: photo.library,
+    alt: 'Rows of books in a representative library photograph.',
+    title: 'Reading opens new perspectives',
+    label: 'REPRESENTATIVE EDUCATION IMAGE',
+    note: 'An illustrative library image; not a verified photograph of the college library.',
+  },
+  {
+    src: photo.science,
+    alt: 'Scientific equipment in a representative laboratory photograph.',
+    title: 'Questions, discovery and science',
+    label: 'REPRESENTATIVE EDUCATION IMAGE',
+    note: 'An illustrative science image; current laboratories and available facilities should be verified by the college.',
+  },
+  {
+    src: photo.graduates,
+    alt: 'Graduates celebrating at a commencement ceremony in a representative education photograph.',
+    title: 'Every achievement begins with a step',
+    label: 'REPRESENTATIVE EDUCATION IMAGE',
+    note: 'An illustrative graduation scene; it does not document a college event.',
+  },
+  {
+    src: photo.study,
+    alt: 'Books and notes arranged on a desk in a representative study photograph.',
+    title: 'Preparation creates opportunity',
+    label: 'REPRESENTATIVE EDUCATION IMAGE',
+    note: 'An illustrative study scene; not a photograph from the college.',
+  },
+]
 
 function scrollToSection(href: string) {
   const id = href.replace('#', '')
@@ -45,6 +103,36 @@ function scrollToSection(href: string) {
 export function CollegeHomePage({ navigate, initialSection }: Props) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [portalOpen, setPortalOpen] = useState(false)
+  const [galleryIndex, setGalleryIndex] = useState(0)
+  const [galleryPaused, setGalleryPaused] = useState(false)
+
+  useEffect(() => {
+    const root = document.querySelector<HTMLElement>('.gidc-site')
+    if (!root || !('IntersectionObserver' in window) || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    root.classList.add('gidc-motion-ready')
+    const elements = root.querySelectorAll<HTMLElement>('[data-reveal]')
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible')
+          observer.unobserve(entry.target)
+        }
+      })
+    }, { threshold: 0.12, rootMargin: '0px 0px -36px 0px' })
+    elements.forEach(element => observer.observe(element))
+    return () => {
+      observer.disconnect()
+      root.classList.remove('gidc-motion-ready')
+    }
+  }, [])
+
+  useEffect(() => {
+    if (galleryPaused || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const interval = window.setInterval(() => {
+      setGalleryIndex(current => (current + 1) % gallerySlides.length)
+    }, 5600)
+    return () => window.clearInterval(interval)
+  }, [galleryPaused])
 
   useEffect(() => {
     if (!portalOpen) return
@@ -59,7 +147,7 @@ export function CollegeHomePage({ navigate, initialSection }: Props) {
     if (!initialSection || initialSection === 'home') return
     const sectionMap: Record<string, string> = {
       about: 'about', features: 'programmes', programmes: 'programmes',
-      admissions: 'admissions', solutions: 'portals', roles: 'portals',
+      admissions: 'admissions', gallery: 'gallery', solutions: 'portals', roles: 'portals',
       'product-tour': 'campus-life', 'campus-services': 'campus-life',
       analytics: 'notices', notices: 'notices', contact: 'contact',
       resources: 'official-links', support: 'contact', mobile: 'portals',
@@ -88,10 +176,7 @@ export function CollegeHomePage({ navigate, initialSection }: Props) {
       <header className="gidc-header">
         <div className="gidc-container gidc-header-inner">
           <a className="gidc-brand" href="#home" onClick={() => goTo('#home')} aria-label="Government Islamia Degree College Badin home">
-            <span className="gidc-crest" aria-hidden="true">
-              <span className="gidc-crest-ring"><BookOpen size={26}/></span>
-              <small>GIDC</small>
-            </span>
+            <img className="gidc-crest-image" src="/gidc-badin-official-logo.svg" alt="Official Government Islamia Degree College Badin emblem"/>
             <span className="gidc-brand-copy">
               <strong>Government Islamia</strong>
               <b>Degree College Badin</b>
@@ -118,7 +203,7 @@ export function CollegeHomePage({ navigate, initialSection }: Props) {
       </header>
 
       <main>
-        <section className="gidc-hero" aria-labelledby="gidc-title">
+        <section className="gidc-hero" aria-labelledby="gidc-title" data-reveal="up">
           <div className="gidc-hero-pattern" aria-hidden="true"/>
           <div className="gidc-container gidc-hero-grid">
             <div className="gidc-hero-copy">
@@ -162,13 +247,14 @@ export function CollegeHomePage({ navigate, initialSection }: Props) {
           </div>
         </section>
 
-        <section className="gidc-section gidc-about" id="about">
+        <section className="gidc-section gidc-about" id="about" data-reveal="up">
           <div className="gidc-container gidc-about-grid">
             <div className="gidc-section-intro">
               <span className="gidc-overline">OUR COLLEGE</span>
               <h2>A place to learn, <em>belong and move forward.</em></h2>
-              <p>Government Islamia Degree College Badin is listed among the Government of Sindh’s colleges serving Badin District. This website brings together college information, admission guidance and secure digital services for its academic community.</p>
-              <p>Our aim here is simple: make important information easier to find, make college communication clearer and make student support more accessible.</p>
+              <p>Government Islamia Degree College Badin is included in the Government of Sindh’s official government-colleges directory for Badin District, where Science is the stream shown in the published listing. The college is also named in the University of Sindh’s published 2024 directory of affiliated colleges. This website is being shaped as a clear digital front door for students, families, teachers and the college administration.</p>
+              <p>Our purpose is practical: help prospective students understand their next step, make verified notices and academic information easier to find, give families a clearer route to college updates, and support educators and staff with dependable digital services. We aim to encourage curiosity, strengthen communication and make everyday college processes more accessible.</p>
+              <p>Programme details, admission dates, office contacts and campus facilities will be published as confirmed information—not assumptions—so visitors can make decisions with confidence.</p>
               <a className="gidc-text-link" href="https://college.sindh.gov.pk/government-colleges" target="_blank" rel="noreferrer">View Government of Sindh college directory <ExternalLink size={15}/></a>
             </div>
             <div className="gidc-about-art">
@@ -186,7 +272,7 @@ export function CollegeHomePage({ navigate, initialSection }: Props) {
           </div>
         </section>
 
-        <section className="gidc-section gidc-programmes" id="programmes">
+        <section className="gidc-section gidc-programmes" id="programmes" data-reveal="up">
           <div className="gidc-container">
             <div className="gidc-section-heading">
               <div><span className="gidc-overline">ACADEMIC PATHWAYS</span><h2>Find the path that <em>fits your ambition.</em></h2></div>
@@ -216,7 +302,7 @@ export function CollegeHomePage({ navigate, initialSection }: Props) {
           </div>
         </section>
 
-        <section className="gidc-section gidc-admissions" id="admissions">
+        <section className="gidc-section gidc-admissions" id="admissions" data-reveal="up">
           <div className="gidc-container gidc-admissions-grid">
             <div className="gidc-admissions-copy">
               <span className="gidc-overline">ADMISSIONS</span>
@@ -240,7 +326,7 @@ export function CollegeHomePage({ navigate, initialSection }: Props) {
           </div>
         </section>
 
-        <section className="gidc-section gidc-campus-life" id="campus-life">
+        <section className="gidc-section gidc-campus-life" id="campus-life" data-reveal="up">
           <div className="gidc-container">
             <div className="gidc-section-heading gidc-campus-heading">
               <div><span className="gidc-overline">COLLEGE LIFE</span><h2>Learning continues <em>beyond the timetable.</em></h2></div>
@@ -265,7 +351,51 @@ export function CollegeHomePage({ navigate, initialSection }: Props) {
           </div>
         </section>
 
-        <section className="gidc-section gidc-notices" id="notices">
+        <section className="gidc-section gidc-gallery" id="gallery" data-reveal="up">
+          <div className="gidc-container">
+            <div className="gidc-gallery-heading">
+              <div>
+                <span className="gidc-overline">A CLOSER LOOK</span>
+                <h2>Education, community <em>and campus life.</em></h2>
+                <p>Explore a visual collection connected with the college and the wider learning experience. Captions identify sourced campus imagery separately from representative photographs.</p>
+              </div>
+              <div className="gidc-gallery-controls">
+                <button type="button" aria-label="Previous gallery image" onClick={() => setGalleryIndex(current => (current - 1 + gallerySlides.length) % gallerySlides.length)}><ArrowLeft size={19}/></button>
+                <button type="button" aria-label="Next gallery image" onClick={() => setGalleryIndex(current => (current + 1) % gallerySlides.length)}><ArrowRight size={19}/></button>
+                <button type="button" className="gidc-gallery-pause" aria-label={galleryPaused ? 'Resume automatic gallery' : 'Pause automatic gallery'} onClick={() => setGalleryPaused(value => !value)}>
+                  {galleryPaused ? <Play size={16}/> : <Pause size={16}/>}
+                  <span>{galleryPaused ? 'Play' : 'Pause'}</span>
+                </button>
+              </div>
+            </div>
+            <div className="gidc-gallery-frame" aria-roledescription="carousel" aria-label="College and education photo gallery">
+              <div className="gidc-gallery-track" style={{ transform: `translate3d(-${galleryIndex * 100}%,0,0)` }}>
+                {gallerySlides.map((slide, index) => (
+                  <figure className="gidc-gallery-slide" key={slide.title} aria-hidden={index !== galleryIndex}>
+                    <img src={slide.src} alt={slide.alt} loading="lazy" decoding="async"/>
+                    <figcaption>
+                      <span>{slide.label}</span>
+                      <strong>{slide.title}</strong>
+                      <small>{slide.note}</small>
+                      {slide.source && <a href={slide.source} target="_blank" rel="noreferrer">View source listing <ExternalLink size={13}/></a>}
+                    </figcaption>
+                  </figure>
+                ))}
+              </div>
+            </div>
+            <div className="gidc-gallery-bottom">
+              <span>{String(galleryIndex + 1).padStart(2, '0')} / {String(gallerySlides.length).padStart(2, '0')}</span>
+              <div className="gidc-gallery-dots" role="group" aria-label="Choose gallery image">
+                {gallerySlides.map((slide, index) => (
+                  <button key={slide.title} type="button" className={index === galleryIndex ? 'is-active' : ''} aria-label={`Show image ${index + 1}: ${slide.title}`} aria-pressed={index === galleryIndex} onClick={() => setGalleryIndex(index)}/>
+                ))}
+              </div>
+              <span>Auto-advances every 5.6 seconds</span>
+            </div>
+          </div>
+        </section>
+
+        <section className="gidc-section gidc-notices" id="notices" data-reveal="up">
           <div className="gidc-container gidc-notices-grid">
             <div className="gidc-notices-copy">
               <span className="gidc-overline">NOTICE BOARD</span>
@@ -282,7 +412,7 @@ export function CollegeHomePage({ navigate, initialSection }: Props) {
           </div>
         </section>
 
-        <section className="gidc-portal-section" id="portals">
+        <section className="gidc-portal-section" id="portals" data-reveal="up">
           <div className="gidc-container gidc-portal-grid">
             <div className="gidc-portal-copy">
               <span className="gidc-overline">COLLEGE DIGITAL SERVICES</span>
@@ -313,7 +443,36 @@ export function CollegeHomePage({ navigate, initialSection }: Props) {
           </div>
         </section>
 
-        <section className="gidc-contact" id="contact">
+        <section className="gidc-section gidc-affiliations" id="affiliations" data-reveal="up">
+          <div className="gidc-container">
+            <div className="gidc-section-heading">
+              <div><span className="gidc-overline">INSTITUTIONAL REFERENCES</span><h2>Our college and <em>education partners.</em></h2></div>
+              <p>These marks identify the college itself and the public institutions whose directories provide reference information. They are not interchangeable logos.</p>
+            </div>
+            <div className="gidc-affiliation-grid">
+              <a className="gidc-affiliation-card gidc-affiliation-college" href="#home" onClick={() => goTo('#home')}>
+                <span className="gidc-affiliation-logo"><img src="/gidc-badin-official-logo.svg" alt="Government Islamia Degree College Badin official emblem"/></span>
+                <span className="gidc-affiliation-copy"><small>COLLEGE IDENTITY</small><b>Government Islamia Degree College Badin</b><em>Official college emblem supplied for this website</em></span>
+              </a>
+              <a className="gidc-affiliation-card" href="https://usindh.edu.pk/colleges" target="_blank" rel="noreferrer">
+                <span className="gidc-affiliation-logo"><img src="https://usindh.edu.pk/images/usindh/logo.png" alt="University of Sindh logo" loading="lazy"/></span>
+                <span className="gidc-affiliation-copy"><small>UNIVERSITY DIRECTORY</small><b>University of Sindh</b><em>Its published 2024 affiliated-colleges directory includes Government Islamia College Badin.</em></span>
+                <ExternalLink size={16}/>
+              </a>
+              <a className="gidc-affiliation-card" href="https://college.sindh.gov.pk/" target="_blank" rel="noreferrer">
+                <span className="gidc-affiliation-logo"><img src="https://college.sindh.gov.pk/images/icons/logo-main.png" alt="College Education Department, Government of Sindh logo" loading="lazy"/></span>
+                <span className="gidc-affiliation-copy"><small>PROVINCIAL DEPARTMENT</small><b>College Education Department</b><em>Government of Sindh · official college information and resources</em></span>
+                <ExternalLink size={16}/>
+              </a>
+            </div>
+            <div className="gidc-directory-link">
+              <span><Landmark size={18}/> Government Colleges in Sindh</span>
+              <a href="https://college.sindh.gov.pk/government-colleges" target="_blank" rel="noreferrer">Open the official district-wise directory <ArrowUpRight size={15}/></a>
+            </div>
+          </div>
+        </section>
+
+        <section className="gidc-contact" id="contact" data-reveal="up">
           <div className="gidc-container gidc-contact-grid">
             <div><span className="gidc-overline">GET IN TOUCH</span><h2>We’re here to help you <em>take the next step.</em></h2><p>For current admissions, subject combinations, office timings, certificates and official documents, please contact the college office directly.</p></div>
             <div className="gidc-contact-card">
@@ -330,11 +489,11 @@ export function CollegeHomePage({ navigate, initialSection }: Props) {
       <footer className="gidc-footer">
         <div className="gidc-container gidc-footer-main">
           <a className="gidc-brand gidc-footer-brand" href="#home" onClick={() => goTo('#home')}>
-            <span className="gidc-crest"><span className="gidc-crest-ring"><BookOpen size={23}/></span><small>GIDC</small></span>
+            <img className="gidc-crest-image gidc-crest-image-footer" src="/gidc-badin-official-logo.svg" alt="Official Government Islamia Degree College Badin emblem"/>
             <span className="gidc-brand-copy"><strong>Government Islamia</strong><b>Degree College Badin</b><small>LEARNING · SERVICE · OPPORTUNITY</small></span>
           </a>
           <p>A public degree college in Badin, Sindh. This website is designed to make verified college information and authorised digital services easier to reach.</p>
-          <div className="gidc-footer-links"><a href="#about">About</a><a href="#programmes">Programmes</a><a href="#admissions">Admissions</a><a href="#notices">Notices</a><a href="#portals">College portal</a></div>
+          <div className="gidc-footer-links"><a href="#about">About</a><a href="#programmes">Programmes</a><a href="#admissions">Admissions</a><a href="#gallery">Gallery</a><a href="#affiliations">Official links</a><a href="#notices">Notices</a><a href="#portals">College portal</a></div>
         </div>
         <div className="gidc-footer-bottom"><div className="gidc-container"><span>© {new Date().getFullYear()} Government Islamia Degree College Badin</span><span>Official information should be confirmed with the college office.</span><a href="#home">Back to top ↑</a></div></div>
       </footer>
