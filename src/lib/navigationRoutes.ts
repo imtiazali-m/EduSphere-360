@@ -532,7 +532,7 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
       'student-attendance':'attendance:students',
       'teacher-attendance':'attendance:teachers',
       'staff-attendance':'attendance:staff',
-      'leave-management':'care:leave',
+      'leave-management':'care:leave-applications','leave-applications':'care:leave-applications','leave-review-approvals':'care:leave-approvals','leave-balances':'care:leave-balances','leave-reports':'care:leave-reports',
       'attendance-reports':'care:reports',
       'student-attendance-reports':'care:reports-students',
       'teacher-attendance-reports':'care:reports-teachers',
