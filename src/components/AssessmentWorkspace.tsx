@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, useRef, type FormEvent, type ChangeEvent } from 'react'
 import { Activity, Award, BookOpenCheck, CalendarClock, ClipboardCheck, Download, FileQuestion, Printer, RefreshCw, Search, ShieldCheck, Timer, Upload, X } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import { exportXlsx, exportDocx, exportExcelXml, exportWordXml, printOfficeReport } from '../lib/officeExport'
 import { supabase } from '../lib/supabase'
 
 type Row=Record<string,any>&{id:string}
@@ -43,6 +44,8 @@ export function AssessmentWorkspace({workspaceKey,onToast}:Props){
  const [grade,setGrade]=useState({grade_label:'A',min_percentage:'80',max_percentage:'100',grade_point:'4',is_pass:true}),[weight,setWeight]=useState({component_name:'Final examination',weight_percent:'60'}),[rubricForm,setRubricForm]=useState({rubric_name:'Descriptive response rubric',description:'',maximum_marks:'10',criteria:'Accuracy: 4\nCompleteness: 3\nClarity: 3'})
  const [drafts,setDrafts]=useState<Record<string,{marks:string;absent:boolean;remarks:string}>>({})
  const [studentFilter,setStudentFilter]=useState(''),[recheckTarget,setRecheckTarget]=useState<Row|null>(null),[recheckReason,setRecheckReason]=useState('')
+ const [cardTemplate,setCardTemplate]=useState<'official'|'compact'|'detailed'>('official')
+ const [examExportFormat,setExamExportFormat]=useState<'csv'|'xlsx'|'xls'|'docx'|'doc'|'pdf'>('xlsx')
  const [delivery,setDelivery]=useState<Row|null>(null),[responses,setResponses]=useState<Record<string,any>>({}),[seconds,setSeconds]=useState(0),[reviewTarget,setReviewTarget]=useState<Row|null>(null),[manualScore,setManualScore]=useState('0'),[reviewNotes,setReviewNotes]=useState('')
  const responsesRef=useRef<Record<string,any>>({})
  const autoSubmittedAttempt=useRef<string|null>(null)
@@ -64,7 +67,7 @@ export function AssessmentWorkspace({workspaceKey,onToast}:Props){
   setLoading(true);setError('')
   const read=async(q:any)=>{try{const {data,error}=await q;if(error)throw error;return data??[]}catch(e){if(!learner)setError(old=>old||(e instanceof Error?e.message:'Some examination records could not be loaded'));return []}}
   const staff=learner?Promise.resolve([]):null
-  const ownStudent=student?read(supabase.from('students').select('id,full_name,admission_no,class_name,status,user_id').eq('institution_id',user.institutionId).eq('user_id',user.id).limit(1)):Promise.resolve([])
+  const ownStudent=student?read(supabase.from('students').select('id,full_name,admission_no,guardian_name,class_name,status,user_id').eq('institution_id',user.institutionId).eq('user_id',user.id).limit(1)):Promise.resolve([])
   const [e,r,st,cl,su,se,te,q,b,w,rb,a,at,rc,h]=await Promise.all([
    read(supabase.from('exams').select('*').eq('institution_id',user.institutionId).order('exam_date',{ascending:false}).limit(1000)),
    read(supabase.from('exam_results').select('*').eq('institution_id',user.institutionId).order('created_at',{ascending:false}).limit(5000)),
@@ -114,8 +117,33 @@ export function AssessmentWorkspace({workspaceKey,onToast}:Props){
  async function deleteGrade(row:Row){if(!supabase||!user||!canApprove||!window.confirm('Delete this grading band?'))return;const {error}=await supabase.from('examination_grade_bands').delete().eq('id',row.id);if(error){onToast(error.message,true);return}await load()}
  async function requestRecheck(e:FormEvent){e.preventDefault();if(!supabase||!user||!recheckTarget)return;const studentRow=students.find(s=>s.user_id===user.id),studentId=student?studentRow?.id:recheckTarget.student_id;if(!studentId){onToast('Your student profile is not linked. Contact the institution.',true);return}const {error}=await supabase.from('examination_recheck_requests').insert({institution_id:user.institutionId,exam_result_id:recheckTarget.id,student_id:studentId,reason:recheckReason,requested_by:user.id});if(error){onToast(error.message,true);return}setRecheckTarget(null);setRecheckReason('');onToast('Recheck request submitted.');await load()}
  async function decideRecheck(row:Row,status:string){if(!supabase||!user||!canApprove)return;const {error}=await supabase.from('examination_recheck_requests').update({status,reviewed_by:user.id,reviewed_at:new Date().toISOString()}).eq('id',row.id);if(error){onToast(error.message,true);return}await load()}
- function printCards(){const rows=studentFilter?results.filter(r=>r.student_id===studentFilter):results.filter(r=>!learner||r.result_status==='published');const groups=new Map<string,Row[]>();rows.forEach(r=>groups.set(r.student_id,[...(groups.get(r.student_id)??[]),r]));const cards=Array.from(groups.values()).map(items=>{const first=items[0],total=items.reduce((n,r)=>n+Number(r.total_marks||0),0),mark=items.reduce((n,r)=>n+Number(r.marks_obtained||0),0),name=students.find(s=>s.id===first.student_id)?.full_name??first.student_name;return '<article><h2>'+safeHtml(name)+'</h2><p>'+safeHtml(first.exam_title)+'</p><table><tr><th>Subject</th><th>Marks</th><th>Total</th><th>Grade</th><th>Remarks</th></tr>'+items.map(r=>'<tr><td>'+safeHtml(r.subject)+'</td><td>'+(r.is_absent?'Absent':safeHtml(r.marks_obtained))+'</td><td>'+safeHtml(r.total_marks)+'</td><td>'+safeHtml(r.grade)+'</td><td>'+safeHtml(r.remarks)+'</td></tr>').join('')+'</table><h3>Overall '+mark.toFixed(2)+' / '+total.toFixed(2)+' ('+(total?mark/total*100:0).toFixed(1)+'%)</h3></article>'}).join('');const win=window.open('','_blank');if(!win){onToast('Allow pop-ups to print report cards.',true);return}win.document.write('<html><head><title>EduSphere 360 Report Cards</title><style>body{font:14px Arial;padding:25px;color:#162238}article{page-break-after:always;border:1px solid #ccd5e1;border-radius:12px;padding:22px;margin-bottom:20px}table{border-collapse:collapse;width:100%;margin:16px 0}td,th{border:1px solid #ccd5e1;padding:8px;text-align:left}@media print{article{page-break-after:always}}</style></head><body><h1>'+safeHtml(user?.institutionName??'EduSphere 360')+' — Report Cards</h1>'+(cards||'<p>No published results found.</p>')+'</body></html>');win.document.close();win.focus();win.print()}
- function exportResults(){const lines=[['Student','Examination','Subject','Marks','Maximum','Grade','Workflow','Remarks'],...visibleResults.map(r=>[r.student_name,r.exam_title,r.subject,r.marks_obtained,r.total_marks,r.grade,r.approval_status,r.remarks])];download('examination-results.csv',lines.map(r=>r.map(csv).join(',')).join('\n'),'text/csv;charset=utf-8')}
+ function printCards(){
+  const rows=studentFilter?results.filter(r=>r.student_id===studentFilter):results.filter(r=>!learner||r.result_status==='published')
+  const groups=new Map<string,Row[]>()
+  rows.forEach(r=>groups.set(r.student_id,[...(groups.get(r.student_id)??[]),r]))
+  const cards=Array.from(groups.values()).map(items=>{
+   const first=items[0],total=items.reduce((n,r)=>n+Number(r.total_marks||0),0),mark=items.reduce((n,r)=>n+Number(r.marks_obtained||0),0)
+   const studentRecord=students.find(s=>s.id===first.student_id),name=studentRecord?.full_name??first.student_name
+   const marks=items.map(r=>'<tr><td>'+safeHtml(r.subject)+'</td><td>'+(r.is_absent?'Absent':safeHtml(r.marks_obtained))+'</td><td>'+safeHtml(r.total_marks)+'</td><td>'+safeHtml(r.grade)+'</td><td>'+safeHtml(r.remarks)+'</td></tr>').join('')
+   const identity='<div class="identity"><span>Admission No. <b>'+safeHtml(studentRecord?.admission_no??'—')+'</b></span><span>Class <b>'+safeHtml(studentRecord?.class_name??first.class_name??'—')+'</b></span><span>Guardian <b>'+safeHtml(studentRecord?.guardian_name??'—')+'</b></span></div>'
+   return '<article class="card '+cardTemplate+'"><header><img src="'+safeHtml(window.location.origin+'/gidc-badin-official-logo.svg')+'" alt="College emblem"/><div><h2>Government Islamia Degree College, Badin</h2><small>Official examination result card</small></div></header><h3>'+safeHtml(name)+'</h3>'+identity+'<p class="exam">'+safeHtml(first.exam_title)+'</p><table><thead><tr><th>Subject</th><th>Marks</th><th>Total</th><th>Grade</th><th>Remarks</th></tr></thead><tbody>'+marks+'</tbody></table><div class="overall"><strong>'+mark.toFixed(2)+' / '+total.toFixed(2)+'</strong><span>'+(total?(mark/total*100).toFixed(1):'0.0')+'%</span></div>'+(cardTemplate==='detailed'?'<p class="footnote">This result card reflects published examination marks available in the college portal.</p>':'')+'<footer>Principal / Examination Officer</footer></article>'
+  }).join('')
+  const win=window.open('','_blank')
+  if(!win){onToast('Allow pop-ups to print report cards.',true);return}
+  win.document.write('<html><head><title>GIDC Badin — Report Cards</title><style>body{font:12px Arial,sans-serif;color:#18221b;padding:20px}article{break-after:page;border:1px solid #d9e4db;border-radius:12px;padding:20px;margin-bottom:18px}.card header{display:flex;align-items:center;gap:12px;border-bottom:2px solid #27623a;padding-bottom:10px}.card header img{width:52px;height:52px;object-fit:contain}.card header h2{margin:0;font-size:17px;color:#1d5630}.card header small{font-size:10px;color:#68766d}.card h3{font-size:19px;margin:14px 0 6px}.identity{display:flex;gap:18px;flex-wrap:wrap;padding:10px 0}.identity span{color:#69756c}.identity b{color:#202c23}.exam{font-weight:800;color:#27623a}table{width:100%;border-collapse:collapse;margin:12px 0}th,td{border:1px solid #dce5de;padding:7px;text-align:left}th{background:#eef5ef}.overall{display:flex;justify-content:flex-end;gap:16px;align-items:center;font-size:17px;color:#205d35}.footnote{color:#6b786e;font-size:10px}.card footer{text-align:right;color:#68766d;font-size:10px;margin-top:34px;padding-top:8px;border-top:1px solid #e4ebe5}.compact{padding:12px}.compact td,.compact th{padding:5px}.detailed{padding:25px}@media print{article{break-after:page}}</style></head><body><h1>Examination Report Cards</h1>'+(cards||'<p>No published results found.</p>')+'</body></html>')
+  win.document.close();win.focus();win.print()
+ }
+ function exportResults(){
+  const rows=visibleResults.map(r=>({student:r.student_name,admission_no:students.find(s=>s.id===r.student_id)?.admission_no??'',exam:r.exam_title,class_name:r.class_name,subject:r.subject,marks:r.marks_obtained,total:r.total_marks,grade:r.grade,status:r.approval_status,publication:r.result_status,remarks:r.remarks}))
+  const columns=[{key:'student',label:'Student'},{key:'admission_no',label:'Admission No.'},{key:'exam',label:'Examination'},{key:'class_name',label:'Class'},{key:'subject',label:'Subject'},{key:'marks',label:'Marks'},{key:'total',label:'Maximum'},{key:'grade',label:'Grade'},{key:'status',label:'Approval'},{key:'publication',label:'Publication'},{key:'remarks',label:'Remarks'}]
+  const filename='gidc-examination-results-'+new Date().toISOString().slice(0,10)
+  if(examExportFormat==='xlsx')exportXlsx(filename+'.xlsx','Examination Results',rows,columns)
+  else if(examExportFormat==='xls')exportExcelXml(filename+'.xls','Examination Results',rows,columns)
+  else if(examExportFormat==='docx')exportDocx(filename+'.docx','Examination Results',rows,columns)
+  else if(examExportFormat==='doc')exportWordXml(filename+'.doc','Examination Results',rows,columns)
+  else if(examExportFormat==='pdf')printOfficeReport('Examination Results',rows,columns,'Government Islamia Degree College, Badin')
+  else download(filename+'.csv',[columns.map(x=>csv(x.label)).join(','),...rows.map(row=>columns.map(x=>csv(row[x.key])).join(','))].join('\n'),'text/csv;charset=utf-8')
+ }
  const section=visibleTabs.find(t=>t.key===active)??visibleTabs[0]??tabs[0],examOptions=exams.map(e=><option key={e.id} value={e.id}>{e.title} · {e.class_name} · {e.subject} · {dateLabel(e.exam_date)}</option>)
  const passCount=visibleResults.filter(r=>!r.is_absent&&Number(r.marks_obtained)>=Number(r.total_marks)*0.4).length,average=visibleResults.length?visibleResults.reduce((s,r)=>s+(Number(r.marks_obtained||0)/Math.max(1,Number(r.total_marks||1))*100),0)/visibleResults.length:0
 
