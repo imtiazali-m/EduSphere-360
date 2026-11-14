@@ -58,6 +58,27 @@ check('Sidebar highlights only the exact selected submenu', () => {
   assert.ok(!dashboardNavigationSource.includes('const isActive = activeTab.route === route ||'))
 })
 
+check('Specialist job profiles filter operation-specific menus and workspace search by exact view grants', () => {
+  for (const permission of [
+    "hostel: 'hostel'",
+    "procurement: 'procurement'",
+    "cafeteria: 'cafeteria'",
+    "messaging: 'communications'",
+    "helpdesk: 'helpdesk'",
+    "'duplicate-detection': 'data_management'",
+    "'scheduled-reports': 'reports'",
+    "'asset-lifecycle': 'facilities'",
+    "'payment-operations': 'fees'",
+    "'receipt-operations': 'fees'",
+    "'library-reading': 'library'",
+    "'certificate-forms': 'forms'",
+  ]) assert.ok(dashboardNavigationSource.includes(permission), 'Missing specialist menu permission mapping: '+permission)
+  assert.ok(dashboardNavigationSource.includes('const items = group.items.filter(title =>'))
+  assert.ok(dashboardNavigationSource.includes('customPermissionModuleForRoute(route)'))
+  assert.ok(dashboardNavigationSource.includes('return !moduleKey || (grants[moduleKey] ?? []).includes(\'view\')'))
+  assert.ok(dashboardNavigationSource.includes('[searchText, visibleSections]'), 'Workspace search must not return hidden specialist destinations')
+})
+
 const require = createRequire(import.meta.url)
 const ts = require('typescript')
 require.extensions['.ts'] = (module, filename) => {
