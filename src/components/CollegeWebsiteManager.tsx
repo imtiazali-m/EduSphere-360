@@ -94,7 +94,7 @@ function makeId(prefix: string) {
   return prefix + '-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 7)
 }
 
-function TextInput({ label, value, onChange, placeholder = '', type = 'text' }: { label: string; value: string; onChange: (value: string) => void; placeholder?: string; type?: string }) {
+function TextInput({ label, value, onChange, placeholder = '', type = 'text' }: { label: string; value: string; onChange: (value: string) => void; placeholder?: string; type?: 'text' | 'email' | 'date' | 'number' | 'tel' | 'url' }) {
   return <label className="cwm-field"><span>{label}</span><input type={type} value={value} onChange={event => onChange(event.target.value)} placeholder={placeholder}/></label>
 }
 function TextArea({ label, value, onChange, placeholder = '', rows = 4 }: { label: string; value: string; onChange: (value: string) => void; placeholder?: string; rows?: number }) {
@@ -314,7 +314,7 @@ export function CollegeWebsiteManager({ onToast }: { onToast: (message: string, 
           <div><span><Users size={20}/></span><strong>{teachers.length}</strong><small>Internal faculty records</small></div>
           <div><span><CheckCircle2 size={20}/></span><strong>{publicFacultyCount}</strong><small>Published faculty profiles</small></div>
           <div><span><ShieldCheck size={20}/></span><strong>{principalCount}</strong><small>Published principal profiles</small></div>
-          <div><span><ImagePlus size={20}/></span><strong>{approvedCount}</strong><small>Approved Facebook images</small></div>
+          <div><span><ImagePlus size={20}/></span><strong>{approvedCount}</strong><small>Approved Facebook sources</small></div>
         </div>
 
         <AdminSection icon={ImagePlus} title="Homepage photographs — approval required" description="Four exact photo posts listed by the official GIDC Badin Facebook Photos tab. Open each original to inspect it, then mark Yes or No. The image is published only after you upload the same approved photo.">
