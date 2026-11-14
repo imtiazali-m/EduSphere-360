@@ -7,7 +7,7 @@ import { supabase } from '../lib/supabase'
 import { exportXlsx, exportDocx, exportExcelXml, exportWordXml, printOfficeReport } from '../lib/officeExport'
 import { userFacingError } from '../lib/userErrors'
 
-type DatasetKey = 'students'|'teachers'|'attendance'|'exam_results'|'fee_invoices'|'payroll'|'assignments'|'assignment_submissions''
+type DatasetKey = 'students'|'teachers'|'attendance'|'exam_results'|'fee_invoices'|'payroll'|'assignments'|'assignment_submissions'
 type ExportFormat = 'csv'|'tsv'|'json'|'xls'|'xlsx'|'doc'|'docx'|'pdf'
 type ReportRow = Record<string, unknown> & { id?: string }
 
