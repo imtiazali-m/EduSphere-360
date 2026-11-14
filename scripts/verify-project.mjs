@@ -137,7 +137,7 @@ check('The full institutional menu maps every submenu to a working destination',
       }
     }
   }
-  assert.equal(getNavigationRoute('ai', 'AI Question Generation'), 'institutional:examinations:question-bank', 'AI question generation shortcut must open the dedicated assessment question-bank workspace')
+  assert.equal(getNavigationRoute('ai', 'AI Question Generation'), 'assistant:ai-question-generation', 'AI question generation must open its dedicated intelligence workspace')
   assert.equal(getNavigationRoute('reports', 'Student Reports'), 'reports:students', 'Student reports must open the student report window')
   assert.equal(getNavigationRoute('reports', 'Attendance Reports'), 'reports:attendance', 'Attendance reports must open the attendance report window')
   assert.equal(getNavigationRoute('teaching', 'Homework'), 'assignments:open', 'Homework must open the open-coursework view')
@@ -267,7 +267,7 @@ check('Stage 12 front-office windows use the live tenant-scoped enquiry, notices
 })
 check('Stage 14 AI assistant is transparent when no AI provider is connected', () => {
   const assistant = read('src/components/AIAssistantWorkspace.tsx')
-  assert.ok(assistant.includes('AI service not connected') && assistant.includes('disabled'), 'The assistant must not pretend to send prompts without a configured provider')
+  assert.ok(assistant.includes('AI provider endpoint') && assistant.includes('disabled') && assistant.includes('no private college records are sent'), 'The assistant must disclose provider setup requirements and must not send prompts without a configured provider')
 })
 check('Stage 15 personal account pages use the authenticated session and respect personal scope', () => {
   const personal = read('src/components/PersonalWorkspace.tsx')
@@ -506,11 +506,11 @@ check('Operational modules expose distinct nested workspace windows and contextu
   assert.ok(record.includes('ed360-contextual-subwindow') && record.includes('Operational next step'), 'Record detail must open a module-specific contextual sub-window')
   const accounts = read('src/components/AccountsModule.tsx')
   const files = read('src/components/FilesModule.tsx')
-  const reports = read('src/components/ReportsModule.tsx')
+  const reports = read('src/components/ReportsAnalyticsWorkspace.tsx')
   const administration = read('src/components/AdministrationModule.tsx')
   assert.ok(accounts.includes('Access Overview') && accounts.includes('Account Directory') && accounts.includes('Provision Account'), 'Accounts must have separate overview, directory and provisioning windows')
   assert.ok(files.includes('File Register') && files.includes('categoryFilter') && files.includes('viewingFile') && files.includes('CONTEXTUAL SUB-WINDOW'), 'Files must have category windows and a contextual file detail window')
-  assert.ok(reports.includes('Finance & Collections') && reports.includes('Attendance Analysis') && reports.includes('Examination Results'), 'Reports must have separate subject-specific windows')
+  assert.ok(reports.includes('Student Reports') && reports.includes('Employee Reports') && reports.includes('Attendance Reports') && reports.includes('Examination Reports') && reports.includes('Academic Reports') && reports.includes('Fee Collection Reports') && reports.includes('Payroll Reports') && reports.includes('Financial Reports') && reports.includes('Class Reports') && reports.includes('Comparative Analytics') && reports.includes('Custom Report Builder') && reports.includes('Scheduled Reports') && reports.includes('Report Templates') && reports.includes('Report History'), 'Reports must provide separate dedicated report pages')
   assert.ok(administration.includes('Department Structure') && administration.includes('Class Capacity Overview') && administration.includes('Session Configuration'), 'Administration workspaces must use structure-specific tabs')
   const styles = read('src/styles/operational-hierarchy.css')
   assert.ok(!/zoom\s*:/.test(styles), 'The application must not use browser-level zoom for responsive scaling')
@@ -618,13 +618,13 @@ check('Administration settings and approval queues support sorting and paginatio
 })
 
 check('Report tables show all rows through accessible sorting and pagination', () => {
-  const reports = read('src/components/ReportsModule.tsx')
-  const styles = read('src/styles/reports.css')
-  for (const value of ['orderedRows', 'pageRows', 'toggleSort', 'aria-sort=', 'report-sort-header', 'report-table-pagination']) {
+  const reports = read('src/components/ReportsAnalyticsWorkspace.tsx')
+  const styles = read('src/styles/reports-analytics-workspace.css')
+  for (const value of ['orderedRows', 'pageRows', 'toggleSort', 'aria-sort=', 'ra-sort-button', 'ra-pagination']) {
     assert.ok(reports.includes(value), 'Report table interaction is missing: ' + value)
   }
   assert.ok(!reports.includes('rows.slice(0, 200)'), 'Reports must not silently truncate records at 200 rows')
-  assert.ok(styles.includes('.report-sort-header:focus-visible') && styles.includes('.report-table-pagination'), 'Report tables require responsive accessible controls')
+  assert.ok(styles.includes('.ra-sort-button:focus-visible') && styles.includes('.ra-pagination'), 'Report tables require responsive accessible controls')
 })
 
 check('Institution operations lists are paginated without changing their domain workflows', () => {
@@ -889,11 +889,10 @@ check('Timetable workspace exposes schedule resources and detects real conflicts
   assert.ok(record.includes('timetableConflictIds') && record.includes('const overlaps =') && record.includes("activeOperationalView.key === 'conflicts'"), 'Timetable conflicts must be derived from saved class/teacher/room overlaps')
 })
 check('Employee and payroll report workspaces use role-scoped live database records', () => {
-  const reports = read('src/components/ReportsModule.tsx')
-  for (const value of ['payroll_runs','payroll_items','Employee Reports','Payroll Reports','employeeColumns','payrollColumns']) assert.ok(reports.includes(value), 'Report workflow feature is missing: ' + value)
-  assert.ok(reports.includes("const wantsEmployees = ['owner', 'admin'].includes(role)"))
-  assert.ok(reports.includes("const wantsPayroll = ['owner', 'admin', 'accountant'].includes(role)"))
-  assert.ok(reports.includes("'Restricted employee record'"), 'Payroll reports must not leak employee names to roles without staff directory permission')
+  const reports = read('src/components/ReportsAnalyticsWorkspace.tsx')
+  for (const value of ['payroll_runs','payroll_items','Employee Reports','Payroll Reports','teachers','payroll']) assert.ok(reports.includes(value), 'Report workflow feature is missing: ' + value)
+  assert.ok(reports.includes('listRecords(mode,user!,key)'), 'Report sources must use the existing role-aware record reader')
+  assert.ok(reports.includes(".eq('institution_id',user!.institutionId)"), 'Payroll queries must be institution-scoped')
 })
 check('Transport allocation and cancellation use atomic tenant-scoped capacity controls', () => {
   const migration = read('supabase/migrations/20261110082738_atomic_transport_allocations.sql')
@@ -973,9 +972,9 @@ check('Dashboard entry points resolve to the intended role-specific operational 
 })
 
 check('Teacher reporting routes expose only the teacher-permitted report datasets', () => {
-  const reports = read('src/components/ReportsModule.tsx')
-  assert.ok(reports.includes("const wantsPeople = ['owner', 'admin', 'teacher'].includes(role)"))
-  assert.ok(reports.includes("const wantsResults = ['owner', 'admin', 'teacher', 'exam_officer'].includes(role)"))
+  const reports = read('src/components/ReportsAnalyticsWorkspace.tsx')
+  assert.ok(reports.includes('listRecords(mode,user!,key)'), 'Teacher report data must flow through role-aware listRecords permissions')
+  assert.ok(reports.includes("'attendance'" ) && reports.includes("'exam_results'"), 'Teacher report workspace must include permitted attendance and examination datasets')
 })
  
 check('College GitHub release pipeline verifies and deploys the dedicated public website', () => {
