@@ -47,7 +47,7 @@ export const institutionalMenu:WorkspaceMenuGroup[]=[
   'Students','Admissions & Enrollment','Teachers','Faculty & Staff','Parents & Guardians',
   'HR & Recruitment','Employee Contracts & Documents','Employee Performance','Payroll & Salary Records','Alumni'
  ]),
- group('attendance','Attendance, Leave & Student Wellbeing','Daily attendance registers, leave decisions, reporting and restricted student-care records.','CalendarCheck','rose','attendance',staff.concat(['student','parent']),[
+ group('attendance','Attendance & Leave','Daily attendance registers, leave decisions, reporting and restricted student-care records.','CalendarCheck','rose','attendance',staff.concat(['student','parent']),[
   'Student Attendance','Teacher Attendance','Staff Attendance','Leave Management','Attendance Reports','Student Discipline','Student Counselling & Wellbeing','Health & Emergency Records'
  ]),
  group('behaviour','Behaviour and Skills','Positive recognition, safeguarding-aware behaviour logs, incidents, skills and competency tracking.','HeartHandshake','pink','behaviour',staff.concat(['student','parent']),[
@@ -85,7 +85,7 @@ export const institutionalMenu:WorkspaceMenuGroup[]=[
  group('library','Digital Library','Catalogue, book inventory, member reading records, circulation, returns, fines and reports.','Library','indigo','library',family,[
   'Library Dashboard','Digital Library','Book Management','Book Catalogue','Book Categories','Book Registration','Reading Records','Reading Cards','Student Reading History','Book Issue and Returns','Learning Materials','Resource Downloads','Library Reports'
  ]),
- group('accounts-finance','Accounts and Finance','General ledger, income, expenses, cash/bank books, vouchers and financial statements.','Calculator','amber','finance',finance,[
+ group('accounts-finance','Accounting & Finance','General ledger, income, expenses, cash/bank books, vouchers and financial statements.','Calculator','amber','finance',finance,[
   'Accounts Dashboard','Chart of Accounts','Income','Expenses','Cash Book','Bank Book','Transactions','Vouchers','General Ledger','Financial Statements','Account Reconciliation','Financial Reports'
  ]),
  group('fees','Fees Management','Fee structures, invoices, discounts, scholarships, collection and receipts.','Wallet','amber','fees',finance.concat(['student','parent']),[
@@ -142,7 +142,7 @@ export const institutionalMenu:WorkspaceMenuGroup[]=[
   'Supplier Invoices',
   'Procurement Reports'
  ]),
- group('facilities','Rooms and Facilities','Classrooms, specialist rooms, availability, reservations, maintenance and facility history.','DoorOpen','cyan','facilities',management.concat(['teacher']),[
+ group('facilities','Room & Facility Management','Classrooms, specialist rooms, availability, reservations, maintenance and facility history.','DoorOpen','cyan','facilities',management.concat(['teacher']),[
   'Facilities Dashboard','Classroom Management','Laboratories','Library Rooms','Room Allocation','Room Availability','Room Reservations','Facility Maintenance','Facility History','Facilities Reports',
   'Hostel Dashboard',
   'Hostel Buildings',
