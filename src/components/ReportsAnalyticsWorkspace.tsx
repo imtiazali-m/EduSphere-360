@@ -83,10 +83,27 @@ export function ReportsAnalyticsWorkspace({initialWindow='overview',onToast}:{in
  const [examTemplate,setExamTemplate]=useState('whole-college-performance')
  const [customSource,setCustomSource]=useState<DatasetKey>('students')
  const [customFields,setCustomFields]=useState<string[]>(COLUMNS.students.map(c=>c.key))
- const [history,setHistory]=useState<{name:string;format:string;at:string;count:number}[]>([])
+ const [history,setHistory]=useState<Record<string,any>[]>([])
+ const [savedDefinitions,setSavedDefinitions]=useState<Record<string,any>[]>([])
+ const [savedSchedules,setSavedSchedules]=useState<Record<string,any>[]>([])
+ const [definitionName,setDefinitionName]=useState('')
+ const [selectedDefinition,setSelectedDefinition]=useState('')
+ const [scheduleName,setScheduleName]=useState('')
+ const [scheduleReportName,setScheduleReportName]=useState('Student Reports')
+ const [scheduleSource,setScheduleSource]=useState<DatasetKey>('students')
  const [scheduleFrequency,setScheduleFrequency]=useState('monthly')
+ const [scheduleDelivery,setScheduleDelivery]=useState('in_app')
+ const [scheduleNextRun,setScheduleNextRun]=useState(()=>new Date(Date.now()+86400000).toISOString().slice(0,16))
+ const [templateName,setTemplateName]=useState('')
+ const [templateScope,setTemplateScope]=useState('college')
+ const [persistentLoading,setPersistentLoading]=useState(false)
 
  useEffect(()=>{let live=true;setLoading(true);const keys:DatasetKey[]=['students','teachers','attendance','exam_results','fee_invoices','assignments','assignment_submissions'];Promise.all(keys.map(async key=>{try{return [key,await listRecords(mode,user!,key)] as const}catch(e){if(live)setErrors(v=>[...v,userFacingError(e,'Some report records could not be loaded.')]);return [key,[]] as const}})).then(async pairs=>{if(!live)return;const next:Record<DatasetKey,ReportRow[]>={students:[],teachers:[],attendance:[],exam_results:[],fee_invoices:[],payroll:[],assignments:[],assignment_submissions:[]};pairs.forEach(([key,rows])=>{next[key]=rows as ReportRow[]});if(supabase){try{const [items,runs]=await Promise.all([supabase.from('payroll_items').select('*').eq('institution_id',user!.institutionId).order('created_at',{ascending:false}).limit(2000),supabase.from('payroll_runs').select('*').eq('institution_id',user!.institutionId).limit(250)]);if(items.error)throw items.error;if(runs.error)throw runs.error;const runMap=new Map((runs.data??[]).map(run=>[String(run.id),run]));next.payroll=(items.data??[]).map(item=>{const run=runMap.get(String(item.payroll_run_id));return {...item,employee_name:String(item.employee_name??'Employee record'),period_start:run?.period_start??'',period_end:run?.period_end??''} as ReportRow})}catch(e){if(live)setErrors(v=>[...v,userFacingError(e,'Payroll report data could not be loaded.')])}}setData(next);setLoading(false)});return()=>{live=false}},[mode,user?.id,user?.institutionId,refresh])
+ useEffect(()=>{let live=true;if(!supabase||!user)return;setPersistentLoading(true);Promise.all([
+  supabase.from('institution_report_definitions').select('*').eq('institution_id',user.institutionId).order('updated_at',{ascending:false}).limit(300),
+  supabase.from('institution_report_schedules').select('*').eq('institution_id',user.institutionId).order('created_at',{ascending:false}).limit(300),
+  supabase.from('scheduled_report_execution_history').select('*').eq('institution_id',user.institutionId).order('executed_at',{ascending:false}).limit(500)
+ ]).then(([definitions,schedules,runs])=>{if(!live)return;if(definitions.error||schedules.error||runs.error){setErrors(v=>[...v,'Some saved report workspace records could not be loaded.']);return}setSavedDefinitions((definitions.data??[]) as Record<string,any>[]);setSavedSchedules((schedules.data??[]) as Record<string,any>[]);setHistory((runs.data??[]) as Record<string,any>[])}).catch(()=>{if(live)setErrors(v=>[...v,'Saved report workspace records could not be loaded.'])}).finally(()=>{if(live)setPersistentLoading(false)});return()=>{live=false}},[user?.id,user?.institutionId,refresh])
  const dataset=pageKey==='builder'?customSource:meta.dataset
  const allRows=data[dataset]??[]
  const filtered=useMemo(()=>allRows.filter(row=>{const d=dateValue(row);if(from&&d&&d<from)return false;if(to&&d&&d>to)return false;if(className!=='all'&&String(row.class_name??'')!==className)return false;if(section!=='all'&&String(row.section_name??'')!==section)return false;if(pageKey==='examinations'&&examName!=='all'&&String(row.exam_title??'')!==examName)return false;if(pageKey==='examinations'&&subjectName!=='all'&&String(row.subject??'')!==subjectName)return false;if(pageKey==='examinations'&&examScope==='class'&&className==='all')return false;if(pageKey==='examinations'&&examScope==='section'&&section==='all')return false;if(pageKey==='examinations'&&examScope==='subject'&&subjectName==='all')return false;if(pageKey==='examinations'&&examScope==='exam'&&examName==='all')return false;if(pageKey==='examinations'&&examScope==='student'&&!query.trim())return false;if(query&&!Object.values(row).some(v=>String(v??'').toLowerCase().includes(query.toLowerCase())))return false;return true}),[allRows,from,to,className,section,query,pageKey,examName,subjectName,examScope])
@@ -110,7 +127,45 @@ export function ReportsAnalyticsWorkspace({initialWindow='overview',onToast}:{in
  const submitted=data.assignment_submissions.length
  const gradedSubmissions=data.assignment_submissions.filter(r=>r.status==='graded').length
  const average=published.length?published.reduce((n,r)=>n+(Number(r.total_marks)>0?Number(r.marks_obtained??0)/Number(r.total_marks)*100:0),0)/published.length:0
- function doExport(format=exportFormat){if(!rows.length){onToast('There are no matching records to export.',true);return}exportData(meta.title,rows,columns,format);setHistory(h=>[{name:meta.title,format:format.toUpperCase(),at:new Date().toLocaleString(),count:rows.length},...h].slice(0,50));onToast('Report export prepared.')}
+ async function doExport(format=exportFormat){
+  if(!rows.length){onToast('There are no matching records to export.',true);return}
+  const filename=meta.title.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-'+today()+'.'+format
+  try{
+   exportData(meta.title,rows,columns,format)
+   if(supabase&&user){
+    const {error}=await supabase.from('scheduled_report_execution_history').insert({
+     institution_id:user.institutionId,report_name:meta.title,source_module:dataset,output_format:format.toUpperCase(),
+     row_count:rows.length,output_filename:filename,run_status:'completed',
+     filter_snapshot:{from,to,className,section,query,examName,subjectName,scope:examScope},executed_by:user.id
+    })
+    if(error)throw error
+   }
+   setHistory(h=>[{id:crypto.randomUUID(),report_name:meta.title,output_format:format.toUpperCase(),row_count:rows.length,executed_at:new Date().toISOString(),run_status:'completed',output_filename:filename},...h].slice(0,500))
+   onToast('Report export prepared and recorded in Report History.')
+  }catch(e){onToast(userFacingError(e,'The report was exported, but history could not be recorded.'),true)}
+ }
+ async function saveDefinition(){
+  if(!supabase||!user||!definitionName.trim()){onToast('Enter a name for this custom report.',true);return}
+  if(!customFields.length){onToast('Select at least one report field.',true);return}
+  const payload={institution_id:user.institutionId,name:definitionName.trim(),source_module:customSource,template_key:examTemplate,selected_fields:customFields,filters:{from,to,className,section,query},export_format:exportFormat,created_by:user.id,updated_by:user.id}
+  try{const result=await supabase.from('institution_report_definitions').insert(payload).select('*').single();if(result.error)throw result.error;setSavedDefinitions(v=>[result.data,...v]);setSelectedDefinition(result.data.id);onToast('Custom report definition saved to this institution.')}catch(e){onToast(userFacingError(e,'The report definition could not be saved.'),true)}
+ }
+ function loadDefinition(id:string){
+  setSelectedDefinition(id);const found=savedDefinitions.find(item=>item.id===id);if(!found)return;
+  const source=String(found.source_module) as DatasetKey
+  if(COLUMNS[source]){setCustomSource(source);setCustomFields(Array.isArray(found.selected_fields)?found.selected_fields:COLUMNS[source].map(x=>x.key))}
+  const filters=found.filters??{};setFrom(filters.from??'');setTo(filters.to??'');setClassName(filters.className??'all');setSection(filters.section??'all');setQuery(filters.query??'');if(found.export_format)setExportFormat(String(found.export_format).toLowerCase() as ExportFormat);onToast('Saved report definition loaded.')
+ }
+ async function saveTemplate(){
+  if(!templateName.trim()){onToast('Enter a template name.',true);return}
+  if(!supabase||!user)return
+  try{const result=await supabase.from('institution_report_definitions').insert({institution_id:user.institutionId,name:templateName.trim(),source_module:pageKey==='templates'?'exam_results':customSource,template_key:examTemplate,selected_fields:pageKey==='templates'?COLUMNS.exam_results.map(c=>c.key):customFields,filters:{scope:templateScope,template:examTemplate},export_format:exportFormat,created_by:user.id,updated_by:user.id}).select('*').single();if(result.error)throw result.error;setSavedDefinitions(v=>[result.data,...v]);setTemplateName('');onToast('Report template saved in the institution template library.')}catch(e){onToast(userFacingError(e,'The report template could not be saved.'),true)}
+ }
+ async function saveSchedule(event:React.FormEvent<HTMLFormElement>){
+  event.preventDefault();if(!supabase||!user)return
+  if(!scheduleName.trim()){onToast('Enter a schedule name.',true);return}
+  try{const result=await supabase.from('institution_report_schedules').insert({institution_id:user.institutionId,name:scheduleName.trim(),report_name:scheduleReportName,source_module:scheduleSource,cadence:scheduleFrequency,delivery_channel:scheduleDelivery,timezone:'Asia/Karachi',next_run_at:new Date(scheduleNextRun).toISOString(),is_enabled:false,paused_reason:'Scheduler worker not configured. This schedule is saved but will not execute automatically.',created_by:user.id,updated_by:user.id}).select('*').single();if(result.error)throw result.error;setSavedSchedules(v=>[result.data,...v]);setScheduleName('');onToast('Schedule saved. It is paused until the institution report scheduler is configured.')}catch(e){onToast(userFacingError(e,'The report schedule could not be saved.'),true)}
+ }
  const templates=['Whole-college performance','Class-wise result summary','Section-wise result summary','Subject-wise result analysis','Individual student report card','Exam-wise marks register','Grade distribution report','Merit and position list','Pass/fail analysis','Attendance and result correlation','Top performers report','Improvement required report','Missing marks register','Result publication summary','Examination comparison report']
  const templateValues=['whole-college-performance','class-wise-result-summary','section-wise-result-summary','subject-wise-result-analysis','individual-student-report-card','exam-wise-marks-register','grade-distribution-report','merit-and-position-list','pass-fail-analysis','attendance-result-correlation','top-performers-report','improvement-required-report','missing-marks-register','result-publication-summary','examination-comparison-report']
  if(loading)return <div className="ra-loading">Loading authorised report records…</div>
