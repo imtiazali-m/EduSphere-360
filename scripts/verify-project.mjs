@@ -1171,7 +1171,7 @@ check('Administration pages are dedicated, audience-aware and scoped to existing
   assert.ok(!adminWorkspace.includes('Institution data remains scoped by the signed-in membership') && !adminWorkspace.includes('Direct supervisor links and approved vacancy positions are not stored'), 'Remove redundant scope and schema-explanation statements from Administration views')
   assert.ok(!operations.includes('Changes remain inside {user?.institutionName') && !operations.includes('Scoped to {user?.institutionName'), 'Campus workspace must not repeat institution-scope statements')
   assert.ok(roleDashboard.includes('Government Islamia Degree College, Badin') && roleDashboard.includes('Badin weather') || roleDashboard.includes('BADIN WEATHER · LIVE'), 'College welcome panel must identify the college and show live Badin conditions')
-  assert.ok(roleDashboard.includes('timeZone:\'Asia/Karachi\'') && roleDashboard.includes('CampusIllustration'), 'Welcome panel must use Pakistan local date/time and a campus visual')
+  assert.ok(roleDashboard.includes('timeZone:\'Asia/Karachi\'') && !roleDashboard.includes('CampusIllustration') && !roleDashboard.includes('rd-institution-logo'), 'Welcome panel must use Pakistan local date/time without a forced campus visual or logo')
 })
 check('Student admission is a dedicated, accessible workspace window', () => {
   const recordModule = read('src/components/RecordModule.tsx')
