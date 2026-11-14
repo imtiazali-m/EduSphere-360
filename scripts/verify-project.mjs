@@ -1117,7 +1117,7 @@ check('Required database safeguards and Cloudflare redirects remain in the proje
     '20261113174054_college_approval_profile_action_alignment.sql',
     '20261113175058_college_custom_role_high_impact_rpc_guards.sql',
     '20261114032847_college_operations_custom_permission_guards.sql',
-    '20261114033300_college_permission_role_variable_fix.sql',
+    '20261114033406_college_permission_role_variable_fix.sql',
   ]) {
     assert.ok(migrations.includes(migration), `${migration} missing`)
   }
