@@ -10,7 +10,7 @@ import { userFacingError } from '../lib/userErrors'
 import type { RecordRow } from '../lib/types'
 import '../styles/stage7-workspace.css'
 
-type WindowKey = 'leave'|'reports'|'reports-students'|'reports-teachers'|'reports-staff'|'discipline'|'counselling'|'health'
+type WindowKey = 'leave'|'leave-applications'|'leave-approvals'|'leave-balances'|'leave-reports'|'reports'|'reports-students'|'reports-teachers'|'reports-staff'|'discipline'|'counselling'|'health'
 type Student = { id:string; full_name:string; admission_no:string; class_name:string; campus_id?:string|null }
 type Employee = { id:string; user_id?:string|null; full_name:string; employee_no:string; employee_type:string; department?:string|null; campus_id?:string|null }
 type CareGrant = { area:'discipline'|'counselling'|'health'; can_read:boolean; can_write:boolean }
@@ -24,12 +24,19 @@ type AttendanceReportRow = RecordRow & {
 }
 const today = () => new Date().toLocaleDateString('en-CA')
 const dayCount = (start:string,end:string) => Math.max(0,Math.round((Date.parse(end+'T00:00:00Z')-Date.parse(start+'T00:00:00Z'))/86400000)+1)
+const overlapDays = (start:unknown,end:unknown,from:string,to:string) => {
+  const s=String(start??''),e=String(end??'')
+  if(!s||!e||!from||!to)return 0
+  const left=Math.max(Date.parse(s.slice(0,10)+'T00:00:00Z'),Date.parse(from+'T00:00:00Z'))
+  const right=Math.min(Date.parse(e.slice(0,10)+'T00:00:00Z'),Date.parse(to+'T00:00:00Z'))
+  return Number.isFinite(left)&&Number.isFinite(right)&&right>=left?Math.floor((right-left)/86400000)+1:0
+}
 const areaLabels:Record<string,string>={discipline:'Student Discipline',counselling:'Counselling & Wellbeing',health:'Health & Emergency'}
 const message = (error:unknown,fallback:string) => userFacingError(error,fallback)
 
 export function Stage7CareWorkspace({initialWindow='leave',onToast}:{initialWindow?:string;onToast:(message:string,error?:boolean)=>void}) {
   const {user}=useAuth()
-  const activeWindow=(['leave','reports','reports-students','reports-teachers','reports-staff','discipline','counselling','health'].includes(initialWindow)?initialWindow:'leave') as WindowKey
+  const activeWindow=(['leave','leave-applications','leave-approvals','leave-balances','leave-reports','reports','reports-students','reports-teachers','reports-staff','discipline','counselling','health'].includes(initialWindow)?initialWindow:'leave-applications') as WindowKey
   const isAdmin=Boolean(user&&['owner','admin'].includes(user.role))
   const isStudentOrParent=Boolean(user&&['student','parent'].includes(user.role))
   const [students,setStudents]=useState<Student[]>([])
@@ -40,6 +47,9 @@ export function Stage7CareWorkspace({initialWindow='leave',onToast}:{initialWind
   const [refreshKey,setRefreshKey]=useState(0)
   const [leaveRows,setLeaveRows]=useState<LeaveRow[]>([])
   const [leaveBalances,setLeaveBalances]=useState<RecordRow[]>([])
+   const [academicSessions,setAcademicSessions]=useState<RecordRow[]>([])
+   const [leavePeriod,setLeavePeriod]=useState<'week'|'month'|'year'|'session'>('month')
+   const [leaveSessionId,setLeaveSessionId]=useState('')
   const [leaveKind,setLeaveKind]=useState<'student'|'employee'>(isStudentOrParent?'student':'employee')
   const [leavePerson,setLeavePerson]=useState('')
   const [leaveType,setLeaveType]=useState('sick')
