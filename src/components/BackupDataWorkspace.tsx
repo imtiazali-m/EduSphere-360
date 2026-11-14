@@ -83,7 +83,16 @@ function parseCsv(source:string): DataRow[] {
   if(row.some(value=>value.trim()))matrix.push(row)
   if(matrix.length<2) return []
   const headers=matrix[0].map(normaliseHeader)
-  return matrix.slice(1).map(values=>Object.fromEntries(headers.map((header,index)=>[header,values[index]??'']).filter(([key])=>Boolean(key))))
+  return matrix.slice(1).map(values=>{
+    const entries:Array<[string,string]>=headers.map((header,index)=>[header,values[index]??''])
+    return Object.fromEntries(entries.filter(([key])=>Boolean(key)))
+  })
+}
+function safeImportPayload(row:DataRow):Record<string,unknown>{
+  const entries:Array<[string,unknown]>=Object.entries(row)
+    .map(([key,value])=>[normaliseHeader(key),value])
+    .filter(([key])=>!protectedFields.has(key))
+  return Object.fromEntries(entries)
 }
 function parseJsonRows(source:string,table?:string):DataRow[] {
   const parsed=JSON.parse(source) as unknown
@@ -193,9 +202,6 @@ export function BackupDataWorkspace({initialWindow,onToast}:Props){
     if(['backup-history','import-history','export-history'].includes(view))void loadHistory()
     if(view==='dashboard')void loadDashboardCounts()
   },[view,user?.id,user?.institutionId,mode])
-  useEffect(()=>{
-    if(['validation','duplicates','integrity'].includes(view))void loadTable(validationTable)
-  },[validationTable])
   async function makeSnapshot(){
     if(!user)return
     setSnapshotBusy(true)
@@ -256,7 +262,7 @@ export function BackupDataWorkspace({initialWindow,onToast}:Props){
     let saved=0,failed=0
     const messages:string[]=[]
     for(let index=0;index<importRows.length;index++){
-      const payload=Object.fromEntries(Object.entries(importRows[index]).map(([key,value])=>[normaliseHeader(key),value]).filter(([key])=>!protectedFields.has(String(key))))
+      const payload=safeImportPayload(importRows[index])
       try{await createRecord(mode,user,importTable,payload);saved++}
       catch(error){failed++;if(messages.length<8)messages.push('Row '+(index+2)+': '+userFacingError(error,'Could not be saved.'))}
     }
@@ -270,7 +276,7 @@ export function BackupDataWorkspace({initialWindow,onToast}:Props){
     setImportBusy(true)
     let saved=0,failed=0
     for(const row of recoveryRows){
-      const payload=Object.fromEntries(Object.entries(row).map(([key,value])=>[normaliseHeader(key),value]).filter(([key])=>!protectedFields.has(String(key))))
+      const payload=safeImportPayload(row)
       try{await createRecord(mode,user,importTable,payload);saved++}catch{failed++}
     }
     setImportOutcome({saved,failed,messages:[]})
