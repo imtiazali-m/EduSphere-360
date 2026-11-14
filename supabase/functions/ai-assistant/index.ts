@@ -66,8 +66,9 @@ async function callProvider(provider:string,key:string,model:string,system:strin
     const base=provider==="deepseek"?"https://api.deepseek.com":provider==="xai"?"https://api.x.ai":"https://api.meta.ai/v1";
     data=await requestJson(base+"/chat/completions",{method:"POST",headers:{"Authorization":"Bearer "+key,"Content-Type":"application/json"},body:JSON.stringify({model,messages:[{role:"system",content:system},{role:"user",content:combined}],max_tokens:1800,stream:false})});
   }else if(provider==="perplexity"){
-    data=await requestJson("https://api.perplexity.ai/v1/agent",{method:"POST",headers:{"Authorization":"Bearer "+key,"Content-Type":"application/json"},body:JSON.stringify({model:model||"perplexity/sonar",input:system+"\n\n"+combined,tools:[{type:"web_search"}],max_output_tokens:1800,stream:false})});
-    if(["failed","cancelled"].includes(String(data.status)))throw new Error("Perplexity could not complete this request. Check the model and API account.");
+    const preset=["fast","low","medium","high","xhigh"].includes(model)?model:"fast";
+    data=await requestJson("https://api.perplexity.ai/v1/agent",{method:"POST",headers:{"Authorization":"Bearer "+key,"Content-Type":"application/json"},body:JSON.stringify({preset,input:combined,instructions:system,tools:[{type:"web_search",search_context_size:"medium"}],stream:false})});
+    if(["failed","cancelled"].includes(String(data.status)))throw new Error("Perplexity could not complete this request. Check the provider account and usage limits.");
     const sources=(data.output??[]).find((item:any)=>item.type==="search_results")?.results??[];
     const text=outputText(data);
     return {text,sources:sources.slice(0,8).map((s:any)=>({title:s.title,url:s.url,snippet:s.snippet}))};
