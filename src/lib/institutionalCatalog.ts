@@ -169,8 +169,7 @@ export const institutionalMenu:WorkspaceMenuGroup[]=[
  ]),
  group('ai','AI Intelligence','Connected model assistance and evidence-grounded institutional insights with transparent assumptions and uncertainty.','BrainCircuit','violet','ai',management.concat(['teacher','accountant','exam_officer']),[
   'AI Assistant','Smart Reports','Student Performance Prediction','Student Analysis','Fee Collection Prediction','Examination Analysis','AI Timetable Suggestions','AI Question Generation','AI Document Assistant','AI Learning Recommendations','Academic Performance Insights','Attendance and Behaviour Insights','Institutional Intelligence'
- ]),,
-
+ ]),
 ]
 
 export function getWorkspaceGroup(key:string){return institutionalMenu.find(group=>group.key===key)}
