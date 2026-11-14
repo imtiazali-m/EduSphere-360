@@ -154,3 +154,14 @@
   .cwm-internal-announcement { align-items: stretch; flex-direction: column; gap: 12px; }
   .cwm-publish-toggle { width: 100%; }
 }
+
+
+.cwm-bulk-upload { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 16px; border: 1px dashed #b9c9b8; border-radius: 11px; background: #f6faf5; }
+.cwm-bulk-upload>div { display: grid; gap: 5px; min-width: 0; }
+.cwm-bulk-upload>div>b { color: #244c34; font-size: 12px; }
+.cwm-bulk-upload>div>span { color: #66766b; font-size: 10px; line-height: 1.55; }
+.cwm-bulk-upload .cwm-upload { min-width: 220px; flex: 0 0 auto; }
+@media(max-width:720px) {
+  .cwm-bulk-upload { align-items: stretch; flex-direction: column; }
+  .cwm-bulk-upload .cwm-upload { width: 100%; min-width: 0; }
+}
