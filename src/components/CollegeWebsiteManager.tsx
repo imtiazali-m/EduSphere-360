@@ -507,8 +507,8 @@ export function CollegeWebsiteManager({ onToast }: { onToast: (message: string, 
 
         <AdminSection icon={ImagePlus} title="Campus photographs & gallery" description="Upload or link authentic college photographs and assign each one to its correct gallery category.">
           <div className="cwm-bulk-upload">
-            <div><b>Import the sorted college photo folder</b><span>Extract the supplied ZIP, then select its GIDC_Badin_Images_Sorted folder. Images are assigned by their folder and filenames; the unidentified office portrait and logo reference are skipped.</span></div>
-            <label className="cwm-upload"><Upload size={17}/><span>{uploading ? 'Importing photographs…' : 'Select sorted image folder'}</span><input type="file" accept="image/*" multiple {...({ webkitdirectory: true } as Record<string, boolean>)} disabled={uploading} onChange={event => void handleBulkPhotoUpload(event)}/></label>
+            <div><b>Import the sorted college photo folder</b><span>Extract the supplied ZIP, then select multiple images from each category folder in turn. Images are assigned from their descriptive filenames; the unidentified office portrait and logo reference are skipped.</span></div>
+            <label className="cwm-upload"><Upload size={17}/><span>{uploading ? 'Importing photographs…' : 'Select multiple images'}</span><input type="file" accept="image/*" multiple disabled={uploading} onChange={event => void handleBulkPhotoUpload(event)}/></label>
           </div>
           <p className="cwm-help">Placement guide: campus/building views go under Main campus; classroom photos under Academics & classrooms; room and shelf photographs under Campus facilities; student-only assemblies under Student life; staff presentations, mixed student-and-teacher group photographs, guest visits and sessions under College events. The fifth image is classified as an Event, not Student life.</p>
           {content.gallery.map((photo, index) => <div className="cwm-repeat-card" key={photo.id}>
