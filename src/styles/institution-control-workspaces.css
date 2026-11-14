@@ -1,0 +1,264 @@
+/* Focused design layer for Institute Profile and Campus & Branch Management only. */
+.ed360-admin-stage5.is-profile {
+  max-width: 1500px;
+  padding: clamp(18px,2.2vw,32px);
+  border: 1px solid #eee6f3;
+  border-radius: 28px;
+  background:
+    radial-gradient(ellipse at 0% 5%,rgba(249,221,238,.36),transparent 27%),
+    radial-gradient(ellipse at 100% 8%,rgba(225,231,255,.42),transparent 29%),
+    #fff;
+  color: #28384b;
+}
+.ed360-admin-stage5.is-profile .gov-heading { align-items:center; padding: 4px 3px 8px; }
+.ed360-admin-stage5.is-profile .gov-heading>div>span { color:#9860b4; font-size:12px; letter-spacing:1.5px; }
+.ed360-admin-stage5.is-profile .gov-heading h1 { color:#25334a; font-size:clamp(29px,3vw,39px); letter-spacing:-.8px; }
+.ed360-admin-stage5.is-profile .gov-heading p { color:#738095; font-size:15px; }
+.ed360-admin-stage5.is-profile .gov-context {
+  padding: clamp(20px,2.5vw,30px);
+  border:1px solid #eee1f4;
+  border-radius:23px;
+  background:
+    radial-gradient(ellipse at 0% 100%,rgba(245,220,237,.30),transparent 35%),
+    radial-gradient(ellipse at 100% 0%,rgba(222,230,255,.36),transparent 38%),
+    #fff;
+  box-shadow:0 12px 32px rgba(91,65,128,.07);
+}
+.ed360-admin-stage5.is-profile .gov-context small { color:#9262af; font-size:11px; letter-spacing:1.1px; }
+.ed360-admin-stage5.is-profile .gov-context h2 { color:#2b344c; font-size:24px; letter-spacing:-.35px; }
+.ed360-admin-stage5.is-profile .gov-context p { color:#6d7d91; font-size:14px; }
+.ed360-admin-stage5.is-profile .gov-context>div:last-child strong { color:#8054af; font-size:31px; }
+.ed360-admin-stage5.is-profile .gov-context>div:last-child small { color:#7d8798; font-size:11px; }
+.ed360-admin-stage5.is-profile .gov-panel {
+  padding:clamp(20px,2.2vw,28px);
+  border:1px solid #e9e3f1;
+  border-radius:23px;
+  background:#fff;
+  box-shadow:0 12px 32px rgba(47,62,91,.055);
+}
+.ed360-admin-stage5.is-profile .gov-panel>header h2 { color:#26364b; font-size:21px; }
+.ed360-admin-stage5.is-profile .gov-panel>header p { color:#77869b; font-size:13px; }
+.ed360-admin-stage5.is-profile .gov-readonly { color:#7655a4; background:#f4edfb; font-size:11px; padding:8px 12px; }
+.ed360-admin-stage5.is-profile .ed360-admin-profile { grid-template-columns:minmax(0,1.55fr) minmax(260px,.72fr); gap:20px; align-items:start; }
+.ed360-admin-stage5.is-profile .ed360-admin-profile-form { gap:17px 16px; }
+.ed360-admin-stage5.is-profile .ed360-admin-field { color:#53647c; font-size:13px; font-weight:800; gap:8px; }
+.ed360-admin-stage5.is-profile .ed360-admin-field input,
+.ed360-admin-stage5.is-profile .ed360-admin-field select,
+.ed360-admin-stage5.is-profile .ed360-admin-field textarea {
+  min-height:48px;
+  padding:12px 14px;
+  border:1px solid #dfe4ef;
+  border-radius:12px;
+  background:#fff;
+  color:#26384e;
+  font-size:14px;
+  font-weight:550;
+}
+.ed360-admin-stage5.is-profile .ed360-admin-field textarea { min-height:104px; }
+.ed360-admin-stage5.is-profile .ed360-admin-field input:focus,
+.ed360-admin-stage5.is-profile .ed360-admin-field select:focus,
+.ed360-admin-stage5.is-profile .ed360-admin-field textarea:focus {
+  outline:3px solid rgba(153,99,203,.15);
+  border-color:#ad82d1;
+}
+.ed360-admin-stage5.is-profile .ed360-admin-field small { color:#8692a5; font-size:12px; line-height:1.5; }
+.ed360-admin-stage5.is-profile .ed360-admin-field .gov-button { min-height:45px; padding:11px 15px; border:1px solid #e1d7f0; border-radius:12px; color:#7453a0; font-size:13px; }
+.ed360-admin-stage5.is-profile .gov-button.primary {
+  min-height:47px; padding:12px 19px; border:0; border-radius:13px;
+  color:#fff; font-size:13px; font-weight:850;
+  background:linear-gradient(105deg,#d65a9b 0%,#9460ce 52%,#5a85ca 100%);
+  box-shadow:0 8px 18px rgba(142,89,180,.18);
+}
+.ed360-admin-stage5.is-profile .gov-row-actions { gap:10px; }
+.ed360-admin-stage5.is-profile .ed360-admin-logo {
+  min-height:255px;
+  padding:25px;
+  border:1px dashed #d9c9eb;
+  border-radius:21px;
+  background:
+    radial-gradient(circle at 50% 15%,rgba(245,218,240,.55),transparent 55%),
+    linear-gradient(145deg,#fff,#f9f7ff);
+}
+.ed360-admin-stage5.is-profile .ed360-admin-logo img {
+  width:138px; height:138px; padding:9px;
+  border:1px solid #e8e0f1; border-radius:22px;
+  box-shadow:0 10px 25px rgba(80,61,115,.08);
+}
+.ed360-admin-stage5.is-profile .ed360-admin-logo .placeholder {
+  width:138px; height:138px; border-radius:22px;
+  color:#fff; font-size:36px;
+  background:linear-gradient(135deg,#d75c9c,#9561d0 60%,#6489cc);
+}
+.ed360-admin-stage5.is-profile .ed360-admin-logo b { color:#304057; font-size:16px; line-height:1.5; }
+.ed360-admin-stage5.is-profile .ed360-admin-logo small { color:#8491a5; font-size:12px; }
+.ed360-admin-stage5.is-profile .ed360-admin-profile-preview {
+  padding:22px; border:1px solid #e8e0f0; border-radius:21px;
+  background:linear-gradient(150deg,#fff,#faf8ff);
+  box-shadow:0 10px 25px rgba(47,62,91,.045);
+}
+.ed360-admin-stage5.is-profile .ed360-admin-profile-preview h3 { color:#34334f; font-size:20px; }
+.ed360-admin-stage5.is-profile .ed360-admin-profile-preview p { color:#7e7898; font-size:13px; }
+.ed360-admin-stage5.is-profile .ed360-admin-profile-preview dt { color:#8791a3; font-size:11px; }
+.ed360-admin-stage5.is-profile .ed360-admin-profile-preview dd { color:#48566e; font-size:13px; }
+
+.ed360-campus-workspace {
+  max-width:1500px;
+  padding:clamp(14px,2vw,28px);
+  border:1px solid #e9e4f1;
+  border-radius:27px;
+  background:
+    radial-gradient(ellipse at 0% 0%,rgba(250,222,239,.32),transparent 25%),
+    radial-gradient(ellipse at 100% 0%,rgba(223,232,255,.40),transparent 30%),
+    #fff;
+  color:#28384b;
+}
+.ed360-campus-workspace .ed360-workspace-hero {
+  align-items:center;
+  padding:clamp(19px,2.3vw,30px);
+  border:1px solid #e8e0f1;
+  border-radius:23px;
+  background:
+    radial-gradient(ellipse at 0% 100%,rgba(248,220,238,.35),transparent 34%),
+    radial-gradient(ellipse at 100% 0%,rgba(222,230,255,.43),transparent 37%),
+    #fff;
+  box-shadow:0 12px 30px rgba(50,58,92,.055);
+}
+.ed360-campus-workspace .ed360-workspace-hero-icon {
+  width:54px;height:54px;border-radius:17px;
+  color:#8754b4;background:linear-gradient(135deg,#fae8f3,#ece8fb,#e4efff);
+}
+.ed360-campus-workspace .ed360-workspace-hero-copy>span { color:#9662b1; font-size:11px; letter-spacing:1.35px; }
+.ed360-campus-workspace .ed360-workspace-hero-copy h1 { color:#26384f; font-size:clamp(26px,2.6vw,35px); letter-spacing:-.6px; }
+.ed360-campus-workspace .ed360-workspace-hero-copy p { max-width:780px; color:#718198; font-size:14px; line-height:1.7; }
+.ed360-campus-actions {
+  display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+  padding:2px 2px 4px;
+}
+.ed360-campus-actions .button {
+  min-height:47px; padding:12px 18px; border-radius:14px;
+  font-size:14px; font-weight:850;
+}
+.ed360-campus-actions .button-primary {
+  border:0; color:#fff;
+  background:linear-gradient(105deg,#d65a9b 0%,#9560cf 55%,#5d86ca 100%);
+  box-shadow:0 8px 19px rgba(143,88,181,.18);
+}
+.ed360-campus-actions .button-outline {
+  border:1px solid #dcd4eb; color:#71549a; background:#fff;
+}
+.ed360-campus-actions>span { margin-left:auto; color:#8793a6; font-size:12px; }
+.ed360-campus-workspace .ed360-workspace-kpis { grid-template-columns:repeat(5,minmax(0,1fr)); gap:13px; }
+.ed360-campus-workspace .ed360-workspace-kpis article {
+  min-width:0; padding:18px; border:1px solid #e8e3f0; border-radius:19px;
+  background:linear-gradient(145deg,#fff,#fbf9ff);
+  box-shadow:0 8px 22px rgba(48,61,91,.045);
+}
+.ed360-campus-workspace .ed360-workspace-kpis article:nth-child(3) { background:linear-gradient(145deg,#fff,#fff7fb); border-color:#f0dce9; }
+.ed360-campus-workspace .ed360-workspace-kpis article:nth-child(4) { background:linear-gradient(145deg,#fff,#f6faff); border-color:#dfe8f5; }
+.ed360-campus-workspace .ed360-workspace-kpis article span { color:#697a91; font-size:12px; font-weight:800; line-height:1.45; }
+.ed360-campus-workspace .ed360-workspace-kpis article strong { color:#624c91; font-size:31px; font-weight:900; line-height:1.25; }
+.ed360-campus-workspace .ed360-workspace-kpis article small { color:#8a95a8; font-size:11px; line-height:1.5; }
+.ed360-campus-workspace .ed360-workspace-record-card {
+  padding:20px; border:1px solid #e7e1ef; border-radius:23px;
+  background:#fff; box-shadow:0 12px 30px rgba(44,58,91,.05);
+}
+.ed360-campus-workspace .table-toolbar { align-items:center; margin-bottom:16px; }
+.ed360-campus-workspace .table-count { color:#687a90; font-size:14px; }
+.ed360-campus-workspace .table-count strong { color:#684e9b; font-size:19px; }
+.ed360-campus-scope-label {
+  padding:8px 12px; border:1px solid #e8dff2; border-radius:99px;
+  color:#8059a9; background:#fbf8ff; font-size:12px; font-weight:800;
+}
+.ed360-campus-workspace .ed360-linked-search { color:#596b84; font-size:13px; font-weight:800; }
+.ed360-campus-workspace .ed360-linked-search input {
+  min-height:47px; padding:11px 14px; border:1px solid #e1e2ed; border-radius:12px;
+  color:#2b3c52; background:#fff; font-size:14px;
+}
+.ed360-campus-workspace .table-scroll table { min-width:1060px; }
+.ed360-campus-workspace .table-scroll th { padding:14px 12px; color:#8b70a6; font-size:11px; letter-spacing:.55px; }
+.ed360-campus-workspace .table-scroll td { padding:15px 12px; color:#495b71; font-size:13px; line-height:1.5; }
+.ed360-campus-workspace .table-scroll td b { color:#31445d; font-size:14px; }
+.ed360-campus-student-count { color:#7551a8; font-size:18px; font-variant-numeric:tabular-nums; }
+.ed360-campus-cell-note { display:block; margin-top:2px; color:#96a0af; font-size:10px; }
+.ed360-campus-workspace .ed360-row-actions button {
+  min-height:35px; padding:7px 11px; border:1px solid #e3d8ef; border-radius:9px;
+  color:#7653a3; background:#fff; font-size:12px; font-weight:800;
+}
+.ed360-campus-workspace .ed360-workspace-empty { min-height:170px; padding:28px; border:1px dashed #d9cce9; border-radius:18px; background:#fcfaff; color:#76849a; }
+.ed360-campus-empty strong { color:#3b4861; font-size:18px; }
+.ed360-campus-empty span { font-size:13px; line-height:1.6; }
+.ed360-campus-empty .button { margin-top:14px; min-height:43px; border-radius:12px; font-size:13px; }
+.ed360-campus-modal {
+  width:min(860px,calc(100vw - 30px));
+  max-height:92vh; overflow:auto;
+  padding:clamp(20px,2.5vw,32px);
+  border:1px solid #e8def1; border-radius:25px;
+  background:
+    radial-gradient(ellipse at 0% 0%,rgba(250,223,240,.34),transparent 31%),
+    radial-gradient(ellipse at 100% 0%,rgba(224,233,255,.40),transparent 34%),
+    #fff;
+  box-shadow:0 24px 70px rgba(43,40,75,.20);
+}
+.ed360-campus-modal .modal-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:24px; }
+.ed360-campus-modal .modal-heading h2 { margin:5px 0 8px; color:#293a52; font-size:26px; letter-spacing:-.5px; }
+.ed360-campus-modal .modal-heading p { max-width:680px; margin:0; color:#77859a; font-size:13px; line-height:1.65; }
+.ed360-campus-modal .modal-heading .eyebrow { color:#9b61b7; font-size:11px; font-weight:850; letter-spacing:1.3px; }
+.ed360-campus-form-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:17px 16px; }
+.ed360-campus-form-section-title { grid-column:1/-1; padding:12px 15px; border:1px solid #eadff2; border-radius:13px; background:linear-gradient(100deg,#fff7fb,#f8f5ff 65%,#f5f9ff); }
+.ed360-campus-form-section-title h3 { margin:0 0 4px; color:#684d90; font-size:16px; }
+.ed360-campus-form-section-title p { margin:0; color:#8792a5; font-size:12px; }
+.ed360-campus-form-grid>label { display:flex; flex-direction:column; gap:8px; color:#53647c; font-size:13px; font-weight:800; }
+.ed360-campus-form-grid>label:nth-of-type(4),
+.ed360-campus-form-grid>label:nth-of-type(7),
+.ed360-campus-form-grid>label:nth-of-type(8) { grid-column:1/-1; }
+.ed360-campus-form-grid>label input,
+.ed360-campus-form-grid>label select,
+.ed360-campus-form-grid>label textarea,
+.ed360-campus-form-grid>.ed360-form-row input,
+.ed360-campus-form-grid>.ed360-form-row select {
+  width:100%; min-height:47px; padding:11px 13px;
+  border:1px solid #dfe2ed; border-radius:11px;
+  color:#2c3d53; background:#fff; font:inherit; font-size:14px;
+}
+.ed360-campus-form-grid>label textarea { min-height:90px; resize:vertical; }
+.ed360-campus-form-grid>.ed360-form-row { grid-column:1/-1; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:15px; }
+.ed360-campus-form-grid>.ed360-form-row label { display:flex; flex-direction:column; gap:8px; color:#53647c; font-size:13px; font-weight:800; }
+.ed360-campus-form-grid>.ed360-form-row label input { font-weight:550; }
+.ed360-campus-form-grid>.ed360-check-label { flex-direction:row; align-items:center; gap:10px; padding:12px 14px; border:1px solid #e9e1f1; border-radius:12px; background:#fff; }
+.ed360-campus-form-grid>.ed360-check-label input { width:18px; min-height:18px; accent-color:#9861cc; }
+.ed360-campus-form-grid .modal-actions { grid-column:1/-1; display:flex; justify-content:flex-end; gap:10px; padding-top:12px; border-top:1px solid #eee8f4; }
+.ed360-campus-modal .modal-actions .button { min-height:44px; padding:10px 17px; border-radius:12px; font-size:13px; }
+.ed360-campus-modal .modal-actions .button-primary { border:0; color:#fff; background:linear-gradient(105deg,#d65a9b,#9560cf 55%,#5d86ca); }
+@media(max-width:1120px) {
+  .ed360-campus-workspace .ed360-workspace-kpis { grid-template-columns:repeat(3,minmax(0,1fr)); }
+}
+@media(max-width:850px) {
+  .ed360-admin-stage5.is-profile .ed360-admin-profile { grid-template-columns:1fr; }
+  .ed360-campus-workspace .ed360-workspace-kpis { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .ed360-campus-workspace .ed360-workspace-hero { align-items:flex-start; flex-wrap:wrap; }
+}
+@media(max-width:620px) {
+  .ed360-admin-stage5.is-profile { padding:13px; border-radius:19px; }
+  .ed360-admin-stage5.is-profile .gov-heading h1 { font-size:27px; }
+  .ed360-admin-stage5.is-profile .gov-context { align-items:flex-start; flex-direction:column; }
+  .ed360-admin-stage5.is-profile .gov-context>div:last-child { text-align:left; }
+  .ed360-admin-stage5.is-profile .ed360-admin-profile-form { grid-template-columns:1fr; }
+  .ed360-admin-stage5.is-profile .ed360-admin-field.full { grid-column:auto; }
+  .ed360-campus-workspace { padding:10px; border-radius:19px; }
+  .ed360-campus-workspace .ed360-workspace-hero { padding:16px; border-radius:18px; }
+  .ed360-campus-actions { align-items:stretch; flex-direction:column; }
+  .ed360-campus-actions .button { justify-content:center; width:100%; }
+  .ed360-campus-actions>span { margin-left:0; }
+  .ed360-campus-workspace .ed360-workspace-kpis { grid-template-columns:1fr; }
+  .ed360-campus-workspace .ed360-workspace-record-card { padding:13px; border-radius:17px; }
+  .ed360-campus-modal .modal-heading h2 { font-size:22px; }
+  .ed360-campus-form-grid { grid-template-columns:1fr; }
+  .ed360-campus-form-grid>label,
+  .ed360-campus-form-grid>label:nth-of-type(4),
+  .ed360-campus-form-grid>label:nth-of-type(7),
+  .ed360-campus-form-grid>label:nth-of-type(8),
+  .ed360-campus-form-section-title,
+  .ed360-campus-form-grid>.ed360-form-row,
+  .ed360-campus-form-grid .modal-actions { grid-column:1; }
+  .ed360-campus-form-grid>.ed360-form-row { grid-template-columns:1fr; }
+}

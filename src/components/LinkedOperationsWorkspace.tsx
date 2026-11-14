@@ -5,11 +5,12 @@ import { supabase } from '../lib/supabase'
 import { userFacingError } from '../lib/userErrors'
 import { downloadCsv } from '../lib/csv'
 import { getWorkspaceGroup } from '../lib/institutionalCatalog'
+import '../styles/institution-control-workspaces.css'
 
 type Props={workspaceKey:string;onToast:(message:string,error?:boolean)=>void;onNavigate:(key:string)=>void}
 type Campus={id:string;name:string;campus_code?:string|null;address?:string|null;phone?:string|null;email?:string|null;branch_head_name?:string|null;academic_settings?:Record<string,unknown>;operational_settings?:Record<string,unknown>;is_headquarters:boolean;is_active:boolean}
 type Book={id:string;title:string;reference_code?:string|null;quantity?:number|null;payload?:Record<string,unknown>}
-type Student={id:string;full_name:string;admission_no?:string|null;class_name?:string|null}
+type Student={id:string;full_name:string;admission_no?:string|null;class_name?:string|null;campus_id?:string|null}
 type Item={id:string;title:string;reference_code?:string|null;quantity?:number|null;payload?:Record<string,unknown>}
 type RouteRecord={id:string;title:string;reference_code?:string|null;parent_record_id?:string|null;payload?:Record<string,unknown>}
 type Loan={id:string;book_record_id:string;student_id:string|null;issued_at:string;due_at:string;returned_at:string|null;status:string;fine_amount:number;notes?:string|null}
@@ -38,7 +39,7 @@ async function loadAllPages<T>(
 }
 
 const palette:Record<string,{accent:string;soft:string;ink:string}>={
- administration:{accent:'#667d98',soft:'#f0f3f7',ink:'#344a61'},
+ administration:{accent:'#9562cb',soft:'#f9effb',ink:'#66447f'},
  library:{accent:'#5368c9',soft:'#eef0ff',ink:'#35458f'},
  inventory:{accent:'#c58b24',soft:'#fff7e8',ink:'#795515'},
  transport:{accent:'#d87831',soft:'#fff1e8',ink:'#8d481d'}
@@ -126,9 +127,14 @@ export function LinkedOperationsWorkspace({workspaceKey,onToast,onNavigate}:Prop
   setLoading(true);setLoadError('')
   try{
    if(isCampus){
-    const {data,error}=await supabase.from('campuses').select('*').eq('institution_id',user.institutionId).order('name')
-    if(error)throw error
-    setCampuses((data??[]) as Campus[])
+    const [campusResult,studentResult]=await Promise.all([
+     supabase.from('campuses').select('*').eq('institution_id',user.institutionId).order('name'),
+     supabase.from('students').select('id,full_name,admission_no,class_name,campus_id').eq('institution_id',user.institutionId).order('full_name')
+    ])
+    if(campusResult.error)throw campusResult.error
+    if(studentResult.error)throw studentResult.error
+    setCampuses((campusResult.data??[]) as Campus[])
+    setStudents((studentResult.data??[]) as Student[])
    }else if(isLibrary){
     const [bookResult,studentResult,loanRows]=await Promise.all([
      supabase.from('institutional_records').select('id,title,reference_code,quantity,payload').eq('institution_id',user.institutionId).eq('module_key','library').eq('record_type','book-registration').order('title'),
@@ -356,22 +362,68 @@ export function LinkedOperationsWorkspace({workspaceKey,onToast,onNavigate}:Prop
 
  if(!user||!group)return null
  const specialTitle=isCampus?'Campus and Branch Management':isLibrary?(isLibraryReport?'Library Circulation Reports':'Book Issue and Returns'):isInventory?(itemKey==='stock-reports'?'Inventory Stock Reports':itemKey==='inventory-history'?'Inventory Movement History':itemKey==='stock-in'?'Stock In':itemKey==='stock-out'?'Stock Out':itemKey==='stock-allocation'?'Stock Allocation':itemKey==='stock-adjustments'?'Stock Adjustments':'Inventory Stock Movements'):isTransport?(isTransportReport?'Transport Allocation Reports':'Student Transport Allocation'):'Institution Operations'
- const nav=<nav className="ed360-operations-window-nav ed360-workspace-tabs" aria-label={group.label+' submenus'}>{group.items.map(menu=><button key={menu.key} className={menu.key===itemKey?'active':''} type="button" onClick={()=>onNavigate('institutional:'+group.key+':'+menu.key)}>{menu.label}</button>)}</nav>
- const header=<header className="ed360-workspace-hero" style={{'--workspace-accent':theme.accent,'--workspace-soft':theme.soft,'--workspace-ink':theme.ink} as CSSProperties}><div className="ed360-workspace-hero-icon">{isCampus?<MapPin size={21}/>:isLibrary?<BookOpen size={21}/>:isInventory?<Package size={21}/>:<Bus size={21}/>}</div><div className="ed360-workspace-hero-copy"><span>{group.label.toUpperCase()} / LIVE RELATIONAL WORKFLOW</span><h1>{specialTitle}</h1><p>{isCampus?'Manage real institution branches. Campus assignments are referenced by existing institutional tables.':isLibrary?(isLibraryReport?'Review actual issue, return, overdue and fine activity from the library loan ledger.':'Issue and return books against student records, with due dates and traceable circulation history.'):isInventory?'Record stock movement through an atomic transaction that prevents inventory going below zero.':isTransport?(isTransportReport?'Review active allocations, registered routes, vehicle usage and recorded transport fees.':'Allocate students to registered routes, stops and vehicles with effective dates and transport fees.'):'Institution operations'}</p></div><div className="ed360-workspace-hero-tools"><span className="ed360-data-state"><i/> Live Supabase records</span>{isCampus&&canAdmin&&<button className="button button-primary" onClick={()=>resetCampus()}><Plus size={16}/> Add campus</button>}{isLibrary&&!isLibraryReport&&canLibrary&&<button className="button button-primary" onClick={()=>setShowLoanForm(true)}><Plus size={16}/> Issue book</button>}{isInventory&&!['stock-reports','inventory-history'].includes(itemKey)&&canAdmin&&<button className="button button-primary" onClick={()=>setShowMovementForm(true)}><Plus size={16}/> Record movement</button>}{isTransport&&!isTransportReport&&canAdmin&&<button className="button button-primary" onClick={()=>setShowAllocationForm(true)}><Plus size={16}/> Allocate student</button>}</div></header>
+ const nav=isCampus?null:<nav className="ed360-operations-window-nav ed360-workspace-tabs" aria-label={group.label+' submenus'}>{group.items.map(menu=><button key={menu.key} className={menu.key===itemKey?'active':''} type="button" onClick={()=>onNavigate('institutional:'+group.key+':'+menu.key)}>{menu.label}</button>)}</nav>
+ const header=<header className="ed360-workspace-hero" style={{'--workspace-accent':theme.accent,'--workspace-soft':theme.soft,'--workspace-ink':theme.ink} as CSSProperties}><div className="ed360-workspace-hero-icon">{isCampus?<MapPin size={21}/>:isLibrary?<BookOpen size={21}/>:isInventory?<Package size={21}/>:<Bus size={21}/>}</div><div className="ed360-workspace-hero-copy"><span>{group.label.toUpperCase()} / LIVE RELATIONAL WORKFLOW</span><h1>{specialTitle}</h1><p>{isCampus?'Manage institution branches, review student links and maintain each campus register from the live institution records.':isLibrary?(isLibraryReport?'Review actual issue, return, overdue and fine activity from the library loan ledger.':'Issue and return books against student records, with due dates and traceable circulation history.'):isInventory?'Record stock movement through an atomic transaction that prevents inventory going below zero.':isTransport?(isTransportReport?'Review active allocations, registered routes, vehicle usage and recorded transport fees.':'Allocate students to registered routes, stops and vehicles with effective dates and transport fees.'):'Institution operations'}</p></div><div className="ed360-workspace-hero-tools">{!isCampus&&<span className="ed360-data-state"><i/> Live Supabase records</span>}{isLibrary&&!isLibraryReport&&canLibrary&&<button className="button button-primary" onClick={()=>setShowLoanForm(true)}><Plus size={16}/> Issue book</button>}{isInventory&&!['stock-reports','inventory-history'].includes(itemKey)&&canAdmin&&<button className="button button-primary" onClick={()=>setShowMovementForm(true)}><Plus size={16}/> Record movement</button>}{isTransport&&!isTransportReport&&canAdmin&&<button className="button button-primary" onClick={()=>setShowAllocationForm(true)}><Plus size={16}/> Allocate student</button>}</div></header>
 
- return <main className="page-content ed360-module-page ed360-institutional-workspace ed360-linked-operations" style={{'--workspace-accent':theme.accent,'--workspace-soft':theme.soft,'--workspace-ink':theme.ink} as React.CSSProperties}>
-  {header}{nav}
+ return <main className={"page-content ed360-module-page ed360-institutional-workspace ed360-linked-operations" + (isCampus ? " ed360-campus-workspace" : "")} style={{'--workspace-accent':theme.accent,'--workspace-soft':theme.soft,'--workspace-ink':theme.ink} as React.CSSProperties}>
+  {header}
+  {isCampus&&<div className="ed360-campus-actions">
+   {canAdmin&&<button type="button" className="button button-primary" onClick={()=>resetCampus()}><Plus size={18}/> Add campus</button>}
+   <button type="button" className="button button-outline" onClick={()=>void load()} disabled={loading}><RefreshCw size={16}/> Refresh records</button>
+   <span>Changes remain inside {user?.institutionName??'this institution'}.</span>
+  </div>}
+  {!isCampus&&nav}
   {loadError&&<div className="ed360-workspace-error" role="alert">{loadError}</div>}
   {loading?<div className="ed360-workspace-empty">Loading secure institution records…</div>:null}
 
   {isCampus&&<>
-   <section className="ed360-workspace-kpis"><article><span>Registered campuses</span><strong>{campuses.length}</strong><small>Institution branches and sites</small></article><article><span>Active campuses</span><strong>{campuses.filter(x=>x.is_active).length}</strong><small>Available for assignment</small></article><article><span>Headquarters</span><strong>{campuses.filter(x=>x.is_headquarters).length}</strong><small>Primary campus designation</small></article><article><span>Inactive</span><strong>{campuses.filter(x=>!x.is_active).length}</strong><small>Retained in records</small></article></section>
-   <section className="table-card ed360-workspace-record-card"><div className="table-toolbar"><div className="table-count"><strong>{visibleCampuses.length}</strong> matching campuses · Institution scope</div><span className="ed360-table-refresh"><button type="button" onClick={()=>void load()}>Refresh <RefreshCw size={13}/></button></span></div>
-    <label className="ed360-linked-search">Search campuses<input aria-label="Search campuses" value={campusSearch} onChange={e=>{setCampusSearch(e.target.value);setCampusPage(1)}} placeholder="Name, campus code, branch head, address or contact…"/></label>
-    {visibleCampuses.length===0?<div className="ed360-workspace-empty"><strong>No campuses are registered</strong><span>Add a campus or branch before assigning institutional records to a site.</span>{canAdmin&&<button className="button button-primary" onClick={()=>resetCampus()}>Add first campus</button>}</div>:<div className="table-scroll"><table><thead><tr><th>Campus code</th><th>Campus</th><th>Branch head</th><th>Address</th><th>Contact</th><th>Type</th><th>Status</th><th>Actions</th></tr></thead><tbody>{pageRows(visibleCampuses,campusPage).map(row=><tr key={row.id}><td>{row.campus_code||'—'}</td><td><b>{row.name}</b></td><td>{row.branch_head_name||'Not assigned'}</td><td>{row.address||'—'}</td><td>{row.phone||row.email||'—'}</td><td>{row.is_headquarters?'Headquarters':'Branch'}</td><td><span className={'ed360-state-pill '+(row.is_active?'state-approved':'state-cancelled')}>{row.is_active?'Active':'Inactive'}</span></td><td><div className="ed360-row-actions">{canAdmin&&<button onClick={()=>resetCampus(row)}>Edit</button>}{canAdmin&&<button onClick={()=>void deleteCampus(row)}>Delete</button>}</div></td></tr>)}</tbody></table></div>}
+   <section className="ed360-workspace-kpis ed360-campus-kpis">
+    <article><span>Registered campuses</span><strong>{campuses.length.toLocaleString()}</strong><small>Branches and sites in this institution</small></article>
+    <article><span>Active campuses</span><strong>{campuses.filter(x=>x.is_active).length.toLocaleString()}</strong><small>Available for institutional use</small></article>
+    <article><span>Students linked to campuses</span><strong>{students.filter(student=>Boolean(student.campus_id)&&campuses.some(campus=>campus.id===student.campus_id)).length.toLocaleString()}</strong><small>Live links from student records</small></article>
+    <article><span>Students not assigned</span><strong>{students.filter(student=>!student.campus_id||!campuses.some(campus=>campus.id===student.campus_id)).length.toLocaleString()}</strong><small>Institution records without a campus link</small></article>
+    <article><span>Headquarters</span><strong>{campuses.filter(x=>x.is_headquarters).length.toLocaleString()}</strong><small>Primary campus designation</small></article>
+   </section>
+   <section className="table-card ed360-workspace-record-card ed360-campus-record-card">
+    <div className="table-toolbar">
+     <div className="table-count"><strong>{visibleCampuses.length.toLocaleString()}</strong> matching campuses <span>·</span> Institution register</div>
+     <span className="ed360-campus-scope-label">Scoped to {user?.institutionName??'your institution'}</span>
+    </div>
+    <label className="ed360-linked-search">Search campuses<input aria-label="Search campuses" value={campusSearch} onChange={e=>{setCampusSearch(e.target.value);setCampusPage(1)}} placeholder="Search campus name, code, branch head, address or contact…"/></label>
+    {visibleCampuses.length===0
+     ?<div className="ed360-workspace-empty ed360-campus-empty"><strong>{campuses.length===0?'No campuses registered yet':'No campuses match this search'}</strong><span>{campuses.length===0?'Create the first campus or branch to begin assigning institutional records to a site.':'Try a different campus name, code or contact detail.'}</span>{canAdmin&&campuses.length===0&&<button className="button button-primary" onClick={()=>resetCampus()}><Plus size={16}/> Add first campus</button>}</div>
+     :<div className="table-scroll"><table><thead><tr><th>Campus code</th><th>Campus / branch</th><th>Branch head</th><th>Linked students</th><th>Address</th><th>Contact</th><th>Type</th><th>Status</th><th>Actions</th></tr></thead><tbody>{pageRows(visibleCampuses,campusPage).map(row=><tr key={row.id}>
+      <td>{row.campus_code||'—'}</td>
+      <td><b>{row.name}</b></td>
+      <td>{row.branch_head_name||'Not assigned'}</td>
+      <td><strong className="ed360-campus-student-count">{students.filter(student=>student.campus_id===row.id).length.toLocaleString()}</strong><small className="ed360-campus-cell-note">Existing student records</small></td>
+      <td>{row.address||'—'}</td>
+      <td>{row.phone||row.email||'—'}</td>
+      <td>{row.is_headquarters?'Headquarters':'Branch'}</td>
+      <td><span className={'ed360-state-pill '+(row.is_active?'state-approved':'state-cancelled')}>{row.is_active?'Active':'Inactive'}</span></td>
+      <td><div className="ed360-row-actions">{canAdmin&&<button type="button" onClick={()=>resetCampus(row)}>Edit</button>}{canAdmin&&<button type="button" onClick={()=>void deleteCampus(row)}>Delete</button>}</div></td>
+     </tr>)}</tbody></table></div>}
     {pageControls(visibleCampuses.length,campusPage,setCampusPage)}
    </section>
-   {showCampusForm&&<div className="modal-backdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setShowCampusForm(false)}}><section className="modal-card ed360-context-form" role="dialog" aria-modal="true"><div className="modal-heading"><div><div className="eyebrow">INSTITUTION ADMINISTRATION / CAMPUS</div><h2>{editingCampus?'Edit campus':'Register campus / branch'}</h2></div><button className="icon-button" onClick={()=>setShowCampusForm(false)}><X size={18}/></button></div><form className="ed360-context-form-grid" onSubmit={saveCampus}><label>Campus name *<input required value={campusName} onChange={e=>setCampusName(e.target.value)}/></label><label>Campus code<input value={campusCode} onChange={e=>setCampusCode(e.target.value)}/></label><label>Branch head<input value={campusBranchHead} onChange={e=>setCampusBranchHead(e.target.value)} placeholder="Responsible campus head"/></label><label>Address<textarea rows={2} value={campusAddress} onChange={e=>setCampusAddress(e.target.value)}/></label><div className="ed360-form-row"><label>Phone<input value={campusPhone} onChange={e=>setCampusPhone(e.target.value)}/></label><label>Email<input type="email" value={campusEmail} onChange={e=>setCampusEmail(e.target.value)}/></label></div><label>Academic settings (JSON object)<textarea rows={4} value={campusAcademicSettings} onChange={e=>setCampusAcademicSettings(e.target.value)} placeholder="{&quot;default_session_id&quot;:&quot;...&quot;}"/></label><label>Operational settings (JSON object)<textarea rows={4} value={campusOperationalSettings} onChange={e=>setCampusOperationalSettings(e.target.value)} placeholder="{&quot;attendance_cutoff&quot;:&quot;...&quot;}"/></label><label className="ed360-check-label"><input type="checkbox" checked={campusHQ} onChange={e=>setCampusHQ(e.target.checked)}/> Headquarters</label><label className="ed360-check-label"><input type="checkbox" checked={campusActive} onChange={e=>setCampusActive(e.target.checked)}/> Active campus</label><div className="modal-actions"><button type="button" className="button button-outline" onClick={()=>setShowCampusForm(false)}>Cancel</button><button type="submit" className="button button-primary" disabled={saving}>{saving?'Saving…':'Save campus'}</button></div></form></section></div>}
+   {showCampusForm&&<div className="modal-backdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setShowCampusForm(false)}}>
+    <section className="modal-card ed360-context-form ed360-campus-modal" role="dialog" aria-modal="true" aria-labelledby="ed360-campus-form-title">
+     <div className="modal-heading"><div><div className="eyebrow">ADMINISTRATION / CAMPUS REGISTER</div><h2 id="ed360-campus-form-title">{editingCampus?'Update campus details':'Register a new campus'}</h2><p>Keep campus identity, contact details and operational settings together. Student records continue to reference this institution’s existing campus IDs.</p></div><button type="button" className="icon-button" onClick={()=>setShowCampusForm(false)} aria-label="Close campus form"><X size={18}/></button></div>
+     <form className="ed360-context-form-grid ed360-campus-form-grid" onSubmit={saveCampus}>
+      <div className="ed360-campus-form-section-title"><h3>Campus identity</h3><p>Basic details used to identify this campus or branch.</p></div>
+      <label>Campus name *<input required value={campusName} onChange={e=>setCampusName(e.target.value)} placeholder="Enter campus or branch name"/></label>
+      <label>Campus code<input value={campusCode} onChange={e=>setCampusCode(e.target.value)} placeholder="Unique campus reference"/></label>
+      <label>Branch head<input value={campusBranchHead} onChange={e=>setCampusBranchHead(e.target.value)} placeholder="Responsible campus head"/></label>
+      <label>Address<textarea rows={2} value={campusAddress} onChange={e=>setCampusAddress(e.target.value)} placeholder="Campus address"/></label>
+      <div className="ed360-form-row"><label>Phone<input value={campusPhone} onChange={e=>setCampusPhone(e.target.value)} placeholder="Contact number"/></label><label>Email<input type="email" value={campusEmail} onChange={e=>setCampusEmail(e.target.value)} placeholder="Campus email address"/></label></div>
+      <div className="ed360-campus-form-section-title"><h3>Campus settings</h3><p>Optional JSON configuration for academic and operational defaults.</p></div>
+      <label>Academic settings (JSON object)<textarea rows={4} value={campusAcademicSettings} onChange={e=>setCampusAcademicSettings(e.target.value)} placeholder="{&quot;default_session_id&quot;:&quot;...&quot;}"/></label>
+      <label>Operational settings (JSON object)<textarea rows={4} value={campusOperationalSettings} onChange={e=>setCampusOperationalSettings(e.target.value)} placeholder="{&quot;attendance_cutoff&quot;:&quot;...&quot;}"/></label>
+      <label className="ed360-check-label"><input type="checkbox" checked={campusHQ} onChange={e=>setCampusHQ(e.target.checked)}/> Designate as headquarters</label>
+      <label className="ed360-check-label"><input type="checkbox" checked={campusActive} onChange={e=>setCampusActive(e.target.checked)}/> Active campus</label>
+      <div className="modal-actions"><button type="button" className="button button-outline" onClick={()=>setShowCampusForm(false)}>Cancel</button><button type="submit" className="button button-primary" disabled={saving}>{saving?'Saving campus…':'Save campus'}</button></div>
+     </form>
+    </section>
+   </div>}
   </>}
 
   {isLibrary&&<>
