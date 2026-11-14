@@ -65,6 +65,7 @@ export function IntegrationManagementWorkspace({initialWindow='overview',onToast
  const {user}=useAuth()
  const page=(initialWindow in pages?initialWindow:'overview') as PageKey
  const meta=pages[page]
+ const ActiveIcon=PageIcon[page]
  const [providerStatus,setProviderStatus]=useState<ProviderState>({})
  const [checking,setChecking]=useState(false)
  const [testing,setTesting]=useState('')
@@ -110,13 +111,13 @@ export function IntegrationManagementWorkspace({initialWindow='overview',onToast
 
  return <main className="page-content ed360-integration-workspace" data-integration-page={page}>
   <header className="ed360-integration-heading">
-   <div className="ed360-integration-heading-icon"><PageIcon size={21}/></div>
+   <div className="ed360-integration-heading-icon"><ActiveIcon size={21}/></div>
    <div><span>{meta.eyebrow}</span><h1>{meta.title}</h1><p>{meta.intro}</p></div>
    {page==='ai-providers'&&<button type="button" className="button button-outline" onClick={()=>void refreshAI()} disabled={checking}><RefreshCw size={15}/>{checking?'Checking…':'Refresh status'}</button>}
   </header>
   {page==='overview'&&<section className="ed360-integration-grid">
-   {(['ai-providers','zoom','google','youtube','biometric'] as PageKey[]).map(key=><article className="ed360-integration-card" key={key}>
-    <div className="ed360-integration-card-icon"><PageIcon size={20}/></div><div><span>{pages[key].eyebrow}</span><h2>{pages[key].title}</h2><p>{pages[key].intro}</p></div>
+   {(['ai-providers','zoom','google','youtube','biometric'] as PageKey[]).map(key=>{const CardIcon=PageIcon[key];return <article className="ed360-integration-card" key={key}>
+    <div className="ed360-integration-card-icon"><CardIcon size={20}/></div><div><span>{pages[key].eyebrow}</span><h2>{pages[key].title}</h2><p>{pages[key].intro}</p></div>
     <div className="ed360-integration-card-foot">{key==='ai-providers'?<b className={configuredCount?'is-ready':'is-pending'}>{checking?'Checking…':configuredCount+' of 7 credentials configured'}</b>:<b className="is-pending">Connection pending</b>}<button type="button" className="button button-outline" onClick={()=>onNavigate('integration:'+key)}>Open workspace <ArrowUpRight size={14}/></button></div>
    </article>)}
   </section>}
