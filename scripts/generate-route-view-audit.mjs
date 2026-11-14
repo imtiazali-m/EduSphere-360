@@ -36,7 +36,7 @@ const studentVisibleTabs = {
 }
 const facultyTabs = new Set(['overview','registration','directory','directory-teaching','directory-staff','profile','id-cards','departments','designations','assignments','attendance','leave','workload','documents','qualifications','history','reports'])
 const facultyStaffTabs = new Set(['overview','profile','id-cards','assignments','attendance','leave','workload','documents','qualifications','history'])
-const attendanceWindows = new Set(['students','teachers','staff','history','devices'])
+const attendanceWindows = new Set(['students','teachers','staff','history','devices','cards','biometric','reports'])
 const reportTabs = new Set(['overview','finance','attendance','academics','students','employees','payroll','examinations','academic','fees','financial','class','comparative','builder','scheduled','templates','history'])
 const financeTabs = {
   'accounts-finance': new Set(['overview','accounts','journals','reconciliation']),
@@ -135,7 +135,7 @@ function checkView(role, route, dispatcher) {
     return { component:'BackupDataWorkspace', view:targetWindow, status:supported.has(targetWindow) ? 'Supported' : 'Unsupported backup/data view' }
   }
   if (targetKey === 'academic') {
-    const supported = new Set(['academic-sessions','classes-sections','subjects-courses','curriculum','lesson-planning','timetable','homework-assignments','study-materials','online-learning','classroom-activities','academic-calendar','learning-progress'])
+    const supported = new Set(['academic-sessions','classes-sections','sections','subjects-courses','curriculum','lesson-planning','timetable','homework-assignments','study-materials','online-learning','classroom-activities','academic-calendar','learning-progress'])
     return { component:'AcademicManagementWorkspace', view:targetWindow, status:supported.has(targetWindow) ? 'Supported' : 'Unsupported academic workspace' }
   }
   if (targetKey === 'personal') return { component:'PersonalWorkspace', view:targetWindow, status:new Set(['my-profile','account-settings','notification-settings','my-activity','help-support']).has(targetWindow)?'Supported':'Unsupported personal view' }
