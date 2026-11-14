@@ -497,6 +497,7 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
       'student-attendance':'attendance:students',
       'teacher-attendance':'attendance:teachers',
       'staff-attendance':'attendance:staff',
+      'attendance-history':'attendance:history',
       'automatic-attendance':'attendance:devices',
       'attendance-cards':'attendance:cards',
       'biometric-attendance':'attendance:biometric',
