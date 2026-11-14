@@ -39,6 +39,15 @@ type SiteContent = {
   magazines: Magazine[]
   approvedFacebookPhotoIds: string[]
 }
+type InternalAnnouncement = {
+  id: string
+  title: string
+  body: string
+  audience: string
+  created_at: string
+  is_public: boolean
+  published_at: string | null
+}
 type Teacher = {
   id: string
   full_name: string
@@ -108,6 +117,7 @@ export function CollegeWebsiteManager({ onToast }: { onToast: (message: string, 
   const { user } = useAuth()
   const [content, setContent] = useState<SiteContent>(emptyContent)
   const [teachers, setTeachers] = useState<Teacher[]>([])
+  const [internalAnnouncements, setInternalAnnouncements] = useState<InternalAnnouncement[]>([])
   const [recordId, setRecordId] = useState<string | null>(null)
   const [published, setPublished] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -131,7 +141,7 @@ export function CollegeWebsiteManager({ onToast }: { onToast: (message: string, 
       setLoading(true)
       setLoadError('')
       try {
-        const [settingsResult, teachersResult] = await Promise.all([
+        const [settingsResult, teachersResult, announcementsResult] = await Promise.all([
           supabase.from('institution_settings')
             .select('id,setting_value,is_public')
             .eq('institution_id', user.institutionId)
@@ -142,15 +152,22 @@ export function CollegeWebsiteManager({ onToast }: { onToast: (message: string, 
             .select('id,full_name,department,subject,employment_status,is_public_profile,is_principal,public_designation,public_qualification,public_bio,public_photo_url,public_profile_order')
             .eq('institution_id', user.institutionId)
             .order('full_name', { ascending: true }),
+          supabase.from('announcements')
+            .select('id,title,body,audience,created_at,is_public,published_at')
+            .eq('institution_id', user.institutionId)
+            .order('created_at', { ascending: false })
+            .limit(50),
         ])
         if (settingsResult.error) throw settingsResult.error
         if (teachersResult.error) throw teachersResult.error
+        if (announcementsResult.error) throw announcementsResult.error
         if (settingsResult.data) {
           setRecordId(String(settingsResult.data.id))
           setContent({ ...emptyContent, ...(settingsResult.data.setting_value as Partial<SiteContent>) })
           setPublished(Boolean(settingsResult.data.is_public))
         }
         setTeachers((teachersResult.data ?? []) as Teacher[])
+        setInternalAnnouncements((announcementsResult.data ?? []) as InternalAnnouncement[])
       } catch (error) {
         if (live) setLoadError(error instanceof Error ? error.message : 'The website editor could not load its records.')
       } finally {
@@ -164,6 +181,7 @@ export function CollegeWebsiteManager({ onToast }: { onToast: (message: string, 
   const approvedCount = content.approvedFacebookPhotoIds.length
   const principalCount = teachers.filter(person => person.is_public_profile && person.is_principal).length
   const publicFacultyCount = teachers.filter(person => person.is_public_profile && !person.is_principal && person.employment_status === 'active').length
+  const publicAnnouncementCount = internalAnnouncements.filter(item => item.is_public).length
 
   const set = <K extends keyof SiteContent>(key: K, value: SiteContent[K]) => setContent(current => ({ ...current, [key]: value }))
 
@@ -273,6 +291,26 @@ export function CollegeWebsiteManager({ onToast }: { onToast: (message: string, 
     }
   }
 
+  async function setInternalAnnouncementPublic(item: InternalAnnouncement, isPublic: boolean) {
+    if (!supabase || !user) return
+    try {
+      const { data, error } = await supabase.from('announcements')
+        .update({ is_public: isPublic, published_at: isPublic ? new Date().toISOString() : null })
+        .eq('id', item.id)
+        .eq('institution_id', user.institutionId)
+        .select('id,is_public,published_at')
+        .single()
+      if (error) throw error
+      setInternalAnnouncements(current => current.map(row => row.id === item.id ? { ...row, is_public: Boolean(data.is_public), published_at: data.published_at } : row))
+      setStatusMessage(isPublic ? 'Internal announcement is now visible on the public website.' : 'Announcement removed from the public website; it remains in the internal portal.')
+      onToast(isPublic ? 'Announcement published externally.' : 'Announcement hidden from the public website.')
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Announcement publication status could not be updated.'
+      setStatusMessage(message)
+      onToast(message, true)
+    }
+  }
+
   function addProgram() {
     set('programs', [...content.programs, { id: makeId('program'), title: '', detail: '', officialUrl: '' }])
   }
@@ -315,6 +353,7 @@ export function CollegeWebsiteManager({ onToast }: { onToast: (message: string, 
           <div><span><CheckCircle2 size={20}/></span><strong>{publicFacultyCount}</strong><small>Published faculty profiles</small></div>
           <div><span><ShieldCheck size={20}/></span><strong>{principalCount}</strong><small>Published principal profiles</small></div>
           <div><span><ImagePlus size={20}/></span><strong>{approvedCount}</strong><small>Approved Facebook sources</small></div>
+          <div><span><Megaphone size={20}/></span><strong>{publicAnnouncementCount}</strong><small>Internal notices published publicly</small></div>
         </div>
 
         <AdminSection icon={ImagePlus} title="Homepage photographs — approval required" description="Four exact photo posts listed by the official GIDC Badin Facebook Photos tab. Open each original to inspect it, then mark Yes or No. The image is published only after you upload the same approved photo.">
@@ -369,6 +408,21 @@ export function CollegeWebsiteManager({ onToast }: { onToast: (message: string, 
             <div className="cwm-teacher-list">{teachers.map(person => <FacultyEditor key={person.id} person={person} onChange={changes => updateFacultyDraft(person.id, changes)} onSave={() => void saveFaculty(person)} onUpload={event => void handleImageUpload(event, 'faculty', url => updateFacultyDraft(person.id, { public_photo_url: url }))}/>)}</div>}
         </AdminSection>
 
+        <AdminSection icon={Megaphone} title="Internal announcements → public website" description="Notices created in the internal Announcements module are listed here. Turn on public display only after the college approves them; edits to the internal record are reflected on the website automatically.">
+          {internalAnnouncements.length === 0 ? <div className="cwm-empty"><Megaphone size={25}/><b>No internal announcements yet</b><span>Create a notice in the internal Announcements module. It will appear here for public-release approval.</span></div> :
+            <div className="cwm-internal-announcement-list">{internalAnnouncements.map(item => (
+              <article className={item.is_public ? 'cwm-internal-announcement is-public' : 'cwm-internal-announcement'} key={item.id}>
+                <div className="cwm-internal-announcement-copy">
+                  <div className="cwm-internal-announcement-meta"><span>{item.audience.replaceAll('_', ' ')}</span><time dateTime={item.created_at}>{new Date(item.created_at).toLocaleDateString('en-PK', { day: 'numeric', month: 'short', year: 'numeric' })}</time></div>
+                  <h3>{item.title}</h3><p>{item.body}</p>
+                  <small>{item.is_public ? 'Visible on the external website' : 'Internal only'}</small>
+                </div>
+                <button type="button" className={item.is_public ? 'cwm-publish-toggle is-public' : 'cwm-publish-toggle'} onClick={() => void setInternalAnnouncementPublic(item, !item.is_public)}>{item.is_public ? 'Remove from website' : 'Publish on website'}</button>
+              </article>
+            ))}</div>}
+          <p className="cwm-help">The external News & Announcements page reads these same records from the database. Internal changes to a published title or message flow through on the next automatic refresh.</p>
+        </AdminSection>
+
         <AdminSection icon={Building2} title="Campus, location & facilities" description="Use the college's verified location and add each facility only after the college confirms it.">
           <TextArea label="Campus introduction" value={content.campusIntro} onChange={value => set('campusIntro', value)} rows={3}/>
           <TextInput label="Campus address for the website" value={content.contactAddress} onChange={value => set('contactAddress', value)} placeholder="Badin, Sindh, Pakistan"/>
@@ -378,6 +432,7 @@ export function CollegeWebsiteManager({ onToast }: { onToast: (message: string, 
         </AdminSection>
 
         <AdminSection icon={ImagePlus} title="Campus photographs & gallery" description="Upload or link authentic college photographs and assign each one to its correct gallery category.">
+          <p className="cwm-help">Placement guide: campus/building views go under Main campus; room and shelf photographs under Campus facilities; student-only assemblies under Student life; staff presentations, mixed student-and-teacher group photographs, guest visits and sessions under College events or Campus activities. The mixed student/staff group photo belongs in Events, not Student life.</p>
           {content.gallery.map((photo, index) => <div className="cwm-repeat-card" key={photo.id}>
             <div className="cwm-repeat-top"><b>Photograph {index + 1}</b><button type="button" aria-label="Remove photograph" onClick={() => set('gallery', content.gallery.filter(item => item.id !== photo.id))}><Trash2 size={15}/></button></div>
             <div className="cwm-fields-two"><TextInput label="Photo title" value={photo.title} onChange={value => updatePhoto(photo.id, { title: value })}/><label className="cwm-field"><span>Category</span><select value={photo.category} onChange={event => updatePhoto(photo.id, { category: event.target.value as PhotoCategory })}>{categories.map(item => <option value={item.value} key={item.value}>{item.label}</option>)}</select></label></div>
@@ -388,7 +443,7 @@ export function CollegeWebsiteManager({ onToast }: { onToast: (message: string, 
           <button type="button" className="cwm-add" onClick={addPhoto}><Plus size={16}/> Add gallery photograph</button>
         </AdminSection>
 
-        <AdminSection icon={Megaphone} title="Official college news & announcements" description="Publish admission notices, academic announcements, event updates and official circulars.">
+        <AdminSection icon={Megaphone} title="Additional website notices" description="Use this for special website-only posts or image-led notices that are not created in the internal Announcements module.">
           {content.news.map((notice, index) => <div className="cwm-repeat-card" key={notice.id}>
             <div className="cwm-repeat-top"><b>Announcement {index + 1}</b><button type="button" aria-label="Remove announcement" onClick={() => set('news', content.news.filter(item => item.id !== notice.id))}><Trash2 size={15}/></button></div>
             <div className="cwm-fields-two"><TextInput label="Title" value={notice.title} onChange={value => updateNotice(notice.id, { title: value })}/><TextInput label="Publication date" type="date" value={notice.date} onChange={value => updateNotice(notice.id, { date: value })}/></div>
