@@ -48,7 +48,7 @@ export const institutionalMenu:WorkspaceMenuGroup[]=[
   'HR & Recruitment','Employee Contracts & Documents','Employee Performance','Payroll & Salary Records','Alumni'
  ]),
  group('attendance','Attendance & Leave','Daily attendance registers, leave decisions, reporting and restricted student-care records.','CalendarCheck','rose','attendance',staff.concat(['student','parent']),[
-  'Student Attendance','Teacher Attendance','Staff Attendance','Attendance History','Automatic Attendance','Attendance Cards','Biometric Attendance','Leave Management','Attendance Reports','Student Discipline','Student Counselling & Wellbeing','Health & Emergency Records'
+  'Student Attendance','Teacher Attendance','Staff Attendance','Attendance History','Automatic Attendance','Student Cards','Teacher Cards','Staff Cards','Biometric Attendance','Leave Management','Attendance Reports','Student Discipline','Student Counselling & Wellbeing','Health & Emergency Records'
  ]),
  group('behaviour','Behaviour and Skills','Positive recognition, safeguarding-aware behaviour logs, incidents, skills and competency tracking.','HeartHandshake','pink','behaviour',staff.concat(['student','parent']),[
   'Behaviour Dashboard','Behaviour Records','Positive Behaviour','Disciplinary Incidents','Rewards and Recognition','Warnings','Student Skills','Co-curricular Activities','Competency Tracking','Student Progress History','Behaviour Analytics','Downloadable Behaviour Reports'
