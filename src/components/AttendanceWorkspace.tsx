@@ -228,7 +228,7 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
  }
  const cardPeople=cardPopulation==='students'?students:staff.filter(person=>cardPopulation==='teachers'?String(person.employee_type??'').toLowerCase()==='teaching':String(person.employee_type??'').toLowerCase()!=='teaching')
  const reportTotal=existing.length
- const reportPresent=existing.filter(row=>['present','late'].includes(row.status)).length
+ const reportPresent=existing.filter(row=>row.status==='present').length
  const reportAbsent=existing.filter(row=>row.status==='absent').length
  const reportLeave=existing.filter(row=>['approved_leave','excused'].includes(row.status)).length
  const reportPending=existing.filter(row=>row.status==='leave_pending').length
@@ -249,7 +249,7 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
  return <main className="page-content ed360-module-page ed360-attendance-workspace">
   <header className="ed360-attendance-hero">
    <div className="ed360-attendance-icon"><CalendarCheck size={23}/></div>
-   <div><span>ACADEMIC & STAFF OPERATIONS / ATTENDANCE</span><h1>Attendance Management</h1><p>Record the whole class or staff roster together. Mark P, A or L and save one validated register.</p></div>
+   <div><span>ACADEMIC & STAFF OPERATIONS / ATTENDANCE</span><h1>Attendance Management</h1><p>Class-wise registers, scan-assisted marking, saved history and staff attendance.</p></div>
    <div className="ed360-attendance-stats"><span><b>{people.length}</b> people in selected roster</span></div>
   </header>
   <div className="ed360-attendance-main-tabs">
@@ -280,7 +280,7 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
     
     {loading?<div className="ed360-attendance-empty">Loading the institution roster…</div>:loadingError?<div className="ed360-attendance-empty error">{loadingError}</div>:visiblePeople.length===0?<div className="ed360-attendance-empty">{people.length?'No matching names. Clear your search.':'No active people were found in this roster.'}</div>:
     <div className="ed360-attendance-grid-table"><div className="attendance-grid-head"><span>Roll / Employee ID</span><span>Name</span><span>Class / Department</span><span>Attendance mark</span><span>Note (optional)</span></div>
-     {visiblePeople.map((person,index)=><div className="attendance-grid-row" key={person.id}><span className="attendance-grid-id">{person.admission_no??person.employee_no??String(index+1).padStart(2,'0')}</span><strong>{person.full_name}</strong><span>{person.class_name??person.department??(population==='teachers'?'Teacher':'Employee')}</span>
+     {visiblePeople.map((person,index)=><div className="attendance-grid-row" key={person.id}><span className="attendance-grid-id">{person.admission_no??person.employee_no??String(index+1).padStart(2,'0')}</span><strong>{person.full_name}</strong><small className="attendance-person-guardian">{population==='students'&&person.guardian_name?'Guardian: '+person.guardian_name:''}</small><span>{person.class_name??person.department??(population==='teachers'?'Teacher':'Employee')}</span>
       <div className="attendance-mark-options">
        {(['present','absent','approved_leave','leave_pending'] as AttendanceMark[]).map(s=><button type="button" disabled={readOnly} key={s} aria-pressed={effectiveMarks[person.id]===s} className={'attendance-mark-button mark-'+(s==='approved_leave'?'leave':s==='excused'?'excused':s.charAt(0))} onClick={()=>markOne(person.id,s)}>{statusLabel(s)}</button>)}
       </div>
@@ -302,7 +302,7 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
     </div>
    </div>
    <label className="ed360-attendance-search"><Search size={15}/><input value={historySearch} onChange={e=>setHistorySearch(e.target.value)} placeholder="Search person, ID, status or note"/></label>
-   <div className="ed360-attendance-counts"><div className="count-p"><b>{existing.filter(x=>x.status==='present').length}</b><span>Present</span></div><div className="count-a"><b>{existing.filter(x=>x.status==='absent').length}</b><span>Absent</span></div><div className="count-l"><b>{existing.filter(x=>x.status==='late').length}</b><span>Late</span></div><div><b>{existing.length}</b><span>Entries</span></div></div>
+   <div className="ed360-attendance-counts"><div className="count-p"><b>{existing.filter(x=>x.status==='present').length}</b><span>Present</span></div><div className="count-a"><b>{existing.filter(x=>x.status==='absent').length}</b><span>Absent</span></div><div className="count-l"><b>{existing.filter(x=>x.status==='late').length}</b><span>Historical late</span></div><div><b>{existing.length}</b><span>Entries</span></div></div>
    {historyLoading&&<p className="ed360-attendance-empty">Loading attendance history…</p>}
    {!loadingError&&visibleHistory.length>0&&<div className="ed360-attendance-history-list">{visibleHistory.map((entry,index)=>{
     const personId=population==='students'?entry.student_id:entry.teacher_id
