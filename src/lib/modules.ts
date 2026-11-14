@@ -285,11 +285,11 @@ export function modulesForRole(role: AppRole) {
 }
 
 export const roleLabels: Record<AppRole, string> = {
-  owner: 'Institution owner',
-  admin: 'Administrator',
-  teacher: 'Teacher',
+  owner: 'College Principal / Owner',
+  admin: 'College Administrator',
+  teacher: 'Faculty Member',
   student: 'Student',
-  parent: 'Parent / guardian',
-  accountant: 'Accountant',
-  exam_officer: 'Examination officer',
+  parent: 'Parent / Guardian',
+  accountant: 'Accounts Officer',
+  exam_officer: 'Examination Officer',
 }

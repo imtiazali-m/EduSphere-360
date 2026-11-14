@@ -1,6 +1,6 @@
 # Migration history
 
-The fifty timestamped migration files in this folder match the remote migration history recorded by the linked Supabase project. Keep each 14-digit timestamp unchanged so local and remote migration histories remain aligned.
+The fifty-five timestamped migration files in this folder match the remote migration history recorded by the linked Supabase project. Keep each 14-digit timestamp unchanged so local and remote migration histories remain aligned.
 
 The current online application includes the reviewed schema changes for the existing live schema, Faculty & Employee Management, and Student Management operations (admission lifecycle, linked guardian contacts, class placements, private student documents and audit history for attendance, published results, assignment submissions, guardian policy consolidation and activity indexes). The Student Management and Faculty/Employee migrations have already been applied to the linked project; do not replay them manually.
 
@@ -48,3 +48,22 @@ The atomic transport allocation migration adds database-side creation and end-al
 
 
 The Stage 5 administration, Stage 6 people/HR, Stage 7 attendance/leave/wellbeing, Stage 8 academic-management, and Stage 9 assessment-weight migrations have been restored from the linked Supabase project's recorded migration statements. Filenames use the exact remote migration versions; these files document already-applied schema changes and must not be replayed manually against the linked production database.
+
+
+## Government Islamia Degree College Badin — custom role permissions
+
+The college redesign adds three migrations to the linked Supabase project:
+
+- `20261113173320_college_custom_role_profiles_and_scope_policies.sql` creates tenant-scoped job role profiles and user assignments, stores module/action grants, supports optional campus and department scope, and intersects existing row-level policies on core student, employee, academic, attendance, exam, fee, HR, payroll, library, certificate and visitor records.
+- `20261113173552_college_private_permission_guards.sql` moves permission evaluators into the non-API `private` schema and guards examination result approval/publication and approval-queue decisions.
+- `20261113174054_college_approval_profile_action_alignment.sql` allows an explicitly delegated approval profile to perform an approval decision without granting general edit access.
+
+The seven existing membership roles remain the authentication ceiling. Profiles such as Principal, Vice Principal, HOD, Registrar, Admissions Officer, Examination Controller, Invigilator, Accounts Officer, Cashier, HR Manager, Librarian and Receptionist are job/access profiles assigned to a matching active membership role. A profile cannot elevate an account to owner or administrator. An account with any custom assignment is restricted to its active profiles; an account with no custom assignment retains its prior role-based access. Do not seed or assign profiles automatically; the institution owner/authorised administrator must review the employee and scope before assignment.
+
+The current permission guard covers direct RLS-backed access to the listed tables and has explicit database triggers for result and approval status decisions. Review existing SECURITY DEFINER RPCs separately before claiming every RPC-based action has full custom-profile enforcement. The existing project security advisor still reports pre-existing SECURITY DEFINER functions exposed to authenticated users and recommends reviewing them individually.
+
+
+- `20261113175058_college_custom_role_high_impact_rpc_guards.sql` adds the custom-profile checks to question-paper approval, payroll approval and adjustments, transport fee charge creation, and institutional setting approval RPCs. These checks run in addition to the original base membership-role checks.
+
+
+The admission-stage guard migration adds a database trigger to the existing student admission lifecycle. It rejects invalid status jumps, restricts stage changes to institution owners and administrators with the relevant student edit scope, and assigns reviewer identity and review timestamps from the authenticated database session. It also synchronises the student's active, pending or inactive record status with the admission outcome. The trigger is invoker-security and runs under the existing students row-level policies.

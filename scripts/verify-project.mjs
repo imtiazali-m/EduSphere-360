@@ -45,7 +45,8 @@ const requiredFiles = [
   'supabase/migrations/20261109153658_academic_studentcare_and_campus_operations.sql',
   'supabase/migrations/20261109155028_question_paper_approval_and_line_removal.sql',
   'docs/EDUSPHERE_360_BENCHMARK_AND_GAP_REVIEW.md',
-  '.env.example', 'package-lock.json', 'src/lib/types.ts', 'supabase/migrations/20261108053651_owner_signup_institution_details.sql', 'supabase/migrations/20261109085154_faculty_employee_management.sql', 'supabase/migrations/20261109092734_student_management_operations.sql', 'supabase/migrations/20261109092920_student_management_scope_indexes_and_guardian_portal_read.sql',
+  '.env.example', 'package-lock.json', 'src/lib/types.ts', 'supabase/migrations/20261108053651_owner_signup_institution_details.sql', 'supabase/migrations/20261109085154_faculty_employee_management.sql', 'supabase/migrations/20261109092734_student_management_operations.sql',
+  'supabase/migrations/20261114033957_guard_student_admission_status_transitions.sql', 'supabase/migrations/20261109092920_student_management_scope_indexes_and_guardian_portal_read.sql',
   '.github/workflows/cloudflare-pages-release.yml', 'docs/FINAL_REBUILD_STAGE.md', 'docs/NAVIGATION_RECONCILIATION.md',
 ]
 check('Integrated frontend, authentication, modules and deployment files exist', () => {
@@ -366,12 +367,15 @@ check('Teacher account provisioning verifies and links one employee identity wit
   assert.ok(accountForm.includes('Teacher login creation verifies and links that employee record'), 'Account form does not explain the employee-first teacher login flow')
 })
 
-check('Cloudflare production deployment remains manual-only', () => {
+check('College production deployment runs only from main after the verified build', () => {
   const releaseWorkflow = read('.github/workflows/cloudflare-pages-release.yml')
   const productionJob = releaseWorkflow.slice(releaseWorkflow.indexOf('  deploy-production:'))
-  assert.ok(productionJob.includes("github.event_name == 'workflow_dispatch'"), 'Production deployment must require workflow dispatch')
-  assert.ok(productionJob.includes('inputs.deploy_production == true'), 'Production deployment must require explicit approval')
-  assert.ok(!productionJob.includes("github.event_name == 'push'"), 'Production deployment must never run automatically on push')
+  assert.ok(productionJob.includes("github.ref == 'refs/heads/main'"), 'Production deployment must be restricted to main')
+  assert.ok(productionJob.includes("github.event_name == 'push'"), 'A verified merge to main must deploy the college production site')
+  assert.ok(productionJob.includes("github.event_name == 'workflow_dispatch'") && productionJob.includes('inputs.deploy_production == true'), 'A manual, explicitly approved redeploy must remain available')
+  assert.ok(productionJob.includes('Ensure the college-named Cloudflare Pages project exists'), 'The college Pages project must be created idempotently when missing')
+  assert.ok(productionJob.includes('pages deploy dist --project-name=gidcbadin --branch=main'), 'Production must deploy to the college-named Pages project')
+  assert.ok(!releaseWorkflow.includes('deploy-preview'), 'Pull requests must not publish a separate Cloudflare preview')
 })
 
 const authScreens = read('src/components/AuthScreens.tsx')
@@ -964,16 +968,16 @@ check('Teacher reporting routes expose only the teacher-permitted report dataset
   assert.ok(reports.includes("const wantsResults = ['owner', 'admin', 'teacher', 'exam_officer'].includes(role)"))
 })
  
-check('GitHub-hosted release pipeline builds assets and keeps production deploy manual', () => {
+check('College GitHub release pipeline verifies and deploys the dedicated public website', () => {
   const workflow = read('.github/workflows/cloudflare-pages-release.yml')
-  for (const phrase of ['workflow_dispatch', 'npm ci --no-audit --no-fund', 'npm run verify:project', 'npm run test:user-errors', 'npm run test:finance', 'npm run test:file-access', 'npm run build', 'edusphere360-cloudflare-direct-upload.zip', 'cloudflare/wrangler-action@v4']) {
+  for (const phrase of ['workflow_dispatch', 'npm ci --no-audit --no-fund', 'npm run verify:project', 'npm run test:user-errors', 'npm run test:finance', 'npm run test:file-access', 'npm run build', 'gidcbadin-cloudflare-direct-upload.zip', 'cloudflare/wrangler-action@v4']) {
     assert.ok(workflow.includes(phrase), `Release workflow is missing ${phrase}`)
   }
-  assert.ok(workflow.includes('inputs.deploy_production == true'), 'Production deployment must require an explicit manual approval input')
-  assert.ok(workflow.includes('Generate responsive source coverage audit') && workflow.includes('edusphere360-responsive-source-audit'), 'Responsive source evidence must be generated and uploaded in CI')
-  const previewJob = workflow.slice(workflow.indexOf('  deploy-preview:'), workflow.indexOf('  deploy-production:'))
-  assert.ok(previewJob.includes('Publish isolated pull-request preview') && previewJob.includes('--branch=pr-') && previewJob.includes("github.event_name == 'pull_request'") && previewJob.includes('github.event.pull_request.head.repo.full_name == github.repository') && previewJob.includes('available=false'), 'Only same-repository PRs may deploy to an isolated preview alias, and missing credentials must skip safely')
-  assert.ok(workflow.includes("github.event_name == 'workflow_dispatch'"), 'Production deployment must not run on normal pushes or pull requests')
+  assert.ok(workflow.includes('inputs.deploy_production == true'), 'Manual production redeployment must require explicit approval')
+  assert.ok(workflow.includes('Generate responsive source coverage audit') && workflow.includes('gidcbadin-responsive-source-audit'), 'Responsive source evidence must be generated and uploaded in CI')
+  assert.ok(workflow.includes('gidcbadin-dist') && workflow.includes('gidcbadin-exact-route-audit') && workflow.includes('gidcbadin-route-view-audit'), 'College production and audit artifacts must use the college project name')
+  assert.ok(!workflow.includes('deploy-preview'), 'Pull requests must not create a Cloudflare preview deployment')
+  assert.ok(workflow.includes("github.event_name == 'push'") && workflow.includes("github.ref == 'refs/heads/main'"), 'Only a verified main-branch merge may trigger production deployment')
   assert.ok(workflow.includes('secrets.CLOUDFLARE_API_TOKEN') && workflow.includes('secrets.CLOUDFLARE_ACCOUNT_ID'))
   assert.ok(workflow.includes('vars.VITE_SUPABASE_URL') && workflow.includes('vars.VITE_SUPABASE_PUBLISHABLE_KEY'))
   assert.ok(!workflow.includes('SUPABASE_SERVICE_ROLE_KEY'), 'A Supabase service-role key must never be a frontend build variable')
@@ -1001,13 +1005,17 @@ check('Required database safeguards and Cloudflare redirects remain in the proje
     '20261111170233_stage7_branch_scope_and_guardian_message_access.sql',
     '20261111170358_stage_6_employee_salary_components_own_read.sql',
     '20261111170659_stage_6_employee_appraisal_acknowledgement.sql',
-    '20261111170722_stage8_timetable_session_and_student_submission_guards.sql'
+    '20261111170722_stage8_timetable_session_and_student_submission_guards.sql',
+    '20261113173320_college_custom_role_profiles_and_scope_policies.sql',
+    '20261113173552_college_private_permission_guards.sql',
+    '20261113174054_college_approval_profile_action_alignment.sql',
+    '20261113175058_college_custom_role_high_impact_rpc_guards.sql'
   ]) {
     assert.ok(migrations.includes(migration), `${migration} missing`)
   }
   const timestamped = migrations.filter(name => /^202611\d{8}_.+\.sql$/.test(name))
-  assert.equal(timestamped.length, 50, 'Expected fifty timestamped migrations including the Stage 9 assessment workflows')
-  assert.ok(read('supabase/migrations/README.md').includes('fifty timestamped migration files'))
+  assert.equal(timestamped.length, 55, 'Expected fifty-five timestamped migrations including Stage 9, college custom-role security workflows and admission-stage guards')
+  assert.ok(read('supabase/migrations/README.md').includes('fifty-five timestamped migration files'))
   assert.equal(read('public/_redirects').trim(), '/* /index.html 200')
   const envExample = read('.env.example')
   const gitignore = read('.gitignore')
@@ -1141,6 +1149,34 @@ check('Student admission is a dedicated, accessible workspace window', () => {
   assert.ok(recordModule.includes('Save student admission') && recordModule.includes('Back to students'), 'The admission window must provide clear save and return actions')
   assert.ok(admissionStyles.includes('.ed360-admission-workspace') && admissionStyles.includes('@media(max-width:680px)'), 'The admission workspace must have dedicated responsive styles')
   assert.ok(mainEntry.includes("import './styles/student-admission-workspace.css'"), 'Dedicated admission styles must be loaded by the application')
+})
+
+check('Admission transitions are enforced by the database and reviewed with trusted identity', () => {
+  const guard = read('supabase/migrations/20261114033957_guard_student_admission_status_transitions.sql')
+  const recordModule = read('src/components/RecordModule.tsx')
+  for (const rule of [
+    "when 'draft' then new.application_status in ('submitted','withdrawn')",
+    "when 'submitted' then new.application_status in ('under_review','documents_required','rejected','withdrawn')",
+    "when 'under_review' then new.application_status in ('documents_required','approved','rejected','withdrawn')",
+    "when 'documents_required' then new.application_status in ('under_review','rejected','withdrawn')",
+    "when 'approved' then new.application_status in ('enrolled','withdrawn')",
+    "when 'enrolled' then new.application_status = 'withdrawn'",
+  ]) assert.ok(guard.includes(rule), 'Missing database admission transition rule: ' + rule)
+  assert.ok(guard.includes('security invoker'), 'Admission guard must run with the authenticated caller privileges')
+  assert.ok(guard.includes("array['owner','admin']::text[]"), 'Only institution owners and administrators may change admission stages')
+  assert.ok(guard.includes('private.has_institution_permission(') && guard.includes("'students'") && guard.includes("'edit'"), 'Custom college role and scope must be checked')
+  assert.ok(guard.includes('new.application_reviewed_by := auth.uid()'), 'Reviewer identity must come from the authenticated session')
+  assert.ok(guard.includes('new.application_reviewed_at := now()'), 'Review timestamp must be assigned by the database')
+  assert.ok(guard.includes("new.status := 'active'") && guard.includes("new.status := 'inactive'") && guard.includes("new.status := 'pending'"), 'Student status must follow the admission stage')
+  assert.ok(guard.includes('before update of application_status on public.students'), 'Admission changes must be guarded on every database update')
+  const updateStart = recordModule.indexOf('async function updateAdmissionStatus')
+  const updateEnd = recordModule.indexOf('async function saveGuardianContact', updateStart)
+  assert.ok(updateStart >= 0 && updateEnd > updateStart, 'Student admission status action must remain present')
+  const updateHandler = recordModule.slice(updateStart, updateEnd)
+  assert.ok(updateHandler.includes('application_review_notes: note.trim() || null'), 'The UI must preserve the admission review note')
+  assert.ok(!updateHandler.includes('application_reviewed_by:'), 'The browser must not choose the reviewer identity')
+  assert.ok(!updateHandler.includes('application_reviewed_at:'), 'The browser must not choose the review timestamp')
+  assert.ok(!updateHandler.includes('application_submitted_at:'), 'The browser must not choose submission timestamps')
 })
 
 console.log('\nRole workspace counts:')

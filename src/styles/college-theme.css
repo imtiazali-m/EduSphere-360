@@ -1,0 +1,67 @@
+/* Government Islamia Degree College Badin — shared application identity */
+:root {
+  --es-brand-950:#142c40; --es-brand-900:#18344c; --es-brand-800:#234b60; --es-brand-700:#2e625f;
+  --es-primary-700:#2c6558; --es-primary-600:#397766; --es-primary-500:#659787; --es-primary-100:#e5eee8; --es-primary-050:#f2f6f0;
+  --es-teal-700:#2f7166; --es-teal-100:#e5f0ea; --es-violet:#6a617f; --es-violet-bg:#f0edf3;
+  --es-amber:#a77528; --es-amber-bg:#fbf0db; --es-rose:#a95a50; --es-rose-bg:#f8eae5;
+  --es-ink:#1b2d3a; --es-muted:#6e7b7d; --es-subtle:#8b9693; --es-line:#e5dfd2; --es-line-soft:#eee9df;
+  --es-canvas:#f6f3eb; --es-surface:#fffdf8; --es-surface-soft:#faf7ef;
+  --es-shadow-sm:0 3px 12px rgba(25,47,57,.055); --es-shadow-md:0 12px 30px rgba(25,47,57,.09); --es-shadow-lg:0 24px 58px rgba(18,38,52,.16);
+  --es-radius-sm:7px; --es-radius-md:10px; --es-radius-lg:14px; --es-radius-xl:18px; accent-color:#397766;
+}
+html,body,#root { min-height:100%; width:100%; }
+body { background:#f6f3eb; color:#1b2d3a; font-family:'DM Sans',Arial,sans-serif; }
+button,input,select,textarea { font:inherit; }
+:focus-visible { outline:3px solid rgba(191,145,65,.55)!important; outline-offset:2px!important; }
+::selection { background:#f2e2bd; color:#18344c; }
+.pro-app-shell,.pro-main-shell,.pro-workspace,.pro-module-stage { background:#f6f3eb; }
+.pro-sidebar { background:#18344c; border-right:1px solid rgba(226,212,185,.18); box-shadow:5px 0 24px rgba(18,38,52,.08); }
+.pro-sidebar-brand-copy b { color:#fff; font-family:'Playfair Display',Georgia,serif; letter-spacing:-.2px; }
+.pro-sidebar-brand-copy small { color:#d6bd8a; font-size:8px; letter-spacing:1.2px; }
+.pro-institution-card { background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.13); }
+.pro-institution-card b { color:#fff; } .pro-institution-card small { color:#dfd7c5; }
+.pro-nav-section-label { color:#d0b77f; letter-spacing:1.2px; }
+.pro-nav-group-head { color:#e7eceb; border-radius:7px; }
+.pro-nav-group-head:hover,.pro-nav-item:hover { background:rgba(255,255,255,.09); }
+.pro-nav-item { color:#dce5e1; border-radius:6px; }
+.pro-nav-item.active,.pro-nav-group-head.active { background:#e6c17d; color:#18344c; box-shadow:none; }
+.pro-nav-item.active svg,.pro-nav-group-head.active svg { color:#18344c; }
+.pro-quick-access { border-top-color:rgba(255,255,255,.17); }
+.pro-topbar { background:#fffdf8; border-bottom:1px solid #e5dfd2; box-shadow:0 3px 12px rgba(27,45,58,.035); }
+.pro-global-search { background:#f8f5ed; border-color:#e8e0d1; }
+.pro-profile-trigger { background:#fffdf8; border-color:#e5dfd2; }
+.pro-profile-avatar { background:#e7eee7; color:#285b50; border-radius:50%; }
+.pro-workspace-tabs { background:#f7f3e9; border-bottom:1px solid #e7dfd1; }
+.pro-workspace-tab.active,.pro-workspace-tab[aria-selected="true"] { background:#e6efe8; color:#255a4d; border-color:#cbdccf; }
+.pro-module-stage { background:#f6f3eb; }
+.pro-window-panel,.ed360-panel,.ed360-module-insights,.gov-panel { background:#fffdf8; border-color:#e8e0d1; box-shadow:0 4px 15px rgba(31,48,57,.04); }
+.pro-window-panel :is(h1,h2,h3),.ed360-dashboard-heading h1 { color:#18344c; }
+.pro-window-panel :is(input,select,textarea),.es-auth-input { background:#fffefa; border-color:#ded7c8; border-radius:7px; }
+.pro-window-panel :is(input,select,textarea):focus { border-color:#799d8d; box-shadow:0 0 0 3px rgba(57,119,102,.11); }
+.pro-window-panel :is(button.primary,.primary-button,.button-primary,.gov-button.primary),.es-auth-submit { background:#2f6d5e; border-color:#2f6d5e; box-shadow:none; color:#fff; }
+.pro-window-panel :is(button.primary,.primary-button,.button-primary,.gov-button.primary):hover,.es-auth-submit:hover { background:#255a4e; }
+.pro-window-panel :is(.button,.gov-button) { border-radius:6px; }
+.pro-window-panel :is(th,.table-head) { background:#f4f0e6; color:#4e5e5b; }
+.pro-window-panel :is(td,th) { border-color:#ebe4d7; }
+.pro-window-panel :is(.status-pill,.badge) { border-radius:4px; }
+.pro-window-panel :is(.metric-card,.ed360-metric-card) { border-color:#e7dfd1; background:#fffdf8; box-shadow:0 3px 12px rgba(31,48,57,.035); }
+.pro-window-panel :is(.metric-card,.ed360-metric-card) :is(strong,b) { color:#18344c; }
+.es-auth-page { background:#f6f3eb; } .es-auth-main { background:#fbf8f0; } .es-auth-visual { background:#18344c; }
+.es-auth-brand-mark { background:#e6bd72; color:#18344c; border-radius:8px; box-shadow:none; }
+.es-auth-brand-copy b { color:#fff; font-family:'Playfair Display',Georgia,serif; } .es-auth-brand-copy em { color:#f2cf8c; }
+.es-auth-brand-copy small { color:#d6bd8a; letter-spacing:1.2px; }
+.es-auth-visual-label,.es-auth-kicker { color:#edcf91; }
+.es-auth-visual-copy h1 { color:#fff; font-family:'Playfair Display',Georgia,serif; }
+.es-auth-visual-copy h1 em { color:#f0cb82; } .es-auth-visual-copy p { color:#e0e8e3; }
+.es-auth-card { border:1px solid #e9e0d1; border-radius:10px; box-shadow:0 15px 45px rgba(30,45,50,.07); }
+.es-auth-card h2 { color:#18344c; font-family:'Playfair Display',Georgia,serif; }
+.es-auth-card p,.es-auth-field>span { color:#6d7978; }
+.es-auth-input { background:#fffefa; border:1px solid #e1d9ca; border-radius:6px; }
+.es-auth-input:focus-within { border-color:#739989; box-shadow:0 0 0 3px rgba(57,119,102,.1); }
+.es-account-type button.is-active { border-color:#8bac99; background:#eaf1e9; color:#285d51; }
+.es-auth-mobile-signup { color:#7b8581; font-size:11px; line-height:1.6; }
+.es-auth-main-foot { color:#8a8e86; }
+.connection-required-screen,.loading-screen { background:#f6f3eb; }
+.loading-brand { color:#18344c; font-family:'Playfair Display',Georgia,serif; } .loading-brand span { color:#a77528; }
+@media (max-width:760px) { .pro-main-shell { min-width:0; } .pro-module-stage { padding-inline:14px; } .pro-topbar { padding-inline:14px; } }
+@media (prefers-reduced-motion:reduce) { *,*:before,*:after { scroll-behavior:auto!important; animation-duration:.01ms!important; transition-duration:.01ms!important; } }

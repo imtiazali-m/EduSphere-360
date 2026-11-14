@@ -1098,19 +1098,12 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
       }
       const note = window.prompt('Add a review note for this admission (optional):', String(row.application_review_notes ?? ''))
       if (note === null) return
-      const now = new Date().toISOString()
+      // The database trigger is authoritative for valid transitions, reviewer identity,
+      // timestamps and the student's mirrored active/pending/inactive status.
       const payload: Record<string, unknown> = {
         application_status: nextStatus,
-        application_reviewed_by: user!.id,
-        application_reviewed_at: now,
         application_review_notes: note.trim() || null,
       }
-      if (nextStatus === 'submitted') payload.application_submitted_at = now
-      if (nextStatus === 'enrolled') {
-        payload.status = 'active'
-        payload.admission_date = now.slice(0, 10)
-      }
-      if (nextStatus === 'rejected' || nextStatus === 'withdrawn') payload.status = 'inactive'
       try {
         await updateRecord(mode, user!, 'students', row.id, payload)
         await load({ silent: true })

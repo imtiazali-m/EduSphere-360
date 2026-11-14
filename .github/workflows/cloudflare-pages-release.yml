@@ -1,4 +1,4 @@
-name: EduSphere 360 — build, verify and release
+name: Government Islamia Degree College Badin — build and production release
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       deploy_production:
-        description: Deploy the verified build to the production Cloudflare Pages project
+        description: Deploy the verified college website to the dedicated Government Islamia Degree College Badin Pages project
         required: true
         default: false
         type: boolean
@@ -101,14 +101,14 @@ jobs:
         run: |
           set -euo pipefail
           cd dist
-          zip -q -r ../edusphere360-cloudflare-direct-upload.zip .
+          zip -q -r ../gidcbadin-cloudflare-direct-upload.zip .
           cd ..
-          test -s edusphere360-cloudflare-direct-upload.zip
+          test -s gidcbadin-cloudflare-direct-upload.zip
 
       - name: Upload route-to-view compatibility audit
         uses: actions/upload-artifact@v7
         with:
-          name: edusphere360-route-view-audit
+          name: gidcbadin-route-view-audit
           path: docs/PHASE_1_ROUTE_VIEW_AUDIT.md
           if-no-files-found: error
           retention-days: 14
@@ -116,7 +116,7 @@ jobs:
       - name: Upload responsive source coverage audit
         uses: actions/upload-artifact@v7
         with:
-          name: edusphere360-responsive-source-audit
+          name: gidcbadin-responsive-source-audit
           path: docs/PHASE_2_RESPONSIVE_SOURCE_AUDIT.md
           if-no-files-found: error
           retention-days: 14
@@ -124,7 +124,7 @@ jobs:
       - name: Upload exact role-aware route audit
         uses: actions/upload-artifact@v7
         with:
-          name: edusphere360-exact-route-audit
+          name: gidcbadin-exact-route-audit
           path: docs/PHASE_1_EXACT_ROUTE_AUDIT.md
           if-no-files-found: error
           retention-days: 14
@@ -132,7 +132,7 @@ jobs:
       - name: Upload production dist folder
         uses: actions/upload-artifact@v7
         with:
-          name: edusphere360-dist
+          name: gidcbadin-dist
           path: dist/
           if-no-files-found: error
           retention-days: 14
@@ -140,67 +140,21 @@ jobs:
       - name: Upload Cloudflare Direct Upload ZIP
         uses: actions/upload-artifact@v7
         with:
-          name: edusphere360-cloudflare-direct-upload
-          path: edusphere360-cloudflare-direct-upload.zip
+          name: gidcbadin-cloudflare-direct-upload
+          path: gidcbadin-cloudflare-direct-upload.zip
           if-no-files-found: error
           retention-days: 14
 
-  deploy-preview:
-    name: Publish isolated pull-request preview
-    needs: verify-and-build
-    if: >-
-      ${{
-        github.event_name == 'pull_request' &&
-        github.event.pull_request.head.repo.full_name == github.repository
-      }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    env:
-      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-      CLOUDFLARE_PAGES_PROJECT: ${{ vars.CLOUDFLARE_PAGES_PROJECT || 'edusphere360' }}
-    steps:
-      - name: Download verified preview assets
-        uses: actions/download-artifact@v7
-        with:
-          name: edusphere360-dist
-          path: dist
-
-      - name: Check preview deployment credentials
-        id: preview-credentials
-        shell: bash
-        run: |
-          if [[ -z "$CLOUDFLARE_API_TOKEN" || -z "$CLOUDFLARE_ACCOUNT_ID" || -z "$CLOUDFLARE_PAGES_PROJECT" ]]; then
-            echo "available=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::Cloudflare preview credentials are not configured; the PR preview was not published."
-            exit 0
-          fi
-          test -s dist/index.html
-          test -s dist/_redirects
-          echo "available=true" >> "$GITHUB_OUTPUT"
-
-      - name: Deploy isolated PR preview (never production)
-        if: steps.preview-credentials.outputs.available == 'true'
-        uses: cloudflare/wrangler-action@v4
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=${{ vars.CLOUDFLARE_PAGES_PROJECT || 'edusphere360' }} --branch=pr-${{ github.event.pull_request.number }}-preview
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Report preview not published
-        if: steps.preview-credentials.outputs.available != 'true'
-        run: echo "No preview URL is available. The verified build artifacts remain attached to this workflow run."
-
   deploy-production:
-    name: Manually approved Cloudflare production deployment
+    name: Deploy college website after successful main-branch verification
     needs: verify-and-build
     if: >-
       ${{
-        github.ref == format('refs/heads/{0}', vars.EDUSPHERE_PRODUCTION_BRANCH || 'main') &&
-        github.event_name == 'workflow_dispatch' &&
-        inputs.deploy_production == true
+        github.ref == 'refs/heads/main' &&
+        (
+          github.event_name == 'push' ||
+          (github.event_name == 'workflow_dispatch' && inputs.deploy_production == true)
+        )
       }}
     runs-on: ubuntu-latest
     environment: production
@@ -211,7 +165,7 @@ jobs:
       - name: Download verified production assets
         uses: actions/download-artifact@v7
         with:
-          name: edusphere360-dist
+          name: gidcbadin-dist
           path: dist
 
       - name: Check release credentials and production configuration
@@ -219,7 +173,7 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          CLOUDFLARE_PAGES_PROJECT: ${{ vars.CLOUDFLARE_PAGES_PROJECT || 'edusphere360' }}
+          CLOUDFLARE_PAGES_PROJECT: gidcbadin
           VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
         run: |
@@ -232,10 +186,32 @@ jobs:
           test -s dist/index.html
           test -s dist/_redirects
 
+      - name: Ensure the college-named Cloudflare Pages project exists
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_PAGES_PROJECT: gidcbadin
+        run: |
+          set -euo pipefail
+          api="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects"
+          projects="$(curl --fail-with-body --silent --show-error "$api" -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN")"
+          if jq -e --arg project "$CLOUDFLARE_PAGES_PROJECT" '.result | any(.[]; .name == $project)' <<<"$projects" >/dev/null; then
+            echo "Cloudflare Pages project $CLOUDFLARE_PAGES_PROJECT already exists."
+          else
+            payload="$(jq -n --arg name "$CLOUDFLARE_PAGES_PROJECT" '{name:$name,production_branch:"main"}')"
+            created="$(curl --fail-with-body --silent --show-error -X POST "$api" \
+              -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+              -H "Content-Type: application/json" \
+              --data "$payload")"
+            jq -e '.success == true' <<<"$created" >/dev/null
+            echo "Created Cloudflare Pages project $CLOUDFLARE_PAGES_PROJECT."
+          fi
+
       - name: Deploy verified assets to Cloudflare Pages
         uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=${{ vars.CLOUDFLARE_PAGES_PROJECT || 'edusphere360' }} --branch=${{ vars.EDUSPHERE_PRODUCTION_BRANCH || 'main' }}
+          command: pages deploy dist --project-name=gidcbadin --branch=main
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}

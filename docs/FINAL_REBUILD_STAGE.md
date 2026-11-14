@@ -68,7 +68,7 @@ Repository variables:
 
 - `VITE_SUPABASE_URL` — the existing project's public Supabase URL.
 - `VITE_SUPABASE_PUBLISHABLE_KEY` — the Supabase publishable key (not a service-role key).
-- `CLOUDFLARE_PAGES_PROJECT` — defaults to `edusphere360` if omitted.
+- `CLOUDFLARE_PAGES_PROJECT` — defaults to `gidcbadin` if omitted.
 - `EDUSPHERE_PRODUCTION_BRANCH` — defaults to `main` if omitted.
 
 Repository secrets:
@@ -91,3 +91,10 @@ The release is not complete until all of these are true:
 - A previous known-good deployment/version and rollback procedure are recorded.
 
 Until then, label the package **source / release candidate**, not a production-ready deployment.
+
+
+## College-only production website and domain
+
+The public site is the official front door for Government Islamia Degree College Badin, not a generic multi-institution SaaS marketing site. The Cloudflare release workflow provisions a separate Direct Upload Pages project named `gidcbadin` and deploys the verified `dist/` assets to it. The previous `edusphere360` Pages project is retained and is not deleted or overwritten.
+
+The interim production address will be `https://gidcbadin.pages.dev`. The preferred permanent address is `gidcbadin.edu.pk`; PKNIC's registry lookup currently reports that candidate as unregistered and potentially available. PKNIC keeps `.edu.pk` domains inactive pending review and requires an original-letterhead authorization signed by the Principal/Head, evidence the college is a registered and active educational institute, and a copy of the signing authority's CNIC. After registration/activation, add the domain in Cloudflare Pages > Custom domains and complete the required DNS/nameserver configuration. Until that verification is finished, the custom domain must not be advertised as live.
