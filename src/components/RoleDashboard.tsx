@@ -25,11 +25,16 @@ const TABLES_BY_ROLE: Record<AppRole, string[]> = {
     'students', 'teachers', 'campuses', 'attendance', 'employee_attendance',
     'fee_invoices', 'fee_payments', 'exams', 'exam_results', 'workflow_approvals',
     'announcements', 'institutional_audit_events', 'academic_sessions',
+    'departments', 'programs', 'classes', 'subjects', 'rooms',
+    'assignments', 'assignment_submissions', 'timetable_entries',
+    'work_tasks', 'employee_leave_requests',
   ],
   admin: [
     'students', 'teachers', 'campuses', 'attendance', 'employee_attendance',
     'fee_invoices', 'fee_payments', 'exams', 'exam_results', 'workflow_approvals',
     'announcements', 'academic_sessions', 'work_tasks', 'employee_leave_requests',
+    'departments', 'programs', 'classes', 'subjects', 'rooms',
+    'assignments', 'assignment_submissions', 'timetable_entries',
   ],
   accountant: [
     'fee_invoices', 'fee_payments', 'finance_accounts', 'finance_journals',
@@ -160,7 +165,14 @@ function Panel({ title, description, icon: Icon, action, children, className = '
   </section>
 }
 function EmptyState({ loading, message }: { loading: boolean; message: string }) {
-  return <div className="rd-empty">{loading ? 'Loading live records…' : message}</div>
+  const unavailable = /unavailable|could not be loaded|not available/i.test(message)
+  return (
+    <div className="rd-empty">
+      <span className="rd-empty-icon"><ClipboardList size={17}/></span>
+      <strong>{loading ? 'Loading this area' : unavailable ? 'Data unavailable' : 'Nothing to show yet'}</strong>
+      <small>{loading ? 'Checking the latest records for your account.' : message}</small>
+    </div>
+  )
 }
 function NoticeList({ items, loading }: { items: RecordRow[]; loading: boolean }) {
   if (loading || !items.length) return <EmptyState loading={loading} message="No notices have been published for your account."/>
@@ -489,6 +501,102 @@ export function RoleDashboard({ onNavigate }: Props) {
       { label: 'Pending approvals', value: known('workflow_approvals') ? formatCount(pendingExamApprovals) : '—', hint: 'Assessment workflow requests', icon: ShieldAlert, tone: 'rose', route: 'institutional:administration:approval-and-workflows' },
     )
   }
+
+  const managerOverviewCards = role === 'owner' || role === 'admin' ? [
+    {
+      title: 'People & admissions',
+      description: 'Learners and your institution team',
+      icon: Users,
+      tone: 'blue',
+      stats: [
+        { label: 'Students', value: knownCount('students'), route: 'students' },
+        { label: 'Faculty & staff', value: knownCount('teachers'), route: 'teachers' },
+        { label: 'New this month', value: known('students') ? formatCount(students.filter(student => {
+          const date = recordDate(student, ['admission_date', 'created_at'])
+          return date && date >= monthStart
+        }).length) : '—', route: 'students:admissions' },
+      ],
+    },
+    {
+      title: 'Academic structure',
+      description: 'The institution’s academic foundation',
+      icon: School,
+      tone: 'violet',
+      stats: [
+        { label: 'Sessions', value: knownCount('academic_sessions'), route: 'admin:academic_sessions' },
+        { label: 'Departments', value: knownCount('departments'), route: 'admin:departments' },
+        { label: 'Classes', value: knownCount('classes'), route: 'admin:classes' },
+        { label: 'Subjects', value: knownCount('subjects'), route: 'admin:subjects' },
+        { label: 'Programmes', value: knownCount('programs'), route: 'admin:programs' },
+      ],
+    },
+    {
+      title: 'Teaching & learning',
+      description: 'Coursework, submissions and class schedules',
+      icon: BookOpen,
+      tone: 'green',
+      stats: [
+        { label: 'Assignments', value: knownCount('assignments'), route: 'assignments' },
+        { label: 'Submissions', value: knownCount('assignment_submissions'), route: 'assignments:submissions' },
+        { label: 'Timetable periods', value: knownCount('timetable_entries'), route: 'timetable:week' },
+      ],
+    },
+    {
+      title: 'Attendance',
+      description: 'Student and employee attendance registers',
+      icon: CalendarCheck,
+      tone: 'teal',
+      stats: [
+        { label: 'Student entries', value: knownCount('attendance'), route: 'attendance:students' },
+        { label: 'Staff entries', value: knownCount('employee_attendance'), route: 'attendance:faculty' },
+        { label: 'Present today', value: known('attendance', 'employee_attendance') ? formatCount(presentToday) : '—', route: 'attendance:students' },
+      ],
+    },
+    {
+      title: 'Examinations & results',
+      description: 'Assessment schedules and recorded outcomes',
+      icon: ClipboardCheck,
+      tone: 'amber',
+      stats: [
+        { label: 'Examinations', value: knownCount('exams'), route: 'exams:calendar' },
+        { label: 'Result records', value: knownCount('exam_results'), route: 'exam_results:all' },
+        { label: 'Published results', value: known('exam_results') ? formatCount(publishedResults.length) : '—', route: 'exam_results:published' },
+      ],
+    },
+    {
+      title: 'Fees & payments',
+      description: 'Invoices, collections and outstanding balances',
+      icon: Wallet,
+      tone: 'rose',
+      stats: [
+        { label: 'Invoices', value: knownCount('fee_invoices'), route: 'finance:fees:invoices' },
+        { label: 'Successful payments', value: knownCount('fee_payments'), route: 'finance:fees:payments' },
+        { label: 'Outstanding', value: known('fee_invoices') ? formatMoney(outstanding) : '—', route: 'finance:receivables:receivables' },
+      ],
+    },
+    {
+      title: 'Campus & operations',
+      description: 'Campuses, facilities, tasks and approvals',
+      icon: Building2,
+      tone: 'teal',
+      stats: [
+        { label: 'Campuses', value: knownCount('campuses'), route: 'institutional:administration:campus-and-branch-management' },
+        { label: 'Rooms & facilities', value: knownCount('rooms'), route: 'admin:rooms' },
+        { label: 'Open tasks', value: known('work_tasks') ? formatCount(get('work_tasks').filter(task => !['completed', 'cancelled'].includes(String(task.status ?? '').toLowerCase())).length) : '—', route: 'work_tasks' },
+        { label: 'Pending approvals', value: knownCount('workflow_approvals') === '—' ? '—' : formatCount(pendingApprovals.length), route: 'institutional:administration:approval-and-workflows' },
+      ],
+    },
+    {
+      title: 'Communication & records',
+      description: 'Notices and recorded institutional activity',
+      icon: Megaphone,
+      tone: 'violet',
+      stats: [
+        { label: 'Announcements', value: knownCount('announcements'), route: 'announcements' },
+        { label: 'Audit events', value: knownCount('institutional_audit_events'), route: 'institutional:administration:administrative-audit' },
+      ],
+    },
+  ] : []
 
   const rolePanels: Record<AppRole, ReactNode> = {
     owner: (() => {
@@ -862,6 +970,30 @@ export function RoleDashboard({ onNavigate }: Props) {
     <section className="rd-metric-grid" aria-label={roleLabels[role] + ' dashboard summary'}>
       {metrics.map(metric => <MetricCard key={metric.label} icon={metric.icon} label={metric.label} value={loading ? '—' : metric.value} hint={metric.hint} tone={metric.tone} onClick={metric.route ? () => onNavigate(metric.route!) : undefined}/>)}
     </section>
+    {(role === 'owner' || role === 'admin') && <section className="rd-domain-overview" aria-labelledby="rd-domain-overview-title">
+      <header className="rd-domain-overview-head">
+        <div>
+          <span className="rd-eyebrow">INSTITUTION AT A GLANCE</span>
+          <h2 id="rd-domain-overview-title">All key areas</h2>
+          <p>Every core area stays visible, even before its first record is added. Figures refresh as your institution’s records are saved.</p>
+        </div>
+        <span className="rd-domain-live"><i className={realtimeStatus === 'live' ? 'is-live' : ''}/>{realtimeStatus === 'live' ? 'Live overview' : 'Auto-updating overview'}</span>
+      </header>
+      <div className="rd-domain-grid">
+        {managerOverviewCards.map(card => <article className="rd-domain-card" key={card.title}>
+          <header className="rd-domain-card-head">
+            <span className={'rd-domain-icon ' + card.tone}><card.icon size={18}/></span>
+            <div><h3>{card.title}</h3><p>{card.description}</p></div>
+          </header>
+          <div className="rd-domain-stats">
+            {card.stats.map(stat => <button type="button" key={stat.label} onClick={() => onNavigate(stat.route)} aria-label={stat.label + ': ' + stat.value + '. Open related workspace.'}>
+              <strong>{loading ? '—' : stat.value}</strong>
+              <small>{stat.label}</small>
+            </button>)}
+          </div>
+        </article>)}
+      </div>
+    </section>}
     {rolePanels[role]}
     <footer className="rd-dashboard-footnote"><CheckCircle2 size={15}/><span>Dashboard figures come from live institution records visible to your signed-in role. Empty states mean no matching records were returned; unavailable figures are not treated as zero.</span></footer>
   </main>
