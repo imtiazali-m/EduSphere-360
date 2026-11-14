@@ -55,10 +55,10 @@ type Teacher = {
 }
 
 const coverChoices = [
-  { id: 'gidc-cover-1', title: 'Facebook cover photo 1', url: 'https://www.facebook.com/photo/?fbid=947437973852174&set=a.541418854454090', image: 'https://scontent-sjc6-1.xx.fbcdn.net/v/t39.30808-6/482278097_1101918731737430_5190993433085170007_n.jpg?stp=dst-jpg_tt6&cstp=mx981x363&ctp=s417x417&_nc_cat=101&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=86c6b0&_nc_ohc=SKA4T0ZMkOgQ7kNvwFBsVW9&_nc_oc=AdooV2JwyTR5aZkIDS08MJV3GfksYXuFE_pXctqwE123nYbuvrIc8mAF_tM_gAvwjIc&_nc_zt=23&_nc_ht=scontent-sjc6-1.xx&_nc_gid=Vo7OQ8UyD-3TQ98Teohh0A&_nc_ss=7b289&oh=00_AQQzPLg1Vhye-ijutzniBcdeYE10Z4k01iDKiEFeKXbfQg&oe=6AFDD00F' },
-  { id: 'gidc-cover-2', title: 'Facebook cover photo 2', url: 'https://www.facebook.com/photo/?fbid=541418884454087&set=a.541418854454090', image: 'https://scontent-sjc3-1.xx.fbcdn.net/v/t39.30808-6/474781692_1069923271603643_4028461545376206158_n.jpg?stp=dst-jpg_tt6&cstp=mx1280x720&ctp=s417x417&_nc_cat=100&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=86c6b0&_nc_ohc=iOZF-xkdW8YQ7kNvwGNXKH4&_nc_oc=AdrhnwbKwBZinLoJr7qQIzDA59KGyrjmDc5ykivTlxaeEG9j3iShSKyOXOvaSIAnbr8&_nc_zt=23&_nc_ht=scontent-sjc3-1.xx&_nc_gid=Vo7OQ8UyD-3TQ98Teohh0A&_nc_ss=7b289&oh=00_AQQP2PMxVw23_XtuoCLQwZu8RCZCEIaR1uLiVUeUPd_uwQ&oe=6AFDD6F8' },
-  { id: 'gidc-cover-3', title: 'Facebook cover photo 3', url: 'https://www.facebook.com/photo/?fbid=1282997795400950&set=a.541418854454090', image: 'https://scontent-sjc3-1.xx.fbcdn.net/v/t1.6435-9/122388657_1282997802067616_144999525467400152_n.jpg?stp=dst-jpg_tt6&cstp=mx1280x720&ctp=s417x417&_nc_cat=100&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=86c6b0&_nc_ohc=TFhaqpQcdFMQ7kNvwEJa_Vj&_nc_oc=AdrvIqoq5nYQW9FcFrtNUdNVYBkYIr8mxvwtp9Pq3z3OdlvV7lXLgg1M3HdBDXmjTn0&_nc_zt=23&_nc_ht=scontent-sjc3-1.xx&_nc_gid=Vo7OQ8UyD-3TQ98Teohh0A&_nc_ss=7b289&oh=00_AQQIOGS1h0JvdvszfwJpnlRZSB8ddmqMAjWvgRDPrYi_CQ&oe=6B1F5CA4' },
-  { id: 'gidc-cover-4', title: 'Facebook cover photo 4', url: 'https://www.facebook.com/photo/?fbid=1251748731859190&set=a.541418854454090', image: 'https://scontent-sjc6-1.xx.fbcdn.net/v/t1.6435-9/119520038_1251748735192523_4032561162598661558_n.jpg?stp=dst-jpg_tt6&cstp=mx960x550&ctp=s417x417&_nc_cat=104&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=cc71e4&_nc_ohc=SoiX-V2J7kYQ7kNvwEhPXl4&_nc_oc=AdpIgVDbvXrCKPrGw96EEjMgVJMQgrn1pK91IcppPOykYi02klUfX7AI8kRf8adCQ-s&_nc_zt=23&_nc_ht=scontent-sjc6-1.xx&_nc_gid=Vo7OQ8UyD-3TQ98Teohh0A&_nc_ss=7b289&oh=00_AQRKFq_ObDPZ1uTwjzKvJpKOmY6-e8xjxLYLuxUkfEUeJg&oe=6B1F5BAF' },
+  { id: 'gidc-facebook-photo-1', title: 'Choice 1 · Facebook photo', url: 'https://www.facebook.com/photo.php?fbid=1563832945546004&set=pb.100057579394832.-2207520000&type=3' },
+  { id: 'gidc-facebook-photo-2', title: 'Choice 2 · Facebook photo', url: 'https://www.facebook.com/photo.php?fbid=1560229795906319&set=pb.100057579394832.-2207520000&type=3' },
+  { id: 'gidc-facebook-photo-3', title: 'Choice 3 · Facebook photo', url: 'https://www.facebook.com/photo.php?fbid=1560219495907349&set=pb.100057579394832.-2207520000&type=3' },
+  { id: 'gidc-facebook-photo-4', title: 'Choice 4 · Facebook photo', url: 'https://www.facebook.com/photo.php?fbid=1557434519519180&set=pb.100057579394832.-2207520000&type=3' },
 ]
 const emptyContent: SiteContent = {
   heroHeading: 'Government Islamia Degree College Badin',
@@ -237,17 +237,7 @@ export function CollegeWebsiteManager({ onToast }: { onToast: (message: string, 
         ? Array.from(new Set([...current.approvedFacebookPhotoIds, id]))
         : current.approvedFacebookPhotoIds.filter(item => item !== id)
       const selected = nextIds.map(item => coverChoices.find(photo => photo.id === item)).find(Boolean)
-      const nextHero = approve && !current.heroPhotoUrl && candidate
-        ? candidate.image
-        : !approve && current.heroPhotoSource === candidate?.url
-          ? (selected?.image ?? '')
-          : current.heroPhotoUrl
-      const nextSource = approve && !current.heroPhotoSource && candidate
-        ? candidate.url
-        : !approve && current.heroPhotoSource === candidate?.url
-          ? (selected?.url ?? '')
-          : current.heroPhotoSource
-      return { ...current, approvedFacebookPhotoIds: nextIds, heroPhotoUrl: nextHero, heroPhotoSource: nextSource }
+      return { ...current, approvedFacebookPhotoIds: nextIds }
     })
   }
 
@@ -328,13 +318,13 @@ export function CollegeWebsiteManager({ onToast }: { onToast: (message: string, 
           <div><span><ImagePlus size={20}/></span><strong>{approvedCount}</strong><small>Approved Facebook images</small></div>
         </div>
 
-        <AdminSection icon={ImagePlus} title="Homepage photographs — approval required" description="Four photographs from the official GIDC Badin Facebook Cover Photos album. Open each original, then mark Yes or No. Nothing is shown publicly until you save.">
-          <div className="cwm-source-line"><Facebook size={17}/><span>Source: <a href="https://www.facebook.com/GIDCBadin/photos" target="_blank" rel="noreferrer">GIDC Badin official Facebook Photos</a> → Cover photos album</span></div>
+        <AdminSection icon={ImagePlus} title="Homepage photographs — approval required" description="Four exact photo posts listed by the official GIDC Badin Facebook Photos tab. Open each original to inspect it, then mark Yes or No. The photo itself is not published until you upload that same approved image.">
+          <div className="cwm-source-line"><Facebook size={17}/><span>Source: <a href="https://www.facebook.com/GIDCBadin/photos" target="_blank" rel="noreferrer">GIDC Badin official Facebook Photos</a> → public photo stream</span></div>
           <div className="cwm-cover-grid">
             {coverChoices.map((photo, index) => {
               const approved = content.approvedFacebookPhotoIds.includes(photo.id)
               return <article className={approved ? 'cwm-cover-card is-approved' : 'cwm-cover-card'} key={photo.id}>
-                <div className="cwm-cover-image"><img src={photo.image} alt={photo.title} loading="lazy" onError={event => { event.currentTarget.style.opacity = '0.18' }}/><span>CHOICE {index + 1}</span></div>
+                <div className="cwm-cover-image cwm-cover-image-link"><span>CHOICE {index + 1}</span><b>Open the original Facebook photo to inspect its actual contents</b></div>
                 <div className="cwm-cover-copy"><b>{photo.title}</b><a href={photo.url} target="_blank" rel="noreferrer">Open original Facebook photo <ExternalLink size={13}/></a>
                   <div className="cwm-yes-no" role="group" aria-label={'Approve photo choice ' + (index + 1)}>
                     <button type="button" className={approved ? 'is-yes selected' : 'is-yes'} aria-pressed={approved} onClick={() => toggleApprovedCover(photo.id, true)}><Check size={14}/> Yes</button>
@@ -344,7 +334,7 @@ export function CollegeWebsiteManager({ onToast }: { onToast: (message: string, 
               </article>
             })}
           </div>
-          <p className="cwm-help">A Yes selection approves that original Facebook image for the college gallery. The first approved choice becomes the homepage image unless you upload or select a different hero photograph.</p>
+          <p className="cwm-help">Yes records your approval of that Facebook source. To publish it, download that exact image from Facebook, upload it below in the gallery editor, and choose its correct category. No Facebook photo becomes the homepage image automatically.</p>
           <TextInput label="Homepage image URL (optional override)" value={content.heroPhotoUrl} onChange={value => set('heroPhotoUrl', value)} placeholder="Paste a college-owned or approved image URL"/>
           <TextInput label="Source link for homepage image" value={content.heroPhotoSource} onChange={value => set('heroPhotoSource', value)} placeholder="Original Facebook post or album link"/>
           <label className="cwm-upload"><Upload size={17}/><span>{uploading ? 'Uploading…' : 'Upload an approved campus image'}</span><input type="file" accept="image/*" disabled={uploading} onChange={event => void handleImageUpload(event, 'homepage', url => set('heroPhotoUrl', url))}/></label>
