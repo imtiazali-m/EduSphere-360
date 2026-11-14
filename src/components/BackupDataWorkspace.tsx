@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState, type ChangeEvent } from 'react'
-import { Activity, AlertTriangle, Archive, ArrowDownToLine, CheckCircle2, Clipboard, Cloud, Database, Download, FileSpreadsheet, FileText, History, RefreshCw, ShieldCheck, Upload } from 'lucide-react'
+import { useEffect, useMemo, useState, type ChangeEvent, type ReactNode } from 'react'
+import { Activity, AlertTriangle, Archive, ArrowDownToLine, CheckCircle2, Cloud, Database, History, RefreshCw, ShieldCheck, Upload } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { listRecords, createRecord } from '../lib/data'
 import { supabase } from '../lib/supabase'
@@ -128,7 +128,7 @@ function validateRows(table:string,rows:DataRow[]){
 function InfoStat({label,value,detail}:{label:string;value:string;detail:string}){
   return <article className="bdw-stat"><small>{label}</small><strong>{value}</strong><span>{detail}</span></article>
 }
-function PageIntro({icon:Icon,title,description,action}:{icon:typeof Database;title:string;description:string;action?:React.ReactNode}){
+function PageIntro({icon:Icon,title,description,action}:{icon:typeof Database;title:string;description:string;action?:ReactNode}){
   return <header className="bdw-page-intro"><span className="bdw-intro-icon"><Icon size={22}/></span><div><h2>{title}</h2><p>{description}</p></div>{action&&<div className="bdw-intro-action">{action}</div>}</header>
 }
 export function BackupDataWorkspace({initialWindow,onToast}:Props){
