@@ -46,43 +46,13 @@ const steps:Record<Exclude<PageKey,'overview'|'ai-providers'>,{number:string;hea
   {number:'04',heading:'Add lessons to the learning library',detail:'Teachers select an approved video, map it to subject, class and chapter, then publish it as a learning resource. Student progress is recorded by EduSphere, not inferred from a public video view.'},
  ],
  biometric:[
-  {number:'01',heading:'Choose a supported reader first',detail:'Select a fingerprint scanner/terminal that explicitly supports Android integration, a documented SDK/API, device identity and server/event export. A generic camera or phone power-button fingerprint sensor is not a student scanner.'},
-  {number:'02',heading:'Set up a supervised enrolment station',detail:'An authorised staff member verifies the student’s identity and records consent/notice. Enrol two fingers where supported and provide an accessible non-biometric alternative.'},
-  {number:'03',heading:'Keep fingerprint templates on the reader',detail:'The reader should create and match biometric templates locally. The college system stores a student-to-reader template reference, not raw fingerprint images or reusable fingerprint templates.'},
-  {number:'04',heading:'Send signed attendance events',detail:'A trusted Android companion app or device gateway sends a signed event containing student ID, device ID, timestamp, event type and match result to a protected Supabase Edge Function. Duplicate events are rejected.'},
-  {number:'05',heading:'Verify, reconcile and audit',detail:'Test multiple students, failed matches, offline queue/resync, duplicate scans, device clock drift and manual override. Keep a full audit trail and allow manual/QR attendance if a reader fails.'},
+  {number:'01',heading:'Use the teacher’s phone biometric for staff verification',detail:'Register a passkey/WebAuthn credential for every owner, administrator and teacher. When that staff member opens attendance or submits the register, the phone may ask for its enrolled fingerprint, face or device PIN. This proves the staff account holder is present; it does not identify a student.'},
+  {number:'02',heading:'Add a separate student fingerprint reader',detail:'To identify students one by one, pair a supported USB-C OTG or Bluetooth fingerprint reader with the teacher’s Android phone, or use a fixed attendance terminal. The phone’s built-in power-button sensor is controlled by Android and cannot be used by the website to enrol or scan other people.'},
+  {number:'03',heading:'Confirm identity and enrol each student',detail:'An authorised enrolment operator checks the student against the admission record, records the required student/parent notice and consent, then enrols the agreed fingers using the reader vendor’s SDK. Provide a manual or QR alternative for students who cannot or do not use biometrics.'},
+  {number:'04',heading:'Match locally and keep templates protected',detail:'The reader/approved companion app must perform 1:N student matching and return a student ID plus a match result. Keep encrypted biometric templates inside the reader or its approved secure device store; do not upload fingerprint photos or reusable templates to the college database.'},
+  {number:'05',heading:'Send a signed attendance event to EduSphere',detail:'The companion app sends institution ID, student ID, reader/device ID, class/section, period, timestamp and match result to a protected Supabase Edge Function. The server validates the roster and attendance session, rejects replay/duplicate events and writes the attendance record.'},
+  {number:'06',heading:'Test online, offline and exception handling',detail:'Test false rejects, duplicate scans, device clock changes, lost phones, offline event queues and secure resynchronisation. Keep a complete audit trail and a teacher-controlled manual correction path.'},
  ],
-}
-const requiredSecrets:Record<Exclude<PageKey,'overview'|'ai-providers'>,string[]> = {
- zoom:['ZOOM_ACCOUNT_ID','ZOOM_CLIENT_ID','ZOOM_CLIENT_SECRET','ZOOM_WEBHOOK_SECRET_TOKEN'],
- google:['GOOGLE_CLIENT_ID','GOOGLE_CLIENT_SECRET','GOOGLE_TOKEN_ENCRYPTION_KEY'],
- youtube:['YOUTUBE_DATA_API_KEY (only for search/metadata)','GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET (only for channel OAuth)'],
- biometric:['No student fingerprint image/template secret belongs in the browser. Device SDK credentials and webhook signing key are server-side.'],
-}
-const PageIcon:Record<PageKey,LucideIcon>={overview:Cloud,'ai-providers':Activity,zoom:Video,google:Cloud,youtube:Youtube,biometric:Fingerprint}
-
-export function IntegrationManagementWorkspace({initialWindow='overview',onToast,onNavigate}:{initialWindow?:string;onToast:(message:string,error?:boolean)=>void;onNavigate:(route:string)=>void}){
- const {user}=useAuth()
- const page=(initialWindow in pages?initialWindow:'overview') as PageKey
- const meta=pages[page]
- const ActiveIcon=PageIcon[page]
- const [providerStatus,setProviderStatus]=useState<ProviderState>({})
- const [checking,setChecking]=useState(false)
- const [testing,setTesting]=useState('')
- const [lastChecked,setLastChecked]=useState('')
- const [error,setError]=useState('')
- const [testResults,setTestResults]=useState<Record<string,string>>({})
-
- const refreshAI=useCallback(async()=>{
-  if(!supabase||!user){setError('Sign in to check the institution AI connection.');return}
-  setChecking(true);setError('')
-  try{
-   const {data,error:invokeError}=await supabase.functions.invoke('ai-assistant',{body:{action:'status',institutionId:user.institutionId}})
-   if(invokeError)throw invokeError
-   setProviderStatus((data?.providers??{}) as ProviderState)
-   setLastChecked(new Date().toLocaleString())
-  }catch(e){setError(e instanceof Error?e.message:'AI provider status could not be checked.');setProviderStatus({})}
-  finally{setChecking(false)}
  },[user?.id,user?.institutionId])
  useEffect(()=>{if(page==='ai-providers'||page==='overview')void refreshAI()},[page,refreshAI])
  const configuredCount=useMemo(()=>providers.filter(p=>providerStatus[p.key]?.configured).length,[providerStatus])
