@@ -34,3 +34,12 @@
 .ra-field-picker input{accent-color:#23653c}
 @media(max-width:700px){.ra-heading{align-items:flex-start;flex-direction:column}.ra-heading .ra-refresh{width:100%}.ra-form-grid{grid-template-columns:1fr}.ra-panel{padding:13px}.ra-export-tools{width:100%}.ra-export-tools select{flex:1}.ra-filters>*{flex:1 1 140px}}
 @media print{.ra-heading .ra-refresh,.ra-filters,.ra-export-tools,.ra-template-grid,.ra-field-picker{display:none!important}.ra-workspace{padding:0}.ra-panel{break-inside:avoid;box-shadow:none}}
+
+.ra-sort-button{display:inline-flex;align-items:center;gap:7px;padding:0;border:0;background:transparent;color:inherit;font:inherit;font-weight:850;cursor:pointer;white-space:nowrap}
+.ra-sort-button span{color:#89958c;font-size:10px}
+.ra-sort-button:focus-visible,.ra-pagination button:focus-visible{outline:2px solid #42845a;outline-offset:3px;border-radius:4px}
+.ra-pagination{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 3px 0;color:#69756d;font-size:10px}
+.ra-pagination>div{display:flex;align-items:center;gap:10px}
+.ra-pagination button{min-height:31px;padding:0 10px;border:1px solid #dce4de;border-radius:7px;background:#fff;color:#253329;font-size:10px;font-weight:750;cursor:pointer}
+.ra-pagination button:disabled{opacity:.45;cursor:not-allowed}
+@media(max-width:600px){.ra-pagination{align-items:flex-start;flex-direction:column}.ra-pagination>div{width:100%;justify-content:space-between}}
