@@ -89,6 +89,7 @@ const attendanceViews: Record<string, string> = {
   'early-departure': 'staff',
   'attendance-calendar': 'history',
   'attendance-history': 'history',
+  'automatic-attendance': 'devices',
   'attendance-devices': 'devices',
   'qr-barcode-check-in': 'qr-scan',
   'biometric-verification': 'biometric',
@@ -285,6 +286,7 @@ const administrationGovernanceItems: Record<string,string> = {
   'role-permission-management':'permissions',
   'institute-settings':'settings',
   'branding-document-settings':'branding',
+  'document-access':'files',
   'security-access-history':'security',
 }
 const institutionConfigurationItems: Record<string,string> = {
@@ -503,6 +505,9 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
       'staff-attendance':'attendance:staff',
       'leave-management':'care:leave',
       'attendance-reports':'care:reports',
+      'student-attendance-reports':'care:reports-students',
+      'teacher-attendance-reports':'care:reports-teachers',
+      'staff-attendance-reports':'care:reports-staff',
       'student-discipline':'care:discipline',
       'student-counselling-wellbeing':'care:counselling',
       'health-emergency-records':'care:health',
