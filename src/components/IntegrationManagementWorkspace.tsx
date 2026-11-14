@@ -51,8 +51,39 @@ const steps:Record<Exclude<PageKey,'overview'|'ai-providers'>,{number:string;hea
   {number:'03',heading:'Confirm identity and enrol each student',detail:'An authorised enrolment operator checks the student against the admission record, records the required student/parent notice and consent, then enrols the agreed fingers using the reader vendor’s SDK. Provide a manual or QR alternative for students who cannot or do not use biometrics.'},
   {number:'04',heading:'Match locally and keep templates protected',detail:'The reader/approved companion app must perform 1:N student matching and return a student ID plus a match result. Keep encrypted biometric templates inside the reader or its approved secure device store; do not upload fingerprint photos or reusable templates to the college database.'},
   {number:'05',heading:'Send a signed attendance event to EduSphere',detail:'The companion app sends institution ID, student ID, reader/device ID, class/section, period, timestamp and match result to a protected Supabase Edge Function. The server validates the roster and attendance session, rejects replay/duplicate events and writes the attendance record.'},
-  {number:'06',heading:'Test online, offline and exception handling',detail:'Test false rejects, duplicate scans, device clock changes, lost phones, offline event queues and secure resynchronisation. Keep a complete audit trail and a teacher-controlled manual correction path.'},
+   {number:'06',heading:'Test online, offline and exception handling',detail:'Test false rejects, duplicate scans, device clock changes, lost phones, offline event queues and secure resynchronisation. Keep a complete audit trail and a teacher-controlled manual correction path.'},
  ],
+}
+const requiredSecrets:Record<Exclude<PageKey,'overview'|'ai-providers'>,string[]> = {
+ zoom:['ZOOM_ACCOUNT_ID','ZOOM_CLIENT_ID','ZOOM_CLIENT_SECRET','ZOOM_WEBHOOK_SECRET_TOKEN'],
+ google:['GOOGLE_CLIENT_ID','GOOGLE_CLIENT_SECRET','GOOGLE_REDIRECT_URI','GOOGLE_TOKEN_ENCRYPTION_KEY'],
+ youtube:['YOUTUBE_DATA_API_KEY (only for search/metadata)','GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET (only for channel OAuth)'],
+ biometric:['BIOMETRIC_EVENT_SIGNING_SECRET','Vendor Android SDK / device registration credentials (stored securely by the trusted companion app)','WebAuthn/passkey credentials are public-key registrations; no raw staff fingerprint is stored in EduSphere.'],
+}
+const PageIcon:Record<PageKey,LucideIcon>={overview:Cloud,'ai-providers':Activity,zoom:Video,google:Cloud,youtube:Youtube,biometric:Fingerprint}
+
+export function IntegrationManagementWorkspace({initialWindow='overview',onToast,onNavigate}:{initialWindow?:string;onToast:(message:string,error?:boolean)=>void;onNavigate:(route:string)=>void}){
+ const {user}=useAuth()
+ const page=(initialWindow in pages?initialWindow:'overview') as PageKey
+ const meta=pages[page]
+ const ActiveIcon=PageIcon[page]
+ const [providerStatus,setProviderStatus]=useState<ProviderState>({})
+ const [checking,setChecking]=useState(false)
+ const [testing,setTesting]=useState('')
+ const [lastChecked,setLastChecked]=useState('')
+ const [error,setError]=useState('')
+ const [testResults,setTestResults]=useState<Record<string,string>>({})
+
+ const refreshAI=useCallback(async()=>{
+  if(!supabase||!user){setError('Sign in to check the institution AI connection.');return}
+  setChecking(true);setError('')
+  try{
+   const {data,error:invokeError}=await supabase.functions.invoke('ai-assistant',{body:{action:'status',institutionId:user.institutionId}})
+   if(invokeError)throw invokeError
+   setProviderStatus((data?.providers??{}) as ProviderState)
+   setLastChecked(new Date().toLocaleString())
+  }catch(e){setError(e instanceof Error?e.message:'AI provider status could not be checked.');setProviderStatus({})}
+  finally{setChecking(false)}
  },[user?.id,user?.institutionId])
  useEffect(()=>{if(page==='ai-providers'||page==='overview')void refreshAI()},[page,refreshAI])
  const configuredCount=useMemo(()=>providers.filter(p=>providerStatus[p.key]?.configured).length,[providerStatus])
