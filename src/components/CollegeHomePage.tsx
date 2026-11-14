@@ -77,7 +77,9 @@ const DEFAULT_CONTENT: WebsiteContent = {
   campusIntro: '',
   facilities: [],
   programs: [{ id: 'science', title: 'Science', detail: 'Listed for Government Islamia Degree College Badin in the Government of Sindh government-colleges directory.', officialUrl: 'https://college.sindh.gov.pk/government-colleges' }],
-  gallery: [],
+  gallery: [
+    { id: 'gidc-event-guidance-05', title: 'Student guidance session', category: 'college-events', imageUrl: '/gidc-badin/events/student-guidance-session-event-05.webp', alt: 'Teacher guiding students during a college session', published: true }
+  ],
   news: [],
   magazines: [],
   approvedFacebookPhotoIds: [],
