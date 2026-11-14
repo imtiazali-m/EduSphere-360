@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
-  ArrowRight, ArrowUpRight, BookOpen, CalendarDays, ChevronRight, ExternalLink,
-  Facebook, FileText, GraduationCap, Landmark, LibraryBig, Mail, MapPin, Menu,
+  ArrowRight, ArrowUpRight, BookOpen, CalendarDays, ExternalLink,
+  Facebook, FileText, GraduationCap, Landmark, Mail, MapPin, Menu,
   Newspaper, Phone, School, ShieldCheck, Users, X, Microscope, Image as ImageIcon,
   Building2, Award, BookMarked, Compass,
 } from 'lucide-react'
@@ -89,7 +89,7 @@ const pages = [
   { id: 'principal', label: 'Principal', icon: Award },
   { id: 'faculty', label: 'Faculty', icon: Users },
   { id: 'campus', label: 'Campus', icon: School },
-  { id: 'content', label: 'Updates', icon: Newspaper },
+  { id: 'content', label: 'Content', icon: Newspaper },
   { id: 'gallery', label: 'Gallery', icon: ImageIcon },
   { id: 'emagazine', label: 'E-magazine', icon: BookMarked },
   { id: 'contact', label: 'Contact', icon: MapPin },
@@ -97,10 +97,6 @@ const pages = [
 
 function textValue(value: unknown, fallback = '') {
   return typeof value === 'string' ? value : fallback
-}
-
-function pageTitle(page: string) {
-  return pages.find(item => item.id === page)?.label ?? 'Home'
 }
 
 function goToPage(id: string) {
@@ -364,7 +360,7 @@ export function CollegeHomePage({ navigate, initialSection }: Props) {
                 <div className="gidc-public-principal-portrait">{principal.public_photo_url ? <img src={principal.public_photo_url} alt={principal.full_name}/> : <img src="/gidc-badin-official-logo.svg" alt="GIDC Badin official crest"/>}</div>
                 <div><span className="gidc-public-pill">PRINCIPAL</span><h2>{principal.full_name}</h2><h3>{principal.public_designation || 'Principal'}</h3>{principal.public_qualification && <p className="gidc-public-qualification">{principal.public_qualification}</p>}<p>{textValue(content.principalMessage, principal.public_bio || '')}</p></div>
               </div>
-            ) : <EmptyState icon={Award} title="Principal profile" detail="The principal's published profile will appear here when it is added in the college portal."/>}
+            ) : <EmptyState icon={Award} title="Principal profile" detail="No principal profile is currently published."/>}
           </PageFrame>
         )}
 
@@ -373,7 +369,7 @@ export function CollegeHomePage({ navigate, initialSection }: Props) {
             {faculty.length > 0 ? <div className="gidc-public-faculty-grid">{faculty.map(person => <article className="gidc-public-faculty-card" key={person.id}>
               <div className="gidc-public-faculty-photo">{person.public_photo_url ? <img src={person.public_photo_url} alt={person.full_name}/> : <Users size={38}/>}</div>
               <div className="gidc-public-faculty-info"><h3>{person.full_name}</h3><b>{person.public_designation || person.subject || 'Faculty member'}</b><span>{person.department || 'Department'}</span>{person.public_qualification && <small>{person.public_qualification}</small>}{person.public_bio && <p>{person.public_bio}</p>}</div>
-            </article>)}</div> : <EmptyState icon={Users} title="Faculty directory" detail="Faculty profiles will appear here when the college publishes them from the internal faculty records."/>}
+            </article>)}</div> : <EmptyState icon={Users} title="Faculty directory" detail="No faculty profiles are currently published."/>}
           </PageFrame>
         )}
 
@@ -387,7 +383,7 @@ export function CollegeHomePage({ navigate, initialSection }: Props) {
               </div>
               <div className="gidc-public-facilities">
                 <small>CAMPUS FACILITIES</small><h3>Facilities</h3>
-                {content.facilities?.length ? <div className="gidc-public-facility-list">{content.facilities.map((facility, index) => <div key={facility}><span><Building2 size={18}/></span><b>{facility}</b><small>{String(index + 1).padStart(2, '0')}</small></div>)}</div> : <EmptyState icon={Building2} title="Campus facilities" detail="Campus facilities will be listed here when the college publishes its facility information."/>}
+                {content.facilities?.length ? <div className="gidc-public-facility-list">{content.facilities.map((facility, index) => <div key={facility}><span><Building2 size={18}/></span><b>{facility}</b><small>{String(index + 1).padStart(2, '0')}</small></div>)}</div> : <EmptyState icon={Building2} title="Campus facilities" detail="No campus facilities are currently published."/>}
               </div>
             </div>
             {galleryItems.filter(item => item.category === 'main-campus' || item.category === 'campus-facility').length > 0 && <div className="gidc-public-subsection"><SectionHeading eyebrow="CAMPUS PHOTOGRAPHS" title="Campus views"/><div className="gidc-public-photo-grid">{galleryItems.filter(item => item.category === 'main-campus' || item.category === 'campus-facility').map(item => <PhotoCard item={item} key={item.id}/>)}</div></div>}
@@ -403,7 +399,7 @@ export function CollegeHomePage({ navigate, initialSection }: Props) {
 
         {page === 'gallery' && (
           <PageFrame eyebrow="PHOTOGRAPHS" title="College gallery" lead="Campus, activities, college events, student life and facilities." icon={ImageIcon}>
-            {galleryItems.length > 0 ? <div className="gidc-public-gallery-grid">{galleryItems.map(item => <PhotoCard item={item} key={item.id}/>)}</div> : <EmptyState icon={ImageIcon} title="College photo gallery" detail="Approved college photographs will appear here, organised by campus, activities, events, student life and facilities."/>}
+            {galleryItems.length > 0 ? <div className="gidc-public-gallery-grid">{galleryItems.map(item => <PhotoCard item={item} key={item.id}/>)}</div> : <EmptyState icon={ImageIcon} title="College photo gallery" detail="No college photographs are currently published."/>}
           </PageFrame>
         )}
 
@@ -412,7 +408,7 @@ export function CollegeHomePage({ navigate, initialSection }: Props) {
             {magazines.length > 0 ? <div className="gidc-public-magazine-grid">{magazines.map(issue => <article className="gidc-public-magazine-card" key={issue.id}>
               <div className="gidc-public-magazine-cover">{issue.coverUrl ? <img src={issue.coverUrl} alt={issue.title + ' cover'}/> : <BookMarked size={42}/>}</div>
               <div><small>{issue.issue || 'COLLEGE MAGAZINE'} · {issue.year || ''}</small><h3>{issue.title}</h3><a href={issue.pdfUrl} target="_blank" rel="noreferrer">Read issue <FileText size={15}/></a></div>
-            </article>)}</div> : <EmptyState icon={BookMarked} title="College e-magazine" detail="The e-magazine section is ready. Published issues will appear here when uploaded by the college administrator."/>}
+            </article>)}</div> : <EmptyState icon={BookMarked} title="College e-magazine" detail="No e-magazine issues are currently published."/>}
           </PageFrame>
         )}
 
