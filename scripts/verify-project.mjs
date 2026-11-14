@@ -1120,16 +1120,16 @@ check('Stage 8 provides all 12 connected academic work areas', () => {
 })
 
 
-check('Modern and Classic dashboard modes preserve role data, workspaces and accessible display preferences', () => {
+check('Single dashboard layout preserves role data and accessible display preferences', () => {
   const dashboard = read('src/components/Dashboard.tsx')
   const preferences = read('src/lib/displayPreferences.js')
   const displayStyles = read('src/styles/dashboard-display-settings.css')
   const displayTests = read('scripts/test-display-preferences.mjs')
   const mainEntry = read('src/main.tsx')
-  assert.ok(dashboard.includes('data-view-mode={displayPreferences.viewMode}') && dashboard.includes('data-theme={displayPreferences.theme}'), 'Display preferences must be applied to the existing signed-in shell')
-  assert.ok(dashboard.includes('aria-label="Dashboard display mode"') && dashboard.includes('Modern') && dashboard.includes('Classic'), 'Top-bar view selector must expose both accessible display modes')
+  assert.ok(dashboard.includes('data-view-mode="modern"') && dashboard.includes('data-theme={displayPreferences.theme}'), 'One consistent dashboard layout and theme preferences must be applied to the signed-in shell')
+  assert.ok(!dashboard.includes('aria-label="Dashboard display mode"') && !dashboard.includes('>Modern</button>') && !dashboard.includes('>Classic</button>'), 'The inactive Modern / Classic selector must be removed')
   assert.ok(dashboard.includes('roleNavigationGroups(user!.role)') && dashboard.includes('modulesForRole(user!.role)'), 'Role-filtered navigation and modules must remain unchanged')
-  assert.ok(dashboard.includes('workspaceTabs.map(tab =>') && dashboard.includes('<RoleDashboard onNavigate={navigateChild}/>'), 'View switches must retain the same current workspace and overview component')
+  assert.ok(dashboard.includes('workspaceTabs.map(tab =>') && dashboard.includes('<RoleDashboard onNavigate={navigateChild}/>'), 'The single layout must retain the same workspace and overview components')
   for (const preference of ['viewMode', 'theme', 'fontSize', 'sidebar', 'reducedMotion']) assert.ok(preferences.includes(preference), 'Preference persistence is missing: ' + preference)
   assert.ok(preferences.includes('localStorage') === false, 'The preference helper must remain storage-adapter based and testable')
   for (const style of ['data-view-mode="classic"', 'data-theme="dark"', 'data-font-size="largest"', 'data-reduced-motion="true"', 'prefers-reduced-motion: reduce', 'focus-visible', 'min-height: 32px']) assert.ok(displayStyles.includes(style), 'Display style/accessibility support is missing: ' + style)
