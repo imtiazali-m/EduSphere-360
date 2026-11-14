@@ -197,7 +197,9 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
   <div className="ed360-attendance-main-tabs">
    <button className={autoTab==='register'?'active':''} onClick={()=>setAutoTab('register')}>Manual register</button>
    <button className={autoTab==='history'?'active':''} onClick={()=>setAutoTab('history')}>Attendance history</button>
-   {canManageStaff&&<button className={autoTab==='devices'?'active':''} onClick={()=>{setAutoTab('devices');void loadDevices()}}>Device connections</button><button className={autoTab==='qr-scan'?'active':''} onClick={()=>{setAutoTab('qr-scan');setScanResult('')}}>QR / barcode</button><button className={autoTab==='biometric'?'active':''} onClick={()=>setAutoTab('biometric')}>Biometric</button>{canManageStaff&&<button className={['cards-students','cards-teachers','cards-staff'].includes(autoTab)?'active':''} onClick={()=>setAutoTab(population==='students'?'cards-students':population==='teachers'?'cards-teachers':'cards-staff')}>ID cards</button>}}
+   {canManageStaff&&<button className={autoTab==='devices'?'active':''} onClick={()=>{setAutoTab('devices');void loadDevices()}}>Device connections</button>}
+   {(canManageStudents||canManageStaff)&&<><button className={autoTab==='qr-scan'?'active':''} onClick={()=>{setAutoTab('qr-scan');setScanResult('')}}>QR / barcode</button><button className={autoTab==='biometric'?'active':''} onClick={()=>setAutoTab('biometric')}>Biometric</button></>}
+   {canManageStaff&&<button className={['cards-students','cards-teachers','cards-staff'].includes(autoTab)?'active':''} onClick={()=>setAutoTab(population==='students'?'cards-students':population==='teachers'?'cards-teachers':'cards-staff')}>ID cards</button>}
   </div>
   {autoTab==='register'&&<>
    <section className="ed360-attendance-filter-card">

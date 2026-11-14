@@ -154,8 +154,8 @@ check('The full institutional menu maps every submenu to a working destination',
   assert.equal(getNavigationRoute('timetable', 'Timetable Publishing'), 'unavailable:timetable:timetable-publishing', 'Timetable publication controls are not implemented yet')
   assert.equal(getNavigationRoute('class-tests', 'Online Tests'), 'unavailable:class-tests:online-tests', 'Online test delivery must not be represented as ordinary examination records')
   assert.equal(getNavigationRoute('examinations', 'Automatic Checking'), 'unavailable:examinations:automatic-checking', 'Automated marking is not configured')
-  assert.equal(getNavigationRoute('reports', 'Custom Report Builder'), 'unavailable:reports:custom-report-builder', 'Custom report builder must not open fixed report cards')
-  assert.equal(getNavigationRoute('reports', 'Scheduled Reports'), 'unavailable:reports:scheduled-reports', 'Scheduled report execution is not implemented')
+  assert.equal(getNavigationRoute('reports', 'Custom Report Builder'), 'reports:builder', 'Custom Report Builder must open its dedicated multi-source builder')
+  assert.equal(getNavigationRoute('reports', 'Scheduled Reports'), 'reports:scheduled', 'Scheduled Reports must open its dedicated scheduling page')
   assert.equal(getNavigationRoute('library', 'Student Reading History'), 'unavailable:library:student-reading-history', 'Reading progress history is distinct from the library loan ledger')
   assert.equal(getNavigationRoute('transport', 'Transport Attendance'), 'unavailable:transport:transport-attendance', 'Transport boarding attendance requires its own route attendance register')
   assert.equal(getNavigationRoute('receipts', 'Receipt Templates'), 'unavailable:receipts:receipt-templates', 'Receipt template management must not be confused with receipt printing')
@@ -207,7 +207,7 @@ check('The full institutional menu maps every submenu to a working destination',
 
 
 check('Sidebar workspaces follow the approved parent-section sequence for every role', () => {
-  const expectedGroupOrder = ["dashboard","reports","ai","administration","academic-management","attendance","examinations","behaviour","people-hr","certificates","question-bank","class-tests","library","accounts-finance","fees","receivables","payments","receipts","reconciliation","communication","transport","inventory","facilities","visitors","backup"]
+  const expectedGroupOrder = ["dashboard","attendance","academic-management","examinations","reports","ai","administration","behaviour","people-hr","certificates","question-bank","class-tests","library","accounts-finance","fees","receivables","payments","receipts","reconciliation","communication","transport","inventory","facilities","visitors","backup"]
   const completeCatalogOrder = ["dashboard","administration","institution-config","academic-sessions","classes-sections","subjects","backup","people-hr","attendance","behaviour","certificates","academic-management","curriculum","timetable","teaching","question-bank","examinations","class-tests","library","accounts-finance","fees","receivables","payments","receipts","reconciliation","communication","transport","inventory","facilities","visitors","reports","ai"]
   assert.deepEqual(navigationSectionDefinitions.map(section => section.key), ['main'], 'The sidebar must use one continuous, unlabelled navigation list')
   assert.deepEqual(navigationSectionDefinitions.flatMap(section => section.groupKeys), expectedGroupOrder)
@@ -250,9 +250,10 @@ check('All seven roles receive focused, permission-aware workspaces', () => {
   assert.ok(!roleNavigationGroups('exam_officer').some(group => ['employees','students','accounts-finance','payroll'].includes(group.key)))
 })
 
-check('Bulk attendance uses class registers with P A L marking and atomic saves', () => {
+check('Bulk attendance uses class and section registers without a new Late status', () => {
   const attendance = read('src/components/AttendanceWorkspace.tsx')
-  assert.ok(attendance.includes('All present') && attendance.includes('All absent') && attendance.includes('All late'))
+  assert.ok(attendance.includes('All present') && attendance.includes('All absent') && attendance.includes('All on approved leave') && attendance.includes('sectionName'))
+  assert.ok(!attendance.includes("markAll('late')") && !attendance.includes('>All late</button>'), 'New attendance registers must not offer Late marking')
   assert.ok(attendance.includes('save_student_attendance_register') && attendance.includes('save_employee_attendance_register') && attendance.includes('Save whole register'), 'Student and employee registers must use their validated atomic save RPCs')
   assert.ok(attendance.includes('not_configured') && attendance.includes('provider feed'), 'Automatic attendance must not pretend that a device is connected')
 })
@@ -267,7 +268,7 @@ check('Stage 12 front-office windows use the live tenant-scoped enquiry, notices
 })
 check('Stage 14 AI assistant is transparent when no AI provider is connected', () => {
   const assistant = read('src/components/AIAssistantWorkspace.tsx')
-  assert.ok(assistant.includes('AI provider endpoint') && assistant.includes('disabled') && assistant.includes('no private college records are sent'), 'The assistant must disclose provider setup requirements and must not send prompts without a configured provider')
+  assert.ok(assistant.includes('No AI provider key is configured on the institution server yet') && assistant.includes("provider==='auto'&&!configured.length") && assistant.includes('supabase.functions.invoke'), 'The assistant must disclose server-side provider setup requirements and must not send prompts without a configured provider')
 })
 check('Stage 15 personal account pages use the authenticated session and respect personal scope', () => {
   const personal = read('src/components/PersonalWorkspace.tsx')
@@ -1113,7 +1114,7 @@ check('Stage 8 provides all 12 connected academic work areas', () => {
   const dashboard = read('src/components/Dashboard.tsx')
   const catalog = read('src/lib/institutionalCatalog.ts')
   const routes = read('src/lib/navigationRoutes.ts')
-  for (const name of ['Academic Sessions','Classes & Sections','Subjects & Courses','Curriculum & Syllabus','Lesson Planning','Timetable','Homework & Assignments','Study Materials','Online Learning','Classwork & Classroom Activities','Academic Calendar','Learning Progress']) {
+  for (const name of ['Academic Sessions','Classes & Sections','Subjects','Curriculum','Lesson Plans','Timetable','Homework','Learning Materials','Online Learning','Classroom Activities','Academic Calendar','Learning Progress']) {
     assert.ok(catalog.includes(name), 'Stage 8 navigation is missing ' + name)
     assert.ok(academic.includes(name), 'Stage 8 workspace is missing ' + name)
   }

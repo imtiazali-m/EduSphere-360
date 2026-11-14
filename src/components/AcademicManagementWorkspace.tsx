@@ -120,7 +120,7 @@ const academicSections: AcademicSection[] = [
     ],
   },
   {
-    key: 'subjects-courses', title: 'Subjects & Courses', short: 'Subjects',
+    key: 'subjects-courses', title: 'Subjects', short: 'Subjects',
     description: 'Subject catalogue, course information, credits and teacher / class allocations.',
     icon: BookOpen,
     modes: [
@@ -148,7 +148,7 @@ const academicSections: AcademicSection[] = [
     ],
   },
   {
-    key: 'curriculum', title: 'Curriculum & Syllabus', short: 'Curriculum',
+    key: 'curriculum', title: 'Curriculum', short: 'Curriculum',
     description: 'Curriculum map, objectives, learning outcomes, units, topics and syllabus coverage.',
     icon: Layers3,
     modes: [
@@ -169,7 +169,7 @@ const academicSections: AcademicSection[] = [
     ],
   },
   {
-    key: 'lesson-planning', title: 'Lesson Planning', short: 'Lessons',
+    key: 'lesson-planning', title: 'Lesson Plans', short: 'Lessons',
     description: 'Teacher lesson plans, learning objectives, teaching methods, resources and completion tracking.',
     icon: BookOpenCheck,
     modes: [
@@ -207,7 +207,7 @@ const academicSections: AcademicSection[] = [
     ],
   },
   {
-    key: 'homework-assignments', title: 'Homework & Assignments', short: 'Homework',
+    key: 'homework-assignments', title: 'Homework', short: 'Homework',
     description: 'Create assignments, collect submissions, review work, award marks and share feedback.',
     icon: ClipboardList,
     modes: [
@@ -237,7 +237,7 @@ const academicSections: AcademicSection[] = [
     ],
   },
   {
-    key: 'study-materials', title: 'Study Materials', short: 'Materials',
+    key: 'study-materials', title: 'Learning Materials', short: 'Materials',
     description: 'Upload and share notes, PDFs, presentations, videos, links and learning resources.',
     icon: Library,
     modes: [
@@ -292,7 +292,7 @@ const academicSections: AcademicSection[] = [
     ],
   },
   {
-    key: 'classroom-activities', title: 'Classwork & Classroom Activities', short: 'Classwork',
+    key: 'classroom-activities', title: 'Classroom Activities', short: 'Classwork',
     description: 'Daily classwork, group activities, practical work, participation and teacher observations.',
     icon: Users,
     modes: [
