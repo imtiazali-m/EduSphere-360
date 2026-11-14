@@ -1116,12 +1116,13 @@ check('Required database safeguards and Cloudflare redirects remain in the proje
     '20261113173552_college_private_permission_guards.sql',
     '20261113174054_college_approval_profile_action_alignment.sql',
     '20261113175058_college_custom_role_high_impact_rpc_guards.sql',
+    '20261114032847_college_operations_custom_permission_guards.sql',
   ]) {
     assert.ok(migrations.includes(migration), `${migration} missing`)
   }
   const timestamped = migrations.filter(name => /^202611\d{8}_.+\.sql$/.test(name))
-  assert.equal(timestamped.length, 76, 'Expected seventy-six timestamped migrations matching remote applied history')
-  assert.ok(read('supabase/migrations/README.md').includes('seventy-six timestamped migration files'))
+  assert.equal(timestamped.length, 77, 'Expected seventy-seven timestamped migrations matching remote applied history')
+  assert.ok(read('supabase/migrations/README.md').includes('seventy-seven timestamped migration files'))
   assert.equal(read('public/_redirects').trim(), '/* /index.html 200')
   const envExample = read('.env.example')
   const gitignore = read('.gitignore')
