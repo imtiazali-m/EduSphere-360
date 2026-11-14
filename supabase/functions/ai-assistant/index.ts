@@ -62,9 +62,11 @@ async function callProvider(provider:string,key:string,model:string,system:strin
   }else if(provider==="gemini"){
     const url="https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent?key="+encodeURIComponent(key);
     data=await requestJson(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({systemInstruction:{parts:[{text:system}]},contents:[{role:"user",parts:[{text:combined}]}],generationConfig:{maxOutputTokens:1800}})});
-  }else if(provider==="deepseek"||provider==="xai"||provider==="meta"){
-    const base=provider==="deepseek"?"https://api.deepseek.com":provider==="xai"?"https://api.x.ai":"https://api.meta.ai/v1";
+  }else if(provider==="deepseek"||provider==="meta"){
+    const base=provider==="deepseek"?"https://api.deepseek.com":"https://api.meta.ai/v1";
     data=await requestJson(base+"/chat/completions",{method:"POST",headers:{"Authorization":"Bearer "+key,"Content-Type":"application/json"},body:JSON.stringify({model,messages:[{role:"system",content:system},{role:"user",content:combined}],max_tokens:1800,stream:false})});
+  }else if(provider==="xai"){
+    data=await requestJson("https://api.x.ai/v1/responses",{method:"POST",headers:{"Authorization":"Bearer "+key,"Content-Type":"application/json"},body:JSON.stringify({model,instructions:system,input:combined,max_output_tokens:1800,store:false})});
   }else if(provider==="perplexity"){
     const preset=["fast","low","medium","high","xhigh"].includes(model)?model:"fast";
     data=await requestJson("https://api.perplexity.ai/v1/agent",{method:"POST",headers:{"Authorization":"Bearer "+key,"Content-Type":"application/json"},body:JSON.stringify({preset,input:combined,instructions:system,tools:[{type:"web_search",search_context_size:"medium"}],stream:false})});
