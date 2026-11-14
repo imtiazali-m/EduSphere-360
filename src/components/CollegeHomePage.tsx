@@ -42,7 +42,9 @@ const photo = {
   collegeDirectory: 'https://lh5.googleusercontent.com/p/AF1QipOUOOw-XvK3g8WEHRnrrxkXQq4VnEgx0DW4ufDF=w1080-k-no',
 }
 
-const gallerySlides = [
+type GallerySlide = { src: string; alt: string; title: string; label: string; note: string; source?: string }
+
+const gallerySlides: GallerySlide[] = [
   {
     src: photo.collegeDirectory,
     alt: 'A courtyard and building shown in a public directory photo associated with Government Islamia Degree College Badin.',
@@ -377,7 +379,7 @@ export function CollegeHomePage({ navigate, initialSection }: Props) {
                       <span>{slide.label}</span>
                       <strong>{slide.title}</strong>
                       <small>{slide.note}</small>
-                      {slide.source && <a href={slide.source} target="_blank" rel="noreferrer">View source listing <ExternalLink size={13}/></a>}
+                      {slide.source && <a href={slide.source} target="_blank" rel="noreferrer" tabIndex={index === galleryIndex ? 0 : -1}>View source listing <ExternalLink size={13}/></a>}
                     </figcaption>
                   </figure>
                 ))}
