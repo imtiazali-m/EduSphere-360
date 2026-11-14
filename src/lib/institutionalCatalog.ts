@@ -24,7 +24,7 @@ const group=(key:string,label:string,description:string,icon:string,theme:string
 export const institutionalMenu:WorkspaceMenuGroup[]=[
  group('dashboard','Dashboard','Your single overview for live KPIs, campus performance, approvals, audit activity and institutional health.','LayoutDashboard','blue','',all,[]),
  group('administration','Administration','Institution identity, organisational structure, policies, approvals and access control.','Building2','slate','administration',management,[
-  'Institute Profile','Campus and Branch Management','Academic Structure & Sections','Department Directory','Designation Catalogue','Organisational Structure','Approval Workflows','Student Policies','Faculty Policies','Administrative Audit','User Access & Invitations','Role & Permission Management','Institute Settings','Branding & Document Settings','Security & Access History'
+  'Overview','Institute Profile','Campus and Branch Management','Academic Structure & Sections','Department Directory','Designation Catalogue','Organisational Structure','Approval Workflows','Student Policies','Faculty Policies','Administrative Audit','User Access & Invitations','Role & Permission Management','Institute Settings','Branding & Document Settings','Document Access','Security & Access'
  ]),
  group('institution-config','Institutional Systems and Configuration','Education levels, institution/campus settings, invitations, role rights, module rights and security.','Settings','slate','institution_config',management,[
   'Institution Configuration','Education System Configuration','Education Levels','Grade and Academic Level Configuration','Institution Settings','Campus Settings','Academic Settings','General System Settings','Invitations and Access','User Management','Role Management','User Permissions','Module Permissions','Approval Permissions','Security Configuration'
@@ -48,7 +48,7 @@ export const institutionalMenu:WorkspaceMenuGroup[]=[
   'HR & Recruitment','Employee Contracts & Documents','Employee Performance','Payroll & Salary Records','Alumni'
  ]),
  group('attendance','Attendance & Leave','Daily attendance registers, leave decisions, reporting and restricted student-care records.','CalendarCheck','rose','attendance',staff.concat(['student','parent']),[
-  'Student Attendance','Teacher Attendance','Staff Attendance','Leave Management','Attendance Reports','Student Discipline','Student Counselling & Wellbeing','Health & Emergency Records'
+  'Student Attendance','Teacher Attendance','Staff Attendance','Student Attendance Reports','Teacher Attendance Reports','Staff Attendance Reports','Attendance History','Automatic Attendance','Student Cards','Teacher Cards','Staff Cards','Biometric Attendance','Leave Management','Attendance Reports','Student Discipline','Student Counselling & Wellbeing','Health & Emergency Records'
  ]),
  group('behaviour','Behaviour and Skills','Positive recognition, safeguarding-aware behaviour logs, incidents, skills and competency tracking.','HeartHandshake','pink','behaviour',staff.concat(['student','parent']),[
   'Behaviour Dashboard','Behaviour Records','Positive Behaviour','Disciplinary Incidents','Rewards and Recognition','Warnings','Student Skills','Co-curricular Activities','Competency Tracking','Student Progress History','Behaviour Analytics','Downloadable Behaviour Reports'
@@ -61,8 +61,8 @@ export const institutionalMenu:WorkspaceMenuGroup[]=[
   'Letters & Applications',
   'Document Verification'
  ]),
- group('academic-management','Academic Management & Learning','Plan sessions, classes, subjects, curriculum, lesson delivery, timetables, homework, learning materials, digital courses, classroom work, calendar and learner progress.','GraduationCap','blue','academic-management',academic.concat(['student','parent']),[
-  'Academic Sessions','Classes & Sections','Subjects & Courses','Curriculum & Syllabus','Lesson Planning','Timetable','Homework & Assignments','Study Materials','Online Learning','Classwork & Classroom Activities','Academic Calendar','Learning Progress'
+ group('academic-management','Academic Management','Plan sessions, classes, subjects, curriculum, lesson delivery, timetables, homework, learning materials, digital courses, classroom work, calendar and learner progress.','GraduationCap','blue','academic-management',academic.concat(['student','parent']),[
+  'Academic Sessions','Classes','Sections','Subjects','Curriculum','Lesson Plans','Timetable','Assignments','Study Materials','Online Learning','Class Activities','Academic Calendar','Learning Progress'
  ]),
  group('curriculum','Curriculum and Learning Resources','Curriculum maps, syllabus, outcomes, teaching resources, chapter materials and progress analytics.','BookOpen','teal','curriculum',family,[
   'Curriculum Dashboard','Curriculum Map','Syllabus Management','Learning Outcomes','Lesson Plans','Teaching Resources','Learning Materials','Resource Downloads','Subject-wise Curriculum','Chapter-wise Learning Resources','Curriculum Coverage','Learning Progress Tracking','Curriculum Reports'

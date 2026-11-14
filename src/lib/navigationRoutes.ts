@@ -90,6 +90,15 @@ const attendanceViews: Record<string, string> = {
   'attendance-calendar': 'history',
   'attendance-history': 'history',
   'attendance-devices': 'devices',
+  'attendance-reports': 'reports',
+  'student-attendance-reports': 'student-reports',
+  'teacher-attendance-reports': 'teacher-reports',
+  'staff-attendance-reports': 'staff-reports',
+  'automatic-attendance': 'devices',
+  'student-cards': 'student-cards',
+  'teacher-cards': 'teacher-cards',
+  'staff-cards': 'staff-cards',
+  'biometric-attendance': 'biometric',
 }
 
 const reportViews: Record<string, string> = {
@@ -247,6 +256,8 @@ const institutionalOperationsItems: Record<string, Record<string,string>> = {
   behaviour: {
     'behaviour-dashboard':'register','behaviour-records':'register','positive-behaviour':'positive',
     'disciplinary-incidents':'register','rewards-and-recognition':'positive','warnings':'register',
+    'student-skills':'skills','co-curricular-activities':'activities','competency-tracking':'competencies',
+    'student-progress-history':'progress','behaviour-analytics':'analytics','downloadable-behaviour-reports':'reports',
   },
   certificates: {
     'certificate-dashboard':'verify','character-certificate':'issue','leaving-certificate':'issue',
@@ -263,23 +274,22 @@ const institutionalOperationsItems: Record<string, Record<string,string>> = {
 }
 
 const administrationGovernanceItems: Record<string,string> = {
+  'overview':'overview',
   'institute-profile':'profile',
   'academic-structure-sections':'academic',
   'department-directory':'departments',
   'designation-catalogue':'designations',
-  'departments-designations':'departments',
+  'organisational-structure':'organization',
+  'approval-workflows':'approvals',
   'student-policies':'policies-students',
   'faculty-policies':'policies-faculty',
-  'organisational-structure':'organization',
-  'system-configuration':'system',
-  'approval-workflows':'approvals',
-  'policies-rules':'policies',
   'administrative-audit':'audit',
   'user-access-invitations':'accounts',
   'role-permission-management':'permissions',
   'institute-settings':'settings',
   'branding-document-settings':'branding',
-  'security-access-history':'security',
+  'document-access':'documents',
+  'security-access':'security',
 }
 const institutionConfigurationItems: Record<string,string> = {
   'institution-configuration':'settings','education-system-configuration':'settings','education-levels':'academic',
@@ -336,6 +346,10 @@ function dedicatedRoute(groupKey: string, itemKey: string): string | undefined {
   }
   if (groupKey === 'attendance') {
     if (itemKey === 'leave-applications') return 'employees:leave'
+    if (itemKey === 'leave-management') return 'care:leave'
+    if (itemKey === 'student-discipline') return 'care:discipline'
+    if (itemKey === 'student-counselling-wellbeing') return 'care:counselling'
+    if (itemKey === 'health-emergency-records') return 'care:health'
     const view = attendanceViews[itemKey]
     return view ? `attendance:${view}` : undefined
   }
@@ -452,15 +466,16 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
   if (groupKey === 'academic-management') {
     const academicWindows: Record<string,string> = {
       'academic-sessions':'academic-sessions',
-      'classes-sections':'classes-sections',
-      'subjects-courses':'subjects-courses',
-      'curriculum-syllabus':'curriculum',
-      'lesson-planning':'lesson-planning',
+      'classes':'classes-sections',
+      'sections':'sections',
+      'subjects':'subjects-courses',
+      'curriculum':'curriculum',
+      'lesson-plans':'lesson-planning',
       'timetable':'timetable',
-      'homework-assignments':'homework-assignments',
+      'assignments':'homework-assignments',
       'study-materials':'study-materials',
       'online-learning':'online-learning',
-      'classwork-classroom-activities':'classroom-activities',
+      'class-activities':'classroom-activities',
       'academic-calendar':'academic-calendar',
       'learning-progress':'learning-progress',
     }
@@ -495,8 +510,18 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
       'student-attendance':'attendance:students',
       'teacher-attendance':'attendance:teachers',
       'staff-attendance':'attendance:staff',
+      'attendance-history':'attendance:history',
+      'student-attendance-reports':'attendance:student-reports',
+      'teacher-attendance-reports':'attendance:teacher-reports',
+      'staff-attendance-reports':'attendance:staff-reports',
+      'automatic-attendance':'attendance:devices',
+      'student-cards':'attendance:student-cards',
+      'teacher-cards':'attendance:teacher-cards',
+      'staff-cards':'attendance:staff-cards',
+      'attendance-cards':'attendance:cards',
+      'biometric-attendance':'attendance:biometric',
       'leave-management':'care:leave',
-      'attendance-reports':'care:reports',
+      'attendance-reports':'attendance:reports',
       'student-discipline':'care:discipline',
       'student-counselling-wellbeing':'care:counselling',
       'health-emergency-records':'care:health',
@@ -505,10 +530,10 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
   }
   if (groupKey === 'attendance' && itemKey === 'attendance-analytics') return 'reports:attendance'
   if (groupKey === 'attendance' && itemKey === 'attendance-alerts') return 'unavailable:attendance:attendance-alerts'
-  if (groupKey === 'reports' && ['custom-report-builder','scheduled-reports','report-templates','report-history'].includes(itemKey)) return 'unavailable:reports:'+itemKey
+  // Builder, schedules, templates and history are dedicated report workspaces.
   if (groupKey === 'question-bank' && ['question-bank-import-and-export','question-paper-version-history'].includes(itemKey)) return 'unavailable:question-bank:'+itemKey
   if (groupKey === 'curriculum' && ['teaching-resources','learning-materials','resource-downloads','chapter-wise-learning-resources','learning-progress-tracking'].includes(itemKey)) return 'unavailable:curriculum:'+itemKey
-  if (groupKey === 'behaviour' && ['student-progress-history','behaviour-analytics','downloadable-behaviour-reports'].includes(itemKey)) return 'unavailable:behaviour:'+itemKey
+  // Behaviour analytics, progress history and reports are handled by the dedicated behaviour workspace.
   if (groupKey === 'certificates' && ['experience-certificate','id-card-designer','certificate-templates','editable-document-templates','bulk-certificate-generation'].includes(itemKey)) return 'unavailable:certificates:'+itemKey
   if (groupKey === 'library' && ['reading-records','reading-cards','student-reading-history'].includes(itemKey)) return 'unavailable:library:'+itemKey
   if (groupKey === 'transport' && itemKey === 'transport-attendance') return 'unavailable:transport:transport-attendance'

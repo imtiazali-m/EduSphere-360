@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
 import {
   Activity, AlertTriangle, CalendarDays, Download, FileText,
   HeartPulse, LockKeyhole, MessageSquare, RefreshCw, ShieldCheck,
@@ -49,6 +49,9 @@ export function Stage7CareWorkspace({initialWindow='leave',onToast}:{initialWind
   const [leaveFile,setLeaveFile]=useState<File|null>(null)
   const [reviewNotes,setReviewNotes]=useState<Record<string,string>>({})
   const [saving,setSaving]=useState(false)
+  const [leavePeriod,setLeavePeriod]=useState<'week'|'month'|'year'|'session'|'all'>('month')
+  const [leaveStatusFilter,setLeaveStatusFilter]=useState('all')
+  const [leavePeopleFilter,setLeavePeopleFilter]=useState<'all'|'student'|'employee'>('all')
   const [reportFrom,setReportFrom]=useState(today().slice(0,8)+'01')
   const [reportTo,setReportTo]=useState(today())
   const [reportClass,setReportClass]=useState('')
@@ -156,6 +159,32 @@ export function Stage7CareWorkspace({initialWindow='leave',onToast}:{initialWind
     finally{setLoading(false)}
   },[user?.id,user?.institutionId,user?.role,isAdmin])
 
+  const leaveWindow=useMemo(()=>{
+    const now=new Date()
+    const to=now.toLocaleDateString('en-CA')
+    const start=new Date(now)
+    if(leavePeriod==='week'){const day=(start.getDay()+6)%7;start.setDate(start.getDate()-day)}
+    if(leavePeriod==='month')start.setDate(1)
+    if(leavePeriod==='year')start.setMonth(0,1)
+    if(leavePeriod==='session'){const month=now.getMonth()+1;const startYear=month>=8?now.getFullYear():now.getFullYear()-1;start.setFullYear(startYear,7,1)}
+    const from=leavePeriod==='all'?'0001-01-01':start.toLocaleDateString('en-CA')
+    return {from,to}
+  },[leavePeriod])
+  const filteredLeaveRows=useMemo(()=>leaveRows.filter(row=>{
+    const kind=String(row.person_type??'student')
+    if(leavePeopleFilter!=='all'&&kind!==leavePeopleFilter)return false
+    if(leaveStatusFilter!=='all'&&String(row.status??'')!==leaveStatusFilter)return false
+    const rowStart=String(row.start_date??'')
+    const rowEnd=String(row.end_date??row.start_date??'')
+    return rowEnd>=leaveWindow.from&&rowStart<=leaveWindow.to
+  }),[leaveRows,leavePeopleFilter,leaveStatusFilter,leaveWindow])
+  const leaveStats=useMemo(()=>({
+    requests:filteredLeaveRows.length,
+    pending:filteredLeaveRows.filter(row=>row.status==='pending').length,
+    approved:filteredLeaveRows.filter(row=>row.status==='approved').length,
+    rejected:filteredLeaveRows.filter(row=>row.status==='rejected').length,
+    approvedDays:filteredLeaveRows.filter(row=>row.status==='approved').reduce((sum,row)=>sum+Number(row.day_count??dayCount(String(row.start_date),String(row.end_date))),0)
+  }),[filteredLeaveRows])
   const loadLeave=useCallback(async()=>{
     if(!supabase||!user)return
     const [studentResult,employeeResult,balanceResult]=await Promise.all([
@@ -483,8 +512,14 @@ export function Stage7CareWorkspace({initialWindow='leave',onToast}:{initialWind
         </form>
       </section>
       <section className="s7-panel">
-        <div className="s7-panel-title"><div><span>APPLICATION HISTORY</span><h2>Leave requests</h2></div><strong>{leaveRows.length} records</strong></div>
-        {leaveRows.length===0?<div className="s7-empty">No leave applications are available for this account yet.</div>:<div className="s7-table-wrap"><table><thead><tr><th>Applicant</th><th>Type</th><th>Dates</th><th>Days</th><th>Status</th><th>Document / review</th></tr></thead><tbody>{leaveRows.map(row=>{
+        <div className="s7-panel-title"><div><span>APPLICATION HISTORY</span><h2>Leave requests</h2><p>{leaveWindow.from==='0001-01-01'?'All recorded periods':leaveWindow.from+' to '+leaveWindow.to}</p></div><strong>{filteredLeaveRows.length.toLocaleString()} records</strong></div>
+        <div className="s7-filters">
+          <label>Period<select value={leavePeriod} onChange={e=>setLeavePeriod(e.target.value as typeof leavePeriod)}><option value="week">This week</option><option value="month">This month</option><option value="year">This year</option><option value="session">Academic session</option><option value="all">All periods</option></select></label>
+          <label>Applicant type<select value={leavePeopleFilter} onChange={e=>setLeavePeopleFilter(e.target.value as typeof leavePeopleFilter)}><option value="all">All applicants</option><option value="student">Students</option><option value="employee">Teachers / staff</option></select></label>
+          <label>Status<select value={leaveStatusFilter} onChange={e=>setLeaveStatusFilter(e.target.value)}><option value="all">All statuses</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select></label>
+        </div>
+        <div className="s7-metrics s7-leave-metrics"><div><b>{leaveStats.requests}</b><span>Requests</span></div><div><b>{leaveStats.pending}</b><span>Pending</span></div><div><b>{leaveStats.approved}</b><span>Approved</span></div><div><b>{leaveStats.rejected}</b><span>Rejected</span></div><div><b>{leaveStats.approvedDays}</b><span>Approved days</span></div></div>
+        {filteredLeaveRows.length===0?<div className="s7-empty">No leave applications match this period and filter.</div>:<div className="s7-table-wrap"><table><thead><tr><th>Applicant</th><th>Type</th><th>Dates</th><th>Days</th><th>Status</th><th>Document / review</th></tr></thead><tbody>{filteredLeaveRows.map(row=>{
           const student=students.find(s=>s.id===row.student_id),employee=employees.find(e=>e.id===row.teacher_id)
           const applicant=row.person_type==='student'?student?.full_name??'Student':employee?.full_name??'Employee'
           const path=String(row.supporting_document_path??'')

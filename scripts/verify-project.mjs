@@ -141,7 +141,7 @@ check('The full institutional menu maps every submenu to a working destination',
   assert.equal(getNavigationRoute('reports', 'Student Reports'), 'reports:students', 'Student reports must open the student report window')
   assert.equal(getNavigationRoute('reports', 'Attendance Reports'), 'reports:attendance', 'Attendance reports must open the attendance report window')
   assert.equal(getNavigationRoute('teaching', 'Homework'), 'assignments:open', 'Homework must open the open-coursework view')
-  assert.equal(getNavigationRoute('attendance', 'Attendance Reports'), 'care:reports', 'Stage 7 attendance reports must open the dedicated care/report workspace')
+  assert.equal(getNavigationRoute('attendance', 'Attendance Reports'), 'attendance:reports', 'Attendance reports must open the dedicated attendance report workspace')
   assert.equal(getNavigationRoute('students', 'Student Directory'), 'students:directory', 'Student Directory must open the student directory view')
   assert.equal(getNavigationRoute('students', 'Bulk Student Operations'), 'unavailable:students:bulk-student-operations', 'Bulk student operations must not imply a batch edit workflow')
   assert.equal(getNavigationRoute('students', 'Student Data Export', 'student'), 'unavailable:students:student-data-export', 'Student accounts must not receive institution-wide data export access')
@@ -252,9 +252,11 @@ check('All seven roles receive focused, permission-aware workspaces', () => {
 
 check('Bulk attendance uses class registers with P A L marking and atomic saves', () => {
   const attendance = read('src/components/AttendanceWorkspace.tsx')
-  assert.ok(attendance.includes('All present') && attendance.includes('All absent') && attendance.includes('All late'))
+  assert.ok(attendance.includes('All present') && attendance.includes('All absent') && attendance.includes('All leave'), 'Bulk attendance must offer present, absent and approved leave without a new late option')
+  assert.ok(attendance.includes("'leave_pending'") && attendance.includes('Leave not approved'), 'Student attendance must distinguish leave that has not been approved')
   assert.ok(attendance.includes('save_student_attendance_register') && attendance.includes('save_employee_attendance_register') && attendance.includes('Save whole register'), 'Student and employee registers must use their validated atomic save RPCs')
   assert.ok(attendance.includes('not_configured') && attendance.includes('provider feed'), 'Automatic attendance must not pretend that a device is connected')
+  assert.ok(attendance.includes('record_student_attendance_scan') && attendance.includes('Biometric attendance access'), 'QR scan and biometric readiness must have separate dedicated workflows')
 })
 check('Stage 12 front-office windows use the live tenant-scoped enquiry, notices and calendar tables', () => {
   const frontOffice = read('src/components/FrontOfficeWorkspace.tsx')

@@ -120,6 +120,22 @@ const academicSections: AcademicSection[] = [
     ],
   },
   {
+    key: 'sections', title: 'Sections', short: 'Sections',
+    description: 'Maintain the section register attached to each class and academic session.',
+    icon: Layers3,
+    modes: [
+      { key: 'sections', title: 'Section register', table: 'classes', description: 'Create and maintain section labels on the institution class register.',
+        writeRoles: admins,
+        fields: [
+          f('name','Class name','text',true),f('section','Section name','text',true),
+          f('grade_level','Grade / academic level'),f('academic_session_id','Academic session','select',false,'sessions'),
+          f('capacity','Section capacity','number'),f('description','Description','textarea'),f('is_active','Active section','boolean'),
+        ],
+        columns: [c('name','Class'),c('section','Section'),c('grade_level','Grade'),c('academic_session_id','Academic session','sessions'),c('capacity','Capacity'),c('is_active','Active')],
+      },
+    ],
+  },
+  {
     key: 'subjects-courses', title: 'Subjects & Courses', short: 'Subjects',
     description: 'Subject catalogue, course information, credits and teacher / class allocations.',
     icon: BookOpen,
@@ -265,10 +281,13 @@ const academicSections: AcademicSection[] = [
           f('title','Course title','text',true),f('course_code','Course code'),f('class_id','Class / section','select',true,'classes'),
           f('subject_id','Subject','select',false,'subjects'),f('academic_session_id','Academic session','select',false,'sessions'),
           f('description','Course description','textarea'),f('learning_outcomes','Learning outcomes','textarea'),
+          f('meeting_provider','Live class provider','select',false,undefined,select(['none','google_meet','zoom','other'])),
+          f('meeting_url','Google Meet / Zoom / live class URL','url'),f('youtube_url','YouTube lesson / recording URL','url'),
+          f('resource_links','Additional learning links (JSON array)','textarea',false,undefined,undefined,{jsonArray:true}),
           f('is_optional','Optional digital course','boolean'),f('start_date','Start date','date'),f('end_date','End date','date'),
           f('status','Status','select',true,undefined,select(['draft','published','archived'])),
         ],
-        columns: [c('title','Course'),c('course_code','Code'),c('class_id','Class','classes'),c('subject_id','Subject','subjects'),c('is_optional','Optional'),c('status','Status')],
+        columns: [c('title','Course'),c('course_code','Code'),c('class_id','Class','classes'),c('subject_id','Subject','subjects'),c('meeting_provider','Live class'),c('meeting_url','Join link'),c('youtube_url','YouTube link'),c('is_optional','Optional'),c('status','Status')],
       },
       { key: 'units', title: 'Learning units', table: 'learning_course_units', description: 'Add lessons, text content, video links and required learning activities to a course.',
         writeRoles: manager,
@@ -709,7 +728,7 @@ export function AcademicManagementWorkspace({ initialWindow = 'academic-sessions
       <header className="ed360-academic-heading">
         <div className="ed360-academic-heading-copy">
           <span>STAGE 08 · ACADEMIC OPERATIONS</span>
-          <h1>Academic Management & Learning</h1>
+          <h1>Academic Management</h1>
           <p>{section.description}</p>
         </div>
         <div className="ed360-academic-heading-tools">
@@ -773,7 +792,7 @@ export function AcademicManagementWorkspace({ initialWindow = 'academic-sessions
                 {filteredRows.map(row => <tr key={row.id}>
                   {activeMode.columns.map(column => <td key={column.key}>{column.key === 'status' || column.key === 'progress_status' || column.key === 'visibility' ?
                     <span className={'ed360-academic-status status-' + String(row[column.key] ?? '').toLowerCase().replace(/[^a-z0-9]+/g,'-')}>{displayCell(row,column)}</span> :
-                    <span title={String(row[column.key] ?? '')}>{displayCell(row,column)}</span>}</td>)}
+                    {['meeting_url','youtube_url','resource_url'].includes(column.key)&&String(row[column.key]??'').startsWith('https://')?<a className="ed360-academic-external-link" href={String(row[column.key])} target="_blank" rel="noreferrer"><ExternalLink size={12}/> Open link</a>:<span title={String(row[column.key] ?? '')}>{displayCell(row,column)}</span>}}</td>)}
                   <td className="ed360-academic-row-actions">
                     {activeMode.table === 'study_materials' && (row.storage_path || row.external_url) ? <button type="button" aria-label="Open learning resource" title="Open resource" onClick={() => void openMaterial(row)}><ExternalLink size={15}/></button> : null}
                     {canEditRow() ? <button type="button" aria-label="Edit record" title="Edit record" onClick={() => openEdit(row)}><Pencil size={15}/></button> : null}

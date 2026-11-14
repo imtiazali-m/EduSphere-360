@@ -5,18 +5,19 @@ import { supabase } from '../lib/supabase'
 import { userFacingError } from '../lib/userErrors'
 import { listRecords } from '../lib/data'
 import { downloadCsv } from '../lib/csv'
+import { exportXlsx, exportDocx, exportExcelXml, exportWordXml, printOfficeReport } from '../lib/officeExport'
 import type { RecordRow } from '../lib/types'
 import '../styles/institution-operations.css'
 
 type Domain = 'question-bank'|'curriculum'|'behaviour'|'certificates'|'visitors'|'facilities'
-type View = 'pool'|'papers'|'units'|'coverage'|'register'|'positive'|'follow-up'|'issue'|'verify'|'log'|'checked-in'|'history'|'assets'|'maintenance'
+type View = 'pool'|'papers'|'units'|'coverage'|'register'|'positive'|'follow-up'|'skills'|'activities'|'competencies'|'progress'|'analytics'|'reports'|'issue'|'verify'|'log'|'checked-in'|'history'|'assets'|'maintenance'
 type Row = RecordRow & { id:string; [key:string]:unknown }
 type Props = { workspaceKey:string; initialWindow?:string; onToast:(message:string,error?:boolean)=>void }
 type Draft = Record<string,string>
 
 const viewLabels:Record<View,string>={
   pool:'Question bank',papers:'Question papers',units:'Curriculum units',coverage:'Curriculum coverage',
-  register:'Behaviour register',positive:'Positive recognition', 'follow-up':'Follow-up cases',
+  register:'Behaviour register',positive:'Positive recognition', 'follow-up':'Follow-up cases',skills:'Student skills',activities:'Co-curricular activities',competencies:'Competency tracking',progress:'Student progress history',analytics:'Behaviour analytics',reports:'Behaviour reports',
   issue:'Issue certificate',verify:'Certificate register',log:'Visitor log','checked-in':'Currently on site',
   history:'Visit history',assets:'Asset register',maintenance:'Maintenance queue',
 }
@@ -47,7 +48,7 @@ const domainDescriptions:Record<Domain,string>={
 const views:Record<Domain,View[]>={
   'question-bank':['pool','papers'],
   curriculum:['units','coverage'],
-  behaviour:['register','positive','follow-up'],
+  behaviour:['register','positive','follow-up','skills','activities','competencies','progress','analytics','reports'],
   certificates:['verify','issue'],
   visitors:['log','checked-in','history'],
   facilities:['assets','maintenance','history'],
@@ -64,6 +65,9 @@ export function InstitutionOperationsWorkspace({workspaceKey,initialWindow,onToa
   const teacher=['owner','admin','teacher'].includes(user!.role)
   const firstView=(views[selectedDomain] as string[]).includes(initialWindow??'')?initialWindow as View:initialViews[selectedDomain] as View
   const [view,setView]=useState<View>(firstView)
+ const [behaviourExportFormat,setBehaviourExportFormat]=useState<'csv'|'xlsx'|'xls'|'docx'|'doc'|'pdf'>('xlsx')
+ const [behaviourTemplate,setBehaviourTemplate]=useState('full-register')
+  useEffect(()=>{setView(firstView);setSearch('');setListPage(1)},[initialWindow,selectedDomain])
   const [loading,setLoading]=useState(true)
   const [busy,setBusy]=useState(false)
   const [error,setError]=useState('')
@@ -356,8 +360,35 @@ export function InstitutionOperationsWorkspace({workspaceKey,initialWindow,onToa
   }
 
   function renderBehaviour(){
-    const rows=visibleBehaviour.filter(row=>view==='positive'?row.event_type==='positive':view==='follow-up'?row.follow_up_required===true:view==='register'?row.event_type!=='positive':true)
-    return <div className="iop-panel"><header><div><h2>{view==='positive'?'Positive behaviour and recognition':view==='follow-up'?'Student care follow-up queue':'Student behaviour register'}</h2><p>Private student-care records. Family visibility is explicit and off by default; safeguarding notes remain staff-only unless authorised to share.</p></div>{teacher&&<button className="iop-button primary" onClick={()=>openDialog('behaviour')}><Plus size={14}/> Record event</button>}</header><div className="iop-kpis"><article><small>Total records</small><b>{behaviour.length}</b></article><article><small>Positive</small><b>{behaviour.filter(row=>row.event_type==='positive').length}</b></article><article><small>Concerns / incidents</small><b>{behaviour.filter(row=>['concern','incident','safeguarding'].includes(String(row.event_type))).length}</b></article><article><small>Follow-up due</small><b>{behaviour.filter(row=>row.follow_up_required&&row.status!=='resolved'&&row.status!=='closed').length}</b></article></div><label className="iop-search">Search student-care records<input value={search} onChange={e=>{setSearch(e.target.value);setListPage(1)}} placeholder="Student, category or event…"/></label>{rows.length?<div className="iop-table-wrap"><table><thead><tr><th>Student</th><th>Date</th><th>Type / category</th><th>Summary</th><th>Severity</th><th>Family visibility</th><th>Follow-up</th><th>Status</th></tr></thead><tbody>{pageRows(rows).map(row=><tr key={row.id}><td>{String(students.find(x=>x.id===row.student_id)?.full_name??'Student')}</td><td>{prettyDate(row.event_date)}</td><td>{toLabel(row.event_type)}<small>{String(row.category)}</small></td><td>{String(row.summary)}</td><td>{toLabel(row.severity)}</td><td>{row.family_visible?'Visible':'Staff only'}</td><td>{row.follow_up_required?prettyDate(row.follow_up_date):'—'}</td><td><span className={'iop-status '+String(row.status)}>{toLabel(row.status)}</span></td></tr>)}</tbody></table></div>:<div className="iop-empty">No records in this behaviour view.</div>}</div>
+    const rows=visibleBehaviour.filter(row=>view==='positive'?row.event_type==='positive':view==='follow-up'?row.follow_up_required===true:view==='skills'?String(row.category??'').toLowerCase().includes('skill'):view==='activities'?String(row.category??'').toLowerCase().includes('activity')||String(row.category??'').toLowerCase().includes('co-curricular'):view==='competencies'?String(row.category??'').toLowerCase().includes('competenc'):view==='register'?row.event_type!=='positive':true)
+    return <div className="iop-panel"><header><div><h2>{({register:'Student behaviour register',positive:'Positive behaviour and recognition','follow-up':'Student care follow-up queue',skills:'Student skills register',activities:'Co-curricular activity records',competencies:'Student competency evidence',progress:'Student progress history',analytics:'Behaviour analytics',reports:'Downloadable behaviour reports'} as Record<string,string>)[view]??'Student behaviour register'}</h2><p>{view==='analytics'?'Aggregated views of saved behaviour and recognition entries.':view==='reports'?'Export the selected authorised behaviour records for review.':view==='skills'?'Events categorised as skill development, strengths or personal skills.':view==='activities'?'Entries explicitly categorised as co-curricular or activity participation.':'Private student-care records. Family visibility remains explicit and off by default; safeguarding notes are staff-only.'}</p></div>{teacher&&<button className="iop-button primary" onClick={()=>openDialog('behaviour')}><Plus size={14}/> Record event</button>}</header>{view==='analytics'&&<div className="iop-kpis"><article><small>Low severity</small><b>{rows.filter(row=>row.severity==='low').length}</b></article><article><small>Medium severity</small><b>{rows.filter(row=>row.severity==='medium').length}</b></article><article><small>High / critical</small><b>{rows.filter(row=>['high','critical'].includes(String(row.severity))).length}</b></article><article><small>Resolved / closed</small><b>{rows.filter(row=>['resolved','closed'].includes(String(row.status))).length}</b></article></div>}
+     {view==='reports'&&<div className="iop-report-export">
+      <p>{rows.length.toLocaleString()} selected behaviour records</p>
+      <label>Report template<select value={behaviourTemplate} onChange={e=>setBehaviourTemplate(e.target.value)}>{[['full-register','Full behaviour register'],['incident-report','Disciplinary incidents'],['positive-recognition','Positive recognition'],['follow-up-register','Follow-up actions'],['skills-development','Student skills'],['co-curricular','Co-curricular participation'],['competency-evidence','Competency tracking'],['student-progress','Student progress history']].map(([value,label])=><option value={value} key={value}>{label}</option>)}</select></label>
+      <label>Export format<select value={behaviourExportFormat} onChange={e=>setBehaviourExportFormat(e.target.value as typeof behaviourExportFormat)}><option value="csv">CSV</option><option value="xlsx">Excel XLSX</option><option value="xls">Excel XLS</option><option value="docx">Word DOCX</option><option value="doc">Word DOC</option><option value="pdf">PDF / Print</option></select></label>
+      <button className="iop-button primary" onClick={()=>{
+       const filteredRows=rows.filter(row=>{
+        if(behaviourTemplate==='incident-report')return ['concern','incident','safeguarding'].includes(String(row.event_type))
+        if(behaviourTemplate==='positive-recognition')return row.event_type==='positive'
+        if(behaviourTemplate==='follow-up-register')return row.follow_up_required===true
+        if(behaviourTemplate==='skills-development')return String(row.category??'').toLowerCase().includes('skill')
+        if(behaviourTemplate==='co-curricular')return String(row.category??'').toLowerCase().includes('activity')||String(row.category??'').toLowerCase().includes('co-curricular')
+        if(behaviourTemplate==='competency-evidence')return String(row.category??'').toLowerCase().includes('competenc')
+        return true
+       })
+       const exportRows=filteredRows.map(row=>({student:students.find(x=>x.id===row.student_id)?.full_name??'Student',date:row.event_date,event_type:row.event_type,category:row.category,severity:row.severity,summary:row.summary,status:row.status,follow_up:row.follow_up_required,follow_up_date:row.follow_up_date,family_visible:row.family_visible}))
+       const cols=[{key:'student',label:'Student'},{key:'date',label:'Date'},{key:'event_type',label:'Event type'},{key:'category',label:'Category'},{key:'severity',label:'Severity'},{key:'summary',label:'Summary'},{key:'status',label:'Status'},{key:'follow_up',label:'Follow-up'},{key:'follow_up_date',label:'Follow-up date'},{key:'family_visible',label:'Family visible'}]
+       const title=behaviourTemplate.replaceAll('-',' ').replace(/\b\w/g,ch=>ch.toUpperCase())
+       const filename='gidc-behaviour-'+behaviourTemplate+'-'+day()
+       if(behaviourExportFormat==='xlsx')exportXlsx(filename+'.xlsx',title,exportRows,cols)
+       else if(behaviourExportFormat==='xls')exportExcelXml(filename+'.xls',title,exportRows,cols)
+       else if(behaviourExportFormat==='docx')exportDocx(filename+'.docx',title,exportRows,cols)
+       else if(behaviourExportFormat==='doc')exportWordXml(filename+'.doc',title,exportRows,cols)
+       else if(behaviourExportFormat==='pdf')printOfficeReport(title,exportRows,cols,'Government Islamia Degree College, Badin')
+       else downloadCsv(filename+'.csv',exportRows,cols)
+      }}><Download size={14}/> Export report</button>
+     </div>}
+     <div className="iop-kpis"><article><small>Total records</small><b>{behaviour.length.toLocaleString()}</b></article><article><small>Positive recognition</small><b>{behaviour.filter(row=>row.event_type==='positive').length.toLocaleString()}</b></article><article><small>Open concerns</small><b>{behaviour.filter(row=>['concern','incident','safeguarding'].includes(String(row.event_type))&&!['resolved','closed'].includes(String(row.status))).length.toLocaleString()}</b></article><article><small>Follow-up due</small><b>{behaviour.filter(row=>row.follow_up_required&&row.status!=='resolved'&&row.status!=='closed').length.toLocaleString()}</b></article></div><label className="iop-search">Search student-care records<input value={search} onChange={e=>{setSearch(e.target.value);setListPage(1)}} placeholder="Student, category or event…"/></label>{rows.length?<div className="iop-table-wrap"><table><thead><tr><th>Student</th><th>Date</th><th>Type / category</th><th>Summary</th><th>Severity</th><th>Family visibility</th><th>Follow-up</th><th>Status</th></tr></thead><tbody>{pageRows(rows).map(row=><tr key={row.id}><td>{String(students.find(x=>x.id===row.student_id)?.full_name??'Student')}</td><td>{prettyDate(row.event_date)}</td><td>{toLabel(row.event_type)}<small>{String(row.category)}</small></td><td>{String(row.summary)}</td><td>{toLabel(row.severity)}</td><td>{row.family_visible?'Visible':'Staff only'}</td><td>{row.follow_up_required?prettyDate(row.follow_up_date):'—'}</td><td><span className={'iop-status '+String(row.status)}>{toLabel(row.status)}</span></td></tr>)}</tbody></table></div>:<div className="iop-empty">No records in this behaviour view.</div>}</div>
   }
 
   function renderCertificates(){
@@ -442,7 +473,7 @@ export function InstitutionOperationsWorkspace({workspaceKey,initialWindow,onToa
   const recordCount=selectedDomain==='question-bank'?questions.length+papers.length:selectedDomain==='curriculum'?curriculum.length:selectedDomain==='behaviour'?behaviour.length:selectedDomain==='certificates'?certificates.length:selectedDomain==='visitors'?visitors.length:assets.length+maintenance.length
   const viewRowCount=selectedDomain==='question-bank'?Math.max(visibleQuestions.length,visiblePapers.length)
     :selectedDomain==='curriculum'?visibleCurriculum.length
-    :selectedDomain==='behaviour'?visibleBehaviour.filter(row=>view==='positive'?row.event_type==='positive':view==='follow-up'?row.follow_up_required===true:view==='register'?row.event_type!=='positive':true).length
+    :selectedDomain==='behaviour'?visibleBehaviour.filter(row=>view==='positive'?row.event_type==='positive':view==='follow-up'?row.follow_up_required===true:view==='skills'?String(row.category??'').toLowerCase().includes('skill'):view==='activities'?String(row.category??'').toLowerCase().includes('activity')||String(row.category??'').toLowerCase().includes('co-curricular'):view==='competencies'?String(row.category??'').toLowerCase().includes('competenc'):view==='register'?row.event_type!=='positive':true).length
     :selectedDomain==='certificates'?visibleCertificates.length
     :selectedDomain==='visitors'?visibleVisitors.filter(row=>view==='checked-in'?row.status==='checked_in':view==='history'?['checked_out','denied','cancelled'].includes(String(row.status)):true).length
     :view==='history'?maintenance.filter(row=>['completed','cancelled'].includes(String(row.status))).length

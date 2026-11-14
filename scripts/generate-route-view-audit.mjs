@@ -36,7 +36,7 @@ const studentVisibleTabs = {
 }
 const facultyTabs = new Set(['overview','registration','directory','directory-teaching','directory-staff','profile','id-cards','departments','designations','assignments','attendance','leave','workload','documents','qualifications','history','reports'])
 const facultyStaffTabs = new Set(['overview','profile','id-cards','assignments','attendance','leave','workload','documents','qualifications','history'])
-const attendanceWindows = new Set(['students','teachers','staff','history','devices'])
+const attendanceWindows = new Set(['students','teachers','staff','history','devices','cards','student-cards','teacher-cards','staff-cards','biometric','reports','student-reports','teacher-reports','staff-reports'])
 const reportTabs = new Set(['overview','finance','attendance','academics','students','employees','payroll','examinations','academic','fees','financial','class','comparative','builder','scheduled','templates','history'])
 const financeTabs = {
   'accounts-finance': new Set(['overview','accounts','journals','reconciliation']),
@@ -48,11 +48,11 @@ const financeTabs = {
 }
 const payrollTabs = new Set(['overview','salary','components','adjustments','runs','payslips'])
 const peopleHRTabs = new Set(['admissions','recruitment','contracts','performance','alumni'])
-const governanceTabs = new Set(['profile','settings','approvals','audit','academic','accounts','departments','designations','organization','system','policies','policies-students','policies-faculty','permissions','branding','security'])
+const governanceTabs = new Set(['overview','profile','settings','approvals','audit','academic','accounts','departments','designations','organization','system','policies','policies-students','policies-faculty','permissions','branding','documents','security'])
 const operationTabs = {
   'question-bank': new Set(['pool','papers']),
   curriculum: new Set(['units','coverage']),
-  behaviour: new Set(['register','positive','follow-up']),
+  behaviour: new Set(['register','positive','follow-up','skills','activities','competencies','progress','analytics','reports']),
   certificates: new Set(['verify','issue']),
   visitors: new Set(['log','checked-in','history']),
   facilities: new Set(['assets','maintenance','history']),
@@ -135,7 +135,7 @@ function checkView(role, route, dispatcher) {
     return { component:'BackupDataWorkspace', view:targetWindow, status:supported.has(targetWindow) ? 'Supported' : 'Unsupported backup/data view' }
   }
   if (targetKey === 'academic') {
-    const supported = new Set(['academic-sessions','classes-sections','subjects-courses','curriculum','lesson-planning','timetable','homework-assignments','study-materials','online-learning','classroom-activities','academic-calendar','learning-progress'])
+    const supported = new Set(['academic-sessions','classes-sections','sections','subjects-courses','curriculum','lesson-planning','timetable','homework-assignments','study-materials','online-learning','classroom-activities','academic-calendar','learning-progress'])
     return { component:'AcademicManagementWorkspace', view:targetWindow, status:supported.has(targetWindow) ? 'Supported' : 'Unsupported academic workspace' }
   }
   if (targetKey === 'personal') return { component:'PersonalWorkspace', view:targetWindow, status:new Set(['my-profile','account-settings','notification-settings','my-activity','help-support']).has(targetWindow)?'Supported':'Unsupported personal view' }

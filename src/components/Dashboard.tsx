@@ -47,6 +47,7 @@ import { supabase } from '../lib/supabase'
 import { readDisplayPreferences, writeDisplayPreferences, type DashboardDisplayPreferences, type DashboardFontSize } from '../lib/displayPreferences'
 import { displayInstitutionName } from '../lib/collegeIdentity'
 import { BackupDataWorkspace } from './BackupDataWorkspace'
+import '../styles/modern-workspace-refresh.css'
 
 interface Props { onToast: (message: string, error?: boolean) => void }
 type Dataset = Record<string, RecordRow[]>
