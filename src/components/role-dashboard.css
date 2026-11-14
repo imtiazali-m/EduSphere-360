@@ -484,3 +484,80 @@ button.rd-metric-card:hover { border-color: #bfd2bc; box-shadow: 0 9px 20px rgba
 @media(prefers-reduced-motion:reduce) {
   .ed360-role-dashboard *, .ed360-role-dashboard *::before, .ed360-role-dashboard *::after { transition:none!important; scroll-behavior:auto!important; }
 }
+
+
+/* Larger dashboard cards with generous spacing and no cramped layouts. */
+.rd-page-head { padding-bottom:8px; }
+.rd-welcome-panel {
+  display:block;
+  min-height:0;
+  padding:26px 28px;
+  border-radius:17px;
+}
+.rd-welcome-copy { position:relative; z-index:1; max-width:none; }
+.rd-welcome-copy h2 { margin:8px 0 4px; font-size:31px; line-height:1.12; }
+.rd-welcome-copy h3 { margin:0 0 18px; font-size:21px; line-height:1.35; }
+.rd-welcome-facts { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin-top:16px; }
+.rd-welcome-fact { min-height:82px; padding:13px 15px; border:1px solid rgba(255,255,255,.55); border-radius:11px; background:rgba(255,255,255,.72); }
+.rd-metric-grid { grid-template-columns:repeat(3,minmax(0,1fr)); gap:15px; }
+.rd-metric-card { min-height:132px; padding:20px 18px; gap:14px; border-radius:15px; }
+.rd-metric-icon { width:46px; height:46px; flex-basis:46px; }
+.rd-metric-copy { gap:5px; }
+.rd-metric-copy small { font-size:11px; }
+.rd-metric-copy strong { font-size:25px; }
+.rd-metric-copy em { font-size:10px; white-space:normal; }
+.rd-domain-grid { grid-template-columns:repeat(3,minmax(0,1fr)); gap:15px; }
+.rd-domain-card { min-height:245px; padding:19px; gap:15px; border-radius:15px; }
+.rd-domain-card-head { gap:12px; }
+.rd-domain-icon { width:42px; height:42px; flex-basis:42px; }
+.rd-domain-card-head h3 { font-size:13px; }
+.rd-domain-card-head p { font-size:10px; }
+.rd-domain-stats { gap:9px; }
+.rd-domain-stats button { min-height:72px; padding:11px; }
+.rd-domain-stats strong { font-size:20px; }
+.rd-domain-stats small { font-size:9px; }
+.rd-grid-wide { gap:17px; }
+.rd-grid-wide > .rd-panel { min-height:315px; border-radius:15px; }
+.rd-panel-head { min-height:74px; padding:17px 19px; gap:12px; }
+.rd-panel-icon { width:40px; height:40px; flex-basis:40px; }
+.rd-panel-title h2 { font-size:14px; }
+.rd-panel-title p { font-size:10px; }
+.rd-panel-body { padding:18px 19px; }
+.rd-trend-panel { min-height:410px !important; }
+.rd-trend-series-grid { grid-template-columns:repeat(3,minmax(0,1fr)); gap:15px; }
+.rd-trend-series { min-height:148px; padding:16px; }
+.rd-trend-series-head span { font-size:11px; }
+.rd-trend-series-head strong { font-size:15px; }
+.rd-trend-bars { height:122px; gap:10px; }
+.rd-trend-track { height:94px; }
+.rd-trend-month small { font-size:10px; }
+.rd-performance { min-height:195px; gap:12px; }
+.rd-performance>strong { font-size:42px; }
+.rd-performance>span,.rd-performance>small { font-size:11px; }
+.rd-branch-list { gap:20px; }
+.rd-branch-row { gap:8px; }
+.rd-branch-top strong { font-size:12px; }
+.rd-branch-meta { font-size:9px; }
+.rd-list-row { padding:11px 3px; }
+.rd-row-copy strong { font-size:11px; }
+.rd-row-copy small { font-size:10px; }
+.rd-list-row time { font-size:10px; }
+@media(max-width:1120px) {
+  .rd-metric-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .rd-domain-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .rd-trend-series-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media(max-width:760px) {
+  .rd-welcome-panel { padding:20px 16px; }
+  .rd-welcome-copy h2 { font-size:26px; }
+  .rd-welcome-copy h3 { font-size:17px; }
+  .rd-welcome-facts { grid-template-columns:1fr; }
+  .rd-metric-grid,.rd-domain-grid,.rd-trend-series-grid { grid-template-columns:1fr; }
+  .rd-grid-wide > .rd-panel { min-height:260px; }
+}
+@media(max-width:520px) {
+  .rd-metric-grid { grid-template-columns:1fr; }
+  .rd-metric-card { min-height:108px; }
+  .rd-domain-card { min-height:0; }
+  .rd-trend-panel { min-height:0 !important; }
+}

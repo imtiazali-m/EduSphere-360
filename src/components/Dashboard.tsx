@@ -46,6 +46,7 @@ import { CollegeWebsiteManager } from './CollegeWebsiteManager'
 import { supabase } from '../lib/supabase'
 import { readDisplayPreferences, writeDisplayPreferences, type DashboardDisplayPreferences, type DashboardFontSize } from '../lib/displayPreferences'
 import { displayInstitutionName } from '../lib/collegeIdentity'
+import { BackupDataWorkspace } from './BackupDataWorkspace'
 
 interface Props { onToast: (message: string, error?: boolean) => void }
 type Dataset = Record<string, RecordRow[]>
@@ -748,6 +749,7 @@ export function Dashboard({ onToast }: Props) {
     const frontOfficeWindowRoute = key.startsWith('frontoffice:')
     const governanceWindowRoute = key.startsWith('governance:')
     const operationsWindowRoute = key.startsWith('operations:')
+    const backupWindowRoute = key.startsWith('backup:')
     const routeParts = key.split(':')
     const moduleWindowRoute = routeParts.length === 2 && ['fees', 'exams', 'exam_results', 'assignments', 'assignment_submissions', 'timetable', 'announcements', 'work_tasks'].includes(routeParts[0])
     const targetKey = academicWindowRoute ? 'academic'
@@ -766,6 +768,7 @@ export function Dashboard({ onToast }: Props) {
       : payrollWindowRoute ? 'payroll'
       : governanceWindowRoute ? 'governance'
       : operationsWindowRoute ? 'operations'
+      : backupWindowRoute ? 'backup'
       : moduleWindowRoute ? routeParts[0]
       : key
     const targetWindow = academicWindowRoute ? key.slice('academic:'.length)
@@ -784,6 +787,7 @@ export function Dashboard({ onToast }: Props) {
       : payrollWindowRoute ? key.slice('payroll:'.length)
       : governanceWindowRoute ? key.slice('governance:'.length)
       : operationsWindowRoute ? key.slice('operations:'.length)
+      : backupWindowRoute ? key.slice('backup:'.length)
       : moduleWindowRoute ? routeParts[1]
       : 'overview'
     let title = options.title ?? 'Dashboard'
@@ -804,6 +808,7 @@ export function Dashboard({ onToast }: Props) {
       else if (targetKey === 'frontoffice') title = 'Front Office & Communication'
       else if (targetKey === 'governance') title = 'Institution Governance'
       else if (targetKey === 'operations') title = 'Institution Operations'
+      else if (targetKey === 'backup') title = 'Backup & Data Management'
       else if (targetKey.startsWith('admin:')) {
         const subkey = targetKey.slice(6)
         title = adminModuleLabels[subkey] ?? 'Administration'
@@ -885,7 +890,7 @@ export function Dashboard({ onToast }: Props) {
       <div className="pro-institution-card"><span className="pro-institution-symbol"><Building2 size={20}/></span><span><b>{displayInstitutionName(user?.institutionName)}</b><small>{roleLabels[user!.role]}</small></span></div>
       <nav className="pro-navigation" aria-label="Institution workspace">
         {visibleSections.map(section => <div className="pro-nav-section" key={section.key} aria-label={section.label}>
-          <div className="pro-nav-section-label">{section.label}</div>
+          {section.label && <div className="pro-nav-section-label">{section.label}</div>}
           {section.groups.map(group => {
             const GroupIcon = catalogIcons[group.icon] ?? LayoutDashboard
             const isExpanded = expandedGroups.includes(group.key)
@@ -893,8 +898,7 @@ export function Dashboard({ onToast }: Props) {
               <button className={`pro-nav-group-head ${group.key === "dashboard" ? "pro-nav-dashboard-link" : ""}`} aria-label={group.label} title={group.label} aria-expanded={isExpanded} onClick={() => {
                 if (compactSidebar) setSidebarCollapsed(false)
                 if (group.key === 'dashboard') {
-                  setExpandedGroups(current => current.includes(group.key) ? current : [...current, group.key])
-                  navigate('overview', { groupKey: 'dashboard', itemKey: 'institutional-overview', title: 'Dashboard' })
+                  navigate('overview', { groupKey: 'dashboard', title: 'Dashboard' })
                 } else if (compactSidebar) {
                   setExpandedGroups(current => current.includes(group.key) ? current : [...current, group.key])
                 } else {
@@ -957,7 +961,8 @@ export function Dashboard({ onToast }: Props) {
             const tabAdminKey = tab.targetKey.startsWith('admin:') ? tab.targetKey.slice(6) : undefined
             const linkedWorkspaceKeys = ['administration:campus-and-branch-management','library:book-issue-and-returns','library:library-reports','inventory:stock-in','inventory:stock-out','inventory:stock-allocation','inventory:stock-adjustments','inventory:inventory-history','inventory:stock-reports','transport:student-transport-allocation','transport:transport-reports']
             return <section className="pro-window-panel" key={tab.id} hidden={activeTabId !== tab.id} aria-label={tab.title}>
-              {tab.targetKey === 'notifications' ? <NotificationCenter onToast={onToast} onUnreadCountChange={setUnreadAnnouncementCount}/> :
+              {tab.targetKey === 'backup' ? <BackupDataWorkspace initialWindow={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'notifications' ? <NotificationCenter onToast={onToast} onUnreadCountChange={setUnreadAnnouncementCount}/> :
                 tab.targetKey === 'overview' ? <RoleDashboard onNavigate={navigateChild}/> :
                 tab.targetKey === 'institutional' && tab.targetWindow.startsWith('examinations:') ? <AssessmentWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'institutional' && linkedWorkspaceKeys.includes(tab.targetWindow) ? <LinkedOperationsWorkspace workspaceKey={tab.targetWindow} onToast={onToast} onNavigate={navigateChild}/> :

@@ -22,11 +22,9 @@ const group=(key:string,label:string,description:string,icon:string,theme:string
 })
 
 export const institutionalMenu:WorkspaceMenuGroup[]=[
- group('dashboard','Dashboard','Your single overview for live KPIs, campus performance, approvals, audit activity and institutional health.','LayoutDashboard','blue','',all,[
-  'Institutional Overview'
- ]),
+ group('dashboard','Dashboard','Your single overview for live KPIs, campus performance, approvals, audit activity and institutional health.','LayoutDashboard','blue','',all,[]),
  group('administration','Administration','Institution identity, organisational structure, policies, approvals and access control.','Building2','slate','administration',management,[
-  'Institute Profile','Campus and Branch Management','Academic Structure & Sections','Department Directory','Designation Catalogue','Organisational Structure','System Configuration','Approval Workflows','Student Policies','Faculty Policies','Administrative Audit','User Access & Invitations','Role & Permission Management','Institute Settings','Branding & Document Settings','Security & Access History'
+  'Institute Profile','Campus and Branch Management','Academic Structure & Sections','Department Directory','Designation Catalogue','Organisational Structure','Approval Workflows','Student Policies','Faculty Policies','Administrative Audit','User Access & Invitations','Role & Permission Management','Institute Settings','Branding & Document Settings','Security & Access History'
  ]),
  group('institution-config','Institutional Systems and Configuration','Education levels, institution/campus settings, invitations, role rights, module rights and security.','Settings','slate','institution_config',management,[
   'Institution Configuration','Education System Configuration','Education Levels','Grade and Academic Level Configuration','Institution Settings','Campus Settings','Academic Settings','General System Settings','Invitations and Access','User Management','Role Management','User Permissions','Module Permissions','Approval Permissions','Security Configuration'
@@ -49,7 +47,7 @@ export const institutionalMenu:WorkspaceMenuGroup[]=[
   'Students','Admissions & Enrollment','Teachers','Faculty & Staff','Parents & Guardians',
   'HR & Recruitment','Employee Contracts & Documents','Employee Performance','Payroll & Salary Records','Alumni'
  ]),
- group('attendance','Attendance, Leave & Student Wellbeing','Daily attendance registers, leave decisions, reporting and restricted student-care records.','CalendarCheck','rose','attendance',staff.concat(['student','parent']),[
+ group('attendance','Attendance & Leave','Daily attendance registers, leave decisions, reporting and restricted student-care records.','CalendarCheck','rose','attendance',staff.concat(['student','parent']),[
   'Student Attendance','Teacher Attendance','Staff Attendance','Leave Management','Attendance Reports','Student Discipline','Student Counselling & Wellbeing','Health & Emergency Records'
  ]),
  group('behaviour','Behaviour and Skills','Positive recognition, safeguarding-aware behaviour logs, incidents, skills and competency tracking.','HeartHandshake','pink','behaviour',staff.concat(['student','parent']),[
@@ -87,13 +85,13 @@ export const institutionalMenu:WorkspaceMenuGroup[]=[
  group('library','Digital Library','Catalogue, book inventory, member reading records, circulation, returns, fines and reports.','Library','indigo','library',family,[
   'Library Dashboard','Digital Library','Book Management','Book Catalogue','Book Categories','Book Registration','Reading Records','Reading Cards','Student Reading History','Book Issue and Returns','Learning Materials','Resource Downloads','Library Reports'
  ]),
- group('accounts-finance','Accounts and Finance','General ledger, income, expenses, cash/bank books, vouchers and financial statements.','Calculator','amber','finance',finance,[
+ group('accounts-finance','Accounting & Finance','General ledger, income, expenses, cash/bank books, vouchers and financial statements.','Calculator','amber','finance',finance,[
   'Accounts Dashboard','Chart of Accounts','Income','Expenses','Cash Book','Bank Book','Transactions','Vouchers','General Ledger','Financial Statements','Account Reconciliation','Financial Reports'
  ]),
  group('fees','Fees Management','Fee structures, invoices, discounts, scholarships, collection and receipts.','Wallet','amber','fees',finance.concat(['student','parent']),[
   'Fees Dashboard','Fee Structure','Fee Categories','Student Fee Assignment','Fee Invoices','Payment Collection','Online Payments','Partial Payments','Discounts','Scholarships','Outstanding Dues','Fee Refunds','Fee Receipts','Class-wise Collection Reports','Section-wise Collection Reports','Overall Collection Reports'
  ]),
- group('receivables','Accounts Receivable','Outstanding balances, ageing, follow-ups and collection forecasting from live invoice balances.','TrendingUp','orange','receivables',finance,[
+ group('receivables','Account Reversal & Adjustments','Outstanding balances, ageing, follow-ups and collection forecasting from live invoice balances.','TrendingUp','orange','receivables',finance,[
   'Receivables Dashboard','Total Outstanding','Student-wise Receivables','Invoice-wise Receivables','Overdue Accounts','Ageing Analysis','Partial Payment Balances','Collection Follow-ups','Outstanding History','Receivable Reconciliation','Collection Forecasts','Receivables Reports'
  ]),
  group('payments','Payments and Collections','Cash/bank/online payment processing, verification, allocation, refunds and reconciliation.','Wallet','green','payments',finance,[
@@ -144,7 +142,7 @@ export const institutionalMenu:WorkspaceMenuGroup[]=[
   'Supplier Invoices',
   'Procurement Reports'
  ]),
- group('facilities','Rooms and Facilities','Classrooms, specialist rooms, availability, reservations, maintenance and facility history.','DoorOpen','cyan','facilities',management.concat(['teacher']),[
+ group('facilities','Room & Facility Management','Classrooms, specialist rooms, availability, reservations, maintenance and facility history.','DoorOpen','cyan','facilities',management.concat(['teacher']),[
   'Facilities Dashboard','Classroom Management','Laboratories','Library Rooms','Room Allocation','Room Availability','Room Reservations','Facility Maintenance','Facility History','Facilities Reports',
   'Hostel Dashboard',
   'Hostel Buildings',

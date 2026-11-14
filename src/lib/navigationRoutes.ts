@@ -428,6 +428,7 @@ function dedicatedRoute(groupKey: string, itemKey: string): string | undefined {
  */
 export function getNavigationRoute(groupKey: string, itemLabel: string, role?: string): string {
   const itemKey = slug(itemLabel)
+  if (groupKey === 'dashboard' && itemKey === 'dashboard') return 'overview'
   if (groupKey === 'people-hr') {
     const destinations: Record<string,string> = {
       'students':role==='student'||role==='parent'?'students:profile':'students:directory',
@@ -480,7 +481,7 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
     }
     return intelligenceRoutes[itemKey] ?? 'unavailable:ai:' + itemKey
   }
-  if (groupKey === 'backup') return 'unavailable:backup:' + itemKey
+  if (groupKey === 'backup') return 'backup:' + itemKey
   if (groupKey === 'timetable' && ['teacher-availability','substitution-management','timetable-publishing','class-coverage','engaged-classes'].includes(itemKey)) return 'unavailable:timetable:'+itemKey
   if (groupKey === 'students' && itemKey === 'student-data-export' && role && !['owner','admin'].includes(role)) {
     return 'unavailable:students:student-data-export'

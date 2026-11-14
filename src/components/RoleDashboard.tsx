@@ -264,36 +264,6 @@ function weatherLabel(code:number){
   if([95,96,99].includes(code))return 'Thunderstorm'
   return 'Current conditions'
 }
-function CampusIllustration(){
-  return <svg className="rd-campus-illustration" viewBox="0 0 720 420" role="img" aria-label="Illustration of a college campus building" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="campus-sky" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stopColor="#f4dff7"/><stop offset="1" stopColor="#f7c8d9"/></linearGradient>
-      <linearGradient id="campus-wall" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="#fffaf5"/><stop offset="1" stopColor="#e8d9ea"/></linearGradient>
-      <linearGradient id="campus-roof" x1="0" x2="1"><stop offset="0" stopColor="#6f4285"/><stop offset="1" stopColor="#a65d97"/></linearGradient>
-    </defs>
-    <rect x="0" y="0" width="720" height="420" rx="26" fill="url(#campus-sky)"/>
-    <circle cx="585" cy="75" r="42" fill="#fff4c5" opacity=".88"/>
-    <path d="M0 285 Q160 220 310 280 T720 255 V420 H0Z" fill="#c7d7b8"/>
-    <path d="M0 325 Q170 275 360 332 T720 302 V420 H0Z" fill="#9fbd9c"/>
-    <path d="M145 335 L185 220 Q360 178 535 220 L575 335Z" fill="#d8c3d8"/>
-    <rect x="180" y="186" width="360" height="165" rx="7" fill="url(#campus-wall)" stroke="#9d7ca8" strokeWidth="4"/>
-    <path d="M155 194 L355 95 L565 194Z" fill="url(#campus-roof)" stroke="#57356f" strokeWidth="5"/>
-    <path d="M255 149 H470 V190 H255Z" fill="#f4dce9" opacity=".95"/>
-    <rect x="318" y="110" width="82" height="47" rx="5" fill="#fdf6ed" stroke="#7b528e" strokeWidth="3"/>
-    <text x="359" y="140" fill="#58346c" textAnchor="middle" fontSize="20" fontWeight="800">GIDC</text>
-    <rect x="205" y="215" width="310" height="20" rx="3" fill="#b889ad"/>
-    {Array.from({length:5},(_,n)=><g key={n}><rect x={210+n*62} y="240" width="42" height="67" rx="4" fill="#7f91a7" stroke="#725482" strokeWidth="3"/><path d={'M'+(231+n*62)+' 240 V307'} stroke="#e9ebee" strokeWidth="3"/></g>)}
-    <rect x="326" y="269" width="68" height="82" rx="4" fill="#754a7f"/>
-    <rect x="342" y="286" width="36" height="65" rx="3" fill="#e6cbe3"/>
-    <path d="M360 269 V351" stroke="#5a3969" strokeWidth="3"/>
-    <path d="M90 348 H630" stroke="#f5e8ee" strokeWidth="13" strokeLinecap="round"/>
-    <path d="M120 355 L170 285 L200 355Z" fill="#71966f"/><rect x="156" y="352" width="10" height="37" fill="#815b4e"/>
-    <path d="M520 358 L554 278 L590 358Z" fill="#759b72"/><rect x="550" y="355" width="10" height="35" fill="#815b4e"/>
-    <path d="M0 392 Q170 360 340 389 T720 380" fill="none" stroke="#f9e4ef" strokeWidth="5"/>
-    <g fill="#fff6fb" opacity=".8"><circle cx="92" cy="90" r="6"/><circle cx="125" cy="67" r="4"/><circle cx="650" cy="157" r="6"/><circle cx="625" cy="188" r="4"/></g>
-  </svg>
-}
-
 export function RoleDashboard({ onNavigate }: Props) {
   const { user, mode } = useAuth()
   const [welcomeNow,setWelcomeNow]=useState(()=>Date.now())
@@ -411,15 +381,23 @@ export function RoleDashboard({ onNavigate }: Props) {
     }).length,
   )
   const monthlyAdmissions = monthlyRecords(students, ['admission_date', 'created_at'])
-  const monthlyAttendance = monthlyRecords([...attendance, ...get('employee_attendance')], ['attendance_date', 'created_at'])
+  const monthlyStudentAttendance = monthlyRecords(attendance, ['attendance_date', 'created_at'])
+  const monthlyStaffAttendance = monthlyRecords(get('employee_attendance'), ['attendance_date', 'created_at'])
+  const monthlyExaminations = monthlyRecords(exams, ['exam_date', 'created_at'])
+  const monthlyPublishedResults = monthlyRecords(results.filter(result => ['published','released'].includes(String(result.result_status ?? '').toLowerCase())), ['published_at', 'created_at'])
+  const monthlyAssignments = monthlyRecords(assignments, ['created_at', 'due_date'])
   const monthlyCollections = trendMonths.map(month => payments.filter(payment => {
     const date = recordDate(payment, ['payment_date', 'created_at'])
     return date && date.getFullYear() === month.getFullYear() && date.getMonth() === month.getMonth()
   }).reduce((sum, payment) => sum + numberValue(payment.amount), 0))
   const executiveTrends = [
     { key: 'admissions', label: 'New admissions', values: monthlyAdmissions, total: monthlyAdmissions.reduce((sum, value) => sum + value, 0), available: known('students'), display: (value: number) => formatCount(value) },
-    { key: 'attendance', label: 'Attendance entries', values: monthlyAttendance, total: monthlyAttendance.reduce((sum, value) => sum + value, 0), available: known('attendance', 'employee_attendance'), display: (value: number) => formatCount(value) },
+    { key: 'student-attendance', label: 'Student attendance entries', values: monthlyStudentAttendance, total: monthlyStudentAttendance.reduce((sum, value) => sum + value, 0), available: known('attendance'), display: (value: number) => formatCount(value) },
+    { key: 'staff-attendance', label: 'Staff attendance entries', values: monthlyStaffAttendance, total: monthlyStaffAttendance.reduce((sum, value) => sum + value, 0), available: known('employee_attendance'), display: (value: number) => formatCount(value) },
     { key: 'collections', label: 'Fee collections', values: monthlyCollections, total: monthlyCollections.reduce((sum, value) => sum + value, 0), available: known('fee_payments'), display: (value: number) => formatMoney(value) },
+    { key: 'examinations', label: 'Examinations scheduled', values: monthlyExaminations, total: monthlyExaminations.reduce((sum, value) => sum + value, 0), available: known('exams'), display: (value: number) => formatCount(value) },
+    { key: 'results', label: 'Results published', values: monthlyPublishedResults, total: monthlyPublishedResults.reduce((sum, value) => sum + value, 0), available: known('exam_results'), display: (value: number) => formatCount(value) },
+    { key: 'assignments', label: 'Assignments created', values: monthlyAssignments, total: monthlyAssignments.reduce((sum, value) => sum + value, 0), available: known('assignments'), display: (value: number) => formatCount(value) },
   ] as const
   const monthName = now.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })
   const todayAttendance = attendance.filter(row => isToday(row, ['attendance_date'], today))
@@ -1016,9 +994,8 @@ export function RoleDashboard({ onNavigate }: Props) {
   }
 
   return <main className="ed360-role-dashboard">
-    <header className="rd-page-head">
+    {role !== 'owner' && role !== 'admin' && <header className="rd-page-head">
       <div className="rd-heading-main">
-        <span className="rd-institution-logo"><img src="/gidc-badin-official-logo.svg" alt="Institution logo"/></span>
         <div className="rd-institution-heading">
           <h1>{heading.title}</h1>
           <p>{heading.subtitle}</p>
@@ -1028,17 +1005,12 @@ export function RoleDashboard({ onNavigate }: Props) {
         <span className="rd-role-chip">{roleLabels[role]}</span>
         <button type="button" className="rd-header-cta" onClick={() => onNavigate(primaryAction[role].route)}>{primaryAction[role].label}</button>
       </div>
-    </header>
-    {role==='owner'||role==='admin' ? <section className="rd-welcome-panel" aria-label="College welcome and current conditions">
+    </header>}
+    {(role === 'owner' || role === 'admin') && <section className="rd-welcome-panel" aria-label="College welcome and current conditions">
       <div className="rd-welcome-copy">
         <div className="rd-welcome-kicker"><span className="rd-welcome-kicker-dot"/> COLLEGE PORTAL · BADIN, SINDH</div>
         <h2>Welcome</h2>
         <h3>Government Islamia Degree College, Badin</h3>
-        <p className="rd-welcome-intro">Your college at a glance — today’s conditions, campus information and institutional performance.</p>
-        <div className="rd-welcome-logo-row">
-          <span className="rd-welcome-logo"><img src="/gidc-badin-official-logo.svg" alt="Government Islamia Degree College logo"/></span>
-          <span><strong>Government Islamia Degree College</strong><small>Badin · Sindh · Pakistan</small></span>
-        </div>
         <div className="rd-welcome-facts">
           <div className="rd-welcome-fact"><small>DATE</small><strong>{new Intl.DateTimeFormat('en-PK',{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:'Asia/Karachi'}).format(new Date(welcomeNow))}</strong></div>
           <div className="rd-welcome-fact"><small>LOCAL TIME · PAKISTAN</small><strong>{new Intl.DateTimeFormat('en-PK',{hour:'numeric',minute:'2-digit',second:'2-digit',hour12:true,timeZone:'Asia/Karachi'}).format(new Date(welcomeNow))}</strong></div>
@@ -1048,15 +1020,7 @@ export function RoleDashboard({ onNavigate }: Props) {
           </div>
         </div>
       </div>
-      <div className="rd-welcome-visual">
-        <div className="rd-welcome-visual-glow"/>
-        <div className="rd-welcome-visual-label"><span>GIDC</span><span>LEARNING · COMMUNITY · FUTURE</span></div>
-        <CampusIllustration/>
-        <div className="rd-welcome-visual-caption"><span className="rd-illustration-badge">Campus illustration</span><span>Official campus front photograph can replace this illustration when supplied.</span></div>
-      </div>
-      <div className="rd-welcome-decoration rd-welcome-decoration-one"/>
-      <div className="rd-welcome-decoration rd-welcome-decoration-two"/>
-    </section>:null}
+    </section>}
     {errors && Object.keys(errors).length > 0 && <div className="rd-data-warning" role="status"><CircleAlert size={16}/><span>Some live sections could not be loaded. Unavailable figures are shown as a dash rather than being reported as zero.</span></div>}
     <section className="rd-metric-grid" aria-label={roleLabels[role] + ' dashboard summary'}>
       {metrics.map(metric => <MetricCard key={metric.label} icon={metric.icon} label={metric.label} value={loading ? '—' : metric.value} hint={metric.hint} tone={metric.tone} onClick={metric.route ? () => onNavigate(metric.route!) : undefined}/>)}

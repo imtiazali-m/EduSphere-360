@@ -42,7 +42,7 @@ const classify = (route) => {
     'admin', 'assignments', 'assignment_submissions', 'attendance', 'announcements',
     'employees', 'exam_results', 'exams', 'fees', 'finance', 'files', 'governance',
     'academic', 'care', 'peoplehr', 'notifications', 'operations', 'overview', 'payroll', 'reports', 'students',
-    'timetable', 'work_tasks', 'personal', 'assistant', 'frontoffice',
+    'timetable', 'work_tasks', 'personal', 'assistant', 'frontoffice', 'backup',
   ])
   if (!known.has(workspace)) return 'Unexpected route family · investigate'
   if (rootRoute && !intentionalRootRoutes.has(route)) return 'Bare module root · confirm the intended default window'
@@ -69,7 +69,7 @@ for (const token of [
   '<AdministrationModule ', '<AccountsModule ', '<FilesModule ', '<ReportsModule ',
   '<FinanceWorkspace ', '<PayrollWorkspace ', '<PeopleHRWorkspace ', '<GovernanceWorkspace ',
   '<InstitutionOperationsWorkspace ', '<LinkedOperationsWorkspace ',
-  '<InstitutionalWorkspace ', '<AssessmentWorkspace ', '<AcademicManagementWorkspace ', '<FacultyWorkspace ', '<RecordModule ',
+  '<InstitutionalWorkspace ', '<BackupDataWorkspace ', '<AssessmentWorkspace ', '<AcademicManagementWorkspace ', '<FacultyWorkspace ', '<RecordModule ',
 ]) {
   if (!dashboardSource.includes(token)) throw new Error('Dashboard dispatcher no longer contains ' + token)
 }
@@ -102,6 +102,7 @@ const resolveDispatcher = (route) => {
   if (route.startsWith('peoplehr:')) return 'PeopleHRWorkspace'
   if (route.startsWith('governance:')) return 'GovernanceWorkspace'
   if (route.startsWith('operations:')) return 'InstitutionOperationsWorkspace'
+  if (route.startsWith('backup:')) return 'BackupDataWorkspace'
   if (route.startsWith('admin:')) return 'AdministrationModule'
   const moduleKey = route.split(':')[0]
   if (route.split(':').length === 2 && [
