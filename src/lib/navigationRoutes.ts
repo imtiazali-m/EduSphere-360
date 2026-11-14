@@ -90,6 +90,12 @@ const attendanceViews: Record<string, string> = {
   'attendance-calendar': 'history',
   'attendance-history': 'history',
   'attendance-devices': 'devices',
+  'attendance-reports': 'reports',
+  'automatic-attendance': 'devices',
+  'student-cards': 'student-cards',
+  'teacher-cards': 'teacher-cards',
+  'staff-cards': 'staff-cards',
+  'biometric-attendance': 'biometric',
 }
 
 const reportViews: Record<string, string> = {
@@ -337,6 +343,10 @@ function dedicatedRoute(groupKey: string, itemKey: string): string | undefined {
   }
   if (groupKey === 'attendance') {
     if (itemKey === 'leave-applications') return 'employees:leave'
+    if (itemKey === 'leave-management') return 'care:leave'
+    if (itemKey === 'student-discipline') return 'care:discipline'
+    if (itemKey === 'student-counselling-wellbeing') return 'care:counselling'
+    if (itemKey === 'health-emergency-records') return 'care:health'
     const view = attendanceViews[itemKey]
     return view ? `attendance:${view}` : undefined
   }
