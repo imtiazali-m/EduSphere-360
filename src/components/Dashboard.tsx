@@ -134,7 +134,7 @@ function sumOutstanding(rows: RecordRow[]) {
   return rows.reduce((total, row) => total + outstandingInvoiceBalance(row), 0)
 }
 
-function customPermissionModuleForRoute(groupKey: string, route: string): string | undefined {
+function customPermissionModuleForRoute(route: string): string | undefined {
   const prefix = route.split(':')[0]
   const dedicated: Record<string,string> = {
     hostel: 'hostel',
@@ -748,7 +748,7 @@ export function Dashboard({ onToast }: Props) {
         if (!groupAllowed) return []
         const items = group.items.filter(title => {
           const route = getNavigationRoute(group.key,title,user!.role) ?? ''
-          const moduleKey = customPermissionModuleForRoute(group.key,route)
+          const moduleKey = customPermissionModuleForRoute(route)
           return !moduleKey || (grants[moduleKey] ?? []).includes('view')
         })
         return items.length ? [{ ...group, items }] : []
