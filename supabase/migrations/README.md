@@ -1,6 +1,6 @@
 # Migration history
 
-The fifty-four timestamped migration files in this folder match the remote migration history recorded by the linked Supabase project. Keep each 14-digit timestamp unchanged so local and remote migration histories remain aligned.
+The fifty-five timestamped migration files in this folder match the remote migration history recorded by the linked Supabase project. Keep each 14-digit timestamp unchanged so local and remote migration histories remain aligned.
 
 The current online application includes the reviewed schema changes for the existing live schema, Faculty & Employee Management, and Student Management operations (admission lifecycle, linked guardian contacts, class placements, private student documents and audit history for attendance, published results, assignment submissions, guardian policy consolidation and activity indexes). The Student Management and Faculty/Employee migrations have already been applied to the linked project; do not replay them manually.
 
@@ -64,3 +64,6 @@ The current permission guard covers direct RLS-backed access to the listed table
 
 
 - `20261113175058_college_custom_role_high_impact_rpc_guards.sql` adds the custom-profile checks to question-paper approval, payroll approval and adjustments, transport fee charge creation, and institutional setting approval RPCs. These checks run in addition to the original base membership-role checks.
+
+
+The admission-stage guard migration adds a database trigger to the existing student admission lifecycle. It rejects invalid status jumps, restricts stage changes to institution owners and administrators with the relevant student edit scope, and assigns reviewer identity and review timestamps from the authenticated database session. It also synchronises the student's active, pending or inactive record status with the admission outcome. The trigger is invoker-security and runs under the existing students row-level policies.
