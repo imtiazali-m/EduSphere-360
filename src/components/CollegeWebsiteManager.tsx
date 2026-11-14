@@ -86,7 +86,7 @@ const emptyContent: SiteContent = {
   accentColor: '#176342',
   programs: [{ id: 'science', title: 'Science', detail: 'Listed in the Government of Sindh college directory.', officialUrl: 'https://college.sindh.gov.pk/government-colleges' }],
   gallery: [
-    { id: 'gidc-event-guidance-05', title: 'Student guidance session', category: 'college-events', imageUrl: '/gidc-badin/events/student-guidance-session-event-05.webp', alt: 'Teacher guiding students during a college session', published: true }
+    { id: 'gidc-event-guidance-05', title: 'Student guidance session', category: 'college-events', imageUrl: '/gidc-badin/events/student-guidance-session-event-05.webp', sourceUrl: '', alt: 'Teacher guiding students during a college session', published: true }
   ],
   news: [],
   magazines: [],
