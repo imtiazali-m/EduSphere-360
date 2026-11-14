@@ -499,3 +499,303 @@
   .gidc-motion-ready [data-reveal="up"] { opacity:1; transform:none; transition:none; }
   .gidc-gallery-track { transition:none; }
 }
+
+
+/* GIDC landing-page visual refresh: larger typography, stronger contrast and clearer actions. */
+.gidc-site {
+  --gidc-ink:#132b3d;
+  --gidc-navy:#102d49;
+  --gidc-navy-2:#1e5168;
+  --gidc-gold:#edb84f;
+  --gidc-gold-soft:#f6e6c4;
+  --gidc-green:#176757;
+  --gidc-paper:#fffdf8;
+  --gidc-cream:#f3ead9;
+  --gidc-muted:#425a65;
+  --gidc-line:#dfd5c3;
+  color:var(--gidc-ink);
+  background:var(--gidc-paper);
+}
+.gidc-container { width:min(1280px,calc(100% - 64px)); }
+.gidc-topline { background:linear-gradient(90deg,#0c2944,#18546a); font-size:13px; }
+.gidc-topline-inner { min-height:40px; }
+.gidc-header { background:rgba(255,253,248,.98); box-shadow:0 8px 24px rgba(16,45,73,.07); }
+.gidc-header-inner { min-height:96px; }
+.gidc-crest-image { width:76px; height:80px; }
+.gidc-brand-copy strong { font-size:20px; }
+.gidc-brand-copy b { font-size:17px; }
+.gidc-brand-copy small { font-size:10px; letter-spacing:1.7px; }
+.gidc-nav { gap:clamp(13px,1.4vw,22px); }
+.gidc-nav a { font-size:13px; color:#243f52; }
+.gidc-portal-button { min-height:50px; padding:0 19px; font-size:14px; border-radius:7px; }
+.gidc-hero { background:linear-gradient(125deg,#f7f0e1 0%,#f7f0e5 48%,#e3ecdf 100%); }
+.gidc-hero:before { background:linear-gradient(115deg,#fff8ea 0%,#f3e9d5 75%,rgba(242,234,217,0) 100%); }
+.gidc-hero-grid { min-height:690px; grid-template-columns:1fr 1fr; gap:clamp(48px,6vw,100px); padding-top:72px; padding-bottom:80px; }
+.gidc-hero-copy { max-width:650px; }
+.gidc-kicker,.gidc-overline { font-size:12px; letter-spacing:2px; color:#815c24; }
+.gidc-hero h1 { font-size:clamp(52px,5.5vw,80px); line-height:1.02; letter-spacing:-2.3px; margin:24px 0; color:#102d49; }
+.gidc-hero h1 em { color:#a45e24; }
+.gidc-hero-lead { max-width:580px; color:#3d5361; font-size:19px; line-height:1.8; }
+.gidc-hero-actions { margin-top:34px; gap:15px; }
+.gidc-button { min-height:56px; padding:0 22px; border-radius:7px; font-size:14px; }
+.gidc-button-gold { color:#142d40!important; background:#edb84f; }
+.gidc-button-outline { color:#102d49!important; border-color:#7b8790; background:rgba(255,255,255,.58); }
+.gidc-hero-values { margin-top:32px; gap:24px; color:#35544e; font-size:13px; }
+.gidc-photo-frame { height:490px; border-radius:8px 110px 8px 8px; box-shadow:0 32px 75px rgba(13,39,59,.24); }
+.gidc-photo-frame img { filter:saturate(1.03) contrast(1.02); }
+.gidc-photo-caption strong { font-size:30px; }
+.gidc-photo-caption span { font-size:11px; }
+.gidc-photo-note { padding:15px 18px; }
+.gidc-photo-note b { font-size:13px; color:#102d49; }
+.gidc-photo-note small { font-size:11px; color:#4e626c; }
+.gidc-hero-stamp { width:94px; height:94px; }
+.gidc-hero-stamp span { font-size:25px; }
+.gidc-hero-stamp small { font-size:10px; }
+.gidc-facts-strip { background:#fff; border-color:#dfd5c3; }
+.gidc-facts-grid>div { min-height:108px; padding:18px 24px; gap:15px; }
+.gidc-fact-icon { width:48px; height:48px; }
+.gidc-fact-icon svg { width:22px; height:22px; }
+.gidc-facts-grid b { font-size:15px; color:#102d49; }
+.gidc-facts-grid small { font-size:11px; color:#52656d; }
+.gidc-section { padding:112px 0; scroll-margin-top:112px; }
+.gidc-section h2,.gidc-contact h2 { font-size:clamp(38px,4vw,58px); line-height:1.1; margin:18px 0 24px; }
+.gidc-section-intro p,.gidc-admissions-copy p,.gidc-notices-copy p,.gidc-portal-copy p,.gidc-contact-grid>div:first-child p { color:#405660; font-size:16px; line-height:1.85; margin-bottom:17px; }
+.gidc-text-link { font-size:14px; color:#125847!important; }
+.gidc-about-image-main { height:380px; border-radius:8px 78px 8px 8px; }
+.gidc-about-note { padding:28px; }
+.gidc-about-note b { font-size:24px; }
+.gidc-about-note small { font-size:11px; color:#52646c; }
+.gidc-section-heading { margin-bottom:42px; }
+.gidc-section-heading>p { font-size:15px; line-height:1.8; color:#405660; }
+.gidc-programme-card { min-height:350px; border-radius:10px; overflow:hidden; box-shadow:0 18px 44px rgba(17,43,61,.08); }
+.gidc-programme-image { min-height:350px; }
+.gidc-programme-body { padding:30px 28px; }
+.gidc-programme-index { font-size:10px; }
+.gidc-programme-body h3 { font-size:30px; }
+.gidc-programme-body p { color:#425760; font-size:14px; line-height:1.8; }
+.gidc-programme-body a { font-size:13px; color:#125847; }
+.gidc-verification-note { font-size:13px; color:#455b62; }
+.gidc-admissions { background:linear-gradient(120deg,#102d49 0%,#174a5d 62%,#176757 100%); }
+.gidc-admissions-copy p { color:#edf4f0; }
+.gidc-step { min-height:104px; grid-template-columns:48px 1fr 20px; gap:18px; }
+.gidc-step>span { font-size:23px; }
+.gidc-step b { font-size:16px; }
+.gidc-step small { font-size:13px; line-height:1.7; color:#e2e9e9; }
+.gidc-campus-life { background:linear-gradient(180deg,#fffdf8,#f4f0e5); }
+.gidc-life-grid { gap:18px; grid-template-rows:260px 260px; }
+.gidc-life-feature { min-height:538px; border-radius:10px; }
+.gidc-life-card { padding:28px; border-radius:9px; }
+.gidc-life-feature h3 { font-size:36px; }
+.gidc-life-card h3 { font-size:27px; }
+.gidc-life-feature p,.gidc-life-card p { font-size:14px; line-height:1.75; }
+.gidc-life-number,.gidc-life-feature>div>span { font-size:10px; }
+.gidc-life-icon { width:50px; height:50px; }
+.gidc-image-disclaimer { color:#52666d; font-size:12px; text-align:left; line-height:1.65; }
+.gidc-gallery { background:linear-gradient(125deg,#e8efe8,#f7efdf); }
+.gidc-gallery-heading h2 { font-size:clamp(38px,4vw,58px); }
+.gidc-gallery-heading p { font-size:15px; color:#405660; line-height:1.8; }
+.gidc-gallery-controls button { width:50px; height:50px; }
+.gidc-gallery-controls .gidc-gallery-pause { min-width:100px; font-size:12px; }
+.gidc-gallery-frame { border-radius:12px; box-shadow:0 24px 60px rgba(12,36,54,.19); }
+.gidc-gallery-slide { height:clamp(340px,48vw,600px); }
+.gidc-gallery-slide img { transition:transform 7s ease; }
+.gidc-gallery-slide:hover img { transform:scale(1.035); }
+.gidc-gallery-slide figcaption>span { font-size:11px; }
+.gidc-gallery-slide figcaption strong { font-size:clamp(28px,3.5vw,43px); }
+.gidc-gallery-slide figcaption small { font-size:14px; line-height:1.65; }
+.gidc-gallery-slide figcaption a { font-size:13px; }
+.gidc-gallery-bottom { font-size:12px; color:#4d646b; }
+.gidc-gallery-dots button { width:9px; height:9px; }
+.gidc-gallery-dots button.is-active { width:29px; }
+.gidc-notices { background:#f3ead9; }
+.gidc-notice-empty { padding:40px 42px; border-radius:10px; box-shadow:0 18px 42px rgba(21,44,61,.08); }
+.gidc-notice-empty b { font-size:27px; line-height:1.2; }
+.gidc-notice-empty p { font-size:14px; line-height:1.8; color:#40565f; }
+.gidc-notice-icon { width:58px; height:58px; }
+.gidc-notice-label { display:block; margin:0 0 10px; color:#815c24; font-size:11px; font-weight:900; letter-spacing:1.7px; }
+.gidc-notice-actions { display:flex; flex-wrap:wrap; gap:18px; }
+.gidc-notice-actions a { display:inline-flex; align-items:center; gap:8px; color:#125847; font-size:13px; font-weight:800; }
+.gidc-portal-section { background:linear-gradient(115deg,#145a53,#176b61 55%,#1e5366); padding:105px 0; }
+.gidc-portal-copy p { color:#f2f6f0; }
+.gidc-portal-points { font-size:14px; }
+.gidc-portal-card { min-height:100px; padding:17px; border-radius:8px; }
+.gidc-portal-card-icon { width:48px; height:48px; }
+.gidc-portal-card-copy b { font-size:14px; }
+.gidc-portal-card-copy small { font-size:12px; line-height:1.55; color:#eef5ef; }
+.gidc-official-links { padding:100px 0; background:#fffdf8; }
+.gidc-link-grid { grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; }
+.gidc-link-grid>a { min-height:130px; padding:20px; border-radius:9px; box-shadow:0 9px 24px rgba(17,43,61,.05); }
+.gidc-link-grid>a>b { font-size:14px; line-height:1.35; }
+.gidc-link-grid>a>small { font-size:12px; line-height:1.55; color:#52646c; }
+.gidc-affiliations { background:#f4efe3; }
+.gidc-affiliation-grid { gap:17px; margin-top:34px; }
+.gidc-affiliation-card { min-height:174px; border-radius:10px; padding:24px; background:#fff; box-shadow:0 10px 28px rgba(15,42,60,.05); }
+.gidc-affiliation-logo { width:88px; height:88px; flex-basis:88px; }
+.gidc-affiliation-copy small { font-size:10px; }
+.gidc-affiliation-copy b { font-size:16px; }
+.gidc-affiliation-copy em { font-size:12px; line-height:1.55; color:#52646c; }
+.gidc-directory-link { border-radius:8px; padding:20px 22px; }
+.gidc-directory-link span,.gidc-directory-link a { font-size:14px; }
+.gidc-contact { padding:110px 0; background:linear-gradient(135deg,#e4ecdf,#f6ecdb 65%,#e9e1ce); }
+.gidc-contact-heading { max-width:850px; margin-bottom:40px; }
+.gidc-contact-heading>p { max-width:770px; color:#40565f; font-size:16px; line-height:1.8; }
+.gidc-contact-grid { grid-template-columns:.84fr 1.16fr; align-items:start; gap:28px; }
+.gidc-contact-side { display:grid; gap:14px; }
+.gidc-contact-card { border-radius:10px; padding:26px; box-shadow:0 12px 28px rgba(18,44,61,.06); }
+.gidc-contact-icon { width:52px; height:52px; border-radius:9px; }
+.gidc-contact-card>b { font-size:23px; }
+.gidc-contact-card>span:not(.gidc-contact-icon) { color:#415960; font-size:14px; }
+.gidc-contact-card>a { color:#125847; font-size:14px; }
+.gidc-contact-card>small { color:#4b6269; font-size:12px; line-height:1.65; }
+.gidc-contact-label { color:#815c24!important; font-size:10px!important; font-weight:900; letter-spacing:1.4px; }
+.gidc-complaint-form { min-width:0; padding:34px; border:1px solid #dfd1ba; border-radius:12px; background:#fffdfa; box-shadow:0 20px 48px rgba(14,42,61,.12); }
+.gidc-complaint-form-heading { display:flex; align-items:flex-start; gap:15px; margin-bottom:26px; }
+.gidc-complaint-form-heading>span { width:48px; height:48px; display:grid; place-items:center; flex:0 0 auto; color:#fff; background:#176757; border-radius:10px; }
+.gidc-complaint-form-heading small { color:#815c24; font-size:10px; font-weight:900; letter-spacing:1.8px; }
+.gidc-complaint-form-heading h3 { margin:6px 0 5px; color:#102d49; font:700 30px/1.15 'Playfair Display',Georgia,serif; }
+.gidc-complaint-form-heading p { margin:0; color:#4b626a; font-size:13px; line-height:1.65; }
+.gidc-complaint-fields { display:grid; grid-template-columns:1fr 1fr; gap:17px; }
+.gidc-complaint-fields label { display:flex; flex-direction:column; gap:8px; color:#203c4c; font-size:13px; font-weight:800; }
+.gidc-complaint-fields input,.gidc-complaint-fields select,.gidc-complaint-fields textarea { width:100%; min-width:0; border:1px solid #d0d7d2; border-radius:7px; background:#fff; padding:13px 14px; color:#193648; font-size:15px; font-weight:500; outline:none; }
+.gidc-complaint-fields textarea { resize:vertical; line-height:1.65; min-height:154px; }
+.gidc-complaint-fields input:focus,.gidc-complaint-fields select:focus,.gidc-complaint-fields textarea:focus { border-color:#247765; box-shadow:0 0 0 4px rgba(23,103,87,.12); }
+.gidc-complaint-message { grid-column:1 / -1; }
+.gidc-complaint-submit { margin-top:22px; color:#102d49!important; font-size:14px; min-width:250px; }
+.gidc-complaint-privacy { margin:14px 0 0; color:#4a6168; font-size:12px; line-height:1.7; }
+.gidc-complaint-status { padding:12px 14px; margin:13px 0 0; background:#e9f2e8; color:#225c4e; border-left:3px solid #26715f; border-radius:5px; font-size:13px; line-height:1.6; }
+.gidc-footer-main { padding-top:52px; padding-bottom:48px; }
+.gidc-footer-main>p { font-size:13px; color:#e2e9e9; line-height:1.8; }
+.gidc-footer-links a { font-size:13px; }
+.gidc-footer-bottom { font-size:11px; }
+.gidc-site :is(a,button,input,select,textarea):focus-visible { outline:3px solid rgba(237,184,79,.85); outline-offset:3px; }
+
+@media (max-width:1120px) {
+  .gidc-container { width:min(100% - 48px,1100px); }
+  .gidc-nav { gap:10px; }
+  .gidc-nav a { font-size:12px; }
+  .gidc-brand-copy strong { font-size:17px; }
+  .gidc-brand-copy b { font-size:15px; }
+  .gidc-link-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media (max-width:900px) {
+  .gidc-container { width:min(100% - 40px,760px); }
+  .gidc-header-inner { min-height:84px; }
+  .gidc-brand-copy strong { font-size:16px; }
+  .gidc-brand-copy b { font-size:15px; }
+  .gidc-nav a { font-size:15px; }
+  .gidc-hero-grid { min-height:0; grid-template-columns:1fr .92fr; gap:32px; padding:55px 0 70px; }
+  .gidc-hero h1 { font-size:clamp(42px,6vw,62px); }
+  .gidc-hero-lead { font-size:16px; }
+  .gidc-photo-frame { height:380px; }
+  .gidc-section { padding:82px 0; }
+  .gidc-section-intro p,.gidc-admissions-copy p,.gidc-notices-copy p,.gidc-portal-copy p { font-size:15px; }
+  .gidc-life-grid { grid-template-rows:290px 240px; }
+  .gidc-life-feature { min-height:530px; }
+  .gidc-contact-grid { grid-template-columns:1fr; }
+  .gidc-contact-side { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .gidc-contact-card { padding:18px; }
+  .gidc-contact-card>b { font-size:18px; }
+  .gidc-complaint-form { padding:26px; }
+}
+@media (max-width:640px) {
+  .gidc-container { width:calc(100% - 32px); }
+  .gidc-topline { font-size:10px; }
+  .gidc-header-inner { min-height:72px; }
+  .gidc-crest-image { width:50px; height:54px; }
+  .gidc-brand { gap:7px; }
+  .gidc-brand-copy strong { font-size:12px; }
+  .gidc-brand-copy b { font-size:12px; }
+  .gidc-brand-copy small { font-size:6px; letter-spacing:.9px; }
+  .gidc-header-actions .gidc-portal-button { min-height:38px; padding:0 9px; font-size:10px; }
+  .gidc-nav { left:16px; right:16px; }
+  .gidc-nav a { font-size:15px; padding:14px 12px; }
+  .gidc-hero-grid { grid-template-columns:1fr; gap:30px; padding:43px 0 60px; }
+  .gidc-hero h1 { font-size:clamp(40px,10vw,54px); line-height:1.04; }
+  .gidc-hero-lead { font-size:16px; line-height:1.75; }
+  .gidc-kicker,.gidc-overline { font-size:10px; letter-spacing:1.5px; }
+  .gidc-button { min-height:50px; padding-inline:14px; font-size:12px; }
+  .gidc-photo-frame { height:min(82vw,360px); border-top-right-radius:54px; }
+  .gidc-photo-caption strong { font-size:24px; }
+  .gidc-photo-note { padding:10px; }
+  .gidc-photo-note b { font-size:11px; }
+  .gidc-photo-note small { font-size:9px; }
+  .gidc-facts-grid>div { min-height:86px; padding:13px 6px; gap:8px; }
+  .gidc-fact-icon { width:34px; height:34px; }
+  .gidc-fact-icon svg { width:17px; }
+  .gidc-facts-grid b { font-size:11px; }
+  .gidc-facts-grid small { font-size:9px; }
+  .gidc-section { padding:68px 0; }
+  .gidc-section h2,.gidc-contact h2 { font-size:clamp(34px,8vw,43px); }
+  .gidc-section-intro p,.gidc-admissions-copy p,.gidc-notices-copy p,.gidc-portal-copy p { font-size:14px; line-height:1.78; }
+  .gidc-programme-grid { grid-template-columns:1fr; }
+  .gidc-programme-card { display:grid; grid-template-columns:35% 65%; min-height:0; }
+  .gidc-programme-image { min-height:220px; height:100%; }
+  .gidc-programme-body { padding:18px 14px; }
+  .gidc-programme-body h3 { font-size:22px; }
+  .gidc-programme-body p { font-size:12px; line-height:1.65; }
+  .gidc-programme-body a { font-size:11px; }
+  .gidc-programme-index { font-size:8px; }
+  .gidc-step { min-height:88px; grid-template-columns:35px 1fr 16px; gap:10px; }
+  .gidc-step b { font-size:13px; }
+  .gidc-step small { font-size:11px; }
+  .gidc-life-grid { grid-template-columns:1fr 1fr; grid-template-rows:250px 205px 205px; gap:10px; }
+  .gidc-life-feature { grid-column:1 / -1; grid-row:1; min-height:0; }
+  .gidc-life-card { padding:15px; }
+  .gidc-life-feature h3 { font-size:27px; }
+  .gidc-life-card h3 { font-size:19px; }
+  .gidc-life-feature p,.gidc-life-card p { font-size:11px; }
+  .gidc-life-icon { width:35px; height:35px; }
+  .gidc-life-number,.gidc-life-feature>div>span { font-size:8px; }
+  .gidc-gallery { padding:68px 0; }
+  .gidc-gallery-heading h2 { font-size:35px; }
+  .gidc-gallery-heading p { font-size:13px; }
+  .gidc-gallery-controls { align-self:flex-end; }
+  .gidc-gallery-controls button { width:44px; height:44px; }
+  .gidc-gallery-slide { height:370px; }
+  .gidc-gallery-slide figcaption { left:18px; right:18px; bottom:18px; }
+  .gidc-gallery-slide figcaption strong { font-size:25px; }
+  .gidc-gallery-slide figcaption small { font-size:11px; }
+  .gidc-gallery-bottom { grid-template-columns:auto 1fr; gap:8px; font-size:10px; }
+  .gidc-gallery-bottom>span:last-child { display:none; }
+  .gidc-gallery-dots { justify-content:flex-end; }
+  .gidc-notice-empty { padding:25px 20px; }
+  .gidc-notice-empty b { font-size:22px; }
+  .gidc-notice-empty p { font-size:12px; }
+  .gidc-notice-actions { flex-direction:column; gap:13px; }
+  .gidc-portal-cards { grid-template-columns:1fr; }
+  .gidc-portal-card { min-height:78px; }
+  .gidc-portal-card-copy b { font-size:13px; }
+  .gidc-portal-card-copy small { font-size:11px; }
+  .gidc-link-grid { grid-template-columns:1fr; gap:10px; }
+  .gidc-link-grid>a { min-height:100px; padding:14px; }
+  .gidc-link-grid>a>b { font-size:13px; }
+  .gidc-link-grid>a>small { font-size:11px; }
+  .gidc-affiliation-grid { grid-template-columns:1fr; gap:10px; }
+  .gidc-affiliation-card { min-height:104px; padding:13px; gap:12px; }
+  .gidc-affiliation-logo { width:62px; height:62px; flex-basis:62px; }
+  .gidc-affiliation-copy b { font-size:13px; }
+  .gidc-affiliation-copy em { font-size:11px; }
+  .gidc-directory-link { padding:15px; gap:10px; }
+  .gidc-directory-link span,.gidc-directory-link a { font-size:12px; }
+  .gidc-contact { padding:68px 0; }
+  .gidc-contact-heading { margin-bottom:26px; }
+  .gidc-contact-heading>p { font-size:14px; line-height:1.75; }
+  .gidc-contact-side { grid-template-columns:1fr; }
+  .gidc-contact-card { padding:19px; }
+  .gidc-complaint-form { padding:21px 16px; }
+  .gidc-complaint-form-heading h3 { font-size:24px; }
+  .gidc-complaint-fields { grid-template-columns:1fr; gap:14px; }
+  .gidc-complaint-message { grid-column:auto; }
+  .gidc-complaint-fields label { font-size:13px; }
+  .gidc-complaint-fields input,.gidc-complaint-fields select,.gidc-complaint-fields textarea { font-size:14px; padding:12px; }
+  .gidc-complaint-submit { width:100%; min-width:0; }
+  .gidc-complaint-privacy { font-size:11px; }
+  .gidc-footer-main { grid-template-columns:1fr; gap:18px; padding:32px 0; }
+  .gidc-footer-main>p { font-size:12px; }
+  .gidc-footer-links { gap:12px 17px; }
+  .gidc-footer-links a { font-size:12px; }
+  .gidc-footer-bottom>.gidc-container { padding:13px 0; flex-direction:column; align-items:flex-start; font-size:10px; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .gidc-gallery-slide img { transition:none; }
+}
