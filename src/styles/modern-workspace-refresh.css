@@ -120,3 +120,58 @@
 .attendance-person-guardian{display:block;color:#69766e;font-size:9px}
 @media(max-width:760px){.ed360-admin-overview-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ed360-attendance-report-summary{grid-template-columns:1fr}.ed360-biometric-grid{grid-template-columns:1fr}.ed360-qr-scan-panel{grid-template-columns:1fr}.ed360-qr-scan-panel>p{grid-column:1}.ed360-qr-scan-panel form{grid-template-columns:1fr}.ed360-qr-scan-panel form button{width:100%}}
 @media print{.ed360-attendance-main-tabs,.ed360-attendance-filter-card,.ed360-attendance-board-head button{display:none!important}.ed360-id-card-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ed360-id-card{break-inside:avoid}}
+
+/* Student-care workspaces */
+.s7-page{display:grid;gap:16px;padding:4px 2px 30px;color:#151d17}
+.s7-page .s7-hero{display:flex;align-items:center;gap:14px;padding:8px 0 16px;border-bottom:1px solid #e3eae5}
+.s7-page .s7-hero-icon{display:grid;place-items:center;width:48px;height:48px;border:1px solid #d9e7dc;border-radius:13px;background:#edf5ef;color:#23633a}
+.s7-page .s7-hero h1{margin:3px 0;color:#101712;font-size:clamp(22px,2vw,29px);font-weight:850;letter-spacing:-.6px}
+.s7-page .s7-hero p{margin:0;color:#68756c;font-size:11px;line-height:1.5}
+.s7-page .s7-refresh,.s7-page .s7-panel,.s7-page .s7-privacy-note{border:1px solid #e3eae5;border-radius:13px;background:#fff;box-shadow:0 3px 14px rgba(20,38,24,.035)}
+.s7-page .s7-panel{padding:16px}
+.s7-page .s7-panel-title{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.s7-page .s7-panel-title span{color:#477653;font-size:9px;font-weight:900;letter-spacing:1.2px}
+.s7-page .s7-panel-title h2{margin:4px 0;color:#172019;font-size:16px;font-weight:850}
+.s7-page .s7-panel-title p{margin:3px 0;color:#69766d;font-size:10px}
+.s7-page .s7-filters{display:flex;flex-wrap:wrap;align-items:end;gap:10px;margin:12px 0}
+.s7-page .s7-filters label,.s7-page .s7-form label{display:grid;gap:6px;color:#536158;font-size:10px;font-weight:800}
+.s7-page .s7-filters select,.s7-page .s7-form input,.s7-page .s7-form textarea,.s7-page .s7-form select{min-height:37px;padding:8px 10px;border:1px solid #dce5de;border-radius:8px;background:#fff;color:#1b261e;font-size:11px}
+.s7-page .s7-form{gap:12px}
+.s7-page .s7-metrics>div{border:1px solid #e4ebe5;border-radius:10px;background:#f8faf8}
+.s7-page .s7-metrics b{color:#1b5a34;font-size:21px}
+.s7-page .s7-metrics span{color:#69766d;font-size:9px}
+.s7-page .s7-table-wrap{overflow:auto;border:1px solid #e7ede8;border-radius:10px}
+.s7-page .s7-table-wrap th{background:#f3f7f4;color:#39473e;font-size:10px}
+.s7-page .s7-table-wrap td{color:#344137;font-size:11px}
+.s7-page .s7-alert,.s7-page .s7-privacy-note{padding:12px 14px}
+.s7-page .s7-privacy-note{display:flex;gap:9px;align-items:flex-start;color:#3a5941}
+.s7-page .s7-privacy-note p{margin:4px 0 0;color:#68756c;font-size:10px;line-height:1.5}
+.iop-stage{display:grid;gap:16px;padding:4px 2px 30px;color:#172019}
+.iop-stage .iop-heading{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:8px 0 15px;border-bottom:1px solid #e3eae5}
+.iop-stage .iop-heading h1{color:#101712;font-weight:850;letter-spacing:-.6px}
+.iop-stage .iop-nav{display:flex;gap:7px;flex-wrap:wrap;padding:8px;border:1px solid #e3eae5;border-radius:12px;background:#fff}
+.iop-stage .iop-nav button{border:1px solid transparent;border-radius:8px;background:transparent;color:#3e4b42;font-weight:750}
+.iop-stage .iop-nav button.active{border-color:#cddfd1;background:#edf5ef;color:#205a34}
+.iop-stage .iop-context,.iop-stage .iop-panel{border:1px solid #e3eae5;border-radius:13px;background:#fff;box-shadow:0 3px 14px rgba(20,38,24,.035)}
+.iop-stage .iop-context{padding:14px 16px}
+.iop-stage .iop-panel{padding:16px}
+.iop-stage .iop-button.primary{background:#23633a;border-color:#23633a}
+.iop-stage .iop-table-wrap{overflow:auto;border:1px solid #e5ece6;border-radius:10px}
+.iop-stage .iop-table-wrap th{background:#f3f7f4;color:#38463c;font-size:10px}
+.iop-stage .iop-table-wrap td{color:#354138;font-size:11px}
+.ed360-academic-page{background:transparent}
+.ed360-admin-stage5 .gov-panel,.ed360-admin-stage5 .ed360-admin-directory-card,.ed360-admin-stage5 .ed360-admin-organization-card{border-color:#e3eae5!important;border-radius:13px!important;box-shadow:0 3px 14px rgba(20,38,24,.035)!important}
+.ed360-admin-stage5 .gov-button.primary{background:#23633a!important;border-color:#23633a!important}
+.ed360-admin-stage5 .gov-tab.active,.ed360-admin-stage5 .gov-sort-header.active{background:#edf5ef!important;color:#205d36!important}
+.ed360-assess-page .ed360-assess-hero{border-bottom-color:#e3eae5!important}
+.ed360-assess-page h1,.ed360-assess-page h2,.ed360-assess-page h3{color:#172019}
+.ed360-assess-page .ed360-assess-nav{border-color:#e3eae5!important;background:#fff!important}
+.ed360-assess-page .ed360-assess-nav button.active{border-color:#cddfd1!important;background:#edf5ef!important;color:#205d36!important}
+.ed360-assess-page .ed360-assess-panel{border-color:#e3eae5!important;border-radius:13px!important;background:#fff!important;box-shadow:0 3px 14px rgba(20,38,24,.035)!important}
+.ed360-assess-page .ed360-assess-panel button.primary,.ed360-assess-page .button.button-primary{background:#23633a!important;border-color:#23633a!important}
+.ed360-attendance-workspace .ed360-attendance-main-tabs{border-color:#e3eae5!important;background:#fff!important}
+.ed360-attendance-workspace .ed360-attendance-main-tabs button.active{background:#edf5ef!important;border-color:#cddfd1!important;color:#205d36!important}
+.ed360-attendance-workspace .ed360-attendance-board{border-color:#e3eae5!important;border-radius:13px!important;background:#fff!important;box-shadow:0 3px 14px rgba(20,38,24,.035)!important}
+.ed360-attendance-workspace .ed360-attendance-board-head h2{color:#172019!important;font-weight:850!important}
+.ed360-attendance-workspace .ed360-attendance-grid-table .attendance-grid-head{background:#f3f7f4!important}
+@media(max-width:720px){.s7-page .s7-panel{padding:12px}.s7-page .s7-hero{flex-wrap:wrap}.iop-stage .iop-nav{overflow-x:auto;flex-wrap:nowrap}.ed360-attendance-report-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
