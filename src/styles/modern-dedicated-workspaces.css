@@ -1,0 +1,46 @@
+
+/* GIDC modern standalone-workspace system. The main sidebar is the sole page navigator. */
+.gov-stage,.iop-stage{max-width:1500px;margin:0;padding:4px 2px 28px;gap:14px}
+.gov-heading,.iop-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:4px 0 14px;border-bottom:1px solid #e8ece9}
+.gov-heading>div>span,.iop-heading>div>span{font-size:9px;font-weight:900;letter-spacing:1.4px;color:#34734d}
+.gov-heading h1,.iop-heading h1{margin:5px 0 3px;color:#101512;font-size:24px;line-height:1.2;font-weight:850;letter-spacing:-.7px}
+.gov-heading p,.iop-heading p{margin:0;color:#68736c;font-size:11px;line-height:1.55}
+.gov-panel,.iop-panel{padding:16px;border:1px solid #e4e9e5;border-radius:12px;background:#fff;box-shadow:none}
+.gov-context,.gov-nav,.iop-nav,.iop-context{display:none!important}
+.gov-live,.iop-live{display:none!important}
+.gov-button.primary,.iop-button.primary{background:#205b43;border-color:#205b43}
+.ed360-admin-actions,.ed360-admin-system-refresh{display:none!important}
+.iop-heading .iop-button{flex:0 0 auto}
+.ed360-attendance-workspace{display:grid;gap:14px}
+.ed360-attendance-hero{display:flex;align-items:center;gap:12px;padding:4px 0 14px;border:0;border-bottom:1px solid #e8ece9;border-radius:0;background:transparent;box-shadow:none}
+.ed360-attendance-icon{display:none}
+.ed360-attendance-hero>div:last-child>span{font-size:9px;font-weight:900;letter-spacing:1.4px;color:#34734d}
+.ed360-attendance-hero h1{margin:5px 0 3px;color:#101512;font-size:24px;font-weight:850;letter-spacing:-.7px}
+.ed360-attendance-hero p{margin:0;color:#68736c;font-size:11px;line-height:1.55}
+.ed360-attendance-main-tabs{display:none!important}
+.ed360-assessment-workspace{display:grid;gap:14px}
+.ed360-assess-hero{padding:4px 0 14px;background:transparent;border:0;border-bottom:1px solid #e8ece9;border-radius:0;box-shadow:none}
+.ed360-assess-hero-icon{display:none}
+.ed360-assess-hero>div:nth-child(2)>span{font-size:9px;font-weight:900;letter-spacing:1.4px;color:#34734d}
+.ed360-assess-hero h1{margin:5px 0 3px;color:#101512;font-size:24px;font-weight:850;letter-spacing:-.7px}
+.ed360-assess-hero p{margin:0;color:#68736c;font-size:11px;line-height:1.55}
+.ed360-assess-live{display:none}
+.ed360-assess-tabs,.ed360-assess-context{display:none!important}
+.ed360-assess-panel{border-color:#e4e9e5;border-radius:12px;box-shadow:none}
+.ed360-academic-page{gap:14px}
+.ed360-academic-nav{display:none!important}
+.ed360-academic-workspace{padding:0;border:0;border-radius:0;background:transparent;box-shadow:none}
+.ed360-academic-workspace-top{padding:0;margin:0;border:0;background:transparent;box-shadow:none}
+.ed360-academic-workspace-top>div:first-child{display:none}
+.ed360-academic-toolbar{margin-top:10px}
+.s7-page{gap:14px}
+.s7-page .s7-hero{align-items:center;padding:4px 0 14px;border:0;border-bottom:1px solid #e8ece9;border-radius:0;background:transparent;box-shadow:none}
+.s7-page .s7-hero-icon{display:none}
+.s7-page .s7-hero>div:nth-child(2)>span{font-size:9px;font-weight:900;letter-spacing:1.4px;color:#34734d}
+.s7-page .s7-hero h1{margin:5px 0 3px;color:#101512;font-size:24px;font-weight:850;letter-spacing:-.7px}
+.s7-page .s7-hero p{margin:0;color:#68736c;font-size:11px;line-height:1.55}
+.s7-page .s7-panel{border-color:#e4e9e5;border-radius:12px;box-shadow:none}
+@media(max-width:700px){
+ .gov-heading,.iop-heading,.ed360-attendance-hero,.ed360-assess-hero,.s7-page .s7-hero{align-items:flex-start;flex-direction:column}
+ .gov-heading .gov-button,.iop-heading .iop-button{width:100%}
+}
