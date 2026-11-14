@@ -47,6 +47,7 @@ type InternalAnnouncement = {
   created_at: string
   is_public: boolean
   published_at: string | null
+  image_url: string | null
 }
 type Teacher = {
   id: string
@@ -116,6 +117,70 @@ function AdminSection({ icon: Icon, title, description, children }: { icon: type
   return <section className="cwm-section"><div className="cwm-section-heading"><span><Icon size={21}/></span><div><h2>{title}</h2><p>{description}</p></div></div><div className="cwm-section-body">{children}</div></section>
 }
 
+
+async function extractImageFilesFromZip(archive: File): Promise<File[]> {
+  const bytes = await archive.arrayBuffer()
+  const view = new DataView(bytes)
+  const minOffset = Math.max(0, bytes.byteLength - 65_557)
+  let endOffset = -1
+  for (let offset = bytes.byteLength - 22; offset >= minOffset; offset -= 1) {
+    if (view.getUint32(offset, true) === 0x06054b50) {
+      endOffset = offset
+      break
+    }
+  }
+  if (endOffset < 0) throw new Error('This ZIP archive could not be read. Please use the supplied GIDC image ZIP.')
+  const entryCount = view.getUint16(endOffset + 10, true)
+  let centralOffset = view.getUint32(endOffset + 16, true)
+  const decoder = new TextDecoder()
+  const output: File[] = []
+  const supported = /\.(jpe?g|png|webp)$/i
+
+  for (let index = 0; index < entryCount; index += 1) {
+    if (view.getUint32(centralOffset, true) !== 0x02014b50) {
+      throw new Error('The ZIP directory is incomplete. Please re-select the supplied archive.')
+    }
+    const flags = view.getUint16(centralOffset + 8, true)
+    const method = view.getUint16(centralOffset + 10, true)
+    const compressedSize = view.getUint32(centralOffset + 20, true)
+    const uncompressedSize = view.getUint32(centralOffset + 24, true)
+    const nameLength = view.getUint16(centralOffset + 28, true)
+    const extraLength = view.getUint16(centralOffset + 30, true)
+    const commentLength = view.getUint16(centralOffset + 32, true)
+    const localHeaderOffset = view.getUint32(centralOffset + 42, true)
+    const relativePath = decoder.decode(new Uint8Array(bytes, centralOffset + 46, nameLength)).replace(/\\/g, '/')
+    centralOffset += 46 + nameLength + extraLength + commentLength
+
+    if (!supported.test(relativePath) || relativePath.startsWith('__MACOSX/')) continue
+    if (uncompressedSize > 20 * 1024 * 1024) throw new Error('An image in the archive exceeds the 20 MB import limit.')
+    if ((flags & 1) !== 0) throw new Error('The ZIP archive is password-protected. Use an unencrypted ZIP.')
+    if (method !== 0 && method !== 8) throw new Error('The ZIP contains an unsupported compression method.')
+
+    if (view.getUint32(localHeaderOffset, true) !== 0x04034b50) {
+      throw new Error('An image entry in the ZIP could not be read.')
+    }
+    const localNameLength = view.getUint16(localHeaderOffset + 26, true)
+    const localExtraLength = view.getUint16(localHeaderOffset + 28, true)
+    const dataOffset = localHeaderOffset + 30 + localNameLength + localExtraLength
+    const compressedBytes = bytes.slice(dataOffset, dataOffset + compressedSize)
+    let imageBlob: Blob
+    if (method === 0) {
+      imageBlob = new Blob([compressedBytes])
+    } else {
+      const stream = new Blob([compressedBytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'))
+      imageBlob = await new Response(stream).blob()
+    }
+
+    const filename = relativePath.split('/').pop() || 'college-image.jpg'
+    const extension = filename.split('.').pop()?.toLowerCase()
+    const mime = extension === 'png' ? 'image/png' : extension === 'webp' ? 'image/webp' : 'image/jpeg'
+    const imageFile = new File([imageBlob], filename, { type: mime })
+    Object.defineProperty(imageFile, 'webkitRelativePath', { value: relativePath })
+    output.push(imageFile)
+  }
+  return output
+}
+
 export function CollegeWebsiteManager({ onToast }: { onToast: (message: string, error?: boolean) => void }) {
   const { user } = useAuth()
   const [content, setContent] = useState<SiteContent>(emptyContent)
@@ -156,7 +221,7 @@ export function CollegeWebsiteManager({ onToast }: { onToast: (message: string, 
             .eq('institution_id', user.institutionId)
             .order('full_name', { ascending: true }),
           supabase.from('announcements')
-            .select('id,title,body,audience,created_at,is_public,published_at')
+            .select('id,title,body,audience,created_at,is_public,published_at,image_url')
             .eq('institution_id', user.institutionId)
             .order('created_at', { ascending: false })
             .limit(50),
@@ -228,15 +293,14 @@ export function CollegeWebsiteManager({ onToast }: { onToast: (message: string, 
     }
   }
 
-  async function handleBulkPhotoUpload(event: ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(event.target.files ?? [])
+  async function importImageFiles(files: File[], uploadAlreadyActive = false) {
     if (!files.length) return
-    setUploading(true)
-    setStatusMessage('Importing college photographs…')
+    if (!uploadAlreadyActive) setUploading(true)
+    setStatusMessage('Importing approved college photographs and poster…')
     const photoItems: Photo[] = []
-    const noticeItems: Notice[] = []
     const failures: string[] = []
     let skipped = 0
+    let importedPoster = false
     try {
       for (const file of files) {
         const fileName = file.name.toLowerCase()
@@ -247,35 +311,73 @@ export function CollegeWebsiteManager({ onToast }: { onToast: (message: string, 
         }
         try {
           if (/pakistan-navy-recruitment-awareness-poster|announcement-poster/.test(fileName)) {
+            if (!supabase || !user) throw new Error('Sign in to the GIDC owner or administrator account before importing college images.')
             const imageUrl = await uploadImage(file, 'news')
-            noticeItems.push({
-              id: makeId('notice'),
-              title: 'Pakistan Navy Recruitment & Awareness Session',
-              body: 'Official college poster supplied for the News & Announcements section.',
-              date: '',
-              url: '',
-              imageUrl,
-              published: true,
-            })
+            const title = 'Pakistan Navy Recruitment & Awareness Session'
+            const body = 'Awareness session regarding induction in the Pakistan Navy, led by Commander Asif Raza (Keynote Speaker & Guest of Honour), hosted at Government Islamia Degree College Badin. Please refer to the official poster for the session details.'
+            const existing = await supabase.from('announcements')
+              .select('id')
+              .eq('institution_id', user.institutionId)
+              .eq('title', title)
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .maybeSingle()
+            if (existing.error) throw existing.error
+            const values = {
+              institution_id: user.institutionId,
+              title,
+              body,
+              audience: 'all',
+              image_url: imageUrl,
+              is_public: true,
+              published_at: new Date().toISOString(),
+              created_by: user.id,
+              updated_at: new Date().toISOString(),
+            }
+            const saved = existing.data?.id
+              ? await supabase.from('announcements').update(values).eq('id', existing.data.id).select('id,title,body,audience,created_at,is_public,published_at,image_url').single()
+              : await supabase.from('announcements').insert(values).select('id,title,body,audience,created_at,is_public,published_at,image_url').single()
+            if (saved.error) throw saved.error
+            const notice = saved.data as InternalAnnouncement
+            setInternalAnnouncements(current => [notice, ...current.filter(item => item.id !== notice.id)])
+            importedPoster = true
             continue
           }
+
           let category: PhotoCategory = 'academic-learning'
           if (relativePath.includes('03_facilities') || /book-shelves|study-room/.test(fileName)) category = 'campus-facility'
           else if (/student-assembly/.test(fileName)) category = 'student-life'
           else if (relativePath.includes('04_campus') || /college-entrance/.test(fileName)) category = 'main-campus'
           else if (relativePath.includes('05_events') || /student-guidance|recognition|meeting|flag-event|navy-awareness|staff-|student-staff/.test(fileName)) category = 'college-events'
           const isFeaturedFifth = fileName.includes('student-guidance-session-event-05')
-          const imageUrl = isFeaturedFifth
-            ? '/gidc-badin/events/student-guidance-session-event-05.webp'
-            : await uploadImage(file, 'gallery')
+          const imageUrl = await uploadImage(file, 'gallery')
+          const titleMap: Record<string, string> = {
+            'classroom-board-03.jpg': 'Classroom board lesson',
+            'classroom-lecture-02.jpg': 'Classroom lecture',
+            'classroom-teaching-01.jpg': 'Classroom teaching',
+            'large-classroom-session-05.jpg': 'Classroom session',
+            'book-shelves-study-room.jpg': 'Students studying beside bookshelves',
+            'college-entrance-and-assembly.jpg': 'College entrance and assembly',
+            'student-assembly-outdoors.jpg': 'Outdoor student assembly',
+            'academic-recognition-session.jpg': 'Academic recognition session',
+            'campus-flag-event-collage.jpg': 'College flag and campus activities',
+            'college-meeting-or-guest-session.jpg': 'College meeting or guest session',
+            'indoor-staff-meeting.jpg': 'Indoor staff meeting',
+            'navy-awareness-session-photo.jpg': 'Pakistan Navy awareness session',
+            'staff-recognition-presentation.jpg': 'Staff recognition presentation',
+            'student-guidance-session-event-05.jpg': 'Student guidance session',
+            'student-staff-group-photo.jpg': 'Student and staff group photo',
+          }
+          const title = titleMap[fileName] || file.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ').replace(/\b\w/g, letter => letter.toUpperCase())
+          const stableId = isFeaturedFifth ? 'gidc-event-guidance-05' : 'gidc-' + fileName.replace(/\.[^.]+$/, '').replace(/[^a-z0-9]+/g, '-')
           photoItems.push({
-            id: isFeaturedFifth ? 'gidc-event-guidance-05' : makeId('photo'),
-            title: file.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ').replace(/\b\w/g, letter => letter.toUpperCase()),
+            id: stableId,
+            title,
             category,
             imageUrl,
             sourceUrl: '',
             published: true,
-            alt: file.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' '),
+            alt: title,
           })
         } catch (error) {
           failures.push(file.name + ': ' + (error instanceof Error ? error.message : 'upload failed'))
@@ -288,12 +390,63 @@ export function CollegeWebsiteManager({ onToast }: { onToast: (message: string, 
           if (index >= 0) gallery[index] = { ...gallery[index], ...item }
           else gallery.push(item)
         })
-        return { ...current, gallery, news: [...current.news, ...noticeItems] }
+        return { ...current, gallery }
       })
-      const doneCount = photoItems.length + noticeItems.length
-      const summary = `Imported ${doneCount} approved image(s). ${skipped} identity/logo reference image(s) skipped.`
+      const doneCount = photoItems.length + (importedPoster ? 1 : 0)
+      const summary = `Imported ${doneCount} approved college image(s). ${skipped} logo/identity reference image(s) were skipped. The fifth teacher-guidance photograph was placed under Events.`
       setStatusMessage(failures.length ? summary + ' Some files failed: ' + failures.join('; ') : summary)
       onToast(failures.length ? 'Some college images could not be uploaded.' : summary, failures.length > 0)
+    } finally {
+      if (!uploadAlreadyActive) setUploading(false)
+    }
+  }
+
+  async function handleBulkPhotoUpload(event: ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(event.target.files ?? [])
+    try {
+      await importImageFiles(files)
+    } finally {
+      event.target.value = ''
+    }
+  }
+
+  async function handleArchiveUpload(event: ChangeEvent<HTMLInputElement>) {
+    const archive = event.target.files?.[0]
+    if (!archive) return
+    setUploading(true)
+    setStatusMessage('Reading the approved GIDC image archive…')
+    try {
+      const files = await extractImageFilesFromZip(archive)
+      if (!files.length) throw new Error('No supported photographs were found inside this ZIP archive.')
+      await importImageFiles(files, true)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'The image archive could not be imported.'
+      setStatusMessage(message)
+      onToast(message, true)
+    } finally {
+      setUploading(false)
+      event.target.value = ''
+    }
+  }
+
+  async function handleAnnouncementImageUpload(event: ChangeEvent<HTMLInputElement>, item: InternalAnnouncement) {
+    const file = event.target.files?.[0]
+    if (!file || !supabase || !user) return
+    setUploading(true)
+    try {
+      const imageUrl = await uploadImage(file, 'news')
+      const { error } = await supabase.from('announcements')
+        .update({ image_url: imageUrl, updated_at: new Date().toISOString() })
+        .eq('id', item.id)
+        .eq('institution_id', user.institutionId)
+      if (error) throw error
+      setInternalAnnouncements(current => current.map(row => row.id === item.id ? { ...row, image_url: imageUrl } : row))
+      setStatusMessage('Announcement poster updated. It will refresh on the public website.')
+      onToast('Announcement poster updated.')
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'The announcement image could not be updated.'
+      setStatusMessage(message)
+      onToast(message, true)
     } finally {
       setUploading(false)
       event.target.value = ''
@@ -498,6 +651,8 @@ export function CollegeWebsiteManager({ onToast }: { onToast: (message: string, 
                 <div className="cwm-internal-announcement-copy">
                   <div className="cwm-internal-announcement-meta"><span>{item.audience.replaceAll('_', ' ')}</span><time dateTime={item.created_at}>{new Date(item.created_at).toLocaleDateString('en-PK', { day: 'numeric', month: 'short', year: 'numeric' })}</time></div>
                   <h3>{item.title}</h3><p>{item.body}</p>
+                  {item.image_url && <img className="cwm-announcement-image" src={item.image_url} alt={item.title + ' poster'}/>}
+                  <label className="cwm-upload cwm-upload-small"><Upload size={14}/><span>{item.image_url ? 'Replace poster image' : 'Add poster image'}</span><input type="file" accept="image/*" disabled={uploading} onChange={event => void handleAnnouncementImageUpload(event, item)}/></label>
                   <small>{item.is_public ? 'Visible on the external website' : 'Internal only'}</small>
                 </div>
                 <button type="button" className={item.is_public ? 'cwm-publish-toggle is-public' : 'cwm-publish-toggle'} onClick={() => void setInternalAnnouncementPublic(item, !item.is_public)}>{item.is_public ? 'Remove from website' : 'Publish on website'}</button>
@@ -516,8 +671,11 @@ export function CollegeWebsiteManager({ onToast }: { onToast: (message: string, 
 
         <AdminSection icon={ImagePlus} title="Campus photographs & gallery" description="Upload or link authentic college photographs and assign each one to its correct gallery category.">
           <div className="cwm-bulk-upload">
-            <div><b>Import the sorted college photo folder</b><span>Extract the supplied ZIP, then select multiple images from each category folder in turn. Images are assigned from their descriptive filenames; the unidentified office portrait and logo reference are skipped.</span></div>
-            <label className="cwm-upload"><Upload size={17}/><span>{uploading ? 'Importing photographs…' : 'Select multiple images'}</span><input type="file" accept="image/*" multiple disabled={uploading} onChange={event => void handleBulkPhotoUpload(event)}/></label>
+            <div><b>Import the approved GIDC image ZIP</b><span>One archive upload imports classrooms, campus, student-life, facilities, Events and the Pakistan Navy poster. The poster becomes a public internal announcement. The unidentified office portrait and logo reference are skipped automatically.</span></div>
+            <div className="cwm-bulk-upload-actions">
+              <label className="cwm-upload"><Upload size={17}/><span>{uploading ? 'Importing archive…' : 'Import ZIP archive'}</span><input type="file" accept=".zip,application/zip" disabled={uploading} onChange={event => void handleArchiveUpload(event)}/></label>
+              <label className="cwm-upload cwm-upload-secondary"><ImagePlus size={16}/><span>Or select images</span><input type="file" accept="image/*" multiple disabled={uploading} onChange={event => void handleBulkPhotoUpload(event)}/></label>
+            </div>
           </div>
           <p className="cwm-help">Placement guide: campus/building views go under Main campus; classroom photos under Academics & classrooms; room and shelf photographs under Campus facilities; student-only assemblies under Student life; staff presentations, mixed student-and-teacher group photographs, guest visits and sessions under College events. The fifth image is classified as an Event, not Student life.</p>
           {content.gallery.map((photo, index) => <div className="cwm-repeat-card" key={photo.id}>
