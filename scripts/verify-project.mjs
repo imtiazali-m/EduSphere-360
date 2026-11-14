@@ -12,6 +12,26 @@ const check = (label, fn) => {
 }
 
 const packageJson = JSON.parse(read('package.json'))
+check('Integration center has dedicated AI, Zoom, Google, YouTube and biometric setup pages', () => {
+  const integrations = read('src/components/IntegrationManagementWorkspace.tsx')
+  const dashboard = read('src/components/Dashboard.tsx')
+  for (const key of ["'ai-providers'", "zoom:", "google:", "youtube:", "biometric:"]) assert.ok(integrations.includes(key), 'Missing integration workspace: ' + key)
+  assert.ok(integrations.includes("action:'status'") && integrations.includes("action:'generate'"), 'AI credentials need a live status and provider test')
+  assert.ok(integrations.includes('Not connected'), 'External integrations must not be claimed connected before verification')
+  assert.ok(dashboard.includes('<IntegrationManagementWorkspace'), 'Dashboard must dispatch the Integration workspace')
+})
+check('Behaviour and Skills has distinct database-backed pages and record workflows', () => {
+  const behaviour = read('src/components/BehaviourSkillsWorkspace.tsx')
+  const dashboard = read('src/components/Dashboard.tsx')
+  for (const view of ['dashboard','records','positive','incidents','recognition','warnings','skills','activities','competencies','progress','analytics','downloads']) {
+    assert.ok(behaviour.includes(view + ':'), 'Missing Behaviour & Skills view: ' + view)
+  }
+  for (const table of ['student_behaviour_events','student_competency_records','classroom_activities']) {
+    assert.ok(behaviour.includes(table), 'Missing connected records table: ' + table)
+  }
+  assert.ok(behaviour.includes('student_care_access'), 'Teacher access must follow the care-area permission grant')
+  assert.ok(dashboard.includes('<BehaviourSkillsWorkspace'), 'Dashboard must dispatch the Behaviour & Skills workspace')
+})
 check('Vite development and production scripts exist', () => {
   assert.equal(packageJson.scripts.dev, 'vite --host 0.0.0.0')
   assert.equal(packageJson.scripts.build, 'tsc -b && vite build')
@@ -25,7 +45,7 @@ check('Vite development and production scripts exist', () => {
 })
 
 const requiredFiles = [
-  'index.html', 'src/main.tsx', 'src/App.tsx', 'src/components/Dashboard.tsx', 'src/components/RoleDashboard.tsx', 'src/components/role-dashboard.css', 'src/components/WorkspaceUnavailable.tsx', 'src/components/BackupDataWorkspace.tsx', 'src/components/backup-data-workspace.css',
+  'index.html', 'src/main.tsx', 'src/App.tsx', 'src/components/Dashboard.tsx', 'src/components/RoleDashboard.tsx', 'src/components/role-dashboard.css', 'src/components/WorkspaceUnavailable.tsx', 'src/components/BackupDataWorkspace.tsx', 'src/components/backup-data-workspace.css', 'src/components/IntegrationManagementWorkspace.tsx', 'src/styles/integrations-workspace.css', 'src/components/BehaviourSkillsWorkspace.tsx', 'src/styles/behaviour-skills-workspace.css',
   'src/components/FinanceWorkspace.tsx', 'src/styles/finance-workspace.css', 'src/styles/student-promotion-workspace.css', 'src/styles/navigation-refinement.css',
   'src/components/PayrollWorkspace.tsx', 'src/styles/payroll-workspace.css',
   'src/components/GovernanceWorkspace.tsx', 'src/components/AdministrationStage5Workspace.tsx', 'src/components/PeopleHRWorkspace.tsx', 'src/components/EmployeeQualificationsPanel.tsx', 'src/styles/people-hr-workspace.css', 'src/styles/governance-workspace.css',

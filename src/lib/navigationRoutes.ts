@@ -457,6 +457,34 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
   }
   const compositeKey = `${groupKey}:${itemKey}`
   const actorRole = role ?? 'owner'
+  if (groupKey === 'integrations') {
+    const views:Record<string,string> = {
+      'integration-overview':'overview',
+      'ai-provider-connections':'ai-providers',
+      'zoom-virtual-classrooms':'zoom',
+      'google-workspace':'google',
+      'youtube-learning':'youtube',
+      'biometric-attendance-devices':'biometric',
+    }
+    return 'integration:' + (views[itemKey] ?? 'overview')
+  }
+  if (groupKey === 'behaviour') {
+    const views:Record<string,string> = {
+      'behaviour-dashboard':'dashboard',
+      'behaviour-records':'records',
+      'positive-behaviour':'positive',
+      'disciplinary-incidents':'incidents',
+      'rewards-and-recognition':'recognition',
+      'warnings':'warnings',
+      'student-skills':'skills',
+      'co-curricular-activities':'activities',
+      'competency-tracking':'competencies',
+      'student-progress-history':'progress',
+      'behaviour-analytics':'analytics',
+      'downloadable-behaviour-reports':'downloads',
+    }
+    return 'behaviour:' + (views[itemKey] ?? 'dashboard')
+  }
   if (groupKey === 'academic-management') {
     const academicWindows: Record<string,string> = {
       'academic-sessions':'academic-sessions',
@@ -492,6 +520,7 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
     }
     return intelligenceRoutes[itemKey] ?? 'unavailable:ai:' + itemKey
   }
+  if (groupKey === 'backup' && itemKey === 'integration-status') return 'integration:overview'
   if (groupKey === 'backup') return 'backup:' + itemKey
   if (groupKey === 'timetable' && ['teacher-availability','substitution-management','timetable-publishing','class-coverage','engaged-classes'].includes(itemKey)) return 'unavailable:timetable:'+itemKey
   if (groupKey === 'students' && itemKey === 'student-data-export' && role && !['owner','admin'].includes(role)) {

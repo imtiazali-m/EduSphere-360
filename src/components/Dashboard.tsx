@@ -48,6 +48,8 @@ import { supabase } from '../lib/supabase'
 import { readDisplayPreferences, writeDisplayPreferences, type DashboardDisplayPreferences, type DashboardFontSize } from '../lib/displayPreferences'
 import { displayInstitutionName } from '../lib/collegeIdentity'
 import { BackupDataWorkspace } from './BackupDataWorkspace'
+import { IntegrationManagementWorkspace } from './IntegrationManagementWorkspace'
+import { BehaviourSkillsWorkspace } from './BehaviourSkillsWorkspace'
 
 interface Props { onToast: (message: string, error?: boolean) => void }
 type Dataset = Record<string, RecordRow[]>
@@ -751,6 +753,8 @@ export function Dashboard({ onToast }: Props) {
     const governanceWindowRoute = key.startsWith('governance:')
     const operationsWindowRoute = key.startsWith('operations:')
     const backupWindowRoute = key.startsWith('backup:')
+    const integrationWindowRoute = key.startsWith('integration:')
+    const behaviourWindowRoute = key.startsWith('behaviour:')
     const routeParts = key.split(':')
     const moduleWindowRoute = routeParts.length === 2 && ['fees', 'exams', 'exam_results', 'assignments', 'assignment_submissions', 'timetable', 'announcements', 'work_tasks'].includes(routeParts[0])
     const targetKey = academicWindowRoute ? 'academic'
@@ -770,6 +774,8 @@ export function Dashboard({ onToast }: Props) {
       : governanceWindowRoute ? 'governance'
       : operationsWindowRoute ? 'operations'
       : backupWindowRoute ? 'backup'
+      : integrationWindowRoute ? 'integrations'
+      : behaviourWindowRoute ? 'behaviour'
       : moduleWindowRoute ? routeParts[0]
       : key
     const targetWindow = academicWindowRoute ? key.slice('academic:'.length)
@@ -789,6 +795,8 @@ export function Dashboard({ onToast }: Props) {
       : governanceWindowRoute ? key.slice('governance:'.length)
       : operationsWindowRoute ? key.slice('operations:'.length)
       : backupWindowRoute ? key.slice('backup:'.length)
+      : integrationWindowRoute ? key.slice('integration:'.length)
+      : behaviourWindowRoute ? key.slice('behaviour:'.length)
       : moduleWindowRoute ? routeParts[1]
       : 'overview'
     let title = options.title ?? 'Dashboard'
@@ -810,6 +818,8 @@ export function Dashboard({ onToast }: Props) {
       else if (targetKey === 'governance') title = 'Institution Governance'
       else if (targetKey === 'operations') title = 'Institution Operations'
       else if (targetKey === 'backup') title = 'Backup & Data Management'
+      else if (targetKey === 'integrations') title = 'Integrations & Devices'
+      else if (targetKey === 'behaviour') title = 'Behaviour & Skills'
       else if (targetKey.startsWith('admin:')) {
         const subkey = targetKey.slice(6)
         title = adminModuleLabels[subkey] ?? 'Administration'
@@ -989,6 +999,8 @@ export function Dashboard({ onToast }: Props) {
                 tab.targetKey === 'governance' && tab.targetWindow === 'website-content' ? <CollegeWebsiteManager onToast={onToast}/> :
                 tab.targetKey === 'governance' ? <GovernanceWorkspace initialWindow={tab.targetWindow} onToast={onToast} onNavigate={navigateChild}/> :
                 tab.targetKey === 'operations' ? <InstitutionOperationsWorkspace workspaceKey={tab.targetWindow} initialWindow={tab.targetWindow.split(':')[1]} onToast={onToast}/> :
+                tab.targetKey === 'integrations' ? <IntegrationManagementWorkspace initialWindow={tab.targetWindow || 'overview'} onToast={onToast} onNavigate={navigateChild}/> :
+                tab.targetKey === 'behaviour' ? <BehaviourSkillsWorkspace initialWindow={tab.targetWindow || 'dashboard'} onToast={onToast}/> :
                 tab.targetKey === 'assistant' ? <AIAssistantWorkspace initialWindow={tab.targetWindow || 'chat'}/> :
                 tab.targetKey === 'frontoffice' ? <FrontOfficeWorkspace initialView={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'personal' ? <PersonalWorkspace initialWindow={tab.targetWindow} onToast={onToast} onNavigate={navigateChild}/> :
