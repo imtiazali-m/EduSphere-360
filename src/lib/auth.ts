@@ -3,7 +3,10 @@ import { supabase } from './supabase'
 
 export async function getCloudUserContext(userId: string): Promise<AppUser> {
   if (!supabase) throw new Error('Cloud mode is not configured. Add the Supabase URL and publishable key to .env.local.')
-  const { data: profile, error: profileError } = await supabase.from('profiles').select('full_name,email').eq('id', userId).maybeSingle()
+  const [{ data: profile, error: profileError }, { data: authData }] = await Promise.all([
+    supabase.from('profiles').select('full_name,email').eq('id', userId).maybeSingle(),
+    supabase.auth.getUser(),
+  ])
   if (profileError) throw profileError
   const { data: membership, error: membershipError } = await supabase
     .from('memberships').select('institution_id,role,institutions(name,institution_type)')
@@ -59,7 +62,7 @@ export async function getCloudUserContext(userId: string): Promise<AppUser> {
   }
   return {
     id: userId,
-    email: profile?.email ?? '',
+    email: authData.user?.email ?? profile?.email ?? '',
     fullName: profile?.full_name ?? 'User',
     role,
     institutionId: membership.institution_id,
