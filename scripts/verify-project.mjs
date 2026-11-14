@@ -336,6 +336,11 @@ check('Dashboard matches the menu and keeps Quick Access at the sidebar bottom',
   assert.ok(!dashboardSource.includes("group.key === 'dashboard' ? 'overview' : getNavigationRoute"), 'Dashboard submenu items must not all collapse to overview')
   assert.ok(!dashboardSource.includes('closeWorkspaceTab'), 'The visible close-window workflow must remain removed with the window bar')
   assert.ok(dashboardSource.includes('ed360-topbar-institution') && dashboardSource.includes('ed360-topbar-notice'), 'Approved institution topbar is missing')
+  assert.ok(dashboardSource.includes('/gidc-badin-official-logo.svg') && dashboardSource.includes('ed360-topbar-college-logo') && dashboardSource.includes('pro-sidebar-college-logo'), 'College emblem must appear in the sidebar and institution topbar')
+  assert.ok(dashboardSource.includes('Online notifications') && dashboardSource.includes('College portal online'), 'The topbar must identify college online notifications and portal status')
+  const navigationTheme = read('src/styles/college-theme.css')
+  for (const style of ['background:#ffffff !important;', 'color:#080b09 !important;', '.pro-app-shell[data-theme] .pro-sidebar .pro-nav-group-head.active', '.pro-app-shell[data-theme] .pro-sidebar .pro-nav-item.active', '.ed360-notification-copy']) assert.ok(navigationTheme.includes(style), 'High-contrast white navigation style is missing: ' + style)
+
   assert.ok(dashboardSource.includes('pro-profile-menu'), 'Account menu is missing')
   const quickAccessBlock = dashboardSource.slice(quickStart, dashboardSource.indexOf('</section>', quickStart) + 10)
   assert.ok(quickAccessBlock.includes('Sign out') && quickAccessBlock.includes('logout()'), 'Sidebar bottom area must retain Sign out')

@@ -711,3 +711,187 @@ button,input,select,textarea { font:inherit; }
 }
 
 .pro-nav-dashboard-link .pro-nav-chevron { display:none !important; }
+
+
+/* Final owner sidebar correction: the earlier blue active-state rules were more specific than the first white-theme override. */
+.pro-app-shell[data-theme] .pro-sidebar {
+  background:#ffffff !important;
+  background-image:none !important;
+  color:#101010 !important;
+  border-right:1px solid #e4e7e5 !important;
+  box-shadow:4px 0 18px rgba(18,28,22,.06) !important;
+}
+.pro-app-shell[data-theme] .pro-sidebar .pro-sidebar-brand {
+  background:#ffffff !important;
+  border-bottom:1px solid #e7eae8 !important;
+}
+.pro-app-shell[data-theme] .pro-sidebar .pro-sidebar-college-logo {
+  display:block;
+  width:46px;
+  height:46px;
+  flex:0 0 46px;
+  object-fit:contain;
+  padding:3px;
+  border:1px solid #dce9df;
+  border-radius:12px;
+  background:#f4faf5;
+}
+.pro-app-shell[data-theme] .pro-sidebar .pro-sidebar-brand-copy b {
+  color:#080b09 !important;
+  font-size:15px;
+  font-weight:900;
+}
+.pro-app-shell[data-theme] .pro-sidebar .pro-sidebar-brand-copy small {
+  color:#3f4a43 !important;
+  font-weight:800;
+  letter-spacing:1px;
+}
+.pro-app-shell[data-theme] .pro-sidebar .pro-sidebar-mark { display:none !important; }
+.pro-app-shell[data-theme] .pro-sidebar .pro-navigation {
+  background:#ffffff !important;
+  scrollbar-color:#c5ccc7 transparent !important;
+}
+.pro-app-shell[data-theme] .pro-sidebar .pro-nav-section,
+.pro-app-shell[data-theme] .pro-sidebar .pro-nav-group,
+.pro-app-shell[data-theme] .pro-sidebar .pro-nav-children { background:#ffffff !important; }
+.pro-app-shell[data-theme] .pro-sidebar .pro-nav-group-head,
+.pro-app-shell[data-theme] .pro-sidebar .pro-nav-item {
+  color:#080b09 !important;
+  background:#ffffff !important;
+  border-color:transparent !important;
+  text-shadow:none !important;
+}
+.pro-app-shell[data-theme] .pro-sidebar .pro-nav-group-head:hover,
+.pro-app-shell[data-theme] .pro-sidebar .pro-nav-item:hover {
+  color:#050705 !important;
+  background:#f2f5f3 !important;
+}
+.pro-app-shell[data-theme] .pro-sidebar .pro-nav-group-head.active,
+.pro-app-shell[data-theme] .pro-sidebar .pro-nav-dashboard-link.active,
+.pro-app-shell[data-theme] .pro-sidebar .pro-nav-item.active {
+  color:#050705 !important;
+  background:#e9eeeb !important;
+  box-shadow:inset 3px 0 0 #101612 !important;
+  font-weight:850 !important;
+}
+.pro-app-shell[data-theme] .pro-sidebar .pro-nav-group-icon,
+.pro-app-shell[data-theme] .pro-sidebar .pro-nav-icon,
+.pro-app-shell[data-theme] .pro-sidebar .pro-nav-chevron,
+.pro-app-shell[data-theme] .pro-sidebar .pro-nav-group-head svg,
+.pro-app-shell[data-theme] .pro-sidebar .pro-nav-item svg {
+  color:#101612 !important;
+}
+.pro-app-shell[data-theme] .pro-sidebar .pro-nav-children {
+  border-left:1px solid #e1e6e3 !important;
+}
+.pro-app-shell[data-theme] .pro-sidebar .pro-nav-connected {
+  background:#25834e !important;
+}
+.pro-app-shell[data-theme] .pro-sidebar .pro-quick-access {
+  background:#ffffff !important;
+  border-top:1px solid #e4e8e5 !important;
+}
+.pro-app-shell[data-theme] .pro-sidebar .pro-quick-access *,
+.pro-app-shell[data-theme] .pro-sidebar .pro-sidebar-collapse,
+.pro-app-shell[data-theme] .pro-sidebar .pro-mobile-close {
+  color:#101612 !important;
+}
+.pro-app-shell[data-theme] .pro-sidebar .pro-sidebar-collapse {
+  border:1px solid #d6ddd8 !important;
+  background:#f8faf8 !important;
+}
+.pro-app-shell[data-theme] .pro-sidebar .pro-sidebar-search {
+  border:1px solid #dbe1dd !important;
+  background:#f7f9f7 !important;
+  color:#151a16 !important;
+}
+.pro-app-shell[data-theme] .pro-sidebar .pro-sidebar-search input {
+  color:#101612 !important;
+}
+.pro-app-shell[data-theme] .pro-sidebar .pro-sidebar-search input::placeholder {
+  color:#737e77 !important;
+}
+.ed360-topbar-institution {
+  color:#111713 !important;
+  gap:10px;
+}
+.ed360-topbar-college-logo {
+  display:block;
+  width:34px;
+  height:34px;
+  flex:0 0 34px;
+  object-fit:contain;
+  padding:2px;
+  border:1px solid #dce9df;
+  border-radius:9px;
+  background:#f5faf6;
+}
+.ed360-topbar-institution b {
+  max-width:300px !important;
+  color:#111713 !important;
+  font-size:11px;
+}
+.ed360-topbar-institution small {
+  color:#56645b !important;
+}
+.pro-topbar-bell.ed360-topbar-notice {
+  display:flex !important;
+  align-items:center;
+  justify-content:center;
+  gap:9px;
+  width:auto !important;
+  min-width:146px;
+  height:38px !important;
+  padding:0 11px !important;
+  border:1px solid #dfe7e1 !important;
+  border-radius:10px !important;
+  color:#111713 !important;
+  background:#ffffff !important;
+}
+.pro-topbar-bell.ed360-topbar-notice:hover {
+  color:#111713 !important;
+  background:#f4f8f5 !important;
+  border-color:#b8c9bd !important;
+}
+.ed360-notification-copy {
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:2px;
+  line-height:1.15;
+}
+.ed360-notification-copy b {
+  color:#111713;
+  font-size:10px;
+  font-weight:850;
+  white-space:nowrap;
+}
+.ed360-notification-copy small {
+  color:#657169;
+  font-size:8px;
+}
+.pro-topbar-bell.ed360-topbar-notice>svg { color:#171e19 !important; }
+.ed360-topbar-notice .ed360-notification-count {
+  position:static !important;
+  display:grid;
+  place-items:center;
+  min-width:19px;
+  height:19px;
+  margin-left:1px;
+  padding:0 5px;
+  border-radius:99px;
+  color:#ffffff !important;
+  background:#247548 !important;
+  font-size:9px;
+  font-weight:900;
+}
+@media(max-width:900px) {
+  .ed360-topbar-institution b { max-width:205px !important; }
+  .ed360-notification-copy b { font-size:9px; }
+  .pro-topbar-bell.ed360-topbar-notice { min-width:0; }
+}
+@media(max-width:650px) {
+  .ed360-topbar-institution { display:none !important; }
+  .ed360-notification-copy { display:none; }
+  .pro-topbar-bell.ed360-topbar-notice { width:38px !important; min-width:38px; padding:0 !important; }
+}
