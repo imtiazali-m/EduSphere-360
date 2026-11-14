@@ -5,6 +5,7 @@ import {
   Newspaper, Phone, School, ShieldCheck, Users, X, Microscope, Image as ImageIcon,
   Building2, Award, BookMarked, Compass,
 } from 'lucide-react'
+import type { CSSProperties, ReactNode } from 'react'
 import type { AppRole } from '../lib/types'
 import { supabase } from '../lib/supabase'
 import '../styles/college-home-page.css'
@@ -37,7 +38,7 @@ type WebsitePhoto = {
   alt?: string
 }
 
-type WebsiteNews = { id: string; title: string; body: string; date?: string; url?: string; published?: boolean }
+type WebsiteNews = { id: string; title: string; body: string; date?: string; url?: string; published?: boolean; imageUrl?: string }
 type MagazineIssue = { id: string; title: string; issue?: string; year?: string; pdfUrl: string; coverUrl?: string; published?: boolean }
 type AcademicProgram = { id: string; title: string; detail?: string; officialUrl?: string }
 
@@ -88,8 +89,10 @@ const pages = [
   { id: 'academics', label: 'Academics', icon: BookOpen },
   { id: 'principal', label: 'Principal', icon: Award },
   { id: 'faculty', label: 'Faculty', icon: Users },
+  { id: 'departments', label: 'Faculty arrangement', icon: Users },
   { id: 'campus', label: 'Campus', icon: School },
-  { id: 'content', label: 'Content', icon: Newspaper },
+  { id: 'events', label: 'Events', icon: CalendarDays },
+  { id: 'content', label: 'News & announcements', icon: Newspaper },
   { id: 'gallery', label: 'Gallery', icon: ImageIcon },
   { id: 'emagazine', label: 'E-magazine', icon: BookMarked },
   { id: 'contact', label: 'Contact', icon: MapPin },
@@ -123,22 +126,25 @@ export function CollegeHomePage({ navigate, initialSection }: Props) {
   const page = pages.some(item => item.id === initialSection) ? initialSection! : 'home'
   const [content, setContent] = useState<WebsiteContent>(DEFAULT_CONTENT)
   const [faculty, setFaculty] = useState<FacultyProfile[]>([])
+  const [internalNews, setInternalNews] = useState<WebsiteNews[]>([])
   const [principal, setPrincipal] = useState<FacultyProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
 
   useEffect(() => {
     let live = true
-    async function loadPublicContent() {
-      setLoading(true)
+    async function loadPublicContent(showLoading = false) {
+      if (showLoading) setLoading(true)
       setLoadError('')
       if (!supabase) {
-        setLoading(false)
-        setLoadError('The public content service is not connected.')
+        if (live) {
+          setLoading(false)
+          setLoadError('The public content service is not connected.')
+        }
         return
       }
       try {
-        const [settingsResult, facultyResult] = await Promise.all([
+        const [settingsResult, facultyResult, announcementsResult] = await Promise.all([
           supabase.from('institution_settings')
             .select('setting_value, updated_at')
             .in('institution_id', PUBLIC_INSTITUTION_IDS)
@@ -154,25 +160,49 @@ export function CollegeHomePage({ navigate, initialSection }: Props) {
             .eq('is_public_profile', true)
             .order('public_profile_order', { ascending: true })
             .order('full_name', { ascending: true }),
+          supabase.from('announcements')
+            .select('id,title,body,created_at,published_at')
+            .in('institution_id', PUBLIC_INSTITUTION_IDS)
+            .eq('is_public', true)
+            .order('created_at', { ascending: false })
+            .limit(50),
         ])
         if (settingsResult.error) throw settingsResult.error
         if (facultyResult.error) throw facultyResult.error
+        if (announcementsResult.error) throw announcementsResult.error
         const saved = (settingsResult.data?.setting_value ?? {}) as WebsiteContent
         const merged = { ...DEFAULT_CONTENT, ...saved }
         const profiles = (facultyResult.data ?? []) as FacultyProfile[]
+        const publicNotices: WebsiteNews[] = (announcementsResult.data ?? []).map(item => ({
+          id: 'internal-' + item.id,
+          title: String(item.title),
+          body: String(item.body),
+          date: new Date(item.published_at || item.created_at).toLocaleDateString('en-PK', { day: 'numeric', month: 'short', year: 'numeric' }),
+          published: true,
+        }))
         if (live) {
           setContent(merged)
           setFaculty(profiles.filter(item => item.is_principal !== true))
           setPrincipal(profiles.find(item => item.is_principal === true) ?? null)
+          setInternalNews(publicNotices)
         }
       } catch (error) {
         if (live) setLoadError(error instanceof Error ? error.message : 'Public college information could not be loaded.')
       } finally {
-        if (live) setLoading(false)
+        if (live && showLoading) setLoading(false)
       }
     }
-    void loadPublicContent()
-    return () => { live = false }
+    const refresh = () => {
+      if (document.visibilityState === 'visible') void loadPublicContent(false)
+    }
+    void loadPublicContent(true)
+    window.addEventListener('focus', refresh)
+    const refreshTimer = window.setInterval(refresh, 60000)
+    return () => {
+      live = false
+      window.removeEventListener('focus', refresh)
+      window.clearInterval(refreshTimer)
+    }
   }, [])
 
   useEffect(() => {
@@ -184,9 +214,18 @@ export function CollegeHomePage({ navigate, initialSection }: Props) {
     return uploaded
   }, [content])
 
-  const news = (content.news ?? []).filter(item => item.published !== false)
+  const news = [...internalNews, ...(content.news ?? []).filter(item => item.published !== false)]
   const magazines = (content.magazines ?? []).filter(item => item.published !== false)
   const programmeList = content.programs?.length ? content.programs : DEFAULT_CONTENT.programs ?? []
+  const facultyGroups = useMemo(() => {
+    const grouped = new Map<string, FacultyProfile[]>()
+    faculty.forEach(person => {
+      const key = String(person.department || 'Department not entered').trim()
+      grouped.set(key, [...(grouped.get(key) ?? []), person])
+    })
+    return Array.from(grouped.entries()).sort(([a], [b]) => a.localeCompare(b))
+  }, [faculty])
+  const eventPhotos = galleryItems.filter(item => item.category === 'college-events' || item.category === 'campus-activities')
   const contactAddress = textValue(content.contactAddress, 'Badin, Sindh, Pakistan')
   const contactEmail = textValue(content.contactEmail)
   const contactPhone = textValue(content.contactPhone)
