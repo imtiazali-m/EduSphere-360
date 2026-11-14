@@ -231,7 +231,6 @@ export function CollegeWebsiteManager({ onToast }: { onToast: (message: string, 
   }
 
   function toggleApprovedCover(id: string, approve: boolean) {
-    const candidate = coverChoices.find(item => item.id === id)
     setContent(current => {
       const nextIds = approve
         ? Array.from(new Set([...current.approvedFacebookPhotoIds, id]))
@@ -318,7 +317,7 @@ export function CollegeWebsiteManager({ onToast }: { onToast: (message: string, 
           <div><span><ImagePlus size={20}/></span><strong>{approvedCount}</strong><small>Approved Facebook images</small></div>
         </div>
 
-        <AdminSection icon={ImagePlus} title="Homepage photographs — approval required" description="Four exact photo posts listed by the official GIDC Badin Facebook Photos tab. Open each original to inspect it, then mark Yes or No. The photo itself is not published until you upload that same approved image.">
+        <AdminSection icon={ImagePlus} title="Homepage photographs — approval required" description="Four exact photo posts listed by the official GIDC Badin Facebook Photos tab. Open each original to inspect it, then mark Yes or No. The image is published only after you upload the same approved photo.">
           <div className="cwm-source-line"><Facebook size={17}/><span>Source: <a href="https://www.facebook.com/GIDCBadin/photos" target="_blank" rel="noreferrer">GIDC Badin official Facebook Photos</a> → public photo stream</span></div>
           <div className="cwm-cover-grid">
             {coverChoices.map((photo, index) => {
