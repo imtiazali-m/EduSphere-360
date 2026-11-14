@@ -87,7 +87,7 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
    if(studentResult.error && population==='students')throw studentResult.error
    if(staffResult.error && population!=='students' && (canManageStaff||isEmployeeSelf))throw staffResult.error
    const [classResult,placementResult]=await Promise.all([
-    supabase.from('classes').select('id,name,section,campus_id').eq('institution_id',user.institutionId).eq('is_active',true),
+    supabase.from('classes').select('id,name,section,campus_id').eq('institution_id',user.institutionId),
     supabase.from('student_placements').select('student_id,class_id,effective_from,effective_to,status,campus_id').eq('institution_id',user.institutionId).lte('effective_from',date).or('effective_to.is.null,effective_to.gte.'+date).order('effective_from',{ascending:false})
    ])
    if(classResult.error)throw classResult.error
@@ -95,7 +95,7 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
    const classMap=new Map((classResult.data??[]).map(row=>[String(row.id),row]))
    const placementMap=new Map<string,typeof placementResult.data[number]>();for(const row of placementResult.data??[])if(!placementMap.has(String(row.student_id)))placementMap.set(String(row.student_id),row)
    setClassRecords((classResult.data??[]) as {id:string;name:string;section:string|null;campus_id:string|null}[])
-   const roster=(studentResult.data??[]).map(row=>{const placement=placementMap.get(String(row.id));const linked=placement?classMap.get(String(placement.class_id)):undefined;return {...row,class_name:row.class_name??linked?.name??null,section_name:linked?.section??null,class_id:linked?.id??null} as Person})
+   const roster=(studentResult.data??[]).map(row=>{const placement=placementMap.get(String(row.id));const linked=placement?classMap.get(String(placement.class_id)):undefined;return {...row,class_name:linked?.name??row.class_name??null,section_name:linked?.section??null,class_id:linked?.id??null} as Person})
    setStudents(roster)
    setStaff((staffResult.data??[]) as Person[])
    const campusResult=await supabase.from('campuses').select('id,name').eq('institution_id',user.institutionId).order('name')
@@ -104,7 +104,7 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
    if(canManageStaff){const shiftResult=await supabase.from('employee_shifts').select('*').eq('institution_id',user.institutionId).eq('is_active',true).order('name');if(shiftResult.error)throw shiftResult.error;setShifts((shiftResult.data??[]) as RecordRow[])}
   }catch(error){setLoadingError(error instanceof Error?error.message:'The roster could not be loaded.');setStudents([]);setStaff([])}
   finally{setLoading(false)}
- },[user?.id,user?.institutionId,population,canManageStaff])
+ },[user?.id,user?.institutionId,population,canManageStaff,date])
 
  const loadAttendance=useCallback(async()=>{
   if(!supabase||!user)return
