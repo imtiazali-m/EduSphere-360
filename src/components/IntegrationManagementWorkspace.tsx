@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Activity, AlertCircle, ArrowUpRight, CheckCircle2, CircleHelp, Cloud, Fingerprint, KeyRound, RefreshCw, ShieldCheck, Video, Youtube } from 'lucide-react'
+import { Activity, AlertCircle, ArrowUpRight, CircleHelp, Cloud, Fingerprint, KeyRound, RefreshCw, ShieldCheck, Video, Youtube, type LucideIcon } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import '../styles/integrations-workspace.css'
@@ -59,7 +59,7 @@ const requiredSecrets:Record<Exclude<PageKey,'overview'|'ai-providers'>,string[]
  youtube:['YOUTUBE_DATA_API_KEY (only for search/metadata)','GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET (only for channel OAuth)'],
  biometric:['No student fingerprint image/template secret belongs in the browser. Device SDK credentials and webhook signing key are server-side.'],
 }
-const PageIcon:Record<PageKey,typeof Cloud>={overview:Cloud,'ai-providers':Activity,zoom:Video,google:Cloud,youtube:Youtube,biometric:Fingerprint}
+const PageIcon:Record<PageKey,LucideIcon>={overview:Cloud,'ai-providers':Activity,zoom:Video,google:Cloud,youtube:Youtube,biometric:Fingerprint}
 
 export function IntegrationManagementWorkspace({initialWindow='overview',onToast,onNavigate}:{initialWindow?:string;onToast:(message:string,error?:boolean)=>void;onNavigate:(route:string)=>void}){
  const {user}=useAuth()
@@ -71,7 +71,6 @@ export function IntegrationManagementWorkspace({initialWindow='overview',onToast
  const [lastChecked,setLastChecked]=useState('')
  const [error,setError]=useState('')
  const [testResults,setTestResults]=useState<Record<string,string>>({})
- const [expanded,setExpanded]=useState<string>('')
 
  const refreshAI=useCallback(async()=>{
   if(!supabase||!user){setError('Sign in to check the institution AI connection.');return}
