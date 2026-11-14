@@ -3,6 +3,7 @@ import { CalendarDays, Download, RefreshCw, Search } from 'lucide-react'
 import '../styles/reports-analytics-workspace.css'
 import { useAuth } from '../context/AuthContext'
 import { listRecords } from '../lib/data'
+import { supabase } from '../lib/supabase'
 import { userFacingError } from '../lib/userErrors'
 import type { RecordRow } from '../lib/types'
 
@@ -75,7 +76,7 @@ export function ReportsAnalyticsWorkspace({initialWindow='overview',onToast}:{in
  const [history,setHistory]=useState<{name:string;format:string;at:string;count:number}[]>([])
  const [scheduleFrequency,setScheduleFrequency]=useState('monthly')
 
- useEffect(()=>{let live=true;setLoading(true);const keys:DatasetKey[]=['students','teachers','attendance','exam_results','fee_invoices'];Promise.all(keys.map(async key=>{try{return [key,await listRecords(mode,user!,key)] as const}catch(e){if(live)setErrors(v=>[...v,userFacingError(e,'Some report records could not be loaded.')]);return [key,[]] as const}})).then(async pairs=>{if(!live)return;const next:Record<DatasetKey,ReportRow[]>={students:[],teachers:[],attendance:[],exam_results:[],fee_invoices:[],payroll:[]};pairs.forEach(([key,rows])=>{next[key]=rows as ReportRow[]});setData(next);setLoading(false)});return()=>{live=false}},[mode,user?.id,user?.institutionId,refresh])
+ useEffect(()=>{let live=true;setLoading(true);const keys:DatasetKey[]=['students','teachers','attendance','exam_results','fee_invoices'];Promise.all(keys.map(async key=>{try{return [key,await listRecords(mode,user!,key)] as const}catch(e){if(live)setErrors(v=>[...v,userFacingError(e,'Some report records could not be loaded.')]);return [key,[]] as const}})).then(async pairs=>{if(!live)return;const next:Record<DatasetKey,ReportRow[]>={students:[],teachers:[],attendance:[],exam_results:[],fee_invoices:[],payroll:[]};pairs.forEach(([key,rows])=>{next[key]=rows as ReportRow[]});if(supabase){try{const [items,runs]=await Promise.all([supabase.from('payroll_items').select('*').eq('institution_id',user!.institutionId).order('created_at',{ascending:false}).limit(2000),supabase.from('payroll_runs').select('*').eq('institution_id',user!.institutionId).limit(250)]);if(items.error)throw items.error;if(runs.error)throw runs.error;const runMap=new Map((runs.data??[]).map(run=>[String(run.id),run]));next.payroll=(items.data??[]).map(item=>{const run=runMap.get(String(item.payroll_run_id));return {...item,employee_name:String(item.employee_name??'Employee record'),period_start:run?.period_start??'',period_end:run?.period_end??''} as ReportRow})}catch(e){if(live)setErrors(v=>[...v,userFacingError(e,'Payroll report data could not be loaded.')])}}setData(next);setLoading(false)});return()=>{live=false}},[mode,user?.id,user?.institutionId,refresh])
  const dataset=pageKey==='builder'?customSource:meta.dataset
  const allRows=data[dataset]??[]
  const filtered=useMemo(()=>allRows.filter(row=>{const d=dateValue(row);if(from&&d&&d<from)return false;if(to&&d&&d>to)return false;if(className!=='all'&&String(row.class_name??'')!==className)return false;if(section!=='all'&&String(row.section_name??'')!==section)return false;if(query&&!Object.values(row).some(v=>String(v??'').toLowerCase().includes(query.toLowerCase())))return false;return true}),[allRows,from,to,className,section,query])
