@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
-import { Activity, Award, BarChart3, CheckCircle2, Download, FilePlus2, Filter, HeartHandshake, RefreshCw, Search, ShieldAlert, Sparkles, Users } from 'lucide-react'
+import { Activity, Award, CheckCircle2, Download, FilePlus2, Filter, RefreshCw, Search, ShieldAlert } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import '../styles/behaviour-skills-workspace.css'
