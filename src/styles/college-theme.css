@@ -69,7 +69,7 @@ button,input,select,textarea { font:inherit; }
 
 /* Internal application — one cohesive plum / violet / rose canvas.
    Public pages remain on their existing visual theme. */
-:root {
+.pro-app-shell {
   --es-brand-950:#241334;
   --es-brand-900:#351b4b;
   --es-brand-800:#4c2864;
@@ -91,8 +91,6 @@ button,input,select,textarea { font:inherit; }
   --es-shadow-md:0 12px 30px rgba(49,24,65,.10);
   --es-shadow-lg:0 24px 58px rgba(35,16,48,.18);
   accent-color:#93519f;
-}
-.pro-app-shell {
   --pro-ink:#34233f;
   --pro-muted:#806d89;
   --pro-line:#eaddeb;
@@ -223,7 +221,7 @@ button,input,select,textarea { font:inherit; }
 
 /* Existing workspaces share the same single page background; only their cards sit above it. */
 .pro-window-panel :is(
-  .rd-metric-card,.rd-panel,.rd-domain-card,.rd-domain-overview,
+  .rd-metric-card,.rd-panel,.rd-domain-card,
   .gov-panel,.gov-context,.gov-card,.ed360-panel,.ed360-module-insights,
   .ed360-personal-card,.ed360-personal-hero,.ed360-personal-nav,
   .ed360-admin-profile-preview,.ed360-admin-logo,.table-card,.modal-card,
