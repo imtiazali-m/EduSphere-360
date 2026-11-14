@@ -90,7 +90,7 @@ function parseCsv(source:string): DataRow[] {
 }
 function safeImportPayload(row:DataRow):Record<string,unknown>{
   const entries:Array<[string,unknown]>=Object.entries(row)
-    .map(([key,value])=>[normaliseHeader(key),value])
+    .map(([key,value]):[string,unknown]=>[normaliseHeader(key),value])
     .filter(([key])=>!protectedFields.has(key))
   return Object.fromEntries(entries)
 }
