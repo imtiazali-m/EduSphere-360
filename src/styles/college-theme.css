@@ -510,3 +510,121 @@ button,input,select,textarea { font:inherit; }
  .pro-window-panel .rd-campus-illustration { max-height:none; }
  .pro-window-panel .rd-welcome-visual-caption { align-items:flex-start; flex-direction:column; }
 }
+
+
+/* Administration: spacious, purpose-built pages instead of repeated summary cards. */
+.pro-window-panel .ed360-admin-stage5 { gap:20px; }
+.pro-window-panel .gov-stage { max-width:1560px; gap:18px; }
+.pro-window-panel .gov-heading { align-items:center; padding:4px 2px 8px; }
+.pro-window-panel .gov-heading>div { display:grid; gap:5px; }
+.pro-window-panel .gov-heading>div>span { color:#d9a8d2; font-size:9px; letter-spacing:1.45px; }
+.pro-window-panel .gov-heading h1 { margin:0; color:#482957; font-size:clamp(25px,2.4vw,34px); letter-spacing:-.75px; }
+.pro-window-panel .ed360-admin-top-refresh { min-height:39px; padding:0 14px; border-color:#e7d5ec; color:#684078; background:#fffaff; box-shadow:0 3px 12px rgba(56,28,72,.07); }
+.pro-window-panel .ed360-admin-top-refresh:hover { background:#f8eef9; }
+.pro-window-panel .ed360-admin-directory-page,
+.pro-window-panel .ed360-admin-organization-page,
+.pro-window-panel .ed360-admin-approval-page,
+.pro-window-panel .ed360-admin-settings-page { display:grid; gap:18px; min-width:0; }
+.pro-window-panel .ed360-admin-directory-card { min-height:350px; padding:23px; }
+.pro-window-panel .ed360-admin-directory-card>header h2 { color:#4a2a5b; font-size:19px; }
+.pro-window-panel .ed360-admin-directory-card>header p { color:#897996; font-size:11px; }
+.pro-window-panel .ed360-admin-directory-card .ed360-admin-kpis { grid-template-columns:repeat(3,minmax(0,1fr)); margin:10px 0 16px; }
+.pro-window-panel .ed360-admin-directory-card .ed360-admin-kpis article { min-height:82px; border-color:#ecdff0; border-radius:13px; background:linear-gradient(150deg,#fffaff,#fbf4fc); }
+.pro-window-panel .ed360-admin-directory-card .ed360-admin-kpis strong { color:#58336c; font-size:25px; }
+.pro-window-panel .ed360-admin-directory-card .ed360-admin-kpis small { color:#907a99; }
+.pro-window-panel .ed360-admin-directory-card .ed360-admin-table th { background:#f8f0fa; color:#785f84; }
+.pro-window-panel .ed360-admin-directory-card .ed360-admin-table td { color:#523761; }
+.pro-window-panel .ed360-admin-search { border-color:#e8dced; border-radius:10px; background:#fffaff; color:#917b9a; }
+.pro-window-panel .ed360-admin-search input { color:#492a57; }
+.pro-window-panel .ed360-admin-academic-page { display:grid; gap:17px; }
+.pro-window-panel .ed360-admin-academic-page>.ed360-admin-kpis { grid-template-columns:repeat(5,minmax(0,1fr)); gap:11px; }
+.pro-window-panel .ed360-admin-academic-page>.ed360-admin-kpis article { min-height:104px; padding:16px; border-color:#e9d9ee; border-radius:14px; background:linear-gradient(155deg,#fffaff,#f8effa); }
+.pro-window-panel .ed360-admin-academic-page>.ed360-admin-kpis small { color:#8a7493; font-size:9px; letter-spacing:.65px; }
+.pro-window-panel .ed360-admin-academic-page>.ed360-admin-kpis strong { margin-top:7px; color:#643a79; font-size:26px; }
+.pro-window-panel .ed360-admin-academic-page>.ed360-admin-kpis em { margin-top:3px; color:#927e9c; font-size:9px; font-style:normal; }
+.pro-window-panel .ed360-admin-academic-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; align-items:start; }
+.pro-window-panel .ed360-admin-academic-grid>.gov-panel { min-width:0; min-height:245px; padding:19px; }
+.pro-window-panel .ed360-admin-academic-grid>.gov-panel>header h2 { color:#4d2d5e; font-size:16px; }
+.pro-window-panel .ed360-admin-academic-grid>.gov-panel>header p { color:#8a7794; font-size:10px; }
+.pro-window-panel .ed360-admin-academic-list { display:grid; gap:0; }
+.pro-window-panel .ed360-admin-academic-list article { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:5px 12px; padding:12px 2px; border-bottom:1px solid #f0e6f2; }
+.pro-window-panel .ed360-admin-academic-list article b { color:#543365; font-size:12px; }
+.pro-window-panel .ed360-admin-academic-list article span { color:#8a6c96; font-size:10px; }
+.pro-window-panel .ed360-admin-academic-list article small { grid-column:1/-1; color:#9887a0; font-size:9px; }
+.pro-window-panel .ed360-admin-organization-card { padding:23px; }
+.pro-window-panel .ed360-admin-organization-card>header h2 { color:#4b2a5a; font-size:19px; }
+.pro-window-panel .ed360-admin-organization-card>header p { color:#8d7a98; font-size:11px; }
+.pro-window-panel .ed360-admin-organization-card .ed360-admin-kpis { grid-template-columns:repeat(4,minmax(0,1fr)); margin:12px 0 20px; }
+.pro-window-panel .ed360-admin-organization-card .ed360-admin-kpis article { border-color:#e9d9ee; background:#fcf7fd; }
+.pro-window-panel .ed360-admin-organization-card .ed360-admin-kpis strong { color:#643c78; }
+.pro-window-panel .ed360-admin-org { gap:16px; }
+.pro-window-panel .ed360-admin-org-root { position:relative; min-width:min(100%,450px); padding:19px 24px; border-color:#e4cde9; border-radius:16px; color:#fff6ff; background:linear-gradient(125deg,#58336d,#87508d); box-shadow:0 9px 22px rgba(70,34,84,.14); }
+.pro-window-panel .ed360-admin-org-root span { display:block; margin-bottom:6px; color:#edc9e8; font-size:8px; font-weight:850; letter-spacing:1.5px; }
+.pro-window-panel .ed360-admin-org-root b { color:#fff9ff; font-size:19px; }
+.pro-window-panel .ed360-admin-org-root small { color:#f0d9ed; }
+.pro-window-panel .ed360-admin-org-connector { align-self:center; width:2px; height:24px; margin:-16px 0; background:linear-gradient(#c996c9,#ead8eb); }
+.pro-window-panel .ed360-admin-org-admins span { min-width:170px; padding:13px 17px; border-color:#e9dcef; border-radius:12px; color:#664775; background:#fffaff; box-shadow:0 3px 10px rgba(65,31,81,.04); }
+.pro-window-panel .ed360-admin-org-admins b { color:#4c2c5d; font-size:12px; }
+.pro-window-panel .ed360-admin-org-departments { gap:14px; }
+.pro-window-panel .ed360-admin-org-department { padding:17px; border-color:#eaddec; border-radius:14px; background:linear-gradient(155deg,#fffaff,#fcf7fd); }
+.pro-window-panel .ed360-admin-org-department h3 { color:#503160; font-size:14px; }
+.pro-window-panel .ed360-admin-org-department p { color:#917d9a; }
+.pro-window-panel .ed360-admin-org-staff { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+.pro-window-panel .ed360-admin-org-staff span { display:grid; gap:3px; padding:9px 10px; border:1px solid #eee3f0; border-radius:9px; color:#5a3b68; background:#fffaff; font-size:10px; }
+.pro-window-panel .ed360-admin-org-staff span small { color:#977fa0; font-size:9px; }
+.pro-window-panel .ed360-admin-org-empty { grid-column:1/-1; color:#9a8aa2 !important; }
+.pro-window-panel .ed360-admin-organization-roster { padding:21px; }
+.pro-window-panel .ed360-admin-organization-roster>header h2 { color:#4c2e5d; }
+.pro-window-panel .ed360-admin-approval-panel { min-height:480px; padding:24px; }
+.pro-window-panel .ed360-admin-approval-panel>header h2 { color:#4b2a5a; font-size:20px; }
+.pro-window-panel .ed360-admin-approval-panel .gov-approval-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:15px; align-items:stretch; }
+.pro-window-panel .ed360-admin-approval-panel .gov-approval-list article { min-width:0; display:flex; flex-direction:column; gap:12px; padding:19px; border-color:#eadced; border-radius:15px; background:linear-gradient(155deg,#fffaff,#fbf4fc); }
+.pro-window-panel .ed360-admin-approval-panel .gov-approval-list article .gov-row-actions { margin-top:auto; }
+.pro-window-panel .ed360-admin-approval-panel .gov-payload { overflow:auto; border:1px solid #eee1f1; background:#faf4fc; }
+.pro-window-panel .ed360-admin-policy-page { min-height:360px; padding:23px; }
+.pro-window-panel .ed360-admin-policy-page>header h2 { color:#4c2c5b; font-size:19px; }
+.pro-window-panel .ed360-admin-policy-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+.pro-window-panel .ed360-admin-policy-card { min-width:0; padding:18px; border-color:#eadced; border-radius:14px; background:linear-gradient(155deg,#fffaff,#fcf7fd); }
+.pro-window-panel .ed360-admin-policy-card h3 { color:#4c2e5d; font-size:15px; }
+.pro-window-panel .ed360-admin-policy-meta { color:#8e7a97; }
+.pro-window-panel .ed360-admin-policy-card details { padding-top:9px; border-top:1px solid #f0e5f2; }
+.pro-window-panel .ed360-admin-settings-page { gap:15px; }
+.pro-window-panel .ed360-admin-settings-card { max-width:1050px; padding:25px; }
+.pro-window-panel .ed360-admin-settings-card>header h2 { color:#4b2b5b; font-size:20px; }
+.pro-window-panel .ed360-admin-settings-card>header p { color:#8d7a96; }
+.pro-window-panel .ed360-admin-preferences-form { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:17px 20px; }
+.pro-window-panel .ed360-admin-preferences-form label { display:grid; gap:7px; color:#694a77; font-size:11px; font-weight:800; }
+.pro-window-panel .ed360-admin-preferences-form input,
+.pro-window-panel .ed360-admin-preferences-form select { width:100%; min-height:43px; padding:9px 12px; border:1px solid #e5d5ea; border-radius:10px; color:#492d57; background:#fffaff; font-size:12px; }
+.pro-window-panel .ed360-admin-preferences-form input:focus,
+.pro-window-panel .ed360-admin-preferences-form select:focus { border-color:#a76bb5; box-shadow:0 0 0 3px rgba(167,107,181,.13); }
+.pro-window-panel .ed360-admin-preferences-footer { grid-column:1/-1; display:flex; align-items:center; justify-content:space-between; gap:15px; padding-top:15px; border-top:1px solid #f0e5f2; }
+.pro-window-panel .ed360-admin-preferences-footer span { color:#937f9b; font-size:10px; line-height:1.5; }
+.pro-window-panel .ed360-admin-preferences-note { display:flex; align-items:flex-start; gap:11px; max-width:1050px; padding:15px 17px; border:1px solid #eadced; border-radius:13px; background:#fcf7fd; }
+.pro-window-panel .ed360-admin-preferences-note>span { color:#815092; }
+.pro-window-panel .ed360-admin-preferences-note strong { color:#573668; font-size:11px; }
+.pro-window-panel .ed360-admin-preferences-note p { margin:4px 0 0; color:#8b7795; font-size:10px; line-height:1.5; }
+.pro-window-panel .ed360-admin-system-refresh { justify-content:flex-end; border:0; background:transparent; }
+.pro-window-panel .ed360-admin-system-refresh button { min-height:38px; }
+@media(max-width:1000px) {
+ .pro-window-panel .ed360-admin-academic-page>.ed360-admin-kpis { grid-template-columns:repeat(3,minmax(0,1fr)); }
+ .pro-window-panel .ed360-admin-policy-list { grid-template-columns:1fr; }
+}
+@media(max-width:780px) {
+ .pro-window-panel .ed360-admin-academic-grid { grid-template-columns:1fr; }
+ .pro-window-panel .ed360-admin-approval-panel .gov-approval-list { grid-template-columns:1fr; }
+ .pro-window-panel .ed360-admin-organization-card .ed360-admin-kpis { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media(max-width:620px) {
+ .pro-window-panel .gov-heading { align-items:flex-start; flex-direction:column; }
+ .pro-window-panel .ed360-admin-top-refresh { width:100%; justify-content:center; }
+ .pro-window-panel .ed360-admin-directory-card,.pro-window-panel .ed360-admin-organization-card,
+ .pro-window-panel .ed360-admin-approval-panel,.pro-window-panel .ed360-admin-policy-page,
+ .pro-window-panel .ed360-admin-settings-card { padding:16px; }
+ .pro-window-panel .ed360-admin-directory-card .ed360-admin-kpis,
+ .pro-window-panel .ed360-admin-academic-page>.ed360-admin-kpis { grid-template-columns:repeat(2,minmax(0,1fr)); }
+ .pro-window-panel .ed360-admin-preferences-form { grid-template-columns:1fr; }
+ .pro-window-panel .ed360-admin-preferences-footer { align-items:stretch; flex-direction:column; }
+ .pro-window-panel .ed360-admin-preferences-footer button { width:100%; }
+ .pro-window-panel .ed360-admin-org-staff { grid-template-columns:1fr; }
+}
