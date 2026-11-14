@@ -12,11 +12,11 @@ type Message={id:string;role:'user'|'assistant';content:string;provider?:string;
 const providers:{key:ProviderKey;label:string;model:string}[]=[
  {key:'openai',label:'ChatGPT / OpenAI',model:'gpt-6-astra'},
  {key:'anthropic',label:'Claude',model:'claude-sonnet-5'},
- {key:'gemini',label:'Gemini',model:'gemini-flash-latest'},
+ {key:'gemini',label:'Gemini',model:'gemini-3.8-flash'},
  {key:'deepseek',label:'DeepSeek',model:'deepseek-flash'},
  {key:'xai',label:'Grok',model:'grok-4.7'},
  {key:'meta',label:'Meta',model:'muse-spark-1.3'},
- {key:'perplexity',label:'Perplexity',model:'fast'},
+ {key:'perplexity',label:'Perplexity',model:'fast-search'},
 ]
 const intelligencePages:Record<string,{title:string;eyebrow:string;description:string;placeholder:string;icon:any;quick:string[]}>={
  chat:{title:'AI Assistant',eyebrow:'INSTITUTIONAL AI',description:'Ask a question, prepare a document or explore an authorised institutional dataset.',placeholder:'Ask the college assistant…',icon:BrainCircuit,quick:['Summarise the latest institutional indicators','Draft a formal college notice','Explain the strongest attendance trend']},
