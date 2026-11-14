@@ -1,4 +1,4 @@
-name: EduSphere 360 — build, verify and release
+name: Government Islamia Degree College Badin — build and production release
 
 on:
   push:
@@ -146,7 +146,7 @@ jobs:
           retention-days: 14
 
   deploy-production:
-    name: Manually approved Cloudflare production deployment
+    name: Deploy college website after successful main-branch verification
     needs: verify-and-build
     if: >-
       ${{
