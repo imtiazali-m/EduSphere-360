@@ -420,7 +420,7 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
     const ownerMembers=members.filter(row=>row.role==='owner'),adminMembers=members.filter(row=>row.role==='admin')
     return <div className="ed360-admin-organization-page">
       <section className="gov-panel ed360-admin-organization-card">
-        <header><div><h2>Reporting layers</h2><p>College authority, administration, department leadership and employee assignments.</p></div><span className="gov-readonly">Current records</span></header>
+        <header><div><h2>Reporting layers</h2><p>College authority, administration, department leadership and employee assignments.</p></div><div className="gov-row-actions"><button className="gov-button" onClick={()=>onNavigate('admin:departments')}>Departments <ArrowUpRight size={13}/></button><button className="gov-button" onClick={()=>onNavigate('employees:designations')}>Designations <ArrowUpRight size={13}/></button><button className="gov-button" onClick={()=>onNavigate('teachers')}>Faculty &amp; staff <ArrowUpRight size={13}/></button></div></header>
         <div className="ed360-admin-kpis"><article><small>Departments</small><strong>{departments.length}</strong></article><article><small>Faculty & staff records</small><strong>{teachers.length}</strong></article><article><small>Designations</small><strong>{designations.length}</strong></article><article><small>Administrators</small><strong>{adminMembers.length}</strong></article></div>
         <div className="ed360-admin-org">
           <div className="ed360-admin-org-root"><span>COLLEGE AUTHORITY</span><b>{ownerMembers.map(row=>row.full_name).join(', ')||'Institution Owner'}</b><small>Institute owner · highest authority</small></div>
@@ -445,19 +445,19 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
         <article><small>Rooms</small><strong>{rooms.length}</strong><em>Teaching and campus spaces</em></article>
       </section>
       <div className="ed360-admin-academic-grid">
-        <section className="gov-panel"><header><div><h2>Academic sessions</h2><p>Saved academic years and their current status.</p></div></header>
+        <section className="gov-panel"><header><div><h2>Academic sessions</h2><p>Saved academic years and their current status.</p></div><button className="gov-button" onClick={()=>onNavigate('admin:academic_sessions')}>Manage sessions <ArrowUpRight size={14}/></button></header>
           {academicSessions.length?<div className="gov-table-wrap"><table className="ed360-admin-table"><thead><tr><th>Session</th><th>Start</th><th>End</th><th>Status</th></tr></thead><tbody>{academicSessions.map(row=><tr key={row.id}><td><b>{String(row.session_name??row.name??'Academic session')}</b></td><td>{dateLabel(row.start_date)}</td><td>{dateLabel(row.end_date)}</td><td>{label(row.status??(row.is_current?'current':'active'))}</td></tr>)}</tbody></table></div>:<div className="gov-empty">No academic sessions have been saved yet.</div>}
         </section>
-        <section className="gov-panel"><header><div><h2>Classes and sections</h2><p>Classes, grade levels and section names currently on file.</p></div></header>
+        <section className="gov-panel"><header><div><h2>Classes and sections</h2><p>Classes, grade levels and section names currently on file.</p></div><button className="gov-button" onClick={()=>onNavigate('admin:classes')}>Manage classes <ArrowUpRight size={14}/></button></header>
           {classes.length?<div className="gov-table-wrap"><table className="ed360-admin-table"><thead><tr><th>Class</th><th>Grade / level</th><th>Section</th><th>Status</th></tr></thead><tbody>{classes.map(row=><tr key={row.id}><td><b>{String(row.name??'Class')}</b></td><td>{String(row.grade_level??'—')}</td><td>{String(row.section??'—')}</td><td>{row.is_active===false?'Inactive':'Active'}</td></tr>)}</tbody></table></div>:<div className="gov-empty">No classes or sections have been saved yet.</div>}
         </section>
-        <section className="gov-panel"><header><div><h2>Programmes</h2><p>Institution programmes with their connected departments.</p></div></header>
+        <section className="gov-panel"><header><div><h2>Programmes</h2><p>Institution programmes with their connected departments.</p></div><button className="gov-button" onClick={()=>onNavigate('admin:programs')}>Manage programmes <ArrowUpRight size={14}/></button></header>
           {programs.length?<div className="ed360-admin-academic-list">{programs.map(row=><article key={row.id}><b>{String(row.name??'Programme')}</b><span>{String(row.code??'No programme code')}</span><small>{departments.find(d=>d.id===row.department_id)?.name??'Department not assigned'}</small></article>)}</div>:<div className="gov-empty">No programmes have been saved yet.</div>}
         </section>
-        <section className="gov-panel"><header><div><h2>Subjects</h2><p>Registered subjects and their available department links.</p></div></header>
+        <section className="gov-panel"><header><div><h2>Subjects</h2><p>Registered subjects and their available department links.</p></div><button className="gov-button" onClick={()=>onNavigate('admin:subjects')}>Manage subjects <ArrowUpRight size={14}/></button></header>
           {subjects.length?<div className="ed360-admin-academic-list">{subjects.map(row=><article key={row.id}><b>{String(row.name??'Subject')}</b><span>{String(row.code??'No subject code')}</span><small>{departments.find(d=>d.id===row.department_id)?.name??'Department not assigned'}</small></article>)}</div>:<div className="gov-empty">No subjects have been saved yet.</div>}
         </section>
-        <section className="gov-panel"><header><div><h2>Rooms and teaching spaces</h2><p>Rooms available in the college facilities register.</p></div></header>
+        <section className="gov-panel"><header><div><h2>Rooms and teaching spaces</h2><p>Rooms available in the college facilities register.</p></div><button className="gov-button" onClick={()=>onNavigate('admin:rooms')}>Manage rooms <ArrowUpRight size={14}/></button></header>
           {rooms.length?<div className="ed360-admin-academic-list">{rooms.map(row=><article key={row.id}><b>{String(row.name??row.room_number??'Room')}</b><span>{String(row.code??row.room_type??'Teaching space')}</span><small>{String(row.building??row.location??'College campus')}</small></article>)}</div>:<div className="gov-empty">No rooms have been saved yet.</div>}
         </section>
       </div>
@@ -465,9 +465,12 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
   }
 
   function renderSettingsPage(){
+    const reportRows:Record<string,unknown>[]=orderedSettings.map(row=>({category:label(row.category),key:row.setting_key,value:JSON.stringify(row.setting_value),visibility:row.is_public?'Public':'Private',updated_at:row.updated_at??''}))
+    const reportColumns:OfficeColumn[]=[{key:'category',label:'Category'},{key:'key',label:'Setting key'},{key:'value',label:'Value'},{key:'visibility',label:'Visibility'},{key:'updated_at',label:'Last updated'}]
     return <div className="ed360-admin-stage5">
       {section==='branding'&&<section className="gov-panel"><header><div><h2>Brand preview</h2><p>Stored branding defaults. The private college logo is managed in Institute Profile.</p></div><Palette size={20}/></header><div className="ed360-admin-brand-preview"><span className="ed360-admin-brand-swatch" style={{background:primaryColor}}/><span><b>{displayInstitutionName(institution?.name)}</b><small style={{display:'block',color:'#859287',fontSize:10}}>Primary brand colour · {primaryColor}</small></span><span className="ed360-admin-brand-swatch" style={{background:accentColor}}/><small>Accent · {accentColor}</small></div></section>}
       <section className="gov-panel ed360-admin-settings-table-panel"><header><div><h2>{section==='system'?'System settings register':'Brand and document defaults'}</h2></div><div className="gov-row-actions">{section==='branding'?<><button className="gov-button primary" onClick={()=>openSetting(undefined,'branding')}><Plus size={14}/> Add brand setting</button><button className="gov-button" onClick={()=>openSetting(undefined,'documents')}><FileText size={14}/> Add document setting</button></>:<button className="gov-button primary" onClick={()=>openSetting(undefined,'system')}><Plus size={14}/> Add system setting</button>}</div></header>
+        {reportActions(section==='system'?'System settings':'Branding and document settings','institution-'+section+'-settings',reportRows,reportColumns)}
         <label className="ed360-admin-search"><Search size={14}/><input value={search} onChange={e=>{setSearch(e.target.value);setSettingsPage(1)}} placeholder="Search settings…"/></label>
         {renderSettingRows(settingsPageRows,section==='system'?'No system settings have been configured.':'No branding or document settings have been configured.')}
         {pageControls(orderedSettings.length,settingsCurrentPage,settingsPageCount,setSettingsPage)}
