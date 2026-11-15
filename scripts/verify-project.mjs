@@ -1117,6 +1117,17 @@ check('Administration settings, approvals and audit are connected to governance 
   assert.ok(read('supabase/migrations/20261109151231_atomic_institution_setting_approval.sql').includes('decide_institution_setting_approval'))
 })
 
+check('Administration membership controls use the protected tenant access procedure', () => {
+  const administration = read('src/components/AdministrationStage5Workspace.tsx')
+  const migration = read('supabase/migrations/20261111161307_stage5_administration_profile_campus_and_access_controls.sql')
+  for (const value of ["select('id,user_id,role,status,created_at')", "set_institution_membership_status", 'p_institution_id:user!.institutionId', 'p_membership_id:member.id', "member.role==='owner'", 'member.user_id===user?.id', "['active','suspended'].includes(member.status)", 'Reactivate access', 'Suspend access']) {
+    assert.ok(administration.includes(value), 'Administration membership access control is missing: ' + value)
+  }
+  for (const value of ["p_status not in ('active','suspended')", "array['owner','admin']::text[]", 'v_membership.role = \'owner\'', 'v_membership.user_id = auth.uid()', 'p_membership_id', 'p_institution_id']) {
+    assert.ok(migration.includes(value), 'Membership access procedure is missing safeguard: ' + value)
+  }
+})
+
 check('Student and employee ID cards are printed from selected verified records', () => {
   const students = read('src/components/RecordModule.tsx')
   const staff = read('src/components/FacultyWorkspace.tsx')
