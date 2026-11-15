@@ -707,13 +707,11 @@ export function AcademicManagementWorkspace({ initialWindow = 'academic-sessions
     <main className="page-content ed360-module-page ed360-academic-page">
       <header className="ed360-academic-heading">
         <div className="ed360-academic-heading-copy">
-          <span>STAGE 08 · ACADEMIC OPERATIONS</span>
+          <span>{(user?.institutionName?.trim()||'GOVERNMENT ISLAMIA DEGREE COLLEGE').toUpperCase()} / ACADEMICS / {section.title.toUpperCase()}</span>
           <h1>{section.title}</h1>
-          <p>{section.description}</p>
         </div>
         <div className="ed360-academic-heading-tools">
-          <span className="ed360-academic-live"><i/> Live institution records</span>
-          <button className="ed360-academic-icon-button" type="button" onClick={() => void reload()} disabled={loading} aria-label="Refresh records"><RefreshCw size={16}/></button>
+          <button className="ed360-academic-refresh" type="button" onClick={() => void reload()} disabled={loading}><RefreshCw size={15}/>{loading?'Refreshing…':'Refresh'}</button>
         </div>
       </header>
 
@@ -727,17 +725,10 @@ export function AcademicManagementWorkspace({ initialWindow = 'academic-sessions
       </nav>
 
       <section className="ed360-academic-workspace">
-        <div className="ed360-academic-workspace-top">
-          <div>
-            <span className="ed360-academic-kicker">{section.short.toUpperCase()} WORKSPACE</span>
-            <h2>{section.title}</h2>
-            <p>{section.description}</p>
-          </div>
-          {isOnlineLearning ? <div className="ed360-academic-online-control">
-            <span className={onlineLearningEnabled ? 'is-on' : ''}>{onlineLearningEnabled ? 'Digital learning is active' : 'Digital learning is optional and inactive'}</span>
-            {admins.includes(user?.role as AppRole) ? <button type="button" onClick={() => void toggleOnlineLearning()} disabled={preferenceLoading}>{preferenceLoading ? 'Saving…' : onlineLearningEnabled ? 'Disable online learning' : 'Enable online learning'}</button> : <small>{onlineLearningEnabled ? 'Enabled by your institution' : 'Not enabled by your institution'}</small>}
-          </div> : null}
-        </div>
+        {isOnlineLearning ? <div className="ed360-academic-online-control">
+          <span className={onlineLearningEnabled ? 'is-on' : ''}>{onlineLearningEnabled ? 'Digital learning is active' : 'Digital learning is optional and inactive'}</span>
+          {admins.includes(user?.role as AppRole) ? <button type="button" onClick={() => void toggleOnlineLearning()} disabled={preferenceLoading}>{preferenceLoading ? 'Saving…' : onlineLearningEnabled ? 'Disable online learning' : 'Enable online learning'}</button> : <small>{onlineLearningEnabled ? 'Enabled by your institution' : 'Not enabled by your institution'}</small>}
+        </div> : null}
 
         <div className="ed360-academic-mode-tabs" role="tablist" aria-label="Academic record types">
           {section.modes.map(mode => <button type="button" role="tab" aria-selected={activeMode.key === mode.key} className={activeMode.key === mode.key ? 'active' : ''} key={mode.key} onClick={() => {setModeKey(mode.key);setSearch('');setShowEditor(false)}}>{mode.title}</button>)}
@@ -750,7 +741,7 @@ export function AcademicManagementWorkspace({ initialWindow = 'academic-sessions
              <button type="button" className="ed360-academic-secondary" onClick={() => exportRows('xlsx')} disabled={!filteredRows.length}>Excel</button>
              <button type="button" className="ed360-academic-secondary" onClick={() => exportRows('docx')} disabled={!filteredRows.length}>Word</button>
              <button type="button" className="ed360-academic-secondary" onClick={() => exportRows('print')} disabled={!filteredRows.length}><Printer size={15}/> Print / PDF</button>
-            <button type="button" className="ed360-academic-secondary" onClick={() => window.print()}><Printer size={15}/> Print</button>
+            
             {canCreate ? <button type="button" className="ed360-academic-primary" onClick={openCreate}><Plus size={16}/> Add record</button> : null}
           </div>
         </div>
