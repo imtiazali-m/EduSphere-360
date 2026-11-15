@@ -120,12 +120,12 @@ check('The full institutional menu maps every submenu to a working destination',
   assert.ok(menuDestinationCount >= 390, 'All specified submenu destinations should be present')
   const administration = institutionalMenu.find(group => group.key === 'administration')
   const peopleHR = institutionalMenu.find(group => group.key === 'people-hr')
-  assert.deepEqual(peopleHR?.items.map(item => item.label), ['Students','Admissions & Enrollment','Teachers','Faculty & Staff','Parents & Guardians','HR & Recruitment','Employee Contracts & Documents','Employee Performance','Payroll & Salary Records','Alumni'], 'People & HR must contain the ten approved Stage 6 destinations')
+  assert.deepEqual(peopleHR?.items.map(item => item.label), ['Admissions & Enrollment','Students','Parents & Guardians','Teachers','Faculty & Staff','HR & Recruitment','Employee Contracts & Documents','Employee Performance','Payroll & Salary Records','Alumni'], 'People & HR must contain the ten approved Stage 6 destinations in lifecycle order')
   assert.deepEqual(administration?.items.map(item => item.label), [
-    'Institute Profile','Campus and Branch Management','Academic Structure & Sections','Department Directory','Designation Catalogue',
-    'Organisational Structure','Approval Workflows','Student Policies','Faculty Policies','Administrative Audit',
-    'User Access & Invitations','Role & Permission Management','Institute Settings','Branding & Document Settings','Document Access','Security & Access History',
-  ], 'Administration must retain the requested dedicated submenus in order')
+    'Institute Profile','Campus and Branch Management','Organisational Structure','Department Directory','Designation Catalogue',
+    'Academic Structure & Sections','Institute Settings','Branding & Document Settings','Student Policies','Faculty Policies',
+    'User Access & Invitations','Role & Permission Management','Document Access','Approval Workflows','Security & Access History','Administrative Audit',
+  ], 'Administration must retain the requested dedicated submenus in institution-setup order')
   assert.ok(!navigationCatalog.some(group => ['institution-config','academic-sessions','classes-sections','subjects','curriculum','timetable','teaching'].includes(group.key)), 'Nested setup and academic workspaces must not remain separate top-level menus')
   const permittedLinkedRoutes = new Set([
     'administration:campus-and-branch-management',
@@ -227,8 +227,8 @@ check('The full institutional menu maps every submenu to a working destination',
 
 
 check('Sidebar workspaces follow the approved parent-section sequence for every role', () => {
-  const expectedGroupOrder = ["dashboard","attendance","academic-management","examinations","reports","ai","administration","behaviour","people-hr","certificates","question-bank","class-tests","library","accounts-finance","fees","receivables","payments","receipts","reconciliation","communication","transport","inventory","facilities","visitors","backup"]
-  const completeCatalogOrder = ["dashboard","administration","institution-config","academic-sessions","classes-sections","subjects","backup","people-hr","attendance","behaviour","certificates","academic-management","curriculum","timetable","teaching","question-bank","examinations","class-tests","library","accounts-finance","fees","receivables","payments","receipts","reconciliation","communication","transport","inventory","facilities","visitors","reports","ai"]
+  const expectedGroupOrder = ["dashboard","administration","academic-management","people-hr","attendance","behaviour","question-bank","examinations","class-tests","library","certificates","fees","receivables","payments","receipts","accounts-finance","reconciliation","communication","transport","inventory","facilities","visitors","reports","ai","backup"]
+  const completeCatalogOrder = ["dashboard","administration","institution-config","academic-sessions","classes-sections","subjects","people-hr","academic-management","curriculum","timetable","teaching","attendance","behaviour","question-bank","examinations","class-tests","library","certificates","fees","receivables","payments","receipts","accounts-finance","reconciliation","communication","transport","inventory","facilities","visitors","reports","ai","backup"]
   assert.deepEqual(navigationSectionDefinitions.map(section => section.key), ['main'], 'The sidebar must use one continuous, unlabelled navigation list')
   assert.deepEqual(navigationSectionDefinitions.flatMap(section => section.groupKeys), expectedGroupOrder)
   assert.deepEqual(navigationCatalog.map(group => group.key), expectedGroupOrder)
