@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { Package, RefreshCw } from 'lucide-react'
+import { RefreshCw } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import '../styles/data-management.css'
@@ -10,18 +10,6 @@ const titles:Record<string,string>={
  'supplier-directory':'Supplier Directory','suppliers':'Supplier Directory','purchase-records':'Purchase Order Records',
  'purchase-requests':'Purchase Requests','quotation-comparison':'Quotation Comparison','purchase-approvals':'Purchase Approvals',
  'purchase-orders':'Purchase Orders','goods-receipt':'Goods Receipt','supplier-invoices':'Supplier Invoices','procurement-reports':'Procurement Reports'
-}
-const descriptions:Record<string,string>={
- 'supplier-directory':'Maintain approved supplier details and trading status for this institution.',
- 'suppliers':'Maintain approved supplier details and trading status for this institution.',
- 'purchase-records':'Review purchase orders, receiving progress and supplier costs.',
- 'purchase-requests':'Raise, itemise and submit purchase requests for approval.',
- 'quotation-comparison':'Capture supplier quotations against approved requests and compare totals before selection.',
- 'purchase-approvals':'Review submitted purchase requests and approve or reject draft purchase orders.',
- 'purchase-orders':'Create orders from approved requests, add inventory lines and approve the order.',
- 'goods-receipt':'Record actual deliveries and post received quantities into the existing inventory stock ledger.',
- 'supplier-invoices':'Record supplier invoices and review their approval status. This does not trigger a bank payment.',
- 'procurement-reports':'Review request pipeline, supplier spend, purchase orders, receipts and invoices.'
 }
 const date=(v:unknown)=>v?new Date(String(v)).toLocaleDateString():'—'
 const money=(v:unknown)=>'PKR '+Number(v??0).toLocaleString(undefined,{maximumFractionDigits:2})
