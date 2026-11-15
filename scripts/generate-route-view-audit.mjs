@@ -122,6 +122,7 @@ function shellTarget(route) {
   const helpdesk = route.startsWith('helpdesk:')
   const duplicateDetection = route.startsWith('duplicate-detection:')
   const certificateForms = route.startsWith('certificate-forms:')
+  const transportAttendance = route.startsWith('transport-attendance:')
   const personal = route.startsWith('personal:')
   const assistant = route.startsWith('assistant:')
   const frontOffice = route.startsWith('frontoffice:')
@@ -158,6 +159,7 @@ function shellTarget(route) {
     : helpdesk ? 'helpdesk'
     : duplicateDetection ? 'duplicate-detection'
     : certificateForms ? 'certificate-forms'
+    : transportAttendance ? 'transport-attendance'
     : personal ? 'personal'
     : assistant ? 'assistant'
     : frontOffice ? 'frontoffice'
@@ -194,6 +196,7 @@ function shellTarget(route) {
     : helpdesk ? route.slice('helpdesk:'.length)
     : duplicateDetection ? route.slice('duplicate-detection:'.length)
     : certificateForms ? route.slice('certificate-forms:'.length)
+    : transportAttendance ? route.slice('transport-attendance:'.length)
     : personal ? route.slice('personal:'.length)
     : assistant ? route.slice('assistant:'.length)
     : frontOffice ? route.slice('frontoffice:'.length)
@@ -234,6 +237,7 @@ function checkView(role, route, dispatcher) {
   if (targetKey === 'helpdesk') return { component:'HelpdeskWorkspace', view:targetWindow, status:new Set(["complaints-helpdesk"]).has(targetWindow)?'Supported':'Unsupported helpdesk view' }
   if (targetKey === 'duplicate-detection') return { component:'DuplicateDetectionWorkspace', view:targetWindow, status:new Set(["duplicate-detection"]).has(targetWindow)?'Supported':'Unsupported duplicate-detection view' }
   if (targetKey === 'certificate-forms') return { component:'CertificateFormsWorkspace', view:targetWindow, status:new Set(["form-builder","form-submissions","letters-applications"]).has(targetWindow)?'Supported':'Unsupported certificate-forms view' }
+  if (targetKey === 'transport-attendance') return { component:'TransportAttendanceWorkspace', view:targetWindow, status:targetWindow==='transport-attendance'?'Supported':'Unsupported transport-attendance view' }
   if (targetKey === 'personal') return { component:'PersonalWorkspace', view:targetWindow, status:new Set(['my-profile','account-settings','notification-settings','my-activity','help-support']).has(targetWindow)?'Supported':'Unsupported personal view' }
   if (targetKey === 'integrations') return { component:'IntegrationManagementWorkspace', view:targetWindow, status:new Set(['overview','ai-providers','biometric']).has(targetWindow)?'Supported':'Unsupported integration view' }
   if (targetKey === 'behaviour') return { component:'BehaviourSkillsWorkspace', view:targetWindow, status:new Set(['dashboard','records','positive','incidents','recognition','warnings','skills','activities','competencies','progress','analytics','downloads']).has(targetWindow)?'Supported':'Unsupported behaviour view' }
@@ -343,6 +347,7 @@ for (const [role, label] of roles) {
         : dashboard.targetKey === 'helpdesk' ? 'HelpdeskWorkspace'
         : dashboard.targetKey === 'duplicate-detection' ? 'DuplicateDetectionWorkspace'
         : dashboard.targetKey === 'certificate-forms' ? 'CertificateFormsWorkspace'
+        : dashboard.targetKey === 'transport-attendance' ? 'TransportAttendanceWorkspace'
         : dashboard.targetKey === 'personal' ? 'PersonalWorkspace'
         : dashboard.targetKey === 'assistant' ? 'AIAssistantWorkspace'
         : dashboard.targetKey === 'frontoffice' ? 'FrontOfficeWorkspace'
