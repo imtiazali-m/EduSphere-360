@@ -50,7 +50,7 @@ function cleanObject(value:unknown):Record<string,unknown>|null{return value&&ty
 function moduleLabel(key:string){return specs.find(x=>x.key===key)?.label??key.replaceAll('_',' ')}
 export function DataManagementWorkspace({workspaceKey,onToast}:{workspaceKey:string;onToast:(message:string,error?:boolean)=>void}){
  const {user,mode}=useAuth()
- const itemKey=workspaceKey.split(':').slice(1).join(':')||'backup-dashboard'
+ const itemKey=workspaceKey.split(':').slice(-1).join(':')||'backup-dashboard'
  const admin=Boolean(user&&['owner','admin'].includes(user.role))
  const [jobs,setJobs]=useState<Job[]>([])
  const [loading,setLoading]=useState(true)
