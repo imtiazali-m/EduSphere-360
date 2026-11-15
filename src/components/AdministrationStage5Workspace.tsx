@@ -17,7 +17,7 @@ type Audit=RecordRow & {id:string;record_id:string;action:string;module_key:stri
 type Department=RecordRow & {id:string;name:string;department_code?:string;head_name?:string|null;email?:string|null;phone?:string|null;status?:string;is_active?:boolean;campus_id?:string|null}
 type Designation=RecordRow & {id:string;name:string;code?:string|null;department_id?:string|null;is_active:boolean}
 type Teacher=RecordRow & {id:string;full_name:string;department?:string|null;department_id?:string|null;designation_id?:string|null;employment_status?:string;campus_id?:string|null}
-type Member=RecordRow & {user_id:string;role:string;status:string;full_name?:string;email?:string}
+type Member=RecordRow & {id:string;user_id:string;role:string;status:string;created_at?:string;full_name?:string;email?:string}
 type Policy=RecordRow & {id:string;title:string;reference_code?:string|null;description?:string|null;status:string;effective_date?:string|null;payload:Record<string,unknown>}
 type AcademicRow=RecordRow & {id:string;[key:string]:unknown}
 type InstitutePreferences={timezone:string;date_format:string;currency:string;academic_year_start_month:string;term_structure:string;student_id_prefix:string;employee_id_prefix:string}
@@ -46,6 +46,7 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
   const [settingsSortDirection,setSettingsSortDirection]=useState<'asc'|'desc'>('asc')
   const [settingsPage,setSettingsPage]=useState(1),[approvalPage,setApprovalPage]=useState(1)
   const pageSize=10
+  const [membershipSavingId,setMembershipSavingId]=useState<string|null>(null)
   const [policyForm,setPolicyForm]=useState(false),[policyEditing,setPolicyEditing]=useState<Policy|null>(null)
   const [policyTitle,setPolicyTitle]=useState(''),[policyCode,setPolicyCode]=useState(''),[policyCategory,setPolicyCategory]=useState('general'),[policyDescription,setPolicyDescription]=useState(''),[policyStatus,setPolicyStatus]=useState('draft'),[policyEffectiveDate,setPolicyEffectiveDate]=useState('')
   const [settingForm,setSettingForm]=useState(false),[settingEditing,setSettingEditing]=useState<Setting|null>(null),[settingCategory,setSettingCategory]=useState('general'),[settingKey,setSettingKey]=useState(''),[settingValue,setSettingValue]=useState('{}'),[settingPublic,setSettingPublic]=useState(false)
@@ -64,7 +65,7 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
         admin?supabase.from('departments').select('*').eq('institution_id',user.institutionId).order('name').limit(500):Promise.resolve({data:[],error:null}),
         admin?supabase.from('designations').select('*').eq('institution_id',user.institutionId).order('name').limit(500):Promise.resolve({data:[],error:null}),
         admin?supabase.from('teachers').select('id,full_name,department,department_id,designation_id,employment_status,campus_id').eq('institution_id',user.institutionId).order('full_name').limit(1000):Promise.resolve({data:[],error:null}),
-        admin?supabase.from('memberships').select('user_id,role,status,created_at').eq('institution_id',user.institutionId).order('created_at').limit(1000):Promise.resolve({data:[],error:null}),
+        admin?supabase.from('memberships').select('id,user_id,role,status,created_at').eq('institution_id',user.institutionId).order('created_at').limit(1000):Promise.resolve({data:[],error:null}),
         admin?supabase.from('academic_sessions').select('*').eq('institution_id',user.institutionId).order('start_date',{ascending:false}).limit(200):Promise.resolve({data:[],error:null}),
         admin?supabase.from('classes').select('*').eq('institution_id',user.institutionId).order('name').limit(500):Promise.resolve({data:[],error:null}),
         admin?supabase.from('programs').select('*').eq('institution_id',user.institutionId).order('name').limit(500):Promise.resolve({data:[],error:null}),
@@ -229,6 +230,40 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
     if(decisionError)onToast(userFacingError(decisionError,'Approval decision could not be saved.'),true)
     else{onToast(decision==='approved'?'Approved and applied.':'Request rejected.');await load(true)}
     setSaving(false)
+  }
+
+  async function changeMembershipStatus(member:Member){
+    if(!supabase||!admin)return
+    if(member.role==='owner'){
+      onToast('The institution owner membership cannot be suspended from this workspace.',true)
+      return
+    }
+    if(member.user_id===user?.id){
+      onToast('You cannot change the access status of your own account.',true)
+      return
+    }
+    if(!['active','suspended'].includes(member.status)){
+      onToast('Pending and invited memberships must be completed through account provisioning.',true)
+      return
+    }
+    const nextStatus=member.status==='active'?'suspended':'active'
+    const displayName=member.full_name||member.email||'this member'
+    if(!window.confirm(`${nextStatus==='suspended'?'Suspend':'Reactivate'} access for ${displayName}?`))return
+    setMembershipSavingId(member.id)
+    try{
+      const {error:statusError}=await supabase.rpc('set_institution_membership_status',{
+        p_institution_id:user!.institutionId,
+        p_membership_id:member.id,
+        p_status:nextStatus,
+      })
+      if(statusError)throw statusError
+      onToast(nextStatus==='suspended'?'Institution access suspended.':'Institution access reactivated.')
+      await load(true)
+    }catch(err){
+      onToast(userFacingError(err,'The membership access status could not be changed.'),true)
+    }finally{
+      setMembershipSavingId(null)
+    }
   }
 
   async function saveInstitutePreferences(event:FormEvent){
@@ -460,7 +495,8 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
     </div>
   }
   function renderAccounts(){
-    return <section className="gov-panel"><header><div><h2>User access and invitations</h2><p>Institution memberships, role assignments and account activation status.</p></div><Users size={20}/></header><div className="ed360-admin-kpis"><article><small>Total memberships</small><strong>{members.length}</strong></article><article><small>Active</small><strong>{members.filter(row=>row.status==='active').length}</strong></article><article><small>Invited / pending</small><strong>{members.filter(row=>['invited','pending'].includes(row.status)).length}</strong></article><article><small>Suspended / inactive</small><strong>{members.filter(row=>['suspended','inactive'].includes(row.status)).length}</strong></article></div><label className="ed360-admin-search"><Search size={14}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search name, email, role or status…"/></label>{filteredMembers.length?<div className="gov-table-wrap"><table className="ed360-admin-table"><thead><tr><th>User</th><th>Email</th><th>Role</th><th>Access status</th><th>Added</th></tr></thead><tbody>{filteredMembers.map(row=><tr key={row.user_id}><td><b>{row.full_name}</b></td><td>{row.email}</td><td>{label(row.role)}</td><td><span className={'ed360-admin-status '+row.status}>{label(row.status)}</span></td><td>{dateLabel(row.created_at)}</td></tr>)}</tbody></table></div>:<div className="gov-empty">No memberships match this search.</div>}<div className="gov-row-actions" style={{marginTop:14}}><button className="gov-button primary" onClick={()=>onNavigate('accounts')}>Open User Account Manager <ArrowUpRight size={14}/></button></div><div className="gov-note">Account provisioning is handled in the linked account manager. Email invitation resends and membership suspension changes are not exposed by the current account API, so status is read-only here.</div></section>
+    return <section className="gov-panel"><header><div><h2>User access and invitations</h2><p>Institution memberships, role assignments and account activation status.</p></div><Users size={20}/></header><div className="ed360-admin-kpis"><article><small>Total memberships</small><strong>{members.length}</strong></article><article><small>Active</small><strong>{members.filter(row=>row.status==='active').length}</strong></article><article><small>Invited / pending</small><strong>{members.filter(row=>['invited','pending'].includes(row.status)).length}</strong></article><article><small>Suspended / inactive</small><strong>{members.filter(row=>['suspended','inactive'].includes(row.status)).length}</strong></article></div><label className="ed360-admin-search"><Search size={14}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search name, email, role or status…"/></label>{filteredMembers.length?<div className="gov-table-wrap"><table className="ed360-admin-table"><thead><tr><th>User</th><th>Email</th><th>Role</th><th>Access status</th><th>Added</th><th>Access action</th></tr></thead><tbody>{filteredMembers.map(row=><tr key={row.user_id}><td><b>{row.full_name}</b>{row.user_id===user?.id&&<small className="gov-note">Your account</small>}</td><td>{row.email}</td><td>{label(row.role)}</td><td><span className={'ed360-admin-status '+row.status}>{label(row.status)}</span></td><td>{dateLabel(row.created_at)}</td><td>{row.role==='owner'?<span className="gov-readonly">Protected owner</span>:row.user_id===user?.id?<span className="gov-readonly">Protected account</span>:['active','suspended'].includes(row.status)?<button type="button" className={'gov-button '+(row.status==='active'?'danger':'primary')} disabled={membershipSavingId===row.id} onClick={()=>void changeMembershipStatus(row)}>{membershipSavingId===row.id?'Updating…':row.status==='active'?'Suspend access':'Reactivate access'}</button>:<span className="gov-readonly">Use account provisioning</span>}</td></tr>)}</tbody></table></div>:<div className="gov-empty">No memberships match this search.</div>}<div className="gov-row-actions" style={{marginTop:14}}><button className="gov-button primary" onClick={()=>onNavigate('accounts')}>Open User Account Manager <ArrowUpRight size={14}/></button></div><div className="gov-note">Create and invite accounts in the linked Account Manager. This register can activate or suspend established memberships; pending and invited accounts remain under account provisioning.</div></section>
+  }
   }
   function renderSecurity(){
     const related=filteredAudit.filter(row=>/auth|login|session|security|access|membership/i.test(row.module_key+' '+row.record_type+' '+row.action))
