@@ -36,8 +36,6 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - name: Refresh npm lockfile for native WebRTC dependency
-        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
       - name: Install locked dependencies
         run: npm ci --no-audit --no-fund
       - name: Run workspace privacy regression tests
