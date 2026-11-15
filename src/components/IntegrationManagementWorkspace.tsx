@@ -84,7 +84,6 @@ export function IntegrationManagementWorkspace({initialWindow='overview',onToast
  const {user}=useAuth()
  const page=(initialWindow in pages?initialWindow:'overview') as PageKey
  const meta=pages[page]
- const ActiveIcon=PageIcon[page]
  const [providerStatus,setProviderStatus]=useState<ProviderState>({})
  const [checking,setChecking]=useState(false)
  const [testing,setTesting]=useState('')
