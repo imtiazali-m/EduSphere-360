@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from 'react'
-import { CheckCheck, MessageSquare, Plus, RefreshCw, Search, Send } from 'lucide-react'
+import { CheckCheck, Plus, RefreshCw, Search, Send } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { createRecord, listRecords } from '../lib/data'
@@ -12,22 +12,6 @@ type Template=RecordRow & {id:string;title:string;payload?:Record<string,unknown
 type VisitorRow={id:string;visitor_name:string;host_teacher_id:string|null;visit_date:string;status:string;approved_by:string|null}
 type TeacherRow={id:string;user_id:string|null;full_name:string}
 const pageTitles:Record<string,string>={'whatsapp-integration':'WhatsApp Integration','individual-messages':'Individual Messages','bulk-messages':'Bulk Messages','class-wise-messaging':'Class-wise Messaging','employee-notifications':'Employee Notifications','message-templates':'Message Templates','email-notifications':'Email Notifications','delivery-history':'Delivery History','communication-logs':'Communication Logs','communication-reports':'Communication Reports','parent-communication':'Parent Communication','internal-messages':'Internal Messages','complaints-helpdesk':'Complaints & Helpdesk','visitor-notifications':'Visitor Host Notifications'}
-const pageNotes:Record<string,string>={
- 'whatsapp-integration':'Review the WhatsApp provider state. In-app messages work; WhatsApp delivery is not connected.',
- 'individual-messages':'Send a private in-app message to one active member of this institution.',
- 'bulk-messages':'Send one in-app notice to a selected institution role group.',
- 'class-wise-messaging':'Send an in-app notice to students with active accounts in a selected class.',
- 'employee-notifications':'Send operational notices to active employee and specialist accounts.',
- 'message-templates':'Save reusable subject and message templates for institution communications.',
- 'email-notifications':'Review email delivery readiness. No email provider is connected.',
- 'delivery-history':'Review sent and read states for in-app messages.',
- 'communication-logs':'Review institution message activity with sender, recipient and time.',
- 'communication-reports':'Review message volume and read status by message type.',
- 'parent-communication':'Send an in-app notice to active parent accounts. This is not an SMS or WhatsApp delivery.',
- 'internal-messages':'Manage direct in-app conversations inside the institution.',
- 'complaints-helpdesk':'Review and respond to complaints and helpdesk messages received in the institution.',
- 'visitor-notifications':'Notify an approved visitor’s host through a private in-app message. External email and WhatsApp delivery are not connected.'
-}
 const displayDate=(value:string)=>value?new Date(value).toLocaleString():'—'
 export function CommunicationWorkspace({workspaceKey,onToast}:{workspaceKey:string;onToast:(message:string,error?:boolean)=>void}){
  const {user,mode}=useAuth()
