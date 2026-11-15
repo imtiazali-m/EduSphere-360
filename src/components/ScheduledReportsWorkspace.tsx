@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { CalendarClock, Download, FileClock, Pause, Play, RefreshCw } from 'lucide-react'
+import { Download, FileClock, Pause, Play, RefreshCw } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import '../styles/data-management.css'
@@ -15,7 +15,7 @@ const safeColumns:Record<Source,string[]>={
 const csvCell=(v:unknown)=>{const s=v===null||v===undefined?'':typeof v==='object'?JSON.stringify(v):String(v);return '"'+s.replaceAll('"','""')+'"'}
 const safeFilename=(v:string)=>v.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'')||'report'
 const dateTime=(v:unknown)=>v?new Date(String(v)).toLocaleString():'—'
-export function ScheduledReportsWorkspace({workspaceKey,onToast}:{workspaceKey:string;onToast:(message:string,error?:boolean)=>void}){
+export function ScheduledReportsWorkspace({onToast}:{workspaceKey:string;onToast:(message:string,error?:boolean)=>void}){
  const {user}=useAuth()
  const admin=Boolean(user&&['owner','admin'].includes(user.role))
  const finance=Boolean(user&&['owner','admin','accountant'].includes(user.role))
@@ -98,7 +98,7 @@ export function ScheduledReportsWorkspace({workspaceKey,onToast}:{workspaceKey:s
  if(!finance)return <main className="page-content ed360-module-page"><section className="ed360-workspace-empty">Report management is available to owner, administrator and accountant roles.</section></main>
  return <main className="page-content ed360-module-page ed360-scheduled-reports">
   {loading&&<div className="ed360-workspace-empty">Loading saved report definitions…</div>}
-  <header className="ed360-workspace-hero"><div className="ed360-workspace-hero-copy"><span>{(user?.institutionName?.trim()||'GOVERNMENT ISLAMIA DEGREE COLLEGE').toUpperCase()} / REPORTS</span><h1>Scheduled Reports</h1></div><div className="ed360-workspace-hero-tools"><button type="button" className="button button-primary" onClick={()=>void load()} disabled={loading}><RefreshCw size={15}/>{loading?'Refreshing…':'Refresh'}</button></div></header>
+  <header className="ed360-workspace-hero"><div className="ed360-workspace-hero-copy"><span>{(user?.institutionName?.trim()||'GOVERNMENT ISLAMIA DEGREE COLLEGE').toUpperCase()} / REPORTS</span><h1>Scheduled Reports</h1></div><div className="ed360-workspace-hero-tools"><button type="button" className="button button-primary" onClick={()=>void load()} disabled={busy}><RefreshCw size={15}/>{busy?'Refreshing…':'Refresh'}</button></div></header>
   <div className="ed360-payment-provider-note"><FileClock size={18}/><span><b>Execution mode</b> Report definitions can store daily/weekly/monthly preferences, but automatic background execution and email delivery need a server scheduler and approved delivery provider. Run now generates and downloads a CSV immediately.</span></div>
   {admin&&<section className="ed360-data-card"><header><h2>Create a report definition</h2><p>Choose a tenant-scoped source and permitted columns. Recipients are stored for future delivery configuration only.</p></header><form className="ed360-data-form" onSubmit={saveSchedule}>
    <label>Report name<input required value={form.name} onChange={e=>setForm(x=>({...x,name:e.target.value}))}/></label>
