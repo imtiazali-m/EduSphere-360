@@ -1,6 +1,11 @@
 -- Authorised human review and reconciliation for signed attendance-device events.
 -- The device event remains immutable evidence; only its review metadata may change.
 
+alter table public.employee_attendance
+  add column if not exists correction_reason text,
+  add column if not exists corrected_by uuid references auth.users(id) on delete set null,
+  add column if not exists corrected_at timestamptz;
+
 alter table public.attendance_device_events
   add column if not exists reviewed_by uuid references auth.users(id) on delete set null,
   add column if not exists reviewed_at timestamptz,
@@ -579,6 +584,9 @@ begin
              campus_id = v_teacher.campus_id,
              shift_id = coalesce(p_shift_id, shift_id),
              minutes_late = v_minutes_late,
+             correction_reason = case when v_correction_reason is not null then v_correction_reason else correction_reason end,
+             corrected_by = case when v_correction_reason is not null then v_user_id else corrected_by end,
+             corrected_at = case when v_correction_reason is not null then now() else corrected_at end,
              updated_at = now()
        where id = v_record_id;
     end if;
@@ -592,6 +600,9 @@ begin
            notes = coalesce(v_review_note, notes),
            shift_id = coalesce(p_shift_id, shift_id),
            early_departure_minutes = v_early_minutes,
+           correction_reason = case when v_correction_reason is not null then v_correction_reason else correction_reason end,
+           corrected_by = case when v_correction_reason is not null then v_user_id else corrected_by end,
+           corrected_at = case when v_correction_reason is not null then now() else corrected_at end,
            updated_at = now()
      where id = v_record_id;
   end if;
