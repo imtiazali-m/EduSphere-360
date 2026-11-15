@@ -29,7 +29,7 @@ import { PersonalWorkspace } from './PersonalWorkspace'
 import { AIAssistantWorkspace } from './AIAssistantWorkspace'
 import { FrontOfficeWorkspace } from './FrontOfficeWorkspace'
 import { FacultyWorkspace } from './FacultyWorkspace'
-import { institutionalMenu } from '../lib/institutionalCatalog'
+import { getWorkspaceGroup, institutionalMenu } from '../lib/institutionalCatalog'
 import { InstitutionalWorkspace } from './InstitutionalWorkspace'
 import { AssessmentWorkspace } from './AssessmentWorkspace'
 import { AttendanceWorkspace } from './AttendanceWorkspace'
@@ -985,6 +985,7 @@ export function Dashboard({ onToast }: Props) {
                 tab.targetKey === 'institutional' && tab.targetWindow.startsWith('examinations:') ? <AssessmentWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'institutional' && linkedWorkspaceKeys.includes(tab.targetWindow) ? <LinkedOperationsWorkspace workspaceKey={tab.targetWindow} onToast={onToast} onNavigate={navigateChild}/> :
                 tab.targetKey === 'institutional' ? <InstitutionalWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'unavailable' && getWorkspaceGroup(tab.targetWindow.split(':')[0])?.roles.includes(user!.role) ? <InstitutionalWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'unavailable' ? <WorkspaceUnavailable groupKey={tab.targetWindow.split(':')[0]} itemKey={tab.targetWindow.split(':').slice(1).join(':')} onNavigate={navigate}/> :
                 tab.targetKey === 'attendance' ? <AttendanceWorkspace initialWindow={tab.targetWindow || 'students'} onToast={onToast}/> :
                 tab.targetKey === 'academic' ? <AcademicManagementWorkspace initialWindow={tab.targetWindow} onToast={onToast}/> :
