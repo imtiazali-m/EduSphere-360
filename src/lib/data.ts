@@ -371,6 +371,36 @@ export async function recordFeePayment(
   }
 }
 
+export async function issueFeeReceipt(
+  mode: AppMode,
+  user: AppUser,
+  input: { paymentId: string; templateKey?: string },
+): Promise<{ id: string; payment_id: string; receipt_number: string; template_key: string; issued_at: string }> {
+  void mode
+  requireInstitution(user)
+  if (!['owner', 'admin', 'accountant'].includes(user.role)) {
+    throw new Error('Only the owner, administrator or accountant can issue fee receipts.')
+  }
+  await verifyCloudActor(user)
+  const { data, error } = await supabase!.rpc('issue_fee_receipt', {
+    p_institution_id: user.institutionId,
+    p_payment_id: input.paymentId,
+    p_template_key: input.templateKey?.trim() || 'default',
+  })
+  if (error) throw error
+  const result = (Array.isArray(data) ? data[0] : data) as Record<string, unknown> | null
+  if (!result || typeof result.id !== 'string' || typeof result.payment_id !== 'string' || typeof result.receipt_number !== 'string') {
+    throw new Error('The database did not confirm that a formal fee receipt was issued.')
+  }
+  return {
+    id: result.id,
+    payment_id: result.payment_id,
+    receipt_number: result.receipt_number,
+    template_key: String(result.template_key ?? 'default'),
+    issued_at: String(result.issued_at ?? new Date().toISOString()),
+  }
+}
+
 export async function listAccounts(mode: AppMode, user: AppUser) {
   void mode
   requireInstitution(user)
