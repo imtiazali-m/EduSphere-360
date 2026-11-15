@@ -127,7 +127,7 @@ export function CustomReportsWorkspace({workspaceKey,onToast}:{workspaceKey:stri
  }
  if(!user)return null
  return <main className="page-content ed360-module-page ed360-custom-reports">
-  <header className="ed360-workspace-hero"><div className="ed360-workspace-hero-icon"><BarChart3 size={21}/></div><div className="ed360-workspace-hero-copy"><span>REPORTS & ANALYTICS / CUSTOM WORKSPACE</span><h1>{title}</h1><p>{description}</p></div><div className="ed360-workspace-hero-tools"><span className="ed360-data-state"><i/> Live institution data</span><button type="button" className="button button-outline" onClick={()=>void loadSaved()}><RefreshCw size={15}/> Refresh</button></div></header>
+  <header className="ed360-workspace-hero"><div className="ed360-workspace-hero-copy"><span>{(user?.institutionName?.trim()||'GOVERNMENT ISLAMIA DEGREE COLLEGE').toUpperCase()} / REPORTS & ANALYTICS / {title.toUpperCase()}</span><h1>{title}</h1></div><div className="ed360-workspace-hero-tools"><button type="button" className="button button-primary" onClick={()=>void loadSaved()} disabled={loading}><RefreshCw size={15}/>{loading?'Refreshing…':'Refresh'}</button></div></header>
   {itemKey==='custom-report-builder'&&<section className="ed360-data-card"><header><h2>Report definition</h2><p>Select a supported data source and the fields needed for this report.</p></header><form className="ed360-data-form" onSubmit={runReport}>
    <label>Report name<input value={reportName} onChange={e=>setReportName(e.target.value)} placeholder="e.g. Grade-wise student attendance"/></label>
    <label>Data source<select value={sourceKey} onChange={e=>{setSourceKey(e.target.value);setRunRows([])}}>{sources.map(s=><option key={s.key} value={s.key}>{s.label}</option>)}</select></label>
