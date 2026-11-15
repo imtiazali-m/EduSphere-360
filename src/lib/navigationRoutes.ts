@@ -2,7 +2,10 @@ import {
   institutionalMenu,
   institutionalRoute,
   existingRouteOverrides,
+  getWorkspaceGroup,
+  getWorkspaceItem,
 } from './institutionalCatalog'
+import { roleNavigationGroups } from './navigationCatalog'
 
 const slug = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
 
@@ -10,7 +13,7 @@ const linkedRoutes = new Set([
   'administration:campus-and-branch-management',
   'library:book-issue-and-returns','library:digital-library','library:book-management','library:book-catalogue','library:book-categories','library:book-registration','library:reading-records','library:reading-cards','library:student-reading-history','library:learning-materials','library:resource-downloads','library:library-reports',
   'inventory:items-management','inventory:item-catalogue','inventory:item-categories','inventory:suppliers','inventory:purchase-records','inventory:stock-in','inventory:stock-out','inventory:stock-allocation','inventory:stock-adjustments','inventory:inventory-history','inventory:stock-reports',
-  'transport:vehicle-management','transport:drivers-management','transport:transport-routes','transport:route-stops','transport:student-transport-allocation','transport:transport-fees','transport:transport-assignments','transport:vehicle-maintenance','transport:transport-attendance','transport:transport-history','transport:transport-reports',
+  'transport:vehicle-management','transport:drivers-management','transport:transport-routes','transport:route-stops','transport:student-transport-allocation','transport:transport-fees','transport:transport-assignments','transport:vehicle-maintenance','transport:transport-history','transport:transport-reports',
 
 ])
 
@@ -302,6 +305,44 @@ function institutionOperationsRoute(groupKey:string,itemKey:string):string|undef
 }
 
 function dedicatedRoute(groupKey: string, itemKey: string): string | undefined {
+  // Dedicated operational workspaces. Provider-dependent execution remains
+  // visibly pending until its real integration is configured.
+  if (groupKey === 'backup' && itemKey === 'duplicate-detection') return 'duplicate-detection:duplicate-detection'
+  if (groupKey === 'communication' && itemKey === 'complaints-helpdesk') return 'helpdesk:complaints-helpdesk'
+  if (groupKey === 'reports' && itemKey === 'scheduled-reports') return 'scheduled-reports:scheduled-reports'
+  if (groupKey === 'facilities' && ['asset-assignment','asset-transfers','asset-warranty','asset-disposal','asset-reports'].includes(itemKey)) return 'asset-lifecycle:' + itemKey
+  if (groupKey === 'payments' && ['online-payment-records','failed-and-pending-payments'].includes(itemKey)) return 'payment-operations:' + itemKey
+  if (groupKey === 'fees' && itemKey === 'online-payments') return 'payment-operations:online-payment-records'
+  if (groupKey === 'receipts' && ['receipt-templates','receipt-numbering','bulk-receipt-generation'].includes(itemKey)) return 'receipt-operations:' + itemKey
+  if (groupKey === 'library' && ['reading-records','reading-cards','student-reading-history'].includes(itemKey)) return 'library-reading:' + itemKey
+  if (groupKey === 'library' && ['library-dashboard','book-management','book-catalogue','book-categories','book-registration','book-issue-and-returns','digital-library','learning-materials','resource-downloads','library-reports'].includes(itemKey)) return institutionalRoute(groupKey,itemKey)
+  if (groupKey === 'inventory' && ['inventory-dashboard','items-management','item-catalogue','item-categories','stock-in','stock-out','stock-allocation','stock-adjustments','inventory-history','stock-reports'].includes(itemKey)) return institutionalRoute(groupKey,itemKey)
+  if (groupKey === 'transport' && ['transport-dashboard','vehicle-management','drivers-management','transport-routes','route-stops','student-transport-allocation','transport-fees','transport-assignments','vehicle-maintenance','transport-history','transport-reports'].includes(itemKey)) return institutionalRoute(groupKey,itemKey)
+  if (groupKey === 'inventory') {
+    const procurementPages = new Set(['suppliers','supplier-directory','purchase-records','purchase-requests','quotation-comparison','purchase-approvals','purchase-orders','goods-receipt','supplier-invoices','procurement-reports'])
+    const cafeteriaPages = new Set(['cafeteria-dashboard','menu-price-list','daily-availability','sales-transactions','meal-plans','cafeteria-inventory','cafeteria-reports'])
+    if (procurementPages.has(itemKey)) return 'procurement:' + (itemKey === 'suppliers' ? 'supplier-directory' : itemKey === 'purchase-records' ? 'purchase-orders' : itemKey)
+    if (cafeteriaPages.has(itemKey)) return 'cafeteria:' + itemKey
+  }
+  if (groupKey === 'facilities') {
+    const hostelPages = new Set(['hostel-dashboard','hostel-buildings','room-bed-register','resident-allocation','room-transfers','check-in-check-out','hostel-visitor-register','hostel-fees','accommodation-maintenance','occupancy-reports'])
+    if (hostelPages.has(itemKey)) return 'hostel:' + itemKey
+  }
+  if (groupKey === 'communication' && ['whatsapp-integration','individual-messages','bulk-messages','class-wise-messaging','employee-notifications','message-templates','email-notifications','delivery-history','communication-logs','communication-reports','parent-communication','internal-messages'].includes(itemKey)) return 'messaging:' + itemKey
+  if (groupKey === 'certificates') {
+    if (['certificate-dashboard','character-certificate','leaving-certificate','enrollment-certificate','bonafide-certificate','achievement-certificate','experience-certificate'].includes(itemKey)) return 'operations:certificates:issue'
+    if (itemKey === 'certificate-verification' || itemKey === 'document-verification') return 'operations:certificates:verify'
+    if (['id-card-designer','certificate-templates','editable-document-templates'].includes(itemKey)) return 'operations:certificates:templates'
+    if (itemKey === 'bulk-certificate-generation') return 'operations:certificates:bulk'
+    if (itemKey === 'certificate-history') return 'operations:certificates:history'
+    if (['form-builder','form-submissions','letters-applications'].includes(itemKey)) return 'certificate-forms:' + itemKey
+  }
+  if (groupKey === 'visitors') {
+    const visitorPages:Record<string,string> = {'visitor-approvals':'approvals','visitor-notifications':'notifications','visitor-reports':'reports'}
+    if (visitorPages[itemKey]) return itemKey === 'visitor-notifications' ? 'messaging:visitor-notifications' : 'operations:visitors:' + visitorPages[itemKey]
+  }
+  if (groupKey === 'facilities' && itemKey === 'room-reservations') return 'operations:facilities:reservations'
+  if (groupKey === 'facilities' && itemKey === 'facilities-reports') return 'operations:facilities:reports'
   if (groupKey === 'communication') {
     const frontOfficeRoutes:Record<string,string>={
       'reception-enquiries':'frontoffice:enquiries',
@@ -343,7 +384,22 @@ function dedicatedRoute(groupKey: string, itemKey: string): string | undefined {
     return view && view !== 'unavailable' ? `employees:${view}` : undefined
   }
   if (groupKey === 'attendance') {
-    if (itemKey === 'leave-applications') return 'employees:leave'
+    const careRoutes:Record<string,string> = {
+      'leave-management':'care:leave-applications',
+      'leave-applications':'care:leave-applications',
+      'leave-review-approvals':'care:leave-approvals',
+      'leave-approvals':'care:leave-approvals',
+      'leave-balances':'care:leave-balances',
+      'leave-reports':'care:leave-reports',
+      'attendance-reports':'care:reports',
+      'student-attendance-reports':'care:reports-students',
+      'teacher-attendance-reports':'care:reports-teachers',
+      'staff-attendance-reports':'care:reports-staff',
+      'student-discipline':'care:discipline',
+      'student-counselling-wellbeing':'care:counselling',
+      'health-emergency-records':'care:health',
+    }
+    if (careRoutes[itemKey]) return careRoutes[itemKey]
     const view = attendanceViews[itemKey]
     return view ? `attendance:${view}` : undefined
   }
@@ -381,13 +437,27 @@ function dedicatedRoute(groupKey: string, itemKey: string): string | undefined {
     return 'institutional:examinations:' + itemKey
   }
   if (groupKey === 'class-tests') {
-    if (['marks-entry','marks-verification','result-processing','report-cards','merit-lists','result-publishing','result-corrections','test-results','performance-analysis','student-wise-test-history'].includes(itemKey)) {
-      const view = ['report-cards','merit-lists','result-publishing','test-results','performance-analysis'].includes(itemKey) ? 'published'
-        : ['marks-verification','result-processing','result-corrections'].includes(itemKey) ? 'review' : 'all'
-      return 'exam_results:' + view
+    const classTestViews:Record<string,string> = {
+      'class-test-dashboard':'examination-programs',
+      'create-class-tests':'online-tests-and-quizzes',
+      'test-schedule':'examination-timetable',
+      'online-tests':'online-tests-and-quizzes',
+      'written-tests':'online-tests-and-quizzes',
+      'test-questions':'question-bank',
+      'marks-entry':'marks-entry',
+      'test-results':'results-and-result-approval',
+      'performance-analysis':'examination-reports',
+      'test-reports':'examination-reports',
+      'student-wise-test-history':'results-and-result-approval',
     }
-    if (itemKey.includes('report')) return 'reports:academics'
-    return 'exams:' + (itemKey.includes('upcoming') ? 'upcoming' : itemKey.includes('completed') ? 'completed' : 'calendar')
+    const view=classTestViews[itemKey]
+    if (view) return 'institutional:examinations:' + view
+    if (['marks-verification','result-processing','report-cards','merit-lists','result-publishing','result-corrections'].includes(itemKey)) {
+      const resultView = ['report-cards','merit-lists','result-publishing'].includes(itemKey) ? 'published'
+        : ['marks-verification','result-processing','result-corrections'].includes(itemKey) ? 'review' : 'all'
+      return 'exam_results:' + resultView
+    }
+    return 'institutional:examinations:examination-programs'
   }
   if (groupKey === 'fees' || groupKey === 'receivables' || groupKey === 'payments' || groupKey === 'receipts') {
     const view = itemKey.includes('overdue') ? 'overdue'
@@ -419,6 +489,8 @@ function dedicatedRoute(groupKey: string, itemKey: string): string | undefined {
     return 'announcements:bulletin'
   }
   if (groupKey === 'reports') {
+    if (['custom-report-builder','report-templates','report-history'].includes(itemKey)) return 'custom-reports:' + itemKey
+    if (itemKey === 'scheduled-reports') return 'scheduled-reports:scheduled-reports'
     const view = reportViews[itemKey]
     return view ? `reports:${view}` : undefined
   }
@@ -437,8 +509,12 @@ function dedicatedRoute(groupKey: string, itemKey: string): string | undefined {
  * two groups contain the same display label and prevents silent routing into
  * the generic institutional_records CRUD screen.
  */
-export function getNavigationRoute(groupKey: string, itemLabel: string, role?: string): string {
+function resolveNavigationRoute(groupKey: string, itemLabel: string, role?: string): string {
   const itemKey = slug(itemLabel)
+  const directDedicated = dedicatedRoute(groupKey,itemKey)
+  const earlyDedicatedPrefixes = ['duplicate-detection:','helpdesk:','scheduled-reports:','asset-lifecycle:','payment-operations:','receipt-operations:','library-reading:','certificate-forms:','procurement:','cafeteria:','hostel:','messaging:','operations:certificates:','operations:visitors:','operations:facilities:']
+  const linkedInstitutionalGroup = ['administration','library','inventory','transport','ai'].includes(groupKey) && Boolean(directDedicated?.startsWith('institutional:'))
+  if (directDedicated && (earlyDedicatedPrefixes.some(prefix=>directDedicated.startsWith(prefix)) || linkedInstitutionalGroup)) return directDedicated
   if (groupKey === 'communication' && itemKey === 'internet-calling') return 'voice:native'
   if (groupKey === 'dashboard' && itemKey === 'dashboard') return 'overview'
   if (groupKey === 'people-hr') {
@@ -458,6 +534,24 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
   }
   const compositeKey = `${groupKey}:${itemKey}`
   const actorRole = role ?? 'owner'
+  if (groupKey === 'class-tests') {
+    const classTestViews:Record<string,string> = {
+      'class-test-dashboard':'examination-programs',
+      'create-class-tests':'online-tests-and-quizzes',
+      'test-schedule':'examination-timetable',
+      'online-tests':'online-tests-and-quizzes',
+      'written-tests':'online-tests-and-quizzes',
+      'marks-entry':'marks-entry',
+      'test-results':'results-and-result-approval',
+      'performance-analysis':'examination-reports',
+      'test-reports':'examination-reports',
+      'student-wise-test-history':'results-and-result-approval',
+    }
+    if (itemKey === 'test-questions') return 'operations:question-bank:pool'
+    if (classTestViews[itemKey]) return 'institutional:examinations:' + classTestViews[itemKey]
+  }
+  const transportAttendanceRoutePrefix = 'transport-attendance:'
+  if (groupKey === 'transport' && itemKey === 'transport-attendance') return ['owner','admin','teacher'].includes(actorRole) ? transportAttendanceRoutePrefix + 'transport-attendance' : 'unavailable:transport:transport-attendance'
   if (groupKey === 'integrations') {
     const views:Record<string,string> = {
       'integration-overview':'overview',
@@ -520,7 +614,7 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
     return intelligenceRoutes[itemKey] ?? 'unavailable:ai:' + itemKey
   }
   if (groupKey === 'backup' && itemKey === 'integration-status') return 'integration:overview'
-  if (groupKey === 'backup') return 'backup:' + itemKey
+  if (groupKey === 'backup') return 'data-management:' + itemKey
   if (groupKey === 'timetable' && ['teacher-availability','substitution-management','timetable-publishing','class-coverage','engaged-classes'].includes(itemKey)) return 'unavailable:timetable:'+itemKey
   if (groupKey === 'students' && itemKey === 'student-data-export' && role && !['owner','admin'].includes(role)) {
     return 'unavailable:students:student-data-export'
@@ -547,7 +641,8 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
   if (groupKey === 'certificates' && itemKey === 'form-builder') return 'reports:forms'
   if (groupKey === 'certificates' && itemKey === 'form-submissions') return 'reports:forms'
   if (groupKey === 'administration' && itemKey === 'document-access') return 'files'
-  if (groupKey === 'question-bank' && ['question-bank-import-and-export','question-paper-version-history'].includes(itemKey)) return 'unavailable:question-bank:'+itemKey
+  if (groupKey === 'question-bank' && itemKey === 'question-bank-import-and-export') return 'operations:question-bank:pool'
+  if (groupKey === 'question-bank' && itemKey === 'question-paper-version-history') return 'operations:question-bank:papers'
   if (groupKey === 'curriculum' && ['teaching-resources','learning-materials','resource-downloads','chapter-wise-learning-resources','learning-progress-tracking'].includes(itemKey)) return 'unavailable:curriculum:'+itemKey
   if (groupKey === 'behaviour') {
     const behaviourWindows:Record<string,string>={'behaviour-dashboard':'dashboard','behaviour-records':'register','positive-behaviour':'positive','disciplinary-incidents':'incidents','rewards-and-recognition':'recognition','warnings':'warnings','student-skills':'skills','co-curricular-activities':'activities','competency-tracking':'competencies','student-progress-history':'progress','behaviour-analytics':'analytics','downloadable-behaviour-reports':'downloads'}
@@ -562,7 +657,8 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
   if (groupKey === 'examinations' && ['invigilation-management','automatic-checking'].includes(itemKey)) return 'unavailable:examinations:'+itemKey
   if (groupKey === 'examinations' && ['examination-programs','examination-timetable','question-bank','online-tests-and-quizzes','marks-entry','grades-and-grading-system','results-and-result-approval','report-cards','examination-reports'].includes(itemKey)) return 'institutional:examinations:' + itemKey
   if (groupKey === 'examinations' && itemKey === 'examination-rooms') return 'admin:rooms'
-  if (groupKey === 'class-tests' && ['online-tests','written-tests','test-questions'].includes(itemKey)) return 'unavailable:class-tests:'+itemKey
+  if (groupKey === 'class-tests' && itemKey === 'test-questions') return 'operations:question-bank:pool'
+  if (groupKey === 'class-tests' && ['online-tests','written-tests'].includes(itemKey)) return 'institutional:examinations:online-tests-and-quizzes'
   if (groupKey === 'fees' && itemKey === 'online-payments') return 'unavailable:fees:online-payments'
   if (groupKey === 'payments' && itemKey === 'online-payment-records') return 'unavailable:payments:online-payment-records'
   if (groupKey === 'receipts' && ['receipt-templates','receipt-numbering','bulk-receipt-generation'].includes(itemKey)) return 'unavailable:receipts:'+itemKey
@@ -638,6 +734,28 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
 
   if (linkedRoutes.has(compositeKey)) return institutionalRoute(groupKey, itemKey)
   return 'unavailable:' + groupKey + ':' + itemKey
+}
+
+/**
+ * All visible institution-owned menu destinations resolve to a dedicated
+ * workspace or to a typed, institution-scoped record register. This fallback
+ * never creates a new sidebar item and never bypasses role/RLS enforcement.
+ */
+export function getNavigationRoute(groupKey: string, itemLabel: string, role?: string): string {
+  const route = resolveNavigationRoute(groupKey,itemLabel,role)
+  if (!route.startsWith('unavailable:')) return route
+  const explicitlyUnavailable = new Set([
+    'attendance:attendance-alerts','timetable:substitution-management','timetable:timetable-publishing',
+    'examinations:automatic-checking','examinations:invigilation-management','transport:transport-attendance',
+  ])
+  if (explicitlyUnavailable.has(groupKey + ':' + slug(itemLabel))) return route
+  const group = getWorkspaceGroup(groupKey)
+  const item = getWorkspaceItem(groupKey,slug(itemLabel))
+  const actorRole = role ?? 'owner'
+  if (!group || !item || !group.dataModule || !group.roles.includes(actorRole as typeof group.roles[number])) return route
+  const visibleGroup = roleNavigationGroups(actorRole as Parameters<typeof roleNavigationGroups>[0]).find(candidate=>candidate.key===groupKey)
+  if (!visibleGroup?.items.includes(item.label)) return route
+  return institutionalRoute(groupKey,item.key)
 }
 
 const contextualEntries = institutionalMenu.flatMap(group => group.items.map(item => [

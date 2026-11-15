@@ -1,6 +1,6 @@
 # Migration history
 
-The sixty-three timestamped migration files in this folder match the remote migration history recorded by the linked Supabase project. Keep each 14-digit timestamp unchanged so local and remote migration histories remain aligned.
+This repository contains timestamped migration SQL, but the checked-out folder must not be assumed to be an exact mirror of the currently linked Supabase migration ledger. Migration scripts must not be replayed blindly. Reconcile migration versions and inspect the remote schema before adding, deploying or replaying any SQL. As checked on 15 November 2026, this repository snapshot contains 85 timestamped SQL files while the linked project's migration ledger reports 94 versions; 17 remote versions have no matching local SQL file and 8 local timestamped files are not listed in that remote ledger. This difference must be reviewed deliberately rather than resolved by blindly replaying migrations. Keep each 14-digit timestamp unchanged.
 
 The current online application includes the reviewed schema changes for the existing live schema, Faculty & Employee Management, and Student Management operations (admission lifecycle, linked guardian contacts, class placements, private student documents and audit history for attendance, published results, assignment submissions, guardian policy consolidation and activity indexes). The Student Management and Faculty/Employee migrations have already been applied to the linked project; do not replay them manually.
 

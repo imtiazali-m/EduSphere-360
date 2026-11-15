@@ -52,18 +52,48 @@ const governanceTabs = new Set(['profile','settings','approvals','audit','academ
 const operationTabs = {
   'question-bank': new Set(['pool','papers']),
   curriculum: new Set(['units','coverage']),
-  behaviour: new Set(['register','positive','follow-up','dashboard','incidents','recognition','warnings','skills','activities','competencies','progress','analytics','downloads']),
-  certificates: new Set(['verify','issue']),
-  visitors: new Set(['log','checked-in','history']),
-  facilities: new Set(['assets','maintenance','history']),
+  behaviour: new Set(['register','positive','follow-up','dashboard','incidents','recognition','warnings','skills','activities','competencies','progress','history','analytics','downloads','reports']),
+  certificates: new Set(['verify','issue','templates','bulk','history']),
+  visitors: new Set(['log','checked-in','approvals','notifications','history','reports']),
+  facilities: new Set(['assets','maintenance','history','reservations','reports']),
 }
 const adminKeys = new Set(['departments','programs','classes','academic_sessions','subjects','rooms'])
 const linkedKeys = new Set([
   'administration:campus-and-branch-management',
-  'library:book-issue-and-returns','library:library-reports',
-  'inventory:stock-in','inventory:stock-out','inventory:stock-allocation',
-  'inventory:stock-adjustments','inventory:inventory-history','inventory:stock-reports',
-  'transport:student-transport-allocation','transport:transport-reports',
+  'library:book-issue-and-returns',
+  'library:digital-library',
+  'library:book-management',
+  'library:book-catalogue',
+  'library:book-categories',
+  'library:book-registration',
+  'library:reading-records',
+  'library:reading-cards',
+  'library:student-reading-history',
+  'library:learning-materials',
+  'library:resource-downloads',
+  'library:library-reports',
+  'inventory:items-management',
+  'inventory:item-catalogue',
+  'inventory:item-categories',
+  'inventory:suppliers',
+  'inventory:purchase-records',
+  'inventory:stock-in',
+  'inventory:stock-out',
+  'inventory:stock-allocation',
+  'inventory:stock-adjustments',
+  'inventory:inventory-history',
+  'inventory:stock-reports',
+  'transport:vehicle-management',
+  'transport:drivers-management',
+  'transport:transport-routes',
+  'transport:route-stops',
+  'transport:student-transport-allocation',
+  'transport:transport-fees',
+  'transport:transport-assignments',
+  'transport:vehicle-maintenance',
+  'transport:transport-attendance',
+  'transport:transport-history',
+  'transport:transport-reports'
 ])
 
 function shellTarget(route) {
@@ -78,6 +108,21 @@ function shellTarget(route) {
   const finance = route.startsWith('finance:')
   const payroll = route.startsWith('payroll:')
   const peopleHR = route.startsWith('peoplehr:')
+  const dataManagement = route.startsWith('data-management:')
+  const customReports = route.startsWith('custom-reports:')
+  const messaging = route.startsWith('messaging:')
+  const hostel = route.startsWith('hostel:')
+  const procurement = route.startsWith('procurement:')
+  const cafeteria = route.startsWith('cafeteria:')
+  const libraryReading = route.startsWith('library-reading:')
+  const receiptOperations = route.startsWith('receipt-operations:')
+  const paymentOperations = route.startsWith('payment-operations:')
+  const assetLifecycle = route.startsWith('asset-lifecycle:')
+  const scheduledReports = route.startsWith('scheduled-reports:')
+  const helpdesk = route.startsWith('helpdesk:')
+  const duplicateDetection = route.startsWith('duplicate-detection:')
+  const certificateForms = route.startsWith('certificate-forms:')
+  const transportAttendance = route.startsWith('transport-attendance:')
   const personal = route.startsWith('personal:')
   const assistant = route.startsWith('assistant:')
   const frontOffice = route.startsWith('frontoffice:')
@@ -100,6 +145,21 @@ function shellTarget(route) {
     : finance ? 'finance'
     : payroll ? 'payroll'
     : peopleHR ? 'peoplehr'
+    : dataManagement ? 'data-management'
+    : customReports ? 'custom-reports'
+    : messaging ? 'messaging'
+    : hostel ? 'hostel'
+    : procurement ? 'procurement'
+    : cafeteria ? 'cafeteria'
+    : libraryReading ? 'library-reading'
+    : receiptOperations ? 'receipt-operations'
+    : paymentOperations ? 'payment-operations'
+    : assetLifecycle ? 'asset-lifecycle'
+    : scheduledReports ? 'scheduled-reports'
+    : helpdesk ? 'helpdesk'
+    : duplicateDetection ? 'duplicate-detection'
+    : certificateForms ? 'certificate-forms'
+    : transportAttendance ? 'transport-attendance'
     : personal ? 'personal'
     : assistant ? 'assistant'
     : frontOffice ? 'frontoffice'
@@ -122,6 +182,21 @@ function shellTarget(route) {
     : finance ? route.slice('finance:'.length)
     : payroll ? route.slice('payroll:'.length)
     : peopleHR ? route.slice('peoplehr:'.length)
+    : dataManagement ? route.slice('data-management:'.length)
+    : customReports ? route.slice('custom-reports:'.length)
+    : messaging ? route.slice('messaging:'.length)
+    : hostel ? route.slice('hostel:'.length)
+    : procurement ? route.slice('procurement:'.length)
+    : cafeteria ? route.slice('cafeteria:'.length)
+    : libraryReading ? route.slice('library-reading:'.length)
+    : receiptOperations ? route.slice('receipt-operations:'.length)
+    : paymentOperations ? route.slice('payment-operations:'.length)
+    : assetLifecycle ? route.slice('asset-lifecycle:'.length)
+    : scheduledReports ? route.slice('scheduled-reports:'.length)
+    : helpdesk ? route.slice('helpdesk:'.length)
+    : duplicateDetection ? route.slice('duplicate-detection:'.length)
+    : certificateForms ? route.slice('certificate-forms:'.length)
+    : transportAttendance ? route.slice('transport-attendance:'.length)
     : personal ? route.slice('personal:'.length)
     : assistant ? route.slice('assistant:'.length)
     : frontOffice ? route.slice('frontoffice:'.length)
@@ -148,6 +223,21 @@ function checkView(role, route, dispatcher) {
     const supported = new Set(['academic-sessions','classes-sections','subjects-courses','curriculum','lesson-planning','timetable','homework-assignments','study-materials','online-learning','classroom-activities','academic-calendar','learning-progress'])
     return { component:nativeOnline ? 'NativeCallingWorkspace' : 'AcademicManagementWorkspace', view:targetWindow, status:nativeOnline || supported.has(targetWindow) ? 'Supported' : 'Unsupported academic workspace' }
   }
+  if (targetKey === 'data-management') return { component:'DataManagementWorkspace', view:targetWindow, status:new Set(["backup-dashboard","create-backup","scheduled-cloud-backups","backup-history","restore-data","data-recovery","import-data","export-data","bulk-data-import","data-validation","import-history","export-history","data-integrity-reports","integration-status"]).has(targetWindow)?'Supported':'Unsupported data-management view' }
+  if (targetKey === 'custom-reports') return { component:'CustomReportsWorkspace', view:targetWindow, status:new Set(["custom-report-builder","report-templates","report-history"]).has(targetWindow)?'Supported':'Unsupported custom-reports view' }
+  if (targetKey === 'messaging') return { component:'CommunicationWorkspace', view:targetWindow, status:new Set(["whatsapp-integration","individual-messages","bulk-messages","class-wise-messaging","employee-notifications","message-templates","email-notifications","delivery-history","communication-logs","communication-reports","parent-communication","internal-messages","visitor-notifications"]).has(targetWindow)?'Supported':'Unsupported messaging view' }
+  if (targetKey === 'hostel') return { component:'HostelWorkspace', view:targetWindow, status:new Set(["hostel-dashboard","hostel-buildings","room-bed-register","resident-allocation","room-transfers","check-in-check-out","hostel-visitor-register","hostel-fees","accommodation-maintenance","occupancy-reports"]).has(targetWindow)?'Supported':'Unsupported hostel view' }
+  if (targetKey === 'procurement') return { component:'ProcurementWorkspace', view:targetWindow, status:new Set(["supplier-directory","purchase-requests","quotation-comparison","purchase-approvals","purchase-orders","goods-receipt","supplier-invoices","procurement-reports"]).has(targetWindow)?'Supported':'Unsupported procurement view' }
+  if (targetKey === 'cafeteria') return { component:'CafeteriaWorkspace', view:targetWindow, status:new Set(["cafeteria-dashboard","menu-price-list","daily-availability","sales-transactions","meal-plans","cafeteria-inventory","cafeteria-reports"]).has(targetWindow)?'Supported':'Unsupported cafeteria view' }
+  if (targetKey === 'library-reading') return { component:'LibraryReadingWorkspace', view:targetWindow, status:new Set(["reading-records","reading-cards","student-reading-history"]).has(targetWindow)?'Supported':'Unsupported library-reading view' }
+  if (targetKey === 'receipt-operations') return { component:'ReceiptWorkspace', view:targetWindow, status:new Set(["receipt-dashboard","generate-receipt","fee-receipts","payment-receipts","receipt-templates","receipt-numbering","receipt-reprinting","receipt-verification","bulk-receipt-generation","receipt-history"]).has(targetWindow)?'Supported':'Unsupported receipt-operations view' }
+  if (targetKey === 'payment-operations') return { component:'PaymentOperationsWorkspace', view:targetWindow, status:new Set(["online-payment-records","failed-and-pending-payments"]).has(targetWindow)?'Supported':'Unsupported payment-operations view' }
+  if (targetKey === 'asset-lifecycle') return { component:'AssetLifecycleWorkspace', view:targetWindow, status:new Set(["asset-assignment","asset-transfers","asset-warranty","asset-disposal","asset-reports"]).has(targetWindow)?'Supported':'Unsupported asset-lifecycle view' }
+  if (targetKey === 'scheduled-reports') return { component:'ScheduledReportsWorkspace', view:targetWindow, status:new Set(["scheduled-reports"]).has(targetWindow)?'Supported':'Unsupported scheduled-reports view' }
+  if (targetKey === 'helpdesk') return { component:'HelpdeskWorkspace', view:targetWindow, status:new Set(["complaints-helpdesk"]).has(targetWindow)?'Supported':'Unsupported helpdesk view' }
+  if (targetKey === 'duplicate-detection') return { component:'DuplicateDetectionWorkspace', view:targetWindow, status:new Set(["duplicate-detection"]).has(targetWindow)?'Supported':'Unsupported duplicate-detection view' }
+  if (targetKey === 'certificate-forms') return { component:'CertificateFormsWorkspace', view:targetWindow, status:new Set(["form-builder","form-submissions","letters-applications"]).has(targetWindow)?'Supported':'Unsupported certificate-forms view' }
+  if (targetKey === 'transport-attendance') return { component:'TransportAttendanceWorkspace', view:targetWindow, status:targetWindow==='transport-attendance'?'Supported':'Unsupported transport-attendance view' }
   if (targetKey === 'personal') return { component:'PersonalWorkspace', view:targetWindow, status:new Set(['my-profile','account-settings','notification-settings','my-activity','help-support']).has(targetWindow)?'Supported':'Unsupported personal view' }
   if (targetKey === 'integrations') return { component:'IntegrationManagementWorkspace', view:targetWindow, status:new Set(['overview','ai-providers','biometric']).has(targetWindow)?'Supported':'Unsupported integration view' }
   if (targetKey === 'behaviour') return { component:'BehaviourSkillsWorkspace', view:targetWindow, status:new Set(['dashboard','records','positive','incidents','recognition','warnings','skills','activities','competencies','progress','analytics','downloads']).has(targetWindow)?'Supported':'Unsupported behaviour view' }
@@ -171,7 +261,7 @@ function checkView(role, route, dispatcher) {
     return { component: 'AttendanceWorkspace', view: targetWindow, status: attendanceWindows.has(targetWindow) ? 'Supported' : 'Unsupported attendance view' }
   }
   if (targetKey === 'care') {
-    const careWindows = new Set(['leave','reports','reports-students','reports-teachers','reports-staff','discipline','counselling','health'])
+    const careWindows = new Set(['leave','leave-applications','leave-approvals','leave-balances','leave-reports','reports','reports-students','reports-teachers','reports-staff','discipline','counselling','health'])
     return { component: 'Stage7CareWorkspace', view: targetWindow, status: careWindows.has(targetWindow) ? 'Supported' : 'Unsupported care view' }
   }
   if (targetKey === 'reports') {
@@ -243,6 +333,21 @@ for (const [role, label] of roles) {
         : dashboard.targetKey === 'finance' ? 'FinanceWorkspace'
         : dashboard.targetKey === 'payroll' ? 'PayrollWorkspace'
         : dashboard.targetKey === 'peoplehr' ? 'PeopleHRWorkspace'
+        : dashboard.targetKey === 'data-management' ? 'DataManagementWorkspace'
+        : dashboard.targetKey === 'custom-reports' ? 'CustomReportsWorkspace'
+        : dashboard.targetKey === 'messaging' ? 'CommunicationWorkspace'
+        : dashboard.targetKey === 'hostel' ? 'HostelWorkspace'
+        : dashboard.targetKey === 'procurement' ? 'ProcurementWorkspace'
+        : dashboard.targetKey === 'cafeteria' ? 'CafeteriaWorkspace'
+        : dashboard.targetKey === 'library-reading' ? 'LibraryReadingWorkspace'
+        : dashboard.targetKey === 'receipt-operations' ? 'ReceiptWorkspace'
+        : dashboard.targetKey === 'payment-operations' ? 'PaymentOperationsWorkspace'
+        : dashboard.targetKey === 'asset-lifecycle' ? 'AssetLifecycleWorkspace'
+        : dashboard.targetKey === 'scheduled-reports' ? 'ScheduledReportsWorkspace'
+        : dashboard.targetKey === 'helpdesk' ? 'HelpdeskWorkspace'
+        : dashboard.targetKey === 'duplicate-detection' ? 'DuplicateDetectionWorkspace'
+        : dashboard.targetKey === 'certificate-forms' ? 'CertificateFormsWorkspace'
+        : dashboard.targetKey === 'transport-attendance' ? 'TransportAttendanceWorkspace'
         : dashboard.targetKey === 'personal' ? 'PersonalWorkspace'
         : dashboard.targetKey === 'assistant' ? 'AIAssistantWorkspace'
         : dashboard.targetKey === 'frontoffice' ? 'FrontOfficeWorkspace'

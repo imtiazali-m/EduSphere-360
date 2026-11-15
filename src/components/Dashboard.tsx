@@ -43,6 +43,21 @@ import { PayrollWorkspace } from './PayrollWorkspace'
 import { PeopleHRWorkspace } from './PeopleHRWorkspace'
 import { GovernanceWorkspace } from './GovernanceWorkspace'
 import { InstitutionOperationsWorkspace } from './InstitutionOperationsWorkspace'
+import { AssetLifecycleWorkspace } from './AssetLifecycleWorkspace'
+import { CafeteriaWorkspace } from './CafeteriaWorkspace'
+import { CertificateFormsWorkspace } from './CertificateFormsWorkspace'
+import { TransportAttendanceWorkspace } from './TransportAttendanceWorkspace'
+import { CommunicationWorkspace } from './CommunicationWorkspace'
+import { CustomReportsWorkspace } from './CustomReportsWorkspace'
+import { DataManagementWorkspace } from './DataManagementWorkspace'
+import { DuplicateDetectionWorkspace } from './DuplicateDetectionWorkspace'
+import { HelpdeskWorkspace } from './HelpdeskWorkspace'
+import { HostelWorkspace } from './HostelWorkspace'
+import { LibraryReadingWorkspace } from './LibraryReadingWorkspace'
+import { PaymentOperationsWorkspace } from './PaymentOperationsWorkspace'
+import { ProcurementWorkspace } from './ProcurementWorkspace'
+import { ReceiptWorkspace } from './ReceiptWorkspace'
+import { ScheduledReportsWorkspace } from './ScheduledReportsWorkspace'
 import { AcademicManagementWorkspace } from './AcademicManagementWorkspace'
 import { CollegeWebsiteManager } from './CollegeWebsiteManager'
 import { supabase } from '../lib/supabase'
@@ -753,6 +768,21 @@ export function Dashboard({ onToast }: Props) {
     const assistantWindowRoute = key.startsWith('assistant:')
     const frontOfficeWindowRoute = key.startsWith('frontoffice:')
     const governanceWindowRoute = key.startsWith('governance:')
+    const dataManagementWindowRoute = key.startsWith('data-management:')
+    const customReportsWindowRoute = key.startsWith('custom-reports:')
+    const messagingWindowRoute = key.startsWith('messaging:')
+    const hostelWindowRoute = key.startsWith('hostel:')
+    const procurementWindowRoute = key.startsWith('procurement:')
+    const cafeteriaWindowRoute = key.startsWith('cafeteria:')
+    const libraryReadingWindowRoute = key.startsWith('library-reading:')
+    const receiptOperationsWindowRoute = key.startsWith('receipt-operations:')
+    const paymentOperationsWindowRoute = key.startsWith('payment-operations:')
+    const assetLifecycleWindowRoute = key.startsWith('asset-lifecycle:')
+    const scheduledReportsWindowRoute = key.startsWith('scheduled-reports:')
+    const helpdeskWindowRoute = key.startsWith('helpdesk:')
+    const duplicateDetectionWindowRoute = key.startsWith('duplicate-detection:')
+    const certificateFormsWindowRoute = key.startsWith('certificate-forms:')
+    const transportAttendanceWindowRoute = key.startsWith('transport-attendance:')
     const operationsWindowRoute = key.startsWith('operations:')
     const backupWindowRoute = key.startsWith('backup:')
     const integrationWindowRoute = key.startsWith('integration:')
@@ -774,6 +804,21 @@ export function Dashboard({ onToast }: Props) {
       : assistantWindowRoute ? 'assistant'
       : frontOfficeWindowRoute ? 'frontoffice'
       : payrollWindowRoute ? 'payroll'
+      : dataManagementWindowRoute ? 'data-management'
+      : customReportsWindowRoute ? 'custom-reports'
+      : messagingWindowRoute ? 'messaging'
+      : hostelWindowRoute ? 'hostel'
+      : procurementWindowRoute ? 'procurement'
+      : cafeteriaWindowRoute ? 'cafeteria'
+      : libraryReadingWindowRoute ? 'library-reading'
+      : receiptOperationsWindowRoute ? 'receipt-operations'
+      : paymentOperationsWindowRoute ? 'payment-operations'
+      : assetLifecycleWindowRoute ? 'asset-lifecycle'
+      : scheduledReportsWindowRoute ? 'scheduled-reports'
+      : helpdeskWindowRoute ? 'helpdesk'
+      : duplicateDetectionWindowRoute ? 'duplicate-detection'
+      : certificateFormsWindowRoute ? 'certificate-forms'
+      : transportAttendanceWindowRoute ? 'transport-attendance'
       : governanceWindowRoute ? 'governance'
       : operationsWindowRoute ? 'operations'
       : backupWindowRoute ? 'backup'
@@ -796,6 +841,21 @@ export function Dashboard({ onToast }: Props) {
       : assistantWindowRoute ? key.slice('assistant:'.length)
       : frontOfficeWindowRoute ? key.slice('frontoffice:'.length)
       : payrollWindowRoute ? key.slice('payroll:'.length)
+      : dataManagementWindowRoute ? key.slice('data-management:'.length)
+      : customReportsWindowRoute ? key.slice('custom-reports:'.length)
+      : messagingWindowRoute ? key.slice('messaging:'.length)
+      : hostelWindowRoute ? key.slice('hostel:'.length)
+      : procurementWindowRoute ? key.slice('procurement:'.length)
+      : cafeteriaWindowRoute ? key.slice('cafeteria:'.length)
+      : libraryReadingWindowRoute ? key.slice('library-reading:'.length)
+      : receiptOperationsWindowRoute ? key.slice('receipt-operations:'.length)
+      : paymentOperationsWindowRoute ? key.slice('payment-operations:'.length)
+      : assetLifecycleWindowRoute ? key.slice('asset-lifecycle:'.length)
+      : scheduledReportsWindowRoute ? key.slice('scheduled-reports:'.length)
+      : helpdeskWindowRoute ? key.slice('helpdesk:'.length)
+      : duplicateDetectionWindowRoute ? key.slice('duplicate-detection:'.length)
+      : certificateFormsWindowRoute ? key.slice('certificate-forms:'.length)
+      : transportAttendanceWindowRoute ? key.slice('transport-attendance:'.length)
       : governanceWindowRoute ? key.slice('governance:'.length)
       : operationsWindowRoute ? key.slice('operations:'.length)
       : backupWindowRoute ? key.slice('backup:'.length)
@@ -820,6 +880,21 @@ export function Dashboard({ onToast }: Props) {
       else if (targetKey === 'personal') title = 'My Workspace'
       else if (targetKey === 'assistant') title = 'AI Assistant'
       else if (targetKey === 'frontoffice') title = 'Front Office & Communication'
+      else if (targetKey === 'data-management') title = 'Backup, Restore & Data Management'
+      else if (targetKey === 'custom-reports') title = 'Custom Report Builder'
+      else if (targetKey === 'messaging') title = 'Communication & Messaging'
+      else if (targetKey === 'hostel') title = 'Hostel Management'
+      else if (targetKey === 'procurement') title = 'Procurement Management'
+      else if (targetKey === 'cafeteria') title = 'Cafeteria Management'
+      else if (targetKey === 'library-reading') title = 'Library Reading Management'
+      else if (targetKey === 'receipt-operations') title = 'Receipt Management'
+      else if (targetKey === 'payment-operations') title = 'Payment Operations'
+      else if (targetKey === 'asset-lifecycle') title = 'Asset Lifecycle'
+      else if (targetKey === 'scheduled-reports') title = 'Scheduled Reports'
+      else if (targetKey === 'helpdesk') title = 'Helpdesk'
+      else if (targetKey === 'duplicate-detection') title = 'Duplicate Detection'
+      else if (targetKey === 'certificate-forms') title = 'Forms & Submissions'
+      else if (targetKey === 'transport-attendance') title = 'Transport Attendance'
       else if (targetKey === 'governance') title = 'Institution Governance'
       else if (targetKey === 'operations') title = 'Institution Operations'
       else if (targetKey === 'backup') title = 'Backup & Data Management'
@@ -985,13 +1060,63 @@ export function Dashboard({ onToast }: Props) {
           {workspaceTabs.map(tab => {
             const tabModule = available.find(module => module.key === tab.targetKey)
             const tabAdminKey = tab.targetKey.startsWith('admin:') ? tab.targetKey.slice(6) : undefined
-            const linkedWorkspaceKeys = ['administration:campus-and-branch-management','library:book-issue-and-returns','library:library-reports','inventory:stock-in','inventory:stock-out','inventory:stock-allocation','inventory:stock-adjustments','inventory:inventory-history','inventory:stock-reports','transport:student-transport-allocation','transport:transport-reports']
+            const linkedWorkspaceKeys = [
+              'administration:campus-and-branch-management',
+              'library:book-issue-and-returns',
+              'library:digital-library',
+              'library:book-management',
+              'library:book-catalogue',
+              'library:book-categories',
+              'library:book-registration',
+              'library:reading-records',
+              'library:reading-cards',
+              'library:student-reading-history',
+              'library:learning-materials',
+              'library:resource-downloads',
+              'library:library-reports',
+              'inventory:items-management',
+              'inventory:item-catalogue',
+              'inventory:item-categories',
+              'inventory:suppliers',
+              'inventory:purchase-records',
+              'inventory:stock-in',
+              'inventory:stock-out',
+              'inventory:stock-allocation',
+              'inventory:stock-adjustments',
+              'inventory:inventory-history',
+              'inventory:stock-reports',
+              'transport:vehicle-management',
+              'transport:drivers-management',
+              'transport:transport-routes',
+              'transport:route-stops',
+              'transport:student-transport-allocation',
+              'transport:transport-fees',
+              'transport:transport-assignments',
+              'transport:vehicle-maintenance',
+              'transport:transport-history',
+              'transport:transport-reports'
+            ]
             return <section className="pro-window-panel" key={tab.id} hidden={activeTabId !== tab.id} aria-label={tab.title}>
               {tab.groupKey && tab.itemKey && tab.targetKey !== 'unavailable' && (tab.targetKey !== 'institutional' || tab.targetWindow.startsWith('examinations:') || linkedWorkspaceKeys.includes(tab.targetWindow)) && <WorkspacePageGuide groupKey={tab.groupKey} itemKey={tab.itemKey}/>}
               {tab.targetKey === 'backup' ? <BackupDataWorkspace initialWindow={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'notifications' ? <NotificationCenter onToast={onToast} onUnreadCountChange={setUnreadAnnouncementCount}/> :
                 tab.targetKey === 'overview' ? <RoleDashboard onNavigate={navigateChild}/> :
                 tab.targetKey === 'institutional' && tab.targetWindow.startsWith('examinations:') ? <AssessmentWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'data-management' ? <DataManagementWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'custom-reports' ? <CustomReportsWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'messaging' ? <CommunicationWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'hostel' ? <HostelWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'procurement' ? <ProcurementWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'cafeteria' ? <CafeteriaWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'library-reading' ? <LibraryReadingWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'receipt-operations' ? <ReceiptWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'payment-operations' ? <PaymentOperationsWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'asset-lifecycle' ? <AssetLifecycleWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'scheduled-reports' ? <ScheduledReportsWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'helpdesk' ? <HelpdeskWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'duplicate-detection' ? <DuplicateDetectionWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'certificate-forms' ? <CertificateFormsWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'transport-attendance' ? <TransportAttendanceWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'institutional' && linkedWorkspaceKeys.includes(tab.targetWindow) ? <LinkedOperationsWorkspace workspaceKey={tab.targetWindow} onToast={onToast} onNavigate={navigateChild}/> :
                 tab.targetKey === 'institutional' ? <InstitutionalWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'unavailable' && getWorkspaceGroup(tab.targetWindow.split(':')[0])?.roles.includes(user!.role) ? <InstitutionalWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { Download, Plus, RefreshCw, X, CheckCircle2, AlertTriangle } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
-import { listRecords, createRecord, recordFeePayment } from '../lib/data'
+import { listRecords, createRecord, recordFeePayment, issueFeeReceipt } from '../lib/data'
 import { userFacingError } from '../lib/userErrors'
 import { netInvoiceAmount, outstandingInvoiceBalance } from '../lib/finance'
 import { downloadCsv } from '../lib/csv'
@@ -13,6 +13,7 @@ import '../styles/finance-workspace.css'
 type Section = 'overview'|'invoices'|'payments'|'structures'|'discounts'|'refunds'|'receivables'|'receipts'|'accounts'|'journals'|'reconciliation'
 type Props = { workspaceKey:string; initialWindow?:string; onToast:(message:string,error?:boolean)=>void }
 type FinanceRow = RecordRow & { id:string; [key:string]:unknown }
+type ReceiptLedgerRow = { id:string; payment_id:string; receipt_number:string; template_key:string; issued_at:string }
 type JournalLineDraft = { account_id:string; description:string; debit:string; credit:string }
 
 const today=()=>new Date().toLocaleDateString('en-CA')
@@ -20,6 +21,7 @@ const money=(value:number)=>new Intl.NumberFormat('en-PK',{style:'currency',curr
 const label=(value:unknown)=>String(value??'').replaceAll('_',' ').replace(/\b\w/g,char=>char.toUpperCase())
 const dateLabel=(value:unknown)=>value?new Date(String(value).slice(0,10)+'T00:00:00').toLocaleDateString():'—'
 const number=(value:unknown)=>Number(value??0)
+const escapeHtml=(value:unknown)=>String(value??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;')
 
 const sectionFor=(group:string,item:string):Section=>{
   if(group==='accounts-finance') return ['chart-of-accounts'].includes(item)?'accounts':'journals'
@@ -60,6 +62,8 @@ export function FinanceWorkspace({workspaceKey,initialWindow,onToast}:Props){
   const financePageSize=10
   const [invoices,setInvoices]=useState<FinanceRow[]>([])
   const [payments,setPayments]=useState<FinanceRow[]>([])
+  const [receiptLedgerRows,setReceiptLedgerRows]=useState<ReceiptLedgerRow[]>([])
+  const [receiptLedgerError,setReceiptLedgerError]=useState('')
   const [students,setStudents]=useState<FinanceRow[]>([])
   const [structures,setStructures]=useState<FinanceRow[]>([])
   const [structureItems,setStructureItems]=useState<FinanceRow[]>([])
@@ -211,6 +215,17 @@ export function FinanceWorkspace({workspaceKey,initialWindow,onToast}:Props){
       const paymentRows=await listRecords(mode,user!,'fee_payments') as FinanceRow[]
       setPayments(paymentRows)
       if(financeRole){
+        const {data:receiptRows,error:receiptError}=await supabase.from('fee_receipt_ledger')
+          .select('id,payment_id,receipt_number,template_key,issued_at')
+          .eq('institution_id',user!.institutionId)
+          .order('issued_at',{ascending:false})
+        if(receiptError){
+          setReceiptLedgerRows([])
+          setReceiptLedgerError(userFacingError(receiptError,'Formal receipt records could not be loaded.'))
+        }else{
+          setReceiptLedgerRows((receiptRows??[]) as ReceiptLedgerRow[])
+          setReceiptLedgerError('')
+        }
         const [studentRows,structureRows,structureItemRows,discountRows,applicationRows,refundRows,auditRows]=await Promise.all([
           listRecords(mode,user!,'students') as Promise<FinanceRow[]>,
           listRecords(mode,user!,'fee_structures') as Promise<FinanceRow[]>,
@@ -288,16 +303,69 @@ export function FinanceWorkspace({workspaceKey,initialWindow,onToast}:Props){
     }catch(err){onToast(userFacingError(err,'Fee invoice could not be saved.'),true)}finally{setSaving(false)}
   }
 
+  async function issueReceipt(payment:FinanceRow){
+    if(!financeRole||!supabase)return
+    const existing=receiptLedgerRows.find(row=>row.payment_id===payment.id)
+    if(existing){onToast('Formal receipt '+String(existing.receipt_number)+' has already been issued.');return}
+    setSaving(true)
+    try{
+      const receipt=await issueFeeReceipt(mode,user!,{paymentId:payment.id,templateKey:'default'})
+      setReceiptLedgerRows(current=>[receipt,...current.filter(row=>row.payment_id!==payment.id)])
+      setReceiptLedgerError('')
+      onToast('Formal receipt '+receipt.receipt_number+' issued and saved.')
+      await load(true)
+    }catch(err){onToast(userFacingError(err,'Formal receipt could not be issued. Refresh the register and retry.'),true)}finally{setSaving(false)}
+  }
+
+  function printReceipt(payment:FinanceRow,ledger:ReceiptLedgerRow){
+    const invoice=invoices.find(row=>row.id===payment.invoice_id)
+    const printWindow=window.open('','_blank','width=820,height=900')
+    if(!printWindow){onToast('The receipt window was blocked. Allow pop-ups for this site and try again.',true);return}
+    printWindow.opener=null
+    const details:[string,string][]=[
+      ['Student',String(invoice?.student_name??'—')],
+      ['Admission number',String(invoice?.admission_no??'—')],
+      ['Class / programme',String(invoice?.class_name??'—')],
+      ['Invoice number',String(invoice?.invoice_no??'—')],
+      ['Payment date',dateLabel(payment.payment_date)],
+      ['Payment method',label(payment.payment_method)],
+      ['Payment reference',String(payment.payment_reference??payment.transaction_reference??'—')],
+      ['Amount received',money(number(payment.amount))],
+    ]
+    const rows=details.map(([key,value])=>`<tr><th>${escapeHtml(key)}</th><td>${escapeHtml(value)}</td></tr>`).join('')
+    const institution=escapeHtml(user?.institutionName??'Institution')
+    const receiptNumber=escapeHtml(ledger.receipt_number)
+    const issuedAt=escapeHtml(dateLabel(ledger.issued_at))
+    printWindow.document.open()
+    printWindow.document.write(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Fee receipt ${receiptNumber}</title><style>*{box-sizing:border-box}body{font:15px/1.5 Arial,sans-serif;color:#172b3a;margin:0;padding:36px}.receipt{max-width:720px;margin:0 auto;border:1px solid #d8e0e8;padding:32px}.top{display:flex;justify-content:space-between;gap:24px;border-bottom:2px solid #18344c;padding-bottom:20px}.top h1{font-size:24px;margin:0 0 4px}.muted{color:#607487}.number{text-align:right}.number strong{display:block;font-size:20px}table{width:100%;border-collapse:collapse;margin:24px 0}th,td{text-align:left;padding:12px 10px;border-bottom:1px solid #e2e8ee}th{width:38%;color:#52697b;font-weight:600}.amount{font-size:19px;font-weight:700;background:#f3f7fa;padding:16px}.footer{margin-top:30px;border-top:1px solid #d8e0e8;padding-top:14px;color:#607487;font-size:12px}.actions{max-width:720px;margin:18px auto;text-align:right}.actions button{padding:10px 18px;border:0;border-radius:6px;background:#18344c;color:white}@media print{body{padding:0}.receipt{border:0}.actions{display:none}}</style></head><body><main class="receipt"><header class="top"><div><h1>${institution}</h1><div class="muted">Official fee payment receipt</div></div><div class="number"><strong>${receiptNumber}</strong><div class="muted">Issued ${issuedAt}</div></div></header><table>${rows}</table><div class="amount">Amount received: ${escapeHtml(money(number(payment.amount)))}</div><footer class="footer">This receipt was issued from the institution's secured fee receipt ledger. Keep it for your records.</footer></main><div class="actions"><button onclick="window.print()">Print receipt</button></div></body></html>`)
+    printWindow.document.close()
+    printWindow.focus()
+    window.setTimeout(()=>printWindow.print(),200)
+  }
+
   async function savePayment(event:FormEvent){
     event.preventDefault()
     if(!selectedInvoice||!financeRole)return
     const amount=Number(paymentAmount)
-    if(!(amount>0)||amount>outstandingInvoiceBalance(selectedInvoice)){onToast('Enter a positive payment not exceeding the outstanding invoice balance.',true);return}
+    if(!(amount>0)||!Number.isFinite(amount)||Math.round(amount*100)!==amount*100||amount>outstandingInvoiceBalance(selectedInvoice)){
+      onToast('Enter a valid positive payment to two decimal places that does not exceed the outstanding invoice balance.',true);return
+    }
     setSaving(true)
     try{
       const result=await recordFeePayment(mode,user!,{invoiceId:selectedInvoice.id,amount,paymentMethod,paymentReference,paymentDate,notes:paymentNotes})
+      let formalReceipt=''
+      let receiptIssueError:unknown=null
+      try{
+        const issued=await issueFeeReceipt(mode,user!,{paymentId:result.payment_id,templateKey:'default'})
+        formalReceipt=issued.receipt_number
+      }catch(issueError){receiptIssueError=issueError}
       setPaymentTarget(null);setPaymentAmount('');setPaymentReference('');setPaymentNotes('')
-      onToast('Payment recorded. Receipt '+result.receipt_no+'.');await load(true)
+      if(receiptIssueError){
+        onToast('Payment was recorded ('+result.receipt_no+'), but its formal receipt could not be issued: '+userFacingError(receiptIssueError,'Receipt service unavailable')+'. Open Receipt Register to retry.',true)
+      }else{
+        onToast('Payment recorded and formal receipt '+formalReceipt+' issued.')
+      }
+      await load(true)
     }catch(err){onToast(userFacingError(err,'Payment could not be recorded.'),true)}finally{setSaving(false)}
   }
 
@@ -589,23 +657,30 @@ export function FinanceWorkspace({workspaceKey,initialWindow,onToast}:Props){
     const pageRows=ordered.slice((currentPage-1)*financePageSize,currentPage*financePageSize)
     return <>
       <div className="table-scroll"><table><thead><tr>
-        {financeSortHeader('Receipt','receipt_no',paymentSortKey,paymentSortDirection,()=>sortPayments('receipt_no'))}
+        {financeSortHeader(section==='receipts'?'Payment reference':'Receipt','receipt_no',paymentSortKey,paymentSortDirection,()=>sortPayments('receipt_no'))}
+        {section==='receipts'&&<th>Formal receipt</th>}
         {financeSortHeader('Invoice','invoice',paymentSortKey,paymentSortDirection,()=>sortPayments('invoice'))}
         {financeSortHeader('Payment date','payment_date',paymentSortKey,paymentSortDirection,()=>sortPayments('payment_date'))}
         {financeSortHeader('Method','payment_method',paymentSortKey,paymentSortDirection,()=>sortPayments('payment_method'))}
         {financeSortHeader('Reference','payment_reference',paymentSortKey,paymentSortDirection,()=>sortPayments('payment_reference'))}
         {financeSortHeader('Amount','amount',paymentSortKey,paymentSortDirection,()=>sortPayments('amount'))}
         {financeSortHeader('Status','status',paymentSortKey,paymentSortDirection,()=>sortPayments('status'))}
+        {section==='receipts'&&<th>Action</th>}
       </tr></thead><tbody>{pageRows.map(row=>{
         const invoice=invoices.find(item=>item.id===row.invoice_id)
+        const ledger=receiptLedgerRows.find(receipt=>receipt.payment_id===row.id)
         return <tr key={row.id}>
           <td><b>{String(row.receipt_no??row.receipt_number??'—')}</b></td>
+          {section==='receipts'&&<td><b>{String(ledger?.receipt_number??'Not issued')}</b></td>}
           <td>{String(invoice?.invoice_no??'Invoice')}<small>{String(invoice?.student_name??'')}</small></td>
           <td>{dateLabel(row.payment_date)}</td>
           <td>{label(row.payment_method)}</td>
           <td>{String(row.payment_reference??row.transaction_reference??row.cheque_number??'—')}</td>
           <td>{money(number(row.amount))}</td>
           <td><span className="fin-status paid">{label(row.status??'completed')}</span></td>
+          {section==='receipts'&&<td>{ledger
+            ? <button type="button" className="fin-button" onClick={()=>printReceipt(row,ledger)}>Print receipt</button>
+            : <button type="button" className="fin-button primary" disabled={!financeRole||saving} onClick={()=>void issueReceipt(row)}>{saving?'Working…':'Issue receipt'}</button>}</td>}
         </tr>
       })}</tbody></table></div>
       {pageControls(ordered.length,currentPage,setPaymentPage)}
@@ -626,7 +701,7 @@ export function FinanceWorkspace({workspaceKey,initialWindow,onToast}:Props){
       </div>
     </div>
     if(section==='invoices')return <section className="fin-panel"><header><div><h2>Invoice register</h2><p>Search, review outstanding balances and open fee collection.</p></div>{financeRole&&<div className="fin-header-actions"><button className="fin-button" onClick={()=>exportFinance('csv')}><Download size={14}/> Export</button><button className="fin-button primary" onClick={()=>setInvoiceForm(true)}><Plus size={14}/> Create invoice</button></div>}</header><label className="fin-search">Search invoices<input value={query} onChange={event=>{setQuery(event.target.value);setInvoicePage(1);setPaymentPage(1)}} placeholder="Invoice, student, category or status…"/></label>{invoiceTable(visibleInvoices)}</section>
-    if(section==='payments'||section==='receipts')return <section className="fin-panel"><header><div><h2>{sectionLabels[section]}</h2><p>Payment receipts returned by the institution's atomic payment record operation.</p></div></header><label className="fin-search">Search payments<input value={query} onChange={event=>{setQuery(event.target.value);setInvoicePage(1);setPaymentPage(1)}} placeholder="Receipt, student, method or reference…"/></label>{paymentTable(visiblePayments)}</section>
+    if(section==='payments'||section==='receipts')return <section className="fin-panel"><header><div><h2>{sectionLabels[section]}</h2><p>{section==='receipts'?'Official receipt numbers are stored in the protected receipt ledger. Issue missing receipts or print an issued receipt.':'Review recorded payments and their transaction references.'}</p></div></header>{section==='receipts'&&receiptLedgerError&&<div className="fin-error" role="alert">{receiptLedgerError}</div>}<label className="fin-search">Search payments<input value={query} onChange={event=>{setQuery(event.target.value);setInvoicePage(1);setPaymentPage(1)}} placeholder="Receipt, student, method or reference…"/></label>{paymentTable(visiblePayments)}</section>
     if(section==='receivables')return <section className="fin-panel"><header><div><h2>Receivables and ageing</h2><p>Current unpaid, part-paid and overdue invoice balances.</p></div></header><div className="fin-metric-grid slim"><article><small>Current</small><strong>{money(invoices.filter(row=>outstandingInvoiceBalance(row)>0&&String(row.due_date??'')>=today()).reduce((s,row)=>s+outstandingInvoiceBalance(row),0))}</strong></article><article><small>Overdue</small><strong>{money(overdueInvoices.reduce((s,row)=>s+outstandingInvoiceBalance(row),0))}</strong></article><article><small>Part-paid</small><strong>{invoices.filter(row=>number(row.paid_amount)>0&&outstandingInvoiceBalance(row)>0).length}</strong></article><article><small>Unpaid</small><strong>{invoices.filter(row=>number(row.paid_amount)<=0&&outstandingInvoiceBalance(row)>0).length}</strong></article></div>{invoiceTable(visibleInvoices.filter(row=>outstandingInvoiceBalance(row)>0))}</section>
     if(section==='structures')return <div className="fin-two-column"><section className="fin-panel"><header><div><h2>Fee structures</h2><p>Define recurring schedules by class, session and frequency.</p></div>{financeRole&&<button className="fin-button primary" onClick={()=>setStructureForm(true)}><Plus size={14}/> Add structure</button>}</header>{structures.length?<div className="fin-card-list">{structures.map(row=><button type="button" key={row.id} className={'fin-select-card '+(selectedStructure===row.id?'selected':'')} onClick={()=>setSelectedStructure(row.id)}><b>{String(row.name)}</b><span>{String(row.class_name)} · {label(row.frequency)} · {label(row.status)}</span><small>{dateLabel(row.effective_date)}{row.expiry_date?' – '+dateLabel(row.expiry_date):''}</small></button>)}</div>:<div className="fin-empty">No fee structures have been defined. Add one to start.</div>}</section><section className="fin-panel"><header><div><h2>Selected fee components</h2><p>Amounts belonging to the selected structure.</p></div></header>{selectedStructure&&financeRole&&<form className="fin-inline-form" onSubmit={addStructureItem}><label>Category<select value={structureItemCategory} onChange={e=>setStructureItemCategory(e.target.value)}><option value="tuition">Tuition</option><option value="admission">Admission</option><option value="examination">Examination</option><option value="transport">Transport</option><option value="library">Library</option><option value="other">Other</option></select></label><label>Description<input value={structureItemDescription} onChange={e=>setStructureItemDescription(e.target.value)} required/></label><label>Amount (PKR)<input type="number" min="0.01" step="0.01" value={structureItemAmount} onChange={e=>setStructureItemAmount(e.target.value)} required/></label><button className="fin-button primary" disabled={saving}>Add component</button></form>}{(structureItems.filter(row=>row.structure_id===selectedStructure)).length?<div className="table-scroll"><table><thead><tr><th>Category</th><th>Description</th><th>Amount</th></tr></thead><tbody>{structureItems.filter(row=>row.structure_id===selectedStructure).map(row=><tr key={row.id}><td>{label(row.category)}</td><td>{String(row.description)}</td><td>{money(number(row.amount))}</td></tr>)}</tbody></table></div>:<div className="fin-empty">{selectedStructure?'No components added to this structure yet.':'Select a fee structure to manage its components.'}</div>}</section></div>
     if(section==='discounts')return <section className="fin-panel"><header><div><h2>Discounts and scholarships</h2><p>Define schemes, submit applications and process approvals. The invoice only changes after successful approval.</p></div>{financeRole&&<div className="fin-header-actions"><button className="fin-button" onClick={()=>setDiscountApplicationForm(true)}><Plus size={14}/> Apply discount</button><button className="fin-button primary" onClick={()=>setDiscountForm(true)}><Plus size={14}/> New discount</button></div>}</header><div className="fin-two-column"><div><h3>Active discount schemes</h3>{discounts.map(row=><div className="fin-list-row" key={row.id}><span><b>{String(row.name)}</b><small>{label(row.fee_category??'all categories')} · {dateLabel(row.start_date)}{row.end_date?' – '+dateLabel(row.end_date):''}</small></span><strong>{row.discount_type==='percentage'?String(row.discount_value)+'%':money(number(row.discount_value))}</strong></div>)}{!discounts.length&&<div className="fin-empty">No discount schemes defined.</div>}</div><div><h3>Applications and approvals</h3>{discountApplications.map(row=><div className="fin-list-row" key={row.id}><span><b>{String(discounts.find(x=>x.id===row.discount_id)?.name??'Discount')}</b><small>{String(invoices.find(x=>x.id===row.invoice_id)?.student_name??'Student')} · {money(number(row.amount))} · {dateLabel(row.created_at)}</small></span><span className={'fin-status '+String(row.approval_status??'pending')}>{label(row.approval_status)}</span>{financeRole&&row.approval_status==='pending'&&<div className="fin-row-actions"><button type="button" className="fin-button primary" disabled={saving} onClick={()=>void decideDiscount(row,'approve')}>Approve</button><button type="button" className="fin-button danger" disabled={saving} onClick={()=>void decideDiscount(row,'reject')}>Reject</button></div>}</div>)}{!discountApplications.length&&<div className="fin-empty">No discount applications have been submitted.</div>}</div></div></section>

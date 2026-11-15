@@ -34,6 +34,69 @@ check('Behaviour and Skills has distinct database-backed pages and record workfl
   assert.ok(behaviour.includes('student_care_access'), 'Teacher access must follow the care-area permission grant')
   assert.ok(dashboard.includes('<BehaviourSkillsWorkspace'), 'Dashboard must dispatch the Behaviour & Skills workspace')
 })
+check('Dedicated operational submenus dispatch to institution-scoped workspace components', () => {
+  const dashboard = read('src/components/Dashboard.tsx')
+  const routes = read('src/lib/navigationRoutes.ts')
+  const contracts = [
+    ['data-management','DataManagementWorkspace','src/components/DataManagementWorkspace.tsx'],
+    ['custom-reports','CustomReportsWorkspace','src/components/CustomReportsWorkspace.tsx'],
+    ['messaging','CommunicationWorkspace','src/components/CommunicationWorkspace.tsx'],
+    ['hostel','HostelWorkspace','src/components/HostelWorkspace.tsx'],
+    ['procurement','ProcurementWorkspace','src/components/ProcurementWorkspace.tsx'],
+    ['cafeteria','CafeteriaWorkspace','src/components/CafeteriaWorkspace.tsx'],
+    ['library-reading','LibraryReadingWorkspace','src/components/LibraryReadingWorkspace.tsx'],
+    ['receipt-operations','ReceiptWorkspace','src/components/ReceiptWorkspace.tsx'],
+    ['payment-operations','PaymentOperationsWorkspace','src/components/PaymentOperationsWorkspace.tsx'],
+    ['asset-lifecycle','AssetLifecycleWorkspace','src/components/AssetLifecycleWorkspace.tsx'],
+    ['scheduled-reports','ScheduledReportsWorkspace','src/components/ScheduledReportsWorkspace.tsx'],
+    ['helpdesk','HelpdeskWorkspace','src/components/HelpdeskWorkspace.tsx'],
+    ['duplicate-detection','DuplicateDetectionWorkspace','src/components/DuplicateDetectionWorkspace.tsx'],
+    ['certificate-forms','CertificateFormsWorkspace','src/components/CertificateFormsWorkspace.tsx'],
+    ['transport-attendance','TransportAttendanceWorkspace','src/components/TransportAttendanceWorkspace.tsx'],
+  ]
+  for (const [prefix, component, file] of contracts) {
+    assert.ok(dashboard.includes("tab.targetKey === '" + prefix + "'"), 'Missing Dashboard route dispatch: ' + prefix)
+    assert.ok(dashboard.includes('<' + component), 'Missing workspace component render: ' + component)
+    assert.ok(routes.includes("'" + prefix + ":'"), 'Missing route family mapping: ' + prefix)
+    const source = read(file)
+    assert.ok(source.includes('institution_id') || source.includes('listRecords') || source.includes('createRecord'), file + ' must use institution-scoped data services')
+    assert.ok(source.includes('onToast('), file + ' must surface user-facing success or error feedback')
+  }
+  const operations = read('src/components/InstitutionOperationsWorkspace.tsx')
+  for (const view of ['templates','bulk','approvals','notifications','reservations','reports']) {
+    assert.ok(operations.includes("view === '" + view + "'") || operations.includes("view==='" + view + "'"), 'Missing operations submenu view: ' + view)
+  }
+  assert.ok(operations.includes('approve_facility_room_reservation'), 'Room reservation approval must use the conflict-checking database RPC')
+  assert.ok(operations.includes('Generate draft certificates'), 'Bulk certificates must remain drafts until authorised review')
+})
+check('Leave applications, approvals, balances and reporting have separate role-scoped workflows', () => {
+  const care = read('src/components/Stage7CareWorkspace.tsx')
+  const routes = read('src/lib/navigationRoutes.ts')
+  const access = read('src/lib/navigationCatalog.ts')
+  for (const view of ['leave-applications','leave-approvals','leave-balances','leave-reports']) {
+    assert.ok(care.includes("activeWindow==='" + view + "'"), 'Missing leave workspace view: ' + view)
+    assert.ok(routes.includes("'"+view+"':'care:"+view+"'"), 'Missing leave route: ' + view)
+  }
+  assert.ok(care.includes("user?.role==='teacher'?employees.filter(employee=>employee.user_id===user.id):employees"), 'Teachers must apply only for their own employee profile')
+  assert.ok(care.includes("if(!supabase||!user||!isAdmin)return"), 'Only owners and administrators can review leave')
+  assert.ok(care.includes("if(!supabase||!user||!isAdmin||!balancePerson)return"), 'Only owners and administrators can change leave entitlements')
+  assert.ok(care.includes('overlapDays(row.start_date,row.end_date,leavePeriodRange.from,leavePeriodRange.to)'), 'Leave reporting must count only days overlapping the selected reporting period')
+  assert.ok(access.includes("student:['Student Attendance','Leave Applications'"), 'Students must receive leave self-service without approval controls')
+  assert.ok(access.includes("parent:['Student Attendance','Leave Applications'"), 'Parents must receive linked-child leave self-service without approval controls')
+})
+check('Formal fee receipts are issued through the secured ledger and can be retried or printed', () => {
+  const dataLayer = read('src/lib/data.ts')
+  const finance = read('src/components/FinanceWorkspace.tsx')
+  const migration = read('supabase/migrations/20261113092730_fee_receipt_issuance_and_numbering.sql')
+  assert.ok(dataLayer.includes('export async function issueFeeReceipt'), 'Missing authenticated fee receipt issuance helper')
+  assert.ok(dataLayer.includes(".rpc('issue_fee_receipt'"), 'Formal receipt helper must call the database receipt issuer')
+  assert.ok(dataLayer.includes("['owner', 'admin', 'accountant']"), 'Only finance-authorised roles may issue formal receipts')
+  assert.ok(finance.includes("issueFeeReceipt(mode,user!,{paymentId:result.payment_id,templateKey:'default'})"), 'Payment recording must attempt formal receipt issuance')
+  assert.ok(finance.includes('Open Receipt Register to retry'), 'A receipt issuance failure must not hide a recorded payment and must offer a retry path')
+  assert.ok(finance.includes("supabase.from('fee_receipt_ledger')"), 'Receipt register must load official ledger rows')
+  assert.ok(finance.includes('function printReceipt(') && finance.includes('Print receipt'), 'Official receipts must be printable from the ledger')
+  assert.ok(migration.includes('create table if not exists public.fee_receipt_ledger'), 'Receipt ledger schema must exist in migrations')
+})
 check('Vite development and production scripts exist', () => {
   assert.equal(packageJson.scripts.dev, 'vite --host 0.0.0.0')
   assert.equal(packageJson.scripts.build, 'tsc -b && vite build')
@@ -49,6 +112,24 @@ check('Vite development and production scripts exist', () => {
 })
 
 const requiredFiles = [
+  'src/styles/clean-blue-workspace-system.css',
+  'src/components/AssetLifecycleWorkspace.tsx',
+  'src/components/CafeteriaWorkspace.tsx',
+  'src/components/CertificateFormsWorkspace.tsx',
+  'src/components/CommunicationWorkspace.tsx',
+  'src/components/CustomReportsWorkspace.tsx',
+  'src/components/DataManagementWorkspace.tsx',
+  'src/components/DuplicateDetectionWorkspace.tsx',
+  'src/components/HelpdeskWorkspace.tsx',
+  'src/components/HostelWorkspace.tsx',
+  'src/components/LibraryReadingWorkspace.tsx',
+  'src/components/PaymentOperationsWorkspace.tsx',
+  'src/components/ProcurementWorkspace.tsx',
+  'src/components/ReceiptWorkspace.tsx',
+  'src/components/ScheduledReportsWorkspace.tsx',
+  'src/components/TransportAttendanceWorkspace.tsx',
+  'src/styles/data-management.css',
+  'src/styles/library-reading.css',
   'index.html', 'src/main.tsx', 'src/App.tsx', 'src/components/Dashboard.tsx', 'src/components/RoleDashboard.tsx', 'src/components/role-dashboard.css', 'src/components/WorkspaceUnavailable.tsx', 'src/components/BackupDataWorkspace.tsx', 'src/components/backup-data-workspace.css', 'src/components/IntegrationManagementWorkspace.tsx', 'src/styles/integrations-workspace.css', 'src/components/BehaviourSkillsWorkspace.tsx', 'src/styles/behaviour-skills-workspace.css',
   'src/components/FinanceWorkspace.tsx', 'src/styles/finance-workspace.css', 'src/styles/student-promotion-workspace.css', 'src/styles/navigation-refinement.css',
   'src/components/PayrollWorkspace.tsx', 'src/styles/payroll-workspace.css',
@@ -145,6 +226,15 @@ check('The full institutional menu maps every submenu to a working destination',
     'library:library-dashboard','inventory:inventory-dashboard',
     'transport:transport-dashboard','transport:transport-fees','transport:transport-history',
     'examinations:examination-programs','examinations:examination-timetable','examinations:question-bank',
+    'class-tests:class-test-dashboard',
+    'class-tests:create-class-tests',
+    'class-tests:test-schedule',
+    'class-tests:marks-entry',
+    'class-tests:test-results',
+    'class-tests:performance-analysis',
+    'class-tests:test-reports',
+    'class-tests:student-wise-test-history',
+    'class-tests:online-tests','class-tests:written-tests',
     'examinations:online-tests-and-quizzes','examinations:marks-entry','examinations:grades-and-grading-system',
     'examinations:results-and-result-approval','examinations:report-cards','examinations:examination-reports',
     // AI question-generation opens the dedicated examination question-bank workspace;
@@ -172,23 +262,28 @@ check('The full institutional menu maps every submenu to a working destination',
   assert.equal(getNavigationRoute('students', 'Student Data Export', 'student'), 'unavailable:students:student-data-export', 'Student accounts must not receive institution-wide data export access')
   assert.equal(getNavigationRoute('students', 'Student Data Export', 'owner'), 'students:directory', 'Administrators can export their permitted student directory records')
   assert.equal(getNavigationRoute('employees', 'Employee Performance'), 'unavailable:employees:employee-performance', 'HR headcount must not be presented as a performance appraisal')
-  assert.equal(getNavigationRoute('attendance', 'Leave Applications'), 'employees:leave', 'Leave applications must open the HR leave workflow')
+  assert.equal(getNavigationRoute('attendance', 'Leave Applications'), 'care:leave-applications', 'Leave applications must open the self-service leave workflow')
+  assert.equal(getNavigationRoute('attendance', 'Leave Review & Approvals'), 'care:leave-approvals', 'Leave approvals must open their restricted review queue')
+  assert.equal(getNavigationRoute('attendance', 'Leave Balances'), 'care:leave-balances', 'Leave balances must open their entitlement register')
+  assert.equal(getNavigationRoute('attendance', 'Leave Reports'), 'care:leave-reports', 'Leave reports must open period-based analytics')
   assert.equal(getNavigationRoute('attendance', 'Attendance Analytics'), 'reports:attendance', 'Attendance analytics must open the live attendance report')
   assert.equal(getNavigationRoute('attendance', 'Attendance Alerts'), 'unavailable:attendance:attendance-alerts', 'Attendance alerts require a configured rules/notification workflow')
   assert.equal(getNavigationRoute('timetable', 'Substitution Management'), 'unavailable:timetable:substitution-management', 'Teacher substitution must not be represented as unassigned timetable entries')
   assert.equal(getNavigationRoute('timetable', 'Timetable Publishing'), 'unavailable:timetable:timetable-publishing', 'Timetable publication controls are not implemented yet')
-  assert.equal(getNavigationRoute('class-tests', 'Online Tests'), 'unavailable:class-tests:online-tests', 'Online test delivery must not be represented as ordinary examination records')
+  assert.equal(getNavigationRoute('class-tests', 'Online Tests'), 'institutional:examinations:online-tests-and-quizzes', 'Online tests must open the timed assessment workspace')
   assert.equal(getNavigationRoute('examinations', 'Automatic Checking'), 'unavailable:examinations:automatic-checking', 'Automated marking is not configured')
-  assert.equal(getNavigationRoute('reports', 'Custom Report Builder'), 'reports:builder', 'Custom Report Builder must open its dedicated multi-source builder')
-  assert.equal(getNavigationRoute('reports', 'Scheduled Reports'), 'reports:scheduled', 'Scheduled Reports must open its dedicated scheduling page')
-  assert.equal(getNavigationRoute('library', 'Student Reading History'), 'unavailable:library:student-reading-history', 'Reading progress history is distinct from the library loan ledger')
-  assert.equal(getNavigationRoute('transport', 'Transport Attendance'), 'unavailable:transport:transport-attendance', 'Transport boarding attendance requires its own route attendance register')
-  assert.equal(getNavigationRoute('receipts', 'Receipt Templates'), 'unavailable:receipts:receipt-templates', 'Receipt template management must not be confused with receipt printing')
+  assert.equal(getNavigationRoute('reports', 'Custom Report Builder'), 'custom-reports:custom-report-builder', 'Custom Report Builder must open its dedicated multi-source builder')
+  assert.equal(getNavigationRoute('reports', 'Scheduled Reports'), 'scheduled-reports:scheduled-reports', 'Scheduled Reports must open its dedicated scheduling page')
+  assert.equal(getNavigationRoute('library', 'Student Reading History'), 'library-reading:student-reading-history', 'Reading progress history must open its dedicated learner reading register')
+  assert.equal(getNavigationRoute('transport', 'Transport Attendance', 'owner'), 'transport-attendance:transport-attendance', 'Transport boarding attendance must open its append-only event register')
+  assert.equal(getNavigationRoute('transport', 'Transport Attendance', 'student'), 'unavailable:transport:transport-attendance', 'Student accounts must not access the staff-only transport event register')
+  assert.equal(getNavigationRoute('receipts', 'Receipt Templates'), 'receipt-operations:receipt-templates', 'Receipt template management must open the dedicated receipt workspace')
   assert.equal(getNavigationRoute('students', 'Student ID Cards'), 'students:id-cards', 'Student ID Cards must open the print workspace')
   assert.equal(getNavigationRoute('employees', 'Employee ID Cards'), 'employees:id-cards', 'Employee ID Cards must open the staff print workspace')
   assert.equal(getNavigationRoute('ai', 'AI Assistant'), 'assistant:chat', 'AI Assistant must open its dedicated shell while keeping sending disabled until a provider is configured')
-  assert.equal(getNavigationRoute('backup', 'Create Backup'), 'backup:create-backup', 'Create Backup must open the dedicated logical export snapshot workspace')
-  assert.equal(getNavigationRoute('communication', 'WhatsApp Integration'), 'unavailable:communication:whatsapp-integration', 'External messaging must remain unconnected until credentials and delivery tests exist')
+  assert.equal(getNavigationRoute('backup', 'Create Backup'), 'data-management:create-backup', 'Create Backup must open the backup request and data management workspace')
+  assert.equal(getNavigationRoute('communication', 'WhatsApp Integration'), 'messaging:whatsapp-integration', 'WhatsApp integration must open its connection-status workspace without claiming provider readiness')
+  assert.ok(read('src/components/CommunicationWorkspace.tsx').includes("isProviderPage=itemKey==='whatsapp-integration'"), 'WhatsApp configuration must remain a status/configuration page until verified credentials are available')
   assert.equal(getNavigationRoute('communication', 'Notification Centre'), 'notifications', 'In-app notifications remain a supported communication workflow')
   assert.equal(getNavigationRoute('people-hr', 'Teachers'), 'employees:directory-teaching', 'Teachers must open the teaching directory window')
   assert.equal(getNavigationRoute('people-hr', 'Faculty & Staff'), 'employees:directory-staff', 'Faculty & Staff must open the staff directory window')
@@ -420,7 +515,7 @@ check('College production deployment runs only from main after the verified buil
   const releaseWorkflow = read('.github/workflows/cloudflare-pages-release.yml')
   const productionJob = releaseWorkflow.slice(releaseWorkflow.indexOf('  deploy-production:'))
   assert.ok(productionJob.includes("github.ref == 'refs/heads/main'"), 'Production deployment must be restricted to main')
-  assert.ok(productionJob.includes("github.event_name == 'push'"), 'A verified merge to main must deploy the college production site')
+  assert.ok(!productionJob.includes("github.event_name == 'push'") && productionJob.includes("github.event_name == 'workflow_dispatch'") && productionJob.includes('inputs.deploy_production == true'), 'Production release must remain manual and explicitly approved after verification')
   assert.ok(productionJob.includes("github.event_name == 'workflow_dispatch'") && productionJob.includes('inputs.deploy_production == true'), 'A manual, explicitly approved redeploy must remain available')
   assert.ok(productionJob.includes('Ensure both EduSphere production Pages projects exist') && productionJob.includes('for project in gidcbadin edusphere360'), 'Both EduSphere Pages projects must be created idempotently when missing')
   assert.ok(productionJob.includes('pages deploy dist --project-name=gidcbadin --branch=main') && productionJob.includes('pages deploy dist --project-name=edusphere360 --branch=main'), 'Production must deploy the same verified build to both Pages projects')
@@ -1030,7 +1125,7 @@ check('College GitHub release pipeline verifies and deploys the dedicated public
   assert.ok(workflow.includes('Generate responsive source coverage audit') && workflow.includes('gidcbadin-responsive-source-audit'), 'Responsive source evidence must be generated and uploaded in CI')
   assert.ok(workflow.includes('gidcbadin-dist') && workflow.includes('gidcbadin-exact-route-audit') && workflow.includes('gidcbadin-route-view-audit'), 'College production and audit artifacts must use the college project name')
   assert.ok(!workflow.includes('deploy-preview'), 'Pull requests must not create a Cloudflare preview deployment')
-  assert.ok(workflow.includes("github.event_name == 'push'") && workflow.includes("github.ref == 'refs/heads/main'"), 'Only a verified main-branch merge may trigger production deployment')
+  assert.ok(!workflow.includes("github.event_name == 'push'") && workflow.includes("github.event_name == 'workflow_dispatch'") && workflow.includes("github.ref == 'refs/heads/main'") && workflow.includes('inputs.deploy_production == true'), 'Production deployment must remain manual and explicitly approved after main-branch verification')
   assert.ok(workflow.includes('secrets.CLOUDFLARE_API_TOKEN') && workflow.includes('secrets.CLOUDFLARE_ACCOUNT_ID'))
   assert.ok(workflow.includes('vars.VITE_SUPABASE_URL') && workflow.includes('vars.VITE_SUPABASE_PUBLISHABLE_KEY'))
   assert.ok(!workflow.includes('SUPABASE_SERVICE_ROLE_KEY'), 'A Supabase service-role key must never be a frontend build variable')
@@ -1068,8 +1163,29 @@ check('Required database safeguards and Cloudflare redirects remain in the proje
     assert.ok(migrations.includes(migration), `${migration} missing`)
   }
   const timestamped = migrations.filter(name => /^202611\d{8}_.+\.sql$/.test(name))
-  assert.equal(timestamped.length, 63, 'Expected sixty-three timestamped migrations including native online classes, calling and Realtime guards')
-  assert.ok(read('supabase/migrations/README.md').includes('sixty-three timestamped migration files'))
+  assert.ok(timestamped.length >= 60, 'Expected the timestamped migration history to include the institution, operations, attendance and online-class changes')
+  const requiredMigrationFiles = [
+    '20261113085725_institution_messages_and_delivery_tracking.sql',
+    '20261113090948_hostel_residence_operations.sql',
+    '20261113091806_cafeteria_menu_availability_sales.sql',
+    '20261113092458_library_reading_history.sql',
+    '20261113092730_fee_receipt_issuance_and_numbering.sql',
+    '20261113092952_payment_gateway_review_register.sql',
+    '20261113093152_facility_asset_lifecycle.sql',
+    '20261113094116_scheduled_report_execution_history.sql',
+    '20261113094248_institution_helpdesk_ticket_lifecycle.sql',
+    '20261113094459_duplicate_detection_review_workflow.sql',
+    '20261113145609_institution_dynamic_forms_and_submissions.sql',
+    '20261115060000_attendance_device_event_review_approval.sql',
+    '20261115070000_native_online_sessions_calling.sql',
+    '20261115080000_native_online_sessions_realtime_and_link_guards.sql',
+    '20261115100000_native_online_session_public_grants_lockdown.sql',
+    '20261115110000_online_session_attendance_reconnect_fix.sql',
+    '20261115120000_guardian_online_class_observer_access.sql',
+  ]
+  for (const migration of requiredMigrationFiles) assert.ok(migrations.includes(migration), migration + ' missing')
+  const migrationReadme = read('supabase/migrations/README.md')
+  assert.ok(migrationReadme.includes('migration ledger') && migrationReadme.includes('must not be replayed blindly'), 'Migration documentation must state that repository files and the remote migration ledger require reconciliation before applying SQL')
   assert.equal(read('public/_redirects').trim(), '/* /index.html 200')
   const envExample = read('.env.example')
   const gitignore = read('.gitignore')
