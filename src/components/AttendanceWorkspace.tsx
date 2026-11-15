@@ -197,6 +197,7 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
    setCameraMessage(error instanceof Error?error.message:'Camera access was blocked. Allow camera permission and retry.')
   }
  }
+ useEffect(()=>{if(autoTab!=='qr-scan'&&cameraActiveRef.current)stopQrCamera()},[autoTab])
  useEffect(()=>()=>{cameraActiveRef.current=false;if(cameraFrameRef.current!==null)cancelAnimationFrame(cameraFrameRef.current);cameraStreamRef.current?.getTracks().forEach(track=>track.stop())},[])
 
  async function createShift(event:FormEvent){event.preventDefault();if(!supabase||!user||!canManageStaff)return;if(!shiftName.trim()||shiftEnd<=shiftStart){onToast('Enter a shift name and a valid start/end time.',true);return}const {error}=await supabase.from('employee_shifts').insert({institution_id:user.institutionId,name:shiftName.trim(),start_time:shiftStart,end_time:shiftEnd,grace_minutes:Number(shiftGrace)||0,created_by:user.id});if(error){onToast(error.message,true);return}setShiftName('');setShowShiftForm(false);onToast('Employee shift saved.');void loadRoster()}
