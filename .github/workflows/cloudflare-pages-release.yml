@@ -12,7 +12,7 @@ on:
         type: boolean
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   verify-and-build:
@@ -30,6 +30,19 @@ jobs:
         with:
           node-version: 22
           cache: npm
+
+      - name: Refresh the npm lockfile for the native WebRTC client
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+          if ! git diff --quiet -- package-lock.json; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add package-lock.json
+            git commit -m "chore: update lockfile for native WebRTC client"
+            git push origin HEAD:"${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}"
+          fi
 
       - name: Install locked dependencies
         run: npm ci --no-audit --no-fund
