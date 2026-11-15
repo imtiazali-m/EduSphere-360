@@ -12,13 +12,15 @@ const check = (label, fn) => {
 }
 
 const packageJson = JSON.parse(read('package.json'))
-check('Integration center has dedicated AI, Zoom, Google, YouTube and biometric setup pages', () => {
+check('External provider center exposes only AI and biometric hardware integrations', () => {
   const integrations = read('src/components/IntegrationManagementWorkspace.tsx')
   const dashboard = read('src/components/Dashboard.tsx')
-  for (const key of ["'ai-providers'", "zoom:", "google:", "youtube:", "biometric:"]) assert.ok(integrations.includes(key), 'Missing integration workspace: ' + key)
+  for (const key of ["'ai-providers'", "biometric:"]) assert.ok(integrations.includes(key), 'Missing integration workspace: ' + key)
+  for (const key of ["zoom:", "google:", "youtube:"]) assert.ok(!integrations.includes(key), 'Third-party classroom integration should not be required: ' + key)
   assert.ok(integrations.includes("action:'status'") && integrations.includes("action:'generate'"), 'AI credentials need a live status and provider test')
   assert.ok(integrations.includes('Not connected'), 'External integrations must not be claimed connected before verification')
   assert.ok(dashboard.includes('<IntegrationManagementWorkspace'), 'Dashboard must dispatch the Integration workspace')
+  assert.ok(dashboard.includes('<NativeCallingWorkspace'), 'Native calling and online classes must be dispatched by EduSphere')
 })
 check('Behaviour and Skills has distinct database-backed pages and record workflows', () => {
   const behaviour = read('src/components/BehaviourSkillsWorkspace.tsx')
@@ -1063,7 +1065,7 @@ check('Required database safeguards and Cloudflare redirects remain in the proje
     assert.ok(migrations.includes(migration), `${migration} missing`)
   }
   const timestamped = migrations.filter(name => /^202611\d{8}_.+\.sql$/.test(name))
-  assert.equal(timestamped.length, 58, 'Expected fifty-eight timestamped migrations including the report-history, student-development and attendance-device review workflows')
+  assert.equal(timestamped.length, 59, 'Expected fifty-nine timestamped migrations including native online classes and calling')
   assert.ok(read('supabase/migrations/README.md').includes('fifty-eight timestamped migration files'))
   assert.equal(read('public/_redirects').trim(), '/* /index.html 200')
   const envExample = read('.env.example')
