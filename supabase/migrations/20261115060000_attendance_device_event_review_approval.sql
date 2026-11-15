@@ -267,8 +267,8 @@ begin
     end if;
 
     if v_record_register_id is not null then
-      select id, status, campus_id, section_name, method
-        into v_register_id, v_register_status, v_register_campus_id, v_register_section_name, v_register_method
+      select id, status, campus_id, section_name, method, academic_session_id
+        into v_register_id, v_register_status, v_register_campus_id, v_register_section_name, v_register_method, v_session_id
         from public.attendance_registers
        where id = v_record_register_id
          and institution_id = v_event.institution_id
@@ -293,8 +293,8 @@ begin
         0
       ));
 
-      select id, status, campus_id, section_name, method
-        into v_register_id, v_register_status, v_register_campus_id, v_register_section_name, v_register_method
+      select id, status, campus_id, section_name, method, academic_session_id
+        into v_register_id, v_register_status, v_register_campus_id, v_register_section_name, v_register_method, v_session_id
         from public.attendance_registers
        where institution_id = v_event.institution_id
          and population = 'student'
@@ -314,8 +314,8 @@ begin
           v_student.class_name, v_student.section_name, p_attendance_date,
           p_period_label, v_method, 'saved', 0, 0, 0, 0, v_user_id
         )
-        returning id, status, campus_id, section_name, method
-          into v_register_id, v_register_status, v_register_campus_id, v_register_section_name, v_register_method;
+        returning id, status, campus_id, section_name, method, academic_session_id
+          into v_register_id, v_register_status, v_register_campus_id, v_register_section_name, v_register_method, v_session_id;
       end if;
     end if;
 
