@@ -36,6 +36,7 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
   const [institution,setInstitution]=useState<Institution|null>(null)
   const [profileDraft,setProfileDraft]=useState({name:'',institution_type:'school',tagline:'',phone:'',email:'',website:'',address:'',country:''})
   const [logoFile,setLogoFile]=useState<File|null>(null),[logoUrl,setLogoUrl]=useState('')
+  const [logoPreviewUrl,setLogoPreviewUrl]=useState('')
   const [settings,setSettings]=useState<Setting[]>([]),[approvals,setApprovals]=useState<Approval[]>([]),[audit,setAudit]=useState<Audit[]>([]),[policies,setPolicies]=useState<Policy[]>([])
   const [departments,setDepartments]=useState<Department[]>([]),[designations,setDesignations]=useState<Designation[]>([]),[teachers,setTeachers]=useState<Teacher[]>([]),[members,setMembers]=useState<Member[]>([])
   const [academicSessions,setAcademicSessions]=useState<AcademicRow[]>([]),[classes,setClasses]=useState<AcademicRow[]>([]),[programs,setPrograms]=useState<AcademicRow[]>([]),[subjects,setSubjects]=useState<AcademicRow[]>([]),[rooms,setRooms]=useState<AcademicRow[]>([])
@@ -93,6 +94,7 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
     finally{setLoading(false)}
   }
   useEffect(()=>{void load()},[user?.id,user?.institutionId,user?.role])
+  useEffect(()=>{if(!logoFile){setLogoPreviewUrl('');return}const url=URL.createObjectURL(logoFile);setLogoPreviewUrl(url);return()=>URL.revokeObjectURL(url)},[logoFile])
 
   const filteredPolicies=useMemo(()=>policies.filter(row=>{
     const audience=String(jsonObject(row.payload).category??'').toLowerCase()
@@ -271,38 +273,68 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
     return rows.length?<div className="gov-table-wrap"><table className="ed360-admin-table"><thead><tr>{sortHeader('Category','category')}{sortHeader('Key','setting_key')}<th>Value</th>{sortHeader('Visibility','is_public')}<th>Actions</th></tr></thead><tbody>{rows.map(row=><tr key={row.id}><td>{label(row.category)}</td><td><b>{row.setting_key}</b></td><td><code>{JSON.stringify(row.setting_value)}</code></td><td>{row.is_public?'Public':'Private'}</td><td><div className="gov-row-actions"><button className="gov-button" onClick={()=>openSetting(row)}>Edit</button><button className="gov-button danger" onClick={()=>void removeSetting(row)}>Delete</button></div></td></tr>)}</tbody></table></div>:<div className="gov-empty">{empty}</div>
   }
   function renderProfile(){
-    return <div className="ed360-admin-profile">
-      <section className="gov-panel"><header><div><h2>Institution identity</h2><p>Update the public institution details used across this tenant.</p></div><span className="gov-readonly">Owner / admin</span></header>
-        <form className="gov-form ed360-admin-profile-form" onSubmit={saveProfile}>
-          <label className="ed360-admin-field">Institute name *<input required value={profileDraft.name} onChange={e=>setProfileDraft(v=>({...v,name:e.target.value}))}/></label>
-          <label className="ed360-admin-field">Institution type<select value={profileDraft.institution_type} onChange={e=>setProfileDraft(v=>({...v,institution_type:e.target.value}))}><option value="school">School</option><option value="college">College</option><option value="university">University</option><option value="multi_institution">Multi-institution</option></select></label>
-          <label className="ed360-admin-field full">Tagline<input value={profileDraft.tagline} onChange={e=>setProfileDraft(v=>({...v,tagline:e.target.value}))} placeholder="A short institutional statement"/></label>
-          <label className="ed360-admin-field">Phone<input value={profileDraft.phone} onChange={e=>setProfileDraft(v=>({...v,phone:e.target.value}))}/></label>
-          <label className="ed360-admin-field">Email<input type="email" value={profileDraft.email} onChange={e=>setProfileDraft(v=>({...v,email:e.target.value}))}/></label>
-          <label className="ed360-admin-field full">Website<input value={profileDraft.website} onChange={e=>setProfileDraft(v=>({...v,website:e.target.value}))} placeholder="https://example.edu"/></label>
-          <label className="ed360-admin-field full">Address<textarea value={profileDraft.address} onChange={e=>setProfileDraft(v=>({...v,address:e.target.value}))}/></label>
-          <label className="ed360-admin-field">Country<input value={profileDraft.country} onChange={e=>setProfileDraft(v=>({...v,country:e.target.value}))}/></label>
-          <div className="ed360-admin-field"><span>Institution logo</span><label className="gov-button"><Upload size={14}/> Choose logo<input type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={e=>setLogoFile(e.target.files?.[0]??null)}/></label><small>{logoFile?logoFile.name:'PNG, JPG or WebP · up to 5 MB'}</small></div>
-          <div className="gov-row-actions full"><button className="gov-button primary" disabled={saving}>{saving?'Saving…':'Update Profile'} <Save size={14}/></button></div>
-        </form>
-      </section>
-      <div className="ed360-admin-stage5">
-        <section className="ed360-admin-profile-preview gov-panel">
-          <header>
-            {logoUrl?<img src={logoUrl} alt="Institution logo"/>:<div className="ed360-admin-profile-placeholder">{(profileDraft.name||'I').slice(0,1).toUpperCase()}</div>}
-            <div><h3>{profileDraft.name||'Institute name'}</h3><p>{profileDraft.tagline||'Institution tagline'}</p></div>
-          </header>
-          <dl>
-            <div><dt>Institution type</dt><dd>{label(profileDraft.institution_type)}</dd></div>
-            <div><dt>Phone</dt><dd>{profileDraft.phone||'—'}</dd></div>
-            <div><dt>Email</dt><dd>{profileDraft.email||'—'}</dd></div>
-            <div><dt>Website</dt><dd>{profileDraft.website||'—'}</dd></div>
-            <div><dt>Address</dt><dd>{profileDraft.address||'—'}</dd></div>
-            <div><dt>Country</dt><dd>{profileDraft.country||'—'}</dd></div>
-          </dl>
-          <p className="ed360-admin-profile-footnote">Institution identity card · updates when you save the profile</p>
+    const previewLogo=logoPreviewUrl||logoUrl
+    const institutionName=profileDraft.name.trim()||'Government Islamia Degree College'
+    return <div className="ed360-admin-profile-v2">
+      <nav className="ed360-admin-profile-nav" aria-label="Institute profile sections">
+        <a href="#institute-identity"><Building2 size={15}/> Institute Identity</a>
+        <a href="#institute-contact"><Users size={15}/> Contact Details</a>
+        <a href="#institute-public-profile"><ArrowUpRight size={15}/> Public Profile</a>
+      </nav>
+      <form className="ed360-admin-profile-form-v2" onSubmit={saveProfile}>
+        <section className="gov-panel ed360-profile-section" id="institute-identity">
+          <header><div><span className="ed360-profile-kicker">OFFICIAL RECORD</span><h2>Institute Identity</h2><p>Legal name, institute category and official emblem.</p></div><span className="ed360-profile-index">01</span></header>
+          <div className="ed360-profile-identity-grid">
+            <label className="ed360-admin-field">Official institute name *<input required maxLength={180} value={profileDraft.name} onChange={e=>setProfileDraft(v=>({...v,name:e.target.value}))} placeholder="Enter the official institute name"/></label>
+            <label className="ed360-admin-field">Institute category<select value={profileDraft.institution_type} onChange={e=>setProfileDraft(v=>({...v,institution_type:e.target.value}))}><option value="school">School</option><option value="college">College</option><option value="university">University</option><option value="multi_institution">Multi-institution</option></select></label>
+            <div className="ed360-profile-logo-field">
+              <div className="ed360-profile-logo-preview">{previewLogo?<img src={previewLogo} alt="Institute emblem preview"/>:<span>{(institutionName||'I').slice(0,1).toUpperCase()}</span>}</div>
+              <div className="ed360-profile-logo-copy"><b>Official institute emblem</b><small>PNG, JPG or WebP · maximum 5 MB</small><label className="gov-button ed360-profile-upload"><Upload size={14}/> {logoFile?'Choose another logo':'Upload emblem'}<input type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={e=>setLogoFile(e.target.files?.[0]??null)}/></label>{logoFile&&<button type="button" className="ed360-profile-clear-file" onClick={()=>setLogoFile(null)}>Discard selected file</button>}</div>
+            </div>
+          </div>
         </section>
-      </div>
+
+        <section className="gov-panel ed360-profile-section" id="institute-contact">
+          <header><div><span className="ed360-profile-kicker">OFFICIAL CHANNELS</span><h2>Contact Details</h2><p>Verified contact channels and registered postal address.</p></div><span className="ed360-profile-index">02</span></header>
+          <div className="ed360-profile-contact-grid">
+            <label className="ed360-admin-field">Official phone<input type="tel" maxLength={40} value={profileDraft.phone} onChange={e=>setProfileDraft(v=>({...v,phone:e.target.value}))} placeholder="+92 …"/></label>
+            <label className="ed360-admin-field">Official email<input type="email" maxLength={180} value={profileDraft.email} onChange={e=>setProfileDraft(v=>({...v,email:e.target.value}))} placeholder="office@institution.edu"/></label>
+            <label className="ed360-admin-field ed360-profile-span">Registered address<textarea rows={3} maxLength={500} value={profileDraft.address} onChange={e=>setProfileDraft(v=>({...v,address:e.target.value}))} placeholder="Street, area, city and district"/></label>
+            <label className="ed360-admin-field">Country<input maxLength={80} value={profileDraft.country} onChange={e=>setProfileDraft(v=>({...v,country:e.target.value}))} placeholder="Pakistan"/></label>
+          </div>
+        </section>
+
+        <section className="gov-panel ed360-profile-section" id="institute-public-profile">
+          <header><div><span className="ed360-profile-kicker">PUBLIC-FACING INFORMATION</span><h2>Public Profile</h2><p>The short introduction and website shown in the institute profile preview.</p></div><span className="ed360-profile-index">03</span></header>
+          <div className="ed360-profile-public-grid">
+            <label className="ed360-admin-field ed360-profile-span">Official tagline<input maxLength={220} value={profileDraft.tagline} onChange={e=>setProfileDraft(v=>({...v,tagline:e.target.value}))} placeholder="A short official description of the institution"/></label>
+            <label className="ed360-admin-field ed360-profile-span">Official website<input type="url" maxLength={240} value={profileDraft.website} onChange={e=>setProfileDraft(v=>({...v,website:e.target.value}))} placeholder="https://www.example.edu"/></label>
+          </div>
+          <div className="ed360-profile-public-note"><ShieldCheck size={16}/><span>Only the institution fields supported by the current profile record are saved here. A separate public-visibility switch is not shown until its publication control is connected.</span></div>
+        </section>
+
+        <div className="ed360-profile-savebar"><span><ShieldCheck size={16}/> Changes apply to this institution’s official profile.</span><button type="submit" className="gov-button primary" disabled={saving}>{saving?'Saving profile…':'Save Institute Profile'} <Save size={15}/></button></div>
+      </form>
+
+      <aside className="ed360-profile-preview-panel">
+        <div className="ed360-profile-preview-heading"><div><span className="ed360-profile-kicker">LIVE PREVIEW</span><h2>Official Institute Identity</h2></div><span className="ed360-profile-preview-state">Preview</span></div>
+        <article className="ed360-profile-public-card">
+          <div className="ed360-profile-card-accent"/>
+          <header>
+            <div className="ed360-profile-card-logo">{previewLogo?<img src={previewLogo} alt="Institute emblem"/>:<span>{institutionName.slice(0,1).toUpperCase()}</span>}</div>
+            <div><span>OFFICIAL INSTITUTION</span><h3>{institutionName}</h3><p>{label(profileDraft.institution_type)}{profileDraft.country?' · '+profileDraft.country:''}</p></div>
+          </header>
+          {profileDraft.tagline&&<p className="ed360-profile-card-tagline">{profileDraft.tagline}</p>}
+          <div className="ed360-profile-card-details">
+            <div><small>PHONE</small><b>{profileDraft.phone||'Not provided'}</b></div>
+            <div><small>EMAIL</small><b>{profileDraft.email||'Not provided'}</b></div>
+            <div><small>ADDRESS</small><b>{profileDraft.address||'Not provided'}</b></div>
+            <div><small>WEBSITE</small><b>{profileDraft.website||'Not provided'}</b></div>
+          </div>
+          <footer><span>{displayInstitutionName(institutionName)}</span><span>EDUSPHERE 360</span></footer>
+        </article>
+        <p className="ed360-profile-preview-caption">This preview reflects the form values. The official institute record changes only after saving.</p>
+      </aside>
     </div>
   }
   function renderDepartments(){
@@ -452,7 +484,7 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
   }
   if(!admin)return <main className="page-content"><div className="gov-error">Administration is restricted to authorised institution owners and administrators.</div></main>
   return <main className={"gov-stage page-content ed360-module-page ed360-admin-stage5" + (section === "profile" ? " is-profile" : "")}>
-    <header className="gov-heading"><div><span>{(user?.institutionName?.trim()||'INSTITUTION').toUpperCase()} / ADMINISTRATION</span><h1>{pageMeta[section].title}</h1><p>{pageMeta[section].description}</p></div><button type="button" className="gov-button" onClick={()=>void load()} disabled={loading}><RefreshCw size={14}/> Refresh</button></header>
+    <header className="gov-heading"><div><span>{(user?.institutionName?.trim()||'GOVERNMENT ISLAMIA DEGREE COLLEGE').toUpperCase()} / ADMINISTRATION / {section==='profile'?'OFFICIAL INSTITUTE PROFILE':pageMeta[section].title.toUpperCase()}</span><h1>{pageMeta[section].title}</h1></div><button type="button" className="gov-button primary" onClick={()=>void load()} disabled={loading}><RefreshCw size={15}/> {loading?'Refreshing…':'Refresh'}</button></header>
     {error&&<div className="gov-error" role="alert">{error}</div>}
     {loading?<div className="gov-empty"><RefreshCw size={18}/> Loading Administration records…</div>:renderContent()}
     {settingForm&&<div className="modal-backdrop"><section className="modal-card gov-modal" role="dialog" aria-modal="true"><div className="modal-heading"><div><div className="eyebrow">INSTITUTION CONFIGURATION</div><h2>{settingEditing?'Edit setting':'Create setting'}</h2><p>Save an institution-scoped value. Public visibility is off by default.</p></div><button className="icon-button" onClick={()=>setSettingForm(false)}><X size={18}/></button></div><form className="gov-form" onSubmit={saveSetting}><label>Category *<input required value={settingCategory} onChange={e=>setSettingCategory(e.target.value)}/></label><label>Setting key *<input required value={settingKey} onChange={e=>setSettingKey(e.target.value)}/></label><label>Value (JSON) *<textarea rows={6} required value={settingValue} onChange={e=>setSettingValue(e.target.value)}/></label><label className="gov-check"><input type="checkbox" checked={settingPublic} onChange={e=>setSettingPublic(e.target.checked)}/> Publicly visible to unauthenticated visitors</label><div className="modal-actions"><button type="button" className="gov-button" onClick={()=>setSettingForm(false)}>Cancel</button><button className="gov-button primary" disabled={saving}><Save size={14}/> Save setting</button></div></form></section></div>}
