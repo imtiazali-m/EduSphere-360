@@ -149,7 +149,7 @@ export function AIAssistantWorkspace({initialWindow='chat'}:{initialWindow?:stri
  return <main className="ed360-ai-workspace">
   <header className="ed360-ai-header">
    <div className="ed360-ai-brand"><span><Icon size={23}/></span><div><small>EDUSPHERE 360 · {page.eyebrow}</small><h1>{page.title}</h1><p>{page.description}</p></div></div>
-   <div className="ed360-ai-status"><i className={availableCount?'is-connected':''}/>{statusLoading?'Checking AI service':freeAIReady?'Free AI service available':'Free AI connection needed'}</div>
+   <div className="ed360-ai-status"><i className={freeAIReady?'is-connected':''}/>{statusLoading?'Checking AI service':freeAIReady?'Free AI service available':'Free AI connection needed'}</div>
   </header>
   <div className="ed360-ai-layout">
    <aside className="ed360-ai-context">
@@ -161,7 +161,8 @@ export function AIAssistantWorkspace({initialWindow='chat'}:{initialWindow?:stri
     <div className="ed360-ai-context-foot"><small>Institution</small><b>{user?.institutionName??'Institution workspace'}</b><small>Evidence status</small><b>{dataLoading?'Preparing data summary':'Summary prepared'}</b></div>
     <button type="button" className="ed360-ai-settings-trigger" onClick={()=>setSettingsOpen(v=>!v)} aria-expanded={settingsOpen}><span>AI service settings</span><ChevronDown size={15}/></button>
     {settingsOpen&&<div className="ed360-ai-provider-settings">
-     <p>Connection details are kept here. Provider credentials remain server-side.</p>\n     <p>Automatic mode uses Cloudflare's free daily allowance only. Selecting another provider manually may incur charges.</p>
+     <p>Connection details are kept here. Provider credentials remain server-side.</p>
+     <p>Automatic mode uses Cloudflare's free daily allowance only. Selecting another provider manually may incur charges.</p>
      <label>Preferred service<select value={provider} onChange={e=>setProvider(e.target.value as 'auto'|ProviderKey)}><option value="auto">Automatic · Cloudflare free quota only</option>{providers.map(p=><option value={p.key} key={p.key} disabled={!providerStatus[p.key]?.configured}>{p.label}{providerStatus[p.key]?.configured?' · ready':' · not configured'}</option>)}</select></label>
      <label>Model identifier (optional)<input value={model} onChange={e=>setModel(e.target.value)} placeholder="Use the configured default model"/></label>
      <div className="ed360-ai-provider-list">{providers.map(p=><div key={p.key}><span>{p.label}</span><em className={providerStatus[p.key]?.configured?'ready':''}>{statusLoading?'Checking…':providerStatus[p.key]?.configured?'Connected':'Not configured'}</em></div>)}</div>
