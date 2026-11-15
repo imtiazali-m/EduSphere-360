@@ -45,6 +45,7 @@ check('Vite development and production scripts exist', () => {
   assert.equal(packageJson.scripts['test:workspace-privacy'], 'node scripts/test-workspace-privacy.mjs')
   assert.equal(packageJson.scripts['test:display-preferences'], 'node --test scripts/test-display-preferences.mjs')
   assert.equal(packageJson.scripts['test:online-session-security'], 'node scripts/test-online-session-security.mjs')
+  assert.equal(packageJson.scripts['test:ai-free-provider'], 'node scripts/test-ai-free-provider.mjs')
 })
 
 const requiredFiles = [
@@ -54,7 +55,7 @@ const requiredFiles = [
   'src/components/GovernanceWorkspace.tsx', 'src/components/AdministrationStage5Workspace.tsx', 'src/components/PeopleHRWorkspace.tsx', 'src/components/EmployeeQualificationsPanel.tsx', 'src/styles/people-hr-workspace.css', 'src/styles/governance-workspace.css',
   'src/components/InstitutionOperationsWorkspace.tsx', 'src/styles/institution-operations.css',
   'src/components/AcademicManagementWorkspace.tsx', 'src/styles/academic-management.css',
-  'src/components/NativeCallingWorkspace.tsx', 'src/styles/native-calling-workspace.css', 'infra/livekit/README.md', 'scripts/test-online-session-security.mjs', 'supabase/functions/online-session-control/index.ts', 'supabase/migrations/20261115070000_native_online_sessions_calling.sql', 'supabase/migrations/20261115080000_native_online_sessions_realtime_and_link_guards.sql', 'supabase/migrations/20261115100000_native_online_session_public_grants_lockdown.sql', 'supabase/migrations/20261115110000_online_session_attendance_reconnect_fix.sql', 'supabase/migrations/20261115120000_guardian_online_class_observer_access.sql',
+  'src/components/NativeCallingWorkspace.tsx', 'src/styles/native-calling-workspace.css', 'scripts/test-ai-free-provider.mjs', 'docs/FREE_AI_SETUP.md', 'infra/livekit/README.md', 'scripts/test-online-session-security.mjs', 'supabase/functions/online-session-control/index.ts', 'supabase/migrations/20261115070000_native_online_sessions_calling.sql', 'supabase/migrations/20261115080000_native_online_sessions_realtime_and_link_guards.sql', 'supabase/migrations/20261115100000_native_online_session_public_grants_lockdown.sql', 'supabase/migrations/20261115110000_online_session_attendance_reconnect_fix.sql', 'supabase/migrations/20261115120000_guardian_online_class_observer_access.sql',
   'src/components/AuthScreens.tsx', 'src/components/AdministrationModule.tsx',
   'src/components/RecordModule.tsx', 'src/components/FacultyWorkspace.tsx', 'src/styles/faculty-workspace.css', 'src/components/ReportsModule.tsx', 'src/components/ProfileModule.tsx', 'src/components/PersonalWorkspace.tsx', 'src/components/AIAssistantWorkspace.tsx', 'src/components/FrontOfficeWorkspace.tsx', 'src/styles/front-office-workspace.css', 'src/context/AuthContext.tsx', 'src/lib/auth.ts',
   'src/lib/data.ts', 'src/lib/workspacePrivacy.js', 'src/lib/workspacePrivacy.d.ts', 'scripts/test-workspace-privacy.mjs', '.github/workflows/workspace-family-privacy.yml', 'docs/WORKSPACE_ROLE_PRIVACY.md', 'src/lib/displayPreferences.js', 'src/lib/displayPreferences.d.ts', 'src/styles/dashboard-display-settings.css', 'scripts/test-display-preferences.mjs', '.github/workflows/dashboard-display-preferences.yml', 'docs/STAGE_4_DASHBOARD_DISPLAY_MODES.md', 'src/lib/navigationAccess.ts', 'src/lib/userErrors.ts', 'scripts/test-user-errors.mjs',
@@ -310,7 +311,7 @@ check('Stage 12 front-office windows use the live tenant-scoped enquiry, notices
 })
 check('Stage 14 AI assistant is transparent when no AI provider is connected', () => {
   const assistant = read('src/components/AIAssistantWorkspace.tsx')
-  assert.ok(assistant.includes('No AI provider key is configured on the institution server yet') && assistant.includes("provider==='auto'&&!configured.length") && assistant.includes('supabase.functions.invoke'), 'The assistant must disclose server-side provider setup requirements and must not send prompts without a configured provider')
+  assert.ok(assistant.includes('The free Cloudflare AI connection is not configured yet') && assistant.includes("provider==='auto'&&!providerStatus.cloudflare?.configured") && assistant.includes('Automatic · Cloudflare free quota only') && assistant.includes('supabase.functions.invoke'), 'The assistant must require the free Cloudflare connection for automatic mode and never fall back to paid providers')
 })
 check('Stage 15 personal account pages use the authenticated session and respect personal scope', () => {
   const personal = read('src/components/PersonalWorkspace.tsx')
