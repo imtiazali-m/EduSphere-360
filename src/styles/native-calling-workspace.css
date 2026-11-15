@@ -63,7 +63,7 @@
 .ed360-native-live-state.reconnecting i{background:#d29a3b}
 .ed360-native-video-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:9px;min-height:210px;padding:9px;border-radius:12px;background:#152b3f}
 .ed360-call-media-tile{position:relative;overflow:hidden;min-height:190px;border-radius:9px;background:#26445e}
-.ed360-call-media-tile.audio-only{display:none}
+.ed360-call-media-tile.audio-only{position:fixed;left:-10000px;top:0;width:1px;min-height:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none}
 .ed360-call-media-mount{position:absolute;inset:0;display:grid;place-items:center}
 .ed360-call-media-mount video{position:absolute;inset:0}
 .ed360-call-media-name{position:absolute;left:9px;bottom:9px;padding:5px 8px;border-radius:6px;background:rgba(9,25,39,.72);color:#fff;font-size:8px;font-weight:800}
@@ -84,3 +84,5 @@
 .ed360-native-privacy b{color:#3b5b79}
 @media(max-width:850px){.ed360-native-columns{grid-template-columns:1fr}}
 @media(max-width:620px){.ed360-native-header{align-items:flex-start;flex-direction:column}.ed360-native-header h1{font-size:22px}.ed360-native-server-status{align-self:flex-start}.ed360-native-session-card{grid-template-columns:30px minmax(0,1fr)}.ed360-native-session-card>button{grid-column:2;justify-self:start}.ed360-native-live-footer{align-items:flex-start;flex-direction:column}.ed360-native-controls{width:100%}.ed360-native-controls button{flex:1;justify-content:center}.ed360-native-attendance{align-items:flex-start;flex-direction:column}.ed360-native-video-grid{grid-template-columns:1fr}}
+
+.ed360-native-observer{display:flex;align-items:center;gap:7px;padding:8px 10px;border:1px solid #dce8f4;border-radius:8px;background:#f4f8fd;color:#456a8e;font-size:8px;font-weight:850}
