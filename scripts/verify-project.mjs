@@ -12,13 +12,15 @@ const check = (label, fn) => {
 }
 
 const packageJson = JSON.parse(read('package.json'))
-check('Integration center has dedicated AI, Zoom, Google, YouTube and biometric setup pages', () => {
+check('External provider center exposes only AI and biometric hardware integrations', () => {
   const integrations = read('src/components/IntegrationManagementWorkspace.tsx')
   const dashboard = read('src/components/Dashboard.tsx')
-  for (const key of ["'ai-providers'", "zoom:", "google:", "youtube:", "biometric:"]) assert.ok(integrations.includes(key), 'Missing integration workspace: ' + key)
+  for (const key of ["'ai-providers'", "biometric:"]) assert.ok(integrations.includes(key), 'Missing integration workspace: ' + key)
+  for (const key of ["zoom:", "google:", "youtube:"]) assert.ok(!integrations.includes(key), 'Third-party classroom integration should not be required: ' + key)
   assert.ok(integrations.includes("action:'status'") && integrations.includes("action:'generate'"), 'AI credentials need a live status and provider test')
   assert.ok(integrations.includes('Not connected'), 'External integrations must not be claimed connected before verification')
   assert.ok(dashboard.includes('<IntegrationManagementWorkspace'), 'Dashboard must dispatch the Integration workspace')
+  assert.ok(dashboard.includes('<NativeCallingWorkspace'), 'Native calling and online classes must be dispatched by EduSphere')
 })
 check('Behaviour and Skills has distinct database-backed pages and record workflows', () => {
   const behaviour = read('src/components/BehaviourSkillsWorkspace.tsx')
@@ -42,6 +44,8 @@ check('Vite development and production scripts exist', () => {
   assert.equal(packageJson.scripts['test:responsive:public'], 'node scripts/test-responsive-public.mjs')
   assert.equal(packageJson.scripts['test:workspace-privacy'], 'node scripts/test-workspace-privacy.mjs')
   assert.equal(packageJson.scripts['test:display-preferences'], 'node --test scripts/test-display-preferences.mjs')
+  assert.equal(packageJson.scripts['test:online-session-security'], 'node scripts/test-online-session-security.mjs')
+  assert.equal(packageJson.scripts['test:ai-free-provider'], 'node scripts/test-ai-free-provider.mjs')
 })
 
 const requiredFiles = [
@@ -51,6 +55,7 @@ const requiredFiles = [
   'src/components/GovernanceWorkspace.tsx', 'src/components/AdministrationStage5Workspace.tsx', 'src/components/PeopleHRWorkspace.tsx', 'src/components/EmployeeQualificationsPanel.tsx', 'src/styles/people-hr-workspace.css', 'src/styles/governance-workspace.css',
   'src/components/InstitutionOperationsWorkspace.tsx', 'src/styles/institution-operations.css',
   'src/components/AcademicManagementWorkspace.tsx', 'src/styles/academic-management.css',
+  'src/components/NativeCallingWorkspace.tsx', 'src/styles/native-calling-workspace.css', 'scripts/test-ai-free-provider.mjs', 'docs/FREE_AI_SETUP.md', 'infra/livekit/README.md', 'scripts/test-online-session-security.mjs', 'supabase/functions/online-session-control/index.ts', 'supabase/migrations/20261115070000_native_online_sessions_calling.sql', 'supabase/migrations/20261115080000_native_online_sessions_realtime_and_link_guards.sql', 'supabase/migrations/20261115100000_native_online_session_public_grants_lockdown.sql', 'supabase/migrations/20261115110000_online_session_attendance_reconnect_fix.sql', 'supabase/migrations/20261115120000_guardian_online_class_observer_access.sql',
   'src/components/AuthScreens.tsx', 'src/components/AdministrationModule.tsx',
   'src/components/RecordModule.tsx', 'src/components/FacultyWorkspace.tsx', 'src/styles/faculty-workspace.css', 'src/components/ReportsModule.tsx', 'src/components/ProfileModule.tsx', 'src/components/PersonalWorkspace.tsx', 'src/components/AIAssistantWorkspace.tsx', 'src/components/FrontOfficeWorkspace.tsx', 'src/styles/front-office-workspace.css', 'src/context/AuthContext.tsx', 'src/lib/auth.ts',
   'src/lib/data.ts', 'src/lib/workspacePrivacy.js', 'src/lib/workspacePrivacy.d.ts', 'scripts/test-workspace-privacy.mjs', '.github/workflows/workspace-family-privacy.yml', 'docs/WORKSPACE_ROLE_PRIVACY.md', 'src/lib/displayPreferences.js', 'src/lib/displayPreferences.d.ts', 'src/styles/dashboard-display-settings.css', 'scripts/test-display-preferences.mjs', '.github/workflows/dashboard-display-preferences.yml', 'docs/STAGE_4_DASHBOARD_DISPLAY_MODES.md', 'src/lib/navigationAccess.ts', 'src/lib/userErrors.ts', 'scripts/test-user-errors.mjs',
@@ -275,7 +280,25 @@ check('Bulk attendance uses class and section registers without a new Late statu
   assert.ok(attendance.includes('All present') && attendance.includes('All absent') && attendance.includes('All on approved leave') && attendance.includes('sectionName'))
   assert.ok(!attendance.includes("markAll('late')") && !attendance.includes('>All late</button>'), 'New attendance registers must not offer Late marking')
   assert.ok(attendance.includes('save_student_attendance_register') && attendance.includes('save_employee_attendance_register') && attendance.includes('Save whole register'), 'Student and employee registers must use their validated atomic save RPCs')
-  assert.ok(attendance.includes('not_configured') && attendance.includes('provider feed'), 'Automatic attendance must not pretend that a device is connected')
+  const deviceAdmin = read('supabase/functions/attendance-device-admin/index.ts')
+  const deviceWebhook = read('supabase/functions/attendance-device-webhook/index.ts')
+  assert.ok(attendance.includes('Awaiting first signed event') && attendance.includes('last_synced_at'), 'Device sources must remain visibly awaiting their first authenticated event')
+  assert.ok(deviceAdmin.includes('vault.create_secret') && deviceAdmin.includes('vault.update_secret'), 'Device signing keys must be issued and rotated in Supabase Vault')
+  assert.ok(deviceWebhook.includes('verifyDeviceSignature') && deviceWebhook.includes('event.event_type === "heartbeat"') && deviceWebhook.includes('processing_status: "received"') && deviceWebhook.includes('No attendance record was created'), 'Signed heartbeats must update device health while attendance events remain reviewable and never silently create official attendance')
+})
+check('Signed device attendance events require authorised review before reconciliation', () => {
+  const attendance = read('src/components/AttendanceWorkspace.tsx')
+  const review = read('supabase/migrations/20261115060000_attendance_device_event_review_approval.sql')
+  assert.ok(attendance.includes('review_attendance_device_event') && attendance.includes('Approve & apply attendance') && attendance.includes('Reject event'), 'The device queue must expose distinct approval and rejection actions')
+  assert.ok(attendance.includes('p_review_note:reviewNote.trim()') && attendance.includes('p_attendance_date:action===\'approve\'?reviewDate:null'), 'The reviewer must submit an audit note and confirm the local attendance date')
+  assert.ok(review.includes('security definer') && review.includes("has_institution_role(v_event.institution_id, array['owner','admin'])"), 'Employee event review must be restricted to owners and administrators')
+  assert.ok(review.includes("array['owner','admin','teacher']"), 'Teacher review may only be enabled for student events')
+  assert.ok(review.includes("private.has_institution_permission(\n      v_event.institution_id,\n      'attendance',\n      'approve'"), 'Review decisions must enforce custom attendance-approval permissions')
+  assert.ok(review.includes("'attendance',\n        'view'") && review.includes('private.college_department_for_student'), 'Teacher queue visibility must enforce class/campus scope')
+  assert.ok(review.includes('register_id = coalesce(register_id, v_register_id)'), 'A reconciled check-out must preserve its attendance-register link')
+  assert.ok(review.includes('Original device event evidence is immutable') && review.includes('revoke update on public.attendance_device_events'), 'Signed event evidence must not be directly editable by browsers')
+  assert.ok(review.includes("v_register_status = 'locked'") && review.includes('correction_reason is null'), 'Locked registers and unreasoned corrections must be blocked')
+  assert.ok(review.includes('insert into public.attendance(') && review.includes('insert into public.employee_attendance('), 'Approved events must reconcile into the existing attendance records')
 })
 check('Stage 12 front-office windows use the live tenant-scoped enquiry, notices and calendar tables', () => {
   const frontOffice = read('src/components/FrontOfficeWorkspace.tsx')
@@ -288,7 +311,7 @@ check('Stage 12 front-office windows use the live tenant-scoped enquiry, notices
 })
 check('Stage 14 AI assistant is transparent when no AI provider is connected', () => {
   const assistant = read('src/components/AIAssistantWorkspace.tsx')
-  assert.ok(assistant.includes('No AI provider key is configured on the institution server yet') && assistant.includes("provider==='auto'&&!configured.length") && assistant.includes('supabase.functions.invoke'), 'The assistant must disclose server-side provider setup requirements and must not send prompts without a configured provider')
+  assert.ok(assistant.includes('The free Cloudflare AI connection is not configured yet') && assistant.includes("provider==='auto'&&!providerStatus.cloudflare?.configured") && assistant.includes('Automatic · Cloudflare free quota only') && assistant.includes('supabase.functions.invoke'), 'The assistant must require the free Cloudflare connection for automatic mode and never fall back to paid providers')
 })
 check('Stage 15 personal account pages use the authenticated session and respect personal scope', () => {
   const personal = read('src/components/PersonalWorkspace.tsx')
@@ -399,8 +422,8 @@ check('College production deployment runs only from main after the verified buil
   assert.ok(productionJob.includes("github.ref == 'refs/heads/main'"), 'Production deployment must be restricted to main')
   assert.ok(productionJob.includes("github.event_name == 'push'"), 'A verified merge to main must deploy the college production site')
   assert.ok(productionJob.includes("github.event_name == 'workflow_dispatch'") && productionJob.includes('inputs.deploy_production == true'), 'A manual, explicitly approved redeploy must remain available')
-  assert.ok(productionJob.includes('Ensure the college-named Cloudflare Pages project exists'), 'The college Pages project must be created idempotently when missing')
-  assert.ok(productionJob.includes('pages deploy dist --project-name=gidcbadin --branch=main'), 'Production must deploy to the college-named Pages project')
+  assert.ok(productionJob.includes('Ensure both EduSphere production Pages projects exist') && productionJob.includes('for project in gidcbadin edusphere360'), 'Both EduSphere Pages projects must be created idempotently when missing')
+  assert.ok(productionJob.includes('pages deploy dist --project-name=gidcbadin --branch=main') && productionJob.includes('pages deploy dist --project-name=edusphere360 --branch=main'), 'Production must deploy the same verified build to both Pages projects')
   assert.ok(!releaseWorkflow.includes('deploy-preview'), 'Pull requests must not publish a separate Cloudflare preview')
 })
 
@@ -1039,13 +1062,14 @@ check('Required database safeguards and Cloudflare redirects remain in the proje
     '20261113173320_college_custom_role_profiles_and_scope_policies.sql',
     '20261113173552_college_private_permission_guards.sql',
     '20261113174054_college_approval_profile_action_alignment.sql',
-    '20261113175058_college_custom_role_high_impact_rpc_guards.sql'
+    '20261113175058_college_custom_role_high_impact_rpc_guards.sql',
+    '20261115060000_attendance_device_event_review_approval.sql'
   ]) {
     assert.ok(migrations.includes(migration), `${migration} missing`)
   }
   const timestamped = migrations.filter(name => /^202611\d{8}_.+\.sql$/.test(name))
-  assert.equal(timestamped.length, 57, 'Expected fifty-seven timestamped migrations including the report-history and student-development workflows')
-  assert.ok(read('supabase/migrations/README.md').includes('fifty-seven timestamped migration files'))
+  assert.equal(timestamped.length, 63, 'Expected sixty-three timestamped migrations including native online classes, calling and Realtime guards')
+  assert.ok(read('supabase/migrations/README.md').includes('sixty-three timestamped migration files'))
   assert.equal(read('public/_redirects').trim(), '/* /index.html 200')
   const envExample = read('.env.example')
   const gitignore = read('.gitignore')

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
-import { Activity, CalendarCheck, Check, Download, Fingerprint, Printer, RefreshCw, Search, X, ShieldCheck } from 'lucide-react'
+import { Activity, CalendarCheck, Check, Copy, Download, Fingerprint, Printer, RefreshCw, Search, X, ShieldCheck } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { downloadCsv } from '../lib/csv'
@@ -12,6 +12,12 @@ type Person={id:string;full_name:string;admission_no?:string|null;employee_no?:s
 type AttendanceEntry={id?:string;student_id?:string;teacher_id?:string;status:string;notes?:string|null;attendance_date:string;period_label?:string;arrival_time?:string|null;departure_time?:string|null;check_in_time?:string|null;check_out_time?:string|null;minutes_late?:number;early_departure_minutes?:number}
 type Props={initialWindow?:string;onToast:(message:string,error?:boolean)=>void}
 const today=()=>new Date().toLocaleDateString('en-CA')
+const localEventDateTime=(value:string)=>{
+ const d=new Date(value)
+ if(Number.isNaN(d.getTime()))return {date:today(),time:'08:00'}
+ const pad=(n:number)=>String(n).padStart(2,'0')
+ return {date:`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`,time:`${pad(d.getHours())}:${pad(d.getMinutes())}`}
+}
 const statusLabel=(value:string)=>({present:'P',absent:'A',late:'L',approved_leave:'LV',leave_pending:'NP',excused:'EX',unmarked:'—'} as Record<string,string>)[value]??'—'
 
 export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
@@ -60,6 +66,18 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
  const [deviceType,setDeviceType]=useState('qr')
  const [deviceId,setDeviceId]=useState('')
  const [showDeviceForm,setShowDeviceForm]=useState(false)
+ const [deviceSecret,setDeviceSecret]=useState<{sourceId:string;name:string;secret:string;endpoint:string}|null>(null)
+ const [deviceBusy,setDeviceBusy]=useState(false)
+ const [deviceEvents,setDeviceEvents]=useState<RecordRow[]>([])
+ const [reviewEvent,setReviewEvent]=useState<RecordRow|null>(null)
+ const [reviewDate,setReviewDate]=useState(today())
+ const [reviewTime,setReviewTime]=useState('')
+ const [reviewPeriod,setReviewPeriod]=useState('Daily')
+ const [reviewStatus,setReviewStatus]=useState('present')
+ const [reviewNote,setReviewNote]=useState('')
+ const [correctionReason,setCorrectionReason]=useState('')
+ const [reviewShiftId,setReviewShiftId]=useState('')
+ const [reviewBusy,setReviewBusy]=useState(false)
  const [cardTemplate,setCardTemplate]=useState<'classic'|'compact'|'portrait'>('classic')
  const [cardIssueDate,setCardIssueDate]=useState(today())
  const [includeCardClass,setIncludeCardClass]=useState(true)
@@ -135,11 +153,22 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
  },[user?.id,user?.institutionId,population,date,className,period,campusId])
 
  const loadDevices=useCallback(async()=>{
-  if(!supabase||!user)return
-  const {data,error}=await supabase.from('attendance_device_sources').select('*').eq('institution_id',user.institutionId).order('created_at',{ascending:false})
-  if(error){setLoadingError(error.message);return}
-  setDevices((data??[]) as RecordRow[])
- },[user?.id,user?.institutionId])
+  if(!supabase||!user||!canManageStudents){setDevices([]);setDeviceEvents([]);return}
+  if(canManageStaff){
+   const sourceResult=await supabase.from('attendance_device_sources').select('*').eq('institution_id',user.institutionId).order('created_at',{ascending:false})
+   if(sourceResult.error){setLoadingError(sourceResult.error.message);return}
+   setDevices((sourceResult.data??[]) as RecordRow[])
+  }else{
+   setDevices([])
+  }
+  const eventResult=await supabase.from('attendance_device_events')
+   .select('id,institution_id,source_id,external_event_id,student_id,teacher_id,occurred_at,event_kind,processing_status,error_message,created_at,reviewed_by,reviewed_at,review_action,review_note,correction_reason,attendance_register_id,attendance_record_id,attendance_record_type')
+   .eq('institution_id',user.institutionId)
+   .order('created_at',{ascending:false})
+   .limit(50)
+  if(eventResult.error){setLoadingError(eventResult.error.message);setDeviceEvents([]);return}
+  setDeviceEvents((eventResult.data??[]) as RecordRow[])
+ },[user?.id,user?.institutionId,canManageStaff,canManageStudents])
 
  useEffect(()=>{void loadRoster()},[loadRoster])
  useEffect(()=>{if(!readOnly && population==='students' && !className && classes[0])setClassName(classes[0])},[readOnly,population,className,classes])
@@ -277,15 +306,117 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
   else window.print()
  }
 
+ function beginDeviceEventReview(event:RecordRow){
+  const local=localEventDateTime(String(event.occurred_at??''))
+  setReviewEvent(event)
+  setReviewDate(local.date)
+  setReviewTime(local.time)
+  setReviewPeriod('Daily')
+  setReviewStatus('present')
+  setReviewNote('')
+  setCorrectionReason('')
+  setReviewShiftId('')
+ }
+
+ async function submitDeviceEventReview(action:'approve'|'reject'){
+  if(!supabase||!user||!reviewEvent||reviewBusy)return
+  if(action==='approve'&&(!reviewDate||!reviewTime)){
+   onToast('Confirm the attendance date and local event time before approval.',true)
+   return
+  }
+  if(reviewNote.trim().length<5){
+   onToast('Enter an audit note of at least five characters.',true)
+   return
+  }
+  const studentEvent=Boolean(reviewEvent.student_id)
+  if(!canManageStaff&&(!studentEvent||!canManageStudents)){
+   onToast('Your role cannot review this attendance event.',true)
+   return
+  }
+  setReviewBusy(true)
+  try{
+   const {data,error}=await supabase.rpc('review_attendance_device_event',{
+    p_event_id:String(reviewEvent.id),
+    p_action:action,
+    p_attendance_date:action==='approve'?reviewDate:null,
+    p_period_label:studentEvent?reviewPeriod:'Daily',
+    p_attendance_status:reviewStatus,
+    p_event_time:action==='approve'?reviewTime:null,
+    p_review_note:reviewNote.trim(),
+    p_correction_reason:correctionReason.trim()||null,
+    p_shift_id:studentEvent?null:(reviewShiftId||null)
+   })
+   if(error)throw error
+   if(data?.already_reviewed){
+    onToast('This event was already reviewed. The saved review result has been refreshed.')
+   }else if(action==='approve'){
+    onToast('Device event approved and reconciled to the official attendance register.')
+   }else{
+    onToast('Device event rejected. The original signed event remains in the audit history.')
+   }
+   setReviewEvent(null)
+   await Promise.all([loadDevices(),loadAttendance()])
+  }catch(error){
+   onToast(error instanceof Error?error.message:'The attendance event could not be reviewed.',true)
+  }finally{
+   setReviewBusy(false)
+  }
+ }
+
  async function createDevice(event:FormEvent){
   event.preventDefault()
-  if(!supabase||!user||!canManageStaff)return
-  const {error}=await supabase.from('attendance_device_sources').insert({
-   institution_id:user.institutionId,name:deviceName.trim(),provider_type:deviceType,
-   status:'not_configured',external_device_id:deviceId.trim()||null,created_by:user.id,public_settings:{}
-  })
-  if(error){onToast(error.message,true);return}
-  setShowDeviceForm(false);setDeviceName('');setDeviceId('');onToast('Device source profile saved. It is not connected until a provider feed is configured.');await loadDevices()
+  if(!supabase||!user||!canManageStaff||deviceBusy)return
+  setDeviceBusy(true)
+  try{
+   const {data,error}=await supabase.functions.invoke('attendance-device-admin',{body:{
+    action:'create',institutionId:user.institutionId,name:deviceName.trim(),providerType:deviceType,externalDeviceId:deviceId.trim()
+   }})
+   if(error)throw error
+   if(data?.error)throw new Error(String(data.error))
+   if(!data?.source?.id||!data?.secret||!data?.endpoint)throw new Error('The secure device gateway did not return its one-time setup details.')
+   setDeviceSecret({sourceId:String(data.source.id),name:String(data.source.name??deviceName),secret:String(data.secret),endpoint:String(data.endpoint)})
+   setShowDeviceForm(false);setDeviceName('');setDeviceId('')
+   onToast('Secure device source registered. Copy its one-time signing key and configure the device gateway.')
+   await loadDevices()
+  }catch(error){onToast(error instanceof Error?error.message:'The device source could not be registered.',true)}
+  finally{setDeviceBusy(false)}
+ }
+
+ async function rotateDeviceSecret(sourceId:string,name:string){
+  if(!supabase||!user||!canManageStaff||deviceBusy)return
+  setDeviceBusy(true)
+  try{
+   const {data,error}=await supabase.functions.invoke('attendance-device-admin',{body:{action:'rotate',institutionId:user.institutionId,sourceId}})
+   if(error)throw error
+   if(data?.error)throw new Error(String(data.error))
+   if(!data?.secret||!data?.endpoint)throw new Error('A new signing key was not returned.')
+   setDeviceSecret({sourceId,name,secret:String(data.secret),endpoint:String(data.endpoint)})
+   onToast('Device signing key rotated. Update the device gateway now; the previous key is no longer valid.')
+   await loadDevices()
+  }catch(error){onToast(error instanceof Error?error.message:'The signing key could not be rotated.',true)}
+  finally{setDeviceBusy(false)}
+ }
+
+ async function setDeviceSourceStatus(sourceId:string,action:'pause'|'activate'){
+  if(!supabase||!user||!canManageStaff||deviceBusy)return
+  setDeviceBusy(true)
+  try{
+   const {data,error}=await supabase.functions.invoke('attendance-device-admin',{body:{action,institutionId:user.institutionId,sourceId}})
+   if(error)throw error
+   if(data?.error)throw new Error(String(data.error))
+   onToast(action==='pause'?'Device source paused. Incoming events will be rejected.':'Device source activated.')
+   await loadDevices()
+  }catch(error){onToast(error instanceof Error?error.message:'Device status could not be changed.',true)}
+  finally{setDeviceBusy(false)}
+ }
+
+ async function copyDeviceSecret(){
+  if(!deviceSecret)return
+  try{
+   if(!navigator.clipboard)throw new Error('Clipboard access is unavailable in this browser.')
+   await navigator.clipboard.writeText(deviceSecret.secret)
+   onToast('Signing key copied. Store it securely in the device gateway.')
+  }catch(error){onToast(error instanceof Error?error.message:'The signing key could not be copied.',true)}
  }
 
  if(!user)return null
@@ -301,7 +432,7 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
   <div className="ed360-attendance-main-tabs">
    <button className={autoTab==='register'?'active':''} onClick={()=>setAutoTab('register')}>Manual register</button>
    <button className={autoTab==='history'?'active':''} onClick={()=>setAutoTab('history')}>Attendance history</button>
-   {canManageStaff&&<button className={autoTab==='devices'?'active':''} onClick={()=>{setAutoTab('devices');void loadDevices()}}>Device connections</button>}
+   {(canManageStudents||canManageStaff)&&<button className={autoTab==='devices'?'active':''} onClick={()=>{setAutoTab('devices');void loadDevices()}}>Device connections & review</button>}
    {(canManageStudents||canManageStaff)&&<><button className={autoTab==='qr-scan'?'active':''} onClick={()=>{setAutoTab('qr-scan');setScanResult('')}}>QR / barcode</button><button className={autoTab==='biometric'?'active':''} onClick={()=>setAutoTab('biometric')}>Biometric</button></>}
    {canManageStaff&&<button className={['cards-students','cards-teachers','cards-staff'].includes(autoTab)?'active':''} onClick={()=>setAutoTab(population==='students'?'cards-students':population==='teachers'?'cards-teachers':'cards-staff')}>ID cards</button>}
   </div>
@@ -364,12 +495,61 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
    {!loading&&loadingError&&<p className="ed360-attendance-empty error">{loadingError}</p>}
    {!loading&& !loadingError&&visibleHistory.length===0&&<p className="ed360-attendance-empty">{existing.length?'No history rows match your search.':'No attendance entries were found for the selected date and filters.'}</p>}
   </section>}
-  {autoTab==='devices'&&<section className="ed360-attendance-board ed360-device-workspace"><div className="ed360-attendance-board-head"><div><span>AUTOMATIC ATTENDANCE</span><h2>Connected device and provider setup</h2><p>Register supported data sources. Actual automated marking requires a verified QR, RFID, biometric or provider feed.</p></div>{canManageStaff&&<button className="button button-primary" onClick={()=>setShowDeviceForm(true)}>+ Register device source</button>}</div><div className="ed360-device-notice"><Fingerprint size={22}/><div><strong>Automatic attendance is not yet connected to a physical device.</strong><p>These are connection profiles only. No attendance is marked automatically until a device/provider is integrated and its events pass authentication, identity matching and duplicate checks.</p></div></div><div className="ed360-device-list">{devices.length?devices.map(device=><div key={device.id}><span><Fingerprint size={18}/></span><div><b>{String(device.name??'Device source')}</b><small>{String(device.provider_type??'provider').toUpperCase()} · {String(device.external_device_id??'No device ID')}</small></div><em>{String(device.status??'not_configured').replaceAll('_',' ')}</em></div>):<p className="ed360-attendance-empty">No device sources have been registered.</p>}</div></section>}
+  {autoTab==='devices'&&<section className="ed360-attendance-board ed360-device-workspace">
+   {canManageStaff&&<>
+    <div className="ed360-attendance-board-head"><div><span>SECURE AUTOMATIC ATTENDANCE</span><h2>Device connections</h2><p>Register a trusted reader or gateway, issue a one-time signing key, then receive authenticated attendance events.</p></div><button className="button button-primary" onClick={()=>setShowDeviceForm(true)}>+ Register device source</button></div>
+    <div className="ed360-device-notice"><Fingerprint size={22}/><div><strong>Privacy-first device gateway</strong><p>Device credentials are stored in Supabase Vault. Requests use HMAC-SHA256 with a five-minute timestamp window. EduSphere stores a successful match result and the internal student/employee reference only—never raw fingerprint templates or images.</p></div></div>
+    {deviceSecret&&<section className="ed360-device-secret-panel" aria-live="polite">
+     <div><span>ONE-TIME DEVICE CREDENTIAL</span><h3>Copy the signing key for {deviceSecret.name}</h3><p>This key is shown only after creation or rotation. It is not retrievable from the page later; rotate it if it is lost.</p></div>
+     <div className="ed360-device-secret-value"><code>{deviceSecret.secret}</code><button type="button" className="button button-outline" onClick={()=>void copyDeviceSecret()}><Copy size={14}/> Copy key</button><button type="button" className="button button-outline" onClick={()=>setDeviceSecret(null)}>Hide</button></div>
+     <div className="ed360-device-setup-details"><b>Webhook endpoint</b><code>{deviceSecret.endpoint}</code><b>Required request headers</b><code>X-EDUSPHERE-DEVICE-ID: {deviceSecret.sourceId}</code><code>X-EDUSPHERE-TIMESTAMP: Unix time in seconds</code><code>X-EDUSPHERE-SIGNATURE: v1= + HMAC-SHA256(key, timestamp + "." + exact JSON body)</code><b>Signed heartbeat payload (device-health check)</b><code>{'{"event_type":"heartbeat"}'}</code><b>Attendance event JSON fields</b><code>{'{"external_event_id":"unique-device-event-id","person_type":"student","person_id":"internal-UUID","occurred_at":"ISO-8601","event_kind":"check_in","match_result":true,"verification_method":"fingerprint"}'}</code></div>
+    </section>}
+    <div className="ed360-device-list">{devices.length?devices.map(device=><article className="ed360-device-list-row" key={String(device.id)}>
+     <div className="ed360-device-list-identity"><span><Fingerprint size={18}/></span><div><b>{String(device.name??'Device source')}</b><small>{String(device.provider_type??'provider').toUpperCase()} · {String(device.external_device_id??'No external device ID')}</small><small>Source ID: {String(device.id)}</small></div></div>
+     <div className="ed360-device-list-state"><em className={'device-state-'+String(device.status??'not_configured')}>{String(device.status??'not_configured').replaceAll('_',' ')}</em><small>{device.last_synced_at?'Last device sync: '+new Date(String(device.last_synced_at)).toLocaleString():'Awaiting first signed event'}</small>{Boolean(device.last_error)&&<small className="device-last-error">{String(device.last_error)}</small>}</div>
+     <div className="ed360-device-list-actions"><button type="button" className="button button-outline" disabled={deviceBusy} onClick={()=>void rotateDeviceSecret(String(device.id),String(device.name??'Device source'))}>Rotate key</button>{String(device.status)==='paused'?<button type="button" className="button button-outline" disabled={deviceBusy} onClick={()=>void setDeviceSourceStatus(String(device.id),'activate')}>Activate</button>:<button type="button" className="button button-outline" disabled={deviceBusy} onClick={()=>void setDeviceSourceStatus(String(device.id),'pause')}>Pause</button>}</div>
+    </article>):<p className="ed360-attendance-empty">No device sources have been registered.</p>}</div>
+   </>}
+   <section className="ed360-device-events">
+    <div className="ed360-attendance-board-head"><div><span>REVIEW & RECONCILIATION QUEUE</span><h2>Signed device events</h2><p>Confirm the linked person and device time. Approvals update the official attendance register; rejections remain in immutable event history.</p></div><button type="button" className="button button-outline" onClick={()=>void loadDevices()} disabled={deviceBusy}><RefreshCw size={14}/> Refresh events</button></div>
+    {deviceEvents.length?<div className="ed360-device-event-list">{deviceEvents.map(event=>{
+     const isStudent=Boolean(event.student_id)
+     const personId=String(isStudent?event.student_id??'':event.teacher_id??'')
+     const person=isStudent?students.find(item=>item.id===personId):staff.find(item=>item.id===personId)
+     const source=devices.find(item=>String(item.id)===String(event.source_id))
+     const status=String(event.processing_status??'received')
+     const canReview=status==='received'&&(canManageStaff||(canManageStudents&&isStudent))
+     return <article className="ed360-device-event-card" key={String(event.id)}>
+      <div className="ed360-device-event-summary"><span className="device-event-kind">{String(event.event_kind??'event').replaceAll('_',' ').toUpperCase()}</span><b>{person?.full_name??(isStudent?'Student identity':'Employee identity')+' · '+personId.slice(0,8)}</b><small>{isStudent?'Student':'Employee'}{person?.class_name?' · '+person.class_name:''}{person?.section_name?' / '+person.section_name:''}{person?.department?' · '+person.department:''}</small></div>
+      <div className="ed360-device-event-meta"><b>{new Date(String(event.occurred_at)).toLocaleString()}</b><small>{source?.name?String(source.name):'Device source '+String(event.source_id??'').slice(0,8)}</small><small>Event ID: {String(event.external_event_id??'')}</small></div>
+      <div className="ed360-device-event-state"><em className={'event-state-'+status}>{status.replaceAll('_',' ')}</em>{Boolean(event.review_action)&&<small>{String(event.review_action)} · {event.reviewed_at?new Date(String(event.reviewed_at)).toLocaleString():''}</small>}{Boolean(event.review_note)&&<small>{String(event.review_note)}</small>}</div>
+      {canReview?<button type="button" className="button button-primary" onClick={()=>beginDeviceEventReview(event)}>Review event</button>:<span className="ed360-device-event-closed">{status==='processed'?'Applied to attendance':status==='rejected'?'Rejected':'No review action'}</span>}
+     </article>
+    })}</div>:<p className="ed360-attendance-empty">No signed device events have been received.</p>}
+   </section>
+   <div className="ed360-device-notice"><Activity size={20}/><div><b>Controlled attendance updates</b><p>Only an authorised reviewer can approve or reject a received event. A locked attendance register cannot be changed by device review. Existing or published entries require a correction reason. The original signed event remains unchanged for audit.</p></div></div>
+  </section>}
 
    {autoTab==='qr-scan'&&<section className="ed360-attendance-board ed360-attendance-special"><div className="ed360-attendance-board-head"><div><span>IDENTITY CHECK-IN</span><h2>QR / barcode attendance</h2><p>Use an approved scanner that types an admission or employee ID into this field. Confirm the person before saving the register.</p></div></div>{!canManageStudents&&!canManageStaff?<div className="ed360-attendance-empty">Your role cannot record attendance from an identity scan.</div>:<><div className="ed360-scan-controls"><label>Roster<select value={population} onChange={e=>{setPopulation(e.target.value as 'students'|'teachers'|'staff');setScanResult('')}}><option value="students">Students</option>{canManageStaff&&<><option value="teachers">Teachers</option><option value="staff">Staff</option></>}</select></label><label>Class<select value={className} onChange={e=>{setClassName(e.target.value);setSectionName('')}} disabled={population!=='students'}><option value="">All classes</option>{classes.map(v=><option key={v}>{v}</option>)}</select></label><label>Section<select value={sectionName} onChange={e=>setSectionName(e.target.value)} disabled={population!=='students'}><option value="">All sections</option>{sections.map(v=><option key={v}>{v}</option>)}</select></label><label>Date<input type="date" max={today()} value={date} onChange={e=>setDate(e.target.value)}/></label></div><label className="ed360-scan-input">Scan or enter Admission / Employee ID<input autoFocus value={scanCode} onChange={e=>setScanCode(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'){e.preventDefault();const key=scanCode.trim().toLowerCase();const p=people.find(x=>String(x.admission_no??x.employee_no??'').trim().toLowerCase()===key);if(!p){setScanResult('No matching person found in the selected roster. Check the ID and filters.');return}if(population==='students'&&!canManageStudents){setScanResult('You do not have permission to mark student attendance.');return}if(population!=='students'&&!canManageStaff){setScanResult('Only owner and administrator accounts may mark employee attendance.');return}markOne(p.id,'present');setScanResult(p.full_name+' marked Present in the pending register. Save the whole register to commit this entry.');setScanCode('')}}} placeholder="Focus here, then scan with a USB / Bluetooth keyboard-wedge reader"/></label><div className="ed360-mobile-scan-panel"><div><strong>Mobile camera scanner</strong><p>{cameraMessage}</p></div>{cameraActive?<button type="button" className="button button-outline" onClick={stopQrCamera}>Stop camera</button>:<button type="button" className="button button-primary" onClick={()=>void startQrCamera()}>Use phone camera</button>}</div><div className="ed360-camera-preview" hidden={!cameraActive}><video ref={videoRef} autoPlay playsInline muted aria-label="QR and barcode camera preview"/></div>{scanResult&&<div className="ed360-scan-result" role="status">{scanResult}</div>}<div className="ed360-device-notice"><Activity size={20}/><div><b>Camera and external scanner supported.</b><p>Phone camera scanning uses the browser's native Barcode Detection API where available. The ID field remains available for manual entry and USB/Bluetooth keyboard-wedge scanners. Scans are matched against the selected institution roster and only saved when you submit the register.</p></div></div><div className="ed360-attendance-board-footer"><button type="button" className="button button-outline" onClick={()=>setAutoTab('register')}>Review pending register</button><button type="button" className="button button-primary" onClick={()=>void saveRegister()} disabled={saving||!people.length}>Save attendance register</button></div></>}</section>}
    {autoTab==='biometric'&&<section className="ed360-attendance-board ed360-attendance-special"><div className="ed360-attendance-board-head"><div><span>DEVICE-BOUND IDENTITY</span><h2>Biometric attendance verification</h2><p>Design for supported fingerprint or device authentication without collecting raw fingerprint images in this web application.</p></div></div><div className="ed360-biometric-grid"><div className="ed360-biometric-mark"><Fingerprint size={38}/><b>Device-side verification</b><small>Passkey / WebAuthn or a trusted vendor connector</small></div><div><h3>Privacy and deployment status</h3><p>Modern browser biometrics do not expose the fingerprint image or template to a website. A phone's side power-button fingerprint is verified by the operating system; the site receives a cryptographic authentication result, not the fingerprint itself.</p><p>No biometric enrollment or device feed is active in this workspace yet. Register a trusted biometric provider under Device connections, complete signed event integration and test identity matching before enabling attendance writes.</p><span className="ed360-biometric-status">Not connected · no biometric attendance is being recorded</span></div></div><div className="ed360-attendance-board-footer"><button className="button button-outline" type="button" onClick={()=>{setAutoTab('devices');void loadDevices()}}>Open trusted device connections</button></div></section>}
    {['cards-students','cards-teachers','cards-staff'].includes(autoTab)&&<section className="ed360-attendance-board ed360-attendance-special"><div className="ed360-attendance-board-head"><div><span>IDENTITY CARD STUDIO</span><h2>{autoTab==='cards-students'?'Student attendance cards':autoTab==='cards-teachers'?'Teacher attendance cards':'Staff attendance cards'}</h2><p>Choose a white-paper card layout, review the live roster preview, then export or print the selected institution records.</p></div></div><div className="ed360-card-toolbar"><label>Class<select value={className} onChange={e=>setClassName(e.target.value)} disabled={autoTab!=='cards-students'}><option value="">All classes</option>{classes.map(v=><option key={v}>{v}</option>)}</select></label><label>Section<select value={sectionName} onChange={e=>setSectionName(e.target.value)} disabled={autoTab!=='cards-students'}><option value="">All sections</option>{sections.map(v=><option key={v}>{v}</option>)}</select></label><label>Card template<select value={cardTemplate} onChange={e=>setCardTemplate(e.target.value as 'classic'|'compact'|'portrait')}><option value="classic">Classic white</option><option value="compact">Compact white</option><option value="portrait">Portrait white</option></select></label><label>Issue date<input type="date" value={cardIssueDate} onChange={e=>setCardIssueDate(e.target.value)}/></label><span>{people.length} cards in preview</span></div><div className="ed360-card-options"><label><input type="checkbox" checked={includeCardClass} onChange={e=>setIncludeCardClass(e.target.checked)}/> Show class / department</label>{autoTab==='cards-students'&&<label><input type="checkbox" checked={includeCardGuardian} onChange={e=>setIncludeCardGuardian(e.target.checked)}/> Show parent / guardian</label>}</div><div className="ed360-card-export-actions" aria-label="Export attendance identity cards"><button type="button" className="button button-outline" onClick={()=>exportIdentityCards('csv')}><Download size={14}/> CSV</button><button type="button" className="button button-outline" onClick={()=>exportIdentityCards('xlsx')}>Excel</button><button type="button" className="button button-outline" onClick={()=>exportIdentityCards('docx')}>Word</button><button type="button" className="button button-outline" onClick={()=>exportIdentityCards('print')}><Printer size={14}/> Print / PDF</button><a className="button button-outline" href="https://www.canva.com/id-cards/templates/" target="_blank" rel="noreferrer">Browse Canva templates</a></div><div className="ed360-attendance-card-grid">{people.map(person=><article className={'ed360-print-id-card template-'+cardTemplate} key={person.id}><div className="ed360-print-id-head"><b>{user?.institutionName?.trim()||'Institution name not set'}</b><small>{autoTab==='cards-students'?'STUDENT':autoTab==='cards-teachers'?'TEACHER':'STAFF'} ATTENDANCE IDENTITY CARD</small></div><div className="ed360-print-id-body"><div className="ed360-print-id-photo">{person.full_name.slice(0,1).toUpperCase()}</div><div><h3>{person.full_name}</h3><p>{autoTab==='cards-students'?'Student':autoTab==='cards-teachers'?'Teacher':'Staff'}</p><b>{autoTab==='cards-students'?(person.admission_no??'ID pending'):(person.employee_no??'ID pending')}</b>{includeCardClass&&<small>{[person.class_name,person.section_name,person.department].filter(Boolean).join(' · ')||'Class / department not set'}</small>}{autoTab==='cards-students'&&includeCardGuardian&&<small>Guardian: {person.guardian_name??'Not set'}</small>}<small>Issued: {cardIssueDate}</small></div></div><div className="ed360-print-id-foot"><span>{user?.institutionName?.trim()||'Institution'}</span><span>Present this ID at attendance</span></div></article>)}</div>{people.length===0&&<p className="ed360-attendance-empty">No active records are available for this card selection.</p>}<div className="ed360-device-notice"><ShieldCheck size={20}/><div><b>Roster-based card preview</b><p>Cards use existing institutional records only. No sample people, photos or QR credentials are generated. For secure credentials, connect the approved QR/barcode or biometric provider before issuing cards.</p></div></div></section>}
   {showShiftForm&&<div className="modal-backdrop"><section className="modal-card" role="dialog" aria-modal="true"><div className="modal-heading"><div><h2>Employee shifts</h2><p>Define start time, finish time and permitted grace period for attendance calculations.</p></div><button type="button" className="icon-button" onClick={()=>setShowShiftForm(false)}><X size={18}/></button></div><form className="ed360-context-form-grid" onSubmit={createShift}><label>Shift name<input required value={shiftName} onChange={e=>setShiftName(e.target.value)}/></label><label>Start time<input type="time" required value={shiftStart} onChange={e=>setShiftStart(e.target.value)}/></label><label>End time<input type="time" required value={shiftEnd} onChange={e=>setShiftEnd(e.target.value)}/></label><label>Grace minutes<input type="number" min="0" max="240" value={shiftGrace} onChange={e=>setShiftGrace(e.target.value)}/></label><div className="modal-actions"><button type="button" className="button button-outline" onClick={()=>setShowShiftForm(false)}>Cancel</button><button type="submit" className="button button-primary">Save shift</button></div></form></section></div>}
-  {showDeviceForm&&<div className="modal-backdrop"><section className="modal-card" role="dialog" aria-modal="true"><div className="modal-heading"><div><h2>Register attendance source</h2><p>Register a source before connecting its provider or device feed.</p></div><button type="button" className="icon-button" onClick={()=>setShowDeviceForm(false)}><X size={18}/></button></div><form className="ed360-context-form-grid" onSubmit={createDevice}><label>Device / provider name<input required value={deviceName} onChange={e=>setDeviceName(e.target.value)}/></label><label>Source type<select value={deviceType} onChange={e=>setDeviceType(e.target.value)}><option value="qr">QR</option><option value="rfid">RFID</option><option value="biometric">Biometric</option><option value="third_party">Third-party provider</option><option value="csv">CSV import</option></select></label><label>External device ID (optional)<input value={deviceId} onChange={e=>setDeviceId(e.target.value)}/></label><div className="ed360-device-notice"><Activity size={18}/><p>This profile will remain <b>Not configured</b> until a trusted feed is connected and tested.</p></div><div className="modal-actions"><button type="button" className="button button-outline" onClick={()=>setShowDeviceForm(false)}>Cancel</button><button type="submit" className="button button-primary">Save device profile</button></div></form></section></div>}
+  {showDeviceForm&&<div className="modal-backdrop"><section className="modal-card" role="dialog" aria-modal="true"><div className="modal-heading"><div><h2>Register attendance source</h2><p>Register a source before connecting its provider or device feed.</p></div><button type="button" className="icon-button" onClick={()=>setShowDeviceForm(false)}><X size={18}/></button></div><form className="ed360-context-form-grid" onSubmit={createDevice}><label>Device / provider name<input required value={deviceName} onChange={e=>setDeviceName(e.target.value)}/></label><label>Source type<select value={deviceType} onChange={e=>setDeviceType(e.target.value)}><option value="qr">QR</option><option value="rfid">RFID</option><option value="biometric">Biometric</option><option value="third_party">Third-party device gateway</option></select></label><label>External device ID (optional)<input value={deviceId} onChange={e=>setDeviceId(e.target.value)}/></label><div className="ed360-device-notice"><Activity size={18}/><p>EduSphere will generate a random signing key and store it in Supabase Vault. Copy it once after saving; configure your vendor gateway to send signed events to the supplied HTTPS endpoint.</p></div><div className="modal-actions"><button type="button" className="button button-outline" onClick={()=>setShowDeviceForm(false)}>Cancel</button><button type="submit" className="button button-primary" disabled={deviceBusy}>{deviceBusy?'Creating secure source…':'Create secure device source'}</button></div></form></section></div>}
+  {reviewEvent&&<div className="modal-backdrop"><section className="modal-card ed360-device-review-modal" role="dialog" aria-modal="true" aria-labelledby="ed360-device-review-title">
+   <div className="modal-heading"><div><span className="ed360-review-eyebrow">HUMAN REVIEW REQUIRED</span><h2 id="ed360-device-review-title">Review device attendance event</h2><p>Check the identity, event type and local time before applying it to the official register.</p></div><button type="button" className="icon-button" onClick={()=>setReviewEvent(null)} disabled={reviewBusy}><X size={18}/></button></div>
+   <div className="ed360-device-review-identity"><Fingerprint size={20}/><div><b>{Boolean(reviewEvent.student_id)?(students.find(item=>item.id===String(reviewEvent.student_id))?.full_name??'Student record'): (staff.find(item=>item.id===String(reviewEvent.teacher_id))?.full_name??'Employee record')}</b><small>{String(reviewEvent.event_kind??'event').replaceAll('_',' ').toUpperCase()} · {new Date(String(reviewEvent.occurred_at)).toLocaleString()}</small><small>Original event: {String(reviewEvent.external_event_id??'')}</small></div></div>
+   <form className="ed360-context-form-grid" onSubmit={e=>{e.preventDefault();void submitDeviceEventReview('approve')}}>
+    <label>Attendance date<input type="date" required value={reviewDate} onChange={e=>setReviewDate(e.target.value)}/></label>
+    <label>Confirmed local event time<input type="time" required value={reviewTime} onChange={e=>setReviewTime(e.target.value)}/></label>
+    {Boolean(reviewEvent.student_id)&&<label>Student attendance period<select value={reviewPeriod} onChange={e=>setReviewPeriod(e.target.value)}>{['Daily','Period 1','Period 2','Period 3','Period 4','Period 5','Period 6','Morning','Afternoon'].map(value=><option key={value}>{value}</option>)}</select></label>}
+    {String(reviewEvent.event_kind)==='check_in'&&<label>Approved attendance status<select value={reviewStatus} onChange={e=>setReviewStatus(e.target.value)}>{(Boolean(reviewEvent.student_id)?['present','late']:['present','late','remote','half_day']).map(value=><option key={value} value={value}>{value.replaceAll('_',' ').replace(/^./,c=>c.toUpperCase())}</option>)}</select></label>}
+    {!Boolean(reviewEvent.student_id)&&String(reviewEvent.event_kind)==='check_in'&&<label>Employee shift (optional)<select value={reviewShiftId} onChange={e=>setReviewShiftId(e.target.value)}><option value="">Use no shift calculation</option>{shifts.map(shift=><option key={String(shift.id)} value={String(shift.id)}>{String(shift.name)} · {String(shift.start_time).slice(0,5)}–{String(shift.end_time).slice(0,5)}</option>)}</select></label>}
+    <label className="ed360-review-full">Review note (required)<textarea required minLength={5} rows={3} value={reviewNote} onChange={e=>setReviewNote(e.target.value)} placeholder="Example: Confirmed the student identity and device timestamp against the daily register."/></label>
+    <label className="ed360-review-full">Correction reason (when replacing an existing entry)<textarea rows={2} value={correctionReason} onChange={e=>setCorrectionReason(e.target.value)} placeholder="Required when correcting an existing manual/device entry or a published register."/></label>
+    <p className="ed360-review-hint">Check-out events update an existing attendance record only. They cannot create a new attendance entry. Locked registers must be formally reopened before device events can be applied.</p>
+    <div className="modal-actions ed360-review-actions"><button type="button" className="button button-outline" onClick={()=>setReviewEvent(null)} disabled={reviewBusy}>Cancel</button><button type="button" className="button button-outline ed360-review-reject" onClick={()=>void submitDeviceEventReview('reject')} disabled={reviewBusy}>{reviewBusy?'Saving…':'Reject event'}</button><button type="submit" className="button button-primary" disabled={reviewBusy}>{reviewBusy?'Applying…':'Approve & apply attendance'}</button></div>
+   </form>
+  </section></div>}
+
  </main>
 }

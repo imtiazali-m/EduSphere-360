@@ -69,7 +69,7 @@ for (const token of [
   '<AdministrationModule ', '<AccountsModule ', '<FilesModule ', '<ReportsModule ',
   '<FinanceWorkspace ', '<PayrollWorkspace ', '<PeopleHRWorkspace ', '<GovernanceWorkspace ',
   '<InstitutionOperationsWorkspace ', '<LinkedOperationsWorkspace ',
-  '<InstitutionalWorkspace ', '<BackupDataWorkspace ', '<IntegrationManagementWorkspace ', '<BehaviourSkillsWorkspace ', '<AssessmentWorkspace ', '<AcademicManagementWorkspace ', '<FacultyWorkspace ', '<RecordModule ',
+  '<InstitutionalWorkspace ', '<BackupDataWorkspace ', '<IntegrationManagementWorkspace ', '<BehaviourSkillsWorkspace ', '<AssessmentWorkspace ', '<AcademicManagementWorkspace ', '<NativeCallingWorkspace ', '<FacultyWorkspace ', '<RecordModule ',
 ]) {
   if (!dashboardSource.includes(token)) throw new Error('Dashboard dispatcher no longer contains ' + token)
 }
@@ -85,6 +85,7 @@ const resolveDispatcher = (route) => {
   if (route.startsWith('assistant:')) return 'AIAssistantWorkspace'
   if (route === 'assistant') return 'AIAssistantWorkspace'
   if (route === 'teachers') return 'FacultyWorkspace'
+  if (route === 'academic:live-online-classes' || route.startsWith('voice:')) return 'NativeCallingWorkspace'
   if (route.startsWith('academic:')) return 'AcademicManagementWorkspace'
   if (route.startsWith('unavailable:')) return 'WorkspaceUnavailable'
   if (route.startsWith('students:')) return 'RecordModule · students'
@@ -105,7 +106,6 @@ const resolveDispatcher = (route) => {
   if (route.startsWith('backup:')) return 'BackupDataWorkspace'
   if (route.startsWith('integration:')) return 'IntegrationManagementWorkspace'
   if (route.startsWith('behaviour:')) return 'BehaviourSkillsWorkspace'
-  if (route.startsWith('voice:')) return 'OpenAIVoiceWorkspace'
   if (route.startsWith('admin:')) return 'AdministrationModule'
   const moduleKey = route.split(':')[0]
   if (route.split(':').length === 2 && [

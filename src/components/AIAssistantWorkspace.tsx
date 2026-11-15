@@ -6,10 +6,11 @@ import { supabase } from '../lib/supabase'
 import type { RecordRow } from '../lib/types'
 import '../styles/ai-assistant-workspace.css'
 
-type ProviderKey='openai'|'anthropic'|'gemini'|'deepseek'|'xai'|'meta'|'perplexity'
+type ProviderKey='cloudflare'|'openai'|'anthropic'|'gemini'|'deepseek'|'xai'|'meta'|'perplexity'
 type ProviderStatus=Record<ProviderKey,{configured:boolean}>
 type Message={id:string;role:'user'|'assistant';content:string;provider?:string;sources?:{title?:string;url?:string;snippet?:string}[]}
 const providers:{key:ProviderKey;label:string;model:string}[]=[
+ {key:'cloudflare',label:'Cloudflare Workers AI · Free quota',model:'@cf/zai-org/glm-4.7-flash'},
  {key:'openai',label:'ChatGPT / OpenAI',model:'gpt-6.1-sol'},
  {key:'anthropic',label:'Claude',model:'claude-sonnet-5-5'},
  {key:'gemini',label:'Gemini',model:'gemini-3.8-flash'},
@@ -90,8 +91,8 @@ export function AIAssistantWorkspace({initialWindow='chat'}:{initialWindow?:stri
  const [sending,setSending]=useState(false)
  const [error,setError]=useState('')
  const feedRef=useRef<HTMLDivElement>(null)
- const configured=providers.filter(p=>providerStatus[p.key]?.configured)
- const selectedProvider=provider==='auto'?(configured[0]?.key??''):provider
+
+ const selectedProvider=provider==='auto'?'cloudflare':provider
  const activeModel=model.trim()||(providers.find(p=>p.key===selectedProvider)?.model??'')
  const contextNames=useMemo(()=>sourceNames.map(key=>key.replaceAll('_',' ')),[sourceNames])
  useEffect(()=>{
@@ -126,7 +127,7 @@ export function AIAssistantWorkspace({initialWindow='chat'}:{initialWindow?:stri
   if(!content||sending)return
   if(!supabase||!user){setError('Your authenticated institution session is not available. Sign in again.');return}
   if(statusLoading){setError('Checking the institution AI connection. Try again in a moment.');return}
-  if(provider==='auto'&&!configured.length){setError('No AI provider key is configured on the institution server yet. An administrator must add at least one approved provider secret; no request has been sent.');setSettingsOpen(true);return}
+  if(provider==='auto'&&!providerStatus.cloudflare?.configured){setError('The free Cloudflare AI connection is not configured yet. An administrator must add its account ID and API token; automatic mode will not use a paid provider.');setSettingsOpen(true);return}
   if(provider!=='auto'&&!providerStatus[provider]?.configured){setError('This provider is not configured on the institution server. Choose an available provider or ask the administrator to add its secret.');setSettingsOpen(true);return}
   const next:Message[]=[...messages,{id:uid(),role:'user',content}]
   setMessages(next);setPrompt('');setSending(true);setError('')
@@ -143,11 +144,12 @@ export function AIAssistantWorkspace({initialWindow='chat'}:{initialWindow?:stri
   }catch(err){setError(err instanceof Error?err.message:'AI response could not be generated.');}
   finally{setSending(false)}
  }
- const availableCount=configured.length
+
+ const freeAIReady=Boolean(providerStatus.cloudflare?.configured)
  return <main className="ed360-ai-workspace">
   <header className="ed360-ai-header">
    <div className="ed360-ai-brand"><span><Icon size={23}/></span><div><small>EDUSPHERE 360 · {page.eyebrow}</small><h1>{page.title}</h1><p>{page.description}</p></div></div>
-   <div className="ed360-ai-status"><i className={availableCount?'is-connected':''}/>{statusLoading?'Checking AI service':availableCount?'AI service available':'AI connection needed'}</div>
+   <div className="ed360-ai-status"><i className={freeAIReady?'is-connected':''}/>{statusLoading?'Checking AI service':freeAIReady?'Free AI service available':'Free AI connection needed'}</div>
   </header>
   <div className="ed360-ai-layout">
    <aside className="ed360-ai-context">
@@ -160,8 +162,9 @@ export function AIAssistantWorkspace({initialWindow='chat'}:{initialWindow?:stri
     <button type="button" className="ed360-ai-settings-trigger" onClick={()=>setSettingsOpen(v=>!v)} aria-expanded={settingsOpen}><span>AI service settings</span><ChevronDown size={15}/></button>
     {settingsOpen&&<div className="ed360-ai-provider-settings">
      <p>Connection details are kept here. Provider credentials remain server-side.</p>
-     <label>Preferred service<select value={provider} onChange={e=>setProvider(e.target.value as 'auto'|ProviderKey)}><option value="auto">Automatic · choose an available service</option>{providers.map(p=><option value={p.key} key={p.key} disabled={!providerStatus[p.key]?.configured}>{p.label}{providerStatus[p.key]?.configured?' · ready':' · not configured'}</option>)}</select></label>
-     <label>Model identifier (optional)<input value={model} onChange={e=>setModel(e.target.value)} placeholder="Use the configured default model"/></label>
+     <p>Automatic mode uses Cloudflare's free daily allowance only. Selecting another provider manually may incur charges.</p>
+     <label>Preferred service<select value={provider} onChange={e=>setProvider(e.target.value as 'auto'|ProviderKey)}><option value="auto">Automatic · Cloudflare free quota only</option>{providers.map(p=><option value={p.key} key={p.key} disabled={!providerStatus[p.key]?.configured}>{p.label}{providerStatus[p.key]?.configured?' · ready':' · not configured'}</option>)}</select></label>
+     {selectedProvider!=='cloudflare'&&<label>Model identifier (optional)<input value={model} onChange={e=>setModel(e.target.value)} placeholder="Use the configured default model"/></label>}
      <div className="ed360-ai-provider-list">{providers.map(p=><div key={p.key}><span>{p.label}</span><em className={providerStatus[p.key]?.configured?'ready':''}>{statusLoading?'Checking…':providerStatus[p.key]?.configured?'Connected':'Not configured'}</em></div>)}</div>
      <small>API keys are never requested in this browser. Add or rotate them in Supabase Edge Function secrets.</small>
     </div>}

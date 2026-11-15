@@ -8,3 +8,12 @@ verify_jwt = true
 
 [functions.ai-assistant]
 verify_jwt = true
+
+[functions.attendance-device-admin]
+verify_jwt = true
+
+[functions.attendance-device-webhook]
+verify_jwt = false
+
+[functions.online-session-control]
+verify_jwt = true

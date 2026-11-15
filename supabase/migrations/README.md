@@ -1,6 +1,6 @@
 # Migration history
 
-The fifty-seven timestamped migration files in this folder match the remote migration history recorded by the linked Supabase project. Keep each 14-digit timestamp unchanged so local and remote migration histories remain aligned.
+The sixty-three timestamped migration files in this folder match the remote migration history recorded by the linked Supabase project. Keep each 14-digit timestamp unchanged so local and remote migration histories remain aligned.
 
 The current online application includes the reviewed schema changes for the existing live schema, Faculty & Employee Management, and Student Management operations (admission lifecycle, linked guardian contacts, class placements, private student documents and audit history for attendance, published results, assignment submissions, guardian policy consolidation and activity indexes). The Student Management and Faculty/Employee migrations have already been applied to the linked project; do not replay them manually.
 
@@ -67,3 +67,9 @@ The current permission guard covers direct RLS-backed access to the listed table
 
 
 The admission-stage guard migration adds a database trigger to the existing student admission lifecycle. It rejects invalid status jumps, restricts stage changes to institution owners and administrators with the relevant student edit scope, and assigns reviewer identity and review timestamps from the authenticated database session. It also synchronises the student's active, pending or inactive record status with the admission outcome. The trigger is invoker-security and runs under the existing students row-level policies.
+
+
+The 15 November 2026 attendance-device review migration adds an authorised human-review step for signed device events. It stores reviewer identity, review time, decision, audit note and links to the resulting attendance register/record; the original signed device evidence is immutable and direct browser updates are revoked. Student events may be reviewed by authorised owners, administrators and teachers; employee events are restricted to owners and administrators. Approvals reconcile into the existing student or employee attendance tables, require a correction reason for existing/manual or published entries, and cannot change a locked register. This migration was applied to the linked Supabase development project; it does not represent a production deployment.
+
+The native online-class and calling workflow stores institution-scoped class sessions, direct/group call invitations, participant join/leave intervals and audit events. Teachers are restricted to assigned classes; students must have an active class placement. The Realtime invitation feed is enabled only on the participant table, and public/anonymous SQL access to these records is revoked. Live audio/video uses the separately hosted EduSphere WebRTC media server; recording is off by default. Reconnects are stored as separate attendance intervals so time away from the room is not counted.
+Verified guardians may observe a live class only while a linked child has an active placement in that class. Guardian access does not expose other student participant rows, and the room token is subscribe-only for guardian observers.

@@ -51,7 +51,7 @@ import { displayInstitutionName } from '../lib/collegeIdentity'
 import { BackupDataWorkspace } from './BackupDataWorkspace'
 import { IntegrationManagementWorkspace } from './IntegrationManagementWorkspace'
 import { BehaviourSkillsWorkspace } from './BehaviourSkillsWorkspace'
-import { OpenAIVoiceWorkspace } from './OpenAIVoiceWorkspace'
+import { NativeCallingWorkspace } from './NativeCallingWorkspace'
 
 interface Props { onToast: (message: string, error?: boolean) => void }
 type Dataset = Record<string, RecordRow[]>
@@ -997,6 +997,7 @@ export function Dashboard({ onToast }: Props) {
                 tab.targetKey === 'unavailable' && getWorkspaceGroup(tab.targetWindow.split(':')[0])?.roles.includes(user!.role) ? <InstitutionalWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'unavailable' ? <WorkspaceUnavailable groupKey={tab.targetWindow.split(':')[0]} itemKey={tab.targetWindow.split(':').slice(1).join(':')} onNavigate={navigate}/> :
                 tab.targetKey === 'attendance' ? <AttendanceWorkspace initialWindow={tab.targetWindow || 'students'} onToast={onToast}/> :
+                tab.targetKey === 'academic' && tab.targetWindow === 'live-online-classes' ? <NativeCallingWorkspace onToast={onToast} initialView="classes"/> :
                 tab.targetKey === 'academic' ? <AcademicManagementWorkspace initialWindow={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'care' ? <Stage7CareWorkspace initialWindow={tab.targetWindow} onToast={onToast}/> :
                 tabAdminKey ? <AdministrationModule initialKey={tabAdminKey as 'departments' | 'programs' | 'classes' | 'academic_sessions' | 'subjects' | 'rooms'}/> :
@@ -1011,7 +1012,7 @@ export function Dashboard({ onToast }: Props) {
                 tab.targetKey === 'operations' ? <InstitutionOperationsWorkspace workspaceKey={tab.targetWindow} initialWindow={tab.targetWindow.split(':')[1]} onToast={onToast}/> :
                 tab.targetKey === 'integrations' ? <IntegrationManagementWorkspace initialWindow={tab.targetWindow || 'overview'} onToast={onToast} onNavigate={navigateChild}/> :
                 tab.targetKey === 'behaviour' ? <BehaviourSkillsWorkspace initialWindow={tab.targetWindow || 'dashboard'} onToast={onToast}/> :
-                tab.targetKey === 'voice' ? <OpenAIVoiceWorkspace onToast={onToast}/> :
+                tab.targetKey === 'voice' ? <NativeCallingWorkspace onToast={onToast} initialView="calls"/> :
                 tab.targetKey === 'assistant' ? <AIAssistantWorkspace initialWindow={tab.targetWindow || 'chat'}/> :
                 tab.targetKey === 'frontoffice' ? <FrontOfficeWorkspace initialView={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'personal' ? <PersonalWorkspace initialWindow={tab.targetWindow} onToast={onToast} onNavigate={navigateChild}/> :

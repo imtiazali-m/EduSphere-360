@@ -14,6 +14,7 @@ const providerSecrets: Record<string,string> = {
   xai: "XAI_API_KEY",
   meta: "MODEL_API_KEY",
   perplexity: "PERPLEXITY_API_KEY",
+  cloudflare: "CLOUDFLARE_AI_API_TOKEN",
 };
 const roleAccess: Record<string,string[]> = {
   chat: ["owner","admin","teacher"],
@@ -33,6 +34,7 @@ const roleAccess: Record<string,string[]> = {
 const json = (body:unknown,status=200)=>new Response(JSON.stringify(body),{status,headers:{...cors,"Content-Type":"application/json"}});
 
 function outputText(data:any):string {
+  if(typeof data?.result?.response==="string"&&data.result.response.trim())return data.result.response.trim();
   if(typeof data?.output_text==="string"&&data.output_text.trim())return data.output_text.trim();
   if(Array.isArray(data?.output)){
     return data.output.filter((item:any)=>item?.type==="message").flatMap((item:any)=>Array.isArray(item.content)?item.content:[]).filter((part:any)=>part?.type==="output_text"&&typeof part.text==="string").map((part:any)=>part.text).join("\n").trim();
@@ -67,6 +69,13 @@ async function callProvider(provider:string,key:string,model:string,system:strin
     data=await requestJson(base+"/chat/completions",{method:"POST",headers:{"Authorization":"Bearer "+key,"Content-Type":"application/json"},body:JSON.stringify({model,messages:[{role:"system",content:system},{role:"user",content:combined}],max_tokens:1800,stream:false})});
   }else if(provider==="xai"){
     data=await requestJson("https://api.x.ai/v1/responses",{method:"POST",headers:{"Authorization":"Bearer "+key,"Content-Type":"application/json"},body:JSON.stringify({model,instructions:system,input:combined,max_output_tokens:1800,store:false})});
+  }else if(provider==="cloudflare"){
+    const accountId=Deno.env.get("CLOUDFLARE_ACCOUNT_ID")?.trim();
+    if(!accountId)throw new Error("Cloudflare Account ID is not configured in Supabase Edge Function secrets.");
+    if(!model.startsWith("@cf/")||!/^[a-zA-Z0-9@._/-]+$/.test(model))throw new Error("Choose a valid Cloudflare Workers AI model ID.");
+    const url="https://api.cloudflare.com/client/v4/accounts/"+encodeURIComponent(accountId)+"/ai/run/"+model;
+    data=await requestJson(url,{method:"POST",headers:{"Authorization":"Bearer "+key,"Content-Type":"application/json"},body:JSON.stringify({messages:[{role:"system",content:system},...history],max_completion_tokens:1800,temperature:0.2,stream:false})});
+    if(data?.success===false)throw new Error("Cloudflare Workers AI rejected the request. Check token permissions and free daily usage.");
   }else if(provider==="perplexity"){
     const preset=["fast-search","pro-search","deep-research","advanced-deep-research"].includes(model)?model:"fast-search";
     data=await requestJson("https://api.perplexity.ai/v1/agent",{method:"POST",headers:{"Authorization":"Bearer "+key,"Content-Type":"application/json"},body:JSON.stringify({preset,input:combined,instructions:system,tools:[{type:"web_search",search_context_size:"medium"}],stream:false})});
@@ -101,15 +110,18 @@ Deno.serve(async(req:Request)=>{
     const {data:membership,error:membershipError}=await client.rpc("has_institution_role",{target_institution:institutionId,allowed_roles:["owner","admin","teacher","accountant","exam_officer"]});
     if(membershipError||membership!==true)return json({error:"You do not have permission to use institutional AI."},403);
     if(body.action==="status"){
-      const providers:Record<string,{configured:boolean;secretName:string}>={};
+      const providers:Record<string,{configured:boolean}>={};
       for(const [name,secret] of Object.entries(providerSecrets))providers[name]={configured:Boolean(Deno.env.get(secret)?.trim())};
+      providers.cloudflare={configured:Boolean(Deno.env.get("CLOUDFLARE_AI_API_TOKEN")?.trim()&&Deno.env.get("CLOUDFLARE_ACCOUNT_ID")?.trim())};
       return json({providers});
     }
     if(body.action!=="generate")return json({error:"Unsupported AI action."},400);
     let provider=String(body.provider??"");
     if(provider==="auto"){
-      const order=["openai","anthropic","gemini","deepseek","xai","meta","perplexity"];
-      provider=order.find(name=>Boolean(Deno.env.get(providerSecrets[name])?.trim()))??"";
+      provider="cloudflare";
+      if(!Deno.env.get("CLOUDFLARE_AI_API_TOKEN")?.trim()||!Deno.env.get("CLOUDFLARE_ACCOUNT_ID")?.trim()){
+        return json({error:"The free Cloudflare AI connection is not configured yet. Automatic mode will not switch to a paid AI provider."},409);
+      }
     }
     const secret=providerSecrets[provider];
     if(!secret)return json({error:"No supported AI provider is configured. Add at least one provider API key in Supabase Edge Function secrets."},409);
@@ -119,8 +131,8 @@ Deno.serve(async(req:Request)=>{
     const allowed=roleAccess[page]??[];
     const {data:pageAllowed}=await client.rpc("has_institution_role",{target_institution:institutionId,allowed_roles:allowed});
     if(!allowed.length||pageAllowed!==true)return json({error:"This AI workspace is not available to your role."},403);
-    const defaultModels:Record<string,string>={openai:"gpt-6.1-sol",anthropic:"claude-sonnet-5-5",gemini:"gemini-3.8-flash",deepseek:"deepseek-flash",xai:"grok-4.7",meta:"muse-spark-1.3",perplexity:"fast-search"};
-    const model=String(body.model??"").trim()||defaultModels[provider]||"";
+    const defaultModels:Record<string,string>={cloudflare:"@cf/zai-org/glm-4.7-flash",openai:"gpt-6.1-sol",anthropic:"claude-sonnet-5-5",gemini:"gemini-3.8-flash",deepseek:"deepseek-flash",xai:"grok-4.7",meta:"muse-spark-1.3",perplexity:"fast-search"};
+    const model=provider==="cloudflare"?defaultModels.cloudflare:(String(body.model??"").trim()||defaultModels[provider]||"");
     if(!model||model.length>160)return json({error:"Enter a valid model identifier."},400);
     const sourceMessages=Array.isArray(body.messages)?body.messages.slice(-9):[];
     const messages=sourceMessages.map((m:any)=>({role:m?.role==="assistant"?"assistant":"user",content:String(m?.content??"").slice(0,6000)})).filter((m:any)=>m.content.trim());

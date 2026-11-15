@@ -117,6 +117,7 @@ export const institutionalMenu:WorkspaceMenuGroup[]=[
     'Homework',
     'Learning Materials',
     'Online Learning',
+    'Live Online Classes',
     'Classroom Activities',
     'Academic Calendar',
     'Learning Progress'
