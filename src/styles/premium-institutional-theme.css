@@ -706,3 +706,76 @@
   .pro-window-panel .ed360-profile-savebar { align-items:stretch;flex-direction:column; }
   .pro-window-panel .ed360-profile-savebar .gov-button { width:100%;justify-content:center; }
 }
+
+
+/* Academic workspace: one clear page heading, no duplicate hero copy, and a primary refresh action. */
+.pro-window-panel .ed360-academic-page { color:var(--es-ink); }
+.pro-window-panel .ed360-academic-heading {
+  align-items:center;justify-content:space-between;gap:16px;
+  padding:4px 2px 16px;border:0;border-bottom:1px solid var(--es-line);
+  border-radius:0;background:transparent;box-shadow:none;
+}
+.pro-window-panel .ed360-academic-heading-copy>span {
+  color:var(--es-muted);font-size:10px;font-weight:850;letter-spacing:1.15px;line-height:1.5;
+}
+.pro-window-panel .ed360-academic-heading-copy h1 {
+  margin:5px 0 0;color:var(--es-ink);font-size:clamp(26px,2.3vw,32px);
+  font-weight:850;letter-spacing:-.7px;line-height:1.18;
+}
+.pro-window-panel .ed360-academic-refresh {
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  min-height:46px;padding:0 20px;color:#fff;background:var(--es-primary-600);
+  border:1px solid var(--es-primary-600);border-radius:12px;
+  box-shadow:0 6px 16px rgba(96,53,181,.2);font-size:13px;font-weight:850;cursor:pointer;
+}
+.pro-window-panel .ed360-academic-refresh:hover { color:#fff;background:var(--es-primary-700);border-color:var(--es-primary-700); }
+.pro-window-panel .ed360-academic-refresh:disabled { opacity:.6;cursor:wait; }
+.pro-window-panel .ed360-academic-nav button {
+  min-height:52px;color:#504960;background:#fff;border:1px solid var(--es-line);
+  border-radius:12px;font-size:11px;
+}
+.pro-window-panel .ed360-academic-nav button.active {
+  color:var(--es-primary-700);background:var(--es-primary-050);
+  border-color:#d7c9ed;box-shadow:inset 0 0 0 1px rgba(96,53,181,.08);
+}
+.pro-window-panel .ed360-academic-nav-number {
+  color:var(--es-primary-700);background:#f0ebf8;border-radius:8px;
+}
+.pro-window-panel .ed360-academic-workspace {
+  padding:17px;border:1px solid var(--es-line);border-radius:16px;
+  background:#fff;box-shadow:var(--es-shadow-sm);
+}
+.pro-window-panel .ed360-academic-mode-tabs {
+  border-bottom:1px solid var(--es-line);
+}
+.pro-window-panel .ed360-academic-mode-tabs button {
+  color:var(--es-muted);font-size:12px;font-weight:800;
+}
+.pro-window-panel .ed360-academic-mode-tabs button.active {
+  color:var(--es-primary-700);border-color:var(--es-primary-600);
+}
+.pro-window-panel .ed360-academic-toolbar-copy strong { color:var(--es-brand-900);font-size:14px; }
+.pro-window-panel .ed360-academic-toolbar-copy span { color:var(--es-muted);font-size:11px;line-height:1.5; }
+.pro-window-panel .ed360-academic-primary {
+  min-height:42px;color:#fff;background:var(--es-primary-600);
+  border:1px solid var(--es-primary-600);border-radius:10px;font-weight:850;
+}
+.pro-window-panel .ed360-academic-primary:hover { color:#fff;background:var(--es-primary-700); }
+.pro-window-panel .ed360-academic-secondary {
+  min-height:39px;color:#514866;background:#fff;border:1px solid var(--es-line);
+  border-radius:9px;font-weight:750;
+}
+.pro-window-panel .ed360-academic-table-wrap {
+  border:1px solid var(--es-line);border-radius:12px;
+}
+.pro-window-panel .ed360-academic-table th {
+  color:#5d536e;background:#f2eef8;border-bottom:1px solid var(--es-line);
+}
+.pro-window-panel .ed360-academic-table td { color:#332d3e;border-bottom:1px solid var(--es-line-soft); }
+.pro-window-panel .ed360-academic-online-control {
+  border:1px solid #d9cfeb;border-radius:12px;background:#faf8fe;
+}
+@media(max-width:800px) {
+  .pro-window-panel .ed360-academic-heading { align-items:flex-start;flex-direction:column; }
+  .pro-window-panel .ed360-academic-refresh { width:100%; }
+}
