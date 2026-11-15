@@ -242,6 +242,7 @@ export function PeopleHRWorkspace({initialWindow,onToast,onNavigate}:Props) {
     if(key.includes('date')||key.endsWith('_at')) return dateLabel(row[key])
     if(typeof row[key]==='boolean') return row[key]?'Yes':'No'
     return textValue(row[key]).replaceAll('_',' ')
+  }
 
   function exportCurrent(format:'csv'|'xlsx'|'docx'|'print'){
     if(!filteredRows.length){onToast('There are no records in this People and HR view to export.',true);return}
@@ -252,7 +253,6 @@ export function PeopleHRWorkspace({initialWindow,onToast,onNavigate}:Props) {
     else if(format==='xlsx')exportXlsx(filename+'.xlsx',reportTitle,rows,columns)
     else if(format==='docx')exportDocx(filename+'.docx',reportTitle,rows,columns)
     else{try{printOfficeReport(reportTitle,rows,columns,user?.institutionName??'Institution name not set')}catch(error){onToast(error instanceof Error?error.message:'Print view could not be opened.',true)}}
-  }
   }
 
   function openForm(row?:RecordRow) {
