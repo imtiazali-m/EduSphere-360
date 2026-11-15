@@ -17,7 +17,6 @@ export function CommunicationWorkspace({workspaceKey,onToast}:{workspaceKey:stri
  const {user,mode}=useAuth()
  const itemKey=workspaceKey.split(':').slice(-1).join(':')||'communication-logs'
  const title=pageTitles[itemKey]??'Institution Communication'
- const description=pageNotes[itemKey]??'Keep institution communication in one controlled workspace.'
  const admin=Boolean(user&&['owner','admin'].includes(user.role))
  const [members,setMembers]=useState<Member[]>([])
  const [messages,setMessages]=useState<Message[]>([])
