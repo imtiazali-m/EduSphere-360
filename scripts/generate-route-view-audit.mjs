@@ -291,6 +291,12 @@ function checkView(role, route, dispatcher) {
     const assessmentViews = new Set(['examination-programs','examination-timetable','question-bank','online-tests-and-quizzes','marks-entry','grades-and-grading-system','results-and-result-approval','report-cards','examination-reports'])
     return { component: 'AssessmentWorkspace', view, status: assessmentViews.has(view) ? 'Supported' : 'Unsupported assessment view' }
   }
+  if (targetKey === 'institutional' && targetWindow.startsWith('library:')) {
+    const item = targetWindow.slice('library:'.length)
+    const catalogueViews = new Set(['library-dashboard','book-catalogue','book-categories','book-management','book-registration','digital-library','learning-materials','resource-downloads'])
+    if (catalogueViews.has(item)) return { component: 'LibraryManagementWorkspace', view: item, status: 'Supported' }
+    if (['book-issue-and-returns','library-reports'].includes(item)) return { component: 'LinkedOperationsWorkspace', view: 'library:' + item, status: 'Supported' }
+  }
   if (targetKey === 'institutional') {
     const [group, item] = targetWindow.split(':')
     const key = group + ':' + item
@@ -323,7 +329,7 @@ for (const [role, label] of roles) {
       const route = getNavigationRoute(group.key, labelText, role)
       const dashboard = shellTarget(route)
       const dispatcher = route.startsWith('unavailable:') ? 'WorkspaceUnavailable'
-        : route.startsWith('institutional:') ? (dashboard.targetWindow.startsWith('examinations:') ? 'AssessmentWorkspace' : linkedKeys.has(route.slice('institutional:'.length)) ? 'LinkedOperationsWorkspace' : 'InstitutionalWorkspace')
+        : route.startsWith('institutional:') ? (dashboard.targetWindow.startsWith('examinations:') ? 'AssessmentWorkspace' : dashboard.targetWindow.startsWith('library:') && !['library:book-issue-and-returns','library:library-reports'].includes(dashboard.targetWindow) ? 'LibraryManagementWorkspace' : linkedKeys.has(route.slice('institutional:'.length)) ? 'LinkedOperationsWorkspace' : 'InstitutionalWorkspace')
         : dashboard.targetKey === 'academic' ? 'AcademicManagementWorkspace'
         : dashboard.targetKey === 'overview' ? 'RoleDashboard'
         : dashboard.targetKey === 'notifications' ? 'NotificationCenter'

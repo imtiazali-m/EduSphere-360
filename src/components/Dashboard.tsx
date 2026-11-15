@@ -54,6 +54,7 @@ import { DuplicateDetectionWorkspace } from './DuplicateDetectionWorkspace'
 import { HelpdeskWorkspace } from './HelpdeskWorkspace'
 import { HostelWorkspace } from './HostelWorkspace'
 import { LibraryReadingWorkspace } from './LibraryReadingWorkspace'
+import { LibraryManagementWorkspace } from './LibraryManagementWorkspace'
 import { PaymentOperationsWorkspace } from './PaymentOperationsWorkspace'
 import { ProcurementWorkspace } from './ProcurementWorkspace'
 import { ReceiptWorkspace } from './ReceiptWorkspace'
@@ -1109,6 +1110,7 @@ export function Dashboard({ onToast }: Props) {
                 tab.targetKey === 'procurement' ? <ProcurementWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'cafeteria' ? <CafeteriaWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'library-reading' ? <LibraryReadingWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'institutional' && tab.targetWindow.startsWith('library:') && !['library:book-issue-and-returns','library:library-reports'].includes(tab.targetWindow) ? <LibraryManagementWorkspace workspaceKey={tab.targetWindow} onToast={onToast} onNavigate={navigateChild}/> :
                 tab.targetKey === 'receipt-operations' ? <ReceiptWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'payment-operations' ? <PaymentOperationsWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'asset-lifecycle' ? <AssetLifecycleWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
