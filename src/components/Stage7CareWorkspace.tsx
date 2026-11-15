@@ -5,6 +5,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
+import { downloadCsv } from '../lib/csv'
 import { exportDocx, exportXlsx, printOfficeReport, type OfficeColumn } from '../lib/officeExport'
 import { userFacingError } from '../lib/userErrors'
 import type { RecordRow } from '../lib/types'
