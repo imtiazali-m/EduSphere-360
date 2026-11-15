@@ -444,12 +444,11 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
  if(!user)return null
  const attendanceTitles:Record<string,string>={students:'Student Attendance',teachers:'Teacher Attendance',staff:'Staff Attendance',devices:'Automatic Attendance',history:'Attendance History','qr-scan':'QR / Barcode Attendance',biometric:'Biometric Attendance','cards-students':'Student Attendance Cards','cards-teachers':'Teacher Attendance Cards','cards-staff':'Staff Attendance Cards'}
  const attendanceDescriptions:Record<string,string>={students:'Mark student attendance by campus, class, section, period and date.',teachers:'Record and review teacher attendance using the institution register.',staff:'Record and review non-teaching staff attendance using the institution register.',devices:'Review automatic attendance device sources and connection readiness.',history:'Review saved attendance registers and export historical records.','qr-scan':'Record attendance from an authorised QR or barcode scanner.',biometric:'Manage supported biometric verification readiness without exposing fingerprint data.','cards-students':'Prepare student attendance identity cards with scannable identifiers.','cards-teachers':'Prepare teacher attendance identity cards with scannable identifiers.','cards-staff':'Prepare staff attendance identity cards with scannable identifiers.'}
- const attendanceTitle=attendanceTitles[initialWindow]??(population==='students'?'Student Attendance':population==='teachers'?'Teacher Attendance':'Staff Attendance')
- const attendanceDescription=attendanceDescriptions[initialWindow]??attendanceDescriptions[population]
+ const attendanceTitle=autoTab==='register'?attendanceTitles[population]:attendanceTitles[autoTab]
  return <main className="page-content ed360-module-page ed360-attendance-workspace">
   <header className="ed360-attendance-hero">
-   <div className="ed360-attendance-icon"><CalendarCheck size={23}/></div>
-   <div><span>{(user.institutionName?.trim()||'INSTITUTION').toUpperCase()} / ATTENDANCE</span><h1>{attendanceTitle}</h1><p>{attendanceDescription}</p></div>
+   <div><span>{(user.institutionName?.trim()||'GOVERNMENT ISLAMIA DEGREE COLLEGE').toUpperCase()} / ATTENDANCE / {attendanceTitle.toUpperCase()}</span><h1>{attendanceTitle}</h1></div>
+   <button type="button" className="ed360-attendance-refresh" onClick={()=>{void loadRoster();void loadAttendance();if(['devices','biometric'].includes(autoTab))void loadDevices()}} disabled={loading||deviceBusy}><RefreshCw size={15}/>{loading||deviceBusy?'Refreshing…':'Refresh'}</button>
   </header>
   <div className="ed360-attendance-main-tabs">
    <button className={autoTab==='register'?'active':''} onClick={()=>setAutoTab('register')}>Manual register</button>
@@ -474,7 +473,7 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
     <div className="ed360-attendance-roster-meta"><div><strong>{population==='students'?className||'Choose a class':'Employee register'}</strong><span>{date} · {population==='students'?period:'Daily'}{shiftId?' · '+String(shifts.find(s=>s.id===shiftId)?.name??'Shift'):''}</span></div><div className="ed360-attendance-bulk">{!readOnly&&<><button type="button" onClick={()=>markAll('present')}><i className="mark-p">P</i> All present</button><button type="button" onClick={()=>markAll('absent')}><i className="mark-a">A</i> All absent</button><button type="button" onClick={()=>markAll('approved_leave')}><i className="mark-leave">LV</i> All on approved leave</button><button type="button" onClick={()=>markAll('leave_pending')}><i className="mark-pending">NP</i> All leave not approved</button></>}</div></div>
    </section>
    <section className="ed360-attendance-board">
-    <div className="ed360-attendance-board-head"><div><span>REGISTER CHART</span><h2>{population==='students'?'Class attendance register':population==='teachers'?'Teacher attendance register':'Staff attendance register'}</h2><p>Each row is one person. Use the status controls in the row or bulk-mark the whole roster above.</p></div><button type="button" onClick={()=>{void loadRoster();void loadAttendance()}}><RefreshCw size={14}/> Refresh roster</button></div>
+    <div className="ed360-attendance-board-head"><div><span>REGISTER CHART</span><h2>{population==='students'?'Class attendance register':population==='teachers'?'Teacher attendance register':'Staff attendance register'}</h2><p>Each row is one person. Use the status controls in the row or bulk-mark the whole roster above.</p></div></div>
     {loading?<div className="ed360-attendance-empty">Loading the institution roster…</div>:loadingError?<div className="ed360-attendance-empty error">{loadingError}</div>:visiblePeople.length===0?<div className="ed360-attendance-empty">{people.length?'No matching names. Clear your search.':'No active people were found in this roster.'}</div>:
     <div className="ed360-attendance-grid-table"><div className="attendance-grid-head"><span>Roll / Employee ID</span><span>Name</span><span>Father / Guardian</span><span>Section / Department</span><span>Attendance mark</span><span>Note (optional)</span></div>
      {visiblePeople.map((person,index)=><div className="attendance-grid-row" key={person.id}><span className="attendance-grid-id">{person.admission_no??person.employee_no??String(index+1).padStart(2,'0')}</span><strong>{person.full_name}</strong><span>{person.guardian_name??'—'}</span><span>{[person.class_name,person.section_name,person.department].filter(Boolean).join(' / ')||(population==='teachers'?'Teacher':'Employee')}</span>
@@ -500,7 +499,7 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
      <label>Roster<select value={population} onChange={e=>{setPopulation(e.target.value as 'students'|'teachers'|'staff');setHistorySearch('')}} disabled={readOnly}><option value="students">Students</option>{canManageStaff&&<><option value="teachers">Teachers</option><option value="staff">Staff</option></>}</select></label>
      {population==='students'&&canManageStudents&&<><label>Class<select value={className} onChange={e=>{setClassName(e.target.value);setSectionName('')}}><option value="">All classes</option>{classes.map(value=><option key={value} value={value}>{value}</option>)}</select></label><label>Section<select value={sectionName} onChange={e=>setSectionName(e.target.value)}><option value="">All sections</option>{sections.map(value=><option key={value} value={value}>{value}</option>)}</select></label></>}
      <label>Date<input type="date" value={date} max={today()} onChange={e=>setDate(e.target.value)}/></label>
-     <button type="button" onClick={()=>void loadAttendance()}><RefreshCw size={14}/> Refresh history</button>
+     
     </div>
    </div>
    <label className="ed360-attendance-search"><Search size={15}/><input value={historySearch} onChange={e=>setHistorySearch(e.target.value)} placeholder="Search person, ID, status or note"/></label>
@@ -533,7 +532,7 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
     </article>):<p className="ed360-attendance-empty">No device sources have been registered.</p>}</div>
    </>}
    <section className="ed360-device-events">
-    <div className="ed360-attendance-board-head"><div><span>REVIEW & RECONCILIATION QUEUE</span><h2>Signed device events</h2><p>Confirm the linked person and device time. Approvals update the official attendance register; rejections remain in immutable event history.</p></div><button type="button" className="button button-outline" onClick={()=>void loadDevices()} disabled={deviceBusy}><RefreshCw size={14}/> Refresh events</button></div>
+    <div className="ed360-attendance-board-head"><div><span>REVIEW & RECONCILIATION QUEUE</span><h2>Signed device events</h2><p>Confirm the linked person and device time. Approvals update the official attendance register; rejections remain in immutable event history.</p></div></div>
     {deviceEvents.length?<div className="ed360-device-event-list">{deviceEvents.map(event=>{
      const isStudent=Boolean(event.student_id)
      const personId=String(isStudent?event.student_id??'':event.teacher_id??'')
