@@ -164,7 +164,7 @@ export function AIAssistantWorkspace({initialWindow='chat'}:{initialWindow?:stri
      <p>Connection details are kept here. Provider credentials remain server-side.</p>
      <p>Automatic mode uses Cloudflare's free daily allowance only. Selecting another provider manually may incur charges.</p>
      <label>Preferred service<select value={provider} onChange={e=>setProvider(e.target.value as 'auto'|ProviderKey)}><option value="auto">Automatic · Cloudflare free quota only</option>{providers.map(p=><option value={p.key} key={p.key} disabled={!providerStatus[p.key]?.configured}>{p.label}{providerStatus[p.key]?.configured?' · ready':' · not configured'}</option>)}</select></label>
-     <label>Model identifier (optional)<input value={model} onChange={e=>setModel(e.target.value)} placeholder="Use the configured default model"/></label>
+     {selectedProvider!=='cloudflare'&&<label>Model identifier (optional)<input value={model} onChange={e=>setModel(e.target.value)} placeholder="Use the configured default model"/></label>}
      <div className="ed360-ai-provider-list">{providers.map(p=><div key={p.key}><span>{p.label}</span><em className={providerStatus[p.key]?.configured?'ready':''}>{statusLoading?'Checking…':providerStatus[p.key]?.configured?'Connected':'Not configured'}</em></div>)}</div>
      <small>API keys are never requested in this browser. Add or rotate them in Supabase Edge Function secrets.</small>
     </div>}
