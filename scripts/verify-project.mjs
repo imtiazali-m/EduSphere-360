@@ -1409,6 +1409,20 @@ check('Stage 8 provides all 12 connected academic work areas', () => {
 })
 
 
+check('Academic records validate date ranges, marks and overlapping timetable allocations', () => {
+  const academic = read('src/components/AcademicManagementWorkspace.tsx')
+  const timetable = read('supabase/migrations/20261111165921_stage8_academic_data_tables.sql')
+  const guards = read('supabase/migrations/20261111170722_stage8_timetable_session_and_student_submission_guards.sql')
+  for (const value of ['function timetableConflictReason', 'if(existing.id&&candidate.id&&existing.id===candidate.id)', 'existingSession&&candidateSession&&existingSession!==candidateSession', 'end<start', 'completion percentage must be between 0 and 100', 'Marks awarded cannot exceed the assignment maximum', 'Timetable conflict: this', "academic_session_id.eq.", ".lt('start_time'", ".gt('end_time'"]) {
+    assert.ok(academic.toLowerCase().includes(value.toLowerCase()), 'Academic validation is missing: ' + value)
+  }
+  assert.ok(academic.includes('getFullYear()') && !academic.includes("new Date().toISOString().slice(0, 10)"), 'Academic date defaults must use the user's local calendar date')
+  assert.ok(timetable.includes('create trigger timetable_entries_prevent_conflicts') && timetable.includes('pg_advisory_xact_lock'), 'Timetable collision enforcement must remain database-backed and concurrency-safe')
+  for (const value of ['new.end_time<=new.start_time', 'e.id is distinct from new.id', 'new.start_time<e.end_time and new.end_time>e.start_time', 'e.academic_session_id is not distinct from new.academic_session_id', 'e.academic_session_id is null or new.academic_session_id is null']) {
+    assert.ok(guards.includes(value), 'Database timetable guard is missing: ' + value)
+  }
+})
+
 check('Single dashboard layout preserves role data and accessible display preferences', () => {
   const dashboard = read('src/components/Dashboard.tsx')
   const preferences = read('src/lib/displayPreferences.js')
