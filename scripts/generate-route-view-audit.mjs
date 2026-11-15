@@ -291,6 +291,22 @@ function checkView(role, route, dispatcher) {
     const assessmentViews = new Set(['examination-programs','examination-timetable','question-bank','online-tests-and-quizzes','marks-entry','grades-and-grading-system','results-and-result-approval','report-cards','examination-reports'])
     return { component: 'AssessmentWorkspace', view, status: assessmentViews.has(view) ? 'Supported' : 'Unsupported assessment view' }
   }
+  if (targetKey === 'institutional' && targetWindow.startsWith('inventory:')) {
+    const item = targetWindow.slice('inventory:'.length)
+    const catalogueViews = new Set(['inventory-dashboard','item-categories','item-catalogue','items-management'])
+    const ledgerViews = new Set(['stock-in','stock-out','stock-allocation','stock-adjustments','inventory-history','stock-reports'])
+    if (catalogueViews.has(item)) return { component: 'InventoryManagementWorkspace', view: item, status: 'Supported' }
+    if (ledgerViews.has(item)) return { component: 'LinkedOperationsWorkspace', view: 'inventory:' + item, status: 'Supported' }
+  }
+  if (targetKey === 'institutional' && targetWindow.startsWith('transport:')) {
+    const item = targetWindow.slice('transport:'.length)
+    const fleetViews = new Set(['transport-dashboard','vehicle-management','drivers-management','transport-routes','route-stops','vehicle-maintenance','transport-assignments','transport-history','transport-fees'])
+    if (fleetViews.has(item)) return { component: 'TransportManagementWorkspace', view: item, status: 'Supported' }
+    if (['student-transport-allocation','transport-reports'].includes(item)) return { component: 'LinkedOperationsWorkspace', view: 'transport:' + item, status: 'Supported' }
+  }
+  if (targetKey === 'institutional' && targetWindow === 'administration:campus-and-branch-management') {
+    return { component: 'LinkedOperationsWorkspace', view: targetWindow, status: 'Supported' }
+  }
   if (targetKey === 'institutional' && targetWindow.startsWith('library:')) {
     const item = targetWindow.slice('library:'.length)
     const catalogueViews = new Set(['library-dashboard','book-catalogue','book-categories','book-management','book-registration','digital-library','learning-materials','resource-downloads'])
@@ -329,7 +345,7 @@ for (const [role, label] of roles) {
       const route = getNavigationRoute(group.key, labelText, role)
       const dashboard = shellTarget(route)
       const dispatcher = route.startsWith('unavailable:') ? 'WorkspaceUnavailable'
-        : route.startsWith('institutional:') ? (dashboard.targetWindow.startsWith('examinations:') ? 'AssessmentWorkspace' : dashboard.targetWindow.startsWith('library:') && !['library:book-issue-and-returns','library:library-reports'].includes(dashboard.targetWindow) ? 'LibraryManagementWorkspace' : linkedKeys.has(route.slice('institutional:'.length)) ? 'LinkedOperationsWorkspace' : 'InstitutionalWorkspace')
+        : route.startsWith('institutional:') ? (dashboard.targetWindow.startsWith('examinations:') ? 'AssessmentWorkspace' : dashboard.targetWindow.startsWith('library:') && !['library:book-issue-and-returns','library:library-reports'].includes(dashboard.targetWindow) ? 'LibraryManagementWorkspace' : dashboard.targetWindow.startsWith('inventory:') && ['inventory-dashboard','item-categories','item-catalogue','items-management'].includes(dashboard.targetWindow.slice('inventory:'.length)) ? 'InventoryManagementWorkspace' : dashboard.targetWindow.startsWith('transport:') && !['transport:student-transport-allocation','transport:transport-reports'].includes(dashboard.targetWindow) ? 'TransportManagementWorkspace' : linkedKeys.has(route.slice('institutional:'.length)) ? 'LinkedOperationsWorkspace' : 'InstitutionalWorkspace')
         : dashboard.targetKey === 'academic' ? 'AcademicManagementWorkspace'
         : dashboard.targetKey === 'overview' ? 'RoleDashboard'
         : dashboard.targetKey === 'notifications' ? 'NotificationCenter'
