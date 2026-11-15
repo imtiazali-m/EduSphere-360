@@ -57,6 +57,7 @@ const classify = (route) => {
     'helpdesk',
     'duplicate-detection',
     'certificate-forms',
+    'transport-attendance',
   ])
   if (!known.has(workspace)) return 'Unexpected route family · investigate'
   if (rootRoute && !intentionalRootRoutes.has(route)) return 'Bare module root · confirm the intended default window'
@@ -97,7 +98,6 @@ const linkedWorkspaceKeys = [
   'transport:transport-fees',
   'transport:transport-assignments',
   'transport:vehicle-maintenance',
-  'transport:transport-attendance',
   'transport:transport-history',
   'transport:transport-reports'
 ]
@@ -128,6 +128,7 @@ for (const token of [
   '<HelpdeskWorkspace ',
   '<DuplicateDetectionWorkspace ',
   '<CertificateFormsWorkspace ',
+  '<TransportAttendanceWorkspace ',
   '<BackupDataWorkspace ', '<IntegrationManagementWorkspace ', '<BehaviourSkillsWorkspace ', '<AssessmentWorkspace ', '<AcademicManagementWorkspace ', '<NativeCallingWorkspace ', '<FacultyWorkspace ', '<RecordModule ',
 ]) {
   if (!dashboardSource.includes(token)) throw new Error('Dashboard dispatcher no longer contains ' + token)
@@ -154,6 +155,7 @@ const resolveDispatcher = (route) => {
   if (route.startsWith('helpdesk:')) return 'HelpdeskWorkspace'
   if (route.startsWith('duplicate-detection:')) return 'DuplicateDetectionWorkspace'
   if (route.startsWith('certificate-forms:')) return 'CertificateFormsWorkspace'
+  if (route.startsWith('transport-attendance:')) return 'TransportAttendanceWorkspace'
   if (route.startsWith('frontoffice:')) return 'FrontOfficeWorkspace'
   if (route.startsWith('assistant:')) return 'AIAssistantWorkspace'
   if (route === 'assistant') return 'AIAssistantWorkspace'
