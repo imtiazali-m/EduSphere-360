@@ -731,4 +731,3 @@ export function FinanceWorkspace({workspaceKey,initialWindow,onToast}:Props){
   </main>
 }
 
-function ShieldCheckIcon(){return <CheckCircle2 size={14}/>}
