@@ -1417,6 +1417,14 @@ check('Academic records validate date ranges, marks and overlapping timetable al
     assert.ok(academic.toLowerCase().includes(value.toLowerCase()), 'Academic validation is missing: ' + value)
   }
   assert.ok(academic.includes('getFullYear()') && !academic.includes("new Date().toISOString().slice(0, 10)"), "Academic date defaults must use the user local calendar date")
+  assert.ok(academic.includes('async function fetchTable(table: string, loadAll = false)') && academic.includes('query.range(offset, offset + 499)') && academic.includes('fetchTable(activeMode.table,true)'), 'Academic primary records must load in batches rather than stop at 500')
+  assert.ok(academic.includes('activeMode.fields.map(field=>field.source)') && academic.includes('fetchTable(sourceTables[source])'), 'Academic forms must load the linked options used by the active record type')
+  assert.ok(academic.includes('const sortedRows=useMemo') && academic.includes('const pageRows=sortedRows.slice') && academic.includes('const pageSize = 25') && academic.includes('aria-sort='), 'Academic registers need sorting and pagination')
+  const exportStart=academic.indexOf('function exportRows(')
+  const exportEnd=academic.indexOf('function renderField(',exportStart)
+  const exportHandler=academic.slice(exportStart,exportEnd)
+  assert.ok(exportStart>=0 && exportEnd>exportStart && exportHandler.includes('filteredRows.map') && !exportHandler.includes('pageRows'), 'Academic exports and print reports must include every filtered record, not only the visible page')
+  assert.ok(academicStyles.includes('.ed360-academic-sort') && academicStyles.includes('.ed360-academic-pagination') && academicStyles.includes('@media print{.ed360-academic-pagination'), 'Academic sorting and pagination need responsive and print-aware styles')
   assert.ok(timetable.includes('create trigger timetable_entries_prevent_conflicts') && timetable.includes('pg_advisory_xact_lock'), 'Timetable collision enforcement must remain database-backed and concurrency-safe')
   for (const value of ['new.end_time<=new.start_time', 'e.id is distinct from new.id', 'new.start_time<e.end_time and new.end_time>e.start_time', 'e.academic_session_id is not distinct from new.academic_session_id', 'e.academic_session_id is null or new.academic_session_id is null']) {
     assert.ok(guards.includes(value), 'Database timetable guard is missing: ' + value)
