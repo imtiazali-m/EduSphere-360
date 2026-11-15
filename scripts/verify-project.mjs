@@ -44,6 +44,7 @@ check('Vite development and production scripts exist', () => {
   assert.equal(packageJson.scripts['test:responsive:public'], 'node scripts/test-responsive-public.mjs')
   assert.equal(packageJson.scripts['test:workspace-privacy'], 'node scripts/test-workspace-privacy.mjs')
   assert.equal(packageJson.scripts['test:display-preferences'], 'node --test scripts/test-display-preferences.mjs')
+  assert.equal(packageJson.scripts['test:online-session-security'], 'node scripts/test-online-session-security.mjs')
 })
 
 const requiredFiles = [
