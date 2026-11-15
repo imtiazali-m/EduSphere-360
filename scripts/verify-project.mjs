@@ -206,6 +206,7 @@ check('The full institutional menu maps every submenu to a working destination',
     'class-tests:performance-analysis',
     'class-tests:test-reports',
     'class-tests:student-wise-test-history',
+    'class-tests:online-tests','class-tests:written-tests',
     'examinations:online-tests-and-quizzes','examinations:marks-entry','examinations:grades-and-grading-system',
     'examinations:results-and-result-approval','examinations:report-cards','examinations:examination-reports',
     // AI question-generation opens the dedicated examination question-bank workspace;
