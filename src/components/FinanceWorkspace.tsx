@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { Download, Plus, RefreshCw, X, CheckCircle2, AlertTriangle } from 'lucide-react'
+import { Download, Plus, RefreshCw, X, AlertTriangle } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { listRecords, createRecord, recordFeePayment, issueFeeReceipt } from '../lib/data'
