@@ -84,6 +84,19 @@ export function LibraryManagementWorkspace({workspaceKey,onToast,onNavigate}:Pro
  },[user?.id,user?.institutionId,canReadLoans])
 
  useEffect(()=>{void load()},[load])
+ useEffect(()=>{
+  if(!formOpen)return
+  const previousOverflow=document.body.style.overflow
+  const onKeyDown=(event:KeyboardEvent)=>{
+   if(event.key==='Escape'&&!saving){setFormOpen(false);setEditing(null)}
+  }
+  document.body.style.overflow='hidden'
+  window.addEventListener('keydown',onKeyDown)
+  return ()=>{
+   document.body.style.overflow=previousOverflow
+   window.removeEventListener('keydown',onKeyDown)
+  }
+ },[formOpen,saving])
 
  const books=useMemo(()=>records.filter(row=>row.record_type==='book-registration'&&row.status!=='archived'),[records])
  const categories=useMemo(()=>records.filter(row=>row.record_type==='book-category'&&row.status!=='archived'),[records])
