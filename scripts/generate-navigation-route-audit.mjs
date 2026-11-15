@@ -41,7 +41,7 @@ const classify = (route) => {
   const known = new Set([
     'admin', 'assignments', 'assignment_submissions', 'attendance', 'announcements',
     'employees', 'exam_results', 'exams', 'fees', 'finance', 'files', 'governance',
-    'academic', 'care', 'peoplehr', 'notifications', 'operations', 'overview', 'payroll', 'reports', 'students',
+    'academic', 'care', 'peoplehr', 'notifications', 'operations', 'overview', 'payroll', 'reports', 'students', 'voice',
     'timetable', 'work_tasks', 'personal', 'assistant', 'frontoffice', 'backup', 'integration', 'behaviour',
   ])
   if (!known.has(workspace)) return 'Unexpected route family · investigate'
@@ -105,6 +105,7 @@ const resolveDispatcher = (route) => {
   if (route.startsWith('backup:')) return 'BackupDataWorkspace'
   if (route.startsWith('integration:')) return 'IntegrationManagementWorkspace'
   if (route.startsWith('behaviour:')) return 'BehaviourSkillsWorkspace'
+  if (route.startsWith('voice:')) return 'OpenAIVoiceWorkspace'
   if (route.startsWith('admin:')) return 'AdministrationModule'
   const moduleKey = route.split(':')[0]
   if (route.split(':').length === 2 && [
