@@ -42,7 +42,7 @@ check('The no-cost provider and approved model appear in both workspaces', () =>
   assert.ok(workspace.includes("@cf/zai-org/glm-4.7-flash"))
   assert.ok(edge.includes('cloudflare:"@cf/zai-org/glm-4.7-flash"'))
   assert.ok(edge.includes('provider==="cloudflare"?defaultModels.cloudflare'))
-  assert.ok(!workspace.includes('selectedProvider!==\'cloudflare\'') ? true : workspace.includes("selectedProvider!=='cloudflare'"))
+  assert.ok(workspace.includes("selectedProvider!=='cloudflare'"))
 })
 
 check('Credential presence requires both account ID and API token', () => {
