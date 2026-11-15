@@ -13,7 +13,7 @@ const linkedRoutes = new Set([
   'administration:campus-and-branch-management',
   'library:book-issue-and-returns','library:digital-library','library:book-management','library:book-catalogue','library:book-categories','library:book-registration','library:reading-records','library:reading-cards','library:student-reading-history','library:learning-materials','library:resource-downloads','library:library-reports',
   'inventory:items-management','inventory:item-catalogue','inventory:item-categories','inventory:suppliers','inventory:purchase-records','inventory:stock-in','inventory:stock-out','inventory:stock-allocation','inventory:stock-adjustments','inventory:inventory-history','inventory:stock-reports',
-  'transport:vehicle-management','transport:drivers-management','transport:transport-routes','transport:route-stops','transport:student-transport-allocation','transport:transport-fees','transport:transport-assignments','transport:vehicle-maintenance','transport:transport-attendance','transport:transport-history','transport:transport-reports',
+  'transport:vehicle-management','transport:drivers-management','transport:transport-routes','transport:route-stops','transport:student-transport-allocation','transport:transport-fees','transport:transport-assignments','transport:vehicle-maintenance','transport:transport-history','transport:transport-reports',
 
 ])
 
@@ -519,6 +519,7 @@ function resolveNavigationRoute(groupKey: string, itemLabel: string, role?: stri
   }
   const compositeKey = `${groupKey}:${itemKey}`
   const actorRole = role ?? 'owner'
+  if (groupKey === 'transport' && itemKey === 'transport-attendance') return ['owner','admin','teacher'].includes(actorRole) ? 'transport-attendance:transport-attendance' : 'unavailable:transport:transport-attendance'
   if (groupKey === 'integrations') {
     const views:Record<string,string> = {
       'integration-overview':'overview',
@@ -625,7 +626,7 @@ function resolveNavigationRoute(groupKey: string, itemLabel: string, role?: stri
   if (groupKey === 'examinations' && ['examination-programs','examination-timetable','question-bank','online-tests-and-quizzes','marks-entry','grades-and-grading-system','results-and-result-approval','report-cards','examination-reports'].includes(itemKey)) return 'institutional:examinations:' + itemKey
   if (groupKey === 'examinations' && itemKey === 'examination-rooms') return 'admin:rooms'
   if (groupKey === 'class-tests' && itemKey === 'test-questions') return 'operations:question-bank:pool'
-  if (groupKey === 'class-tests' && ['online-tests','written-tests','test-questions'].includes(itemKey)) return 'unavailable:class-tests:'+itemKey
+  if (groupKey === 'class-tests' && ['online-tests','written-tests'].includes(itemKey)) return 'institutional:examinations:online-tests-and-quizzes'
   if (groupKey === 'fees' && itemKey === 'online-payments') return 'unavailable:fees:online-payments'
   if (groupKey === 'payments' && itemKey === 'online-payment-records') return 'unavailable:payments:online-payment-records'
   if (groupKey === 'receipts' && ['receipt-templates','receipt-numbering','bulk-receipt-generation'].includes(itemKey)) return 'unavailable:receipts:'+itemKey
@@ -711,6 +712,11 @@ function resolveNavigationRoute(groupKey: string, itemLabel: string, role?: stri
 export function getNavigationRoute(groupKey: string, itemLabel: string, role?: string): string {
   const route = resolveNavigationRoute(groupKey,itemLabel,role)
   if (!route.startsWith('unavailable:')) return route
+  const explicitlyUnavailable = new Set([
+    'attendance:attendance-alerts','timetable:substitution-management','timetable:timetable-publishing',
+    'examinations:automatic-checking','examinations:invigilation-management','transport:transport-attendance',
+  ])
+  if (explicitlyUnavailable.has(groupKey + ':' + slug(itemLabel))) return route
   const group = getWorkspaceGroup(groupKey)
   const item = getWorkspaceItem(groupKey,slug(itemLabel))
   const actorRole = role ?? 'owner'
