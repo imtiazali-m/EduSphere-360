@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase'
 import '../styles/data-management.css'
 type Row=Record<string,any>&{id:string}
 const titles:Record<string,string>={'asset-assignment':'Asset Assignment','asset-transfers':'Asset Transfers','asset-warranty':'Asset Warranty','asset-disposal':'Asset Disposal','asset-reports':'Asset Lifecycle Reports'}
+const descriptions:Record<string,string>={'asset-assignment':'Assign an asset to a named person or department.','asset-transfers':'Transfer an asset to a new location while retaining a traceable event.','asset-warranty':'Record warranty provider and coverage dates.','asset-disposal':'Record approved disposal and recovered value.','asset-reports':'Review assignments, warranty coverage and lifecycle history.'}
 const date=(v:unknown)=>v?new Date(String(v)).toLocaleDateString():'—'
 const label=(v:unknown)=>String(v??'').replaceAll('_',' ').replace(/\b\w/g,c=>c.toUpperCase())
 export function AssetLifecycleWorkspace({workspaceKey,onToast}:{workspaceKey:string;onToast:(message:string,error?:boolean)=>void}){
