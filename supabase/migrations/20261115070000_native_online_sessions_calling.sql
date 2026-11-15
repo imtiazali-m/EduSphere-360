@@ -463,3 +463,86 @@ grant execute on function public.create_online_session(uuid,text,text,uuid,uuid,
 grant execute on function public.join_online_session(uuid) to authenticated;
 grant execute on function public.leave_online_session(uuid) to authenticated;
 grant execute on function public.end_online_session(uuid) to authenticated;
+
+
+-- Definer helpers keep RLS policies from recursively querying each other's tables.
+create or replace function private.is_online_session_participant(p_session_id uuid, p_user_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $function$
+  select exists (
+    select 1 from public.online_session_participants osp
+    where osp.session_id=p_session_id and osp.user_id=p_user_id
+  );
+$function$;
+
+create or replace function private.can_manage_online_session(p_session_id uuid, p_user_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public, private
+as $function$
+  select exists (
+    select 1
+    from public.online_sessions os
+    join public.memberships m
+      on m.institution_id=os.institution_id
+     and m.user_id=p_user_id
+     and m.status='active'
+    where os.id=p_session_id
+      and (
+        os.created_by=p_user_id
+        or m.role in ('owner','admin')
+        or (m.role='teacher' and os.class_id is not null and public.can_teach_class(os.institution_id,os.class_id))
+      )
+  );
+$function$;
+
+revoke all on function private.is_online_session_participant(uuid,uuid) from public, anon;
+revoke all on function private.can_manage_online_session(uuid,uuid) from public, anon;
+grant execute on function private.is_online_session_participant(uuid,uuid) to authenticated;
+grant execute on function private.can_manage_online_session(uuid,uuid) to authenticated;
+
+drop policy if exists online_sessions_scoped_read on public.online_sessions;
+create policy online_sessions_scoped_read on public.online_sessions
+for select to authenticated
+using (
+  public.has_institution_role(institution_id, array['owner','admin','exam_officer'])
+  or (
+    class_id is not null
+    and public.has_institution_role(institution_id, array['teacher'])
+    and public.can_teach_class(institution_id, class_id)
+  )
+  or (
+    class_id is not null
+    and exists (
+      select 1
+      from public.student_placements sp
+      join public.students s on s.id = sp.student_id and s.institution_id = sp.institution_id
+      where sp.institution_id = online_sessions.institution_id
+        and sp.class_id = online_sessions.class_id
+        and sp.status = 'active'
+        and sp.effective_from <= current_date
+        and (sp.effective_to is null or sp.effective_to >= current_date)
+        and s.user_id = (select auth.uid())
+    )
+  )
+  or private.is_online_session_participant(id,(select auth.uid()))
+);
+
+drop policy if exists online_session_participants_scoped_read on public.online_session_participants;
+create policy online_session_participants_scoped_read on public.online_session_participants
+for select to authenticated
+using (
+  user_id = (select auth.uid())
+  or private.can_manage_online_session(session_id,(select auth.uid()))
+);
+
+drop policy if exists online_session_events_scoped_read on public.online_session_events;
+create policy online_session_events_scoped_read on public.online_session_events
+for select to authenticated
+using (private.can_manage_online_session(session_id,(select auth.uid())));
