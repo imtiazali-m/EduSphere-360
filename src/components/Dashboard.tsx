@@ -55,6 +55,8 @@ import { HelpdeskWorkspace } from './HelpdeskWorkspace'
 import { HostelWorkspace } from './HostelWorkspace'
 import { LibraryReadingWorkspace } from './LibraryReadingWorkspace'
 import { LibraryManagementWorkspace } from './LibraryManagementWorkspace'
+import { TransportManagementWorkspace } from './TransportManagementWorkspace'
+import { InventoryManagementWorkspace } from './InventoryManagementWorkspace'
 import { PaymentOperationsWorkspace } from './PaymentOperationsWorkspace'
 import { ProcurementWorkspace } from './ProcurementWorkspace'
 import { ReceiptWorkspace } from './ReceiptWorkspace'
@@ -1111,6 +1113,8 @@ export function Dashboard({ onToast }: Props) {
                 tab.targetKey === 'cafeteria' ? <CafeteriaWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'library-reading' ? <LibraryReadingWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'institutional' && tab.targetWindow.startsWith('library:') && !['library:book-issue-and-returns','library:library-reports'].includes(tab.targetWindow) ? <LibraryManagementWorkspace workspaceKey={tab.targetWindow} onToast={onToast} onNavigate={navigateChild}/> :
+                tab.targetKey === 'institutional' && tab.targetWindow.startsWith('inventory:') && !['inventory:stock-in','inventory:stock-out','inventory:stock-allocation','inventory:stock-adjustments','inventory:inventory-history','inventory:stock-reports'].includes(tab.targetWindow) ? <InventoryManagementWorkspace workspaceKey={tab.targetWindow} onToast={onToast} onNavigate={navigateChild}/> :
+                tab.targetKey === 'institutional' && tab.targetWindow.startsWith('transport:') && !['transport:student-transport-allocation','transport:transport-reports'].includes(tab.targetWindow) ? <TransportManagementWorkspace workspaceKey={tab.targetWindow} onToast={onToast} onNavigate={navigateChild}/> :
                 tab.targetKey === 'receipt-operations' ? <ReceiptWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'payment-operations' ? <PaymentOperationsWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'asset-lifecycle' ? <AssetLifecycleWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
