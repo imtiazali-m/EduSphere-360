@@ -74,7 +74,7 @@ check('Leave applications, approvals, balances and reporting have separate role-
   const routes = read('src/lib/navigationRoutes.ts')
   const access = read('src/lib/navigationCatalog.ts')
   for (const view of ['leave-applications','leave-approvals','leave-balances','leave-reports']) {
-    assert.ok(care.includes("activeWindow===''" + view + "''"), 'Missing leave workspace view: ' + view)
+    assert.ok(care.includes("activeWindow==='" + view + "'"), 'Missing leave workspace view: ' + view)
     assert.ok(routes.includes("'"+view+"':'care:"+view+"'"), 'Missing leave route: ' + view)
   }
   assert.ok(care.includes("user?.role==='teacher'?employees.filter(employee=>employee.user_id===user.id):employees"), 'Teachers must apply only for their own employee profile')
