@@ -279,7 +279,7 @@ check('Bulk attendance uses class and section registers without a new Late statu
   const deviceWebhook = read('supabase/functions/attendance-device-webhook/index.ts')
   assert.ok(attendance.includes('Awaiting first signed event') && attendance.includes('last_synced_at'), 'Device sources must remain visibly awaiting their first authenticated event')
   assert.ok(deviceAdmin.includes('vault.create_secret') && deviceAdmin.includes('vault.update_secret'), 'Device signing keys must be issued and rotated in Supabase Vault')
-  assert.ok(deviceWebhook.includes('verifyDeviceSignature') && deviceWebhook.includes('processing_status: "received"') && deviceWebhook.includes('no attendance record is changed automatically'), 'Only verified events may enter the review queue; device events must not silently update attendance')
+  assert.ok(deviceWebhook.includes('verifyDeviceSignature') && deviceWebhook.includes('event.event_type === "heartbeat"') && deviceWebhook.includes('processing_status: "received"') && deviceWebhook.includes('No attendance record was created'), 'Signed heartbeats must update device health while attendance events remain reviewable and never silently create official attendance')
 })
 check('Stage 12 front-office windows use the live tenant-scoped enquiry, notices and calendar tables', () => {
   const frontOffice = read('src/components/FrontOfficeWorkspace.tsx')
