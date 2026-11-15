@@ -1061,7 +1061,7 @@ check('Required database safeguards and Cloudflare redirects remain in the proje
   }
   const timestamped = migrations.filter(name => /^202611\d{8}_.+\.sql$/.test(name))
   assert.equal(timestamped.length, 58, 'Expected fifty-eight timestamped migrations including the report-history, student-development and attendance-device review workflows')
-  assert.ok(read('supabase/migrations/README.md').includes('fifty-seven timestamped migration files'))
+  assert.ok(read('supabase/migrations/README.md').includes('fifty-eight timestamped migration files'))
   assert.equal(read('public/_redirects').trim(), '/* /index.html 200')
   const envExample = read('.env.example')
   const gitignore = read('.gitignore')
