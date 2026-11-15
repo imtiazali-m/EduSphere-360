@@ -15,6 +15,7 @@ type SessionRow = {
   class_id: string | null
   subject_id: string | null
   created_by: string
+  participant_role?: string
   media_mode: 'audio' | 'video'
   starts_at: string | null
   ends_at: string | null
@@ -113,7 +114,7 @@ export function NativeCallingWorkspace({
   initialView?: ViewMode
 }) {
   const { user } = useAuth()
-  const [view, setView] = useState<ViewMode>(initialView)
+  const [view, setView] = useState<ViewMode>(user?.role === 'parent' ? 'classes' : initialView)
   const [sessions, setSessions] = useState<SessionRow[]>([])
   const [contacts, setContacts] = useState<Contact[]>([])
   const [classes, setClasses] = useState<ClassOption[]>([])
@@ -317,14 +318,15 @@ export function NativeCallingWorkspace({
       room.on(RoomEvent.ParticipantDisconnected, refreshTracks)
       room.on(RoomEvent.Disconnected, onDisconnected)
       await room.connect(data.serverUrl, data.token)
-      await room.localParticipant.setMicrophoneEnabled(true)
-      if (data.session?.mediaMode === 'video') {
+      const observerMode = data.session?.participantRole === 'parent'
+      if (!observerMode) await room.localParticipant.setMicrophoneEnabled(true)
+      if (!observerMode && data.session?.mediaMode === 'video') {
         await room.localParticipant.setCameraEnabled(true)
         setCameraOn(true)
       } else {
         setCameraOn(false)
       }
-      setMuted(false)
+      setMuted(observerMode)
       setActiveSession({
         id: data.session.id,
         institution_id: institutionId,
@@ -333,6 +335,7 @@ export function NativeCallingWorkspace({
         class_id: null,
         subject_id: null,
         created_by: '',
+        participant_role: data.session.participantRole,
         media_mode: data.session.mediaMode,
         starts_at: data.session.startsAt,
         ends_at: null,
@@ -455,9 +458,12 @@ export function NativeCallingWorkspace({
       <div className="ed360-native-live-footer">
         <span><Users size={15}/>{remoteCount + 1} connected</span>
         <div className="ed360-native-controls">
+          {activeSession.participant_role !== 'parent' && <>
           <button type="button" onClick={() => void toggleMicrophone()} title={muted ? 'Unmute microphone' : 'Mute microphone'}><>{muted ? <MicOff size={17}/> : <Mic size={17}/>}<span>{muted ? 'Unmute' : 'Mute'}</span></></button>
           <button type="button" onClick={() => void toggleCamera()} title={cameraOn ? 'Turn camera off' : 'Turn camera on'}><>{cameraOn ? <Camera size={17}/> : <CameraOff size={17}/>}<span>{cameraOn ? 'Camera on' : 'Camera off'}</span></></button>
           <button type="button" onClick={() => void toggleScreenShare()} title={sharing ? 'Stop sharing' : 'Share screen'}><>{sharing ? <MonitorUp size={17}/> : <MonitorUp size={17}/>}<span>{sharing ? 'Stop share' : 'Share screen'}</span></></button>
+          </>}
+          {activeSession.participant_role === 'parent' && <span className="ed360-native-observer"><ShieldCheck size={15}/> Observer mode</span>}
           <button type="button" className="end" disabled={busy} onClick={() => void leaveSession(canEnd)}><PhoneOff size={17}/><span>{canEnd ? 'End session' : 'Leave'}</span></button>
         </div>
       </div>
@@ -535,7 +541,7 @@ export function NativeCallingWorkspace({
               return <article className="ed360-native-session-card" key={session.id}>
                 <div className="type-icon class"><Video size={17}/></div>
                 <div className="details"><b>{session.title}</b><small>{formatSessionTime(session.starts_at)}</small><span className={'status ' + session.status}>{session.status.replace('_',' ')}</span></div>
-                {session.status !== 'ended' && session.status !== 'cancelled' && <button type="button" onClick={() => void joinSession(session.id)} disabled={busy || !serverConfigured || (!own && !host && user?.role === 'parent')}>{session.status === 'live' ? 'Join live' : 'Join class'}</button>}
+                {session.status !== 'ended' && session.status !== 'cancelled' && <button type="button" onClick={() => void joinSession(session.id)} disabled={busy || !serverConfigured}>{session.status === 'live' ? 'Join live' : 'Join class'}</button>}
               </article>
             }) : <p className="ed360-native-muted">No online classes have been scheduled for your accessible classes.</p>}
           </div>
