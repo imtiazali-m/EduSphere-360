@@ -31,7 +31,7 @@ const pageNotes:Record<string,string>={
 const displayDate=(value:string)=>value?new Date(value).toLocaleString():'—'
 export function CommunicationWorkspace({workspaceKey,onToast}:{workspaceKey:string;onToast:(message:string,error?:boolean)=>void}){
  const {user,mode}=useAuth()
- const itemKey=workspaceKey.split(':').slice(1).join(':')||'communication-logs'
+ const itemKey=workspaceKey.split(':').slice(-1).join(':')||'communication-logs'
  const title=pageTitles[itemKey]??'Institution Communication'
  const description=pageNotes[itemKey]??'Keep institution communication in one controlled workspace.'
  const admin=Boolean(user&&['owner','admin'].includes(user.role))
