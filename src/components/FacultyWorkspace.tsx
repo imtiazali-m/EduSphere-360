@@ -65,13 +65,14 @@ function dateLabel(raw: unknown) {
   const date = new Date(String(raw) + (String(raw).length === 10 ? 'T00:00:00' : ''))
   return Number.isNaN(date.getTime()) ? String(raw) : date.toLocaleDateString()
 }
+function localDate(){const now=new Date();return now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0')}
 function newEmployeeNumber() { return 'EMP-' + new Date().getFullYear() + '-' + crypto.randomUUID().replaceAll('-','').slice(0,8).toUpperCase() }
 function getDefaults(kind: Kind, row: RecordRow|null, employeeId: string, admin: boolean): Record<string,string> {
   if (row) return Object.fromEntries(Object.entries(row).map(([k,v]) => [k, v === null || v === undefined ? '' : String(v)]))
-  if (kind === 'employee') return {employee_no:newEmployeeNumber(),full_name:'',email:'',phone:'',employee_type:'teaching',employment_type:'full_time',employment_status:'active',department_id:'',designation_id:'',joining_date:new Date().toISOString().slice(0,10),contract_end_date:'',work_location:'',emergency_contact:'',user_id:''}
+  if (kind === 'employee') return {employee_no:newEmployeeNumber(),full_name:'',email:'',phone:'',employee_type:'teaching',employment_type:'full_time',employment_status:'active',department_id:'',designation_id:'',joining_date:localDate(),contract_end_date:'',work_location:'',emergency_contact:'',user_id:''}
   if (kind === 'designation') return {name:'',code:'',department_id:'',description:'',is_active:'true'}
   if (kind === 'assignment') return {teacher_id:'',subject_id:'',class_id:'',academic_session_id:'',weekly_periods:'0',assignment_type:'teaching',start_date:'',end_date:'',status:'active',notes:''}
-  if (kind === 'attendance') return {teacher_id:'',attendance_date:new Date().toISOString().slice(0,10),check_in_time:'',check_out_time:'',status:'present',notes:''}
+  if (kind === 'attendance') return {teacher_id:'',attendance_date:localDate(),check_in_time:'',check_out_time:'',status:'present',notes:''}
   if (kind === 'leave') return {teacher_id:admin?'':employeeId,leave_type:'annual',start_date:'',end_date:'',day_count:'1',reason:''}
   return {status:'approved',review_notes:''}
 }
@@ -98,6 +99,7 @@ export function FacultyWorkspace({onToast,onNavigate,initialWindow}:Props) {
   const [docFile,setDocFile]=useState<File|null>(null)
   const [docType,setDocType]=useState('contract')
   const [docTitle,setDocTitle]=useState('')
+  const [docIssueDate,setDocIssueDate]=useState('')
   const [docExpiry,setDocExpiry]=useState('')
   const [docNotes,setDocNotes]=useState('')
   const [uploading,setUploading]=useState(false)
@@ -154,6 +156,9 @@ export function FacultyWorkspace({onToast,onNavigate,initialWindow}:Props) {
         if(duplicate)throw new Error('That employee number or email is already registered in this institution.')
         const account=accounts.find(a=>a.id===v.user_id)
         if(v.user_id&&(!account||account.email.toLowerCase()!==v.email.trim().toLowerCase()))throw new Error('Choose the existing teacher account with the same employee email.')
+        if(v.joining_date&&v.contract_end_date&&v.contract_end_date<v.joining_date)throw new Error('Contract end date cannot precede the employee joining date.')
+        const chosenDesignation=designations.find(r=>r.id===v.designation_id)
+        if(chosenDesignation?.department_id&&v.department_id&&chosenDesignation.department_id!==v.department_id)throw new Error('Choose a designation assigned to the selected department, or clear the department-specific designation.')
         const department=departments.find(r=>r.id===v.department_id)
         const p={employee_no:v.employee_no.trim(),full_name:v.full_name.trim(),email:v.email.trim(),phone:v.phone.trim()||null,department:department?.name??null,department_id:v.department_id||null,designation_id:v.designation_id||null,employee_type:v.employee_type,employment_type:v.employment_type,employment_status:v.employment_status,joining_date:v.joining_date||null,contract_end_date:v.contract_end_date||null,work_location:v.work_location.trim()||null,emergency_contact:v.emergency_contact.trim()||null,user_id:v.user_id||null,updated_at:new Date().toISOString()}
         if(dialog.row)await updateRecord(mode,user!,'teachers',dialog.row.id,p);else await createRecord(mode,user!,'teachers',p)
@@ -163,9 +168,14 @@ export function FacultyWorkspace({onToast,onNavigate,initialWindow}:Props) {
         if(dialog.row)await updateRecord(mode,user!,'designations',dialog.row.id,p);else await createRecord(mode,user!,'designations',p)
       }else if(dialog.kind==='assignment'){
         if(!v.teacher_id||!v.subject_id||!v.class_id||!v.academic_session_id)throw new Error('Select an employee, subject, class and academic session.')
-        if(Number(v.weekly_periods)<0)throw new Error('Weekly periods cannot be negative.')
+        const weeklyPeriods=Number(v.weekly_periods)
+        if(!Number.isInteger(weeklyPeriods)||weeklyPeriods<0)throw new Error('Weekly periods must be a whole number of zero or more.')
         if(v.start_date&&v.end_date&&v.end_date<v.start_date)throw new Error('Assignment end date cannot precede start date.')
-        const p={teacher_id:v.teacher_id,subject_id:v.subject_id,class_id:v.class_id,academic_session_id:v.academic_session_id,weekly_periods:Number(v.weekly_periods),assignment_type:v.assignment_type,start_date:v.start_date||null,end_date:v.end_date||null,status:v.status,notes:v.notes.trim()||null,updated_at:new Date().toISOString()}
+        const assignedEmployee=employees.find(r=>r.id===v.teacher_id)
+        if(!assignedEmployee||assignedEmployee.employment_status!=='active')throw new Error('Teaching allocations can only be assigned to an active employee.')
+        const duplicateScope=assignments.find(r=>r.id!==dialog.row?.id&&r.teacher_id===v.teacher_id&&r.subject_id===v.subject_id&&r.class_id===v.class_id&&r.academic_session_id===v.academic_session_id&&String(r.start_date??'0001-01-01')===String(v.start_date||'0001-01-01'))
+        if(duplicateScope)throw new Error('This employee already has an allocation for the same subject, class, session and start date.')
+        const p={teacher_id:v.teacher_id,subject_id:v.subject_id,class_id:v.class_id,academic_session_id:v.academic_session_id,weekly_periods:weeklyPeriods,assignment_type:v.assignment_type,start_date:v.start_date||null,end_date:v.end_date||null,status:v.status,notes:v.notes.trim()||null,updated_at:new Date().toISOString()}
         if(dialog.row)await updateRecord(mode,user!,'teacher_assignments',dialog.row.id,p);else await createRecord(mode,user!,'teacher_assignments',p)
       }else if(dialog.kind==='attendance'){
         if(!v.teacher_id||!v.attendance_date)throw new Error('Select an employee and attendance date.')
@@ -177,8 +187,11 @@ export function FacultyWorkspace({onToast,onNavigate,initialWindow}:Props) {
       }else if(dialog.kind==='leave'){
         if(!v.teacher_id||!v.start_date||!v.end_date||!v.reason.trim())throw new Error('Employee, dates and reason are required.')
         if(v.end_date<v.start_date)throw new Error('Leave end date cannot precede start date.')
-        if(!(Number(v.day_count)>0))throw new Error('Leave duration must be greater than zero.')
-        await createRecord(mode,user!,'employee_leave_requests',{teacher_id:v.teacher_id,leave_type:v.leave_type,start_date:v.start_date,end_date:v.end_date,day_count:Number(v.day_count),reason:v.reason.trim(),status:'pending',created_by:user!.id})
+        const leaveDays=Number(v.day_count)
+        if(!Number.isFinite(leaveDays)||leaveDays<=0)throw new Error('Leave duration must be a valid number greater than zero.')
+        const overlap=leaves.find(r=>r.teacher_id===v.teacher_id&&['pending','approved'].includes(String(r.status))&&!(v.end_date<String(r.start_date??'')||v.start_date>String(r.end_date??'')))
+        if(overlap)throw new Error('This leave request overlaps another pending or approved request for this employee.')
+        await createRecord(mode,user!,'employee_leave_requests',{teacher_id:v.teacher_id,leave_type:v.leave_type,start_date:v.start_date,end_date:v.end_date,day_count:leaveDays,reason:v.reason.trim(),status:'pending',created_by:user!.id})
       }else if(dialog.kind==='leaveReview'&&dialog.row){
         if(!['approved','rejected'].includes(v.status))throw new Error('Choose approve or reject.')
         await updateRecord(mode,user!,'employee_leave_requests',dialog.row.id,{status:v.status,review_notes:v.review_notes.trim()||null,reviewed_by:user!.id,reviewed_at:new Date().toISOString(),updated_at:new Date().toISOString()})
@@ -197,6 +210,7 @@ export function FacultyWorkspace({onToast,onNavigate,initialWindow}:Props) {
   async function uploadDocument(e:FormEvent){
     e.preventDefault();if(!selected||!docFile||!supabase)return
     if(!docTitle.trim()){onToast('Enter a document title.',true);return}
+    if(docIssueDate&&docExpiry&&docExpiry<docIssueDate){onToast('Document expiry date cannot precede its issue date.',true);return}
     if(docFile.size<=0||docFile.size>10*1024*1024){onToast('Staff documents must be 10 MB or smaller.',true);return}
     const allowed=['application/pdf','image/png','image/jpeg','image/webp','text/plain','application/msword','application/vnd.openxmlformats-officedocument.wordprocessingml.document','application/vnd.ms-excel','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']
     if(!allowed.includes(docFile.type)){onToast('Choose a PDF, image, text, Word or Excel document.',true);return}
@@ -206,9 +220,9 @@ export function FacultyWorkspace({onToast,onNavigate,initialWindow}:Props) {
     try{
       const {error}=await supabase.storage.from('staff-files').upload(path,docFile,{cacheControl:'3600',contentType:docFile.type,upsert:false})
       if(error)throw error
-      try{await createRecord(mode,user!,'staff_documents',{teacher_id:selected.id,document_type:docType,title:docTitle.trim(),file_name:docFile.name,storage_path:path,mime_type:docFile.type,file_size:docFile.size,expiry_date:docExpiry||null,notes:docNotes.trim()||null,uploaded_by:user!.id})}
+      try{await createRecord(mode,user!,'staff_documents',{teacher_id:selected.id,document_type:docType,title:docTitle.trim(),file_name:docFile.name,storage_path:path,mime_type:docFile.type,file_size:docFile.size,issue_date:docIssueDate||null,expiry_date:docExpiry||null,notes:docNotes.trim()||null,uploaded_by:user!.id})}
       catch(err){await supabase.storage.from('staff-files').remove([path]);throw err}
-      setDocFile(null);setDocTitle('');setDocExpiry('');setDocNotes('');onToast('Confidential staff document uploaded.');await load(true)
+      setDocFile(null);setDocTitle('');setDocIssueDate('');setDocExpiry('');setDocNotes('');onToast('Confidential staff document uploaded.');await load(true)
     }catch(err){onToast(userFacingError(err,'The staff document could not be uploaded.'),true)}
     finally{setUploading(false)}
   }
@@ -218,8 +232,13 @@ export function FacultyWorkspace({onToast,onNavigate,initialWindow}:Props) {
     catch(err){onToast(userFacingError(err,'The document is unavailable to this account.'),true)}
   }
   async function deleteDocument(row:RecordRow){
-    try{await deleteRecord(mode,user!,'staff_documents',row.id);if(supabase)await supabase.storage.from('staff-files').remove([String(row.storage_path)]);onToast('Staff document removed.');await load(true)}
-    catch(err){onToast(userFacingError(err,'The staff document could not be removed.'),true)}
+    try{
+      await deleteRecord(mode,user!,'staff_documents',row.id)
+      const {error:storageError}=supabase?await supabase.storage.from('staff-files').remove([String(row.storage_path)]):{error:new Error('Supabase storage is unavailable.')}
+      if(storageError)onToast('The document record was removed, but its private file could not be deleted. Ask an administrator to complete secure file cleanup.',true)
+      else onToast('Staff document and private file removed.')
+      await load(true)
+    }catch(err){onToast(userFacingError(err,'The staff document could not be removed.'),true)}
   }
   function exportCsv(){downloadCsv('edusphere360-staff-report.csv',employees,[{key:'employee_no',label:'Employee ID'},{key:'full_name',label:'Employee'},{key:'email',label:'Email'},{key:'employee_type',label:'Category'},{key:'department',label:'Department'},{key:'employment_status',label:'Status'},{key:'joining_date',label:'Joining date'}])}
 
@@ -237,7 +256,7 @@ export function FacultyWorkspace({onToast,onNavigate,initialWindow}:Props) {
   const ownLeaveRows=leaves.filter(row=>row.teacher_id===selected?.id)
   const ownDocRows=documents.filter(row=>row.teacher_id===selected?.id)
   const ownHistoryRows=history.filter(row=>row.teacher_id===selected?.id)
-  const thisMonth=attendance.filter(row=>String(row.attendance_date??'').slice(0,7)===new Date().toISOString().slice(0,7))
+  const thisMonth=attendance.filter(row=>String(row.attendance_date??'').slice(0,7)===localDate().slice(0,7))
   const activeStaff=employees.filter(row=>row.employment_status==='active')
   const pendingLeave=leaves.filter(row=>row.status==='pending')
   const activeAllocation=assignments.filter(row=>row.status==='active')
@@ -275,7 +294,7 @@ export function FacultyWorkspace({onToast,onNavigate,initialWindow}:Props) {
     {tab==='workload'&&<section className="staff-panel staff-full-panel"><header><div><h2>{admin?'Workload & timetable':'My workload & timetable'}</h2><p>Teaching allocations show expected periods; actual class slots remain in Academic Management.</p></div><button type="button" className="staff-button staff-button-outline" onClick={()=>onNavigate('timetable')}>Open Academic Timetable <CalendarDays size={14}/></button></header>{table((admin?assignments:ownAssignmentRows).map(r=>({...r,subject_label:subjects.find(s=>s.id===r.subject_id)?.name??'—',class_label:classes.find(c=>c.id===r.class_id)?.name??'—',session_label:sessions.find(s=>s.id===r.academic_session_id)?.session_name??'—'})),[{key:'subject_label',label:'Subject'},{key:'class_label',label:'Class'},{key:'session_label',label:'Session'},{key:'weekly_periods',label:'Expected periods / week'},{key:'status',label:'Status'}],'Teaching allocations define workload for each session.')}<h3 className="staff-subheading">Timetable entries</h3>{table((admin?timetable:timetable.filter(r=>String(r.teacher_name??'').toLowerCase()===String(selected?.full_name??'').toLowerCase())),[{key:'weekday',label:'Day'},{key:'start_time',label:'Start'},{key:'end_time',label:'End'},{key:'class_name',label:'Class'},{key:'subject',label:'Subject'},{key:'room',label:'Room'}],'No timetable entries are currently linked to this employee.')}</section>}
 
     {tab==='qualifications'&&<EmployeeQualificationsPanel employeeId={selected?.id??''} institutionId={user!.institutionId} canManage={admin} onToast={onToast}/>}
-    {tab==='documents'&&<section className="staff-panel staff-full-panel"><header><div><h2>{admin?'Confidential staff documents':'My confidential documents'}</h2><p>Stored in the separate private staff-files bucket, not the general institution file store.</p></div></header>{selected&&(admin||selected.user_id===user!.id)&&<form className="staff-document-form" onSubmit={uploadDocument}><label>Document type<select value={docType} onChange={e=>setDocType(e.target.value)}>{documentTypes.map(d=><option key={d.value} value={d.value}>{d.label}</option>)}</select></label><label>Title<input value={docTitle} onChange={e=>setDocTitle(e.target.value)} placeholder="Employment contract, qualification certificate…" required/></label><label>Expiry date<input type="date" value={docExpiry} onChange={e=>setDocExpiry(e.target.value)}/></label><label>File<input type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.doc,.docx,.xls,.xlsx" onChange={e=>setDocFile(e.target.files?.[0]??null)} required/></label><label>Notes<input value={docNotes} onChange={e=>setDocNotes(e.target.value)} placeholder="Optional notes"/></label><button className="staff-button staff-button-primary" type="submit" disabled={!docFile||uploading}>{uploading?'Uploading…':'Upload confidential document'}</button></form>}{table((admin?documents:ownDocuments).map(r=>({...r,employee_label:employees.find(e=>e.id===r.teacher_id)?.full_name??'—'})),[{key:'employee_label',label:'Employee'},{key:'document_type',label:'Type'},{key:'title',label:'Title'},{key:'file_name',label:'File'},{key:'expiry_date',label:'Expiry'},{key:'created_at',label:'Uploaded'}],'No confidential staff documents have been uploaded.',row=><><button type="button" title="Open secure document" onClick={()=>void viewDocument(row)}><Eye size={14}/></button>{admin&&<button type="button" className="staff-action-danger" title="Delete document" onClick={()=>void deleteDocument(row)}><Trash2 size={14}/></button>}</>)}</section>}
+    {tab==='documents'&&<section className="staff-panel staff-full-panel"><header><div><h2>{admin?'Confidential staff documents':'My confidential documents'}</h2><p>Stored in the separate private staff-files bucket, not the general institution file store.</p></div></header>{selected&&(admin||selected.user_id===user!.id)&&<form className="staff-document-form" onSubmit={uploadDocument}><label>Document type<select value={docType} onChange={e=>setDocType(e.target.value)}>{documentTypes.map(d=><option key={d.value} value={d.value}>{d.label}</option>)}</select></label><label>Title<input value={docTitle} onChange={e=>setDocTitle(e.target.value)} placeholder="Employment contract, qualification certificate…" required/></label><label>Issue date<input type="date" value={docIssueDate} onChange={e=>setDocIssueDate(e.target.value)}/></label><label>Expiry date<input type="date" min={docIssueDate||undefined} value={docExpiry} onChange={e=>setDocExpiry(e.target.value)}/></label><label>File<input type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.doc,.docx,.xls,.xlsx" onChange={e=>setDocFile(e.target.files?.[0]??null)} required/></label><label>Notes<input value={docNotes} onChange={e=>setDocNotes(e.target.value)} placeholder="Optional notes"/></label><button className="staff-button staff-button-primary" type="submit" disabled={!docFile||uploading}>{uploading?'Uploading…':'Upload confidential document'}</button></form>}{table((admin?documents:ownDocuments).map(r=>({...r,employee_label:employees.find(e=>e.id===r.teacher_id)?.full_name??'—'})),[{key:'employee_label',label:'Employee'},{key:'document_type',label:'Type'},{key:'title',label:'Title'},{key:'file_name',label:'File'},{key:'expiry_date',label:'Expiry'},{key:'created_at',label:'Uploaded'}],'No confidential staff documents have been uploaded.',row=><><button type="button" title="Open secure document" onClick={()=>void viewDocument(row)}><Eye size={14}/></button>{admin&&<button type="button" className="staff-action-danger" title="Delete document" onClick={()=>void deleteDocument(row)}><Trash2 size={14}/></button>}</>)}</section>}
 
     {tab==='history'&&<section className="staff-panel staff-full-panel"><header><div><h2>{admin?'Employment history':'My employment history'}</h2><p>Database-audited employee registration and employment profile changes.</p></div></header>{table((admin?history:ownHistory).map(r=>({...r,employee_label:employees.find(e=>e.id===r.teacher_id)?.full_name??'Employee record',event_label:r.event_type==='employee_registered'?'Employee registered':'Employment profile updated'})),[{key:'employee_label',label:'Employee'},{key:'event_label',label:'Event'},{key:'effective_date',label:'Effective date'},{key:'created_at',label:'Recorded at'}],'Employment history is created by database audit triggers after registration and profile changes.')}</section>}
 
