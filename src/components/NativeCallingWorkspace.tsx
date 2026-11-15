@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Camera, CameraOff, CalendarClock, Check, ChevronDown, Clock3, Mic, MicOff, MonitorUp, Phone, PhoneCall, PhoneOff, RefreshCw, ShieldCheck, Users, Video, X } from 'lucide-react'
+import { Camera, CameraOff, CalendarClock, Mic, MicOff, MonitorUp, Phone, PhoneCall, PhoneOff, RefreshCw, ShieldCheck, Users, Video, X } from 'lucide-react'
 import { Room, RoomEvent, Track } from 'livekit-client'
 import type { Track as LiveTrack } from 'livekit-client'
 import { useAuth } from '../context/AuthContext'
@@ -125,7 +125,6 @@ export function NativeCallingWorkspace({
   const [selectedContacts, setSelectedContacts] = useState<string[]>([])
   const [sessionTitle, setSessionTitle] = useState('')
   const [mediaMode, setMediaMode] = useState<'audio' | 'video'>('video')
-  const [sessionType, setSessionType] = useState<'direct_call' | 'group_call'>('direct_call')
   const [classId, setClassId] = useState('')
   const [subjectId, setSubjectId] = useState('')
   const [startAt, setStartAt] = useState(() => {
@@ -214,7 +213,6 @@ export function NativeCallingWorkspace({
   function toggleContact(id: string) {
     setSelectedContacts(current => {
       const next = current.includes(id) ? current.filter(item => item !== id) : [...current, id]
-      setSessionType(next.length > 1 ? 'group_call' : 'direct_call')
       return next
     })
   }
