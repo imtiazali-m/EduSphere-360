@@ -5,9 +5,10 @@ import { supabase } from '../lib/supabase'
 import '../styles/integrations-workspace.css'
 
 type PageKey = 'overview'|'ai-providers'|'biometric'
-type ProviderKey = 'openai'|'anthropic'|'gemini'|'deepseek'|'xai'|'meta'|'perplexity'
+type ProviderKey = 'cloudflare'|'openai'|'anthropic'|'gemini'|'deepseek'|'xai'|'meta'|'perplexity'
 type ProviderState = Record<string,{configured:boolean}>
 const providers:{key:ProviderKey;name:string;model:string;secret:string;purpose:string}[]=[
+  {key:'cloudflare',name:'Cloudflare Workers AI · Free quota',model:'@cf/zai-org/glm-4.7-flash',secret:'CLOUDFLARE_AI_API_TOKEN + CLOUDFLARE_ACCOUNT_ID',purpose:'Free Workers AI daily allowance · automatic mode uses this provider only'},
  {key:'openai',name:'OpenAI',model:'gpt-6.1-sol',secret:'OPENAI_API_KEY',purpose:'Reasoning, document assistance and institutional insights'},
  {key:'anthropic',name:'Anthropic Claude',model:'claude-sonnet-5-5',secret:'ANTHROPIC_API_KEY',purpose:'Long-form analysis, policy and document review'},
  {key:'gemini',name:'Google Gemini',model:'gemini-3.8-flash',secret:'GEMINI_API_KEY',purpose:'Multimodal learning assistance and analysis'},
@@ -18,7 +19,7 @@ const providers:{key:ProviderKey;name:string;model:string;secret:string;purpose:
 ]
 const pages:Record<PageKey,{title:string;eyebrow:string;intro:string}> = {
  overview:{title:'Integrations & Devices',eyebrow:'INSTITUTION PLATFORM',intro:'Connect external AI providers and supported attendance hardware. Calling and online classes are built and managed natively inside EduSphere.'},
- 'ai-providers':{title:'AI Provider Connections',eyebrow:'AI SERVICES',intro:'Check server-side provider credentials, test each model and use only verified connections in AI workspaces.'},
+ 'ai-providers':{title:'AI Provider Connections',eyebrow:'AI SERVICES',intro:'Use Cloudflare Workers AI as the no-cost default, then add other AI providers only when an institution approves their billing and data terms.'},
  biometric:{title:'Biometric Attendance Devices',eyebrow:'ATTENDANCE HARDWARE',intro:'Connect a supported fingerprint reader or attendance terminal. A phone’s built-in biometric sensor is for verifying its own user, not enrolling students.'},
 }
 const steps:Record<Exclude<PageKey,'overview'|'ai-providers'>,{number:string;heading:string;detail:string}[]> = {
@@ -103,7 +104,7 @@ export function IntegrationManagementWorkspace({initialWindow='overview',onToast
     <div className="ed360-integration-provider-meta"><span>Model: <b>{p.model}</b></span><span>Secret: <code>{p.secret}</code></span></div>
     <div className="ed360-integration-provider-actions"><button type="button" className="button button-outline" disabled={checking||testing===p.key||!providerStatus[p.key]?.configured} onClick={()=>void testProvider(p)}>{testing===p.key?'Testing…':'Test live connection'}</button>{testResults[p.key]&&<small className={testResults[p.key].startsWith('Passed')?'is-ready':'is-pending'}>{testResults[p.key]}</small>}</div>
    </article>)}</div>
-   <aside className="ed360-integration-note"><ShieldCheck size={18}/><p>Add only the approved AI provider keys directly in <b>Supabase Dashboard → Edge Functions → Secrets</b>. Never paste keys into a website field, source file, GitHub commit or chat. A credential marked present must still pass the live test above before it is treated as working.</p></aside>
+   <aside className="ed360-integration-note"><ShieldCheck size={18}/><p>Add the Cloudflare account ID and API token only in <b>Supabase Dashboard → Edge Functions → Secrets</b>. Keep the Cloudflare account on its Free plan: its daily free AI allowance is capped, and EduSphere automatic mode will not switch to paid providers. Other providers are optional and may charge. Never paste keys into a website field, source file, GitHub commit or chat. A credential marked present must still pass the live test above before it is treated as working.</p></aside>
   </>}
   {page!=='overview'&&page!=='ai-providers'&&<>
    <div className="ed360-integration-status-card"><div><span>CONNECTION STATUS</span><strong>Not connected</strong><small>This is an attendance-device setup guide, not a claim of a live hardware connection.</small></div><span className="ed360-integration-pill">Setup required</span></div>
