@@ -37,6 +37,7 @@ import { Stage7CareWorkspace } from './Stage7CareWorkspace'
 import { LinkedOperationsWorkspace } from './LinkedOperationsWorkspace'
 import { NotificationCenter } from './NotificationCenter'
 import { WorkspaceUnavailable } from './WorkspaceUnavailable'
+import { WorkspacePageGuide } from './WorkspacePageGuide'
 import { FinanceWorkspace } from './FinanceWorkspace'
 import { PayrollWorkspace } from './PayrollWorkspace'
 import { PeopleHRWorkspace } from './PeopleHRWorkspace'
@@ -926,7 +927,9 @@ export function Dashboard({ onToast }: Props) {
                 const route = getNavigationRoute(group.key, item, user!.role)
                 const isActive = activeNavigationTab.groupKey === group.key && activeNavigationTab.itemKey === itemKey
                 const ItemIcon = pageIcon(item, GroupIcon)
-                const connected = Boolean(route && !route.startsWith('unavailable:'))
+                const unavailableGroupKey = route?.startsWith('unavailable:') ? route.slice('unavailable:'.length).split(':')[0] : ''
+                const genericPageAvailable = Boolean(unavailableGroupKey && getWorkspaceGroup(unavailableGroupKey)?.roles.includes(user!.role))
+                const connected = Boolean(route && (!route.startsWith('unavailable:') || genericPageAvailable))
                 return <button key={item} className={`pro-nav-item ${isActive ? 'active' : ''}`} aria-label={item} title={item} aria-current={isActive ? 'page' : undefined} onClick={() => navigateCatalogPage(group.key, item)}><span className="pro-nav-icon"><ItemIcon size={16}/></span><span className="pro-nav-title">{item}</span>{connected && <i className="pro-nav-connected" title="Connected workspace"/>}</button>
               })}</div>}
             </section>
@@ -984,6 +987,7 @@ export function Dashboard({ onToast }: Props) {
             const tabAdminKey = tab.targetKey.startsWith('admin:') ? tab.targetKey.slice(6) : undefined
             const linkedWorkspaceKeys = ['administration:campus-and-branch-management','library:book-issue-and-returns','library:library-reports','inventory:stock-in','inventory:stock-out','inventory:stock-allocation','inventory:stock-adjustments','inventory:inventory-history','inventory:stock-reports','transport:student-transport-allocation','transport:transport-reports']
             return <section className="pro-window-panel" key={tab.id} hidden={activeTabId !== tab.id} aria-label={tab.title}>
+              {tab.groupKey && tab.itemKey && tab.targetKey !== 'unavailable' && (tab.targetKey !== 'institutional' || tab.targetWindow.startsWith('examinations:') || linkedWorkspaceKeys.includes(tab.targetWindow)) && <WorkspacePageGuide groupKey={tab.groupKey} itemKey={tab.itemKey}/>}
               {tab.targetKey === 'backup' ? <BackupDataWorkspace initialWindow={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'notifications' ? <NotificationCenter onToast={onToast} onUnreadCountChange={setUnreadAnnouncementCount}/> :
                 tab.targetKey === 'overview' ? <RoleDashboard onNavigate={navigateChild}/> :
