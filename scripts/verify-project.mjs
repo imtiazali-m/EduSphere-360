@@ -1111,7 +1111,9 @@ check('Administration settings, approvals and audit are connected to governance 
   for (const value of ['institution_settings', 'workflow_approvals', 'institutional_audit_events', 'decide_institution_setting_approval']) {
     assert.ok(administration.includes(value), 'Administration workspace is missing ' + value)
   }
-  assert.ok(administration.includes('Update Profile') && administration.includes("supabase.from('institutions').update(values)"), 'Institution profile must use the existing owner/admin update path')
+  assert.ok(administration.includes('Save Institute Profile') && administration.includes("supabase.from('institutions').update(values)"), 'Institute Profile must use its existing owner/admin update path')
+  for (const section of ['Institute Identity','Contact Details','Public Profile']) assert.ok(administration.includes(section), 'Institute Profile is missing its dedicated section: ' + section)
+  assert.ok(administration.includes('ed360-admin-profile-v2') && administration.includes('ed360-profile-public-card') && administration.includes('logoPreviewUrl'), 'Institute Profile must render the live identity preview and local logo preview')
   assert.ok(read('supabase/migrations/20261109151231_atomic_institution_setting_approval.sql').includes('decide_institution_setting_approval'))
 })
 
@@ -1424,7 +1426,7 @@ check('Internal account and institute profile controls remain connected to secur
   assert.ok(account.includes('updateAccountName') && account.includes("from('profiles').update({full_name:fullName})"), 'Users must be able to edit their own account name')
   assert.ok(account.includes("updateUser({email:address}") && account.includes('updatePassword') && account.includes('Request email change'), 'Account settings must include secure email and password changes')
   assert.ok(auth.includes('supabase.auth.getUser()') && auth.includes('authData.user?.email'), 'The verified Auth email must be used for the signed-in account')
-  assert.ok(institute.includes('ed360-admin-profile-preview') && institute.includes('logoUrl') && !institute.includes('showProfileCard'), 'Institute identity card with its logo must be visible without an extra toggle')
+  assert.ok(institute.includes('ed360-profile-public-card') && institute.includes('logoUrl') && institute.includes('previewLogo') && !institute.includes('showProfileCard'), 'Institute identity preview with its logo must be visible without an extra toggle')
   for (const item of ['institutional_audit_events', 'Recent database changes', 'Live database activity', 'GLOBAL INSTITUTION OVERSIGHT', 'Live updates']) assert.ok(!roleDashboard.includes(item), 'Dashboard-only audit or live-feed UI should be removed: ' + item)
   assert.ok(roleDashboard.includes('studentPresentToday') && roleDashboard.includes('studentAbsentToday') && roleDashboard.includes('studentAttendancePercent'), 'Student attendance must be reported separately from staff attendance')
   assert.ok(internalTheme.includes('linear-gradient(128deg,#321943') && internalTheme.includes('.pro-app-shell'), 'The purple / pink canvas must be scoped to the signed-in internal shell')
