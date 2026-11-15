@@ -462,9 +462,6 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
     const views:Record<string,string> = {
       'integration-overview':'overview',
       'ai-provider-connections':'ai-providers',
-      'zoom-virtual-classrooms':'zoom',
-      'google-workspace':'google',
-      'youtube-learning':'youtube',
       'biometric-attendance-devices':'biometric',
     }
     return 'integration:' + (views[itemKey] ?? 'overview')
