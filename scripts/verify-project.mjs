@@ -275,7 +275,25 @@ check('Bulk attendance uses class and section registers without a new Late statu
   assert.ok(attendance.includes('All present') && attendance.includes('All absent') && attendance.includes('All on approved leave') && attendance.includes('sectionName'))
   assert.ok(!attendance.includes("markAll('late')") && !attendance.includes('>All late</button>'), 'New attendance registers must not offer Late marking')
   assert.ok(attendance.includes('save_student_attendance_register') && attendance.includes('save_employee_attendance_register') && attendance.includes('Save whole register'), 'Student and employee registers must use their validated atomic save RPCs')
-  assert.ok(attendance.includes('not_configured') && attendance.includes('provider feed'), 'Automatic attendance must not pretend that a device is connected')
+  const deviceAdmin = read('supabase/functions/attendance-device-admin/index.ts')
+  const deviceWebhook = read('supabase/functions/attendance-device-webhook/index.ts')
+  assert.ok(attendance.includes('Awaiting first signed event') && attendance.includes('last_synced_at'), 'Device sources must remain visibly awaiting their first authenticated event')
+  assert.ok(deviceAdmin.includes('vault.create_secret') && deviceAdmin.includes('vault.update_secret'), 'Device signing keys must be issued and rotated in Supabase Vault')
+  assert.ok(deviceWebhook.includes('verifyDeviceSignature') && deviceWebhook.includes('event.event_type === "heartbeat"') && deviceWebhook.includes('processing_status: "received"') && deviceWebhook.includes('No attendance record was created'), 'Signed heartbeats must update device health while attendance events remain reviewable and never silently create official attendance')
+})
+check('Signed device attendance events require authorised review before reconciliation', () => {
+  const attendance = read('src/components/AttendanceWorkspace.tsx')
+  const review = read('supabase/migrations/20261115060000_attendance_device_event_review_approval.sql')
+  assert.ok(attendance.includes('review_attendance_device_event') && attendance.includes('Approve & apply attendance') && attendance.includes('Reject event'), 'The device queue must expose distinct approval and rejection actions')
+  assert.ok(attendance.includes('p_review_note:reviewNote.trim()') && attendance.includes('p_attendance_date:action===\'approve\'?reviewDate:null'), 'The reviewer must submit an audit note and confirm the local attendance date')
+  assert.ok(review.includes('security definer') && review.includes("has_institution_role(v_event.institution_id, array['owner','admin'])"), 'Employee event review must be restricted to owners and administrators')
+  assert.ok(review.includes("array['owner','admin','teacher']"), 'Teacher review may only be enabled for student events')
+  assert.ok(review.includes("private.has_institution_permission(\n      v_event.institution_id,\n      'attendance',\n      'approve'"), 'Review decisions must enforce custom attendance-approval permissions')
+  assert.ok(review.includes("'attendance',\n        'view'") && review.includes('private.college_department_for_student'), 'Teacher queue visibility must enforce class/campus scope')
+  assert.ok(review.includes('register_id = coalesce(register_id, v_register_id)'), 'A reconciled check-out must preserve its attendance-register link')
+  assert.ok(review.includes('Original device event evidence is immutable') && review.includes('revoke update on public.attendance_device_events'), 'Signed event evidence must not be directly editable by browsers')
+  assert.ok(review.includes("v_register_status = 'locked'") && review.includes('correction_reason is null'), 'Locked registers and unreasoned corrections must be blocked')
+  assert.ok(review.includes('insert into public.attendance(') && review.includes('insert into public.employee_attendance('), 'Approved events must reconcile into the existing attendance records')
 })
 check('Stage 12 front-office windows use the live tenant-scoped enquiry, notices and calendar tables', () => {
   const frontOffice = read('src/components/FrontOfficeWorkspace.tsx')
@@ -1039,13 +1057,14 @@ check('Required database safeguards and Cloudflare redirects remain in the proje
     '20261113173320_college_custom_role_profiles_and_scope_policies.sql',
     '20261113173552_college_private_permission_guards.sql',
     '20261113174054_college_approval_profile_action_alignment.sql',
-    '20261113175058_college_custom_role_high_impact_rpc_guards.sql'
+    '20261113175058_college_custom_role_high_impact_rpc_guards.sql',
+    '20261115060000_attendance_device_event_review_approval.sql'
   ]) {
     assert.ok(migrations.includes(migration), `${migration} missing`)
   }
   const timestamped = migrations.filter(name => /^202611\d{8}_.+\.sql$/.test(name))
-  assert.equal(timestamped.length, 57, 'Expected fifty-seven timestamped migrations including the report-history and student-development workflows')
-  assert.ok(read('supabase/migrations/README.md').includes('fifty-seven timestamped migration files'))
+  assert.equal(timestamped.length, 58, 'Expected fifty-eight timestamped migrations including the report-history, student-development and attendance-device review workflows')
+  assert.ok(read('supabase/migrations/README.md').includes('fifty-eight timestamped migration files'))
   assert.equal(read('public/_redirects').trim(), '/* /index.html 200')
   const envExample = read('.env.example')
   const gitignore = read('.gitignore')
