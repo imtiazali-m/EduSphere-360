@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { Building2, Download, RefreshCw } from 'lucide-react'
+import { Download, RefreshCw } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import '../styles/data-management.css'
@@ -14,18 +14,6 @@ const titles:Record<string,string>={
  'room-transfers':'Room Transfers','check-in-check-out':'Check-in & Check-out',
  'hostel-visitor-register':'Hostel Visitor Register','hostel-fees':'Hostel Fees',
  'accommodation-maintenance':'Accommodation Maintenance','occupancy-reports':'Occupancy Reports'
-}
-const descriptions:Record<string,string>={
- 'hostel-dashboard':'See occupancy, available beds, arrivals, departures and maintenance from live residence records.',
- 'hostel-buildings':'Register residence buildings, assign wardens and maintain their operating status.',
- 'room-bed-register':'Manage room capacity, room types and the individual bed inventory.',
- 'resident-allocation':'Allocate an eligible student to an available bed using a transaction that checks bed and resident conflicts.',
- 'room-transfers':'Transfer an active resident to another available bed and retain the movement history.',
- 'check-in-check-out':'Record check-in, temporary exit, return and final check-out against active residence allocations.',
- 'hostel-visitor-register':'Record visitors for resident visits and retain their check-in/check-out details.',
- 'hostel-fees':'Create accommodation charges and track paid amounts, balances and due dates. These are not automatically posted to the main fee ledger.',
- 'accommodation-maintenance':'Report, assign and resolve accommodation maintenance requests.',
- 'occupancy-reports':'Review occupancy and bed availability by building, room and resident status.'
 }
 const fmt=(v:unknown)=>v?new Date(String(v)).toLocaleDateString():'—'
 const dateTime=(v:unknown)=>v?new Date(String(v)).toLocaleString():'—'
