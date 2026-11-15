@@ -92,8 +92,8 @@ const roleItemAllow:Record<string,Partial<Record<string,string[]>>>={
     teacher:['Library Dashboard','Digital Library','Book Catalogue','Book Categories','Reading Records','Book Issue and Returns','Learning Materials','Resource Downloads','Library Reports'],
   },
   transport:{
-    student:['Transport Dashboard','Student Transport Allocation','Transport Attendance','Transport History'],
-    parent:['Transport Dashboard','Student Transport Allocation','Transport Fees','Transport Attendance','Transport History'],
+    student:['Transport Dashboard','Student Transport Allocation','Transport History'],
+    parent:['Transport Dashboard','Student Transport Allocation','Transport Fees','Transport History'],
     teacher:['Transport Dashboard','Transport Routes','Route Stops','Transport Attendance','Transport History'],
     accountant:['Transport Dashboard','Transport Fees','Transport Reports'],
   },
