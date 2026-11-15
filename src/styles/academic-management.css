@@ -121,3 +121,17 @@
 .ed360-academic-live{border-color:#e4e9e5;background:#f8faf8;color:#536157;border-radius:8px}
 .ed360-academic-live i{background:#2b7650;box-shadow:0 0 0 3px #edf5ef}
 .ed360-academic-icon-button{border-color:#dce5de;color:#205b43}
+
+/* Academic record sorting and complete-list pagination */
+.ed360-academic-sort{display:inline-flex;align-items:center;gap:7px;padding:0;border:0;background:transparent;color:inherit;font:inherit;font-size:inherit;font-weight:inherit;letter-spacing:inherit;text-align:left;cursor:pointer}
+.ed360-academic-sort span{color:#6c48b5;font-size:10px;font-weight:900}
+.ed360-academic-sort:focus-visible{outline:2px solid #8b67ce;outline-offset:3px;border-radius:3px}
+.ed360-academic-pagination{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 2px;border-bottom:1px solid #edf1f6;color:#687c91;font-size:9px}
+.ed360-academic-pagination>span b{color:#233f5a}
+.ed360-academic-pagination>div{display:flex;align-items:center;gap:9px}
+.ed360-academic-pagination>div>span{color:#536a81;font-size:8px;font-weight:800;white-space:nowrap}
+.ed360-academic-pagination button{min-height:29px;padding:0 10px;border:1px solid #dce5ef;border-radius:7px;background:#fff;color:#405e7c;font-size:8px;font-weight:800;cursor:pointer}
+.ed360-academic-pagination button:disabled{opacity:.45;cursor:not-allowed}
+.ed360-academic-pagination button:not(:disabled):hover{border-color:#a8c7e9;background:#f6f9ff}
+@media(max-width:540px){.ed360-academic-pagination{align-items:flex-start;flex-direction:column}.ed360-academic-pagination>div{width:100%;justify-content:space-between}}
+@media print{.ed360-academic-pagination{display:none!important}}
