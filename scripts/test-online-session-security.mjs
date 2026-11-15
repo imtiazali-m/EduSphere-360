@@ -54,11 +54,6 @@ check('Browser cannot write call records directly or read other institutions', (
   const attendanceFix = read('supabase/migrations/20261115110000_online_session_attendance_reconnect_fix.sql')
   assert.ok(attendanceFix.includes('joined_at=case'))
   assert.ok(attendanceFix.includes('attendance_minutes=attendance_minutes + case'))
-  const grants = read('supabase/migrations/20261115100000_native_online_session_public_grants_lockdown.sql')
-  assert.ok(grants.includes('from public, anon'))
-  const attendanceFix = read('supabase/migrations/20261115110000_online_session_attendance_reconnect_fix.sql')
-  assert.ok(attendanceFix.includes("joined_at=case"))
-  assert.ok(attendanceFix.includes('attendance_minutes=attendance_minutes + case'))
 })
 
 check('WebRTC room tokens are issued server-side and expire quickly', () => {
