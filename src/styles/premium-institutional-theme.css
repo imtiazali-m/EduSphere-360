@@ -892,3 +892,114 @@
   .pro-window-panel .ed360-attendance-hero { align-items:flex-start;flex-direction:column; }
   .pro-window-panel .ed360-attendance-refresh { width:100%; }
 }
+
+
+/* Examinations: task-selected page title and one prominent refresh action. */
+.pro-window-panel .ed360-assess-hero {
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding:4px 2px 16px;margin:0 0 18px;border:0;border-bottom:1px solid var(--es-line);
+  border-radius:0;background:transparent;box-shadow:none;
+}
+.pro-window-panel .ed360-assess-hero>div>span {
+  color:var(--es-muted);font-size:10px;font-weight:850;letter-spacing:1.1px;line-height:1.5;
+}
+.pro-window-panel .ed360-assess-hero h1 {
+  margin:5px 0 0;color:var(--es-ink);font-size:clamp(26px,2.3vw,32px);
+  line-height:1.18;font-weight:850;letter-spacing:-.7px;
+}
+.pro-window-panel .ed360-assess-refresh {
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:46px;
+  padding:0 20px;color:#fff;background:var(--es-primary-600);
+  border:1px solid var(--es-primary-600);border-radius:12px;
+  box-shadow:0 6px 16px rgba(96,53,181,.2);font-size:13px;font-weight:850;cursor:pointer;
+}
+.pro-window-panel .ed360-assess-refresh:hover { color:#fff;background:var(--es-primary-700);border-color:var(--es-primary-700); }
+.pro-window-panel .ed360-assess-refresh:disabled { opacity:.6;cursor:wait; }
+.pro-window-panel .ed360-assess-tabs {
+  display:flex;flex-wrap:wrap;gap:7px;padding:7px;border:1px solid var(--es-line);
+  border-radius:13px;background:#fff;box-shadow:var(--es-shadow-sm);
+}
+.pro-window-panel .ed360-assess-tabs button {
+  min-height:40px;padding:0 13px;color:var(--es-muted);background:transparent;
+  border:0;border-radius:9px;font-size:11px;font-weight:800;
+}
+.pro-window-panel .ed360-assess-tabs button.active {
+  color:var(--es-primary-700);background:var(--es-primary-050);
+  box-shadow:inset 0 0 0 1px #ded3ef;
+}
+.pro-window-panel .ed360-assess-panel {
+  color:var(--es-ink);background:#fff;border:1px solid var(--es-line);
+  border-radius:16px;box-shadow:var(--es-shadow-sm);
+}
+.pro-window-panel .ed360-assess-panel-head h3 { color:var(--es-brand-900);font-size:17px;font-weight:850; }
+.pro-window-panel .ed360-assess-panel-head p { color:var(--es-muted);font-size:11px;line-height:1.55; }
+.pro-window-panel .ed360-assess-table-wrap { border:1px solid var(--es-line);border-radius:12px; }
+.pro-window-panel .ed360-assess-table-wrap th { color:#5d536e;background:#f2eef8;border-bottom:1px solid var(--es-line); }
+.pro-window-panel .ed360-assess-table-wrap td { color:#332d3e;border-bottom:1px solid var(--es-line-soft); }
+
+/* Finance pages: each finance window is the page title, not a duplicate context card. */
+.pro-window-panel .fin-page-heading {
+  align-items:center;gap:16px;padding:4px 2px 16px;margin:0 0 18px;
+  color:var(--es-ink);background:transparent;border:0;border-bottom:1px solid var(--es-line);
+  border-radius:0;box-shadow:none;
+}
+.pro-window-panel .fin-page-heading>div>span {
+  color:var(--es-muted);font-size:10px;font-weight:850;letter-spacing:1.1px;line-height:1.5;
+}
+.pro-window-panel .fin-page-heading h1 {
+  margin:5px 0 0;color:var(--es-ink);font-size:clamp(26px,2.3vw,32px);
+  line-height:1.18;font-weight:850;letter-spacing:-.7px;
+}
+.pro-window-panel .fin-top-refresh {
+  min-height:46px;padding:0 20px;color:#fff;background:var(--es-primary-600);
+  border:1px solid var(--es-primary-600);border-radius:12px;
+  box-shadow:0 6px 16px rgba(96,53,181,.2);font-size:13px;font-weight:850;
+}
+.pro-window-panel .fin-top-refresh:hover { color:#fff;background:var(--es-primary-700);border-color:var(--es-primary-700); }
+.pro-window-panel .fin-top-refresh:disabled { opacity:.6;cursor:wait; }
+.pro-window-panel .fin-window-nav {
+  display:flex;flex-wrap:wrap;gap:7px;padding:7px;border:1px solid var(--es-line);
+  border-radius:13px;background:#fff;box-shadow:var(--es-shadow-sm);
+}
+.pro-window-panel .fin-window-nav button {
+  min-height:40px;padding:0 13px;color:var(--es-muted);background:transparent;
+  border:0;border-radius:9px;font-size:11px;font-weight:800;
+}
+.pro-window-panel .fin-window-nav button.active {
+  color:var(--es-primary-700);background:var(--es-primary-050);
+  box-shadow:inset 0 0 0 1px #ded3ef;
+}
+.pro-window-panel .fin-export-bar {
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 12px;
+  border:1px solid var(--es-line);border-radius:12px;background:#fff;
+}
+.pro-window-panel .fin-export-bar>span { color:var(--es-muted);font-size:11px;font-weight:800;margin-right:auto; }
+.pro-window-panel .fin-panel {
+  color:var(--es-ink);background:#fff;border:1px solid var(--es-line);
+  border-radius:16px;box-shadow:var(--es-shadow-sm);
+}
+.pro-window-panel .fin-panel>header h2 { color:var(--es-brand-900);font-size:17px;font-weight:850; }
+.pro-window-panel .fin-panel>header p { color:var(--es-muted);font-size:11px;line-height:1.55; }
+.pro-window-panel .fin-button.primary {
+  color:#fff;background:var(--es-primary-600);border:1px solid var(--es-primary-600);
+  border-radius:10px;font-weight:850;
+}
+.pro-window-panel .fin-button.primary:hover { color:#fff;background:var(--es-primary-700); }
+.pro-window-panel .fin-button:not(.primary):not(.danger) {
+  color:#514866;background:#fff;border-color:var(--es-line);border-radius:9px;
+}
+.pro-window-panel .fin-panel th { color:#5d536e;background:#f2eef8;border-bottom:1px solid var(--es-line); }
+.pro-window-panel .fin-panel td { color:#332d3e;border-bottom:1px solid var(--es-line-soft); }
+.pro-window-panel .fin-select-card { color:var(--es-ink);border-color:var(--es-line);border-radius:11px; }
+.pro-window-panel .fin-select-card.selected { border-color:#cfc1e5;background:var(--es-primary-050);box-shadow:inset 3px 0 var(--es-primary-600); }
+.pro-window-panel .fin-journal-lines { border-color:var(--es-line);background:#fbfaff; }
+.pro-window-panel .fin-balance-check { background:#f3eff9;color:#50465f; }
+.pro-window-panel .fin-balance-check b { color:var(--es-brand-900); }
+@media(max-width:700px) {
+  .pro-window-panel .ed360-assess-hero,.pro-window-panel .fin-page-heading {
+    align-items:flex-start;flex-direction:column;
+  }
+  .pro-window-panel .ed360-assess-refresh,.pro-window-panel .fin-top-refresh { width:100%; }
+  .pro-window-panel .fin-export-bar { align-items:stretch; }
+  .pro-window-panel .fin-export-bar button { flex:1 1 calc(50% - 8px); }
+}
