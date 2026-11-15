@@ -3,6 +3,7 @@ import { Activity, CalendarCheck, Check, Download, Fingerprint, RefreshCw, Searc
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { downloadCsv } from '../lib/csv'
+import { exportDocx, exportXlsx, printOfficeReport, type OfficeColumn } from '../lib/officeExport'
 import type { RecordRow } from '../lib/types'
 import '../styles/attendance-enhancements.css'
 
@@ -164,15 +165,27 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
   finally{setSaving(false)}
  }
 
- function exportRegister(){
+ function attendanceExportData(){
   const rows=people.map(p=>({
    identifier:p.admission_no??p.employee_no??'',name:p.full_name,class_name:p.class_name??(population==='staff'?'Staff':''),
    date,period,section:p.section_name??'',guardian:p.guardian_name??'',status:effectiveMarks[p.id],notes:notes[p.id]??''
   }))
-  downloadCsv('edusphere-attendance-'+population+'-'+date+'.csv',rows,[
+  const columns:OfficeColumn[]=[
    {key:'identifier',label:'ID'},{key:'name',label:'Name'},{key:'guardian',label:'Father / Guardian'},{key:'class_name',label:'Class / Department'},{key:'section',label:'Section'},
    {key:'date',label:'Date'},{key:'period',label:'Period'},{key:'status',label:'Status'},{key:'notes',label:'Notes'}
-  ])
+  ]
+  return {rows,columns,title:(population==='students'?'Student':population==='teachers'?'Teacher':'Staff')+' Attendance Register'}
+ }
+ function exportRegister(format:'csv'|'xlsx'|'docx'|'print'='csv'){
+  const {rows,columns,title}=attendanceExportData()
+  const filename='edusphere-attendance-'+population+'-'+date
+  if(format==='csv')downloadCsv(filename+'.csv',rows,columns)
+  else if(format==='xlsx')exportXlsx(filename+'.xlsx',title,rows,columns)
+  else if(format==='docx')exportDocx(filename+'.docx',title,rows,columns)
+  else {
+   try{printOfficeReport(title+' · '+date,rows,columns,user?.institutionName??'EduSphere 360')}
+   catch(error){onToast(error instanceof Error?error.message:'Print view could not be opened.',true)}
+  }
  }
 
  async function createDevice(event:FormEvent){
@@ -229,7 +242,12 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
       <div className="attendance-time-fields"><input aria-label="Arrival or check-in time" type="time" value={arrivalTimes[person.id]??''} onChange={e=>setArrivalTimes(v=>({...v,[person.id]:e.target.value}))} disabled={readOnly} title="Arrival / check-in"/><input aria-label="Departure or check-out time" type="time" value={departureTimes[person.id]??''} onChange={e=>setDepartureTimes(v=>({...v,[person.id]:e.target.value}))} disabled={readOnly} title="Departure / check-out"/>{population==='students'&&<input aria-label="Early departure minutes" type="number" min="0" max="1440" value={earlyMinutes[person.id]??'0'} onChange={e=>setEarlyMinutes(v=>({...v,[person.id]:e.target.value}))} disabled={readOnly} placeholder="Early min"/>}<input className="attendance-note-input" value={notes[person.id]??''} onChange={e=>setNotes(current=>({...current,[person.id]:e.target.value}))} disabled={readOnly} placeholder="Reason / note"/></div>
      </div>)}
     </div>}
-    <div className="ed360-attendance-board-footer"><div><span className="attendance-legend"><i className="mark-p">P</i> Present</span><span className="attendance-legend"><i className="mark-a">A</i> Absent</span><span className="attendance-legend"><i className="mark-leave">LV</i> Approved leave</span><span className="attendance-legend"><i className="mark-pending">NP</i> Leave not approved</span></div><div>{lastSaved&&<span className="ed360-last-saved"><Check size={13}/> Last saved {lastSaved}</span>}<button type="button" className="button button-outline" onClick={exportRegister}><Download size={15}/> Export register</button>{!readOnly&&<button type="button" className="button button-primary" disabled={saving||loading||!people.length||(population==='students'&&!canManageStudents)||(population==='staff'&&!canManageStaff)} onClick={()=>void saveRegister()}>{saving?'Saving whole register…':'Save whole register'}</button>}</div></div>
+    <div className="ed360-attendance-board-footer"><div><span className="attendance-legend"><i className="mark-p">P</i> Present</span><span className="attendance-legend"><i className="mark-a">A</i> Absent</span><span className="attendance-legend"><i className="mark-leave">LV</i> Approved leave</span><span className="attendance-legend"><i className="mark-pending">NP</i> Leave not approved</span></div><div>{lastSaved&&<span className="ed360-last-saved"><Check size={13}/> Last saved {lastSaved}</span>}<div className="ed360-attendance-export-actions" aria-label="Export attendance register">
+    <button type="button" className="button button-outline" onClick={()=>exportRegister('csv')}><Download size={14}/> CSV</button>
+    <button type="button" className="button button-outline" onClick={()=>exportRegister('xlsx')}>Excel</button>
+    <button type="button" className="button button-outline" onClick={()=>exportRegister('docx')}>Word</button>
+    <button type="button" className="button button-outline" onClick={()=>exportRegister('print')}><Printer size={14}/> Print / PDF</button>
+   </div>{!readOnly&&<button type="button" className="button button-primary" disabled={saving||loading||!people.length||(population==='students'&&!canManageStudents)||(population==='staff'&&!canManageStaff)} onClick={()=>void saveRegister()}>{saving?'Saving whole register…':'Save whole register'}</button>}</div></div>
    </section>
    <p className="ed360-attendance-method-note">Unmarked people remain pending and must be assigned a status before the register can be saved. Record arrival/check-in and departure/check-out times for late-arrival and early-departure reporting. No person is silently marked present. Legacy Late and Excused entries remain readable in history; new registers do not offer Late marking.</p>
   </>}
