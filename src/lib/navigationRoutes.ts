@@ -384,7 +384,21 @@ function dedicatedRoute(groupKey: string, itemKey: string): string | undefined {
     return view && view !== 'unavailable' ? `employees:${view}` : undefined
   }
   if (groupKey === 'attendance') {
-    if (itemKey === 'leave-applications') return 'employees:leave'
+    const careRoutes:Record<string,string> = {
+      'leave-management':'care:leave-applications',
+      'leave-applications':'care:leave-applications',
+      'leave-review-approvals':'care:leave-approvals',
+      'leave-balances':'care:leave-balances',
+      'leave-reports':'care:leave-reports',
+      'attendance-reports':'care:reports',
+      'student-attendance-reports':'care:reports-students',
+      'teacher-attendance-reports':'care:reports-teachers',
+      'staff-attendance-reports':'care:reports-staff',
+      'student-discipline':'care:discipline',
+      'student-counselling-wellbeing':'care:counselling',
+      'health-emergency-records':'care:health',
+    }
+    if (careRoutes[itemKey]) return careRoutes[itemKey]
     const view = attendanceViews[itemKey]
     return view ? `attendance:${view}` : undefined
   }
