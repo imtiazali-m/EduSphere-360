@@ -32,10 +32,12 @@ Two additional remote-applied migration sources were recovered from the existing
 
 There is also a source file named `20261114040000_college_self_service_privacy_bounds.sql` on that branch, while Supabase reports a version `20261114034316` with the matching migration name. The timestamp prefix differs, so this file is not counted as a match and has not been renamed or treated as reconciled.
 
-The two local-only migrations are:
+The two local-only migration prefixes are:
 
 - `20261114194500_reports_run_history_and_student_sections.sql`
 - `20261114200000_student_development_skills_competencies_activities.sql`
+
+Read-only live-schema inspection confirms that `institution_report_run_history`, `students.section_name`, `student_skill_records`, `student_cocurricular_activities`, `student_competency_records`, and `student_progress_history` already exist, and RLS is enabled on the relevant tables. Their presence does not prove these exact local migration files were applied; do not replay them or infer ledger status from object presence.
 
 ## Source recovery performed in PR #85
 
