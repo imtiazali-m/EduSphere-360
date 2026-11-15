@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { CheckCircle2, Printer, Receipt, RefreshCw, Settings2 } from 'lucide-react'
+import { CheckCircle2, Printer, RefreshCw, Settings2 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import '../styles/data-management.css'
@@ -7,7 +7,6 @@ import '../styles/data-management.css'
 type Row=Record<string,any>&{id:string}
 type ReceiptRow={id:string;institution_id:string;payment_id:string;receipt_number:string;template_key:string;payment_snapshot:Record<string,unknown>;issued_at:string;issued_by:string}
 const titles:Record<string,string>={'receipt-templates':'Receipt Templates','receipt-numbering':'Receipt Numbering','bulk-receipt-generation':'Bulk Receipt Generation','receipt-verification':'Receipt Verification'}
-const labels:Record<string,string>={'receipt-templates':'Manage print layouts and institution receipt text.','receipt-numbering':'Configure the institution prefix and next sequence number.','bulk-receipt-generation':'Issue and print receipts for selected recorded fee payments.','receipt-verification':'Verify a receipt number against the immutable issuance ledger.'}
 const money=(v:unknown)=>'PKR '+Number(v??0).toLocaleString(undefined,{maximumFractionDigits:2})
 const val=(row:Record<string,unknown>,keys:string[],fallback='—')=>{for(const k of keys){const v=row[k];if(v!==undefined&&v!==null&&String(v)!=='')return String(v)}return fallback}
 const when=(v:unknown)=>v?new Date(String(v)).toLocaleString():'—'
