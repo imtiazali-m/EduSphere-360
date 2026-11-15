@@ -1,36 +1,49 @@
-# Supabase migration history reconciliation — 11 November 2026
+# Supabase migration history reconciliation — 15 November 2026
 
-## Finding
+## Current verified state
 
-The connected Supabase project records 30 applied timestamped migrations. The repository also contains 30 timestamped migration files, but one employee migration had a mismatching local version prefix:
+A read-only comparison of the connected Supabase project's migration versions with the repository's timestamped SQL filenames reports:
 
-- Remote applied version: `20261109085154` — `faculty_employee_management`.
-- Previous repository filename: `20261109083133_faculty_employee_management.sql`.
+| Measure | Count |
+|---|---:|
+| Applied migration versions reported by Supabase | 89 |
+| Timestamped migration files in this branch | 79 |
+| Versions present in both | 77 |
+| Remote applied versions without a local source file | 12 |
+| Local timestamped migrations not reported as applied | 2 |
 
-The migration's original integration commit states that the faculty/employee workspace was integrated using the already-applied institution-scoped migration, rather than replaying it.
+The 12 remote versions still missing from this branch are:
 
-## Source-only correction
+- `20261114032847`
+- `20261114033406`
+- `20261114034316`
+- `20261114053650`
+- `20261114061138`
+- `20261114064712`
+- `20261114130438`
+- `20261114131133`
+- `20261114131223`
+- `20261114133303`
+- `20261114135019`
+- `20261114140016`
 
-The migration file was renamed to:
+The two local-only migrations are:
 
-    supabase/migrations/20261109085154_faculty_employee_management.sql
+- `20261114194500_reports_run_history_and_student_sections.sql`
+- `20261114200000_student_development_skills_competencies_activities.sql`
 
-The SQL body was copied byte-for-byte; no SQL statement, schema object, policy, function or database record was changed. The project verifier's three references were updated to the corrected filename.
+## Source recovery performed in PR #85
 
-## Verification
+Twenty-two migration files whose version prefixes were present in the remote applied history were recovered from the existing `feat/complete-98-unavailable-workspaces` Git branch and copied without modification into this review branch.
 
-- The local migration directory has 30 timestamped migration files.
-- The linked Supabase project reports 30 applied migration versions.
-- Every remote migration version now has a matching local filename prefix.
-- No local timestamped migration prefix remains unapplied remotely.
-- The legacy numbered migrations remain preserved and must not be replayed blindly.
+This is a repository-source recovery only. The recovered SQL bodies were not replayed. Supabase does not expose the original migration-file bodies through the read-only migration-history listing, so byte-for-byte equality with the SQL originally applied cannot be independently asserted.
 
-Several older remote migration display names differ from their local filename suffixes, but their version prefixes match. This reconciliation intentionally changes only the one incorrect version prefix; it does not rename historical migrations whose version identifiers already match.
+## Release and database safety
 
-## Release safety
+- No Supabase migration was applied, repaired, marked as applied, reverted or replayed during this reconciliation.
+- No table data, function, policy, grant or schema object was changed.
+- Do not run `supabase db push` or replay the historical files while the 12 remote source files remain missing.
+- Review the two local-only migrations against the live schema before deciding whether either should be applied.
+- Recover the remaining 12 original SQL files from their authoritative source, or plan a separately reviewed schema-baseline process. Do not fabricate historical migration bodies or mark versions as applied merely to make the lists match.
 
-This is a Git repository metadata correction only. No Supabase migration was applied, repaired, marked as applied, reverted or replayed. Before any future database deployment, inspect the current remote migration list and run a remote dry-run. If it proposes any of the historical migrations as new, stop and reconcile the history instead of applying them.
-
-## Pull request
-
-This correction is proposed in PR #20. It must pass the project verifier and production build before merge.
+This document is evidence of the current partial reconciliation, not a statement that migration history is fully consistent.
