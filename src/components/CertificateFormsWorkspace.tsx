@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { ClipboardList, FilePlus2, FileText, RefreshCw, Send, ShieldCheck } from 'lucide-react'
+import { FilePlus2, FileText, RefreshCw, Send, ShieldCheck } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import '../styles/data-management.css'
