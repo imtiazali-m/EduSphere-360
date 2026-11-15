@@ -371,7 +371,27 @@ const displayName = (row: RowData): string => {
   const extra = row.admission_no ? ' · ' + row.admission_no : row.employee_no ? ' · ' + row.employee_no : ''
   return String(name ?? 'Unnamed record') + tail + extra
 }
-const normalDate = () => new Date().toISOString().slice(0, 10)
+const normalDate = () => {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  return year + '-' + month + '-' + day
+}
+
+function timetableConflictReason(candidate:RowData,existing:RowData):string|null {
+  if(existing.id&&candidate.id&&existing.id===candidate.id)return null
+  const candidateSession=String(candidate.academic_session_id??'')
+  const existingSession=String(existing.academic_session_id??'')
+  if(candidateSession&&existingSession&&candidateSession!==existingSession)return null
+  if(String(existing.start_time??'')>=String(candidate.end_time??'')||String(existing.end_time??'')<=String(candidate.start_time??''))return null
+  if(existing.class_name===candidate.class_name)return 'class'
+  const teacher=String(candidate.teacher_name??'').trim().toLowerCase()
+  if(teacher&&String(existing.teacher_name??'').trim().toLowerCase()===teacher)return 'teacher'
+  const room=String(candidate.room??'').trim().toLowerCase()
+  if(room&&String(existing.room??'').trim().toLowerCase()===room)return 'room'
+  return null
+}
 
 interface Props { initialWindow?: string; onToast: (message: string, error?: boolean) => void }
 
@@ -555,6 +575,48 @@ export function AcademicManagementWorkspace({ initialWindow = 'academic-sessions
     try {
       const payload = buildPayload()
       payload.institution_id = user.institutionId
+
+      const dateRanges:[string,string,string,string][]=[
+        ['start_date','end_date','Start date','End date'],
+        ['effective_from','effective_to','Effective from','Effective until'],
+        ['planned_start','planned_end','Planned start','Planned completion'],
+        ['available_from','available_until','Available from','Available until'],
+      ]
+      for(const [startKey,endKey,startLabel,endLabel] of dateRanges){
+        const start=String(payload[startKey]??'')
+        const end=String(payload[endKey]??'')
+        if(start&&end&&end<start)throw new Error(`${endLabel} cannot be earlier than ${startLabel.toLowerCase()}.`)
+      }
+
+      const nonNegativeFields:{[key:string]:string}={
+        capacity:'Capacity',credit_hours:'Credit hours',weekly_periods:'Weekly periods',
+        duration_minutes:'Duration',term_order:'Term sequence',sequence_no:'Unit sequence',
+        unit_order:'Learning unit order',points:'Maximum marks',marks_obtained:'Marks awarded',
+        completion_percent:'Completion percentage',assessment_score:'Assessment score',
+      }
+      for(const [key,fieldLabel] of Object.entries(nonNegativeFields)){
+        if(payload[key]!==undefined&&payload[key]!==null&&Number(payload[key])<0)throw new Error(fieldLabel+' cannot be negative.')
+      }
+      for(const key of ['completion_percent']){
+        if(payload[key]!==undefined&&payload[key]!==null&&Number(payload[key])>100)throw new Error('Completion percentage must be between 0 and 100.')
+      }
+      if(activeMode.table==='assignment_submissions'&&payload.marks_obtained!==undefined){
+        const assignment=resolveOption('assignments',payload.assignment_id)
+        if(assignment?.points!==undefined&&Number(payload.marks_obtained)>Number(assignment.points))throw new Error('Marks awarded cannot exceed the assignment maximum of '+assignment.points+'.')
+      }
+      if(activeMode.table==='timetable_entries'){
+        if(String(payload.end_time??'')<=String(payload.start_time??''))throw new Error('The period end time must be later than its start time.')
+        let conflictQuery=supabase.from('timetable_entries').select('id,class_name,teacher_name,room,academic_session_id,start_time,end_time').eq('institution_id',user.institutionId).ilike('weekday',String(payload.weekday)).lt('start_time',String(payload.end_time)).gt('end_time',String(payload.start_time))
+        if(payload.academic_session_id)conflictQuery=conflictQuery.or(`academic_session_id.eq.${String(payload.academic_session_id)},academic_session_id.is.null`)
+        const {data:existingSlots,error:conflictLoadError}=await conflictQuery.limit(1000)
+        if(conflictLoadError)throw conflictLoadError
+        const conflict=(existingSlots??[]).find(slot=>timetableConflictReason(payload,slot as RowData))
+        if(conflict){
+          const reason=timetableConflictReason(payload,conflict as RowData)
+          throw new Error(`Timetable conflict: this ${reason} is already scheduled during that period in the selected academic session.`)
+        }
+      }
+
       if (activeMode.table === 'lesson_plans' || activeMode.table === 'learning_courses' || activeMode.table === 'learning_course_units' || activeMode.table === 'classroom_activities' || activeMode.table === 'academic_calendar_events') {
         if (!editing) payload.created_by = user.id
       }
