@@ -69,6 +69,7 @@ import { BackupDataWorkspace } from './BackupDataWorkspace'
 import { IntegrationManagementWorkspace } from './IntegrationManagementWorkspace'
 import { BehaviourSkillsWorkspace } from './BehaviourSkillsWorkspace'
 import { NativeCallingWorkspace } from './NativeCallingWorkspace'
+import '../styles/premium-institutional-theme.css'
 
 interface Props { onToast: (message: string, error?: boolean) => void }
 type Dataset = Record<string, RecordRow[]>
