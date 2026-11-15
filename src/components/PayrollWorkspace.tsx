@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase'
 import { listRecords } from '../lib/data'
 import { userFacingError } from '../lib/userErrors'
 import { downloadCsv } from '../lib/csv'
+import { exportDocx, exportXlsx, printOfficeReport, type OfficeColumn } from '../lib/officeExport'
 import type { RecordRow } from '../lib/types'
 import '../styles/payroll-workspace.css'
 
@@ -329,16 +330,16 @@ export function PayrollWorkspace({initialWindow,onToast}:Props){
     setSaving(false);await load(true)
   }
 
-  function exportItems(rows:PayrollItem[]){
-    if(!rows.length){onToast('There are no payslip rows to export.',true);return}
-    const data=rows.map(item=>({employee:employees.find(row=>row.id===item.teacher_id)?.full_name??'Employee',employee_no:employees.find(row=>row.id===item.teacher_id)?.employee_no??'',period:runs.find(run=>run.id===item.payroll_run_id)?.period_start??'',base_salary:item.base_salary,allowances:item.allowances,deductions:item.deductions,advance_recovery:item.advance_recovery,gross_pay:item.gross_pay,net_pay:item.net_pay,payment_status:item.payment_status,payslip_reference:item.payslip_reference??''}))
-    downloadCsv('edusphere-payslips-'+today()+'.csv',data,[
-      {key:'employee',label:'Employee'},{key:'employee_no',label:'Employee ID'},{key:'period',label:'Period'},
-      {key:'base_salary',label:'Base salary (PKR)'},{key:'allowances',label:'Allowances (PKR)'},{key:'deductions',label:'Deductions (PKR)'},
-      {key:'advance_recovery',label:'Advance recovery (PKR)'},{key:'gross_pay',label:'Gross pay (PKR)'},{key:'net_pay',label:'Net pay (PKR)'},
-      {key:'payment_status',label:'Payment status'},{key:'payslip_reference',label:'Payslip reference'},
-    ])
-  }
+   function exportItems(rows:PayrollItem[],format:'csv'|'xlsx'|'docx'|'print'){
+     if(!rows.length){onToast('There are no payslip rows to export.',true);return}
+     const data=rows.map(item=>({employee:employees.find(row=>row.id===item.teacher_id)?.full_name??'Employee',employee_no:employees.find(row=>row.id===item.teacher_id)?.employee_no??'',period:runs.find(run=>run.id===item.payroll_run_id)?.period_start??'',base_salary:item.base_salary,allowances:item.allowances,deductions:item.deductions,advance_recovery:item.advance_recovery,gross_pay:item.gross_pay,net_pay:item.net_pay,payment_status:item.payment_status,payslip_reference:item.payslip_reference??''}))
+     const columns:OfficeColumn[]=[{key:'employee',label:'Employee'},{key:'employee_no',label:'Employee ID'},{key:'period',label:'Period'},{key:'base_salary',label:'Base salary (PKR)'},{key:'allowances',label:'Allowances (PKR)'},{key:'deductions',label:'Deductions (PKR)'},{key:'advance_recovery',label:'Advance recovery (PKR)'},{key:'gross_pay',label:'Gross pay (PKR)'},{key:'net_pay',label:'Net pay (PKR)'},{key:'payment_status',label:'Payment status'},{key:'payslip_reference',label:'Payslip reference'}]
+     const title=financeRole?'Employee Payslip Register':'My Payslips',filename='edusphere-payslips-'+today()
+     if(format==='csv')downloadCsv(filename+'.csv',data,columns)
+     else if(format==='xlsx')exportXlsx(filename+'.xlsx',title,data,columns)
+     else if(format==='docx')exportDocx(filename+'.docx',title,data,columns)
+     else{try{printOfficeReport(title,data,columns,user?.institutionName??'Institution name not set')}catch(error){onToast(error instanceof Error?error.message:'Print view could not be opened.',true)}}
+   }
 
   const tabs:Tab[]=financeRole?['overview','salary','components','adjustments','runs','payslips']:user?.role==='teacher'?['overview','salary','payslips']:['overview','payslips']
   const activeSalaryTotal=activeProfiles.reduce((sum,p)=>{const recurring=profileRecurringTotals(p.id);return sum+moneyValue(p.base_salary)+moneyValue(p.monthly_allowances)+recurring.allowances-moneyValue(p.monthly_deductions)-recurring.deductions},0)
@@ -402,7 +403,7 @@ export function PayrollWorkspace({initialWindow,onToast}:Props){
     </section>
     if(tab==='runs')return <div className="payroll-split"><section className="payroll-panel"><header><div><h2>Payroll runs</h2><p>Period-based payroll snapshots. A generated run never silently changes when a salary profile is edited later.</p></div>{financeRole&&<button className="payroll-button primary" onClick={()=>setRunForm(true)}><Plus size={14}/> Generate run</button>}</header>{runs.length?<div className="payroll-runs-list">{runs.map(run=><button type="button" key={run.id} className={'payroll-run-card '+(selectedRun===run.id?'selected':'')} onClick={()=>setSelectedRun(run.id)}><span><b>{fmtDate(run.period_start)} – {fmtDate(run.period_end)}</b><small>Pay date: {fmtDate(run.pay_date)}</small></span><PayrollBadge value={run.status}/></button>)}</div>:<div className="payroll-empty">No payroll runs yet. Add salary profiles, then generate the first period.</div>}</section><section className="payroll-panel"><header><div><h2>Run detail</h2><p>{selectedRunRow?fmtDate(selectedRunRow.period_start)+' – '+fmtDate(selectedRunRow.period_end):'Select a payroll run'}</p></div>{selectedRunRow&&<div className="payroll-header-total"><small>Net payroll</small><strong>{cash(totalPayroll)}</strong></div>}</header>{selectedRunRow?<><div className="payroll-run-summary"><PayrollBadge value={selectedRunRow.status}/><span>{selectedItems.length} employee entries</span><span>{unpaidSelected} unpaid / held</span></div>{canApprove&&['draft','review'].includes(selectedRunRow.status)&&<button className="payroll-button primary" onClick={()=>void approveRun()} disabled={saving}>Approve payroll run</button>}<div className="payroll-table-wrap"><table><thead><tr><th>Employee</th><th>Base</th><th>Gross</th><th>Net</th><th>Status</th>{financeRole&&<th>Action</th>}</tr></thead><tbody>{selectedItems.map(item=>{const employee=employees.find(e=>e.id===item.teacher_id);return <tr key={item.id}><td><b>{String(employee?.full_name??'Employee')}</b><small>{String(employee?.employee_no??'')}</small></td><td>{cash(item.base_salary)}</td><td>{cash(item.gross_pay)}</td><td><strong>{cash(item.net_pay)}</strong></td><td><PayrollBadge value={item.payment_status}/></td>{financeRole&&<td>{selectedRunRow.status==='approved'&&item.payment_status!=='paid'&&<button className="payroll-button" onClick={()=>void markItemPaid(item)} disabled={saving}>Mark paid</button>}</td>}</tr>})}</tbody></table></div>{selectedItems.length===0&&<div className="payroll-empty">This payroll run has no employee entries.</div>}</>:<div className="payroll-empty">Choose a payroll run to inspect its employees, amounts and payment states.</div>}</section></div>
     if(tab==='payslips')return <section className="payroll-panel">
-      <header><div><h2>{financeRole?'Employee payslip register':'My payslips'}</h2><p>{financeRole?'Search payroll item snapshots and export the current visible records.':'Only payroll entries linked to your signed-in employee profile are shown.'}</p></div><button className="payroll-button" onClick={()=>exportItems(orderedPayslips)}><Download size={14}/> Export CSV</button></header>
+       <header><div><h2>{financeRole?'Employee payslip register':'My payslips'}</h2><p>{financeRole?'Search payroll item snapshots and export the current visible records.':'Only payroll entries linked to your signed-in employee profile are shown.'}</p></div><div className="payroll-inline-actions"><button className="payroll-button" onClick={()=>exportItems(orderedPayslips,'csv')}><Download size={14}/> CSV</button><button className="payroll-button" onClick={()=>exportItems(orderedPayslips,'xlsx')}>Excel</button><button className="payroll-button" onClick={()=>exportItems(orderedPayslips,'docx')}>Word</button><button className="payroll-button" onClick={()=>exportItems(orderedPayslips,'print')}>Print / PDF</button></div></header>
       <label className="payroll-search">Search payslips<input value={search} onChange={e=>{setSearch(e.target.value);setPayslipPage(1)}} placeholder="Employee, ID, period or payslip reference…"/></label>
       {orderedPayslips.length?<><div className="payroll-table-wrap"><table><thead><tr>
         {payrollSortHeader('Employee','employee',payslipSortKey,payslipSortDirection,()=>togglePayslipSort('employee'))}
