@@ -55,6 +55,9 @@ jobs:
       - name: Test signed attendance device requests
         run: npm run test:device-signature
 
+      - name: Test authorised attendance event review
+        run: npm run test:device-review
+
       - name: Test finance calculations
         run: npm run test:finance
 
