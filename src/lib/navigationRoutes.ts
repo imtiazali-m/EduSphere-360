@@ -439,6 +439,7 @@ function dedicatedRoute(groupKey: string, itemKey: string): string | undefined {
  */
 export function getNavigationRoute(groupKey: string, itemLabel: string, role?: string): string {
   const itemKey = slug(itemLabel)
+  if (groupKey === 'communication' && itemKey === 'internet-calling') return 'voice:openai'
   if (groupKey === 'dashboard' && itemKey === 'dashboard') return 'overview'
   if (groupKey === 'people-hr') {
     const destinations: Record<string,string> = {
