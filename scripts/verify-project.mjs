@@ -69,6 +69,21 @@ check('Dedicated operational submenus dispatch to institution-scoped workspace c
   assert.ok(operations.includes('approve_facility_room_reservation'), 'Room reservation approval must use the conflict-checking database RPC')
   assert.ok(operations.includes('Generate draft certificates'), 'Bulk certificates must remain drafts until authorised review')
 })
+check('Leave applications, approvals, balances and reporting have separate role-scoped workflows', () => {
+  const care = read('src/components/Stage7CareWorkspace.tsx')
+  const routes = read('src/lib/navigationRoutes.ts')
+  const access = read('src/lib/navigationCatalog.ts')
+  for (const view of ['leave-applications','leave-approvals','leave-balances','leave-reports']) {
+    assert.ok(care.includes("activeWindow===''" + view + "''"), 'Missing leave workspace view: ' + view)
+    assert.ok(routes.includes("'"+view+"':'care:"+view+"'"), 'Missing leave route: ' + view)
+  }
+  assert.ok(care.includes("user?.role==='teacher'?employees.filter(employee=>employee.user_id===user.id):employees"), 'Teachers must apply only for their own employee profile')
+  assert.ok(care.includes("if(!supabase||!user||!isAdmin)return"), 'Only owners and administrators can review leave')
+  assert.ok(care.includes("if(!supabase||!user||!isAdmin||!balancePerson)return"), 'Only owners and administrators can change leave entitlements')
+  assert.ok(care.includes('overlapDays(row.start_date,row.end_date,leavePeriodRange.from,leavePeriodRange.to)'), 'Leave reporting must count only days overlapping the selected reporting period')
+  assert.ok(access.includes("student:['Student Attendance','Leave Applications'"), 'Students must receive leave self-service without approval controls')
+  assert.ok(access.includes("parent:['Student Attendance','Leave Applications'"), 'Parents must receive linked-child leave self-service without approval controls')
+})
 check('Vite development and production scripts exist', () => {
   assert.equal(packageJson.scripts.dev, 'vite --host 0.0.0.0')
   assert.equal(packageJson.scripts.build, 'tsc -b && vite build')
@@ -234,7 +249,10 @@ check('The full institutional menu maps every submenu to a working destination',
   assert.equal(getNavigationRoute('students', 'Student Data Export', 'student'), 'unavailable:students:student-data-export', 'Student accounts must not receive institution-wide data export access')
   assert.equal(getNavigationRoute('students', 'Student Data Export', 'owner'), 'students:directory', 'Administrators can export their permitted student directory records')
   assert.equal(getNavigationRoute('employees', 'Employee Performance'), 'unavailable:employees:employee-performance', 'HR headcount must not be presented as a performance appraisal')
-  assert.equal(getNavigationRoute('attendance', 'Leave Applications'), 'employees:leave', 'Leave applications must open the HR leave workflow')
+  assert.equal(getNavigationRoute('attendance', 'Leave Applications'), 'care:leave-applications', 'Leave applications must open the self-service leave workflow')
+  assert.equal(getNavigationRoute('attendance', 'Leave Review & Approvals'), 'care:leave-approvals', 'Leave approvals must open their restricted review queue')
+  assert.equal(getNavigationRoute('attendance', 'Leave Balances'), 'care:leave-balances', 'Leave balances must open their entitlement register')
+  assert.equal(getNavigationRoute('attendance', 'Leave Reports'), 'care:leave-reports', 'Leave reports must open period-based analytics')
   assert.equal(getNavigationRoute('attendance', 'Attendance Analytics'), 'reports:attendance', 'Attendance analytics must open the live attendance report')
   assert.equal(getNavigationRoute('attendance', 'Attendance Alerts'), 'unavailable:attendance:attendance-alerts', 'Attendance alerts require a configured rules/notification workflow')
   assert.equal(getNavigationRoute('timetable', 'Substitution Management'), 'unavailable:timetable:substitution-management', 'Teacher substitution must not be represented as unassigned timetable entries')
