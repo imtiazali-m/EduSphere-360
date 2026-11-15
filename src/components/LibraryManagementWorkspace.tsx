@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
-import { BookOpen, BookPlus, Bookmark, Download, ExternalLink, Layers3, Library, Plus, RefreshCw, Search, X, Pencil, Trash2, Link2, FileText } from 'lucide-react'
+import { BookOpen, BookPlus, Download, ExternalLink, Layers3, Library, Plus, RefreshCw, Search, X, Pencil, Trash2, Link2 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { downloadCsv } from '../lib/csv'
@@ -32,7 +32,7 @@ const emptyForm=(type:RecordType):FormState=>({
  title:'',reference_code:'',description:'',author:'',publisher:'',edition:'',publication_year:'',
  category_id:'',format:'Print',language:'English',shelf_location:'',total_copies:'1',
  purchase_cost:'',fine_per_day:'0',cover_url:'',subject:'',class_name:'',
- resource_url:'',resource_kind:'PDF',visibility:'institution_portal',status:'published',tags:''
+ resource_url:'',resource_kind:'PDF',visibility:'institution_portal',status:type==='book-category'?'active':'published',tags:''
 })
 const dateLabel=(value:string|undefined)=>value?new Date(value).toLocaleDateString():'—'
 const clean=(value:unknown)=>String(value??'').trim()
@@ -44,7 +44,7 @@ const validWebUrl=(value:string)=>{
  return parsed.toString()
 }
 
-export function LibraryManagementWorkspace({workspaceKey,onToast}:Props){
+export function LibraryManagementWorkspace({workspaceKey,onToast,onNavigate}:Props){
  const {user}=useAuth()
  const page=workspaceKey.split(':').slice(-1)[0]||'library-dashboard'
  const pageConfig=libraryPages[page]??libraryPages['library-dashboard']
@@ -236,8 +236,6 @@ export function LibraryManagementWorkspace({workspaceKey,onToast}:Props){
  const resourcePage=pageConfig.type==='digital-resource'||pageConfig.type==='learning-material'||pageConfig.type==='resource-download'
  const formType=editing?.record_type??pageConfig.type??'book-registration'
  const showFormAction=canManage&&(pageConfig.type!==undefined)
- const bookRows=visibleRows.filter(row=>row.record_type==='book-registration')
- const resourceRows=visibleRows.filter(row=>row.record_type!=='book-registration'&&row.record_type!=='book-category')
 
  if(!user)return null
  return <main className="page-content ed360-module-page ed360-library-admin">
