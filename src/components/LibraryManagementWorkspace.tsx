@@ -13,7 +13,7 @@ type LibraryRow={
  quantity?:number|null;amount?:number|null;payload:Record<string,any>;created_at:string;updated_at:string
 }
 type LoanRow={id:string;book_record_id:string;student_id?:string|null;status:string;due_at:string}
-type Props={workspaceKey:string;onToast:(message:string,error?:boolean)=>void}
+type Props={workspaceKey:string;onToast:(message:string,error?:boolean)=>void;onNavigate?:(key:string)=>void}
 type FormState=Record<string,string>
 const libraryPages:Record<string,{title:string;description:string;type?:RecordType}>={
  'library-dashboard':{title:'Library Dashboard',description:'One operating view of your institution catalogue, circulation capacity and learning resources.'},
@@ -236,12 +236,6 @@ export function LibraryManagementWorkspace({workspaceKey,onToast}:Props){
  const resourcePage=pageConfig.type==='digital-resource'||pageConfig.type==='learning-material'||pageConfig.type==='resource-download'
  const formType=editing?.record_type??pageConfig.type??'book-registration'
  const showFormAction=canManage&&(pageConfig.type!==undefined)
- const openResource=(row:LibraryRow)=>{
-  const url=clean(row.payload?.resource_url)
-  if(!url){onToast('No resource link has been saved for this entry.',true);return}
-  try{const parsed=new URL(url);if(!['https:','http:'].includes(parsed.protocol))throw new Error('Unsupported resource link');window.open(parsed.toString(),'_blank','noopener,noreferrer')}
-  catch{onToast('The saved resource link is invalid. Ask an administrator to correct it.',true)}
- }
  const bookRows=visibleRows.filter(row=>row.record_type==='book-registration')
  const resourceRows=visibleRows.filter(row=>row.record_type!=='book-registration'&&row.record_type!=='book-category')
 
@@ -272,9 +266,9 @@ export function LibraryManagementWorkspace({workspaceKey,onToast}:Props){
     <article><span>Digital resources</span><strong>{resources.length}</strong><small>Learning and download links</small></article>
    </section>
    <section className="ed360-library-overview-grid">
-    <article className="ed360-library-overview-card"><span className="ed360-library-overview-icon"><BookOpen size={18}/></span><h2>Book collection</h2><p>Manage titles, authors, categories, editions, shelf positions and copy counts.</p><button className="button button-outline" type="button" onClick={()=>window.location.hash='#/dashboard?library=book-catalogue'}>Open catalogue</button></article>
-    <article className="ed360-library-overview-card"><span className="ed360-library-overview-icon"><Layers3 size={18}/></span><h2>Categories</h2><p>Keep the collection organised by subject and category.</p><button className="button button-outline" type="button" onClick={()=>window.location.hash='#/dashboard?library=book-categories'}>Manage categories</button></article>
-    <article className="ed360-library-overview-card"><span className="ed360-library-overview-icon"><Link2 size={18}/></span><h2>Digital resources</h2><p>Publish approved online reading, learning materials and downloads.</p><button className="button button-outline" type="button" onClick={()=>window.location.hash='#/dashboard?library=digital-library'}>Open resources</button></article>
+    <article className="ed360-library-overview-card"><span className="ed360-library-overview-icon"><BookOpen size={18}/></span><h2>Book collection</h2><p>Manage titles, authors, categories, editions, shelf positions and copy counts.</p><button className="button button-outline" type="button" onClick={()=>onNavigate?.('institutional:library:book-catalogue')}>Open catalogue</button></article>
+    <article className="ed360-library-overview-card"><span className="ed360-library-overview-icon"><Layers3 size={18}/></span><h2>Categories</h2><p>Keep the collection organised by subject and category.</p><button className="button button-outline" type="button" onClick={()=>onNavigate?.('institutional:library:book-categories')}>Manage categories</button></article>
+    <article className="ed360-library-overview-card"><span className="ed360-library-overview-icon"><Link2 size={18}/></span><h2>Digital resources</h2><p>Publish approved online reading, learning materials and downloads.</p><button className="button button-outline" type="button" onClick={()=>onNavigate?.('institutional:library:digital-library')}>Open resources</button></article>
    </section>
   </>}
 
