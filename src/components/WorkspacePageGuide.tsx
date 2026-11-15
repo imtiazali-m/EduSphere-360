@@ -1,4 +1,4 @@
-import { CheckCircle2, ClipboardList, Compass, ShieldCheck } from 'lucide-react'
+import { CheckCircle2, Compass, ShieldCheck } from 'lucide-react'
 import { getWorkspaceGroup, getWorkspaceItem } from '../lib/institutionalCatalog'
 import { getWorkspaceExperience } from '../lib/workspaceExperience'
 
