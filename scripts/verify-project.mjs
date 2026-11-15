@@ -761,6 +761,17 @@ check('Operational modules expose distinct nested workspace windows and contextu
   assert.ok(styles.includes('.ed360-operations-window-nav') && styles.includes('.ed360-contextual-subwindow'), 'Nested workspace hierarchy styles are required')
 })
 
+check('Administration catalogues provide register-specific sorting and complete report output', () => {
+  const administration = read('src/components/AdministrationModule.tsx')
+  for (const value of ['DIRECTORY_COLUMNS', 'program_count', 'department_name', 'program_name', 'session_name', 'credit_hours', 'room_type', 'sortDirection', 'aria-sort={sortKey === column.key']) {
+    assert.ok(administration.includes(value), 'Administration register detail or sorting is missing: ' + value)
+  }
+  for (const value of ['downloadCsv(', 'exportXlsx(', 'exportDocx(', 'printOfficeReport(', "exportRegister('csv')", "exportRegister('excel')", "exportRegister('word')", "exportRegister('print')"]) {
+    assert.ok(administration.includes(value), 'Administration register report action is missing: ' + value)
+  }
+  assert.ok(administration.includes('const reportRows = sortedRecords.map') && administration.includes('directoryColumns.map((column) => [column.key, record[column.key] ?? \'\'])'), 'Register exports must include all sorted, filtered rows and their module-specific columns')
+})
+
 check('Attendance history is searchable and independently date-filterable', () => {
   const attendance = read('src/components/AttendanceWorkspace.tsx')
   const styles = read('src/styles/module-workspaces.css')
