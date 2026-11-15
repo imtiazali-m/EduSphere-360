@@ -13,6 +13,7 @@ import '../styles/finance-workspace.css'
 type Section = 'overview'|'invoices'|'payments'|'structures'|'discounts'|'refunds'|'receivables'|'receipts'|'accounts'|'journals'|'reconciliation'
 type Props = { workspaceKey:string; initialWindow?:string; onToast:(message:string,error?:boolean)=>void }
 type FinanceRow = RecordRow & { id:string; [key:string]:unknown }
+type ReceiptLedgerRow = { id:string; payment_id:string; receipt_number:string; template_key:string; issued_at:string }
 type JournalLineDraft = { account_id:string; description:string; debit:string; credit:string }
 
 const today=()=>new Date().toLocaleDateString('en-CA')
@@ -61,7 +62,7 @@ export function FinanceWorkspace({workspaceKey,initialWindow,onToast}:Props){
   const financePageSize=10
   const [invoices,setInvoices]=useState<FinanceRow[]>([])
   const [payments,setPayments]=useState<FinanceRow[]>([])
-  const [receiptLedgerRows,setReceiptLedgerRows]=useState<FinanceRow[]>([])
+  const [receiptLedgerRows,setReceiptLedgerRows]=useState<ReceiptLedgerRow[]>([])
   const [receiptLedgerError,setReceiptLedgerError]=useState('')
   const [students,setStudents]=useState<FinanceRow[]>([])
   const [structures,setStructures]=useState<FinanceRow[]>([])
@@ -222,7 +223,7 @@ export function FinanceWorkspace({workspaceKey,initialWindow,onToast}:Props){
           setReceiptLedgerRows([])
           setReceiptLedgerError(userFacingError(receiptError,'Formal receipt records could not be loaded.'))
         }else{
-          setReceiptLedgerRows((receiptRows??[]) as FinanceRow[])
+          setReceiptLedgerRows((receiptRows??[]) as ReceiptLedgerRow[])
           setReceiptLedgerError('')
         }
         const [studentRows,structureRows,structureItemRows,discountRows,applicationRows,refundRows,auditRows]=await Promise.all([
@@ -309,14 +310,14 @@ export function FinanceWorkspace({workspaceKey,initialWindow,onToast}:Props){
     setSaving(true)
     try{
       const receipt=await issueFeeReceipt(mode,user!,{paymentId:payment.id,templateKey:'default'})
-      setReceiptLedgerRows(current=>[receipt as FinanceRow,...current.filter(row=>row.payment_id!==payment.id)])
+      setReceiptLedgerRows(current=>[receipt,...current.filter(row=>row.payment_id!==payment.id)])
       setReceiptLedgerError('')
       onToast('Formal receipt '+receipt.receipt_number+' issued and saved.')
       await load(true)
     }catch(err){onToast(userFacingError(err,'Formal receipt could not be issued. Refresh the register and retry.'),true)}finally{setSaving(false)}
   }
 
-  function printReceipt(payment:FinanceRow,ledger:FinanceRow){
+  function printReceipt(payment:FinanceRow,ledger:ReceiptLedgerRow){
     const invoice=invoices.find(row=>row.id===payment.invoice_id)
     const printWindow=window.open('','_blank','width=820,height=900')
     if(!printWindow){onToast('The receipt window was blocked. Allow pop-ups for this site and try again.',true);return}
