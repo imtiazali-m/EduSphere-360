@@ -707,10 +707,10 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
      const rows=studentFiltered.map(row=>({admission_no:row.admission_no,full_name:row.full_name,class_name:row.class_name,status:row.status}))
      const columns:OfficeColumn[]=[{key:'admission_no',label:'Admission ID'},{key:'full_name',label:'Student'},{key:'class_name',label:'Class / programme'},{key:'status',label:'Status'}]
      const reportTitle='Student Directory',filename='edusphere-students-'+localDateValue()
-     if(format==='csv')downloadCsv(filename+'.csv',rows,columns)
+     if(format==='csv')downloadCsv('edusphere-students-'+localDateValue()+'.csv',rows,columns)
      else if(format==='xlsx')exportXlsx(filename+'.xlsx',reportTitle,rows,columns)
      else if(format==='docx')exportDocx(filename+'.docx',reportTitle,rows,columns)
-     else{try{printOfficeReport(reportTitle,rows,columns,user?.institutionName??'Institution name not set')}catch(error){onToast(error instanceof Error?error.message:'Print view could not be opened.',true)}}
+     else{try{printOfficeReport(reportTitle,rows,columns,user?.institutionName??'Institution name not set')}catch{onToast('Student directory print view could not be opened. Please try again.',true)}}
    }
   const studentCounts = useMemo(() => ({
     total: rows.length,
