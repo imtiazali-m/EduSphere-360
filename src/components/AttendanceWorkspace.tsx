@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
-import { Activity, CalendarCheck, Check, Download, Fingerprint, RefreshCw, Search, X, ShieldCheck } from 'lucide-react'
+import { Activity, CalendarCheck, Check, Download, Fingerprint, Printer, RefreshCw, Search, X, ShieldCheck } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { downloadCsv } from '../lib/csv'
