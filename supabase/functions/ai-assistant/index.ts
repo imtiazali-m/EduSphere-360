@@ -110,7 +110,7 @@ Deno.serve(async(req:Request)=>{
     const {data:membership,error:membershipError}=await client.rpc("has_institution_role",{target_institution:institutionId,allowed_roles:["owner","admin","teacher","accountant","exam_officer"]});
     if(membershipError||membership!==true)return json({error:"You do not have permission to use institutional AI."},403);
     if(body.action==="status"){
-      const providers:Record<string,{configured:boolean;secretName:string}>={};
+      const providers:Record<string,{configured:boolean}>={};
       for(const [name,secret] of Object.entries(providerSecrets))providers[name]={configured:Boolean(Deno.env.get(secret)?.trim())};
       providers.cloudflare={configured:Boolean(Deno.env.get("CLOUDFLARE_AI_API_TOKEN")?.trim()&&Deno.env.get("CLOUDFLARE_ACCOUNT_ID")?.trim())};
       return json({providers});
