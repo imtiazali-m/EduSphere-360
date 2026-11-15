@@ -847,7 +847,7 @@ check('Faculty registers, assignments, leave and confidential documents follow t
 check('Employee qualification certificates track effective expiry and support complete branded reports', () => {
   const qualifications = read('src/components/EmployeeQualificationsPanel.tsx')
   const qualificationSql = read('supabase/migrations/20261111164407_stage_6_employee_qualification_records.sql')
-  for(const value of ['range(offset,offset+499)', 'Date awarded cannot be in the future.', 'Expiry date cannot precede the date awarded.', 'effectiveStatus(row)', "'expired'", 'pageRows.slice', 'pageRows.map(row=>', 'const reportRows=sorted.map(row=>', 'printOfficeReport(', 'institutionName', 'aria-sort=', 'const pageSize=25']) {
+  for(const value of ['range(offset,offset+499)', 'Date awarded cannot be in the future.', 'Expiry date cannot precede the date awarded.', 'effectiveStatus(row)', "'expired'", 'sorted.slice', 'pageRows.map(row=>', 'const reportRows=sorted.map(row=>', 'printOfficeReport(', 'institutionName', 'aria-sort=', 'const pageSize=25']) {
     assert.ok(qualifications.includes(value), 'Employee qualification workflow is missing: '+value)
   }
   assert.ok(qualificationSql.includes('employee_qualifications_dates_ck') && qualificationSql.includes('employee_qualifications_admin_all') && qualificationSql.includes('employee_qualifications_own_read'), 'Qualification date and owner/employee RLS policies must remain enforced')
