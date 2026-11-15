@@ -290,6 +290,7 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
  const group=getWorkspaceGroup(groupKey)||institutionalMenu[0]
  const initialItem=getWorkspaceItem(group.key,itemKey)||group.items[0]
  const [selectedItem,setSelectedItem]=useState(initialItem.key)
+ useEffect(()=>{setSelectedItem(initialItem.key);setSearch('');setRange('all');setCampus('');setPage(1);setShowForm(false);setDetail(null);setEditing(null)},[workspaceKey])
  const item=getWorkspaceItem(group.key,selectedItem)||group.items[0]
  const [rows,setRows]=useState<OperationalRow[]>([])
  const [loading,setLoading]=useState(true)
