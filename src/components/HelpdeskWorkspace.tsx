@@ -7,7 +7,7 @@ type Row=Record<string,any>&{id:string}
 const label=(v:unknown)=>String(v??'').replaceAll('_',' ').replace(/\b\w/g,c=>c.toUpperCase())
 const stamp=(v:unknown)=>v?new Date(String(v)).toLocaleString():'—'
 const ticketNumber=()=>'HD-'+new Date().toISOString().slice(0,10).replaceAll('-','')+'-'+Math.random().toString(36).slice(2,7).toUpperCase()
-export function HelpdeskWorkspace({workspaceKey,onToast}:{workspaceKey:string;onToast:(message:string,error?:boolean)=>void}){
+export function HelpdeskWorkspace({onToast}:{workspaceKey:string;onToast:(message:string,error?:boolean)=>void}){
  const {user}=useAuth()
  const admin=Boolean(user&&['owner','admin'].includes(user.role))
  const [tickets,setTickets]=useState<Row[]>([]),[comments,setComments]=useState<Row[]>([])
