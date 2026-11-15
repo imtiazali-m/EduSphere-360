@@ -275,7 +275,11 @@ check('Bulk attendance uses class and section registers without a new Late statu
   assert.ok(attendance.includes('All present') && attendance.includes('All absent') && attendance.includes('All on approved leave') && attendance.includes('sectionName'))
   assert.ok(!attendance.includes("markAll('late')") && !attendance.includes('>All late</button>'), 'New attendance registers must not offer Late marking')
   assert.ok(attendance.includes('save_student_attendance_register') && attendance.includes('save_employee_attendance_register') && attendance.includes('Save whole register'), 'Student and employee registers must use their validated atomic save RPCs')
-  assert.ok(attendance.includes('not_configured') && attendance.includes('provider feed'), 'Automatic attendance must not pretend that a device is connected')
+  const deviceAdmin = read('supabase/functions/attendance-device-admin/index.ts')
+  const deviceWebhook = read('supabase/functions/attendance-device-webhook/index.ts')
+  assert.ok(attendance.includes('Awaiting first signed event') && attendance.includes('last_synced_at'), 'Device sources must remain visibly awaiting their first authenticated event')
+  assert.ok(deviceAdmin.includes('vault.create_secret') && deviceAdmin.includes('vault.update_secret'), 'Device signing keys must be issued and rotated in Supabase Vault')
+  assert.ok(deviceWebhook.includes('verifyDeviceSignature') && deviceWebhook.includes('processing_status: "received"') && deviceWebhook.includes('no attendance record is changed automatically'), 'Only verified events may enter the review queue; device events must not silently update attendance')
 })
 check('Stage 12 front-office windows use the live tenant-scoped enquiry, notices and calendar tables', () => {
   const frontOffice = read('src/components/FrontOfficeWorkspace.tsx')
