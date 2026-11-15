@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { ArrowUpRight, Building2, CheckCircle2, FileText, LockKeyhole, Palette, Plus, RefreshCw, Save, Search, ShieldCheck, Upload, Users, X } from 'lucide-react'
+import { ArrowUpRight, Building2, CheckCircle2, Download, FileSpreadsheet, FileText, LockKeyhole, Palette, Plus, Printer, RefreshCw, Save, Search, ShieldCheck, Upload, Users, X } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { userFacingError } from '../lib/userErrors'
+import { downloadCsv } from '../lib/csv'
+import { exportDocx, exportXlsx, printOfficeReport, type OfficeColumn } from '../lib/officeExport'
 import { CollegeRolePermissionWorkspace } from './CollegeRolePermissionWorkspace'
 import type { RecordRow } from '../lib/types'
 import { displayInstitutionName } from '../lib/collegeIdentity'
@@ -132,6 +134,23 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
   }
   function pageControls(total:number,page:number,pageCount:number,onPage:(next:number)=>void){
     return total>pageSize?<div className="gov-pagination"><span>Showing <b>{(page-1)*pageSize+1}–{Math.min(page*pageSize,total)}</b> of <b>{total}</b></span><div><button type="button" className="gov-button" disabled={page<=1} onClick={()=>onPage(page-1)}>Previous</button><span>Page {page} of {pageCount}</span><button type="button" className="gov-button" disabled={page>=pageCount} onClick={()=>onPage(page+1)}>Next</button></div></div>:null
+  }
+
+  function reportActions(title:string,fileName:string,rows:Record<string,unknown>[],columns:OfficeColumn[]){
+    const run=(format:'csv'|'excel'|'word'|'print')=>{
+      try{
+        if(format==='csv')downloadCsv(fileName+'.csv',rows,columns)
+        else if(format==='excel')exportXlsx(fileName+'.xlsx',title,rows,columns)
+        else if(format==='word')exportDocx(fileName+'.docx',title,rows,columns)
+        else printOfficeReport(title,rows,columns,user?.institutionName??'Institution')
+      }catch(error){onToast(error instanceof Error?error.message:'The administration report could not be opened.',true)}
+    }
+    return <div className="gov-row-actions ed360-admin-report-actions" aria-label={title+' exports'}>
+      <button type="button" className="gov-button" onClick={()=>run('csv')}><Download size={13}/> CSV</button>
+      <button type="button" className="gov-button" onClick={()=>run('excel')}><FileSpreadsheet size={13}/> Excel</button>
+      <button type="button" className="gov-button" onClick={()=>run('word')}><FileText size={13}/> Word</button>
+      <button type="button" className="gov-button primary" onClick={()=>run('print')}><Printer size={13}/> Print A4</button>
+    </div>
   }
 
   function openSetting(row?:Setting,category?:string){
