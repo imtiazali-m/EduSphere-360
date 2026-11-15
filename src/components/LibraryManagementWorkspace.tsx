@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
-import { BookOpen, BookPlus, Download, ExternalLink, Layers3, Library, Plus, RefreshCw, Search, X, Pencil, Trash2, Link2 } from 'lucide-react'
+import { BookOpen, BookPlus, Download, ExternalLink, Layers3, Plus, RefreshCw, Search, X, Pencil, Trash2, Link2 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { downloadCsv } from '../lib/csv'
