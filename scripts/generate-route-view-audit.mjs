@@ -144,13 +144,14 @@ function checkView(role, route, dispatcher) {
     return { component:'BackupDataWorkspace', view:targetWindow, status:supported.has(targetWindow) ? 'Supported' : 'Unsupported backup/data view' }
   }
   if (targetKey === 'academic') {
+    const nativeOnline = targetWindow === 'live-online-classes'
     const supported = new Set(['academic-sessions','classes-sections','subjects-courses','curriculum','lesson-planning','timetable','homework-assignments','study-materials','online-learning','classroom-activities','academic-calendar','learning-progress'])
-    return { component:'AcademicManagementWorkspace', view:targetWindow, status:supported.has(targetWindow) ? 'Supported' : 'Unsupported academic workspace' }
+    return { component:nativeOnline ? 'NativeCallingWorkspace' : 'AcademicManagementWorkspace', view:targetWindow, status:nativeOnline || supported.has(targetWindow) ? 'Supported' : 'Unsupported academic workspace' }
   }
   if (targetKey === 'personal') return { component:'PersonalWorkspace', view:targetWindow, status:new Set(['my-profile','account-settings','notification-settings','my-activity','help-support']).has(targetWindow)?'Supported':'Unsupported personal view' }
-  if (targetKey === 'integrations') return { component:'IntegrationManagementWorkspace', view:targetWindow, status:new Set(['overview','ai-providers','zoom','google','youtube','biometric']).has(targetWindow)?'Supported':'Unsupported integration view' }
+  if (targetKey === 'integrations') return { component:'IntegrationManagementWorkspace', view:targetWindow, status:new Set(['overview','ai-providers','biometric']).has(targetWindow)?'Supported':'Unsupported integration view' }
   if (targetKey === 'behaviour') return { component:'BehaviourSkillsWorkspace', view:targetWindow, status:new Set(['dashboard','records','positive','incidents','recognition','warnings','skills','activities','competencies','progress','analytics','downloads']).has(targetWindow)?'Supported':'Unsupported behaviour view' }
-  if (targetKey === 'voice') return { component:'OpenAIVoiceWorkspace', view:targetWindow, status:targetWindow==='openai'?'Supported':'Unsupported voice workspace' }
+  if (targetKey === 'voice') return { component:'NativeCallingWorkspace', view:targetWindow, status:targetWindow==='native'?'Supported':'Unsupported voice workspace' }
   if (targetKey === 'assistant') return { component:'AIAssistantWorkspace', view:targetWindow, status:new Set(['chat','smart-reports','student-performance-prediction','student-analysis','fee-collection-prediction','examination-analysis','ai-timetable-suggestions','ai-question-generation','ai-document-assistant','ai-learning-recommendations','academic-performance-insights','attendance-and-behaviour-insights','institutional-intelligence']).has(targetWindow)?'Supported':'Unsupported AI assistant view' }
   if (targetKey === 'frontoffice') return { component:'FrontOfficeWorkspace', view:targetWindow, status:new Set(['enquiries','announcements','events']).has(targetWindow)?'Supported':'Unsupported front-office view' }
   if (targetKey === 'overview') return { component: 'RoleDashboard', view: 'overview', status: 'Supported' }
