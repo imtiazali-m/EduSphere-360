@@ -211,32 +211,41 @@ jobs:
           test -s dist/index.html
           test -s dist/_redirects
 
-      - name: Ensure the college-named Cloudflare Pages project exists
+      - name: Ensure both EduSphere production Pages projects exist
         shell: bash
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          CLOUDFLARE_PAGES_PROJECT: gidcbadin
         run: |
           set -euo pipefail
           api="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects"
           projects="$(curl --fail-with-body --silent --show-error "$api" -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN")"
-          if jq -e --arg project "$CLOUDFLARE_PAGES_PROJECT" '.result | any(.[]; .name == $project)' <<<"$projects" >/dev/null; then
-            echo "Cloudflare Pages project $CLOUDFLARE_PAGES_PROJECT already exists."
-          else
-            payload="$(jq -n --arg name "$CLOUDFLARE_PAGES_PROJECT" '{name:$name,production_branch:"main"}')"
-            created="$(curl --fail-with-body --silent --show-error -X POST "$api" \
-              -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
-              -H "Content-Type: application/json" \
-              --data "$payload")"
-            jq -e '.success == true' <<<"$created" >/dev/null
-            echo "Created Cloudflare Pages project $CLOUDFLARE_PAGES_PROJECT."
-          fi
+          for project in gidcbadin edusphere360; do
+            if jq -e --arg project "$project" '.result | any(.[]; .name == $project)' <<<"$projects" >/dev/null; then
+              echo "Cloudflare Pages project $project already exists."
+            else
+              payload="$(jq -n --arg name "$project" '{name:$name,production_branch:"main"}')"
+              created="$(curl --fail-with-body --silent --show-error -X POST "$api" \
+                -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+                -H "Content-Type: application/json" \
+                --data "$payload")"
+              jq -e '.success == true' <<<"$created" >/dev/null
+              echo "Created Cloudflare Pages project $project."
+            fi
+          done
 
-      - name: Deploy verified assets to Cloudflare Pages
+      - name: Deploy verified assets to GIDC college Pages site
         uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy dist --project-name=gidcbadin --branch=main
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy verified assets to EduSphere Pages site
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=edusphere360 --branch=main
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
