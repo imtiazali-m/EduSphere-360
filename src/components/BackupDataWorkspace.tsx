@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ChangeEvent, type ReactNode } from 'react'
-import { Activity, AlertTriangle, Archive, ArrowDownToLine, CheckCircle2, Cloud, Database, History, RefreshCw, ShieldCheck, Upload } from 'lucide-react'
+import { Activity, AlertTriangle, Archive, ArrowDownToLine, CheckCircle2, Cloud, History, RefreshCw, ShieldCheck, Upload } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { listRecords, createRecord } from '../lib/data'
 import { supabase } from '../lib/supabase'
@@ -307,7 +307,6 @@ export function BackupDataWorkspace({initialWindow,onToast}:Props){
   if(!admin)return <div className="bdw-page"><div className="bdw-notice warning">Backup and data management is restricted to the institution owner and authorised administrators.</div></div>
 
   const refreshButton=<button className="bdw-button primary" type="button" onClick={()=>view==='dashboard'?void loadDashboardCounts():view.endsWith('history')?void loadHistory():view==='integrations'?void checkIntegration():view==='validation'||view==='duplicates'||view==='integrity'?void loadValidation():void loadTable()}><RefreshCw size={15}/> Refresh</button>
-  const showRefresh=['dashboard','backup-history','import-history','export-history','export','validation','duplicates','integrity','integrations'].includes(view)
   const tableOptions=dataTables.map(item=><option key={item.key} value={item.key}>{item.label}</option>)
   const pageHeader=<PageIntro breadcrumb={(user?.institutionName?.trim()||'GOVERNMENT ISLAMIA DEGREE COLLEGE').toUpperCase()+' / BACKUP & DATA / '+currentTitle.toUpperCase()} title={currentTitle} action={refreshButton}/>
   const historyView=(heading:string,detail:string)=>{
