@@ -1,5 +1,5 @@
 import { useCallback,useEffect,useMemo,useState,type FormEvent } from 'react'
-import { Bus,CalendarDays,ClipboardList,Download,MapPin,Plus,RefreshCw,Route,Search,Users,Wallet,Pencil,Trash2,Truck,Clock3,ArrowRight } from 'lucide-react'
+import { Bus,Download,Plus,RefreshCw,Route,Search,Wallet,Pencil,Trash2,Truck } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { downloadCsv } from '../lib/csv'
@@ -210,8 +210,6 @@ export function TransportManagementWorkspace({workspaceKey,onToast,onNavigate}:P
  }
  useEffect(()=>{if(!open)return;const previous=document.body.style.overflow;const keydown=(e:KeyboardEvent)=>{if(e.key==='Escape'&&!saving){setOpen(false);setEditing(null)}};document.body.style.overflow='hidden';window.addEventListener('keydown',keydown);return()=>{document.body.style.overflow=previous;window.removeEventListener('keydown',keydown)}},[open,saving])
  if(!user)return null
- const collection=itemsForType(records,config.type)
- function itemsForType(rows:FleetRecord[],type?:FleetType){return type?rows.filter(row=>row.record_type===type):rows}
  return <main className="page-content ed360-module-page ed360-operation-management">
   <header className="ed360-operation-hero"><div className="ed360-operation-icon"><Bus size={21}/></div><div className="ed360-operation-title"><span>TRANSPORT / FLEET & ROUTE CONTROL</span><h1>{config.title}</h1><p>{config.description}</p></div><div className="ed360-operation-tools"><button type="button" className="button button-outline" onClick={()=>void load()} disabled={loading}><RefreshCw size={15}/> Refresh</button>{config.type&&canManage&&<button type="button" className="button button-primary" onClick={startCreate}><Plus size={15}/> Add record</button>}</div></header>
   {loading&&<div className="ed360-workspace-empty">Loading transport records…</div>}
