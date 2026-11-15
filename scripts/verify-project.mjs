@@ -281,6 +281,17 @@ check('Bulk attendance uses class and section registers without a new Late statu
   assert.ok(deviceAdmin.includes('vault.create_secret') && deviceAdmin.includes('vault.update_secret'), 'Device signing keys must be issued and rotated in Supabase Vault')
   assert.ok(deviceWebhook.includes('verifyDeviceSignature') && deviceWebhook.includes('event.event_type === "heartbeat"') && deviceWebhook.includes('processing_status: "received"') && deviceWebhook.includes('No attendance record was created'), 'Signed heartbeats must update device health while attendance events remain reviewable and never silently create official attendance')
 })
+check('Signed device attendance events require authorised review before reconciliation', () => {
+  const attendance = read('src/components/AttendanceWorkspace.tsx')
+  const review = read('supabase/migrations/20261115060000_attendance_device_event_review_approval.sql')
+  assert.ok(attendance.includes('review_attendance_device_event') && attendance.includes('Approve & apply attendance') && attendance.includes('Reject event'), 'The device queue must expose distinct approval and rejection actions')
+  assert.ok(attendance.includes('p_review_note:reviewNote.trim()') && attendance.includes('p_attendance_date:action===\'approve\'?reviewDate:null'), 'The reviewer must submit an audit note and confirm the local attendance date')
+  assert.ok(review.includes('security definer') && review.includes("has_institution_role(v_event.institution_id, array['owner','admin'])"), 'Employee event review must be restricted to owners and administrators')
+  assert.ok(review.includes("array['owner','admin','teacher']"), 'Teacher review may only be enabled for student events')
+  assert.ok(review.includes('Original device event evidence is immutable') && review.includes('revoke update on public.attendance_device_events'), 'Signed event evidence must not be directly editable by browsers')
+  assert.ok(review.includes("v_register_status = 'locked'") && review.includes('correction_reason is null'), 'Locked registers and unreasoned corrections must be blocked')
+  assert.ok(review.includes('insert into public.attendance(') && review.includes('insert into public.employee_attendance('), 'Approved events must reconcile into the existing attendance records')
+})
 check('Stage 12 front-office windows use the live tenant-scoped enquiry, notices and calendar tables', () => {
   const frontOffice = read('src/components/FrontOfficeWorkspace.tsx')
   for (const value of ['admission_enquiries','announcements','academic_calendar_events','institution_id','enquiry_no','guardian_phone','created_by','audience','start_date','end_date']) {
