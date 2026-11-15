@@ -848,3 +848,47 @@
   .pro-window-panel .staff-workspace-heading { align-items:flex-start;flex-direction:column; }
   .pro-window-panel .staff-heading-actions { width:100%; }
 }
+
+
+/* Attendance uses the same plain page heading and primary refresh control as all modules. */
+.pro-window-panel .ed360-attendance-hero {
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding:4px 2px 16px;margin:0 0 18px;border:0;border-bottom:1px solid var(--es-line);
+  border-radius:0;background:transparent;box-shadow:none;
+}
+.pro-window-panel .ed360-attendance-hero>div>span {
+  color:var(--es-muted);font-size:10px;font-weight:850;letter-spacing:1.1px;line-height:1.5;
+}
+.pro-window-panel .ed360-attendance-hero h1 {
+  margin:5px 0 0;color:var(--es-ink);font-size:clamp(26px,2.3vw,32px);
+  line-height:1.18;font-weight:850;letter-spacing:-.7px;
+}
+.pro-window-panel .ed360-attendance-refresh {
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:46px;
+  padding:0 20px;color:#fff;background:var(--es-primary-600);
+  border:1px solid var(--es-primary-600);border-radius:12px;
+  box-shadow:0 6px 16px rgba(96,53,181,.2);font-size:13px;font-weight:850;cursor:pointer;
+}
+.pro-window-panel .ed360-attendance-refresh:hover { color:#fff;background:var(--es-primary-700);border-color:var(--es-primary-700); }
+.pro-window-panel .ed360-attendance-refresh:disabled { opacity:.6;cursor:wait; }
+.pro-window-panel .ed360-attendance-main-tabs {
+  display:flex;flex-wrap:wrap;gap:7px;padding:7px;border:1px solid var(--es-line);
+  border-radius:13px;background:#fff;box-shadow:var(--es-shadow-sm);
+}
+.pro-window-panel .ed360-attendance-main-tabs button {
+  min-height:40px;padding:0 14px;color:var(--es-muted);background:transparent;border-radius:9px;
+  font-size:11px;font-weight:800;
+}
+.pro-window-panel .ed360-attendance-main-tabs button.active {
+  color:var(--es-primary-700);background:var(--es-primary-050);
+  box-shadow:inset 0 0 0 1px #ded3ef;
+}
+.pro-window-panel .ed360-attendance-board {
+  border:1px solid var(--es-line);border-radius:16px;background:#fff;box-shadow:var(--es-shadow-sm);
+}
+.pro-window-panel .ed360-attendance-board-head h2 { color:var(--es-brand-900);font-size:17px;font-weight:850; }
+.pro-window-panel .ed360-attendance-board-head p { color:var(--es-muted);font-size:11px;line-height:1.55; }
+@media(max-width:700px) {
+  .pro-window-panel .ed360-attendance-hero { align-items:flex-start;flex-direction:column; }
+  .pro-window-panel .ed360-attendance-refresh { width:100%; }
+}
