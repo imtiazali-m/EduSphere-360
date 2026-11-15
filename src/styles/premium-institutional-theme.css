@@ -533,3 +533,176 @@
   .pro-window-panel .ed360-provider-setup-card>header { flex-direction:column; }
   .pro-window-panel .ed360-integration-heading { align-items:flex-start;flex-direction:column; }
 }
+
+
+/* Administration / Institute Profile — identity, contact and public profile. */
+.pro-window-panel .gov-stage { color:var(--es-ink); }
+.pro-window-panel .ed360-admin-profile-v2 {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(300px,360px);
+  align-items:start;
+  gap:16px;
+}
+.pro-window-panel .ed360-admin-profile-nav {
+  grid-column:1/-1;
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  padding:7px;border:1px solid var(--es-line);border-radius:14px;background:#fff;
+  box-shadow:var(--es-shadow-sm);
+}
+.pro-window-panel .ed360-admin-profile-nav a {
+  display:inline-flex;align-items:center;gap:8px;min-height:38px;padding:0 14px;
+  color:#544968;text-decoration:none;font-size:12px;font-weight:800;
+  border-radius:10px;transition:background .15s ease,color .15s ease;
+}
+.pro-window-panel .ed360-admin-profile-nav a:hover,
+.pro-window-panel .ed360-admin-profile-nav a:focus-visible {
+  color:var(--es-primary-700);background:var(--es-primary-050);outline:none;
+}
+.pro-window-panel .ed360-admin-profile-form-v2 { display:grid;gap:15px;min-width:0; }
+.pro-window-panel .ed360-profile-section {
+  scroll-margin-top:22px;padding:20px 21px;
+}
+.pro-window-panel .ed360-profile-section>header {
+  display:flex;align-items:flex-start;justify-content:space-between;gap:14px;
+  padding-bottom:14px;margin-bottom:17px;border-bottom:1px solid var(--es-line-soft);
+}
+.pro-window-panel .ed360-profile-section>header h2 {
+  margin:4px 0 5px;color:var(--es-brand-900);font-size:19px;line-height:1.25;font-weight:850;
+}
+.pro-window-panel .ed360-profile-section>header p {
+  margin:0;color:var(--es-muted);font-size:12px;line-height:1.55;
+}
+.pro-window-panel .ed360-profile-kicker {
+  color:var(--es-primary-700);font-size:9px;font-weight:900;letter-spacing:1.35px;
+}
+.pro-window-panel .ed360-profile-index {
+  display:grid;place-items:center;width:35px;height:35px;flex:0 0 35px;
+  color:var(--es-primary-700);background:var(--es-primary-050);
+  border:1px solid #e3d9f1;border-radius:11px;font-size:12px;font-weight:900;
+}
+.pro-window-panel .ed360-profile-identity-grid,
+.pro-window-panel .ed360-profile-contact-grid,
+.pro-window-panel .ed360-profile-public-grid {
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 16px;
+}
+.pro-window-panel .ed360-profile-span { grid-column:1/-1; }
+.pro-window-panel .ed360-profile-logo-field {
+  grid-column:1/-1;display:flex;align-items:center;gap:15px;flex-wrap:wrap;
+  padding:14px;border:1px dashed #d9cfe8;border-radius:13px;background:#fbfaff;
+}
+.pro-window-panel .ed360-profile-logo-preview {
+  display:grid;place-items:center;width:76px;height:76px;flex:0 0 76px;overflow:hidden;
+  color:var(--es-primary-700);background:#fff;border:1px solid var(--es-line);
+  border-radius:14px;font-size:28px;font-weight:900;
+}
+.pro-window-panel .ed360-profile-logo-preview img {
+  width:100%;height:100%;object-fit:contain;padding:5px;
+}
+.pro-window-panel .ed360-profile-logo-copy { display:grid;justify-items:start;gap:6px; }
+.pro-window-panel .ed360-profile-logo-copy b { color:var(--es-brand-900);font-size:13px; }
+.pro-window-panel .ed360-profile-logo-copy small { color:var(--es-muted);font-size:11px; }
+.pro-window-panel .ed360-profile-upload {
+  min-height:36px!important;padding:0 12px!important;
+  color:var(--es-primary-700)!important;background:#fff!important;
+  border:1px solid #d9cde9!important;border-radius:9px!important;box-shadow:none!important;
+  cursor:pointer;
+}
+.pro-window-panel .ed360-profile-clear-file {
+  border:0;background:transparent;color:var(--es-danger);font-size:11px;font-weight:800;cursor:pointer;
+}
+.pro-window-panel .ed360-profile-public-note {
+  display:flex;align-items:flex-start;gap:9px;margin-top:15px;padding:12px 13px;
+  border:1px solid #dfece8;border-radius:11px;background:#f5faf8;
+  color:#356d60;font-size:11px;line-height:1.55;
+}
+.pro-window-panel .ed360-profile-public-note svg { flex:0 0 auto;margin-top:1px; }
+.pro-window-panel .ed360-profile-savebar {
+  display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  padding:14px 16px;border:1px solid #ddd3ed;border-radius:14px;background:#fbfaff;
+}
+.pro-window-panel .ed360-profile-savebar>span {
+  display:inline-flex;align-items:center;gap:8px;color:var(--es-muted);font-size:11px;font-weight:700;
+}
+.pro-window-panel .ed360-profile-savebar .gov-button.primary {
+  min-height:46px;padding:0 19px;color:#fff;background:var(--es-primary-600);
+  border:1px solid var(--es-primary-600);border-radius:11px;font-size:13px;font-weight:850;
+  box-shadow:0 7px 17px rgba(96,53,181,.2);
+}
+.pro-window-panel .ed360-profile-preview-panel {
+  position:sticky;top:18px;min-width:0;padding:18px;
+  border:1px solid var(--es-line);border-radius:17px;background:#fff;box-shadow:var(--es-shadow-md);
+}
+.pro-window-panel .ed360-profile-preview-heading {
+  display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:13px;
+}
+.pro-window-panel .ed360-profile-preview-heading h2 {
+  margin:4px 0 0;color:var(--es-brand-900);font-size:17px;font-weight:850;
+}
+.pro-window-panel .ed360-profile-preview-state {
+  padding:5px 9px;border:1px solid #d8cceb;border-radius:999px;
+  color:var(--es-primary-700);background:var(--es-primary-050);font-size:9px;font-weight:900;
+}
+.pro-window-panel .ed360-profile-public-card {
+  overflow:hidden;border:1px solid #ded5ec;border-radius:15px;
+  background:linear-gradient(145deg,#fff 0%,#faf8fe 100%);
+}
+.pro-window-panel .ed360-profile-card-accent {
+  height:7px;background:linear-gradient(90deg,#2b2040 0%,#6035b5 68%,#16877b 100%);
+}
+.pro-window-panel .ed360-profile-public-card>header {
+  display:flex;align-items:center;gap:12px;padding:17px 15px 13px;
+}
+.pro-window-panel .ed360-profile-card-logo {
+  display:grid;place-items:center;width:62px;height:62px;flex:0 0 62px;overflow:hidden;
+  border:1px solid var(--es-line);border-radius:12px;background:#fff;
+  color:var(--es-primary-700);font-size:24px;font-weight:900;
+}
+.pro-window-panel .ed360-profile-card-logo img { width:100%;height:100%;object-fit:contain;padding:4px; }
+.pro-window-panel .ed360-profile-public-card>header>div:last-child { min-width:0; }
+.pro-window-panel .ed360-profile-public-card>header>div:last-child>span {
+  color:var(--es-primary-700);font-size:8px;font-weight:900;letter-spacing:1.15px;
+}
+.pro-window-panel .ed360-profile-public-card h3 {
+  margin:4px 0;color:var(--es-brand-900);font-size:15px;line-height:1.3;font-weight:900;overflow-wrap:anywhere;
+}
+.pro-window-panel .ed360-profile-public-card>header p {
+  margin:0;color:var(--es-muted);font-size:10px;
+}
+.pro-window-panel .ed360-profile-card-tagline {
+  margin:0 15px 14px;color:#4f465d;font-size:11px;line-height:1.55;
+}
+.pro-window-panel .ed360-profile-card-details {
+  display:grid;gap:0;padding:0 15px;
+}
+.pro-window-panel .ed360-profile-card-details>div {
+  display:grid;gap:4px;padding:10px 0;border-top:1px solid var(--es-line-soft);
+}
+.pro-window-panel .ed360-profile-card-details small {
+  color:var(--es-subtle);font-size:8px;font-weight:900;letter-spacing:1px;
+}
+.pro-window-panel .ed360-profile-card-details b {
+  color:var(--es-ink);font-size:11px;font-weight:750;line-height:1.45;overflow-wrap:anywhere;
+}
+.pro-window-panel .ed360-profile-public-card>footer {
+  display:flex;justify-content:space-between;gap:8px;margin-top:7px;padding:11px 15px;
+  color:#e7def4;background:var(--es-brand-900);font-size:8px;font-weight:800;letter-spacing:.55px;
+}
+.pro-window-panel .ed360-profile-preview-caption {
+  margin:11px 1px 0;color:var(--es-muted);font-size:10px;line-height:1.5;
+}
+@media(max-width:1100px) {
+  .pro-window-panel .ed360-admin-profile-v2 { grid-template-columns:minmax(0,1fr); }
+  .pro-window-panel .ed360-admin-profile-nav { grid-column:auto; }
+  .pro-window-panel .ed360-profile-preview-panel { position:static; }
+}
+@media(max-width:640px) {
+  .pro-window-panel .ed360-admin-profile-nav { display:grid;grid-template-columns:1fr; }
+  .pro-window-panel .ed360-admin-profile-nav a { width:100%; }
+  .pro-window-panel .ed360-profile-section { padding:15px; }
+  .pro-window-panel .ed360-profile-identity-grid,
+  .pro-window-panel .ed360-profile-contact-grid,
+  .pro-window-panel .ed360-profile-public-grid { grid-template-columns:minmax(0,1fr); }
+  .pro-window-panel .ed360-profile-span { grid-column:auto; }
+  .pro-window-panel .ed360-profile-savebar { align-items:stretch;flex-direction:column; }
+  .pro-window-panel .ed360-profile-savebar .gov-button { width:100%;justify-content:center; }
+}
