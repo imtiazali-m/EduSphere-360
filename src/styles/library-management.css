@@ -1,0 +1,93 @@
+.ed360-library-admin{display:grid;gap:18px;color:#172033}
+.ed360-library-admin .ed360-workspace-hero{display:flex;align-items:center;gap:16px;padding:18px 0 20px;border-bottom:1px solid #e7edf5;background:transparent;box-shadow:none}
+.ed360-library-admin .ed360-workspace-hero-icon{width:46px;height:46px;display:grid;place-items:center;flex:0 0 46px;border-radius:14px;color:#1d4ed8;background:#eff6ff}
+.ed360-library-admin .ed360-workspace-hero-copy{min-width:0;flex:1}
+.ed360-library-admin .ed360-workspace-hero-copy>span,.ed360-library-modal header>div>span{display:block;color:#64748b;font-size:10px;font-weight:800;letter-spacing:1.15px;text-transform:uppercase}
+.ed360-library-admin .ed360-workspace-hero-copy h1{margin:5px 0 4px;color:#0f172a;font-size:clamp(21px,2.4vw,27px);font-weight:800;letter-spacing:-.65px}
+.ed360-library-admin .ed360-workspace-hero-copy p{max-width:760px;margin:0;color:#64748b;font-size:13px;line-height:1.55}
+.ed360-library-admin .ed360-workspace-hero-tools{display:flex;align-items:center;justify-content:flex-end;gap:9px;flex-wrap:wrap}
+.ed360-library-admin .ed360-data-state{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border:1px solid #dbeafe;border-radius:999px;background:#f8fbff;color:#315b9b;font-size:11px;font-weight:700}
+.ed360-library-admin .ed360-data-state i{width:7px;height:7px;border-radius:50%;background:#2563eb}
+.ed360-library-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.ed360-library-metrics article{min-width:0;padding:16px 17px;border:1px solid #e4eaf3;border-radius:13px;background:#fff;box-shadow:0 2px 8px rgba(15,23,42,.035)}
+.ed360-library-metrics article span{display:block;color:#64748b;font-size:11px;font-weight:700}
+.ed360-library-metrics article strong{display:block;margin:8px 0 3px;color:#0f172a;font-size:26px;font-weight:800;letter-spacing:-.7px;font-variant-numeric:tabular-nums}
+.ed360-library-metrics article small{display:block;color:#94a3b8;font-size:11px;line-height:1.4}
+.ed360-library-overview-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+.ed360-library-overview-card{display:flex;min-height:190px;flex-direction:column;align-items:flex-start;padding:18px;border:1px solid #e4eaf3;border-radius:14px;background:#fff;box-shadow:0 2px 8px rgba(15,23,42,.035)}
+.ed360-library-overview-icon{display:grid;width:36px;height:36px;place-items:center;border-radius:10px;background:#eff6ff;color:#2563eb}
+.ed360-library-overview-card h2{margin:14px 0 5px;color:#172033;font-size:15px;font-weight:800}
+.ed360-library-overview-card p{margin:0 0 16px;color:#64748b;font-size:12px;line-height:1.55}
+.ed360-library-overview-card .button{margin-top:auto}
+.ed360-library-note{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border:1px solid #dbeafe;border-radius:11px;background:#f8fbff;color:#355b91;font-size:12px;line-height:1.55}
+.ed360-library-note svg{flex:0 0 auto;margin-top:1px;color:#2563eb}
+.ed360-library-error{display:grid;gap:7px;padding:14px;border:1px solid #fecaca;border-radius:12px;background:#fffafa;color:#991b1b;font-size:12px}
+.ed360-library-error span{color:#7f1d1d;overflow-wrap:anywhere}
+.ed360-library-error .button{justify-self:start;margin-top:4px}
+.ed360-library-list-card{overflow:hidden;border:1px solid #e4eaf3;border-radius:14px;background:#fff;box-shadow:0 2px 9px rgba(15,23,42,.035)}
+.ed360-library-list-toolbar{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 16px;border-bottom:1px solid #e8edf5}
+.ed360-library-search{display:flex;min-width:220px;max-width:460px;flex:1;align-items:center;gap:9px;padding:0 11px;border:1px solid #dce4ef;border-radius:9px;background:#fff;color:#64748b}
+.ed360-library-search:focus-within{border-color:#93c5fd;box-shadow:0 0 0 3px rgba(59,130,246,.1)}
+.ed360-library-search input{width:100%;min-width:0;height:38px;border:0;outline:0;background:transparent;color:#172033;font:inherit;font-size:12px}
+.ed360-library-toolbar-actions{display:flex;align-items:center;justify-content:flex-end;gap:11px;color:#64748b;font-size:11px;white-space:nowrap}
+.ed360-library-toolbar-actions .button{display:inline-flex;align-items:center;gap:6px}
+.ed360-library-admin .table-scroll{width:100%;overflow:auto}
+.ed360-library-admin table{width:100%;min-width:820px;border-collapse:separate;border-spacing:0;font-size:12px}
+.ed360-library-admin thead th{padding:12px 13px;border-bottom:1px solid #e5ebf3;background:#f8fafc;color:#64748b;text-align:left;font-size:10px;font-weight:800;letter-spacing:.45px;text-transform:uppercase;white-space:nowrap}
+.ed360-library-admin tbody td{padding:13px;border-bottom:1px solid #edf1f6;color:#334155;vertical-align:middle}
+.ed360-library-admin tbody tr:last-child td{border-bottom:0}
+.ed360-library-admin tbody tr:hover td{background:#fbfdff}
+.ed360-library-admin tbody td strong{display:block;color:#172033;font-weight:750}
+.ed360-library-admin tbody td small{display:block;margin-top:4px;color:#94a3b8;font-size:10px}
+.ed360-library-status{display:inline-flex;align-items:center;padding:5px 8px;border:1px solid #e2e8f0;border-radius:999px;background:#f8fafc;color:#64748b;font-size:10px;font-weight:750;text-transform:capitalize}
+.ed360-library-status.is-active{border-color:#bfdbfe;background:#eff6ff;color:#1d4ed8}
+.ed360-library-open-link{display:inline-flex;align-items:center;gap:5px;margin-top:6px;color:#2563eb;font-size:11px;font-weight:700;text-decoration:none}
+.ed360-library-open-link:hover{text-decoration:underline}
+.ed360-library-actions{display:flex;align-items:center;gap:6px}
+.ed360-library-actions button{display:grid;width:30px;height:30px;place-items:center;border:1px solid #dbe4ef;border-radius:8px;background:#fff;color:#475569;cursor:pointer}
+.ed360-library-actions button:hover{border-color:#93c5fd;background:#eff6ff;color:#1d4ed8}
+.ed360-library-actions button:disabled{opacity:.45;cursor:not-allowed}
+.ed360-library-admin .ed360-workspace-empty{display:grid;justify-items:center;gap:7px;padding:40px 18px;color:#64748b;text-align:center;font-size:12px}
+.ed360-library-admin .ed360-workspace-empty strong{color:#172033;font-size:14px}
+.ed360-library-admin .ed360-workspace-empty .button{margin-top:8px}
+.ed360-library-modal-backdrop{position:fixed;z-index:1000;inset:0;display:grid;place-items:center;overflow:auto;padding:22px;background:rgba(15,23,42,.48);backdrop-filter:blur(4px)}
+.ed360-library-modal{width:min(760px,100%);max-height:min(90vh,900px);overflow:auto;border:1px solid #e2e8f0;border-radius:17px;background:#fff;box-shadow:0 24px 80px rgba(15,23,42,.24)}
+.ed360-library-modal>header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:20px 22px;border-bottom:1px solid #e8edf5}
+.ed360-library-modal header h2{margin:6px 0;color:#0f172a;font-size:20px;font-weight:800;letter-spacing:-.4px}
+.ed360-library-modal header p{max-width:570px;margin:0;color:#64748b;font-size:12px;line-height:1.5}
+.ed360-library-modal header>button{display:grid;width:34px;height:34px;flex:0 0 34px;place-items:center;border:1px solid #e2e8f0;border-radius:9px;background:#fff;color:#475569;cursor:pointer}
+.ed360-library-modal form{padding:20px 22px 0}
+.ed360-library-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.ed360-library-form-grid label{display:grid;min-width:0;gap:6px;color:#475569;font-size:11px;font-weight:750}
+.ed360-library-form-grid .ed360-library-span-two{grid-column:1/-1}
+.ed360-library-form-grid input,.ed360-library-form-grid select,.ed360-library-form-grid textarea{width:100%;min-width:0;min-height:39px;padding:9px 10px;border:1px solid #dbe4ef;border-radius:9px;outline:0;background:#fff;color:#172033;font:inherit;font-size:12px;font-weight:450}
+.ed360-library-form-grid textarea{resize:vertical}
+.ed360-library-form-grid input:focus,.ed360-library-form-grid select:focus,.ed360-library-form-grid textarea:focus{border-color:#60a5fa;box-shadow:0 0 0 3px rgba(59,130,246,.1)}
+.ed360-library-modal form>footer{position:sticky;bottom:0;display:flex;align-items:center;justify-content:space-between;gap:12px;margin:19px -22px 0;padding:14px 22px;border-top:1px solid #e8edf5;background:rgba(255,255,255,.97)}
+.ed360-library-modal form>footer>span{color:#64748b;font-size:11px}
+.ed360-library-modal form>footer>div{display:flex;align-items:center;gap:8px}
+.ed360-library-admin button:focus-visible,.ed360-library-admin a:focus-visible{outline:3px solid rgba(37,99,235,.35);outline-offset:2px}
+@media(max-width:900px){
+ .ed360-library-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .ed360-library-overview-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .ed360-library-admin .ed360-workspace-hero{align-items:flex-start;flex-wrap:wrap}
+ .ed360-library-admin .ed360-workspace-hero-tools{width:100%;justify-content:flex-start}
+}
+@media(max-width:560px){
+ .ed360-library-admin{gap:13px}
+ .ed360-library-metrics{gap:8px}
+ .ed360-library-metrics article{padding:12px}
+ .ed360-library-metrics article strong{font-size:22px}
+ .ed360-library-overview-grid{grid-template-columns:1fr}
+ .ed360-library-list-toolbar{align-items:stretch;flex-direction:column}
+ .ed360-library-search{max-width:none}
+ .ed360-library-toolbar-actions{justify-content:space-between}
+ .ed360-library-modal-backdrop{align-items:end;padding:0}
+ .ed360-library-modal{width:100%;max-height:94vh;border-radius:17px 17px 0 0}
+ .ed360-library-modal>header,.ed360-library-modal form{padding-right:16px;padding-left:16px}
+ .ed360-library-form-grid{grid-template-columns:1fr}
+ .ed360-library-form-grid .ed360-library-span-two{grid-column:auto}
+ .ed360-library-modal form>footer{margin-right:-16px;margin-left:-16px;padding:12px 16px}
+ .ed360-library-modal form>footer>span{display:none}
+}
+@media(prefers-reduced-motion:reduce){.ed360-library-admin *{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
