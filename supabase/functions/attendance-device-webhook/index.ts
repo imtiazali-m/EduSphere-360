@@ -70,6 +70,23 @@ Deno.serve(async (req: Request) => {
     const validSignature = await verifyDeviceSignature(secret, timestamp, rawBody, signature);
     if (!validSignature) return json({ error: "Device signature verification failed." }, 401);
 
+    // A signed heartbeat proves the trusted gateway is reachable without inventing an attendance mark.
+    if (event.event_type === "heartbeat") {
+      const { error: heartbeatError } = await db
+        .from("attendance_device_sources")
+        .update({ last_synced_at: new Date().toISOString(), last_error: null })
+        .eq("id", source.id)
+        .eq("institution_id", source.institution_id);
+      if (heartbeatError) return json({ error: "The device heartbeat could not be recorded." }, 500);
+      return json({
+        accepted: true,
+        heartbeat: true,
+        source_id: source.id,
+        last_seen_at: new Date().toISOString(),
+        message: "Signed device heartbeat received. No attendance record was created.",
+      }, 202);
+    }
+
     const externalEventId = String(event.external_event_id || "").trim();
     const personType = String(event.person_type || "");
     const personId = String(event.person_id || "");
