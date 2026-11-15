@@ -997,6 +997,7 @@ export function Dashboard({ onToast }: Props) {
                 tab.targetKey === 'unavailable' && getWorkspaceGroup(tab.targetWindow.split(':')[0])?.roles.includes(user!.role) ? <InstitutionalWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'unavailable' ? <WorkspaceUnavailable groupKey={tab.targetWindow.split(':')[0]} itemKey={tab.targetWindow.split(':').slice(1).join(':')} onNavigate={navigate}/> :
                 tab.targetKey === 'attendance' ? <AttendanceWorkspace initialWindow={tab.targetWindow || 'students'} onToast={onToast}/> :
+                tab.targetKey === 'academic' && tab.targetWindow === 'live-online-classes' ? <NativeCallingWorkspace onToast={onToast} initialView="classes"/> :
                 tab.targetKey === 'academic' ? <AcademicManagementWorkspace initialWindow={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'care' ? <Stage7CareWorkspace initialWindow={tab.targetWindow} onToast={onToast}/> :
                 tabAdminKey ? <AdministrationModule initialKey={tabAdminKey as 'departments' | 'programs' | 'classes' | 'academic_sessions' | 'subjects' | 'rooms'}/> :
