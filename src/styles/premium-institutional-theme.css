@@ -1049,3 +1049,29 @@
   .pro-window-panel .ed360-behaviour-header,.pro-window-panel .ed360-front-office-hero { align-items:flex-start;flex-direction:column; }
   .pro-window-panel .ed360-front-office-refresh-top { width:100%; }
 }
+
+
+/* Backup, restore and data-transfer centre uses the shared plain page heading. */
+.pro-window-panel .bdw-page-intro {
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding:4px 2px 16px;margin:0 0 18px;border:0;border-bottom:1px solid var(--es-line);
+  border-radius:0;background:transparent;box-shadow:none;
+}
+.pro-window-panel .bdw-page-intro .bdw-page-breadcrumb {
+  color:var(--es-muted);font-size:10px;font-weight:850;letter-spacing:1.1px;line-height:1.5;
+}
+.pro-window-panel .bdw-page-intro h1 {
+  margin:5px 0 0;color:var(--es-ink);font-size:clamp(26px,2.3vw,32px);
+  line-height:1.18;font-weight:850;letter-spacing:-.7px;
+}
+.pro-window-panel .bdw-page-intro .bdw-button.primary {
+  min-height:46px;padding:0 20px;color:#fff;background:var(--es-primary-600);
+  border:1px solid var(--es-primary-600);border-radius:12px;
+  box-shadow:0 6px 16px rgba(96,53,181,.2);font-size:13px;font-weight:850;
+}
+.pro-window-panel .bdw-page-intro .bdw-button.primary:hover { color:#fff;background:var(--es-primary-700); }
+@media(max-width:700px) {
+  .pro-window-panel .bdw-page-intro { align-items:flex-start;flex-direction:column; }
+  .pro-window-panel .bdw-page-intro .bdw-intro-action,
+  .pro-window-panel .bdw-page-intro .bdw-button { width:100%; }
+}
