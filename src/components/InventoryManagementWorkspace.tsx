@@ -100,7 +100,8 @@ export function InventoryManagementWorkspace({workspaceKey,onToast,onNavigate}:P
     const duplicate=items.find(row=>row.id!==editing?.id&&form.reference_code.trim()&&String(row.reference_code??'').toLowerCase()===form.reference_code.trim().toLowerCase())
     if(duplicate)throw new Error('That SKU or item reference is already registered in this institution.')
     const category=categories.find(row=>row.id===form.category_id)
-    const values={institution_id:user.institutionId,module_key:'inventory',record_type:'item-catalogue',title,reference_code:form.reference_code.trim()||null,description:form.description.trim()||null,status:form.status,quantity:editing?.quantity??qty,amount:unitCost,payload:{sku:form.reference_code.trim()||null,category_id:category?.id??null,category_name:category?.title??null,unit:form.unit||'pcs',unit_cost:unitCost,reorder_level:reorder,supplier:form.supplier.trim()||null,storage_location:form.storage_location.trim()||null}}
+    const openingQuantity=editing&&(movementMap.get(editing.id)?.length??0)>0?safeNum(editing.quantity):qty
+    const values={institution_id:user.institutionId,module_key:'inventory',record_type:'item-catalogue',title,reference_code:form.reference_code.trim()||null,description:form.description.trim()||null,status:form.status,quantity:openingQuantity,amount:unitCost,payload:{sku:form.reference_code.trim()||null,category_id:category?.id??null,category_name:category?.title??null,unit:form.unit||'pcs',unit_cost:unitCost,reorder_level:reorder,supplier:form.supplier.trim()||null,storage_location:form.storage_location.trim()||null}}
     const result=editing
      ?await supabase.from('institutional_records').update({...values,updated_by:user.id}).eq('id',editing.id).eq('institution_id',user.institutionId).eq('module_key','inventory')
      :await supabase.from('institutional_records').insert({...values,created_by:user.id})
