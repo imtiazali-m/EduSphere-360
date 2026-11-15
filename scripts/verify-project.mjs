@@ -1471,6 +1471,16 @@ check('Student admission is a dedicated, accessible workspace window', () => {
   assert.ok(mainEntry.includes("import './styles/student-admission-workspace.css'"), 'Dedicated admission styles must be loaded by the application')
 })
 
+check('College role assignment expiry controls use effective dates and clear old expiry on reactivation', () => {
+  const roles = read('src/components/CollegeRolePermissionWorkspace.tsx')
+  const policy = read('supabase/migrations/20261113173320_college_custom_role_profiles_and_scope_policies.sql')
+  for (const value of ['assignmentIsActive', 'assignEndDate', 'must be in the future', 'ends_at:null', 'starts_at:new Date().toISOString()', "'Expired'", "'Scheduled'"]) {
+    assert.ok(roles.includes(value), 'Role assignment date handling is missing: ' + value)
+  }
+  assert.ok(roles.includes('assignments.filter(assignmentIsActive)') && roles.includes('assignmentIsActive(row)'), 'Role assignment counts and duplicate checks must use effective dates')
+  assert.ok(policy.includes('a.starts_at<=now()') && policy.includes('(a.ends_at is null or a.ends_at>now())') && policy.includes('p.is_active'), 'Database permission checks must enforce assignment start, expiry and profile state')
+})
+
 check('Admission transitions are enforced by the database and reviewed with trusted identity', () => {
   const guard = read('supabase/migrations/20261114033957_guard_student_admission_status_transitions.sql')
   const recordModule = read('src/components/RecordModule.tsx')
