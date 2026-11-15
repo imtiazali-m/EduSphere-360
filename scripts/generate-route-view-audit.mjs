@@ -286,6 +286,11 @@ function checkView(role, route, dispatcher) {
     const [domain, view] = targetWindow.split(':')
     return { component: 'InstitutionOperationsWorkspace', view: domain + ':' + view, status: operationTabs[domain]?.has(view) ? 'Supported' : 'Unsupported operations view' }
   }
+  if (targetKey === 'institutional' && targetWindow.startsWith('examinations:')) {
+    const view = targetWindow.slice('examinations:'.length)
+    const assessmentViews = new Set(['examination-programs','examination-timetable','question-bank','online-tests-and-quizzes','marks-entry','grades-and-grading-system','results-and-result-approval','report-cards','examination-reports'])
+    return { component: 'AssessmentWorkspace', view, status: assessmentViews.has(view) ? 'Supported' : 'Unsupported assessment view' }
+  }
   if (targetKey === 'institutional') {
     const [group, item] = targetWindow.split(':')
     const key = group + ':' + item
@@ -318,7 +323,7 @@ for (const [role, label] of roles) {
       const route = getNavigationRoute(group.key, labelText, role)
       const dashboard = shellTarget(route)
       const dispatcher = route.startsWith('unavailable:') ? 'WorkspaceUnavailable'
-        : route.startsWith('institutional:') ? (linkedKeys.has(route.slice('institutional:'.length)) ? 'LinkedOperationsWorkspace' : 'InstitutionalWorkspace')
+        : route.startsWith('institutional:') ? (dashboard.targetWindow.startsWith('examinations:') ? 'AssessmentWorkspace' : linkedKeys.has(route.slice('institutional:'.length)) ? 'LinkedOperationsWorkspace' : 'InstitutionalWorkspace')
         : dashboard.targetKey === 'academic' ? 'AcademicManagementWorkspace'
         : dashboard.targetKey === 'overview' ? 'RoleDashboard'
         : dashboard.targetKey === 'notifications' ? 'NotificationCenter'
