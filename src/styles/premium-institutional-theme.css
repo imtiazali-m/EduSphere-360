@@ -406,3 +406,31 @@
   .iop-idcard-preview>header b { font-size:11px; }
   .iop-idcard-info strong { font-size:12px; }
 }
+
+
+/* All refresh controls are a consistent primary action, regardless of workspace. */
+.pro-window-panel button:has(svg.lucide-refresh-cw),
+.pro-window-panel button:has(svg.lucide-refresh-ccw) {
+  min-height:44px;
+  padding:0 18px;
+  color:#fff;
+  background:var(--es-primary-600);
+  border:1px solid var(--es-primary-600);
+  border-radius:11px;
+  box-shadow:0 6px 16px rgba(96,53,181,.2);
+  font-size:13px;
+  font-weight:850;
+}
+.pro-window-panel button:has(svg.lucide-refresh-cw):hover,
+.pro-window-panel button:has(svg.lucide-refresh-ccw):hover {
+  color:#fff;background:var(--es-primary-700);border-color:var(--es-primary-700);
+}
+.pro-window-panel .gov-heading>.gov-button {
+  min-height:46px;padding:0 20px;color:#fff;background:var(--es-primary-600);
+  border:1px solid var(--es-primary-600);border-radius:12px;font-size:14px;font-weight:850;
+  box-shadow:0 6px 16px rgba(96,53,181,.2);
+}
+.pro-window-panel .iop-heading { align-items:center; }
+.pro-window-panel .iop-heading h1 { color:var(--es-ink);font-size:clamp(26px,2.3vw,32px);font-weight:850; }
+.pro-window-panel .iop-heading>div>span { color:var(--es-muted);font-size:10px;font-weight:850;letter-spacing:1.3px; }
+.pro-window-panel .iop-panel .iop-kpis article { border:1px solid var(--es-line);border-radius:12px;background:#fbfaff; }
