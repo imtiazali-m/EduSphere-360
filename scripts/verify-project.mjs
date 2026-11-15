@@ -12,13 +12,17 @@ const check = (label, fn) => {
 }
 
 const packageJson = JSON.parse(read('package.json'))
-check('External provider center exposes only AI and biometric hardware integrations', () => {
+check('External provider centre exposes AI, biometric, messaging, design and online-class integration workspaces', () => {
   const integrations = read('src/components/IntegrationManagementWorkspace.tsx')
   const dashboard = read('src/components/Dashboard.tsx')
-  for (const key of ["'ai-providers'", "biometric:"]) assert.ok(integrations.includes(key), 'Missing integration workspace: ' + key)
-  for (const key of ["zoom:", "google:", "youtube:"]) assert.ok(!integrations.includes(key), 'Third-party classroom integration should not be required: ' + key)
+  for (const key of ["'ai-providers'", "biometric:", "whatsapp:", "canva:", "'google-classroom':", "zoom:", "youtube:"]) {
+    assert.ok(integrations.includes(key), 'Missing integration workspace: ' + key)
+  }
   assert.ok(integrations.includes("action:'status'") && integrations.includes("action:'generate'"), 'AI credentials need a live status and provider test')
-  assert.ok(integrations.includes('Not connected'), 'External integrations must not be claimed connected before verification')
+  assert.ok(integrations.includes('Not connected') && integrations.includes('setup required'), 'External integrations must remain unconnected until verified')
+  for (const key of ['WHATSAPP_ACCESS_TOKEN','CANVA_CLIENT_ID','GOOGLE_CLIENT_ID','ZOOM_CLIENT_ID','YOUTUBE_API_KEY']) {
+    assert.ok(integrations.includes(key), 'Missing server-side integration prerequisite: ' + key)
+  }
   assert.ok(dashboard.includes('<IntegrationManagementWorkspace'), 'Dashboard must dispatch the Integration workspace')
   assert.ok(dashboard.includes('<NativeCallingWorkspace'), 'Native calling and online classes must be dispatched by EduSphere')
 })
@@ -172,6 +176,17 @@ check('Formal fee receipts are issued through the secured ledger and can be retr
   assert.ok(finance.includes('function printReceipt(') && finance.includes('Print receipt'), 'Official receipts must be printable from the ledger')
   assert.ok(migration.includes('create table if not exists public.fee_receipt_ledger'), 'Receipt ledger schema must exist in migrations')
 })
+check('Identity cards and certificates generate QR codes locally without sending identifiers to third-party QR services', () => {
+  const qr = read('src/components/LocalQrCode.tsx')
+  const attendance = read('src/components/AttendanceWorkspace.tsx')
+  const operations = read('src/components/InstitutionOperationsWorkspace.tsx')
+  const index = read('index.html')
+  assert.ok(index.includes('/vendor/qrcode.min.js'), 'Bundled QR generator must load from the college application')
+  assert.ok(qr.includes('new QRCode(host') && qr.includes('value.trim()'), 'Visible QR previews must be generated in the browser')
+  assert.ok(attendance.includes('<LocalQrCode') && attendance.includes('data-qr-value=') && attendance.includes('/vendor/qrcode.min.js'), 'Attendance cards and print sheets must use the local QR generator')
+  assert.ok(operations.includes('<LocalQrCode') && operations.includes('certificate-qr-code') && operations.includes('data-qr-value='), 'Student ID cards and certificates must use local QR generation')
+  assert.ok(!attendance.includes('api.qrserver.com') && !operations.includes('api.qrserver.com'), 'Student and staff identifiers must not be sent to an external QR-image service')
+})
 check('Vite development and production scripts exist', () => {
   assert.equal(packageJson.scripts.dev, 'vite --host 0.0.0.0')
   assert.equal(packageJson.scripts.build, 'tsc -b && vite build')
@@ -205,7 +220,7 @@ const requiredFiles = [
   'src/components/TransportAttendanceWorkspace.tsx',
   'src/styles/data-management.css',
   'src/styles/library-reading.css',
-  'index.html', 'src/main.tsx', 'src/App.tsx', 'src/components/Dashboard.tsx', 'src/components/RoleDashboard.tsx', 'src/components/role-dashboard.css', 'src/components/WorkspaceUnavailable.tsx', 'src/components/BackupDataWorkspace.tsx', 'src/components/backup-data-workspace.css', 'src/components/IntegrationManagementWorkspace.tsx', 'src/styles/integrations-workspace.css', 'src/components/BehaviourSkillsWorkspace.tsx', 'src/styles/behaviour-skills-workspace.css',
+  'index.html', 'src/main.tsx', 'src/App.tsx', 'src/components/Dashboard.tsx', 'src/components/RoleDashboard.tsx', 'src/components/role-dashboard.css', 'src/components/WorkspaceUnavailable.tsx', 'src/components/BackupDataWorkspace.tsx', 'src/components/backup-data-workspace.css', 'src/components/IntegrationManagementWorkspace.tsx', 'src/styles/integrations-workspace.css', 'src/components/LocalQrCode.tsx', 'src/styles/local-qr.css', 'public/vendor/qrcode.min.js', 'public/vendor/qrcodejs.LICENSE.txt', 'src/styles/premium-institutional-theme.css', 'src/components/BehaviourSkillsWorkspace.tsx', 'src/styles/behaviour-skills-workspace.css',
   'src/components/FinanceWorkspace.tsx', 'src/styles/finance-workspace.css', 'src/styles/student-promotion-workspace.css', 'src/styles/navigation-refinement.css',
   'src/components/PayrollWorkspace.tsx', 'src/styles/payroll-workspace.css',
   'src/components/GovernanceWorkspace.tsx', 'src/components/AdministrationStage5Workspace.tsx', 'src/components/PeopleHRWorkspace.tsx', 'src/components/EmployeeQualificationsPanel.tsx', 'src/styles/people-hr-workspace.css', 'src/styles/governance-workspace.css',
