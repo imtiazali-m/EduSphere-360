@@ -46,6 +46,7 @@ import { InstitutionOperationsWorkspace } from './InstitutionOperationsWorkspace
 import { AssetLifecycleWorkspace } from './AssetLifecycleWorkspace'
 import { CafeteriaWorkspace } from './CafeteriaWorkspace'
 import { CertificateFormsWorkspace } from './CertificateFormsWorkspace'
+import { TransportAttendanceWorkspace } from './TransportAttendanceWorkspace'
 import { CommunicationWorkspace } from './CommunicationWorkspace'
 import { CustomReportsWorkspace } from './CustomReportsWorkspace'
 import { DataManagementWorkspace } from './DataManagementWorkspace'
@@ -781,6 +782,7 @@ export function Dashboard({ onToast }: Props) {
     const helpdeskWindowRoute = key.startsWith('helpdesk:')
     const duplicateDetectionWindowRoute = key.startsWith('duplicate-detection:')
     const certificateFormsWindowRoute = key.startsWith('certificate-forms:')
+    const transportAttendanceWindowRoute = key.startsWith('transport-attendance:')
     const operationsWindowRoute = key.startsWith('operations:')
     const backupWindowRoute = key.startsWith('backup:')
     const integrationWindowRoute = key.startsWith('integration:')
@@ -816,6 +818,7 @@ export function Dashboard({ onToast }: Props) {
       : helpdeskWindowRoute ? 'helpdesk'
       : duplicateDetectionWindowRoute ? 'duplicate-detection'
       : certificateFormsWindowRoute ? 'certificate-forms'
+      : transportAttendanceWindowRoute ? 'transport-attendance'
       : governanceWindowRoute ? 'governance'
       : operationsWindowRoute ? 'operations'
       : backupWindowRoute ? 'backup'
@@ -852,6 +855,7 @@ export function Dashboard({ onToast }: Props) {
       : helpdeskWindowRoute ? key.slice('helpdesk:'.length)
       : duplicateDetectionWindowRoute ? key.slice('duplicate-detection:'.length)
       : certificateFormsWindowRoute ? key.slice('certificate-forms:'.length)
+      : transportAttendanceWindowRoute ? key.slice('transport-attendance:'.length)
       : governanceWindowRoute ? key.slice('governance:'.length)
       : operationsWindowRoute ? key.slice('operations:'.length)
       : backupWindowRoute ? key.slice('backup:'.length)
@@ -890,6 +894,7 @@ export function Dashboard({ onToast }: Props) {
       else if (targetKey === 'helpdesk') title = 'Helpdesk'
       else if (targetKey === 'duplicate-detection') title = 'Duplicate Detection'
       else if (targetKey === 'certificate-forms') title = 'Forms & Submissions'
+      else if (targetKey === 'transport-attendance') title = 'Transport Attendance'
       else if (targetKey === 'governance') title = 'Institution Governance'
       else if (targetKey === 'operations') title = 'Institution Operations'
       else if (targetKey === 'backup') title = 'Backup & Data Management'
@@ -1088,7 +1093,6 @@ export function Dashboard({ onToast }: Props) {
               'transport:transport-fees',
               'transport:transport-assignments',
               'transport:vehicle-maintenance',
-              'transport:transport-attendance',
               'transport:transport-history',
               'transport:transport-reports'
             ]
@@ -1112,6 +1116,7 @@ export function Dashboard({ onToast }: Props) {
                 tab.targetKey === 'helpdesk' ? <HelpdeskWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'duplicate-detection' ? <DuplicateDetectionWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'certificate-forms' ? <CertificateFormsWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
+                tab.targetKey === 'transport-attendance' ? <TransportAttendanceWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'institutional' && linkedWorkspaceKeys.includes(tab.targetWindow) ? <LinkedOperationsWorkspace workspaceKey={tab.targetWindow} onToast={onToast} onNavigate={navigateChild}/> :
                 tab.targetKey === 'institutional' ? <InstitutionalWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'unavailable' && getWorkspaceGroup(tab.targetWindow.split(':')[0])?.roles.includes(user!.role) ? <InstitutionalWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/> :
