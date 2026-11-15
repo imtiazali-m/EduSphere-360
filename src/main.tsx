@@ -16,6 +16,7 @@ import './styles/examination-workspace.css'
 import './styles/dashboard-display-settings.css'
 import './styles/product-unification.css'
 import './styles/college-theme.css'
+import './styles/clean-blue-workspace-system.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
