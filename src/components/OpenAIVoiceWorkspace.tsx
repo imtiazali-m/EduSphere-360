@@ -35,13 +35,6 @@ export function OpenAIVoiceWorkspace({ onToast }: { onToast: (message: string, e
 
   const transcriptLineIdsRef = useRef<Partial<Record<VoiceLine['speaker'], number>>>({})
 
-  function addLine(speaker: VoiceLine['speaker'], text: string) {
-    const clean = text.trim()
-    if (!clean) return
-    lineIdRef.current += 1
-    setLines(current => [...current, { id: lineIdRef.current, speaker, text: clean }].slice(-30))
-  }
-
   function appendTranscript(speaker: VoiceLine['speaker'], delta: string) {
     if (!delta) return
     const existingId = transcriptLineIdsRef.current[speaker]
