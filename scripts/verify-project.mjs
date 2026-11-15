@@ -257,6 +257,21 @@ const { institutionalMenu } = require(path.join(root, 'src/lib/institutionalCata
 const { modules, modulesForRole } = require(path.join(root, 'src/lib/modules.ts'))
 const roles = ['owner', 'admin', 'teacher', 'student', 'parent', 'accountant', 'exam_officer']
 
+check('Transport attendance visibility follows staff-only event-table permissions', () => {
+  const source = read('src/lib/navigationCatalog.ts')
+  const start = source.indexOf('  transport:{')
+  const end = source.indexOf('  reports:{', start)
+  assert.ok(start >= 0 && end > start, 'Transport role menu allowlist is missing')
+  const transportRoles = source.slice(start, end)
+  const student = transportRoles.match(/student:\[([^\]]*)\]/)
+  const parent = transportRoles.match(/parent:\[([^\]]*)\]/)
+  const teacher = transportRoles.match(/teacher:\[([^\]]*)\]/)
+  assert.ok(student && !student[1].includes('Transport Attendance'), 'Students must not be shown the staff-only transport attendance register')
+  assert.ok(parent && !parent[1].includes('Transport Attendance'), 'Parents must not be shown the staff-only transport attendance register')
+  assert.ok(teacher && teacher[1].includes('Transport Attendance'), 'Teachers must retain access to their permitted transport attendance register')
+  const route = read('src/lib/navigationRoutes.ts')
+  assert.ok(route.includes("['owner','admin','teacher'].includes(actorRole)"), 'Transport attendance route guard must match event-table RLS roles')
+})
 check('The full institutional menu maps every submenu to a working destination', () => {
   assert.equal(navigationCatalog.length, 25, 'The visible sidebar contains 25 main workspaces after Administration and academic consolidation')
   const groupKeys = new Set(navigationCatalog.map(group => group.key))
