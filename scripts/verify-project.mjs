@@ -104,6 +104,46 @@ check('Library catalogue, circulation and learning resources use dedicated tenan
   assert.ok(linked.includes("rpc('issue_library_book'") && linked.includes("rpc('return_library_book'"), 'Book issue and return must remain on the transactional library RPCs')
   assert.ok(audit.includes("component: 'LibraryManagementWorkspace'") && audit.includes("'book-issue-and-returns','library-reports'"), 'Route-view audit must recognise the library manager and linked circulation workflows')
 })
+check('Transport fleet, route, history and fee workflows are tenant-scoped', () => {
+  const dashboard = read('src/components/Dashboard.tsx')
+  const transport = read('src/components/TransportManagementWorkspace.tsx')
+  const linked = read('src/components/LinkedOperationsWorkspace.tsx')
+  const audit = read('scripts/generate-route-view-audit.mjs')
+  assert.ok(dashboard.includes("tab.targetWindow.startsWith('transport:')") && dashboard.includes('<TransportManagementWorkspace workspaceKey={tab.targetWindow} onToast={onToast} onNavigate={navigateChild}/>'), 'Transport fleet and fees must use the dedicated transport dispatcher')
+  for (const table of ['institutional_records','student_transport_allocations','student_transport_fee_charges','student_transport_fee_payments','transport_attendance_events']) {
+    assert.ok(transport.includes("from('" + table + "')"), 'Transport workspace is missing ' + table)
+  }
+  for (const rpc of ['create_student_transport_fee_charge','record_student_transport_fee_payment']) {
+    assert.ok(transport.includes("rpc('" + rpc + "'"), 'Transport fees must use the database transaction ' + rpc)
+  }
+  for (const recordType of ['vehicle-management','drivers-management','transport-routes','route-stops','vehicle-maintenance']) {
+    assert.ok(transport.includes("'" + recordType + "'"), 'Transport workspace is missing ' + recordType)
+  }
+  assert.ok(transport.includes(".eq('institution_id',user.institutionId)") && transport.includes("module_key:'transport'"), 'Transport fleet reads and writes must be institution-scoped')
+  assert.ok(transport.includes("['owner','admin'].includes(user.role)") && transport.includes("['owner','admin','accountant'].includes(user.role)"), 'Fleet administration and transport finance must enforce distinct role boundaries')
+  assert.ok(linked.includes("rpc('create_student_transport_allocation'") && linked.includes("rpc('end_student_transport_allocation'"), 'Student transport allocation must keep server-side date and vehicle-capacity checks')
+  assert.ok(audit.includes("component: 'TransportManagementWorkspace'"), 'Route audit must map transport fleet pages to their real workspace')
+})
+check('Inventory catalogue and category CRUD preserve the movement ledger', () => {
+  const dashboard = read('src/components/Dashboard.tsx')
+  const inventory = read('src/components/InventoryManagementWorkspace.tsx')
+  const linked = read('src/components/LinkedOperationsWorkspace.tsx')
+  const audit = read('scripts/generate-route-view-audit.mjs')
+  assert.ok(dashboard.includes("tab.targetWindow.startsWith('inventory:')") && dashboard.includes('<InventoryManagementWorkspace workspaceKey={tab.targetWindow} onToast={onToast} onNavigate={navigateChild}/>'), 'Inventory catalogue routes must use the dedicated manager')
+  assert.ok(inventory.includes("from('inventory_movements')") && inventory.includes("from('institutional_records')"), 'Inventory catalogue and movement data must be read from the existing tenant schema')
+  assert.ok(inventory.includes("record_type:'item-catalogue'") && inventory.includes("record_type:'item-category'"), 'Inventory catalogue must support items and categories')
+  assert.ok(inventory.includes("['owner','admin','accountant'].includes(user.role)") && inventory.includes("['owner','admin'].includes(user.role)"), 'Inventory edit and delete roles must follow existing database policies')
+  assert.ok(inventory.includes('movementMap.get(editing.id)?.length') && inventory.includes('Opening stock was preserved'), 'Opening stock cannot be rewritten after an item has ledger history')
+  assert.ok(linked.includes("rpc('record_inventory_movement'"), 'Stock adjustments must remain on the protected inventory movement RPC')
+  assert.ok(audit.includes("component: 'InventoryManagementWorkspace'"), 'Route audit must map inventory catalogue pages to their real workspace')
+})
+check('Campus management uses the existing relational campus register', () => {
+  const linked = read('src/components/LinkedOperationsWorkspace.tsx')
+  const audit = read('scripts/generate-route-view-audit.mjs')
+  assert.ok(linked.includes("supabase.from('campuses')") && linked.includes('async function saveCampus'), 'Campus management must keep its dedicated CRUD flow')
+  assert.ok(linked.includes("['owner','admin'].includes(user.role)"), 'Campus administration must be owner/admin controlled')
+  assert.ok(audit.includes("targetWindow === 'administration:campus-and-branch-management'"), 'Campus management audit classification must match its actual workspace')
+})
 check('Leave applications, approvals, balances and reporting have separate role-scoped workflows', () => {
   const care = read('src/components/Stage7CareWorkspace.tsx')
   const routes = read('src/lib/navigationRoutes.ts')
