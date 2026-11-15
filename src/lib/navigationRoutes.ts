@@ -422,13 +422,27 @@ function dedicatedRoute(groupKey: string, itemKey: string): string | undefined {
     return 'institutional:examinations:' + itemKey
   }
   if (groupKey === 'class-tests') {
-    if (['marks-entry','marks-verification','result-processing','report-cards','merit-lists','result-publishing','result-corrections','test-results','performance-analysis','student-wise-test-history'].includes(itemKey)) {
-      const view = ['report-cards','merit-lists','result-publishing','test-results','performance-analysis'].includes(itemKey) ? 'published'
-        : ['marks-verification','result-processing','result-corrections'].includes(itemKey) ? 'review' : 'all'
-      return 'exam_results:' + view
+    const classTestViews:Record<string,string> = {
+      'class-test-dashboard':'examination-programs',
+      'create-class-tests':'online-tests-and-quizzes',
+      'test-schedule':'examination-timetable',
+      'online-tests':'online-tests-and-quizzes',
+      'written-tests':'online-tests-and-quizzes',
+      'test-questions':'question-bank',
+      'marks-entry':'marks-entry',
+      'test-results':'results-and-result-approval',
+      'performance-analysis':'examination-reports',
+      'test-reports':'examination-reports',
+      'student-wise-test-history':'results-and-result-approval',
     }
-    if (itemKey.includes('report')) return 'reports:academics'
-    return 'exams:' + (itemKey.includes('upcoming') ? 'upcoming' : itemKey.includes('completed') ? 'completed' : 'calendar')
+    const view=classTestViews[itemKey]
+    if (view) return 'institutional:examinations:' + view
+    if (['marks-verification','result-processing','report-cards','merit-lists','result-publishing','result-corrections'].includes(itemKey)) {
+      const resultView = ['report-cards','merit-lists','result-publishing'].includes(itemKey) ? 'published'
+        : ['marks-verification','result-processing','result-corrections'].includes(itemKey) ? 'review' : 'all'
+      return 'exam_results:' + resultView
+    }
+    return 'institutional:examinations:examination-programs'
   }
   if (groupKey === 'fees' || groupKey === 'receivables' || groupKey === 'payments' || groupKey === 'receipts') {
     const view = itemKey.includes('overdue') ? 'overdue'
