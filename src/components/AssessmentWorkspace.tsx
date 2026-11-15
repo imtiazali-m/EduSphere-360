@@ -30,7 +30,6 @@ const localDateTimeToIso=(v:string)=>v?new Date(v).toISOString():null
 const safeXml=(v:any)=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;')
 const safeHtml=(v:any)=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')
 const download=(name:string,body:string,type:string)=>{const url=URL.createObjectURL(new Blob([body],{type}));const a=document.createElement('a');a.href=url;a.download=name;a.click();URL.revokeObjectURL(url)}
-const csv=(v:any)=>'"'+String(v??'').replace(/"/g,'""')+'"'
 const routeKey=(route:string):Key=>{const last=route.split(':').pop()||'';const aliases:Record<string,Key>={'examination-programs':'programs','examination-timetable':'timetable','question-bank':'questions','online-tests-and-quizzes':'online','marks-entry':'marks','grades-and-grading-system':'grading','results-and-result-approval':'results','report-cards':'cards','examination-reports':'reports'};if(aliases[last])return aliases[last];return tabs.find(t=>slug(t.label)===last)?.key??'programs'}
 
 export function AssessmentWorkspace({workspaceKey,onToast}:Props){
