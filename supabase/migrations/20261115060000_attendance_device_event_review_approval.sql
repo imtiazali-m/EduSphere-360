@@ -97,6 +97,14 @@ create policy attendance_device_events_authorised_review_read
     or (
       student_id is not null
       and public.has_institution_role(institution_id, array['teacher'])
+      and public.can_view_student(student_id)
+      and private.has_institution_permission(
+        institution_id,
+        'attendance',
+        'view',
+        (select s.campus_id from public.students s where s.id = student_id and s.institution_id = institution_id),
+        private.college_department_for_student(student_id)
+      )
     )
   );
 
@@ -186,9 +194,27 @@ begin
     if not public.has_institution_role(v_event.institution_id, array['owner','admin','teacher']) then
       raise exception 'Only an authorised owner, administrator or teacher can review student attendance events.';
     end if;
+    if not private.has_institution_permission(
+      v_event.institution_id,
+      'attendance',
+      'approve',
+      (select s.campus_id from public.students s where s.id = v_event.student_id and s.institution_id = v_event.institution_id),
+      private.college_department_for_student(v_event.student_id)
+    ) then
+      raise exception 'Your assigned college role or campus scope cannot review this student attendance event.';
+    end if;
   elsif v_event.teacher_id is not null then
     if not public.has_institution_role(v_event.institution_id, array['owner','admin']) then
       raise exception 'Only an institution owner or administrator can review employee attendance events.';
+    end if;
+    if not private.has_institution_permission(
+      v_event.institution_id,
+      'attendance',
+      'approve',
+      (select t.campus_id from public.teachers t where t.id = v_event.teacher_id and t.institution_id = v_event.institution_id),
+      private.college_department_for_teacher(v_event.teacher_id)
+    ) then
+      raise exception 'Your assigned college role or campus scope cannot review this employee attendance event.';
     end if;
   else
     raise exception 'The device event does not identify exactly one person.';
@@ -382,7 +408,8 @@ begin
         returning id into v_record_id;
       else
         update public.attendance
-           set student_name = v_student.full_name,
+           set register_id = coalesce(register_id, v_register_id),
+               student_name = v_student.full_name,
                class_name = v_student.class_name,
                status = p_attendance_status,
                notes = v_review_note,
@@ -402,6 +429,7 @@ begin
     else
       update public.attendance
          set departure_time = p_event_time,
+             register_id = coalesce(register_id, v_register_id),
              notes = coalesce(v_review_note, notes),
              correction_reason = case when v_correction_reason is not null then v_correction_reason else correction_reason end,
              corrected_by = case when v_correction_reason is not null then v_user_id else corrected_by end,
@@ -589,6 +617,7 @@ begin
     else
       update public.employee_attendance
          set check_in_time = p_event_time,
+             register_id = coalesce(register_id, v_register_id),
              status = p_attendance_status,
              notes = v_review_note,
              recorded_by = v_user_id,
@@ -610,6 +639,7 @@ begin
 
     update public.employee_attendance
        set check_out_time = p_event_time,
+           register_id = coalesce(register_id, v_register_id),
            notes = coalesce(v_review_note, notes),
            shift_id = coalesce(p_shift_id, shift_id),
            early_departure_minutes = v_early_minutes,
