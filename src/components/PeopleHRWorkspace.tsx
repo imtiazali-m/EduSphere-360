@@ -378,8 +378,8 @@ export function PeopleHRWorkspace({initialWindow,onToast,onNavigate}:Props) {
 
   return <main className="page-content people-hr-workspace">
     <header className="staff-workspace-heading">
-      <div><span className="staff-kicker">STAGE 6 · PEOPLE MANAGEMENT & HUMAN RESOURCES</span><h1>{titleText}</h1><p>{windowKey==='admissions'?'Enquiry intake, application conversion and admission follow-up.':windowKey==='recruitment'?'Vacancy planning, applicant screening, interviews and hiring.':windowKey==='contracts'?'Contract lifecycle, signing dates, expiry controls and employee documents.':windowKey==='performance'?'Structured employee reviews, appraisal outcomes and development plans.':'Graduate history, contact preferences and consent-based alumni relations.'}</p></div>
-      <button type="button" className="staff-button staff-button-outline" onClick={()=>void load()} disabled={loading}><RefreshCw size={15}/> Refresh</button>
+      <div><span className="staff-kicker">{(user?.institutionName?.trim()||'GOVERNMENT ISLAMIA DEGREE COLLEGE').toUpperCase()} / PEOPLE &amp; HUMAN RESOURCES / {titleText.toUpperCase()}</span><h1>{titleText}</h1></div>
+      <button type="button" className="staff-button staff-button-primary" onClick={()=>void load()} disabled={loading}><RefreshCw size={15}/>{loading?'Refreshing…':'Refresh'}</button>
     </header>
 
     {(isAdmin||canViewOwnEmployeeRecords)&&<nav className="people-hr-subnav" aria-label="People management workspaces">
