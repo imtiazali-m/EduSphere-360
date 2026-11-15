@@ -422,8 +422,8 @@ check('College production deployment runs only from main after the verified buil
   assert.ok(productionJob.includes("github.ref == 'refs/heads/main'"), 'Production deployment must be restricted to main')
   assert.ok(productionJob.includes("github.event_name == 'push'"), 'A verified merge to main must deploy the college production site')
   assert.ok(productionJob.includes("github.event_name == 'workflow_dispatch'") && productionJob.includes('inputs.deploy_production == true'), 'A manual, explicitly approved redeploy must remain available')
-  assert.ok(productionJob.includes('Ensure the college-named Cloudflare Pages project exists'), 'The college Pages project must be created idempotently when missing')
-  assert.ok(productionJob.includes('pages deploy dist --project-name=gidcbadin --branch=main'), 'Production must deploy to the college-named Pages project')
+  assert.ok(productionJob.includes('Ensure both EduSphere production Pages projects exist') && productionJob.includes('for project in gidcbadin edusphere360'), 'Both EduSphere Pages projects must be created idempotently when missing')
+  assert.ok(productionJob.includes('pages deploy dist --project-name=gidcbadin --branch=main') && productionJob.includes('pages deploy dist --project-name=edusphere360 --branch=main'), 'Production must deploy the same verified build to both Pages projects')
   assert.ok(!releaseWorkflow.includes('deploy-preview'), 'Pull requests must not publish a separate Cloudflare preview')
 })
 
