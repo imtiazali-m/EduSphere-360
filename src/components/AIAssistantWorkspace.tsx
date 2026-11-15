@@ -91,7 +91,7 @@ export function AIAssistantWorkspace({initialWindow='chat'}:{initialWindow?:stri
  const [sending,setSending]=useState(false)
  const [error,setError]=useState('')
  const feedRef=useRef<HTMLDivElement>(null)
- const configured=providers.filter(p=>providerStatus[p.key]?.configured)
+
  const selectedProvider=provider==='auto'?'cloudflare':provider
  const activeModel=model.trim()||(providers.find(p=>p.key===selectedProvider)?.model??'')
  const contextNames=useMemo(()=>sourceNames.map(key=>key.replaceAll('_',' ')),[sourceNames])
