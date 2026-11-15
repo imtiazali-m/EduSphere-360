@@ -138,7 +138,7 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
  },[user?.id,user?.institutionId,population,date,className,period,campusId])
 
  const loadDevices=useCallback(async()=>{
-  if(!supabase||!user)return
+  if(!supabase||!user||!canManageStaff){setDevices([]);setDeviceEvents([]);return}
   const [sourceResult,eventResult]=await Promise.all([
    supabase.from('attendance_device_sources').select('*').eq('institution_id',user.institutionId).order('created_at',{ascending:false}),
    supabase.from('attendance_device_events').select('id,source_id,external_event_id,student_id,teacher_id,occurred_at,event_kind,processing_status,error_message,created_at').eq('institution_id',user.institutionId).order('created_at',{ascending:false}).limit(20)
@@ -147,7 +147,7 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
   setDevices((sourceResult.data??[]) as RecordRow[])
   if(eventResult.error){setLoadingError(eventResult.error.message);setDeviceEvents([]);return}
   setDeviceEvents((eventResult.data??[]) as RecordRow[])
- },[user?.id,user?.institutionId])
+ },[user?.id,user?.institutionId,canManageStaff])
 
  useEffect(()=>{void loadRoster()},[loadRoster])
  useEffect(()=>{if(!readOnly && population==='students' && !className && classes[0])setClassName(classes[0])},[readOnly,population,className,classes])
