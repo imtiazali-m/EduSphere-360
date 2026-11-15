@@ -144,7 +144,7 @@ export function AIAssistantWorkspace({initialWindow='chat'}:{initialWindow?:stri
   }catch(err){setError(err instanceof Error?err.message:'AI response could not be generated.');}
   finally{setSending(false)}
  }
- const availableCount=configured.length
+
  const freeAIReady=Boolean(providerStatus.cloudflare?.configured)
  return <main className="ed360-ai-workspace">
   <header className="ed360-ai-header">
