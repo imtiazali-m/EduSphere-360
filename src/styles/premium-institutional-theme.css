@@ -351,3 +351,58 @@
   outline-offset: 2px;
 }
 ::selection { color:#211832; background:#e4d8f8; }
+
+
+/* Certificate and ID-card workspaces use the shared institutional surface. */
+.pro-window-panel .iop-panel {
+  color:var(--es-ink); background:#fff; border:1px solid var(--es-line);
+  border-radius:16px; box-shadow:var(--es-shadow-sm);
+}
+.pro-window-panel .iop-panel>header h2 { color:var(--es-brand-900); font-size:18px; }
+.pro-window-panel .iop-panel>header p { color:var(--es-muted); font-size:12px; line-height:1.55; }
+.pro-window-panel .iop-button.primary {
+  min-height:40px; color:#fff; background:var(--es-primary-600);
+  border:1px solid var(--es-primary-600); border-radius:10px;
+}
+.iop-idcard-designer { margin-top:16px; }
+.iop-idcard-preview-stage { display:grid; justify-items:center; gap:14px; padding:18px; border:1px dashed #d8cce9; border-radius:14px; background:#faf8fd; }
+.iop-idcard-preview {
+  width:min(100%,420px); aspect-ratio:1.586; overflow:hidden; display:flex; flex-direction:column;
+  border:1px solid #d9cfe8; border-radius:15px;
+  background:linear-gradient(145deg,#fff 0%,#f7f3fd 100%);
+  box-shadow:0 14px 30px rgba(39,27,61,.12);
+}
+.iop-idcard-preview>header {
+  display:flex; align-items:center; gap:11px; padding:12px 14px;
+  color:#fff; background:linear-gradient(105deg,#2b2040,#6035b5);
+}
+.iop-idcard-preview>header img { width:42px;height:42px;object-fit:contain;padding:3px;border-radius:8px;background:#fff; }
+.iop-idcard-preview>header span { min-width:0;display:grid;gap:4px; }
+.iop-idcard-preview>header b { color:#fff;font-size:13px;line-height:1.25; }
+.iop-idcard-preview>header small { color:#e7def4;font-size:9px;font-weight:800;letter-spacing:1px; }
+.iop-idcard-preview>section {
+  display:grid;grid-template-columns:64px minmax(0,1fr) 74px;align-items:center;gap:13px;
+  flex:1;padding:13px 15px;
+}
+.iop-idcard-avatar {
+  width:60px;height:72px;display:grid;place-items:center;border:1px solid #cdbde3;
+  border-radius:10px;color:#fff;background:linear-gradient(145deg,#6035b5,#8b6bc5);
+  font-size:22px;font-weight:900;
+}
+.iop-idcard-info { min-width:0;display:grid;gap:5px; }
+.iop-idcard-info strong { color:#2b2040;font-size:14px;line-height:1.25;overflow-wrap:anywhere; }
+.iop-idcard-info small { color:#6d6878;font-size:10px;line-height:1.3;overflow-wrap:anywhere; }
+.iop-idcard-qr { width:70px;height:70px;object-fit:contain;padding:3px;border:1px solid #e2daed;border-radius:7px;background:#fff; }
+.iop-idcard-preview>footer {
+  display:flex;justify-content:space-between;gap:10px;padding:8px 13px;color:#fff;background:#2b2040;
+  font-size:9px;font-weight:800;letter-spacing:.6px;
+}
+.iop-idcard-actions { display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center; }
+.iop-idcard-actions>span { color:var(--es-muted);font-size:11px; }
+@media(max-width:560px) {
+  .iop-idcard-preview>section { grid-template-columns:50px minmax(0,1fr) 58px;gap:8px;padding:9px; }
+  .iop-idcard-avatar { width:48px;height:58px;font-size:18px; }
+  .iop-idcard-qr { width:56px;height:56px; }
+  .iop-idcard-preview>header b { font-size:11px; }
+  .iop-idcard-info strong { font-size:12px; }
+}
