@@ -515,7 +515,7 @@ check('College production deployment runs only from main after the verified buil
   const releaseWorkflow = read('.github/workflows/cloudflare-pages-release.yml')
   const productionJob = releaseWorkflow.slice(releaseWorkflow.indexOf('  deploy-production:'))
   assert.ok(productionJob.includes("github.ref == 'refs/heads/main'"), 'Production deployment must be restricted to main')
-  assert.ok(productionJob.includes("github.event_name == 'push'"), 'A verified merge to main must deploy the college production site')
+  assert.ok(!productionJob.includes("github.event_name == 'push'") && productionJob.includes("github.event_name == 'workflow_dispatch'") && productionJob.includes('inputs.deploy_production == true'), 'Production release must remain manual and explicitly approved after verification')
   assert.ok(productionJob.includes("github.event_name == 'workflow_dispatch'") && productionJob.includes('inputs.deploy_production == true'), 'A manual, explicitly approved redeploy must remain available')
   assert.ok(productionJob.includes('Ensure both EduSphere production Pages projects exist') && productionJob.includes('for project in gidcbadin edusphere360'), 'Both EduSphere Pages projects must be created idempotently when missing')
   assert.ok(productionJob.includes('pages deploy dist --project-name=gidcbadin --branch=main') && productionJob.includes('pages deploy dist --project-name=edusphere360 --branch=main'), 'Production must deploy the same verified build to both Pages projects')
