@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
-import { Activity, CalendarCheck, Check, Copy, Download, Fingerprint, Printer, RefreshCw, Search, X, ShieldCheck, Clock, CheckCircle2, XCircle } from 'lucide-react'
+import { Activity, CalendarCheck, Check, Copy, Download, Fingerprint, Printer, RefreshCw, Search, X, ShieldCheck } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { downloadCsv } from '../lib/csv'
@@ -522,7 +522,7 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
      return <article className="ed360-device-event-card" key={String(event.id)}>
       <div className="ed360-device-event-summary"><span className="device-event-kind">{String(event.event_kind??'event').replaceAll('_',' ').toUpperCase()}</span><b>{person?.full_name??(isStudent?'Student identity':'Employee identity')+' · '+personId.slice(0,8)}</b><small>{isStudent?'Student':'Employee'}{person?.class_name?' · '+person.class_name:''}{person?.section_name?' / '+person.section_name:''}{person?.department?' · '+person.department:''}</small></div>
       <div className="ed360-device-event-meta"><b>{new Date(String(event.occurred_at)).toLocaleString()}</b><small>{source?.name?String(source.name):'Device source '+String(event.source_id??'').slice(0,8)}</small><small>Event ID: {String(event.external_event_id??'')}</small></div>
-      <div className="ed360-device-event-state"><em className={'event-state-'+status}>{status.replaceAll('_',' ')}</em>{event.review_action&&<small>{String(event.review_action)} · {event.reviewed_at?new Date(String(event.reviewed_at)).toLocaleString():''}</small>}{Boolean(event.review_note)&&<small>{String(event.review_note)}</small>}</div>
+      <div className="ed360-device-event-state"><em className={'event-state-'+status}>{status.replaceAll('_',' ')}</em>{Boolean(event.review_action)&&<small>{String(event.review_action)} · {event.reviewed_at?new Date(String(event.reviewed_at)).toLocaleString():''}</small>}{Boolean(event.review_note)&&<small>{String(event.review_note)}</small>}</div>
       {canReview?<button type="button" className="button button-primary" onClick={()=>beginDeviceEventReview(event)}>Review event</button>:<span className="ed360-device-event-closed">{status==='processed'?'Applied to attendance':status==='rejected'?'Rejected':'No review action'}</span>}
      </article>
     })}</div>:<p className="ed360-attendance-empty">No signed device events have been received.</p>}
