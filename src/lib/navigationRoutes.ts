@@ -519,7 +519,24 @@ function resolveNavigationRoute(groupKey: string, itemLabel: string, role?: stri
   }
   const compositeKey = `${groupKey}:${itemKey}`
   const actorRole = role ?? 'owner'
-  if (groupKey === 'transport' && itemKey === 'transport-attendance') return ['owner','admin','teacher'].includes(actorRole) ? 'transport-attendance:transport-attendance' : 'unavailable:transport:transport-attendance'
+  if (groupKey === 'class-tests') {
+    const classTestViews:Record<string,string> = {
+      'class-test-dashboard':'examination-programs',
+      'create-class-tests':'online-tests-and-quizzes',
+      'test-schedule':'examination-timetable',
+      'online-tests':'online-tests-and-quizzes',
+      'written-tests':'online-tests-and-quizzes',
+      'marks-entry':'marks-entry',
+      'test-results':'results-and-result-approval',
+      'performance-analysis':'examination-reports',
+      'test-reports':'examination-reports',
+      'student-wise-test-history':'results-and-result-approval',
+    }
+    if (itemKey === 'test-questions') return 'operations:question-bank:pool'
+    if (classTestViews[itemKey]) return 'institutional:examinations:' + classTestViews[itemKey]
+  }
+  const transportAttendanceRoutePrefix = 'transport-attendance:'
+  if (groupKey === 'transport' && itemKey === 'transport-attendance') return ['owner','admin','teacher'].includes(actorRole) ? transportAttendanceRoutePrefix + 'transport-attendance' : 'unavailable:transport:transport-attendance'
   if (groupKey === 'integrations') {
     const views:Record<string,string> = {
       'integration-overview':'overview',
