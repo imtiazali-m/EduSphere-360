@@ -388,6 +388,7 @@ function dedicatedRoute(groupKey: string, itemKey: string): string | undefined {
       'leave-management':'care:leave-applications',
       'leave-applications':'care:leave-applications',
       'leave-review-approvals':'care:leave-approvals',
+      'leave-approvals':'care:leave-approvals',
       'leave-balances':'care:leave-balances',
       'leave-reports':'care:leave-reports',
       'attendance-reports':'care:reports',
