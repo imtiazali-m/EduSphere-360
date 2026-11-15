@@ -830,6 +830,30 @@ check('PeopleHRWorkspace exposes recruitment, contracts, performance and alumni 
   assert.ok(!roleNavigationGroups('exam_officer').some(group => group.key === 'people-hr'))
 })
 
+check('Faculty registers, assignments, leave and confidential documents follow their database safeguards', () => {
+  const faculty = read('src/components/FacultyWorkspace.tsx')
+  const facultyStyles = read('src/styles/faculty-workspace.css')
+  const facultySql = read('supabase/migrations/20261109085154_faculty_employee_management.sql')
+  for(const value of ['function localDate()', 'joining_date:localDate()', 'attendance_date:localDate()', 'localDate().slice(0,7)', 'Contract end date cannot precede the employee joining date.', 'weeklyPeriods=Number(v.weekly_periods)', 'Number.isInteger(weeklyPeriods)', 'Teaching allocations can only be assigned to an active employee.', 'duplicateScope=assignments.find', 'This employee already has an allocation for the same subject', 'This leave request overlaps another pending or approved request', 'issue_date:docIssueDate||null', 'Document expiry date cannot precede its issue date.', 'private file could not be deleted']) {
+    assert.ok(faculty.includes(value), 'Faculty & Staff workflow validation is missing: '+value)
+  }
+  assert.ok(faculty.includes('function StaffRecordsTable') && faculty.includes('const filtered=useMemo') && faculty.includes('const sorted=useMemo') && faculty.includes('const pageSize=25') && faculty.includes('aria-sort=') && faculty.includes('exportRows=sorted.map'), 'Each Faculty register needs searchable, sortable, paginated records and complete report exports')
+  for(const value of ['exportXlsx(', 'exportDocx(', 'printOfficeReport(', 'staff-files', 'createSignedUrl(String(row.storage_path),600)', 'storageError']) assert.ok(faculty.includes(value), 'Confidential staff documents and reports are missing: '+value)
+  assert.ok(facultyStyles.includes('.staff-records-toolbar') && facultyStyles.includes('.staff-table-pagination') && facultyStyles.includes('@media print'), 'Faculty registers need responsive controls and print-safe styling')
+  for(const value of ['teacher_assignments_date_range_check','teacher_assignments_unique_scope_uq','employee_leave_date_range_check','employee_leave_overlap_guard','employee_attendance_unique_day','staff_documents_expiry_check','file_size > 0 and file_size <= 10485760']) assert.ok(facultySql.includes(value), 'Faculty database safeguard is missing: '+value)
+  assert.ok(facultySql.includes('daterange(r.start_date, r.end_date, \'[]\') &&') && facultySql.includes('pg_advisory_xact_lock'), 'Leave overlap protection must remain concurrent-safe in the database')
+})
+
+check('Employee qualification certificates track effective expiry and support complete branded reports', () => {
+  const qualifications = read('src/components/EmployeeQualificationsPanel.tsx')
+  const qualificationSql = read('supabase/migrations/20261111164407_stage_6_employee_qualification_records.sql')
+  for(const value of ['range(offset,offset+499)', 'Date awarded cannot be in the future.', 'Expiry date cannot precede the date awarded.', 'effectiveStatus(row)', "'expired'", 'pageRows.slice', 'pageRows.map(row=>', 'const reportRows=sorted.map(row=>', 'printOfficeReport(', 'institutionName', 'aria-sort=', 'const pageSize=25']) {
+    assert.ok(qualifications.includes(value), 'Employee qualification workflow is missing: '+value)
+  }
+  assert.ok(qualificationSql.includes('employee_qualifications_dates_ck') && qualificationSql.includes('employee_qualifications_admin_all') && qualificationSql.includes('employee_qualifications_own_read'), 'Qualification date and owner/employee RLS policies must remain enforced')
+  assert.ok(read('src/components/FacultyWorkspace.tsx').includes('institutionName={user?.institutionName??'), 'Qualification print reports must use the current institution name')
+})
+
 check('Finance and payroll registers support searchable sortable pagination', () => {
   const finance = read('src/components/FinanceWorkspace.tsx')
   const financeStyles = read('src/styles/finance-workspace.css')
