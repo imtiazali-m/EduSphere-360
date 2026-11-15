@@ -43,7 +43,7 @@ Deno.serve(async (req: Request) => {
 
     const { data: hasAccess, error: roleError } = await client.rpc("has_institution_role", {
       target_institution: institutionId,
-      allowed_roles: ["owner", "admin", "teacher", "student", "exam_officer"],
+      allowed_roles: ["owner", "admin", "teacher", "student", "parent", "exam_officer"],
     });
     if (roleError || hasAccess !== true) return json({ error: "Your role cannot access this calling workspace." }, 403);
 
@@ -143,7 +143,7 @@ Deno.serve(async (req: Request) => {
       accessToken.addGrant({
         roomJoin: true,
         room: session.room_name,
-        canPublish: true,
+        canPublish: session.participant_role !== 'parent',
         canSubscribe: true,
       });
       const jwt = await accessToken.toJwt();
