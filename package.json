@@ -22,7 +22,8 @@
     "test:display-preferences": "node --test scripts/test-display-preferences.mjs",
     "test:device-signature": "node --test scripts/test-device-signature.mjs",
     "test:device-review": "node --test scripts/test-device-review.mjs",
-    "test:online-session-security": "node scripts/test-online-session-security.mjs"
+    "test:online-session-security": "node scripts/test-online-session-security.mjs",
+    "test:ai-free-provider": "node scripts/test-ai-free-provider.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.58.0",
