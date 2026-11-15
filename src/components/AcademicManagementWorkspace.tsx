@@ -7,6 +7,8 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
+import { downloadCsv } from '../lib/csv'
+import { exportDocx, exportXlsx, printOfficeReport, type OfficeColumn } from '../lib/officeExport'
 import type { AppRole } from '../lib/types'
 import '../styles/academic-management.css'
 
@@ -661,19 +663,17 @@ export function AcademicManagementWorkspace({ initialWindow = 'academic-sessions
     return String(value)
   }
 
-  function exportRows() {
-    const visibleColumns = activeMode.columns
-    const output = [
-      visibleColumns.map(column => csvValue(column.label)).join(','),
-      ...filteredRows.map(row => visibleColumns.map(column => csvValue(labelValue(row[column.key], column.source))).join(',')),
-    ].join('\n')
-    const url = URL.createObjectURL(new Blob([output], { type: 'text/csv;charset=utf-8' }))
-    const anchor = document.createElement('a')
-    anchor.href = url
-    anchor.download = 'edusphere-' + activeMode.table + '-' + normalDate() + '.csv'
-    anchor.click()
-    URL.revokeObjectURL(url)
-  }
+   function exportRows(format:'csv'|'xlsx'|'docx'|'print') {
+     const visibleColumns=activeMode.columns
+     if(!filteredRows.length){onToast('There are no records in this academic view to export.',true);return}
+     const columns:OfficeColumn[]=visibleColumns.map(column=>({key:column.key,label:column.label}))
+     const outputRows=filteredRows.map(row=>Object.fromEntries(visibleColumns.map(column=>[column.key,labelValue(row[column.key],column.source)])))
+     const title=activeMode.title,filename='edusphere-'+activeMode.table+'-'+normalDate()
+     if(format==='csv')downloadCsv(filename+'.csv',outputRows,columns)
+     else if(format==='xlsx')exportXlsx(filename+'.xlsx',title,outputRows,columns)
+     else if(format==='docx')exportDocx(filename+'.docx',title,outputRows,columns)
+     else{try{printOfficeReport(title,outputRows,columns,user?.institutionName??'Institution name not set')}catch(error){onToast(error instanceof Error?error.message:'Print view could not be opened.',true)}}
+   }
 
   function renderField(field: FieldSpec) {
     const raw = values[field.key]
@@ -747,7 +747,10 @@ export function AcademicManagementWorkspace({ initialWindow = 'academic-sessions
           <div className="ed360-academic-toolbar-copy"><strong>{activeMode.title}</strong><span>{activeMode.description}</span></div>
           <div className="ed360-academic-toolbar-actions">
             <label className="ed360-academic-search"><Search size={15}/><input aria-label="Search records" value={search} onChange={event => setSearch(event.target.value)} placeholder="Search records…"/></label>
-            <button type="button" className="ed360-academic-secondary" onClick={exportRows} disabled={!rows.length}><Download size={15}/> Export</button>
+             <button type="button" className="ed360-academic-secondary" onClick={() => exportRows('csv')} disabled={!filteredRows.length}><Download size={15}/> CSV</button>
+             <button type="button" className="ed360-academic-secondary" onClick={() => exportRows('xlsx')} disabled={!filteredRows.length}>Excel</button>
+             <button type="button" className="ed360-academic-secondary" onClick={() => exportRows('docx')} disabled={!filteredRows.length}>Word</button>
+             <button type="button" className="ed360-academic-secondary" onClick={() => exportRows('print')} disabled={!filteredRows.length}><Printer size={15}/> Print / PDF</button>
             <button type="button" className="ed360-academic-secondary" onClick={() => window.print()}><Printer size={15}/> Print</button>
             {canCreate ? <button type="button" className="ed360-academic-primary" onClick={openCreate}><Plus size={16}/> Add record</button> : null}
           </div>
