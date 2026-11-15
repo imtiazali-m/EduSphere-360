@@ -497,7 +497,7 @@ function dedicatedRoute(groupKey: string, itemKey: string): string | undefined {
 function resolveNavigationRoute(groupKey: string, itemLabel: string, role?: string): string {
   const itemKey = slug(itemLabel)
   const directDedicated = dedicatedRoute(groupKey,itemKey)
-  const earlyDedicatedPrefixes = ['duplicate-detection:','helpdesk:','scheduled-reports:','asset-lifecycle:','payment-operations:','receipt-operations:','library-reading:','certificate-forms:','procurement:','cafeteria:','hostel:','messaging:']
+  const earlyDedicatedPrefixes = ['duplicate-detection:','helpdesk:','scheduled-reports:','asset-lifecycle:','payment-operations:','receipt-operations:','library-reading:','certificate-forms:','procurement:','cafeteria:','hostel:','messaging:','operations:certificates:','operations:visitors:','operations:facilities:']
   const linkedInstitutionalGroup = ['administration','library','inventory','transport','ai'].includes(groupKey) && Boolean(directDedicated?.startsWith('institutional:'))
   if (directDedicated && (earlyDedicatedPrefixes.some(prefix=>directDedicated.startsWith(prefix)) || linkedInstitutionalGroup)) return directDedicated
   if (groupKey === 'communication' && itemKey === 'internet-calling') return 'voice:native'
