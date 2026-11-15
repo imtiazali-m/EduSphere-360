@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
-import { Bus, CalendarClock, CheckCircle2, Download, RefreshCw, Search, UserRound } from 'lucide-react'
+import { Bus, Download, RefreshCw, Search } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 
@@ -17,7 +17,7 @@ const escapeCsv = (value: unknown) => {
 }
 const eventLabel: Record<EventType,string> = { boarded:'Boarded', alighted:'Alighted', absent:'Absent' }
 
-export function TransportAttendanceWorkspace({ workspaceKey, onToast }: {
+export function TransportAttendanceWorkspace({ onToast }: {
   workspaceKey: string
   onToast: (message: string, error?: boolean) => void
 }) {
@@ -74,7 +74,8 @@ export function TransportAttendanceWorkspace({ workspaceKey, onToast }: {
   const allocationMap = useMemo(()=>new Map(allocations.map(row=>[row.id,row])),[allocations])
   const activeAllocations = useMemo(()=>allocations.filter(row=>{
     const end = row.effective_to ? String(row.effective_to).slice(0,10) : ''
-    return !end || end >= today()
+    const start = String(row.effective_from??'').slice(0,10)
+    return (!start || start <= today()) && (!end || end >= today())
   }),[allocations])
   const visibleEvents = useMemo(()=>events.filter(event=>{
     const allocation=allocationMap.get(String(event.allocation_id))
