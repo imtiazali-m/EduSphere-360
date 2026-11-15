@@ -666,6 +666,7 @@ export function FinanceWorkspace({workspaceKey,initialWindow,onToast}:Props){
         {financeSortHeader('Reference','payment_reference',paymentSortKey,paymentSortDirection,()=>sortPayments('payment_reference'))}
         {financeSortHeader('Amount','amount',paymentSortKey,paymentSortDirection,()=>sortPayments('amount'))}
         {financeSortHeader('Status','status',paymentSortKey,paymentSortDirection,()=>sortPayments('status'))}
+        {section==='receipts'&&<th>Action</th>}
       </tr></thead><tbody>{pageRows.map(row=>{
         const invoice=invoices.find(item=>item.id===row.invoice_id)
         const ledger=receiptLedgerRows.find(receipt=>receipt.payment_id===row.id)
