@@ -5,7 +5,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
-import { downloadCsv } from '../lib/csv'
+import { exportDocx, exportXlsx, printOfficeReport, type OfficeColumn } from '../lib/officeExport'
 import { userFacingError } from '../lib/userErrors'
 import type { RecordRow } from '../lib/types'
 import '../styles/stage7-workspace.css'
@@ -460,6 +460,15 @@ export function Stage7CareWorkspace({initialWindow='leave',onToast}:{initialWind
     ...employeeAttendance.map(row=>{const employee=employees.find(e=>e.id===row.teacher_id);const group=String(employee?.employee_type??'').toLowerCase()==='teaching'?'Teacher':'Staff';return {...row,group,person:employee?.full_name??group,id:String(row.teacher_id??'')}}),
   ]
   const reportRows=activeWindow==='reports-students'?reportRowsAll.filter(row=>row.group==='Student'):activeWindow==='reports-teachers'?reportRowsAll.filter(row=>row.group==='Teacher'):activeWindow==='reports-staff'?reportRowsAll.filter(row=>row.group==='Staff'):reportRowsAll
+   const reportColumns:OfficeColumn[]=[{key:'group',label:'Group'},{key:'person',label:'Person'},{key:'class_name',label:'Class'},{key:'attendance_date',label:'Date'},{key:'status',label:'Status'},{key:'minutes_late',label:'Minutes late'},{key:'early_departure_minutes',label:'Early departure minutes'}]
+   function exportAttendanceReport(format:'csv'|'xlsx'|'docx'|'print'){
+     if(!reportRows.length){onToast('There are no attendance records in this report to export.',true);return}
+     const title=activeWindow==='reports-students'?'Student Attendance Report':activeWindow==='reports-teachers'?'Teacher Attendance Report':activeWindow==='reports-staff'?'Staff Attendance Report':'Attendance Report',filename='edusphere-'+activeWindow+'-'+reportFrom+'-'+reportTo
+     if(format==='csv')downloadCsv(filename+'.csv',reportRows,reportColumns)
+     else if(format==='xlsx')exportXlsx(filename+'.xlsx',title,reportRows,reportColumns)
+     else if(format==='docx')exportDocx(filename+'.docx',title,reportRows,reportColumns)
+     else{try{printOfficeReport(title,reportRows,reportColumns,user?.institutionName??'Institution name not set')}catch(error){onToast(error instanceof Error?error.message:'Print view could not be opened.',true)}}
+   }
   const reportCounts=reportRows.reduce((acc,row)=>{const status=String(row.status??'');acc.total++;acc[status]=(acc[status]??0)+1;return acc},{total:0} as Record<string,number>)
   const reportPresent=reportCounts.present??0
   const reportAbsent=reportCounts.absent??0
@@ -514,7 +523,7 @@ export function Stage7CareWorkspace({initialWindow='leave',onToast}:{initialWind
         <div className="s7-panel-title"><div><span>ATTENDANCE ANALYTICS</span><h2>Attendance summary</h2><p>Records are limited by the signed-in user’s institution and row-level permissions.</p></div></div>
         <div className="s7-filters"><label>From<input type="date" value={reportFrom} max={reportTo} onChange={e=>setReportFrom(e.target.value)}/></label><label>To<input type="date" value={reportTo} min={reportFrom} max={today()} onChange={e=>setReportTo(e.target.value)}/></label><label>Class<select value={reportClass} onChange={e=>setReportClass(e.target.value)}><option value="">All visible classes</option>{classOptions.map(c=><option key={c}>{c}</option>)}</select></label><button type="button" className="button button-outline" onClick={()=>void loadReports()}><RefreshCw size={14}/> Apply filters</button></div>
         <div className="s7-chart-row"><div className="s7-attendance-donut" role="img" aria-label={`${reportPercent(reportPresent)} percent present, ${reportPercent(reportAbsent)} percent absent, ${reportPercent(reportLeave)} percent on leave`} style={{background:reportDonut}}><span>{reportPercent(reportPresent)}%<small>Present</small></span></div><div className="s7-chart-legend"><b>{reportTotal.toLocaleString()} attendance records</b><span><i className="present"/>Present <strong>{reportPresent.toLocaleString()}</strong></span><span><i className="absent"/>Absent <strong>{reportAbsent.toLocaleString()}</strong></span><span><i className="leave"/>Leave <strong>{reportLeave.toLocaleString()}</strong></span>{reportOther>0&&<span><i className="other"/>Other recorded statuses <strong>{reportOther.toLocaleString()}</strong></span>}</div></div>
-        <div className="s7-panel-actions"><button type="button" className="button button-outline" onClick={()=>downloadCsv('edusphere-attendance-report-'+reportFrom+'-'+reportTo+'.csv',reportRows,[{key:'group',label:'Group'},{key:'person',label:'Person'},{key:'class_name',label:'Class'},{key:'attendance_date',label:'Date'},{key:'status',label:'Status'},{key:'minutes_late',label:'Minutes late'},{key:'early_departure_minutes',label:'Early departure minutes'}])}><Download size={15}/> Export CSV</button></div>
+         <div className="s7-panel-actions"><button type="button" className="button button-outline" onClick={()=>exportAttendanceReport('csv')}><Download size={15}/> CSV</button><button type="button" className="button button-outline" onClick={()=>exportAttendanceReport('xlsx')}>Excel</button><button type="button" className="button button-outline" onClick={()=>exportAttendanceReport('docx')}>Word</button><button type="button" className="button button-outline" onClick={()=>exportAttendanceReport('print')}>Print / PDF</button></div>
         <div className="s7-table-wrap"><table><thead><tr><th>Person</th><th>Class / type</th><th>Date</th><th>Status</th><th>Arrival variance</th><th>Early (min)</th></tr></thead><tbody>{reportRows.slice(0,500).map((row,index)=><tr key={String(row.id??index)}><td>{String(row.person)}</td><td>{String(row.class_name??row.group)}</td><td>{String(row.attendance_date)}</td><td><span className={'s7-status '+String(row.status)}>{String(row.status)}</span></td><td>{String(row.minutes_late??0)}</td><td>{String(row.early_departure_minutes??0)}</td></tr>)}</tbody></table>{reportRows.length===0&&<div className="s7-empty">No attendance records match this date range and class filter.</div>}</div>
       </section>
     </>}
