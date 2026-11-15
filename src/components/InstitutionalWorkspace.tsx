@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type CSSProperties, type FormEvent } from 'react'
-import { Activity, ArrowUpRight, CheckCircle2, Download, FileSpreadsheet, FileText, Filter, Plus, Printer, RefreshCw, Search, X } from 'lucide-react'
+import { ArrowUpRight, CheckCircle2, Download, FileSpreadsheet, FileText, Filter, Plus, Printer, RefreshCw, Search, X } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { getWorkspaceGroup, getWorkspaceItem, institutionalMenu } from '../lib/institutionalCatalog'
@@ -524,11 +524,6 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
  const overdue=rows.filter(row=>row.due_date&&row.due_date<new Date().toISOString().slice(0,10)&&!['completed','cancelled','closed','approved'].includes(row.status)).length
  const totalAmount=rows.reduce((sum,row)=>sum+Number(row.amount??0),0)
  const statusCounts=reviewMetrics.statusCounts
- const actionableRows=rows.filter(row=>!['completed','closed','approved','cancelled','rejected'].includes(String(row.status??'').toLowerCase()))
- const completedRows=rows.filter(row=>['completed','closed','approved'].includes(String(row.status??'').toLowerCase()))
- const completionRate=rows.length?Math.round(completedRows.length/rows.length*100):0
- const last30Days=Date.now()-30*86400000
- const recentRows=rows.filter(row=>row.created_at&&new Date(row.created_at).getTime()>=last30Days).length
 
  function resetForm(row?:OperationalRow){
   setEditing(row??null);setTitle(row?.title??'');setReference(row?.reference_code??'');setDescription(row?.description??'')
