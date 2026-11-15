@@ -34,6 +34,40 @@ check('Behaviour and Skills has distinct database-backed pages and record workfl
   assert.ok(behaviour.includes('student_care_access'), 'Teacher access must follow the care-area permission grant')
   assert.ok(dashboard.includes('<BehaviourSkillsWorkspace'), 'Dashboard must dispatch the Behaviour & Skills workspace')
 })
+check('Dedicated operational submenus dispatch to institution-scoped workspace components', () => {
+  const dashboard = read('src/components/Dashboard.tsx')
+  const routes = read('src/lib/navigationRoutes.ts')
+  const contracts = [
+    ['data-management','DataManagementWorkspace','src/components/DataManagementWorkspace.tsx'],
+    ['custom-reports','CustomReportsWorkspace','src/components/CustomReportsWorkspace.tsx'],
+    ['messaging','CommunicationWorkspace','src/components/CommunicationWorkspace.tsx'],
+    ['hostel','HostelWorkspace','src/components/HostelWorkspace.tsx'],
+    ['procurement','ProcurementWorkspace','src/components/ProcurementWorkspace.tsx'],
+    ['cafeteria','CafeteriaWorkspace','src/components/CafeteriaWorkspace.tsx'],
+    ['library-reading','LibraryReadingWorkspace','src/components/LibraryReadingWorkspace.tsx'],
+    ['receipt-operations','ReceiptWorkspace','src/components/ReceiptWorkspace.tsx'],
+    ['payment-operations','PaymentOperationsWorkspace','src/components/PaymentOperationsWorkspace.tsx'],
+    ['asset-lifecycle','AssetLifecycleWorkspace','src/components/AssetLifecycleWorkspace.tsx'],
+    ['scheduled-reports','ScheduledReportsWorkspace','src/components/ScheduledReportsWorkspace.tsx'],
+    ['helpdesk','HelpdeskWorkspace','src/components/HelpdeskWorkspace.tsx'],
+    ['duplicate-detection','DuplicateDetectionWorkspace','src/components/DuplicateDetectionWorkspace.tsx'],
+    ['certificate-forms','CertificateFormsWorkspace','src/components/CertificateFormsWorkspace.tsx'],
+  ]
+  for (const [prefix, component, file] of contracts) {
+    assert.ok(dashboard.includes("tab.targetKey === '" + prefix + "'"), 'Missing Dashboard route dispatch: ' + prefix)
+    assert.ok(dashboard.includes('<' + component), 'Missing workspace component render: ' + component)
+    assert.ok(routes.includes("'" + prefix + ":'"), 'Missing route family mapping: ' + prefix)
+    const source = read(file)
+    assert.ok(source.includes('institution_id') || source.includes('listRecords') || source.includes('createRecord'), file + ' must use institution-scoped data services')
+    assert.ok(source.includes('onToast('), file + ' must surface user-facing success or error feedback')
+  }
+  const operations = read('src/components/InstitutionOperationsWorkspace.tsx')
+  for (const view of ['templates','bulk','approvals','notifications','reservations','reports']) {
+    assert.ok(operations.includes("view === '" + view + "'") || operations.includes("view==='" + view + "'"), 'Missing operations submenu view: ' + view)
+  }
+  assert.ok(operations.includes('approve_facility_room_reservation'), 'Room reservation approval must use the conflict-checking database RPC')
+  assert.ok(operations.includes('Generate draft certificates'), 'Bulk certificates must remain drafts until authorised review')
+})
 check('Vite development and production scripts exist', () => {
   assert.equal(packageJson.scripts.dev, 'vite --host 0.0.0.0')
   assert.equal(packageJson.scripts.build, 'tsc -b && vite build')
@@ -49,6 +83,23 @@ check('Vite development and production scripts exist', () => {
 })
 
 const requiredFiles = [
+  'src/styles/clean-blue-workspace-system.css',
+  'src/components/AssetLifecycleWorkspace.tsx',
+  'src/components/CafeteriaWorkspace.tsx',
+  'src/components/CertificateFormsWorkspace.tsx',
+  'src/components/CommunicationWorkspace.tsx',
+  'src/components/CustomReportsWorkspace.tsx',
+  'src/components/DataManagementWorkspace.tsx',
+  'src/components/DuplicateDetectionWorkspace.tsx',
+  'src/components/HelpdeskWorkspace.tsx',
+  'src/components/HostelWorkspace.tsx',
+  'src/components/LibraryReadingWorkspace.tsx',
+  'src/components/PaymentOperationsWorkspace.tsx',
+  'src/components/ProcurementWorkspace.tsx',
+  'src/components/ReceiptWorkspace.tsx',
+  'src/components/ScheduledReportsWorkspace.tsx',
+  'src/styles/data-management.css',
+  'src/styles/library-reading.css',
   'index.html', 'src/main.tsx', 'src/App.tsx', 'src/components/Dashboard.tsx', 'src/components/RoleDashboard.tsx', 'src/components/role-dashboard.css', 'src/components/WorkspaceUnavailable.tsx', 'src/components/BackupDataWorkspace.tsx', 'src/components/backup-data-workspace.css', 'src/components/IntegrationManagementWorkspace.tsx', 'src/styles/integrations-workspace.css', 'src/components/BehaviourSkillsWorkspace.tsx', 'src/styles/behaviour-skills-workspace.css',
   'src/components/FinanceWorkspace.tsx', 'src/styles/finance-workspace.css', 'src/styles/student-promotion-workspace.css', 'src/styles/navigation-refinement.css',
   'src/components/PayrollWorkspace.tsx', 'src/styles/payroll-workspace.css',
