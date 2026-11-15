@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from 'react'
-import { CloudDownload, Database, RefreshCw, ShieldCheck, Upload } from 'lucide-react'
+import { CloudDownload, RefreshCw, ShieldCheck, Upload } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { createRecord, listRecords } from '../lib/data'
@@ -29,23 +29,6 @@ const systemFields=new Set(['id','institution_id','created_at','updated_at','cre
 const labels:Record<string,string>={
  'backup-dashboard':'Backup & Data Management','create-backup':'Create Backup','scheduled-cloud-backups':'Scheduled Cloud Backups','backup-history':'Backup History','restore-data':'Restore Data','data-recovery':'Data Recovery','import-data':'Import Data','export-data':'Export Data','bulk-data-import':'Bulk Data Import','data-validation':'Data Validation','import-history':'Import History','export-history':'Export History','data-integrity-reports':'Data Integrity Reports','duplicate-detection':'Duplicate Detection','integration-status':'Integration Status'
 }
-const descriptions:Record<string,string>={
- 'backup-dashboard':'Review transfer activity, export outcomes and platform backup readiness.',
- 'create-backup':'Prepare an institution-scoped application-data export request. This is not a database snapshot.',
- 'scheduled-cloud-backups':'Record a schedule request. A server-side backup runner is required before scheduled backups can execute.',
- 'backup-history':'Review exports, backup requests, outcomes and responsible users.',
- 'restore-data':'Restore records from an EduSphere JSON export. This does not restore the full database or private storage.',
- 'data-recovery':'Review failed transfers and safely re-run validated record imports.',
- 'import-data':'Import a validated EduSphere JSON export into a selected institution module.',
- 'export-data':'Download institution records from a supported module as JSON.',
- 'bulk-data-import':'Preview, validate and import multiple records with row-level results.',
- 'data-validation':'Check required fields and duplicate identifiers before writing data.',
- 'import-history':'Review import counts, rejected rows and validation errors.',
- 'export-history':'Review generated exports and backup requests.',
- 'data-integrity-reports':'Run read-only checks for missing required values and duplicate references.',
- 'duplicate-detection':'Compare duplicate identifiers without modifying records.',
- 'integration-status':'See which data services are configured and which still need a provider.'
-}
 function cleanObject(value:unknown):Record<string,unknown>|null{return value&&typeof value==='object'&&!Array.isArray(value)?value as Record<string,unknown>:null}
 function moduleLabel(key:string){return specs.find(x=>x.key===key)?.label??key.replaceAll('_',' ')}
 export function DataManagementWorkspace({workspaceKey,onToast}:{workspaceKey:string;onToast:(message:string,error?:boolean)=>void}){
@@ -64,7 +47,6 @@ export function DataManagementWorkspace({workspaceKey,onToast}:{workspaceKey:str
  const [search,setSearch]=useState('')
  const [statusFilter,setStatusFilter]=useState('all')
  const title=labels[itemKey]??'Backup & Data Management'
- const description=descriptions[itemKey]??'Manage institution data transfer and recovery operations.'
  const spec=specs.find(x=>x.key===selectedTable)??specs[0]
  async function loadJobs(){
   if(!supabase||!user||!admin){setJobs([]);setLoading(false);return}
