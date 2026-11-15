@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import {
   Activity, AlertCircle, BookOpen, CalendarCheck, CalendarDays,
-  Check, ChevronLeft, ChevronRight, ClipboardCheck, Download, Edit3, Eye, MoreHorizontal,
+  Check, ChevronLeft, ChevronRight, ClipboardCheck, Edit3, Eye, MoreHorizontal,
   FileCheck2, FileText, FolderOpen, GraduationCap, HeartHandshake, History, ImagePlus,
   LayoutDashboard, Plus, Printer, RefreshCw, Search, ShieldCheck, Trash2, Upload,
   UserRound, Users, Wallet, X,
