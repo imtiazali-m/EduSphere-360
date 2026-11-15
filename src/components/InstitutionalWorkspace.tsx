@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type CSSProperties, type FormEvent } from 'react'
-import { Activity, ArrowUpRight, CheckCircle2, Download, FileSpreadsheet, FileText, Filter, Plus, Printer, Search, X } from 'lucide-react'
+import { Activity, ArrowUpRight, CheckCircle2, Download, FileSpreadsheet, FileText, Filter, Plus, Printer, RefreshCw, Search, X } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { getWorkspaceGroup, getWorkspaceItem, institutionalMenu } from '../lib/institutionalCatalog'
@@ -589,28 +589,18 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
 
  return <main className="page-content ed360-module-page ed360-institutional-workspace" data-workspace-group={group.key} data-workspace-theme={group.theme} data-workspace-layout={workspaceLayout} style={{'--workspace-accent':theme.accent,'--workspace-soft':theme.soft,'--workspace-ink':theme.ink} as CSSProperties}>
   <header className="ed360-workspace-hero">
-   <div className="ed360-workspace-hero-icon"><Activity size={21}/></div>
-   <div className="ed360-workspace-hero-copy"><span>{group.label.toUpperCase()} / INSTITUTIONAL WORKSPACE</span><h1>{group.label}</h1><p>{group.description}</p></div>
-   <div className="ed360-workspace-hero-tools"><span className="ed360-data-state"><i/> Live institution records</span>{canWrite&&<button className="button button-primary" onClick={()=>resetForm()}><Plus size={16}/> New record</button>}</div>
+   <div className="ed360-workspace-hero-copy">
+    <span>{(user?.institutionName||'Government Islamia Degree College, Badin').toUpperCase()} / {group.label.toUpperCase()}</span>
+    <h1>{item.label}</h1>
+   </div>
+   <div className="ed360-workspace-hero-tools">
+    <button type="button" className="button button-primary" onClick={()=>void load()} disabled={loading}><RefreshCw size={16}/> {loading?'Refreshing…':'Refresh'}</button>
+    {canWrite&&<button type="button" className="button button-outline" onClick={()=>resetForm()}><Plus size={16}/> New record</button>}
+   </div>
   </header>
   <nav className="ed360-operations-window-nav ed360-workspace-tabs" aria-label={group.label+' submenus'}>
    {group.items.map(menu=><button key={menu.key} type="button" className={selectedItem===menu.key?'active':''} aria-current={selectedItem===menu.key?'page':undefined} onClick={()=>setSelectedItem(menu.key)}>{menu.label}</button>)}
   </nav>
-  <section className="ed360-operations-context-window ed360-workspace-subwindow">
-   <div><span>MAIN MENU / {group.label.toUpperCase()}</span><h2>{item.label}</h2><p>{experience.purpose}</p></div>
-   <div className="ed360-workspace-window-number"><strong>{filtered.length.toLocaleString()}</strong><small>{dashboard?'records in this module':'records in this view'}</small></div>
-  </section>
-  <section className="ed360-page-purpose" aria-label={item.label+' instructions'}>
-   <div className="ed360-page-purpose-heading"><span>PAGE PURPOSE</span><strong>How to use this workspace</strong><p>{experience.purpose}</p></div>
-   <div className="ed360-page-purpose-steps">{experience.workflow.map((step,index)=><div key={step}><b>{String(index+1).padStart(2,'0')}</b><span>{step}</span></div>)}</div>
-   <div className="ed360-page-purpose-outcome"><span>EXPECTED OUTCOME</span><p>{experience.outcome}</p></div>
-  </section>
-  {!dashboard&&<section className="ed360-workspace-pulse" aria-label={item.label+' live metrics'}>
-   <article><span>Records in this view</span><strong>{loading?'—':rows.length.toLocaleString()}</strong><small>Institution-scoped records</small></article>
-   <article><span>Needs follow-up</span><strong>{loading?'—':actionableRows.length.toLocaleString()}</strong><small>Not yet closed or approved</small></article>
-   <article><span>Completed / approved</span><strong>{loading?'—':completionRate+'%'}</strong><small>{completedRows.length.toLocaleString()} completed records</small></article>
-   <article><span>Added in 30 days</span><strong>{loading?'—':recentRows.toLocaleString()}</strong><small>Recent activity in this view</small></article>
-  </section>}
   <div className="ed360-workspace-toolbar">
    <div className="ed360-workspace-filter"><Filter size={15}/><select value={range} onChange={e=>setRange(e.target.value)} aria-label="Date range"><option value="30">Last 30 days</option><option value="90">Last 90 days</option><option value="365">Last 12 months</option><option value="all">All dates</option></select>
     {campuses.length>0&&<select value={campus} onChange={e=>setCampus(e.target.value)} aria-label="Campus filter"><option value="">All campuses</option>{campuses.map(c=><option value={c.id} key={c.id}>{c.name}</option>)}</select>}
