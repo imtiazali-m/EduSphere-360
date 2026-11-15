@@ -52,6 +52,7 @@ check('Dedicated operational submenus dispatch to institution-scoped workspace c
     ['helpdesk','HelpdeskWorkspace','src/components/HelpdeskWorkspace.tsx'],
     ['duplicate-detection','DuplicateDetectionWorkspace','src/components/DuplicateDetectionWorkspace.tsx'],
     ['certificate-forms','CertificateFormsWorkspace','src/components/CertificateFormsWorkspace.tsx'],
+    ['transport-attendance','TransportAttendanceWorkspace','src/components/TransportAttendanceWorkspace.tsx'],
   ]
   for (const [prefix, component, file] of contracts) {
     assert.ok(dashboard.includes("tab.targetKey === '" + prefix + "'"), 'Missing Dashboard route dispatch: ' + prefix)
@@ -98,6 +99,7 @@ const requiredFiles = [
   'src/components/ProcurementWorkspace.tsx',
   'src/components/ReceiptWorkspace.tsx',
   'src/components/ScheduledReportsWorkspace.tsx',
+  'src/components/TransportAttendanceWorkspace.tsx',
   'src/styles/data-management.css',
   'src/styles/library-reading.css',
   'index.html', 'src/main.tsx', 'src/App.tsx', 'src/components/Dashboard.tsx', 'src/components/RoleDashboard.tsx', 'src/components/role-dashboard.css', 'src/components/WorkspaceUnavailable.tsx', 'src/components/BackupDataWorkspace.tsx', 'src/components/backup-data-workspace.css', 'src/components/IntegrationManagementWorkspace.tsx', 'src/styles/integrations-workspace.css', 'src/components/BehaviourSkillsWorkspace.tsx', 'src/styles/behaviour-skills-workspace.css',
@@ -236,18 +238,20 @@ check('The full institutional menu maps every submenu to a working destination',
   assert.equal(getNavigationRoute('attendance', 'Attendance Alerts'), 'unavailable:attendance:attendance-alerts', 'Attendance alerts require a configured rules/notification workflow')
   assert.equal(getNavigationRoute('timetable', 'Substitution Management'), 'unavailable:timetable:substitution-management', 'Teacher substitution must not be represented as unassigned timetable entries')
   assert.equal(getNavigationRoute('timetable', 'Timetable Publishing'), 'unavailable:timetable:timetable-publishing', 'Timetable publication controls are not implemented yet')
-  assert.equal(getNavigationRoute('class-tests', 'Online Tests'), 'unavailable:class-tests:online-tests', 'Online test delivery must not be represented as ordinary examination records')
+  assert.equal(getNavigationRoute('class-tests', 'Online Tests'), 'institutional:examinations:online-tests-and-quizzes', 'Online tests must open the timed assessment workspace')
   assert.equal(getNavigationRoute('examinations', 'Automatic Checking'), 'unavailable:examinations:automatic-checking', 'Automated marking is not configured')
-  assert.equal(getNavigationRoute('reports', 'Custom Report Builder'), 'reports:builder', 'Custom Report Builder must open its dedicated multi-source builder')
-  assert.equal(getNavigationRoute('reports', 'Scheduled Reports'), 'reports:scheduled', 'Scheduled Reports must open its dedicated scheduling page')
-  assert.equal(getNavigationRoute('library', 'Student Reading History'), 'unavailable:library:student-reading-history', 'Reading progress history is distinct from the library loan ledger')
-  assert.equal(getNavigationRoute('transport', 'Transport Attendance'), 'unavailable:transport:transport-attendance', 'Transport boarding attendance requires its own route attendance register')
-  assert.equal(getNavigationRoute('receipts', 'Receipt Templates'), 'unavailable:receipts:receipt-templates', 'Receipt template management must not be confused with receipt printing')
+  assert.equal(getNavigationRoute('reports', 'Custom Report Builder'), 'custom-reports:custom-report-builder', 'Custom Report Builder must open its dedicated multi-source builder')
+  assert.equal(getNavigationRoute('reports', 'Scheduled Reports'), 'scheduled-reports:scheduled-reports', 'Scheduled Reports must open its dedicated scheduling page')
+  assert.equal(getNavigationRoute('library', 'Student Reading History'), 'library-reading:student-reading-history', 'Reading progress history must open its dedicated learner reading register')
+  assert.equal(getNavigationRoute('transport', 'Transport Attendance', 'owner'), 'transport-attendance:transport-attendance', 'Transport boarding attendance must open its append-only event register')
+  assert.equal(getNavigationRoute('transport', 'Transport Attendance', 'student'), 'unavailable:transport:transport-attendance', 'Student accounts must not access the staff-only transport event register')
+  assert.equal(getNavigationRoute('receipts', 'Receipt Templates'), 'receipt-operations:receipt-templates', 'Receipt template management must open the dedicated receipt workspace')
   assert.equal(getNavigationRoute('students', 'Student ID Cards'), 'students:id-cards', 'Student ID Cards must open the print workspace')
   assert.equal(getNavigationRoute('employees', 'Employee ID Cards'), 'employees:id-cards', 'Employee ID Cards must open the staff print workspace')
   assert.equal(getNavigationRoute('ai', 'AI Assistant'), 'assistant:chat', 'AI Assistant must open its dedicated shell while keeping sending disabled until a provider is configured')
-  assert.equal(getNavigationRoute('backup', 'Create Backup'), 'backup:create-backup', 'Create Backup must open the dedicated logical export snapshot workspace')
-  assert.equal(getNavigationRoute('communication', 'WhatsApp Integration'), 'unavailable:communication:whatsapp-integration', 'External messaging must remain unconnected until credentials and delivery tests exist')
+  assert.equal(getNavigationRoute('backup', 'Create Backup'), 'data-management:create-backup', 'Create Backup must open the backup request and data management workspace')
+  assert.equal(getNavigationRoute('communication', 'WhatsApp Integration'), 'messaging:whatsapp-integration', 'WhatsApp integration must open its connection-status workspace without claiming provider readiness')
+  assert.ok(read('src/components/CommunicationWorkspace.tsx').includes("isProviderPage=itemKey==='whatsapp-integration'"), 'WhatsApp configuration must remain a status/configuration page until verified credentials are available')
   assert.equal(getNavigationRoute('communication', 'Notification Centre'), 'notifications', 'In-app notifications remain a supported communication workflow')
   assert.equal(getNavigationRoute('people-hr', 'Teachers'), 'employees:directory-teaching', 'Teachers must open the teaching directory window')
   assert.equal(getNavigationRoute('people-hr', 'Faculty & Staff'), 'employees:directory-staff', 'Faculty & Staff must open the staff directory window')
