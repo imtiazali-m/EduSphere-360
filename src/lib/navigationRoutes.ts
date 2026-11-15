@@ -313,7 +313,7 @@ function dedicatedRoute(groupKey: string, itemKey: string): string | undefined {
   if (groupKey === 'facilities' && ['asset-assignment','asset-transfers','asset-warranty','asset-disposal','asset-reports'].includes(itemKey)) return 'asset-lifecycle:' + itemKey
   if (groupKey === 'payments' && ['online-payment-records','failed-and-pending-payments'].includes(itemKey)) return 'payment-operations:' + itemKey
   if (groupKey === 'fees' && itemKey === 'online-payments') return 'payment-operations:online-payment-records'
-  if (groupKey === 'receipts' && ['receipt-dashboard','generate-receipt','fee-receipts','payment-receipts','receipt-templates','receipt-numbering','receipt-reprinting','receipt-verification','bulk-receipt-generation','receipt-history'].includes(itemKey)) return 'receipt-operations:' + itemKey
+  if (groupKey === 'receipts' && ['receipt-templates','receipt-numbering','bulk-receipt-generation'].includes(itemKey)) return 'receipt-operations:' + itemKey
   if (groupKey === 'library' && ['reading-records','reading-cards','student-reading-history'].includes(itemKey)) return 'library-reading:' + itemKey
   if (groupKey === 'library' && ['library-dashboard','book-management','book-catalogue','book-categories','book-registration','book-issue-and-returns','digital-library','learning-materials','resource-downloads','library-reports'].includes(itemKey)) return institutionalRoute(groupKey,itemKey)
   if (groupKey === 'inventory' && ['inventory-dashboard','items-management','item-catalogue','item-categories','stock-in','stock-out','stock-allocation','stock-adjustments','inventory-history','stock-reports'].includes(itemKey)) return institutionalRoute(groupKey,itemKey)
@@ -594,7 +594,8 @@ function resolveNavigationRoute(groupKey: string, itemLabel: string, role?: stri
   if (groupKey === 'certificates' && itemKey === 'form-builder') return 'reports:forms'
   if (groupKey === 'certificates' && itemKey === 'form-submissions') return 'reports:forms'
   if (groupKey === 'administration' && itemKey === 'document-access') return 'files'
-  if (groupKey === 'question-bank' && ['question-bank-import-and-export','question-paper-version-history'].includes(itemKey)) return 'unavailable:question-bank:'+itemKey
+  if (groupKey === 'question-bank' && itemKey === 'question-bank-import-and-export') return 'operations:question-bank:pool'
+  if (groupKey === 'question-bank' && itemKey === 'question-paper-version-history') return 'operations:question-bank:papers'
   if (groupKey === 'curriculum' && ['teaching-resources','learning-materials','resource-downloads','chapter-wise-learning-resources','learning-progress-tracking'].includes(itemKey)) return 'unavailable:curriculum:'+itemKey
   if (groupKey === 'behaviour') {
     const behaviourWindows:Record<string,string>={'behaviour-dashboard':'dashboard','behaviour-records':'register','positive-behaviour':'positive','disciplinary-incidents':'incidents','rewards-and-recognition':'recognition','warnings':'warnings','student-skills':'skills','co-curricular-activities':'activities','competency-tracking':'competencies','student-progress-history':'progress','behaviour-analytics':'analytics','downloadable-behaviour-reports':'downloads'}
