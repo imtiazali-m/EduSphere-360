@@ -7,6 +7,7 @@ import { exportDocx, exportXlsx, printOfficeReport, type OfficeColumn } from '..
 import { downloadCsv } from '../lib/csv'
 import { canViewInternalApproval, getWorkspaceExportColumns, getWorkspaceExportRows, getWorkspaceReviewMetrics } from '../lib/workspacePrivacy.js'
 import type { RecordRow } from '../lib/types'
+import { getWorkspaceExperience, getWorkspaceFields } from '../lib/workspaceExperience'
 
 type OperationalRow = RecordRow & {
  module_key:string;record_type:string;title:string;reference_code?:string|null;description?:string|null;
@@ -291,6 +292,7 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
  const initialItem=getWorkspaceItem(group.key,itemKey)||group.items[0]
  const [selectedItem,setSelectedItem]=useState(initialItem.key)
  const item=getWorkspaceItem(group.key,selectedItem)||group.items[0]
+ const experience=getWorkspaceExperience(group.key,item.label)
  const [rows,setRows]=useState<OperationalRow[]>([])
  const [loading,setLoading]=useState(true)
  const [loadError,setLoadError]=useState('')
@@ -318,7 +320,7 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
  const [quantity,setQuantity]=useState('')
  const [payloadData,setPayloadData]=useState<Record<string,unknown>>({})
  useEffect(()=>{setSelectedItem(initialItem.key);setSearch('');setRange('all');setCampus('');setPage(1);setShowForm(false);setDetail(null);setEditing(null)},[workspaceKey])
- const structuredFields=itemWorkspaceFields[group.key+':'+item.key]??workspaceFields[group.key]??workspaceFields[group.dataModule]??[]
+ const structuredFields=itemWorkspaceFields[group.key+':'+item.key]??getWorkspaceFields(group.key,item.label)??workspaceFields[group.key]??workspaceFields[group.dataModule]??[]
  const preferredFieldKeys=workspaceTableFieldOrder[group.key]??workspaceTableFieldOrder[group.dataModule]??structuredFields.map(field=>field.key)
  const tableFields=preferredFieldKeys.flatMap(key=>{
   const field=structuredFields.find(candidate=>candidate.key===key)
@@ -401,6 +403,11 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
  const overdue=rows.filter(row=>row.due_date&&row.due_date<new Date().toISOString().slice(0,10)&&!['completed','cancelled','closed','approved'].includes(row.status)).length
  const totalAmount=rows.reduce((sum,row)=>sum+Number(row.amount??0),0)
  const statusCounts=reviewMetrics.statusCounts
+ const actionableRows=rows.filter(row=>!['completed','closed','approved','cancelled','rejected'].includes(String(row.status??'').toLowerCase()))
+ const completedRows=rows.filter(row=>['completed','closed','approved'].includes(String(row.status??'').toLowerCase()))
+ const completionRate=rows.length?Math.round(completedRows.length/rows.length*100):0
+ const last30Days=Date.now()-30*86400000
+ const recentRows=rows.filter(row=>row.created_at&&new Date(row.created_at).getTime()>=last30Days).length
 
  function resetForm(row?:OperationalRow){
   setEditing(row??null);setTitle(row?.title??'');setReference(row?.reference_code??'');setDescription(row?.description??'')
@@ -469,9 +476,20 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
    {group.items.map(menu=><button key={menu.key} type="button" className={selectedItem===menu.key?'active':''} aria-current={selectedItem===menu.key?'page':undefined} onClick={()=>setSelectedItem(menu.key)}>{menu.label}</button>)}
   </nav>
   <section className="ed360-operations-context-window ed360-workspace-subwindow">
-   <div><span>MAIN MENU / {group.label.toUpperCase()}</span><h2>{item.label}</h2><p>{item.description}</p></div>
+   <div><span>MAIN MENU / {group.label.toUpperCase()}</span><h2>{item.label}</h2><p>{experience.purpose}</p></div>
    <div className="ed360-workspace-window-number"><strong>{filtered.length.toLocaleString()}</strong><small>{dashboard?'records in this module':'records in this view'}</small></div>
   </section>
+  <section className="ed360-page-purpose" aria-label={item.label+' instructions'}>
+   <div className="ed360-page-purpose-heading"><span>PAGE PURPOSE</span><strong>How to use this workspace</strong><p>{experience.purpose}</p></div>
+   <div className="ed360-page-purpose-steps">{experience.workflow.map((step,index)=><div key={step}><b>{String(index+1).padStart(2,'0')}</b><span>{step}</span></div>)}</div>
+   <div className="ed360-page-purpose-outcome"><span>EXPECTED OUTCOME</span><p>{experience.outcome}</p></div>
+  </section>
+  {!dashboard&&<section className="ed360-workspace-pulse" aria-label={item.label+' live metrics'}>
+   <article><span>Records in this view</span><strong>{loading?'—':rows.length.toLocaleString()}</strong><small>Institution-scoped records</small></article>
+   <article><span>Needs follow-up</span><strong>{loading?'—':actionableRows.length.toLocaleString()}</strong><small>Not yet closed or approved</small></article>
+   <article><span>Completed / approved</span><strong>{loading?'—':completionRate+'%'}</strong><small>{completedRows.length.toLocaleString()} completed records</small></article>
+   <article><span>Added in 30 days</span><strong>{loading?'—':recentRows.toLocaleString()}</strong><small>Recent activity in this view</small></article>
+  </section>}
   <div className="ed360-workspace-toolbar">
    <div className="ed360-workspace-filter"><Filter size={15}/><select value={range} onChange={e=>setRange(e.target.value)} aria-label="Date range"><option value="30">Last 30 days</option><option value="90">Last 90 days</option><option value="365">Last 12 months</option><option value="all">All dates</option></select>
     {campuses.length>0&&<select value={campus} onChange={e=>setCampus(e.target.value)} aria-label="Campus filter"><option value="">All campuses</option>{campuses.map(c=><option value={c.id} key={c.id}>{c.name}</option>)}</select>}
@@ -500,7 +518,7 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
   </section>}
   <section className="table-card ed360-workspace-record-card">
    <div className="table-toolbar"><div className="table-count"><strong>{filtered.length.toLocaleString()}</strong> {item.label.toLowerCase()} <span>·</span> Institution scope</div><span className="ed360-table-refresh"><button type="button" onClick={()=>void load()}>Refresh records <ArrowUpRight size={13}/></button></span></div>
-   {loading?<div className="ed360-workspace-empty">Loading institution records…</div>:filtered.length===0?<div className="ed360-workspace-empty"><strong>No records in this workspace yet</strong><span>Records appear here after an authorised user creates them through this workspace. No sample data is being shown.</span>{canWrite&&<button type="button" className="button button-primary" onClick={()=>resetForm()}><Plus size={15}/> Create first record</button>}</div>:
+   {loading?<div className="ed360-workspace-empty">Loading institution records…</div>:filtered.length===0?<div className="ed360-workspace-empty"><strong>{experience.emptyTitle}</strong><span>{experience.emptyDescription}</span>{canWrite&&<button type="button" className="button button-primary" onClick={()=>resetForm()}><Plus size={15}/> {experience.actionLabel}</button>}</div>:
    <div className="table-scroll"><table aria-label={group.label+' '+item.label+' register'}><thead><tr><th scope="col">{recordLabel}</th>{tableMetaColumns.map(column=><th key={column.key} scope="col" data-column={column.key}>{column.label}</th>)}{tableFields.map(field=><th key={field.key} scope="col">{field.label}</th>)}<th scope="col">Actions</th></tr></thead><tbody>
     {pageRows.map(row=><tr key={row.id}><td><button className="ed360-record-open" type="button" onClick={()=>setDetail(row)}>{row.title}</button><small className="ed360-record-subtitle">{row.description||row.record_type.replaceAll('-',' ')}</small></td>{tableMetaColumns.map(column=><td key={column.key} data-column={column.key}>{column.key==='reference_code'?row.reference_code||'—':column.key==='status'?<span className={'ed360-state-pill state-'+row.status}>{row.status.replaceAll('_',' ')}</span>:column.key==='approval_status'?row.approval_status.replaceAll('_',' '):column.key==='record_date'?displayDate(row.record_date):column.key==='due_date'?displayDate(row.due_date):column.key==='amount'?money(row.amount):row.quantity??'—'}</td>)}{tableFields.map(field=><td key={field.key} data-column={field.key}>{String(row.payload?.[field.key]??'—')}</td>)}<td><div className="ed360-row-actions"><button type="button" onClick={()=>setDetail(row)}>Open</button>{canWrite&&<button type="button" onClick={()=>resetForm(row)}>Edit</button>}</div></td></tr>)}
    </tbody></table></div>}
