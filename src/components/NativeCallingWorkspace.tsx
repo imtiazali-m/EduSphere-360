@@ -536,8 +536,6 @@ export function NativeCallingWorkspace({
           <header><div><b>Class schedule</b><small>Upcoming live lessons and previous sessions</small></div><button type="button" className="ed360-native-icon-button" onClick={() => void refreshSessions()} title="Refresh classes"><RefreshCw size={16}/></button></header>
           <div className="ed360-native-session-list">
             {loading ? <p className="ed360-native-muted">Loading your classes…</p> : classSessions.length ? classSessions.map(session => {
-              const own = session.online_session_participants?.some(participant => participant.user_id === user?.id)
-              const host = session.created_by === user?.id || user?.role === 'owner' || user?.role === 'admin'
               return <article className="ed360-native-session-card" key={session.id}>
                 <div className="type-icon class"><Video size={17}/></div>
                 <div className="details"><b>{session.title}</b><small>{formatSessionTime(session.starts_at)}</small><span className={'status ' + session.status}>{session.status.replace('_',' ')}</span></div>
