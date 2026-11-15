@@ -87,6 +87,19 @@ for each row execute function public.guard_attendance_device_event_review();
 -- directly changing a received event's identity, timestamp, outcome or audit fields.
 revoke update on public.attendance_device_events from anon, authenticated;
 
+drop policy if exists attendance_device_events_admin_read on public.attendance_device_events;
+drop policy if exists attendance_device_events_authorised_review_read on public.attendance_device_events;
+create policy attendance_device_events_authorised_review_read
+  on public.attendance_device_events
+  for select to authenticated
+  using (
+    public.has_institution_role(institution_id, array['owner','admin'])
+    or (
+      student_id is not null
+      and public.has_institution_role(institution_id, array['teacher'])
+    )
+  );
+
 create or replace function public.review_attendance_device_event(
   p_event_id uuid,
   p_action text,
