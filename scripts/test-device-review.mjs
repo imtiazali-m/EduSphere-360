@@ -19,6 +19,9 @@ test('original signed device evidence is immutable and direct browser updates ar
   }
   assert.match(migration, /revoke update on public\.attendance_device_events from anon, authenticated/i)
   assert.match(migration, /before update on public\.attendance_device_events/i)
+  assert.match(migration, /private\.has_institution_permission\([\s\S]*?'attendance'[\s\S]*?'view'[\s\S]*?college_department_for_student/i)
+  assert.match(migration, /private\.has_institution_permission\([\s\S]*?'attendance'[\s\S]*?'approve'[\s\S]*?college_department_for_student/i)
+  assert.match(migration, /private\.has_institution_permission\([\s\S]*?'attendance'[\s\S]*?'approve'[\s\S]*?college_department_for_teacher/i)
 })
 
 test('approval reconciles into existing student and employee attendance tables', () => {
@@ -29,6 +32,7 @@ test('approval reconciles into existing student and employee attendance tables',
   assert.match(migration, /attendance_registers/i)
   assert.match(migration, /attendance_record_type = 'attendance'/i)
   assert.match(migration, /attendance_record_type = 'employee_attendance'/i)
+  assert.match(migration, /register_id = coalesce\(register_id, v_register_id\)/i)
 })
 
 test('locked registers are protected and published/manual changes require correction reasons', () => {
