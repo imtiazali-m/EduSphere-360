@@ -477,3 +477,59 @@
   .pro-window-panel .ed360-print-id-photo { width:44px;height:54px;font-size:18px; }
   .pro-window-panel .ed360-print-id-qr { width:48px;height:48px; }
 }
+
+
+.pro-window-panel .ed360-integration-heading {
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  color:var(--es-ink);background:transparent;border:0;border-bottom:1px solid var(--es-line);
+  border-radius:0;box-shadow:none;padding:4px 2px 16px;margin:0 0 18px;
+}
+.pro-window-panel .ed360-integration-heading h1 {
+  margin:5px 0 0;color:var(--es-ink);font-size:clamp(26px,2.3vw,32px);
+  line-height:1.18;font-weight:850;letter-spacing:-.7px;
+}
+.pro-window-panel .ed360-integration-heading>div>span {
+  color:var(--es-muted);font-size:10px;font-weight:850;letter-spacing:1.2px;
+}
+.pro-window-panel .ed360-integration-card {
+  border:1px solid var(--es-line);border-radius:16px;background:#fff;box-shadow:var(--es-shadow-sm);
+}
+.pro-window-panel .ed360-integration-card h2 { color:var(--es-brand-900);font-size:18px; }
+.pro-window-panel .ed360-integration-card p { color:var(--es-muted);font-size:13px;line-height:1.55; }
+.pro-window-panel .ed360-integration-card-foot .button {
+  min-height:40px;color:var(--es-primary-700);background:var(--es-primary-050);
+  border:1px solid #d8cceb;border-radius:10px;font-weight:800;
+}
+.pro-window-panel .ed360-provider-setup-card,
+.pro-window-panel .ed360-data-card {
+  color:var(--es-ink);background:#fff;border:1px solid var(--es-line);
+  border-radius:16px;box-shadow:var(--es-shadow-sm);
+}
+.pro-window-panel .ed360-provider-setup-card>header {
+  display:flex;align-items:flex-start;justify-content:space-between;gap:16px;
+}
+.pro-window-panel .ed360-provider-setup-card>header h2,
+.pro-window-panel .ed360-provider-requirements h3 { color:var(--es-brand-900);font-size:18px; }
+.pro-window-panel .ed360-provider-setup-card>header p { color:var(--es-muted);font-size:13px;line-height:1.6; }
+.pro-window-panel .ed360-provider-requirements {
+  margin-top:18px;padding:18px;border:1px solid var(--es-line);border-radius:13px;background:#fbfaff;
+}
+.pro-window-panel .ed360-provider-requirements ol { margin:12px 0 0;padding-left:22px;display:grid;gap:10px;color:#40384c;font-size:13px;line-height:1.55; }
+.pro-window-panel .ed360-provider-config {
+  display:grid;gap:8px;margin-top:14px;padding:16px;border-radius:12px;background:#f3eff9;
+}
+.pro-window-panel .ed360-provider-config b { color:var(--es-brand-900);font-size:12px; }
+.pro-window-panel .ed360-provider-config code {
+  display:block;overflow-wrap:anywhere;padding:8px 10px;border-radius:8px;
+  color:#3b2b59;background:#fff;border:1px solid var(--es-line);font-size:11px;
+}
+.pro-window-panel .ed360-provider-config small { color:var(--es-muted);font-size:11px;line-height:1.55; }
+.pro-window-panel .ed360-provider-doc-link { display:inline-flex;margin-top:14px;color:var(--es-primary-700);font-weight:800;font-size:12px; }
+.pro-window-panel .iop-idcard-no-qr {
+  display:grid;place-items:center;width:70px;height:70px;padding:6px;
+  border:1px dashed #c9bfd7;border-radius:7px;color:var(--es-muted);font-size:9px;text-align:center;
+}
+@media(max-width:600px) {
+  .pro-window-panel .ed360-provider-setup-card>header { flex-direction:column; }
+  .pro-window-panel .ed360-integration-heading { align-items:flex-start;flex-direction:column; }
+}
