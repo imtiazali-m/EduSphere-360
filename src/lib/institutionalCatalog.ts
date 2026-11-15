@@ -104,7 +104,7 @@ export const institutionalMenu:WorkspaceMenuGroup[]=[
   'Reconciliation Dashboard','Financial Reconciliation','Bank Reconciliation','Cash Reconciliation','Payment Reconciliation','Fee Collection Reconciliation','Transaction Verification','Audit Logs','Administrative Audit','User Activity Logs','Access History','Change History','Audit Reports'
  ]),
  group('communication','Communication and WhatsApp','Role-targeted notices, message templates, notification centre, delivery history and approved messaging integrations.','MessageSquare','sky','communication',all,[
-  'Communication Dashboard','WhatsApp Integration','Individual Messages','Bulk Messages','Class-wise Messaging','Employee Notifications','Message Templates','Assignment Notifications','Email Notifications','Delivery History','Communication Logs','Notification Centre','Communication Reports',
+  'Communication Dashboard','WhatsApp Integration','Individual Messages','Bulk Messages','Class-wise Messaging','Employee Notifications','Message Templates','Assignment Notifications','Email Notifications','Delivery History','Communication Logs','Notification Centre','Communication Reports','Internet Calling',
   'Reception & Enquiries',
   'Parent Communication',
   'Internal Messages',
