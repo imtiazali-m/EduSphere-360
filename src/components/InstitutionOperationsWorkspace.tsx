@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase'
 import { userFacingError } from '../lib/userErrors'
 import { listRecords } from '../lib/data'
 import { downloadCsv } from '../lib/csv'
+import { exportDocx, exportXlsx, printOfficeReport, type OfficeColumn } from '../lib/officeExport'
 import type { RecordRow } from '../lib/types'
 import '../styles/institution-operations.css'
 
@@ -96,6 +97,7 @@ export function InstitutionOperationsWorkspace({workspaceKey,initialWindow,onToa
   const [questionToAdd,setQuestionToAdd]=useState('')
   const [certificateCode,setCertificateCode]=useState('')
   const [certificateResult,setCertificateResult]=useState<Row|null>(null)
+   const [exportRequest,setExportRequest]=useState<{name:string;rows:Row[];columns:OfficeColumn[]}|null>(null)
 
   function update(key:string,value:string){setDraft(current=>({...current,[key]:value}))}
   function field(label:string,key:string,type='text',required=true,options?:{label:string;value:string}[]){
@@ -329,9 +331,20 @@ export function InstitutionOperationsWorkspace({workspaceKey,initialWindow,onToa
     }catch(err){onToast(userFacingError(err,'Random question selection could not be saved.'),true)}
     finally{setBusy(false)}
   }
-  function exportRows(name:string,rows:Row[],columns:{key:string;label:string}[]){
+  function exportRows(name:string,rows:Row[],columns:OfficeColumn[]){
     if(!rows.length){onToast('There are no records to export.',true);return}
-    downloadCsv('edusphere-'+name+'-'+day()+'.csv',rows as Record<string,unknown>[],columns)
+    setExportRequest({name,rows,columns})
+  }
+  function completeExport(format:'csv'|'xlsx'|'docx'|'print'){
+    if(!exportRequest)return
+    const {name,rows,columns}=exportRequest,records=rows as Record<string,unknown>[],filename='edusphere-'+name+'-'+day(),title=name.replaceAll('-',' ').replace(/\b\w/g,value=>value.toUpperCase())
+    try{
+      if(format==='csv')downloadCsv(filename+'.csv',records,columns)
+      else if(format==='xlsx')exportXlsx(filename+'.xlsx',title,records,columns)
+      else if(format==='docx')exportDocx(filename+'.docx',title,records,columns)
+      else printOfficeReport(title,records,columns,user?.institutionName??'Institution name not set')
+      setExportRequest(null)
+    }catch(error){onToast(error instanceof Error?error.message:'The selected report format could not be created.',true)}
   }
 
   const queryMatch=(row:Row,fields:string[])=>fields.some(key=>String(row[key]??'').toLowerCase().includes(search.trim().toLowerCase()))
@@ -403,7 +416,7 @@ export function InstitutionOperationsWorkspace({workspaceKey,initialWindow,onToa
       const reportRows:Row[]=behaviour.map(row=>({...row,student_name:selectedName(row.student_id)}))
       const reportColumns=[{key:'student_name',label:'Student'},{key:'event_date',label:'Date'},{key:'event_type',label:'Record type'},{key:'category',label:'Category'},{key:'summary',label:'Summary'},{key:'severity',label:'Severity'},{key:'status',label:'Status'}]
       return <div className="iop-panel"><header><div><h2>{view==='analytics'?'Behaviour analytics':'Downloadable behaviour reports'}</h2><p>{view==='analytics'?'Explore institution-recorded event patterns without treating correlations as causes.':'Choose an export presentation for the authorised behaviour register.'}</p></div>{view==='downloads'&&<button className="iop-button primary" onClick={()=>window.print()}><Printer size={14}/> Print selected report</button>}</header>
-       {view==='analytics'?<><div className="iop-kpis"><article><small>Total records</small><b>{behaviour.length}</b></article><article><small>Positive</small><b>{behaviour.filter(row=>row.event_type==='positive').length}</b></article><article><small>Concerns</small><b>{behaviour.filter(row=>row.event_type==='concern').length}</b></article><article><small>Incidents</small><b>{behaviour.filter(row=>row.event_type==='incident').length}</b></article><article><small>Safeguarding</small><b>{behaviour.filter(row=>row.event_type==='safeguarding').length}</b></article></div><div className="iop-care-summary"><section><h3>Records by type</h3>{Object.entries(grouped).length?Object.entries(grouped).map(([label,count])=><div key={label}><span>{label}</span><b>{count}</b></div>):<p className="iop-muted">No behaviour records available to analyse.</p>}</section><section><h3>Student development evidence</h3><div><span>Skills</span><b>{skillRecords.length}</b></div><div><span>Co-curricular</span><b>{activityRecords.length}</b></div><div><span>Competencies</span><b>{competencyRecords.length}</b></div><div><span>Progress entries</span><b>{progressRecords.length}</b></div></section></div></>:<><div className="iop-report-templates"><label>Report template<select value={behaviourTemplate} onChange={e=>setBehaviourTemplate(e.target.value)}><option value="summary">Behaviour summary</option><option value="incident">Incident register</option><option value="positive">Positive recognition register</option><option value="follow-up">Follow-up list</option><option value="student">Student development record</option></select></label><span>{reportRows.length} authorised records available</span></div><div className="iop-actions"><button className="iop-button" onClick={()=>exportCare('behaviour-'+behaviourTemplate,reportRows.filter(row=>behaviourTemplate==='incident'?['incident','safeguarding'].includes(String(row.event_type)):behaviourTemplate==='positive'?row.event_type==='positive':behaviourTemplate==='follow-up'?row.follow_up_required:true),reportColumns)}><Download size={14}/> Download CSV</button><button className="iop-button" onClick={()=>window.print()}><Printer size={14}/> Print / PDF</button></div><p className="iop-muted">The selected output follows your institution’s report permissions and does not include internal safeguarding details for audiences without access.</p></>}
+       {view==='analytics'?<><div className="iop-kpis"><article><small>Total records</small><b>{behaviour.length}</b></article><article><small>Positive</small><b>{behaviour.filter(row=>row.event_type==='positive').length}</b></article><article><small>Concerns</small><b>{behaviour.filter(row=>row.event_type==='concern').length}</b></article><article><small>Incidents</small><b>{behaviour.filter(row=>row.event_type==='incident').length}</b></article><article><small>Safeguarding</small><b>{behaviour.filter(row=>row.event_type==='safeguarding').length}</b></article></div><div className="iop-care-summary"><section><h3>Records by type</h3>{Object.entries(grouped).length?Object.entries(grouped).map(([label,count])=><div key={label}><span>{label}</span><b>{count}</b></div>):<p className="iop-muted">No behaviour records available to analyse.</p>}</section><section><h3>Student development evidence</h3><div><span>Skills</span><b>{skillRecords.length}</b></div><div><span>Co-curricular</span><b>{activityRecords.length}</b></div><div><span>Competencies</span><b>{competencyRecords.length}</b></div><div><span>Progress entries</span><b>{progressRecords.length}</b></div></section></div></>:<><div className="iop-report-templates"><label>Report template<select value={behaviourTemplate} onChange={e=>setBehaviourTemplate(e.target.value)}><option value="summary">Behaviour summary</option><option value="incident">Incident register</option><option value="positive">Positive recognition register</option><option value="follow-up">Follow-up list</option><option value="student">Student development record</option></select></label><span>{reportRows.length} authorised records available</span></div><div className="iop-actions"><button className="iop-button" onClick={()=>exportCare('behaviour-'+behaviourTemplate,reportRows.filter(row=>behaviourTemplate==='incident'?['incident','safeguarding'].includes(String(row.event_type)):behaviourTemplate==='positive'?row.event_type==='positive':behaviourTemplate==='follow-up'?row.follow_up_required:true),reportColumns)}><Download size={14}/> Export</button><button className="iop-button" onClick={()=>window.print()}><Printer size={14}/> Print / PDF</button></div><p className="iop-muted">The selected output follows your institution’s report permissions and does not include internal safeguarding details for audiences without access.</p></>}
       </div>
     }
     const rows=visibleBehaviour.filter(row=>view==='positive'||view==='recognition'?row.event_type==='positive':view==='incidents'?['incident','safeguarding'].includes(String(row.event_type)):view==='warnings'?row.event_type==='concern'||String(row.category??'').toLowerCase().includes('warning'):view==='follow-up'?row.follow_up_required===true:view==='register'?row.event_type!=='positive':true)
@@ -511,7 +524,7 @@ export function InstitutionOperationsWorkspace({workspaceKey,initialWindow,onToa
     :view==='assets'?visibleAssets.length:visibleMaintenance.length
 
   return <main className="iop-stage page-content ed360-module-page">
-    <header className="iop-heading"><div><span>GIDC BADIN · {domainTitles[selectedDomain].toUpperCase()}</span><h1>{viewLabels[view]}</h1><p>{domainDescriptions[selectedDomain]}</p></div><button type="button" className="iop-button" onClick={()=>void load()}><RefreshCw size={14}/> Refresh</button></header>
+    <header className="iop-heading"><div><span>{(user?.institutionName?.trim()||'INSTITUTION').toUpperCase()} / {domainTitles[selectedDomain].toUpperCase()}</span><h1>{viewLabels[view]}</h1><p>{domainDescriptions[selectedDomain]}</p></div><button type="button" className="iop-button" onClick={()=>void load()}><RefreshCw size={14}/> Refresh</button></header>
     <nav className="iop-nav" aria-label={domainTitles[selectedDomain]+' workspace windows'}>{tabItems.map(key=><button type="button" key={key} className={view===key?'active':''} aria-current={view===key?'page':undefined} onClick={()=>setView(key)}>{viewLabels[key]}</button>)}</nav>
     <section className="iop-context"><div><small>ACTIVE DOMAIN WINDOW</small><h2>{viewLabels[view]}</h2><p>{domainDescriptions[selectedDomain]}</p></div><div><strong>{recordCount}</strong><small>Visible records</small></div></section>
     {error&&<div className="iop-error" role="alert">{error}</div>}
@@ -519,5 +532,6 @@ export function InstitutionOperationsWorkspace({workspaceKey,initialWindow,onToa
     {!loading&&viewRowCount>pageSize&&<div className="iop-global-pagination">{pageControls(viewRowCount)}</div>}
     <footer className="iop-footer"><span><ShieldCheck size={14}/> Institution access and linked family visibility are enforced by Supabase row-level security.</span><button className="iop-button" onClick={()=>void load()}><RefreshCw size={14}/> Refresh</button></footer>
     {renderDialog()}
+     {exportRequest&&<div className="modal-backdrop" role="presentation" onMouseDown={event=>{if(event.target===event.currentTarget)setExportRequest(null)}}><section className="modal-card" role="dialog" aria-modal="true" aria-labelledby="iop-export-title"><div className="modal-heading"><div><div className="eyebrow">DOCUMENT EXPORT</div><h2 id="iop-export-title">Export {exportRequest.name.replaceAll('-',' ')}</h2><p>{exportRequest.rows.length} authorised records · choose your document format</p></div><button className="icon-button" type="button" onClick={()=>setExportRequest(null)} aria-label="Close export options"><X size={18}/></button></div><div className="iop-actions"><button className="iop-button" type="button" onClick={()=>completeExport('csv')}>CSV</button><button className="iop-button" type="button" onClick={()=>completeExport('xlsx')}>Excel (XLSX)</button><button className="iop-button" type="button" onClick={()=>completeExport('docx')}>Word (DOCX)</button><button className="iop-button primary" type="button" onClick={()=>completeExport('print')}><Printer size={14}/> Print / PDF</button></div><p className="iop-muted">Print uses a clean A4 white-paper layout. PDF is available through the browser print dialog.</p></section></div>}
   </main>
 }
