@@ -1003,3 +1003,49 @@
   .pro-window-panel .fin-export-bar { align-items:stretch; }
   .pro-window-panel .fin-export-bar button { flex:1 1 calc(50% - 8px); }
 }
+
+
+/* Behaviour & Skills: current submenu is the title; permissions and actions stay visible. */
+.pro-window-panel .ed360-behaviour-header {
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding:4px 2px 16px;margin:0 0 18px;border:0;border-bottom:1px solid var(--es-line);
+  border-radius:0;background:transparent;box-shadow:none;
+}
+.pro-window-panel .ed360-behaviour-header>div>span {
+  color:var(--es-muted);font-size:10px;font-weight:850;letter-spacing:1.1px;line-height:1.5;
+}
+.pro-window-panel .ed360-behaviour-header h1 {
+  margin:5px 0 0;color:var(--es-ink);font-size:clamp(26px,2.3vw,32px);
+  line-height:1.18;font-weight:850;letter-spacing:-.7px;
+}
+.pro-window-panel .ed360-behaviour-header-actions { display:flex;align-items:center;gap:9px;flex-wrap:wrap; }
+.pro-window-panel .ed360-behaviour-header-actions .button-primary,
+.pro-window-panel .ed360-front-office-refresh-top {
+  min-height:46px;padding:0 20px;color:#fff;background:var(--es-primary-600);
+  border:1px solid var(--es-primary-600);border-radius:12px;
+  box-shadow:0 6px 16px rgba(96,53,181,.2);font-size:13px;font-weight:850;
+}
+.pro-window-panel .ed360-behaviour-header-actions .button-primary:hover,
+.pro-window-panel .ed360-front-office-refresh-top:hover { color:#fff;background:var(--es-primary-700);border-color:var(--es-primary-700); }
+.pro-window-panel .ed360-behaviour-header-actions .button-outline {
+  min-height:42px;padding:0 15px;color:var(--es-primary-700);background:#fff;border:1px solid #d9cfea;border-radius:10px;font-size:12px;font-weight:800;
+}
+.pro-window-panel .ed360-front-office-hero {
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding:4px 2px 16px;margin:0 0 18px;border:0;border-bottom:1px solid var(--es-line);
+  border-radius:0;background:transparent;box-shadow:none;
+}
+.pro-window-panel .ed360-front-office-hero>div>span {
+  color:var(--es-muted);font-size:10px;font-weight:850;letter-spacing:1.1px;line-height:1.5;
+}
+.pro-window-panel .ed360-front-office-hero h1 {
+  margin:5px 0 0;color:var(--es-ink);font-size:clamp(26px,2.3vw,32px);
+  line-height:1.18;font-weight:850;letter-spacing:-.7px;
+}
+.pro-window-panel .ed360-front-office-result-count { color:var(--es-muted);font-size:11px;font-weight:800; }
+.pro-window-panel .ed360-front-office-panel { border:1px solid var(--es-line);border-radius:16px;background:#fff;box-shadow:var(--es-shadow-sm); }
+.pro-window-panel .ed360-front-office-refresh-top:disabled { opacity:.6;cursor:wait; }
+@media(max-width:700px) {
+  .pro-window-panel .ed360-behaviour-header,.pro-window-panel .ed360-front-office-hero { align-items:flex-start;flex-direction:column; }
+  .pro-window-panel .ed360-front-office-refresh-top { width:100%; }
+}
