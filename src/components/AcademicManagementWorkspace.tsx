@@ -610,7 +610,7 @@ export function AcademicManagementWorkspace({ initialWindow = 'academic-sessions
         if(payload.academic_session_id)conflictQuery=conflictQuery.or(`academic_session_id.eq.${String(payload.academic_session_id)},academic_session_id.is.null`)
         const {data:existingSlots,error:conflictLoadError}=await conflictQuery.limit(1000)
         if(conflictLoadError)throw conflictLoadError
-        const conflict=(existingSlots??[]).find(slot=>timetableConflictReason(payload,slot as RowData))
+        const conflict=(existingSlots??[]).find(slot=>timetableConflictReason({...payload,id:editing?.id},slot as RowData))
         if(conflict){
           const reason=timetableConflictReason(payload,conflict as RowData)
           throw new Error(`Timetable conflict: this ${reason} is already scheduled during that period in the selected academic session.`)
