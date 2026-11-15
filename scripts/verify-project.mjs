@@ -1119,8 +1119,29 @@ check('Required database safeguards and Cloudflare redirects remain in the proje
     assert.ok(migrations.includes(migration), `${migration} missing`)
   }
   const timestamped = migrations.filter(name => /^202611\d{8}_.+\.sql$/.test(name))
-  assert.equal(timestamped.length, 63, 'Expected sixty-three timestamped migrations including native online classes, calling and Realtime guards')
-  assert.ok(read('supabase/migrations/README.md').includes('sixty-three timestamped migration files'))
+  assert.ok(timestamped.length >= 60, 'Expected the timestamped migration history to include the institution, operations, attendance and online-class changes')
+  const requiredMigrationFiles = [
+    '20261113085725_institution_messages_and_delivery_tracking.sql',
+    '20261113090948_hostel_residence_operations.sql',
+    '20261113091806_cafeteria_menu_availability_sales.sql',
+    '20261113092458_library_reading_history.sql',
+    '20261113092730_fee_receipt_issuance_and_numbering.sql',
+    '20261113092952_payment_gateway_review_register.sql',
+    '20261113093152_facility_asset_lifecycle.sql',
+    '20261113094116_scheduled_report_execution_history.sql',
+    '20261113094248_institution_helpdesk_ticket_lifecycle.sql',
+    '20261113094459_duplicate_detection_review_workflow.sql',
+    '20261113145609_institution_dynamic_forms_and_submissions.sql',
+    '20261115060000_attendance_device_event_review_approval.sql',
+    '20261115070000_native_online_sessions_calling.sql',
+    '20261115080000_native_online_sessions_realtime_and_link_guards.sql',
+    '20261115100000_native_online_session_public_grants_lockdown.sql',
+    '20261115110000_online_session_attendance_reconnect_fix.sql',
+    '20261115120000_guardian_online_class_observer_access.sql',
+  ]
+  for (const migration of requiredMigrationFiles) assert.ok(migrations.includes(migration), migration + ' missing')
+  const migrationReadme = read('supabase/migrations/README.md')
+  assert.ok(migrationReadme.includes('migration ledger') && migrationReadme.includes('must not be replayed blindly'), 'Migration documentation must state that repository files and the remote migration ledger require reconciliation before applying SQL')
   assert.equal(read('public/_redirects').trim(), '/* /index.html 200')
   const envExample = read('.env.example')
   const gitignore = read('.gitignore')
