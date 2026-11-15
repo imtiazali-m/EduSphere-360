@@ -3,7 +3,6 @@ export interface WorkspaceFieldDefinition { key:string; label:string; type?:Work
 export interface WorkspaceExperience { purpose:string; workflow:[string,string,string]; outcome:string; actionLabel:string; emptyTitle:string; emptyDescription:string }
 const field=(key:string,label:string,type:WorkspaceFieldType='text',options?:string[]):WorkspaceFieldDefinition=>({key,label,type,options})
 const status=['Draft','In progress','Pending review','Approved','Completed','Closed']
-const yesNo=['Yes','No']
 const groupCopy:Record<string,{purpose:string;workflow:[string,string,string];outcome:string;action:string}> = {
  attendance:{purpose:'Capture attendance events, verify exceptions and maintain an auditable record for students and employees.',workflow:['Choose the date, class, group or person','Record the event and supporting reason','Review exceptions, confirm the register and export the result'],outcome:'A traceable attendance record with clear exception follow-up.',action:'Add attendance record'},
  behaviour:{purpose:'Record student conduct, positive recognition, support needs and agreed follow-up actions with appropriate visibility.',workflow:['Select the student and behaviour category','Document the observation and action taken','Review the outcome and maintain progress history'],outcome:'A dated student-support record with an accountable next step.',action:'Add behaviour record'},
