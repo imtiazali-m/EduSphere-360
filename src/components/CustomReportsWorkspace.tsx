@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { BarChart3, Download, Play, RefreshCw, Save } from 'lucide-react'
+import { Download, Play, RefreshCw, Save } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { listRecords, createRecord } from '../lib/data'
 import { downloadCsv, type CsvColumn } from '../lib/csv'
@@ -23,12 +23,6 @@ const sources:Source[]=[
  {key:'announcements',label:'Announcements',fields:['title','audience','body','created_at'],names:{title:'Notice',audience:'Audience',body:'Message',created_at:'Published'}},
 ]
 const pages:Record<string,string>={'custom-report-builder':'Custom Report Builder','scheduled-reports':'Scheduled Reports','report-templates':'Report Templates','report-history':'Report History'}
-const blurbs:Record<string,string>={
- 'custom-report-builder':'Choose a live institution data source, filter fields and export a saved report definition.',
- 'scheduled-reports':'Save a recurring report request and its recipients. Automatic execution requires a server scheduler.',
- 'report-templates':'Save reusable report column and filter layouts for your institution.',
- 'report-history':'Review reports generated on demand, including their source and row totals.'
-}
 const toStringValue=(value:unknown)=>value===null||value===undefined?'':String(value)
 function matches(row:ResultRow,key:string,operator:string,value:string){
  const actual=toStringValue(row[key]).toLowerCase(), expected=value.trim().toLowerCase()
@@ -43,7 +37,6 @@ export function CustomReportsWorkspace({workspaceKey,onToast}:{workspaceKey:stri
  const {user,mode}=useAuth()
  const itemKey=workspaceKey.split(':').slice(-1).join(':')||'custom-report-builder'
  const title=pages[itemKey]??'Custom Reports'
- const description=blurbs[itemKey]??'Build, save and review institution reports.'
  const canManage=Boolean(user&&['owner','admin'].includes(user.role))
  const [sourceKey,setSourceKey]=useState('students')
  const [selectedFields,setSelectedFields]=useState<string[]>(['admission_no','full_name','class_name','status'])
@@ -127,7 +120,7 @@ export function CustomReportsWorkspace({workspaceKey,onToast}:{workspaceKey:stri
  }
  if(!user)return null
  return <main className="page-content ed360-module-page ed360-custom-reports">
-  <header className="ed360-workspace-hero"><div className="ed360-workspace-hero-copy"><span>{(user?.institutionName?.trim()||'GOVERNMENT ISLAMIA DEGREE COLLEGE').toUpperCase()} / REPORTS & ANALYTICS / {title.toUpperCase()}</span><h1>{title}</h1></div><div className="ed360-workspace-hero-tools"><button type="button" className="button button-primary" onClick={()=>void loadSaved()} disabled={loading}><RefreshCw size={15}/>{loading?'Refreshing…':'Refresh'}</button></div></header>
+  <header className="ed360-workspace-hero"><div className="ed360-workspace-hero-copy"><span>{(user?.institutionName?.trim()||'GOVERNMENT ISLAMIA DEGREE COLLEGE').toUpperCase()} / REPORTS & ANALYTICS / {title.toUpperCase()}</span><h1>{title}</h1></div><div className="ed360-workspace-hero-tools"><button type="button" className="button button-primary" onClick={()=>void loadSaved()} disabled={running||saving}><RefreshCw size={15}/>{running||saving?'Refreshing…':'Refresh'}</button></div></header>
   {itemKey==='custom-report-builder'&&<section className="ed360-data-card"><header><h2>Report definition</h2><p>Select a supported data source and the fields needed for this report.</p></header><form className="ed360-data-form" onSubmit={runReport}>
    <label>Report name<input value={reportName} onChange={e=>setReportName(e.target.value)} placeholder="e.g. Grade-wise student attendance"/></label>
    <label>Data source<select value={sourceKey} onChange={e=>{setSourceKey(e.target.value);setRunRows([])}}>{sources.map(s=><option key={s.key} value={s.key}>{s.label}</option>)}</select></label>
