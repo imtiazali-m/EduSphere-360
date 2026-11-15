@@ -53,6 +53,7 @@ const requiredFiles = [
   'src/components/GovernanceWorkspace.tsx', 'src/components/AdministrationStage5Workspace.tsx', 'src/components/PeopleHRWorkspace.tsx', 'src/components/EmployeeQualificationsPanel.tsx', 'src/styles/people-hr-workspace.css', 'src/styles/governance-workspace.css',
   'src/components/InstitutionOperationsWorkspace.tsx', 'src/styles/institution-operations.css',
   'src/components/AcademicManagementWorkspace.tsx', 'src/styles/academic-management.css',
+  'src/components/NativeCallingWorkspace.tsx', 'src/styles/native-calling-workspace.css', 'scripts/test-online-session-security.mjs', 'supabase/functions/online-session-control/index.ts', 'supabase/migrations/20261115070000_native_online_sessions_calling.sql', 'supabase/migrations/20261115080000_native_online_sessions_realtime_and_link_guards.sql',
   'src/components/AuthScreens.tsx', 'src/components/AdministrationModule.tsx',
   'src/components/RecordModule.tsx', 'src/components/FacultyWorkspace.tsx', 'src/styles/faculty-workspace.css', 'src/components/ReportsModule.tsx', 'src/components/ProfileModule.tsx', 'src/components/PersonalWorkspace.tsx', 'src/components/AIAssistantWorkspace.tsx', 'src/components/FrontOfficeWorkspace.tsx', 'src/styles/front-office-workspace.css', 'src/context/AuthContext.tsx', 'src/lib/auth.ts',
   'src/lib/data.ts', 'src/lib/workspacePrivacy.js', 'src/lib/workspacePrivacy.d.ts', 'scripts/test-workspace-privacy.mjs', '.github/workflows/workspace-family-privacy.yml', 'docs/WORKSPACE_ROLE_PRIVACY.md', 'src/lib/displayPreferences.js', 'src/lib/displayPreferences.d.ts', 'src/styles/dashboard-display-settings.css', 'scripts/test-display-preferences.mjs', '.github/workflows/dashboard-display-preferences.yml', 'docs/STAGE_4_DASHBOARD_DISPLAY_MODES.md', 'src/lib/navigationAccess.ts', 'src/lib/userErrors.ts', 'scripts/test-user-errors.mjs',
@@ -1066,7 +1067,7 @@ check('Required database safeguards and Cloudflare redirects remain in the proje
   }
   const timestamped = migrations.filter(name => /^202611\d{8}_.+\.sql$/.test(name))
   assert.equal(timestamped.length, 60, 'Expected sixty timestamped migrations including native online classes, calling and Realtime guards')
-  assert.ok(read('supabase/migrations/README.md').includes('fifty-eight timestamped migration files'))
+  assert.ok(read('supabase/migrations/README.md').includes('sixty timestamped migration files'))
   assert.equal(read('public/_redirects').trim(), '/* /index.html 200')
   const envExample = read('.env.example')
   const gitignore = read('.gitignore')
