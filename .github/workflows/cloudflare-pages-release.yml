@@ -71,6 +71,9 @@ jobs:
       - name: Test authorised attendance event review
         run: npm run test:device-review
 
+      - name: Test native online session security
+        run: npm run test:online-session-security
+
       - name: Test finance calculations
         run: npm run test:finance
 
