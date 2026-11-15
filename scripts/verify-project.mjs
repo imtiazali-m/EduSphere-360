@@ -601,14 +601,14 @@ check('Teacher account provisioning verifies and links one employee identity wit
   assert.ok(accountForm.includes('Teacher login creation verifies and links that employee record'), 'Account form does not explain the employee-first teacher login flow')
 })
 
-check('College production deployment runs only from main after the verified build', () => {
+check('EduSphere 360 production deployment runs only from main after the verified build', () => {
   const releaseWorkflow = read('.github/workflows/cloudflare-pages-release.yml')
   const productionJob = releaseWorkflow.slice(releaseWorkflow.indexOf('  deploy-production:'))
   assert.ok(productionJob.includes("github.ref == 'refs/heads/main'"), 'Production deployment must be restricted to main')
   assert.ok(!productionJob.includes("github.event_name == 'push'") && productionJob.includes("github.event_name == 'workflow_dispatch'") && productionJob.includes('inputs.deploy_production == true'), 'Production release must remain manual and explicitly approved after verification')
   assert.ok(productionJob.includes("github.event_name == 'workflow_dispatch'") && productionJob.includes('inputs.deploy_production == true'), 'A manual, explicitly approved redeploy must remain available')
-  assert.ok(productionJob.includes('Ensure both EduSphere production Pages projects exist') && productionJob.includes('for project in gidcbadin edusphere360'), 'Both EduSphere Pages projects must be created idempotently when missing')
-  assert.ok(productionJob.includes('pages deploy dist --project-name=gidcbadin --branch=main') && productionJob.includes('pages deploy dist --project-name=edusphere360 --branch=main'), 'Production must deploy the same verified build to both Pages projects')
+  assert.ok(productionJob.includes('Ensure the EduSphere 360 production Pages project exists') && productionJob.includes('for project in edusphere360; do'), 'Only the EduSphere 360 Pages project may be created or deployed by this workflow')
+  assert.ok(productionJob.includes('pages deploy dist --project-name=edusphere360 --branch=main') && !productionJob.includes('project-name=gidcbadin'), 'Production must deploy the verified build only to the EduSphere 360 Pages project')
   assert.ok(!releaseWorkflow.includes('deploy-preview'), 'Pull requests must not publish a separate Cloudflare preview')
 })
 
@@ -1206,17 +1206,18 @@ check('Teacher reporting routes expose only the teacher-permitted report dataset
   assert.ok(reports.includes("'attendance'" ) && reports.includes("'exam_results'"), 'Teacher report workspace must include permitted attendance and examination datasets')
 })
  
-check('College GitHub release pipeline verifies and deploys the dedicated public website', () => {
+check('EduSphere 360 GitHub release pipeline verifies and deploys only its dedicated public website', () => {
   const workflow = read('.github/workflows/cloudflare-pages-release.yml')
-  for (const phrase of ['workflow_dispatch', 'npm ci --no-audit --no-fund', 'npm run verify:project', 'npm run test:user-errors', 'npm run test:finance', 'npm run test:file-access', 'npm run build', 'gidcbadin-cloudflare-direct-upload.zip', 'cloudflare/wrangler-action@v4']) {
+  for (const phrase of ['workflow_dispatch', 'npm ci --no-audit --no-fund', 'npm run verify:project', 'npm run test:user-errors', 'npm run test:finance', 'npm run test:file-access', 'npm run build', 'edusphere360-cloudflare-direct-upload.zip', 'cloudflare/wrangler-action@v4']) {
     assert.ok(workflow.includes(phrase), `Release workflow is missing ${phrase}`)
   }
   assert.ok(workflow.includes('inputs.deploy_production == true'), 'Manual production redeployment must require explicit approval')
-  assert.ok(workflow.includes('Generate responsive source coverage audit') && workflow.includes('gidcbadin-responsive-source-audit'), 'Responsive source evidence must be generated and uploaded in CI')
-  assert.ok(workflow.includes('gidcbadin-dist') && workflow.includes('gidcbadin-exact-route-audit') && workflow.includes('gidcbadin-route-view-audit'), 'College production and audit artifacts must use the college project name')
+  assert.ok(workflow.includes('Generate responsive source coverage audit') && workflow.includes('edusphere360-responsive-source-audit'), 'Responsive source evidence must be generated and uploaded in CI')
+  assert.ok(workflow.includes('edusphere360-dist') && workflow.includes('edusphere360-exact-route-audit') && workflow.includes('edusphere360-route-view-audit'), 'Production and audit artifacts must use the EduSphere 360 project name')
   assert.ok(!workflow.includes('deploy-preview'), 'Pull requests must not create a Cloudflare preview deployment')
   assert.ok(!workflow.includes("github.event_name == 'push'") && workflow.includes("github.event_name == 'workflow_dispatch'") && workflow.includes("github.ref == 'refs/heads/main'") && workflow.includes('inputs.deploy_production == true'), 'Production deployment must remain manual and explicitly approved after main-branch verification')
   assert.ok(workflow.includes('secrets.CLOUDFLARE_API_TOKEN') && workflow.includes('secrets.CLOUDFLARE_ACCOUNT_ID'))
+  assert.ok(!workflow.includes('gidcbadin'), 'EduSphere release must never deploy to the separate GIDC Pages project')
   assert.ok(workflow.includes('vars.VITE_SUPABASE_URL') && workflow.includes('vars.VITE_SUPABASE_PUBLISHABLE_KEY'))
   assert.ok(!workflow.includes('SUPABASE_SERVICE_ROLE_KEY'), 'A Supabase service-role key must never be a frontend build variable')
 })
