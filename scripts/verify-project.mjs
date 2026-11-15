@@ -69,6 +69,22 @@ check('Dedicated operational submenus dispatch to institution-scoped workspace c
   assert.ok(operations.includes('approve_facility_room_reservation'), 'Room reservation approval must use the conflict-checking database RPC')
   assert.ok(operations.includes('Generate draft certificates'), 'Bulk certificates must remain drafts until authorised review')
 })
+check('Examination and class-test pages dispatch to the dedicated assessment lifecycle', () => {
+  const dashboard = read('src/components/Dashboard.tsx')
+  const assessment = read('src/components/AssessmentWorkspace.tsx')
+  const audit = read('scripts/generate-route-view-audit.mjs')
+  assert.ok(dashboard.includes("tab.targetKey === 'institutional' && tab.targetWindow.startsWith('examinations:')"), 'Examination routes must use the dedicated AssessmentWorkspace dispatcher')
+  assert.ok(dashboard.includes('<AssessmentWorkspace workspaceKey={tab.targetWindow} onToast={onToast}/>'), 'AssessmentWorkspace must be rendered for examination route destinations')
+  for (const table of ['exams','exam_results','question_bank_items','online_assessments','online_assessment_attempts','examination_grade_bands','examination_assessment_weights','examination_assessment_rubrics']) {
+    assert.ok(assessment.includes("from('"+table+"')"), 'AssessmentWorkspace is missing institution-scoped '+table+' workflow')
+  }
+  for (const action of ['saveExam','deleteExam','saveQuestion','saveMarks','createAssessment']) {
+    assert.ok(assessment.includes('function '+action+'('), 'AssessmentWorkspace is missing '+action+' operation')
+  }
+  assert.ok(assessment.includes('eq(\'institution_id\',user.institutionId)'), 'Assessment operations must scope database reads/writes to the active institution')
+  assert.ok(audit.includes("targetWindow.startsWith('examinations:') ? 'AssessmentWorkspace'"), 'Route-view audit must match Dashboard examination dispatch')
+  assert.ok(audit.includes("component: 'AssessmentWorkspace'"), 'Assessment destinations must be classified as the actual assessment workspace')
+})
 check('Leave applications, approvals, balances and reporting have separate role-scoped workflows', () => {
   const care = read('src/components/Stage7CareWorkspace.tsx')
   const routes = read('src/lib/navigationRoutes.ts')
