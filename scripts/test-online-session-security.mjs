@@ -69,6 +69,11 @@ check('WebRTC room tokens are issued server-side and expire quickly', () => {
   assert.ok(edge.includes('ttl: "10m"'))
   assert.ok(edge.includes('accessToken.addGrant'))
   assert.ok(edge.includes('roomJoin: true'))
+  assert.ok(edge.includes("canPublish: session.participant_role !== 'parent'"))
+  const guardian = read('supabase/migrations/20261115120000_guardian_online_class_observer_access.sql')
+  assert.ok(guardian.includes('public.student_guardians'))
+  assert.ok(guardian.includes('sg.parent_user_id=auth.uid()'))
+  assert.ok(guardian.includes('v_actor_role=\'parent\''))
   assert.ok(!calling.includes('LIVEKIT_API_SECRET'))
   assert.ok(!calling.includes('LIVEKIT_API_KEY'))
   assert.ok(!dashboard.includes('LIVEKIT_API_SECRET'))
@@ -84,6 +89,7 @@ check('Calling and online classes use the native EduSphere workspace', () => {
   assert.ok(calling.includes('setCameraEnabled'))
   assert.ok(calling.includes('setScreenShareEnabled'))
   assert.ok(calling.includes('online_session_participants'))
+  assert.ok(calling.includes("user?.role === 'parent' ? 'classes' : initialView"))
 })
 
 check('Zoom, Google Meet and YouTube are not dependencies for online classrooms', () => {
