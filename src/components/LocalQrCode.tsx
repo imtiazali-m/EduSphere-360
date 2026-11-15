@@ -1,3 +1,4 @@
+import '../styles/local-qr.css'
 import { useEffect, useRef } from 'react'
 
 type LocalQrCodeProps = {
