@@ -1125,7 +1125,7 @@ check('College GitHub release pipeline verifies and deploys the dedicated public
   assert.ok(workflow.includes('Generate responsive source coverage audit') && workflow.includes('gidcbadin-responsive-source-audit'), 'Responsive source evidence must be generated and uploaded in CI')
   assert.ok(workflow.includes('gidcbadin-dist') && workflow.includes('gidcbadin-exact-route-audit') && workflow.includes('gidcbadin-route-view-audit'), 'College production and audit artifacts must use the college project name')
   assert.ok(!workflow.includes('deploy-preview'), 'Pull requests must not create a Cloudflare preview deployment')
-  assert.ok(workflow.includes("github.event_name == 'push'") && workflow.includes("github.ref == 'refs/heads/main'"), 'Only a verified main-branch merge may trigger production deployment')
+  assert.ok(!workflow.includes("github.event_name == 'push'") && workflow.includes("github.event_name == 'workflow_dispatch'") && workflow.includes("github.ref == 'refs/heads/main'") && workflow.includes('inputs.deploy_production == true'), 'Production deployment must remain manual and explicitly approved after main-branch verification')
   assert.ok(workflow.includes('secrets.CLOUDFLARE_API_TOKEN') && workflow.includes('secrets.CLOUDFLARE_ACCOUNT_ID'))
   assert.ok(workflow.includes('vars.VITE_SUPABASE_URL') && workflow.includes('vars.VITE_SUPABASE_PUBLISHABLE_KEY'))
   assert.ok(!workflow.includes('SUPABASE_SERVICE_ROLE_KEY'), 'A Supabase service-role key must never be a frontend build variable')
