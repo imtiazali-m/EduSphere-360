@@ -6,6 +6,7 @@ import { listRecords, createRecord, recordFeePayment } from '../lib/data'
 import { userFacingError } from '../lib/userErrors'
 import { netInvoiceAmount, outstandingInvoiceBalance } from '../lib/finance'
 import { downloadCsv } from '../lib/csv'
+import { exportDocx, exportXlsx, printOfficeReport, type OfficeColumn } from '../lib/officeExport'
 import type { RecordRow } from '../lib/types'
 import '../styles/finance-workspace.css'
 
@@ -470,13 +471,42 @@ export function FinanceWorkspace({workspaceKey,initialWindow,onToast}:Props){
     setSaving(false)
   }
 
-  function exportInvoices(){
-    if(!invoices.length){onToast('There are no invoices to export.',true);return}
-    downloadCsv('edusphere-fee-invoices-'+today()+'.csv',invoices as Record<string,unknown>[],[
-      {key:'invoice_no',label:'Invoice number'},{key:'student_name',label:'Student'},{key:'fee_title',label:'Fee description'},
-      {key:'amount',label:'Invoice amount'},{key:'paid_amount',label:'Paid amount'},{key:'due_date',label:'Due date'},{key:'status',label:'Status'}
-    ])
-  }
+   function currentFinanceExport(){
+     const columnsBySection:Record<Section,OfficeColumn[]>={
+       overview:[{key:'invoice_no',label:'Invoice number'},{key:'student_name',label:'Student'},{key:'fee_title',label:'Fee description'},{key:'amount',label:'Invoice amount'},{key:'paid_amount',label:'Paid amount'},{key:'balance',label:'Outstanding balance'},{key:'due_date',label:'Due date'},{key:'status',label:'Status'}],
+       invoices:[{key:'invoice_no',label:'Invoice number'},{key:'student_name',label:'Student'},{key:'fee_title',label:'Fee description'},{key:'amount',label:'Invoice amount'},{key:'paid_amount',label:'Paid amount'},{key:'balance',label:'Outstanding balance'},{key:'due_date',label:'Due date'},{key:'status',label:'Status'}],
+       receivables:[{key:'invoice_no',label:'Invoice number'},{key:'student_name',label:'Student'},{key:'amount',label:'Invoice amount'},{key:'paid_amount',label:'Paid amount'},{key:'balance',label:'Outstanding balance'},{key:'due_date',label:'Due date'},{key:'status',label:'Status'}],
+       payments:[{key:'receipt_no',label:'Receipt number'},{key:'payment_date',label:'Payment date'},{key:'student_name',label:'Student'},{key:'invoice_no',label:'Invoice number'},{key:'payment_method',label:'Method'},{key:'payment_reference',label:'Payment reference'},{key:'amount',label:'Amount'},{key:'status',label:'Status'}],
+       receipts:[{key:'receipt_no',label:'Receipt number'},{key:'payment_date',label:'Payment date'},{key:'student_name',label:'Student'},{key:'invoice_no',label:'Invoice number'},{key:'payment_method',label:'Method'},{key:'payment_reference',label:'Payment reference'},{key:'amount',label:'Amount'},{key:'status',label:'Status'}],
+       structures:[{key:'name',label:'Fee structure'},{key:'class_name',label:'Class'},{key:'frequency',label:'Frequency'},{key:'status',label:'Status'},{key:'effective_date',label:'Effective date'},{key:'expiry_date',label:'Expiry date'}],
+       discounts:[{key:'name',label:'Discount scheme'},{key:'fee_category',label:'Fee category'},{key:'discount_type',label:'Discount type'},{key:'discount_value',label:'Discount value'},{key:'start_date',label:'Start date'},{key:'end_date',label:'End date'}],
+       refunds:[{key:'refund_date',label:'Refund date'},{key:'invoice_no',label:'Invoice number'},{key:'receipt_no',label:'Receipt number'},{key:'reason',label:'Reason'},{key:'amount',label:'Refund amount'},{key:'status',label:'Status'}],
+       accounts:[{key:'account_code',label:'Account code'},{key:'name',label:'Account'},{key:'account_type',label:'Account type'},{key:'normal_balance',label:'Normal balance'},{key:'is_active',label:'Active'}],
+       journals:[{key:'journal_no',label:'Journal number'},{key:'journal_date',label:'Journal date'},{key:'description',label:'Description'},{key:'status',label:'Status'}],
+       reconciliation:[{key:'event_type',label:'Event'},{key:'entity_type',label:'Record type'},{key:'description',label:'Description'},{key:'created_at',label:'Date'}]
+     }
+     let rows:Record<string,unknown>[]=[]
+     if(section==='invoices'||section==='overview')rows=visibleInvoices.map(row=>({...row,balance:outstandingInvoiceBalance(row)}))
+     else if(section==='receivables')rows=visibleInvoices.filter(row=>outstandingInvoiceBalance(row)>0).map(row=>({...row,balance:outstandingInvoiceBalance(row)}))
+     else if(section==='payments'||section==='receipts')rows=visiblePayments.map(row=>({...row,student_name:invoices.find(invoice=>invoice.id===row.invoice_id)?.student_name??'',invoice_no:invoices.find(invoice=>invoice.id===row.invoice_id)?.invoice_no??''}))
+     else if(section==='structures')rows=structures
+     else if(section==='discounts')rows=discounts
+     else if(section==='refunds')rows=refunds.map(row=>({...row,invoice_no:invoices.find(invoice=>invoice.id===row.invoice_id)?.invoice_no??'',receipt_no:payments.find(payment=>payment.id===row.payment_id)?.receipt_no??''}))
+     else if(section==='accounts')rows=accounts
+     else if(section==='journals')rows=journals
+     else if(section==='reconciliation')rows=feeAudit
+     const columns=columnsBySection[section]
+     return {rows,columns,title:sectionLabels[section]}
+   }
+   function exportFinance(format:'csv'|'xlsx'|'docx'|'print'){
+     const {rows,columns,title}=currentFinanceExport()
+     if(!rows.length){onToast('There are no records in this finance view to export.',true);return}
+     const filename='edusphere-'+groupKey+'-'+section+'-'+today()
+     if(format==='csv')downloadCsv(filename+'.csv',rows,columns)
+     else if(format==='xlsx')exportXlsx(filename+'.xlsx',title,rows,columns)
+     else if(format==='docx')exportDocx(filename+'.docx',title,rows,columns)
+     else{try{printOfficeReport(title,rows,columns,user?.institutionName??'Institution name not set')}catch(error){onToast(error instanceof Error?error.message:'Print view could not be opened.',true)}}
+   }
 
   function sortedFinanceRows(rows:FinanceRow[],key:string,direction:'asc'|'desc'){
     return [...rows].sort((left,right)=>{
@@ -610,6 +640,7 @@ export function FinanceWorkspace({workspaceKey,initialWindow,onToast}:Props){
   return <main className="fin-stage page-content ed360-module-page">
     <header className="fin-page-heading"><div><span>FINANCE &amp; ACCOUNTS</span><h1>{groupKey==='accounts-finance'?'Accounts and Finance':groupKey==='receivables'?'Accounts Receivable':groupKey==='payments'?'Payments and Collections':groupKey==='receipts'?'Receipts':groupKey==='reconciliation'?'Financial Reconciliation':'Fees & Billing'}</h1><p>{groupKey==='fees'?'Manage fee plans, invoices, discounts, receipts and collections.':groupKey==='accounts-finance'?'Review accounts, journals, expenses and financial statements.':groupKey==='receivables'?'Track due balances, ageing and payment follow-up.':groupKey==='payments'?'Record, review and reconcile payments and refunds.':groupKey==='receipts'?'Issue, review and verify payment receipts.':'Reconcile transactions and review the financial audit trail.'}</p></div><span className="fin-cloud-state"><i/> Live institutional records</span></header>
     <nav className="fin-window-nav" aria-label="Finance workspace">{activeTabs.map(key=><button type="button" key={key} className={section===key?'active':''} aria-current={section===key?'page':undefined} onClick={()=>setSection(key)}>{sectionLabels[key]}</button>)}</nav>
+     <div className="fin-export-bar" aria-label={sectionLabels[section]+' export options'}><span>Export current view</span><button type="button" className="fin-button" onClick={()=>exportFinance('csv')}>CSV</button><button type="button" className="fin-button" onClick={()=>exportFinance('xlsx')}>Excel</button><button type="button" className="fin-button" onClick={()=>exportFinance('docx')}>Word</button><button type="button" className="fin-button" onClick={()=>exportFinance('print')}><Download size={14}/> Print / PDF</button></div>
     <section className="fin-context"><div><small>CURRENT FINANCE WINDOW</small><h2>{sectionLabels[section]}</h2><p>{section==='overview'?'Live financial position from fee invoices and posted receipts.':section==='journals'?'General ledger adjustments use balanced debit and credit journal entries.':section==='accounts'?'Manage the institution chart of accounts before creating journals.':section==='structures'?'Build reusable class/session fee schedules and component amounts.':section==='receivables'?'Review balances and identify accounts requiring follow-up.':'Manage saved records for this finance operation.'}</p></div><div><strong>{section==='accounts'?accounts.length:section==='journals'?journals.length:section==='payments'||section==='receipts'?payments.length:section==='structures'?structures.length:invoices.length}</strong><small>records in this window</small></div></section>
     {error&&<div className="fin-error" role="alert">{error}</div>}
     {loading?<div className="fin-loading"><RefreshCw className="spin" size={20}/> Loading finance records…</div>:renderSection()}
