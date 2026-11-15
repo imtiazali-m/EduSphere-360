@@ -6,16 +6,17 @@ import {
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { downloadCsv } from '../lib/csv'
-import { exportDocx, exportXlsx, printOfficeReport, type OfficeColumn } from '../lib/officeExport'
 import { userFacingError } from '../lib/userErrors'
 import type { RecordRow } from '../lib/types'
 import '../styles/stage7-workspace.css'
 
-type WindowKey = 'leave'|'reports'|'reports-students'|'reports-teachers'|'reports-staff'|'discipline'|'counselling'|'health'
+type WindowKey = 'leave'|'leave-applications'|'leave-approvals'|'leave-balances'|'leave-reports'|'reports'|'reports-students'|'reports-teachers'|'reports-staff'|'discipline'|'counselling'|'health'
 type Student = { id:string; full_name:string; admission_no:string; class_name:string; campus_id?:string|null }
 type Employee = { id:string; user_id?:string|null; full_name:string; employee_no:string; employee_type:string; department?:string|null; campus_id?:string|null }
 type CareGrant = { area:'discipline'|'counselling'|'health'; can_read:boolean; can_write:boolean }
 type LeaveRow = RecordRow & { person_type?:'student'|'employee' }
+type LeaveBalanceRow = RecordRow & { person_type:string; person_id:string; leave_type:string; leave_year:number|string; entitled_days:number|string; carried_forward_days?:number|string }
+type AcademicSessionOption = { id:string; session_name?:string|null; name?:string|null; start_date?:string|null; end_date?:string|null; is_current?:boolean|null; is_active?:boolean|null }
 type GuardianLink = { student_id:string; parent_user_id:string; relationship?:string|null }
 type AttendanceReportRow = RecordRow & {
   student_id?:string|null; student_name?:string|null; class_name?:string|null; attendance_date?:string
@@ -25,12 +26,19 @@ type AttendanceReportRow = RecordRow & {
 }
 const today = () => new Date().toLocaleDateString('en-CA')
 const dayCount = (start:string,end:string) => Math.max(0,Math.round((Date.parse(end+'T00:00:00Z')-Date.parse(start+'T00:00:00Z'))/86400000)+1)
+const overlapDays = (start:unknown,end:unknown,from:string,to:string) => {
+  const s=String(start??''),e=String(end??'')
+  if(!s||!e||!from||!to)return 0
+  const left=Math.max(Date.parse(s.slice(0,10)+'T00:00:00Z'),Date.parse(from+'T00:00:00Z'))
+  const right=Math.min(Date.parse(e.slice(0,10)+'T00:00:00Z'),Date.parse(to+'T00:00:00Z'))
+  return Number.isFinite(left)&&Number.isFinite(right)&&right>=left?Math.floor((right-left)/86400000)+1:0
+}
 const areaLabels:Record<string,string>={discipline:'Student Discipline',counselling:'Counselling & Wellbeing',health:'Health & Emergency'}
 const message = (error:unknown,fallback:string) => userFacingError(error,fallback)
 
 export function Stage7CareWorkspace({initialWindow='leave',onToast}:{initialWindow?:string;onToast:(message:string,error?:boolean)=>void}) {
   const {user}=useAuth()
-  const activeWindow=(['leave','reports','reports-students','reports-teachers','reports-staff','discipline','counselling','health'].includes(initialWindow)?initialWindow:'leave') as WindowKey
+  const activeWindow=(['leave','leave-applications','leave-approvals','leave-balances','leave-reports','reports','reports-students','reports-teachers','reports-staff','discipline','counselling','health'].includes(initialWindow)?initialWindow:'leave-applications') as WindowKey
   const isAdmin=Boolean(user&&['owner','admin'].includes(user.role))
   const isStudentOrParent=Boolean(user&&['student','parent'].includes(user.role))
   const [students,setStudents]=useState<Student[]>([])
@@ -40,7 +48,10 @@ export function Stage7CareWorkspace({initialWindow='leave',onToast}:{initialWind
   const [loadError,setLoadError]=useState('')
   const [refreshKey,setRefreshKey]=useState(0)
   const [leaveRows,setLeaveRows]=useState<LeaveRow[]>([])
-  const [leaveBalances,setLeaveBalances]=useState<RecordRow[]>([])
+  const [leaveBalances,setLeaveBalances]=useState<LeaveBalanceRow[]>([])
+   const [academicSessions,setAcademicSessions]=useState<AcademicSessionOption[]>([])
+   const [leavePeriod,setLeavePeriod]=useState<'week'|'month'|'year'|'session'>('month')
+   const [leaveSessionId,setLeaveSessionId]=useState('')
   const [leaveKind,setLeaveKind]=useState<'student'|'employee'>(isStudentOrParent?'student':'employee')
   const [leavePerson,setLeavePerson]=useState('')
   const [leaveType,setLeaveType]=useState('sick')
@@ -122,7 +133,7 @@ export function Stage7CareWorkspace({initialWindow='leave',onToast}:{initialWind
   const canRead=(area:CareGrant['area'])=>isAdmin||Boolean(grantFor(area)?.can_read)
   const canWrite=(area:CareGrant['area'])=>isAdmin||Boolean(grantFor(area)?.can_write)
   const currentStudents=students
-  const selectedLeavePeople=leaveKind==='student'?currentStudents:employees
+  const selectedLeavePeople=leaveKind==='student'?currentStudents:user?.role==='teacher'?employees.filter(employee=>employee.user_id===user.id):employees
   const leaveTypeOptions=leaveKind==='student'
     ?['sick','family','personal','other']
     :['annual','sick','casual','unpaid','maternity','paternity','other']
@@ -159,19 +170,22 @@ export function Stage7CareWorkspace({initialWindow='leave',onToast}:{initialWind
 
   const loadLeave=useCallback(async()=>{
     if(!supabase||!user)return
-    const [studentResult,employeeResult,balanceResult]=await Promise.all([
-      supabase.from('student_leave_requests').select('*').eq('institution_id',user.institutionId).order('created_at',{ascending:false}).limit(500),
-      supabase.from('employee_leave_requests').select('*').eq('institution_id',user.institutionId).order('created_at',{ascending:false}).limit(500),
-      supabase.from('leave_balances').select('*').eq('institution_id',user.institutionId).order('leave_year',{ascending:false}).limit(500),
+    const [studentResult,employeeResult,balanceResult,sessionResult]=await Promise.all([
+      supabase.from('student_leave_requests').select('*').eq('institution_id',user.institutionId).order('created_at',{ascending:false}).limit(2000),
+      supabase.from('employee_leave_requests').select('*').eq('institution_id',user.institutionId).order('created_at',{ascending:false}).limit(2000),
+      supabase.from('leave_balances').select('*').eq('institution_id',user.institutionId).order('leave_year',{ascending:false}).limit(2000),
+      supabase.from('academic_sessions').select('id,session_name,name,start_date,end_date,is_current,is_active').eq('institution_id',user.institutionId).order('start_date',{ascending:false}).limit(100),
     ])
     if(studentResult.error)throw studentResult.error
     if(employeeResult.error&&isAdmin)throw employeeResult.error
     if(balanceResult.error)throw balanceResult.error
+    if(sessionResult.error&&isAdmin)throw sessionResult.error
     setLeaveRows([
       ...((studentResult.data??[]).map(row=>({...row,person_type:'student' as const}))),
       ...((employeeResult.data??[]).map(row=>({...row,person_type:'employee' as const}))),
     ] as LeaveRow[])
-    setLeaveBalances((balanceResult.data??[]) as RecordRow[])
+    setLeaveBalances((balanceResult.data??[]) as LeaveBalanceRow[])
+    setAcademicSessions((sessionResult.data??[]) as unknown as AcademicSessionOption[])
   },[user?.id,user?.institutionId,isAdmin])
 
   const loadReports=useCallback(async()=>{
@@ -234,7 +248,7 @@ export function Stage7CareWorkspace({initialWindow='leave',onToast}:{initialWind
     if(!user||!supabase)return
     const run=async()=>{
       try{
-        if(activeWindow==='leave')await loadLeave()
+        if(activeWindow.startsWith('leave'))await loadLeave()
         if(activeWindow.startsWith('reports'))await loadReports()
         if(activeWindow==='discipline'&&canRead('discipline'))await loadDiscipline()
         if(activeWindow==='counselling')await loadCounselling()
@@ -247,6 +261,12 @@ export function Stage7CareWorkspace({initialWindow='leave',onToast}:{initialWind
   useEffect(()=>{
     if(!leavePerson&&selectedLeavePeople[0])setLeavePerson(selectedLeavePeople[0].id)
   },[leavePerson,selectedLeavePeople])
+  useEffect(()=>{
+    if(!leaveSessionId&&academicSessions.length){
+      const current=academicSessions.find(row=>row.is_current||row.is_active)||academicSessions[0]
+      setLeaveSessionId(String(current.id))
+    }
+  },[leaveSessionId,academicSessions])
   useEffect(()=>{if(!selectedStudent&&students[0])setSelectedStudent(students[0].id)},[selectedStudent,students])
   useEffect(()=>{if(!healthStudent&&students[0])setHealthStudent(students[0].id)},[healthStudent,students])
   useEffect(()=>{if(!appointmentStudent&&students[0])setAppointmentStudent(students[0].id)},[appointmentStudent,students])
@@ -445,9 +465,13 @@ export function Stage7CareWorkspace({initialWindow='leave',onToast}:{initialWind
 
   if(!user)return null
   if(loading)return <main className="page-content s7-page"><div className="s7-empty">Loading your permitted student care workspace…</div></main>
-  const pageTitle:Record<WindowKey,string>={leave:'Leave Management',reports:'Attendance Reports','reports-students':'Student Attendance Reports','reports-teachers':'Teacher Attendance Reports','reports-staff':'Staff Attendance Reports',discipline:'Student Discipline',counselling:'Student Counselling & Wellbeing',health:'Health & Emergency Records'}
+  const pageTitle:Record<WindowKey,string>={leave:'Leave Applications','leave-applications':'Leave Applications','leave-approvals':'Leave Review & Approvals','leave-balances':'Leave Balances','leave-reports':'Leave Reports',reports:'Attendance Reports','reports-students':'Student Attendance Reports','reports-teachers':'Teacher Attendance Reports','reports-staff':'Staff Attendance Reports',discipline:'Student Discipline',counselling:'Student Counselling & Wellbeing',health:'Health & Emergency Records'}
   const pageIntro:Record<WindowKey,string>={
     leave:'Submit, review and track student and employee leave applications.',
+    'leave-applications':'Submit student or employee leave requests, attach supporting documents and monitor review status.',
+    'leave-approvals':'Review pending applications, inspect supporting documents and record an approval or rejection with notes.',
+    'leave-balances':'Manage yearly entitlements and review approved days used and remaining by person and leave type.',
+    'leave-reports':'Analyse leave by week, month, calendar year or academic session and export the filtered register.',
     reports:'Review date-wise, class-wise, student-wise and employee-wise attendance summaries.',
     'reports-students':'Review student attendance by class, section and date, with status distribution and export.',
     'reports-teachers':'Review teacher attendance records, daily coverage and status distribution.',
@@ -461,15 +485,6 @@ export function Stage7CareWorkspace({initialWindow='leave',onToast}:{initialWind
     ...employeeAttendance.map(row=>{const employee=employees.find(e=>e.id===row.teacher_id);const group=String(employee?.employee_type??'').toLowerCase()==='teaching'?'Teacher':'Staff';return {...row,group,person:employee?.full_name??group,id:String(row.teacher_id??'')}}),
   ]
   const reportRows=activeWindow==='reports-students'?reportRowsAll.filter(row=>row.group==='Student'):activeWindow==='reports-teachers'?reportRowsAll.filter(row=>row.group==='Teacher'):activeWindow==='reports-staff'?reportRowsAll.filter(row=>row.group==='Staff'):reportRowsAll
-   const reportColumns:OfficeColumn[]=[{key:'group',label:'Group'},{key:'person',label:'Person'},{key:'class_name',label:'Class'},{key:'attendance_date',label:'Date'},{key:'status',label:'Status'},{key:'minutes_late',label:'Minutes late'},{key:'early_departure_minutes',label:'Early departure minutes'}]
-   function exportAttendanceReport(format:'csv'|'xlsx'|'docx'|'print'){
-     if(!reportRows.length){onToast('There are no attendance records in this report to export.',true);return}
-     const title=activeWindow==='reports-students'?'Student Attendance Report':activeWindow==='reports-teachers'?'Teacher Attendance Report':activeWindow==='reports-staff'?'Staff Attendance Report':'Attendance Report',filename='edusphere-'+activeWindow+'-'+reportFrom+'-'+reportTo
-     if(format==='csv')downloadCsv(filename+'.csv',reportRows,reportColumns)
-     else if(format==='xlsx')exportXlsx(filename+'.xlsx',title,reportRows,reportColumns)
-     else if(format==='docx')exportDocx(filename+'.docx',title,reportRows,reportColumns)
-     else{try{printOfficeReport(title,reportRows,reportColumns,user?.institutionName??'Institution name not set')}catch(error){onToast(error instanceof Error?error.message:'Print view could not be opened.',true)}}
-   }
   const reportCounts=reportRows.reduce((acc,row)=>{const status=String(row.status??'');acc.total++;acc[status]=(acc[status]??0)+1;return acc},{total:0} as Record<string,number>)
   const reportPresent=reportCounts.present??0
   const reportAbsent=reportCounts.absent??0
@@ -479,6 +494,42 @@ export function Stage7CareWorkspace({initialWindow='leave',onToast}:{initialWind
   const reportPercent=(value:number)=>reportTotal?Math.round(value/reportTotal*100):0
   const reportDonut=reportTotal?`conic-gradient(#2b7650 0 ${reportPercent(reportPresent)}%, #d65c56 ${reportPercent(reportPresent)}% ${reportPercent(reportPresent)+reportPercent(reportAbsent)}%, #d5a84a ${reportPercent(reportPresent)+reportPercent(reportAbsent)}% ${reportPercent(reportPresent)+reportPercent(reportAbsent)+reportPercent(reportLeave)}%, #e8ede9 ${reportPercent(reportPresent)+reportPercent(reportAbsent)+reportPercent(reportLeave)}% 100%)`:'conic-gradient(#e8ede9 0 100%)'
   const classOptions=[...new Set(students.map(s=>s.class_name).filter(Boolean))].sort()
+  const localDate=(value:Date)=>value.toLocaleDateString('en-CA')
+  const leaveSession=academicSessions.find(row=>String(row.id)===leaveSessionId)
+  const leavePeriodRange=(()=>{
+    const now=new Date()
+    if(leavePeriod==='session')return {from:String(leaveSession?.start_date??''),to:String(leaveSession?.end_date??'')}
+    if(leavePeriod==='year')return {from:localDate(new Date(now.getFullYear(),0,1)),to:localDate(new Date(now.getFullYear(),11,31))}
+    if(leavePeriod==='week'){
+      const monday=new Date(now);monday.setHours(0,0,0,0);monday.setDate(monday.getDate()-((monday.getDay()+6)%7))
+      const sunday=new Date(monday);sunday.setDate(sunday.getDate()+6)
+      return {from:localDate(monday),to:localDate(sunday)}
+    }
+    return {from:localDate(new Date(now.getFullYear(),now.getMonth(),1)),to:localDate(new Date(now.getFullYear(),now.getMonth()+1,0))}
+  })()
+  const leaveReportRows=leaveRows.filter(row=>overlapDays(row.start_date,row.end_date,leavePeriodRange.from,leavePeriodRange.to)>0)
+  const leaveDaysInRange=(row:LeaveRow)=>overlapDays(row.start_date,row.end_date,leavePeriodRange.from,leavePeriodRange.to)
+  const leaveRequestedDays=leaveReportRows.reduce((sum,row)=>sum+leaveDaysInRange(row),0)
+  const leaveApprovedDays=leaveReportRows.filter(row=>row.status==='approved').reduce((sum,row)=>sum+leaveDaysInRange(row),0)
+  const leavePendingCount=leaveReportRows.filter(row=>row.status==='pending').length
+  const leaveSummaryByType=[...new Set(leaveReportRows.map(row=>String(row.leave_type??'Other')))].sort().map(type=>{
+    const rows=leaveReportRows.filter(row=>String(row.leave_type??'Other')===type)
+    return {type,requests:rows.length,days:rows.reduce((sum,row)=>sum+leaveDaysInRange(row),0),approved:rows.filter(row=>row.status==='approved').reduce((sum,row)=>sum+leaveDaysInRange(row),0),pending:rows.filter(row=>row.status==='pending').length}
+  })
+  const leaveBalanceView=leaveBalances.map(row=>{
+    const year=Number(row.leave_year),from=String(year)+'-01-01',to=String(year)+'-12-31'
+    const personId=String(row.person_id??''),personType=String(row.person_type??'')
+    const used=leaveRows.filter(item=>item.status==='approved'&&String(item.person_type)===personType&&String(item.student_id??item.teacher_id??'')===personId&&String(item.leave_type)===String(row.leave_type))
+      .reduce((sum,item)=>sum+overlapDays(item.start_date,item.end_date,from,to),0)
+    const entitled=Number(row.entitled_days??0),carry=Number(row.carried_forward_days??0)
+    const person=personType==='student'?students.find(item=>item.id===personId)?.full_name:employees.find(item=>item.id===personId)?.full_name
+    return {...row,person:person??(personType==='employee'?'Employee':'Student'),used,remaining:Math.max(0,entitled+carry-used)}
+  })
+  const exportLeaveReport=()=>{
+    const rows=leaveReportRows.map(row=>({applicant:row.person_type==='student'?(students.find(s=>s.id===row.student_id)?.full_name??'Student'):(employees.find(e=>e.id===row.teacher_id)?.full_name??'Employee'),person_type:row.person_type,leave_type:row.leave_type,start_date:row.start_date,end_date:row.end_date,days_in_period:leaveDaysInRange(row),status:row.status,reason:row.reason,review_notes:row.review_notes}))
+    downloadCsv('edusphere-leave-'+leavePeriod+'-'+leavePeriodRange.from+'-'+leavePeriodRange.to+'.csv',rows,[{key:'applicant',label:'Applicant'},{key:'person_type',label:'Person Type'},{key:'leave_type',label:'Leave Type'},{key:'start_date',label:'Start Date'},{key:'end_date',label:'End Date'},{key:'days_in_period',label:'Days in Period'},{key:'status',label:'Status'},{key:'reason',label:'Reason'},{key:'review_notes',label:'Review Notes'}])
+    if(rows.length)onToast('Leave report exported.')
+  }
   const accessBlocked=(activeWindow==='discipline'&&!canRead('discipline'))||(activeWindow==='counselling'&&!isAdmin&&!canRead('counselling')&&!isStudentOrParent)||(activeWindow==='health'&&!canRead('health')&&!isStudentOrParent)
   return <main className="page-content s7-page">
     <header className="s7-hero">
@@ -489,7 +540,7 @@ export function Stage7CareWorkspace({initialWindow='leave',onToast}:{initialWind
     {loadError&&<div className="s7-alert" role="alert"><AlertTriangle size={16}/>{loadError}</div>}
     {accessBlocked&&<section className="s7-panel s7-locked"><LockKeyhole size={26}/><h2>Restricted workspace</h2><p>This record category is not included in your account permissions. An institution owner or administrator must grant access to the appropriate student-care area.</p></section>}
 
-    {activeWindow==='leave'&&<>
+    {(activeWindow==='leave'||activeWindow==='leave-applications')&&<>
       <section className="s7-panel">
         <div className="s7-panel-title"><div><span>LEAVE WORKFLOW</span><h2>Apply for leave</h2><p>Applications are saved as pending until reviewed by an authorised administrator.</p></div></div>
         <form className="s7-form" onSubmit={applyLeave}>
@@ -509,22 +560,50 @@ export function Stage7CareWorkspace({initialWindow='leave',onToast}:{initialWind
           const student=students.find(s=>s.id===row.student_id),employee=employees.find(e=>e.id===row.teacher_id)
           const applicant=row.person_type==='student'?student?.full_name??'Student':employee?.full_name??'Employee'
           const path=String(row.supporting_document_path??'')
-          return <tr key={row.id}><td><b>{applicant}</b><small>{row.person_type==='student'?student?.class_name??'Student':'Employee'}</small></td><td>{String(row.leave_type??'').replaceAll('_',' ')}</td><td>{String(row.start_date)} – {String(row.end_date)}</td><td>{String(row.day_count??'—')}</td><td><span className={'s7-status '+String(row.status)}>{String(row.status)}</span></td><td>{path&&<button className="s7-text-button" type="button" onClick={()=>void openPrivateDocument(path)}><FileText size={14}/> Open file</button>}{Boolean(row.review_notes)&&<small>{String(row.review_notes)}</small>}{isAdmin&&row.status==='pending'&&<div className="s7-review"><input aria-label="Review notes" value={reviewNotes[String(row.id)]??''} onChange={e=>setReviewNotes(v=>({...v,[String(row.id)]:e.target.value}))} placeholder="Review note"/><button type="button" onClick={()=>void reviewLeave(row,'approved')} disabled={saving}>Approve</button><button type="button" className="danger" onClick={()=>void reviewLeave(row,'rejected')} disabled={saving}>Reject</button></div>}</td></tr>
+          return <tr key={row.id}><td><b>{applicant}</b><small>{row.person_type==='student'?student?.class_name??'Student':'Employee'}</small></td><td>{String(row.leave_type??'').replaceAll('_',' ')}</td><td>{String(row.start_date)} – {String(row.end_date)}</td><td>{String(row.day_count??'—')}</td><td><span className={'s7-status '+String(row.status)}>{String(row.status)}</span></td><td>{path&&<button className="s7-text-button" type="button" onClick={()=>void openPrivateDocument(path)}><FileText size={14}/> Open file</button>}{Boolean(row.review_notes)&&<small>{String(row.review_notes)}</small>}</td></tr>
         })}</tbody></table></div>}
       </section>
+    </>}
+    {activeWindow==='leave-approvals'&&<>
+      {!isAdmin?<section className="s7-panel s7-locked"><LockKeyhole size={22}/><h2>Administrator review only</h2><p>Leave approvals are restricted to institution owners and authorised administrators.</p></section>:<section className="s7-panel">
+        <div className="s7-panel-title"><div><span>ADMINISTRATIVE QUEUE</span><h2>Pending leave approvals</h2><p>Review evidence and record a decision with a note. Each decision is retained in the request history.</p></div><strong>{leaveRows.filter(row=>row.status==='pending').length} pending</strong></div>
+        {leaveRows.filter(row=>row.status==='pending').length===0?<div className="s7-empty">There are no pending leave requests.</div>:<div className="s7-table-wrap"><table><thead><tr><th>Applicant</th><th>Type</th><th>Dates</th><th>Days</th><th>Reason</th><th>Supporting document</th><th>Decision</th></tr></thead><tbody>{leaveRows.filter(row=>row.status==='pending').map(row=>{
+          const student=students.find(s=>s.id===row.student_id),employee=employees.find(e=>e.id===row.teacher_id)
+          const applicant=row.person_type==='student'?student?.full_name??'Student':employee?.full_name??'Employee'
+          const path=String(row.supporting_document_path??'')
+          return <tr key={row.id}><td><b>{applicant}</b><small>{row.person_type==='student'?student?.class_name??'Student':'Employee'}</small></td><td>{String(row.leave_type??'').replaceAll('_',' ')}</td><td>{String(row.start_date)} – {String(row.end_date)}</td><td>{String(row.day_count??'—')}</td><td>{String(row.reason??'—')}</td><td>{path?<button className="s7-text-button" type="button" onClick={()=>void openPrivateDocument(path)}><FileText size={14}/> Open file</button>:'—'}</td><td><div className="s7-review"><input aria-label="Review notes" value={reviewNotes[String(row.id)]??''} onChange={e=>setReviewNotes(v=>({...v,[String(row.id)]:e.target.value}))} placeholder="Review note"/><button type="button" onClick={()=>void reviewLeave(row,'approved')} disabled={saving}>Approve</button><button type="button" className="danger" onClick={()=>void reviewLeave(row,'rejected')} disabled={saving}>Reject</button></div></td></tr>
+        })}</tbody></table></div>}
+      </section>}
+    </>}
+    {activeWindow==='leave-balances'&&<>
       <section className="s7-panel">
-        <div className="s7-panel-title"><div><span>LEAVE BALANCES</span><h2>Entitlements and remaining days</h2><p>Balances are institution-controlled; used days are calculated from approved requests.</p></div></div>
+        <div className="s7-panel-title"><div><span>LEAVE ENTITLEMENTS</span><h2>Balances and remaining days</h2><p>Used days are calculated from approved requests within each leave year.</p></div></div>
         {isAdmin&&<form className="s7-form s7-balance-form" onSubmit={saveBalance}><label>Person<select value={balancePerson} onChange={e=>setBalancePerson(e.target.value)}><option value="">Select person</option>{students.map(s=><option key={s.id} value={s.id}>{s.full_name} · Student</option>)}{employees.map(e=><option key={e.id} value={e.id}>{e.full_name} · Employee</option>)}</select></label><label>Leave type<input value={balanceType} onChange={e=>setBalanceType(e.target.value)}/></label><label>Year<input type="number" min="2000" max="2200" value={balanceYear} onChange={e=>setBalanceYear(e.target.value)}/></label><label>Entitled days<input type="number" min="0" step="0.5" value={balanceEntitlement} onChange={e=>setBalanceEntitlement(e.target.value)}/></label><button className="button button-primary" type="submit">Save balance</button></form>}
-        {leaveBalances.length>0&&<div className="s7-table-wrap"><table><thead><tr><th>Person ID</th><th>Type</th><th>Year</th><th>Entitled</th><th>Carried forward</th></tr></thead><tbody>{leaveBalances.map(row=><tr key={row.id}><td>{String(row.person_id)}</td><td>{String(row.leave_type)}</td><td>{String(row.leave_year)}</td><td>{String(row.entitled_days)}</td><td>{String(row.carried_forward_days??0)}</td></tr>)}</tbody></table></div>}
+        {leaveBalanceView.length>0?<div className="s7-table-wrap"><table><thead><tr><th>Person</th><th>Type</th><th>Year</th><th>Entitled</th><th>Carried forward</th><th>Used (approved)</th><th>Remaining</th></tr></thead><tbody>{leaveBalanceView.map(row=><tr key={row.id}><td>{row.person}</td><td>{String(row.leave_type).replaceAll('_',' ')}</td><td>{String(row.leave_year)}</td><td>{String(row.entitled_days??0)}</td><td>{String(row.carried_forward_days??0)}</td><td>{row.used}</td><td><b>{row.remaining}</b></td></tr>)}</tbody></table></div>:<div className="s7-empty">No leave entitlements have been configured.</div>}
       </section>
     </>}
-
+    {activeWindow==='leave-reports'&&<>
+      <section className="s7-panel">
+        <div className="s7-panel-title"><div><span>LEAVE ANALYTICS</span><h2>Period-based leave report</h2><p>Only the days overlapping the selected period are counted for requests that cross reporting boundaries.</p></div></div>
+        <div className="s7-filters">
+          <label>Reporting period<select value={leavePeriod} onChange={e=>setLeavePeriod(e.target.value as 'week'|'month'|'year'|'session')}><option value="week">Current week</option><option value="month">Current month</option><option value="year">Current calendar year</option><option value="session">Academic session</option></select></label>
+          {leavePeriod==='session'&&<label>Academic session<select value={leaveSessionId} onChange={e=>setLeaveSessionId(e.target.value)}><option value="">Select session</option>{academicSessions.map(session=><option key={session.id} value={String(session.id)}>{String(session.session_name??session.name??'Academic session')} · {String(session.start_date)} – {String(session.end_date)}</option>)}</select></label>}
+          <div className="s7-period-range"><small>REPORT RANGE</small><b>{leavePeriodRange.from||'Select an academic session'}{leavePeriodRange.to?' – '+leavePeriodRange.to:''}</b></div>
+          <button type="button" className="button button-outline" onClick={exportLeaveReport} disabled={!leaveReportRows.length}><Download size={15}/> Export CSV</button>
+        </div>
+        <div className="s7-leave-kpis"><article><span>Requests in period</span><strong>{leaveReportRows.length}</strong></article><article><span>Days requested</span><strong>{leaveRequestedDays}</strong></article><article><span>Approved days</span><strong>{leaveApprovedDays}</strong></article><article><span>Pending requests</span><strong>{leavePendingCount}</strong></article></div>
+        <div className="s7-panel-title"><div><span>LEAVE TYPE BREAKDOWN</span><h2>Requests by leave type</h2></div></div>
+        {leaveSummaryByType.length?<div className="s7-table-wrap"><table><thead><tr><th>Leave type</th><th>Requests</th><th>Days requested</th><th>Approved days</th><th>Pending</th></tr></thead><tbody>{leaveSummaryByType.map(row=><tr key={row.type}><td>{row.type.replaceAll('_',' ')}</td><td>{row.requests}</td><td>{row.days}</td><td>{row.approved}</td><td>{row.pending}</td></tr>)}</tbody></table></div>:<div className="s7-empty">{leavePeriod==='session'&&!leavePeriodRange.from?'Choose an academic session to view its leave report.':'No leave requests overlap this reporting period.'}</div>}
+        <div className="s7-panel-title"><div><span>REQUEST REGISTER</span><h2>Included applications</h2></div></div>
+        {leaveReportRows.length>0&&<div className="s7-table-wrap"><table><thead><tr><th>Applicant</th><th>Type</th><th>Dates</th><th>Days in period</th><th>Status</th></tr></thead><tbody>{leaveReportRows.map(row=>{const name=row.person_type==='student'?(students.find(s=>s.id===row.student_id)?.full_name??'Student'):(employees.find(e=>e.id===row.teacher_id)?.full_name??'Employee');return <tr key={row.id}><td>{name}</td><td>{String(row.leave_type??'').replaceAll('_',' ')}</td><td>{String(row.start_date)} – {String(row.end_date)}</td><td>{leaveDaysInRange(row)}</td><td><span className={'s7-status '+String(row.status)}>{String(row.status)}</span></td></tr>})}</tbody></table></div>}
+      </section>
+    </>}
     {activeWindow.startsWith('reports')&&<>
       <section className="s7-panel">
         <div className="s7-panel-title"><div><span>ATTENDANCE ANALYTICS</span><h2>Attendance summary</h2><p>Records are limited by the signed-in user’s institution and row-level permissions.</p></div></div>
         <div className="s7-filters"><label>From<input type="date" value={reportFrom} max={reportTo} onChange={e=>setReportFrom(e.target.value)}/></label><label>To<input type="date" value={reportTo} min={reportFrom} max={today()} onChange={e=>setReportTo(e.target.value)}/></label><label>Class<select value={reportClass} onChange={e=>setReportClass(e.target.value)}><option value="">All visible classes</option>{classOptions.map(c=><option key={c}>{c}</option>)}</select></label><button type="button" className="button button-outline" onClick={()=>void loadReports()}><RefreshCw size={14}/> Apply filters</button></div>
         <div className="s7-chart-row"><div className="s7-attendance-donut" role="img" aria-label={`${reportPercent(reportPresent)} percent present, ${reportPercent(reportAbsent)} percent absent, ${reportPercent(reportLeave)} percent on leave`} style={{background:reportDonut}}><span>{reportPercent(reportPresent)}%<small>Present</small></span></div><div className="s7-chart-legend"><b>{reportTotal.toLocaleString()} attendance records</b><span><i className="present"/>Present <strong>{reportPresent.toLocaleString()}</strong></span><span><i className="absent"/>Absent <strong>{reportAbsent.toLocaleString()}</strong></span><span><i className="leave"/>Leave <strong>{reportLeave.toLocaleString()}</strong></span>{reportOther>0&&<span><i className="other"/>Other recorded statuses <strong>{reportOther.toLocaleString()}</strong></span>}</div></div>
-         <div className="s7-panel-actions"><button type="button" className="button button-outline" onClick={()=>exportAttendanceReport('csv')}><Download size={15}/> CSV</button><button type="button" className="button button-outline" onClick={()=>exportAttendanceReport('xlsx')}>Excel</button><button type="button" className="button button-outline" onClick={()=>exportAttendanceReport('docx')}>Word</button><button type="button" className="button button-outline" onClick={()=>exportAttendanceReport('print')}>Print / PDF</button></div>
+        <div className="s7-panel-actions"><button type="button" className="button button-outline" onClick={()=>downloadCsv('edusphere-attendance-report-'+reportFrom+'-'+reportTo+'.csv',reportRows,[{key:'group',label:'Group'},{key:'person',label:'Person'},{key:'class_name',label:'Class'},{key:'attendance_date',label:'Date'},{key:'status',label:'Status'},{key:'minutes_late',label:'Minutes late'},{key:'early_departure_minutes',label:'Early departure minutes'}])}><Download size={15}/> Export CSV</button></div>
         <div className="s7-table-wrap"><table><thead><tr><th>Person</th><th>Class / type</th><th>Date</th><th>Status</th><th>Arrival variance</th><th>Early (min)</th></tr></thead><tbody>{reportRows.slice(0,500).map((row,index)=><tr key={String(row.id??index)}><td>{String(row.person)}</td><td>{String(row.class_name??row.group)}</td><td>{String(row.attendance_date)}</td><td><span className={'s7-status '+String(row.status)}>{String(row.status)}</span></td><td>{String(row.minutes_late??0)}</td><td>{String(row.early_departure_minutes??0)}</td></tr>)}</tbody></table>{reportRows.length===0&&<div className="s7-empty">No attendance records match this date range and class filter.</div>}</div>
       </section>
     </>}
