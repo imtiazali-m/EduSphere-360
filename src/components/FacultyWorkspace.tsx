@@ -10,6 +10,7 @@ import { createRecord, deleteRecord, listAccounts, listRecords, updateRecord } f
 import { supabase } from '../lib/supabase'
 import { userFacingError } from '../lib/userErrors'
 import { downloadCsv } from '../lib/csv'
+import { exportDocx, exportXlsx, printOfficeReport, type OfficeColumn } from '../lib/officeExport'
 import type { RecordRow } from '../lib/types'
 import { EmployeeQualificationsPanel } from './EmployeeQualificationsPanel'
 import { LocalQrCode } from './LocalQrCode'
@@ -82,6 +83,52 @@ function Field({label,children,wide=false}:{label:string;children:ReactNode;wide
 function Status({value:raw}:{value:unknown}) {
   const s=String(raw??'unknown').toLowerCase()
   return <span className={'staff-status staff-status-'+s}>{label(raw)}</span>
+}
+
+type StaffColumn={key:string;label:string}
+type StaffRecordsTableProps={rows:RecordRow[];cols:StaffColumn[];empty:string;actions?:(row:RecordRow)=>ReactNode;reportTitle:string;institutionName:string;onToast:(message:string,error?:boolean)=>void}
+function StaffRecordsTable({rows,cols,empty,actions,reportTitle,institutionName,onToast}:StaffRecordsTableProps){
+  const [search,setSearch]=useState('')
+  const [sortKey,setSortKey]=useState(cols[0]?.key??'')
+  const [sortDirection,setSortDirection]=useState<'asc'|'desc'>('asc')
+  const [page,setPage]=useState(1)
+  const pageSize=25
+  const filtered=useMemo(()=>rows.filter(row=>cols.some(col=>String(row[col.key]??'').toLowerCase().includes(search.trim().toLowerCase()))),[rows,cols,search])
+  const activeSortKey=cols.some(col=>col.key===sortKey)?sortKey:(cols[0]?.key??'')
+  const sorted=useMemo(()=>[...filtered].sort((left,right)=>{
+    const a=left[activeSortKey],b=right[activeSortKey]
+    let comparison=0
+    if(typeof a==='number'&&typeof b==='number')comparison=a-b
+    else comparison=String(a??'').localeCompare(String(b??''),undefined,{numeric:true,sensitivity:'base'})
+    return sortDirection==='asc'?comparison:-comparison
+  }),[filtered,activeSortKey,sortDirection])
+  const pageCount=Math.max(1,Math.ceil(sorted.length/pageSize))
+  const currentPage=Math.min(page,pageCount)
+  const pageRows=sorted.slice((currentPage-1)*pageSize,currentPage*pageSize)
+  const display=(row:RecordRow,key:string)=>{
+    const raw=row[key]
+    if(['status','employment_status','verification_status'].includes(key))return label(raw)
+    if(key.endsWith('_date')||key==='created_at'||key==='effective_date')return dateLabel(raw)
+    return value(raw)
+  }
+  const officeColumns:OfficeColumn[]=cols.map(col=>({key:col.key,label:col.label}))
+  const exportRows=sorted.map(row=>Object.fromEntries(cols.map(col=>[col.key,display(row,col.key)])))
+  const filename='edusphere360-'+reportTitle.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-'+localDate()
+  function exportReport(format:'csv'|'xlsx'|'docx'|'print'){
+    if(!exportRows.length){onToast('There are no matching staff records to export.',true);return}
+    try{
+      if(format==='csv')downloadCsv(filename+'.csv',exportRows,officeColumns)
+      else if(format==='xlsx')exportXlsx(filename+'.xlsx',reportTitle,exportRows,officeColumns)
+      else if(format==='docx')exportDocx(filename+'.docx',reportTitle,exportRows,officeColumns)
+      else printOfficeReport(reportTitle,exportRows,officeColumns,institutionName)
+    }catch(error){onToast(error instanceof Error?error.message:'The staff report could not be generated.',true)}
+  }
+  if(!rows.length)return <div className="staff-empty"><span><BriefcaseBusiness size={21}/></span><strong>No records yet</strong><p>{empty}</p></div>
+  return <div className="staff-records-table">
+    <div className="staff-records-toolbar"><label><Search size={14}/><input value={search} onChange={event=>{setSearch(event.target.value);setPage(1)}} placeholder="Search these records…"/></label><span>{filtered.length} matching records</span><div className="staff-record-export"><button type="button" onClick={()=>exportReport('csv')} disabled={!filtered.length}>CSV</button><button type="button" onClick={()=>exportReport('xlsx')} disabled={!filtered.length}>Excel</button><button type="button" onClick={()=>exportReport('docx')} disabled={!filtered.length}>Word</button><button type="button" onClick={()=>exportReport('print')} disabled={!filtered.length}><Printer size={13}/> Print / PDF</button></div></div>
+    {filtered.length?<div className="staff-table-wrap"><table className="staff-table"><thead><tr>{cols.map(col=><th key={col.key} aria-sort={activeSortKey===col.key?(sortDirection==='asc'?'ascending':'descending'):'none'}><button type="button" className="staff-table-sort" onClick={()=>{if(activeSortKey===col.key)setSortDirection(current=>current==='asc'?'desc':'asc');else{setSortKey(col.key);setSortDirection('asc')}setPage(1)}}>{col.label}<span aria-hidden="true">{activeSortKey===col.key?(sortDirection==='asc'?'↑':'↓'):'↕'}</span></button></th>)}{actions&&<th>Actions</th>}</tr></thead><tbody>{pageRows.map(row=><tr key={row.id}>{cols.map(col=><td key={col.key}>{['status','employment_status'].includes(col.key)?<Status value={row[col.key]}/>:display(row,col.key)}</td>)}{actions&&<td><div className="staff-row-actions">{actions(row)}</div></td>}</tr>)}</tbody></table></div>:<div className="staff-empty"><strong>No matching records</strong><p>Change the search terms to see records in this register.</p></div>}
+    {filtered.length>pageSize&&<nav className="staff-table-pagination" aria-label="Staff record pages"><span>Showing <b>{(currentPage-1)*pageSize+1}–{Math.min(currentPage*pageSize,sorted.length)}</b> of <b>{sorted.length}</b></span><div><button type="button" disabled={currentPage<=1} onClick={()=>setPage(currentPage-1)}>Previous</button><span>Page {currentPage} of {pageCount}</span><button type="button" disabled={currentPage>=pageCount} onClick={()=>setPage(currentPage+1)}>Next</button></div></nav>}
+  </div>
 }
 
 export function FacultyWorkspace({onToast,onNavigate,initialWindow}:Props) {
@@ -242,10 +289,8 @@ export function FacultyWorkspace({onToast,onNavigate,initialWindow}:Props) {
   }
   function exportCsv(){downloadCsv('edusphere360-staff-report.csv',employees,[{key:'employee_no',label:'Employee ID'},{key:'full_name',label:'Employee'},{key:'email',label:'Email'},{key:'employee_type',label:'Category'},{key:'department',label:'Department'},{key:'employment_status',label:'Status'},{key:'joining_date',label:'Joining date'}])}
 
-  const table=(rows:RecordRow[],cols:{key:string;label:string}[],empty:string,actions?: (row:RecordRow)=>ReactNode)=>{
-    if(!rows.length)return <div className="staff-empty"><span><BriefcaseBusiness size={21}/></span><strong>No records yet</strong><p>{empty}</p></div>
-    return <div className="staff-table-wrap"><table className="staff-table"><thead><tr>{cols.map(c=><th key={c.key}>{c.label}</th>)}{actions&&<th>Actions</th>}</tr></thead><tbody>{rows.map(row=><tr key={row.id}>{cols.map(c=><td key={c.key}>{['status','employment_status'].includes(c.key)?<Status value={row[c.key]}/>:c.key.endsWith('_date')||c.key==='created_at'?dateLabel(row[c.key]):value(row[c.key])}</td>)}{actions&&<td><div className="staff-row-actions">{actions(row)}</div></td>}</tr>)}</tbody></table></div>
-  }
+  const table=(rows:RecordRow[],cols:{key:string;label:string}[],empty:string,actions?: (row:RecordRow)=>ReactNode)=>
+    <StaffRecordsTable rows={rows} cols={cols} empty={empty} actions={actions} reportTitle={currentStaffPage} institutionName={user?.institutionName??'Institution name not set'} onToast={onToast}/>
   const currentStaffPage=tab==='overview'?'Faculty & Employee Management':tabs.find(item=>item.key===tab)?.label??'Faculty & Employee Management'
   const header=<header className="staff-workspace-heading"><div><span className="staff-kicker">{(user?.institutionName?.trim()||'GOVERNMENT ISLAMIA DEGREE COLLEGE').toUpperCase()} / PEOPLE &amp; HR / {currentStaffPage.toUpperCase()}</span><h1>{currentStaffPage}</h1></div><div className="staff-heading-actions"><button type="button" className="staff-button staff-button-primary" onClick={()=>void load()} disabled={loading}><RefreshCw size={15}/>{loading?'Refreshing…':'Refresh'}</button>{admin&&<button type="button" className="staff-button staff-button-outline" onClick={()=>{setTab('registration');open('employee')}}><Plus size={15}/> Register employee</button>}</div></header>
 
