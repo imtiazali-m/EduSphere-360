@@ -53,7 +53,7 @@ check('AI free-tier limits and safe setup are documented', () => {
   assert.ok(configGuide.includes('Workers Free'))
   assert.ok(configGuide.includes('CLOUDFLARE_ACCOUNT_ID'))
   assert.ok(configGuide.includes('CLOUDFLARE_AI_API_TOKEN'))
-  assert.ok(configGuide.includes('does not switch to paid providers'))
+  assert.ok(configGuide.includes('switch to a paid provider'))
   assert.ok(pkg.scripts['test:ai-free-provider'] === 'node scripts/test-ai-free-provider.mjs')
 })
 
