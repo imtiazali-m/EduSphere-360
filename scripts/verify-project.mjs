@@ -85,6 +85,25 @@ check('Examination and class-test pages dispatch to the dedicated assessment lif
   assert.ok(audit.includes("targetWindow.startsWith('examinations:') ? 'AssessmentWorkspace'"), 'Route-view audit must match Dashboard examination dispatch')
   assert.ok(audit.includes("component: 'AssessmentWorkspace'"), 'Assessment destinations must be classified as the actual assessment workspace')
 })
+check('Library catalogue, circulation and learning resources use dedicated tenant-scoped workflows', () => {
+  const dashboard = read('src/components/Dashboard.tsx')
+  const library = read('src/components/LibraryManagementWorkspace.tsx')
+  const linked = read('src/components/LinkedOperationsWorkspace.tsx')
+  const audit = read('scripts/generate-route-view-audit.mjs')
+  assert.ok(dashboard.includes("tab.targetKey === 'institutional' && tab.targetWindow.startsWith('library:')"), 'Library catalogue routes must dispatch to the dedicated library manager')
+  assert.ok(dashboard.includes('<LibraryManagementWorkspace workspaceKey={tab.targetWindow} onToast={onToast} onNavigate={navigateChild}/>'), 'Library manager must receive workspace navigation and toast handlers')
+  for (const type of ['book-registration','book-category','digital-resource','learning-material','resource-download']) {
+    assert.ok(library.includes("'" + type + "'"), 'Library manager is missing record type ' + type)
+  }
+  for (const operation of ['institutional_records','library_loans','created_by:user.id','updated_by:user.id','deleteRecord','saveRecord']) {
+    assert.ok(library.includes(operation), 'Library manager is missing tenant-scoped persistence guard ' + operation)
+  }
+  assert.ok(library.includes(".eq('institution_id',user.institutionId)") && library.includes(".eq('module_key','library')"), 'Library catalogue queries must remain institution- and module-scoped')
+  assert.ok(library.includes("['owner','admin'].includes(user.role)"), 'Only institution owners and administrators may modify the catalogue')
+  assert.ok(library.includes('validWebUrl'), 'Digital resource links must be validated before publication')
+  assert.ok(linked.includes("rpc('issue_library_book'") && linked.includes("rpc('return_library_book'"), 'Book issue and return must remain on the transactional library RPCs')
+  assert.ok(audit.includes("component: 'LibraryManagementWorkspace'") && audit.includes("'book-issue-and-returns','library-reports'"), 'Route-view audit must recognise the library manager and linked circulation workflows')
+})
 check('Leave applications, approvals, balances and reporting have separate role-scoped workflows', () => {
   const care = read('src/components/Stage7CareWorkspace.tsx')
   const routes = read('src/lib/navigationRoutes.ts')
