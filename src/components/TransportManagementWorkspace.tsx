@@ -1,5 +1,5 @@
 import { useCallback,useEffect,useMemo,useState,type FormEvent } from 'react'
-import { Bus,Download,Plus,RefreshCw,Route,Search,Wallet,Pencil,Trash2,Truck } from 'lucide-react'
+import { Download,Plus,RefreshCw,Route,Search,Wallet,Pencil,Trash2,Truck } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { downloadCsv } from '../lib/csv'
