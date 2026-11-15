@@ -41,7 +41,7 @@ function matches(row:ResultRow,key:string,operator:string,value:string){
 }
 export function CustomReportsWorkspace({workspaceKey,onToast}:{workspaceKey:string;onToast:(message:string,error?:boolean)=>void}){
  const {user,mode}=useAuth()
- const itemKey=workspaceKey.split(':').slice(1).join(':')||'custom-report-builder'
+ const itemKey=workspaceKey.split(':').slice(-1).join(':')||'custom-report-builder'
  const title=pages[itemKey]??'Custom Reports'
  const description=blurbs[itemKey]??'Build, save and review institution reports.'
  const canManage=Boolean(user&&['owner','admin'].includes(user.role))
