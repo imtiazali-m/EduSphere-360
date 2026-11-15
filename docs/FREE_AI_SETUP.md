@@ -6,7 +6,7 @@ EduSphere's automatic AI mode now uses Cloudflare Workers AI only. It does **not
 
 Cloudflare Workers AI includes 10,000 Neurons per day on the Workers Free plan. The allowance resets at 00:00 UTC. When the Free-plan daily allowance is exhausted, requests stop until the allowance resets; the app does not upgrade the Cloudflare plan or switch to a paid provider.
 
-The default model is `@cf/zai-org/glm-4.7-flash`. Cloudflare lists it as a hosted text-generation model and marks it Zero Data Retention. Do not send student/employee direct identifiers or confidential documents unless the institution has approved the data handling.
+The default model is `@cf/zai-org/glm-4.7-flash`. EduSphere pins the Cloudflare provider to this model and hides the custom model field while it is selected, so the automatic/free option cannot be switched to another model that may require paid usage. Cloudflare lists it as a hosted text-generation model and marks it Zero Data Retention. Do not send student/employee direct identifiers or confidential documents unless the institution has approved the data handling.
 
 ## One-time Cloudflare setup
 
