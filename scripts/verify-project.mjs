@@ -1176,6 +1176,22 @@ check('Administration membership controls use the protected tenant access proced
   }
 })
 
+check('Administration governance registers offer filtered export and A4 print actions', () => {
+  const administration = read('src/components/AdministrationStage5Workspace.tsx')
+  const styles = read('src/styles/governance-workspace.css')
+  for (const value of ["reportActions('Approval register'", "reportActions(audience+' policies'", "reportActions('Administrative audit'", "reportActions('User access register'", "reportActions('Security access overview'", "reportActions(section==='system'?'System settings'"]) {
+    assert.ok(administration.includes(value), 'Administration report action is missing: ' + value)
+  }
+  for (const value of ['downloadCsv(', 'exportXlsx(', 'exportDocx(', 'printOfficeReport(', 'Print A4', 'ed360-admin-report-actions']) {
+    assert.ok(administration.includes(value), 'Administration export implementation is missing: ' + value)
+  }
+  for (const route of ["onNavigate('admin:academic_sessions')", "onNavigate('admin:classes')", "onNavigate('admin:programs')", "onNavigate('admin:subjects')", "onNavigate('admin:rooms')", "onNavigate('employees:designations')"]) {
+    assert.ok(administration.includes(route), 'Academic structure shortcut is missing: ' + route)
+  }
+  assert.ok(styles.includes('.ed360-admin-report-actions'), 'Administration report actions need shared responsive styling')
+  assert.ok(administration.includes('A privileged, tenant-filtered authentication event feed is required'), 'Security must not present unsupported sign-in history')
+})
+
 check('Student and employee ID cards are printed from selected verified records', () => {
   const students = read('src/components/RecordModule.tsx')
   const staff = read('src/components/FacultyWorkspace.tsx')
