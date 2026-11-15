@@ -1,5 +1,5 @@
 import { useCallback,useEffect,useMemo,useState,type FormEvent } from 'react'
-import { Boxes,Download,Layers3,Package,Plus,RefreshCw,Search,Pencil,Trash2,ArrowDownToLine,ArrowUpFromLine,ClipboardList } from 'lucide-react'
+import { Boxes,Download,Layers3,Package,Plus,RefreshCw,Search,Pencil,Trash2,ArrowDownToLine } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { downloadCsv } from '../lib/csv'
