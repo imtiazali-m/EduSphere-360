@@ -644,13 +644,13 @@ function renderCertificates(){
     :view==='assets'?visibleAssets.length:visibleMaintenance.length
 
   return <main className="iop-stage page-content ed360-module-page">
-    <header className="iop-heading"><div><span>{(user?.institutionName?.trim()||'INSTITUTION').toUpperCase()} / {domainTitles[selectedDomain].toUpperCase()}</span><h1>{viewLabels[view]}</h1><p>{domainDescriptions[selectedDomain]}</p></div><button type="button" className="iop-button" onClick={()=>void load()}><RefreshCw size={14}/> Refresh</button></header>
+    <header className="iop-heading"><div><span>{(user?.institutionName?.trim()||'INSTITUTION').toUpperCase()} / {domainTitles[selectedDomain].toUpperCase()}</span><h1>{viewLabels[view]}</h1></div><button type="button" className="iop-button primary" onClick={()=>void load()} disabled={loading}><RefreshCw size={15}/> {loading?'Refreshing…':'Refresh'}</button></header>
     <nav className="iop-nav" aria-label={domainTitles[selectedDomain]+' workspace windows'}>{tabItems.map(key=><button type="button" key={key} className={view===key?'active':''} aria-current={view===key?'page':undefined} onClick={()=>setView(key)}>{viewLabels[key]}</button>)}</nav>
-    <section className="iop-context"><div><small>ACTIVE DOMAIN WINDOW</small><h2>{viewLabels[view]}</h2><p>{domainDescriptions[selectedDomain]}</p></div><div><strong>{recordCount}</strong><small>Visible records</small></div></section>
+
     {error&&<div className="iop-error" role="alert">{error}</div>}
     {loading?<div className="iop-empty"><RefreshCw size={18}/> Loading institution records…</div>:renderContent()}
     {!loading&&viewRowCount>pageSize&&<div className="iop-global-pagination">{pageControls(viewRowCount)}</div>}
-    <footer className="iop-footer"><span><ShieldCheck size={14}/> Institution access and linked family visibility are enforced by Supabase row-level security.</span><button className="iop-button" onClick={()=>void load()}><RefreshCw size={14}/> Refresh</button></footer>
+
     {renderDialog()}
      {exportRequest&&<div className="modal-backdrop" role="presentation" onMouseDown={event=>{if(event.target===event.currentTarget)setExportRequest(null)}}><section className="modal-card" role="dialog" aria-modal="true" aria-labelledby="iop-export-title"><div className="modal-heading"><div><div className="eyebrow">DOCUMENT EXPORT</div><h2 id="iop-export-title">Export {exportRequest.name.replaceAll('-',' ')}</h2><p>{exportRequest.rows.length} authorised records · choose your document format</p></div><button className="icon-button" type="button" onClick={()=>setExportRequest(null)} aria-label="Close export options"><X size={18}/></button></div><div className="iop-actions"><button className="iop-button" type="button" onClick={()=>completeExport('csv')}>CSV</button><button className="iop-button" type="button" onClick={()=>completeExport('xlsx')}>Excel (XLSX)</button><button className="iop-button" type="button" onClick={()=>completeExport('docx')}>Word (DOCX)</button><button className="iop-button primary" type="button" onClick={()=>completeExport('print')}><Printer size={14}/> Print / PDF</button></div><p className="iop-muted">Print uses a clean A4 white-paper layout. PDF is available through the browser print dialog.</p></section></div>}
   </main>
