@@ -20,7 +20,8 @@
     "test:responsive:public": "node scripts/test-responsive-public.mjs",
     "test:workspace-privacy": "node scripts/test-workspace-privacy.mjs",
     "test:display-preferences": "node --test scripts/test-display-preferences.mjs",
-    "test:device-signature": "node --test scripts/test-device-signature.mjs"
+    "test:device-signature": "node --test scripts/test-device-signature.mjs",
+    "test:device-review": "node --test scripts/test-device-review.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.58.0",
