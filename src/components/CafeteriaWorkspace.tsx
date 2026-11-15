@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { Coffee, Download, RefreshCw } from 'lucide-react'
+import { Download, RefreshCw } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import '../styles/data-management.css'
@@ -10,15 +10,6 @@ const titleByPage:Record<string,string>={
  'cafeteria-dashboard':'Cafeteria Dashboard','menu-price-list':'Menu & Price List',
  'daily-availability':'Daily Availability','sales-transactions':'Sales Transactions',
  'meal-plans':'Meal Plans','cafeteria-inventory':'Cafeteria Inventory','cafeteria-reports':'Cafeteria Reports'
-}
-const info:Record<string,string>={
- 'cafeteria-dashboard':'Monitor today’s menu availability, sales, serving counts and stock-linked menu items.',
- 'menu-price-list':'Maintain cafeteria menu items, prices, categories and optional links to inventory stock items.',
- 'daily-availability':'Set the quantity of each menu item available for a specific service date.',
- 'sales-transactions':'Record a cafeteria sale against today’s available items. Daily servings and linked inventory stock are updated transactionally.',
- 'meal-plans':'Maintain meal-plan offers, audience, meal period, price and validity dates.',
- 'cafeteria-inventory':'Review menu items linked to the institution inventory stock ledger.',
- 'cafeteria-reports':'Review sales, serving volumes and menu performance from saved cafeteria transactions.'
 }
 const money=(v:unknown)=>'PKR '+Number(v??0).toLocaleString(undefined,{maximumFractionDigits:2})
 const label=(v:unknown)=>String(v??'').replaceAll('_',' ').replace(/\b\w/g,c=>c.toUpperCase())
