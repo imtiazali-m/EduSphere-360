@@ -50,6 +50,7 @@ import { displayInstitutionName } from '../lib/collegeIdentity'
 import { BackupDataWorkspace } from './BackupDataWorkspace'
 import { IntegrationManagementWorkspace } from './IntegrationManagementWorkspace'
 import { BehaviourSkillsWorkspace } from './BehaviourSkillsWorkspace'
+import { OpenAIVoiceWorkspace } from './OpenAIVoiceWorkspace'
 
 interface Props { onToast: (message: string, error?: boolean) => void }
 type Dataset = Record<string, RecordRow[]>
@@ -755,6 +756,7 @@ export function Dashboard({ onToast }: Props) {
     const backupWindowRoute = key.startsWith('backup:')
     const integrationWindowRoute = key.startsWith('integration:')
     const behaviourWindowRoute = key.startsWith('behaviour:')
+    const voiceWindowRoute = key.startsWith('voice:')
     const routeParts = key.split(':')
     const moduleWindowRoute = routeParts.length === 2 && ['fees', 'exams', 'exam_results', 'assignments', 'assignment_submissions', 'timetable', 'announcements', 'work_tasks'].includes(routeParts[0])
     const targetKey = academicWindowRoute ? 'academic'
@@ -776,6 +778,7 @@ export function Dashboard({ onToast }: Props) {
       : backupWindowRoute ? 'backup'
       : integrationWindowRoute ? 'integrations'
       : behaviourWindowRoute ? 'behaviour'
+      : voiceWindowRoute ? 'voice'
       : moduleWindowRoute ? routeParts[0]
       : key
     const targetWindow = academicWindowRoute ? key.slice('academic:'.length)
@@ -797,6 +800,7 @@ export function Dashboard({ onToast }: Props) {
       : backupWindowRoute ? key.slice('backup:'.length)
       : integrationWindowRoute ? key.slice('integration:'.length)
       : behaviourWindowRoute ? key.slice('behaviour:'.length)
+      : voiceWindowRoute ? key.slice('voice:'.length)
       : moduleWindowRoute ? routeParts[1]
       : 'overview'
     let title = options.title ?? 'Dashboard'
@@ -820,6 +824,7 @@ export function Dashboard({ onToast }: Props) {
       else if (targetKey === 'backup') title = 'Backup & Data Management'
       else if (targetKey === 'integrations') title = 'Integrations & Devices'
       else if (targetKey === 'behaviour') title = 'Behaviour & Skills'
+      else if (targetKey === 'voice') title = 'Internet Voice Calling'
       else if (targetKey.startsWith('admin:')) {
         const subkey = targetKey.slice(6)
         title = adminModuleLabels[subkey] ?? 'Administration'
@@ -1002,6 +1007,7 @@ export function Dashboard({ onToast }: Props) {
                 tab.targetKey === 'operations' ? <InstitutionOperationsWorkspace workspaceKey={tab.targetWindow} initialWindow={tab.targetWindow.split(':')[1]} onToast={onToast}/> :
                 tab.targetKey === 'integrations' ? <IntegrationManagementWorkspace initialWindow={tab.targetWindow || 'overview'} onToast={onToast} onNavigate={navigateChild}/> :
                 tab.targetKey === 'behaviour' ? <BehaviourSkillsWorkspace initialWindow={tab.targetWindow || 'dashboard'} onToast={onToast}/> :
+                tab.targetKey === 'voice' ? <OpenAIVoiceWorkspace onToast={onToast}/> :
                 tab.targetKey === 'assistant' ? <AIAssistantWorkspace initialWindow={tab.targetWindow || 'chat'}/> :
                 tab.targetKey === 'frontoffice' ? <FrontOfficeWorkspace initialView={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'personal' ? <PersonalWorkspace initialWindow={tab.targetWindow} onToast={onToast} onNavigate={navigateChild}/> :
