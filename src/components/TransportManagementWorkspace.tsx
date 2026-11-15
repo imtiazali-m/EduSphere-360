@@ -66,7 +66,7 @@ export function TransportManagementWorkspace({workspaceKey,onToast,onNavigate}:P
    const chargeQuery=supabase.from('student_transport_fee_charges').select('id,allocation_id,billing_period,amount,paid_amount,due_date,status,created_at').eq('institution_id',user.institutionId).order('due_date',{ascending:false}).limit(5000)
    const paymentQuery=supabase.from('student_transport_fee_payments').select('id,charge_id,amount,payment_method,payment_reference,received_at').eq('institution_id',user.institutionId).order('received_at',{ascending:false}).limit(5000)
    const eventQuery=canReadStaff?supabase.from('transport_attendance_events').select('id,allocation_id,event_type,occurred_at,source,notes').eq('institution_id',user.institutionId).order('occurred_at',{ascending:false}).limit(5000):Promise.resolve({data:[],error:null} as any)
-   const studentQuery=canReadStaff?supabase.from('students').select('id,full_name,admission_no,class_name').eq('institution_id',user.institutionId).order('full_name').limit(5000):Promise.resolve({data:[],error:null} as any)
+   const studentQuery=supabase.from('students').select('id,full_name,admission_no,class_name').eq('institution_id',user.institutionId).order('full_name').limit(5000)
    const [r,a,c,p,e,s]=await Promise.all([recordQuery,allocationQuery,chargeQuery,paymentQuery,eventQuery,studentQuery])
    for(const result of [r,a,c,p,e,s])if(result.error)throw result.error
    setRecords((r.data??[]) as FleetRecord[]);setAllocations((a.data??[]) as Allocation[])
@@ -145,6 +145,8 @@ export function TransportManagementWorkspace({workspaceKey,onToast,onNavigate}:P
    const sequence=Number(form.stop_sequence)
    if(!route){onToast('Select a route registered by this institution.',true);return}
    if(!Number.isInteger(sequence)||sequence<1){onToast('Stop order must be a whole number starting at one.',true);return}
+   const duplicateStop=stops.find(stop=>stop.id!==editing?.id&&stop.parent_record_id===route.id&&number(stop.payload?.stop_sequence)===sequence)
+   if(duplicateStop){onToast('That stop sequence is already used on this route.',true);return}
    parentId=route.id
    payload={route_record_id:route.id,route_code:String(route.payload?.route_code??route.reference_code??''),stop_sequence:sequence,stop_address:form.stop_address.trim()||null,pickup_time:form.pickup_time||null}
   }else{
@@ -173,6 +175,7 @@ export function TransportManagementWorkspace({workspaceKey,onToast,onNavigate}:P
  async function deleteFleetRecord(row:FleetRecord){
   if(!supabase||!user||!canManage)return
   if(row.record_type==='vehicle-management'&&allocations.some(a=>a.vehicle_record_id===row.id)){onToast('This vehicle has allocation history. Mark it inactive or under maintenance instead of deleting it.',true);return}
+  if(row.record_type==='drivers-management'&&vehicles.some(v=>v.payload?.driver_record_id===row.id)){onToast('This driver is assigned to one or more vehicles. Reassign those vehicles before deleting the driver.',true);return}
   if(row.record_type==='transport-routes'&&allocations.some(a=>a.route_record_id===row.id)){onToast('This route has learner allocations. Keep its history and mark the route inactive instead.',true);return}
   if(row.record_type==='route-stops'&&allocations.some(a=>a.stop_record_id===row.id)){onToast('This stop is referenced by learner allocations and cannot be deleted.',true);return}
   if(records.some(child=>child.parent_record_id===row.id)){onToast('This record has linked operational records. Remove or reassign those records first.',true);return}
@@ -200,7 +203,7 @@ export function TransportManagementWorkspace({workspaceKey,onToast,onNavigate}:P
   const outstanding=Math.max(0,number(charge.amount)-number(charge.paid_amount))
   if(amount>outstanding){onToast('Payment exceeds the outstanding balance of '+money(outstanding)+'.',true);return}
   setSaving(true)
-  try{const {error}=await supabase.rpc('record_student_transport_fee_payment',{p_institution_id:user.institutionId,p_charge_id:charge.id,p_amount:amount,p_payment_method:paymentMethod,p_payment_reference:paymentReference.trim()||null});if(error)throw error;onToast('Transport payment recorded.');setPaymentAmount('');setPaymentReference('');await load()}
+  try{const {error}=await supabase.rpc('record_student_transport_fee_payment',{p_institution_id:user.institutionId,p_charge_id:charge.id,p_amount:amount,p_payment_method:paymentMethod,p_payment_reference:paymentReference.trim()||null});if(error)throw error;onToast('Transport payment recorded.');setPaymentAmount('');setPaymentReference('');setPaymentCharge('');await load()}
   catch(e){onToast(userFacingError(e,'The transport payment could not be recorded.'),true)}
   finally{setSaving(false)}
  }
