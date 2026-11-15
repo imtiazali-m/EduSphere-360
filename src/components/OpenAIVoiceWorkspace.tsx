@@ -33,11 +33,26 @@ export function OpenAIVoiceWorkspace({ onToast }: { onToast: (message: string, e
 
   const canCall = Boolean(user && ['owner', 'admin', 'teacher'].includes(user.role))
 
+  const transcriptLineIdsRef = useRef<Partial<Record<VoiceLine['speaker'], number>>>({})
+
   function addLine(speaker: VoiceLine['speaker'], text: string) {
     const clean = text.trim()
     if (!clean) return
     lineIdRef.current += 1
     setLines(current => [...current, { id: lineIdRef.current, speaker, text: clean }].slice(-30))
+  }
+
+  function appendTranscript(speaker: VoiceLine['speaker'], delta: string) {
+    if (!delta) return
+    const existingId = transcriptLineIdsRef.current[speaker]
+    if (existingId !== undefined) {
+      setLines(current => current.map(line => line.id === existingId ? { ...line, text: line.text + delta } : line))
+      return
+    }
+    lineIdRef.current += 1
+    const nextId = lineIdRef.current
+    transcriptLineIdsRef.current[speaker] = nextId
+    setLines(current => [...current, { id: nextId, speaker, text: delta }].slice(-30))
   }
 
   function endCall() {
@@ -72,6 +87,7 @@ export function OpenAIVoiceWorkspace({ onToast }: { onToast: (message: string, e
 
     setError('')
     setLines([])
+    transcriptLineIdsRef.current = {}
     setStatus('connecting')
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -91,7 +107,6 @@ export function OpenAIVoiceWorkspace({ onToast }: { onToast: (message: string, e
         }
       }
       peer.onconnectionstatechange = () => {
-        if (peer.connectionState === 'connected') setStatus('connected')
         if (['failed', 'disconnected'].includes(peer.connectionState)) {
           setError('The voice connection was interrupted. End the call and try again.')
         }
@@ -103,9 +118,17 @@ export function OpenAIVoiceWorkspace({ onToast }: { onToast: (message: string, e
         try {
           const payload = JSON.parse(String(event.data))
           const kind = String(payload.type ?? '')
-          if (kind === 'conversation.item.input_audio_transcription.completed') addLine('You', String(payload.transcript ?? ''))
-          else if (kind === 'response.output_audio_transcript.done' || kind === 'response.audio_transcript.done') addLine('EduSphere AI', String(payload.transcript ?? ''))
-          else if (kind === 'error') setError(String(payload.error?.message ?? 'The voice service returned an error.'))
+          if (kind === 'session.started') {
+            setStatus('connected')
+          } else if (kind === 'session.input_transcript.delta') {
+            appendTranscript('You', String(payload.delta ?? ''))
+          } else if (kind === 'session.output_transcript.delta') {
+            appendTranscript('EduSphere AI', String(payload.delta ?? ''))
+          } else if (kind === 'session.closed') {
+            setStatus('ended')
+          } else if (kind === 'error' || kind === 'session.error') {
+            setError(String(payload.error?.message ?? payload.message ?? 'The voice service returned an error.'))
+          }
         } catch {
           // Ignore non-JSON transport frames.
         }
@@ -127,8 +150,6 @@ export function OpenAIVoiceWorkspace({ onToast }: { onToast: (message: string, e
       if (typeof answerSdp !== 'string' || !answerSdp) throw new Error('OpenAI returned an incomplete session answer.')
       setSessionId(String(data?.session?.id ?? ''))
       await peer.setRemoteDescription({ type: 'answer', sdp: answerSdp })
-      setStatus('connected')
-      addLine('EduSphere AI', 'Hello. Your EduSphere 360 voice session is connected. How can I help?')
     } catch (caught) {
       endCall()
       const message = caught instanceof Error ? caught.message : 'The voice call could not be started.'
