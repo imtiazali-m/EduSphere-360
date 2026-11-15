@@ -252,17 +252,7 @@ export function LibraryManagementWorkspace({workspaceKey,onToast,onNavigate}:Pro
 
  if(!user)return null
  return <main className="page-content ed360-module-page ed360-library-admin">
-  <header className="ed360-workspace-hero ed360-library-admin-hero">
-   <div className="ed360-workspace-hero-icon"><Library size={22}/></div>
-   <div className="ed360-workspace-hero-copy">
-    <span>LIBRARY / CATALOGUE & RESOURCES</span><h1>{pageConfig.title}</h1><p>{pageConfig.description}</p>
-   </div>
-   <div className="ed360-workspace-hero-tools">
-    <span className="ed360-data-state"><i/> Institution records</span>
-    <button className="button button-outline" type="button" onClick={()=>void load()} disabled={loading}><RefreshCw size={15}/> Refresh</button>
-    {showFormAction&&<button className="button button-primary" type="button" onClick={beginCreate}><Plus size={15}/> Add {typeLabel[pageConfig.type!]}</button>}
-   </div>
-  </header>
+  <header className="ed360-workspace-hero ed360-library-admin-hero"><div className="ed360-workspace-hero-copy"><span>{(user?.institutionName?.trim()||'GOVERNMENT ISLAMIA DEGREE COLLEGE').toUpperCase()} / LIBRARY / {pageConfig.title.toUpperCase()}</span><h1>{pageConfig.title}</h1></div><div className="ed360-workspace-hero-tools"><button type="button" className="button button-primary" onClick={()=>void load()} disabled={loading}><RefreshCw size={15}/>{loading?'Refreshing…':'Refresh'}</button>{showFormAction&&<button className="button button-outline" type="button" onClick={beginCreate}><Plus size={15}/> Add {typeLabel[pageConfig.type!]}</button>}</div></header>
 
   {loading&&<div className="ed360-workspace-empty">Loading institution library…</div>}
   {loadError&&<section className="ed360-library-error"><strong>Library data could not be loaded</strong><span>{loadError}</span><button className="button button-outline" type="button" onClick={()=>void load()}>Retry</button></section>}
