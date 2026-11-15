@@ -1413,7 +1413,7 @@ check('Academic records validate date ranges, marks and overlapping timetable al
   const academic = read('src/components/AcademicManagementWorkspace.tsx')
   const timetable = read('supabase/migrations/20261111165921_stage8_academic_data_tables.sql')
   const guards = read('supabase/migrations/20261111170722_stage8_timetable_session_and_student_submission_guards.sql')
-  for (const value of ['function timetableConflictReason', 'if(existing.id&&candidate.id&&existing.id===candidate.id)', 'existingSession&&candidateSession&&existingSession!==candidateSession', 'end<start', 'completion percentage must be between 0 and 100', 'Marks awarded cannot exceed the assignment maximum', 'Timetable conflict: this', "academic_session_id.eq.", ".lt('start_time'", ".gt('end_time'"]) {
+  for (const value of ['function timetableConflictReason', 'if(existing.id&&candidate.id&&existing.id===candidate.id)', 'candidateSession&&existingSession&&candidateSession!==existingSession', 'end<start', 'completion percentage must be between 0 and 100', 'Marks awarded cannot exceed the assignment maximum', 'Timetable conflict: this', "academic_session_id.eq.", ".lt('start_time'", ".gt('end_time'"]) {
     assert.ok(academic.toLowerCase().includes(value.toLowerCase()), 'Academic validation is missing: ' + value)
   }
   assert.ok(academic.includes('getFullYear()') && !academic.includes("new Date().toISOString().slice(0, 10)"), "Academic date defaults must use the user local calendar date")
