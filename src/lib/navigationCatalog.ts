@@ -6,10 +6,10 @@ export interface NavigationCatalogGroup { key:string; label:string; icon:string;
 const nestedAdministrationGroups=new Set(['institution-config','academic-sessions','classes-sections','subjects'])
 const nestedAcademicGroups=new Set(['curriculum','timetable','teaching'])
 const navigationMenuOrder=[
-  'dashboard','attendance','academic-management','examinations','reports','ai','administration',
-  'behaviour','people-hr','certificates','question-bank','class-tests','library',
-  'accounts-finance','fees','receivables','payments','receipts','reconciliation','communication',
-  'transport','inventory','facilities','visitors','backup',
+  'dashboard','administration','academic-management','people-hr','attendance','behaviour',
+  'question-bank','examinations','class-tests','library','certificates','fees','receivables',
+  'payments','receipts','accounts-finance','reconciliation','communication','transport',
+  'inventory','facilities','visitors','reports','ai','backup',
 ]
 const navigationMenuRank=new Map(navigationMenuOrder.map((key,index)=>[key,index] as const))
 export const navigationCatalog:NavigationCatalogGroup[]=institutionalMenu
