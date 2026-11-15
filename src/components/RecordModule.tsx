@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import {
   Activity, AlertCircle, BookOpen, CalendarCheck, CalendarDays,
-  Check, ChevronLeft, ChevronRight, ClipboardCheck, Download, Edit3, Eye, MoreHorizontal,
+  Check, ChevronLeft, ChevronRight, ClipboardCheck, Edit3, Eye, MoreHorizontal,
   FileCheck2, FileText, FolderOpen, GraduationCap, HeartHandshake, History, ImagePlus,
   LayoutDashboard, Plus, Printer, RefreshCw, Search, ShieldCheck, Trash2, Upload,
   UserRound, Users, Wallet, X,
@@ -12,6 +12,7 @@ import { createRecord, deleteRecord, listAccounts, listFeePayments, listRecords,
 import { supabase } from '../lib/supabase'
 import { userFacingError } from '../lib/userErrors'
 import { downloadCsv } from '../lib/csv'
+import { exportDocx, exportXlsx, printOfficeReport, type OfficeColumn } from '../lib/officeExport'
 import { netInvoiceAmount, outstandingInvoiceBalance } from '../lib/finance'
 import type { AppMode, FieldConfig, ModuleConfig, RecordRow } from '../lib/types'
 import '../styles/student-module.css'
@@ -701,6 +702,16 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
     })
   }, [filtered, sortKey, sortDirection])
   const studentFiltered = useMemo(() => orderedFiltered.filter(row => studentStatus === 'all' || String(row.status ?? 'active').toLowerCase() === studentStatus), [orderedFiltered, studentStatus])
+   function exportStudentDirectory(format:'csv'|'xlsx'|'docx'|'print'){
+     if(!studentFiltered.length){onToast('There are no student records in this filtered directory to export.',true);return}
+     const rows=studentFiltered.map(row=>({admission_no:row.admission_no,full_name:row.full_name,class_name:row.class_name,status:row.status}))
+     const columns:OfficeColumn[]=[{key:'admission_no',label:'Admission ID'},{key:'full_name',label:'Student'},{key:'class_name',label:'Class / programme'},{key:'status',label:'Status'}]
+     const reportTitle='Student Directory',filename='edusphere-students-'+localDateValue()
+     if(format==='csv')downloadCsv('edusphere-students-'+localDateValue()+'.csv',rows,columns)
+     else if(format==='xlsx')exportXlsx(filename+'.xlsx',reportTitle,rows,columns)
+     else if(format==='docx')exportDocx(filename+'.docx',reportTitle,rows,columns)
+     else{try{printOfficeReport(reportTitle,rows,columns,user?.institutionName??'Institution name not set')}catch{onToast('Student directory print view could not be opened. Please try again.',true)}}
+   }
   const studentCounts = useMemo(() => ({
     total: rows.length,
     active: rows.filter(row => String(row.status ?? 'active').toLowerCase() === 'active').length,
@@ -1424,7 +1435,7 @@ export function RecordModule({ module, onToast, initialWindow, showWindowNavigat
         <div className="student-directory-heading"><div><h2>Student directory</h2><p>Institution-wide student register with search, status filters and profile actions.</p></div><span className="student-mode-tag cloud">Live records</span></div>
         <div className="student-directory-toolbar">
           <label className="student-search"><Search size={17}/><input aria-label="Search students" placeholder="Search name, admission number or class…" value={search} onChange={event => { setSearch(event.target.value); setCurrentPage(1) }}/>{search && <button type="button" onClick={() => { setSearch(''); setCurrentPage(1) }} aria-label="Clear search"><X size={15}/></button>}</label>
-          {ownerOrAdmin && <button className="student-refresh-button" type="button" onClick={() => downloadCsv('edusphere-students-'+localDateValue()+'.csv',studentFiltered.map(row=>({admission_no:row.admission_no,full_name:row.full_name,class_name:row.class_name,status:row.status})),[{key:'admission_no',label:'Admission ID'},{key:'full_name',label:'Student'},{key:'class_name',label:'Class / programme'},{key:'status',label:'Status'}])}><Download size={14}/> Export CSV</button>}
+          {ownerOrAdmin && <div className="student-export-actions"><button className="student-refresh-button" type="button" onClick={() => exportStudentDirectory('csv')} disabled={!studentFiltered.length}>CSV</button><button className="student-refresh-button" type="button" onClick={() => exportStudentDirectory('xlsx')} disabled={!studentFiltered.length}>Excel</button><button className="student-refresh-button" type="button" onClick={() => exportStudentDirectory('docx')} disabled={!studentFiltered.length}>Word</button><button className="student-refresh-button" type="button" onClick={() => exportStudentDirectory('print')} disabled={!studentFiltered.length}><Printer size={14}/> Print / PDF</button></div>}
           <button className="student-refresh-button" type="button" onClick={() => void load()} disabled={loading}><RefreshCw size={15} className={loading ? 'spin' : ''}/> Refresh</button>
         </div>
         <div className="student-filter-row" role="group" aria-label="Filter students by status">

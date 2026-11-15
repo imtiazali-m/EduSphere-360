@@ -73,13 +73,13 @@ export const institutionalMenu:WorkspaceMenuGroup[]=[
  group('teaching','Teaching, Homework and Assignments','Lesson delivery, homework, coursework, submissions, grading, teacher review and student feedback.','BookOpenCheck','violet','teaching',family,[
   'Teaching Dashboard','Homework','Create Assignment','Assignment Design and Management','Student Submissions','Teacher Review','Marks and Feedback','Teaching Materials','Lesson Plans','Homework Calendar','Pending Assignments','Pending Reviews','Assignment History','Assignment Reports','Downloadable Attachments'
  ]),
- group('question-bank','Question Bank and Question Papers','Legacy question-bank entry consolidated into the Stage 9 examination workspace.','FileQuestion','indigo','question_bank',[],[
+ group('question-bank','Question Bank and Question Papers','Manage reusable exam questions, categories, difficulty levels and question-paper content.','FileQuestion','indigo','question_bank',exams,[
   'Question Bank Dashboard','Multiple-Choice Questions','Short Questions','Long Questions','Subject-wise Questions','Chapter-wise Questions','Difficulty Levels','Question Categories','Question Builder','Question Paper Designer','Paper Templates','Marks Distribution','Random Question Selection','Question Review','Question Bank Import and Export','Question Paper Download','Question Paper Version History'
  ]),
  group('examinations','Examinations, Assessments and Results','Formal examinations, classroom tests, question banks, online assessment, marks approval, report cards and analysis.','ClipboardCheck','blue','examinations',exams,[
   'Examination Programs','Examination Timetable','Question Bank','Online Tests and Quizzes','Marks Entry','Grades and Grading System','Results and Result Approval','Report Cards','Examination Reports'
  ]),
- group('class-tests','Class Tests','Legacy class-test entry consolidated into the Stage 9 examination workspace.','ListChecks','violet','tests',[],[
+ group('class-tests','Class Tests','Create, schedule and review class tests, timed assessments, marks and student performance.','ListChecks','violet','tests',exams,[
   'Class Test Dashboard','Create Class Tests','Test Schedule','Online Tests','Written Tests','Test Questions','Marks Entry','Test Results','Performance Analysis','Test Reports','Student-wise Test History'
  ]),
  group('library','Digital Library','Catalogue, book inventory, member reading records, circulation, returns, fines and reports.','Library','indigo','library',family,[
@@ -104,7 +104,7 @@ export const institutionalMenu:WorkspaceMenuGroup[]=[
   'Reconciliation Dashboard','Financial Reconciliation','Bank Reconciliation','Cash Reconciliation','Payment Reconciliation','Fee Collection Reconciliation','Transaction Verification','Audit Logs','Administrative Audit','User Activity Logs','Access History','Change History','Audit Reports'
  ]),
  group('communication','Communication and WhatsApp','Role-targeted notices, message templates, notification centre, delivery history and approved messaging integrations.','MessageSquare','sky','communication',all,[
-  'Communication Dashboard','WhatsApp Integration','Individual Messages','Bulk Messages','Class-wise Messaging','Employee Notifications','Message Templates','Assignment Notifications','Email Notifications','Delivery History','Communication Logs','Notification Centre','Communication Reports',
+  'Communication Dashboard','WhatsApp Integration','Individual Messages','Bulk Messages','Class-wise Messaging','Employee Notifications','Message Templates','Assignment Notifications','Email Notifications','Delivery History','Communication Logs','Notification Centre','Communication Reports','Internet Calling',
   'Reception & Enquiries',
   'Parent Communication',
   'Internal Messages',

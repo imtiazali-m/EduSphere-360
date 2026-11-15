@@ -56,3 +56,6 @@
   .people-hr-metric-row { grid-template-columns: 1fr; }
   .people-hr-table-wrap { overflow: auto; }
 }
+
+
+.people-hr-export-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.people-hr-export-actions .staff-button{min-height:30px}@media(max-width:720px){.people-hr-export-actions{width:100%}.people-hr-export-actions .staff-button{flex:1}}

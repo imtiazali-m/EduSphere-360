@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { ArrowRight, CalendarDays, ClipboardList, FileText, Plus, RefreshCw, Search, ShieldCheck, Users, X } from 'lucide-react'
+import { ArrowRight, CalendarDays, ClipboardList, FileText, Plus, Printer, RefreshCw, Search, ShieldCheck, Users, X } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
+import { downloadCsv } from '../lib/csv'
+import { exportDocx, exportXlsx, printOfficeReport, type OfficeColumn } from '../lib/officeExport'
 import { userFacingError } from '../lib/userErrors'
 import type { RecordRow } from '../lib/types'
 import '../styles/people-hr-workspace.css'
@@ -242,6 +244,17 @@ export function PeopleHRWorkspace({initialWindow,onToast,onNavigate}:Props) {
     return textValue(row[key]).replaceAll('_',' ')
   }
 
+  function exportCurrent(format:'csv'|'xlsx'|'docx'|'print'){
+    if(!filteredRows.length){onToast('There are no records in this People and HR view to export.',true);return}
+    const columns:OfficeColumn[]=tableColumns.map(([key,label])=>({key,label}))
+    const rows=filteredRows.map(row=>Object.fromEntries(tableColumns.map(([key])=>[key,displayValue(row,key)])))
+    const filename='edusphere-'+windowKey+(windowKey==='recruitment'?'-'+recruitTab:'')+'-'+dateToday(),reportTitle=viewLabels[windowKey]+(windowKey==='recruitment'?' · '+title(recruitTab):'')
+    if(format==='csv')downloadCsv(filename+'.csv',rows,columns)
+    else if(format==='xlsx')exportXlsx(filename+'.xlsx',reportTitle,rows,columns)
+    else if(format==='docx')exportDocx(filename+'.docx',reportTitle,rows,columns)
+    else{try{printOfficeReport(reportTitle,rows,columns,user?.institutionName??'Institution name not set')}catch(error){onToast(error instanceof Error?error.message:'Print view could not be opened.',true)}}
+  }
+
   function openForm(row?:RecordRow) {
     setEditing(row??null)
     const initial:Record<string,string>={}
@@ -384,7 +397,7 @@ export function PeopleHRWorkspace({initialWindow,onToast,onNavigate}:Props) {
 
     <section className="staff-panel people-hr-data-panel">
       <header><div><h2>{config.heading}</h2><p>{config.description}</p></div><div className="people-hr-header-actions">{windowKey==='contracts'&&<button type="button" className="staff-button staff-button-outline" onClick={()=>onNavigate('employees:documents')}><FileText size={14}/> Open private document vault</button>}{isAdmin&&<button type="button" className="staff-button staff-button-primary" onClick={()=>openForm()}><Plus size={15}/> {windowKey==='admissions'?'New enquiry':windowKey==='recruitment'?'New '+(recruitTab==='vacancies'?'vacancy':recruitTab==='candidates'?'candidate':'interview'):windowKey==='contracts'?'New contract':windowKey==='performance'?'New review':'Register graduate'}</button>}</div></header>
-      <div className="people-hr-toolbar"><label><Search size={16}/><input value={query} onChange={event=>setQuery(event.target.value)} placeholder="Search this register…"/></label><span>{filteredRows.length} records</span></div>
+       <div className="people-hr-toolbar"><label><Search size={16}/><input value={query} onChange={event=>setQuery(event.target.value)} placeholder="Search this register…"/></label><span>{filteredRows.length} records</span><div className="people-hr-export-actions"><button type="button" className="staff-button staff-button-outline" onClick={()=>exportCurrent('csv')} disabled={!filteredRows.length}>CSV</button><button type="button" className="staff-button staff-button-outline" onClick={()=>exportCurrent('xlsx')} disabled={!filteredRows.length}>Excel</button><button type="button" className="staff-button staff-button-outline" onClick={()=>exportCurrent('docx')} disabled={!filteredRows.length}>Word</button><button type="button" className="staff-button staff-button-outline" onClick={()=>exportCurrent('print')} disabled={!filteredRows.length}><Printer size={14}/> Print / PDF</button></div></div>
       {loading?<div className="staff-empty"><RefreshCw size={18}/> Loading institution records…</div>:filteredRows.length===0?<div className="staff-empty"><span><Users size={22}/></span><strong>No records in this register yet</strong><p>{config.description}</p></div>:<div className="staff-table-wrap people-hr-table-wrap"><table className="staff-table"><thead><tr>{tableColumns.map(([key,label])=><th key={key}>{label}</th>)}{(isAdmin||(windowKey==='performance'&&canViewOwnEmployeeRecords))&&<th>Workflow / Actions</th>}</tr></thead><tbody>{filteredRows.map(row=><tr key={row.id}>{tableColumns.map(([key])=><td key={key}>{key==='status'||key==='stage'?<span className={'staff-status staff-status-'+String(row[key]??'draft')}>{title(row[key])}</span>:displayValue(row,key)}</td>)}{(isAdmin||(windowKey==='performance'&&canViewOwnEmployeeRecords))&&<td className="people-hr-row-actions">
         {!isAdmin&&windowKey==='performance'&&row.status==='reviewed'&&<button type="button" className="staff-button staff-button-primary" disabled={saving} onClick={()=>void acknowledgeAppraisal(row)}>Acknowledge review</button>}
         {!isAdmin&&windowKey==='performance'&&row.status==='acknowledged'&&<span className="staff-status staff-status-acknowledged">Acknowledged</span>}

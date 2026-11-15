@@ -86,6 +86,7 @@ function shellTarget(route) {
   const backup = route.startsWith('backup:')
   const integration = route.startsWith('integration:')
   const behaviour = route.startsWith('behaviour:')
+  const voice = route.startsWith('voice:')
   const parts = route.split(':')
   const moduleWindow = parts.length === 2 && ['fees','exams','exam_results','assignments','assignment_submissions','timetable','announcements','work_tasks'].includes(parts[0])
   const targetKey = academic ? 'academic'
@@ -107,6 +108,7 @@ function shellTarget(route) {
     : backup ? 'backup'
     : integration ? 'integrations'
     : behaviour ? 'behaviour'
+    : voice ? 'voice'
     : moduleWindow ? parts[0]
     : route
   const targetWindow = academic ? route.slice('academic:'.length)
@@ -128,6 +130,7 @@ function shellTarget(route) {
     : backup ? route.slice('backup:'.length)
     : integration ? route.slice('integration:'.length)
     : behaviour ? route.slice('behaviour:'.length)
+    : voice ? route.slice('voice:'.length)
     : moduleWindow ? parts[1]
     : 'overview'
   return { targetKey, targetWindow, moduleWindow }
@@ -147,6 +150,7 @@ function checkView(role, route, dispatcher) {
   if (targetKey === 'personal') return { component:'PersonalWorkspace', view:targetWindow, status:new Set(['my-profile','account-settings','notification-settings','my-activity','help-support']).has(targetWindow)?'Supported':'Unsupported personal view' }
   if (targetKey === 'integrations') return { component:'IntegrationManagementWorkspace', view:targetWindow, status:new Set(['overview','ai-providers','zoom','google','youtube','biometric']).has(targetWindow)?'Supported':'Unsupported integration view' }
   if (targetKey === 'behaviour') return { component:'BehaviourSkillsWorkspace', view:targetWindow, status:new Set(['dashboard','records','positive','incidents','recognition','warnings','skills','activities','competencies','progress','analytics','downloads']).has(targetWindow)?'Supported':'Unsupported behaviour view' }
+  if (targetKey === 'voice') return { component:'OpenAIVoiceWorkspace', view:targetWindow, status:targetWindow==='openai'?'Supported':'Unsupported voice workspace' }
   if (targetKey === 'assistant') return { component:'AIAssistantWorkspace', view:targetWindow, status:new Set(['chat','smart-reports','student-performance-prediction','student-analysis','fee-collection-prediction','examination-analysis','ai-timetable-suggestions','ai-question-generation','ai-document-assistant','ai-learning-recommendations','academic-performance-insights','attendance-and-behaviour-insights','institutional-intelligence']).has(targetWindow)?'Supported':'Unsupported AI assistant view' }
   if (targetKey === 'frontoffice') return { component:'FrontOfficeWorkspace', view:targetWindow, status:new Set(['enquiries','announcements','events']).has(targetWindow)?'Supported':'Unsupported front-office view' }
   if (targetKey === 'overview') return { component: 'RoleDashboard', view: 'overview', status: 'Supported' }
@@ -246,6 +250,7 @@ for (const [role, label] of roles) {
         : dashboard.targetKey === 'backup' ? 'BackupDataWorkspace'
         : dashboard.targetKey === 'integrations' ? 'IntegrationManagementWorkspace'
         : dashboard.targetKey === 'behaviour' ? 'BehaviourSkillsWorkspace'
+        : dashboard.targetKey === 'voice' ? 'OpenAIVoiceWorkspace'
         : dashboard.targetKey.startsWith('admin:') ? 'AdministrationModule'
         : 'RecordModule · ' + dashboard.targetKey
       const resolved = checkView(role, route, dispatcher)

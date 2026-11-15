@@ -317,6 +317,7 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
  const [amount,setAmount]=useState('')
  const [quantity,setQuantity]=useState('')
  const [payloadData,setPayloadData]=useState<Record<string,unknown>>({})
+ useEffect(()=>{setSelectedItem(initialItem.key);setSearch('');setRange('all');setCampus('');setPage(1);setShowForm(false);setDetail(null);setEditing(null)},[workspaceKey])
  const structuredFields=itemWorkspaceFields[group.key+':'+item.key]??workspaceFields[group.key]??workspaceFields[group.dataModule]??[]
  const preferredFieldKeys=workspaceTableFieldOrder[group.key]??workspaceTableFieldOrder[group.dataModule]??structuredFields.map(field=>field.key)
  const tableFields=preferredFieldKeys.flatMap(key=>{

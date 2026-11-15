@@ -104,7 +104,7 @@ export function exportXlsx(filename:string,title:string,rows:Record<string,unkno
  const workbook='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
  '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Records" sheetId="1" r:id="rId1"/></sheets><definedNames><definedName name="_xlnm.Print_Titles">Records!$1:$1</definedName></definedNames></workbook>'
  const styles='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
- '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><color rgb="FFFFFFFF"/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF244B73"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>'
+  '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><color rgb="FF111111"/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>'
  const contentTypes='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
  '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>'
  const rootRels='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
@@ -126,7 +126,7 @@ export function exportDocx(filename:string,title:string,rows:Record<string,unkno
  const body=rows.map(row=>'<w:tr>'+columns.map(column=>cell(row[column.key])).join('')+'</w:tr>').join('')
  const documentXml='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
  '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>'+
- '<w:p><w:pPr><w:keepNext/></w:pPr><w:r><w:rPr><w:b/><w:sz w:val="32"/><w:color w:val="244B73"/></w:rPr><w:t>'+xmlEscape(title)+'</w:t></w:r></w:p>'+
+ '<w:p><w:pPr><w:keepNext/></w:pPr><w:r><w:rPr><w:b/><w:sz w:val="32"/></w:rPr><w:t>'+xmlEscape(title)+'</w:t></w:r></w:p>'+
  '<w:p><w:r><w:rPr><w:color w:val="647A91"/><w:sz w:val="18"/></w:rPr><w:t>Generated '+xmlEscape(new Date().toLocaleString())+' · '+rows.length+' records</w:t></w:r></w:p>'+
  '<w:tbl><w:tblPr><w:tblW w:w="0" w:type="auto"/>'+borders+'<w:tblLayout w:type="autofit"/></w:tblPr>'+header+body+'</w:tbl>'+
  '<w:sectPr><w:pgSz w:w="15840" w:h="12240" w:orient="landscape"/><w:pgMar w:top="720" w:right="720" w:bottom="720" w:left="720" w:header="360" w:footer="360" w:gutter="0"/></w:sectPr>'+
@@ -148,7 +148,7 @@ export function exportExcelXml(filename:string,title:string,rows:Record<string,u
  }).join('')+'</Row>').join('')
  const xml='<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?>'+
  '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">'+
- '<Styles><Style ss:ID="Header"><Font ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#23466D" ss:Pattern="Solid"/></Style></Styles>'+
+  '<Styles><Style ss:ID="Header"><Font ss:Bold="1" ss:Color="#111111"/><Interior ss:Color="#FFFFFF" ss:Pattern="Solid"/></Style></Styles>'+
  '<Worksheet ss:Name="Records"><Table><Row><Cell ss:MergeAcross="'+Math.max(0,columns.length-1)+'"><Data ss:Type="String">'+xmlEscape(title)+'</Data></Cell></Row>'+
  header+body+'</Table></Worksheet></Workbook>'
  downloadBlob(filename.replace(/\.[^.]+$/,'')+'.xls',xml,'application/vnd.ms-excel;charset=utf-8')
@@ -170,7 +170,7 @@ export function printOfficeReport(title:string,rows:Record<string,unknown>[],col
  const tableHead=columns.map(c=>'<th>'+htmlEscape(c.label)+'</th>').join('')
  const tableRows=rows.map(row=>'<tr>'+columns.map(c=>'<td>'+htmlEscape(row[c.key])+'</td>').join('')+'</tr>').join('')
  const html='<!doctype html><html><head><meta charset="utf-8"><title>'+htmlEscape(title)+'</title><style>'+
- 'body{font:12px Arial,sans-serif;color:#18324d;padding:28px}h1{font-size:22px;margin:0 0 5px}p{color:#60748a;margin:4px 0 18px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #ccd6e2;padding:8px;text-align:left}th{background:#eaf1f8;color:#23466d}tr:nth-child(even){background:#f8fafc}@media print{body{padding:0}button{display:none}}</style></head><body>'+
+ '@page{size:A4 portrait;margin:16mm}html,body{background:#fff!important;color:#111!important}body{font:11px Arial,sans-serif;padding:18px;line-height:1.45}h1{font-size:19px;font-weight:700;color:#111;margin:0 0 5px}p{color:#444;margin:4px 0 18px}table{width:100%;border-collapse:collapse;background:#fff}thead{display:table-header-group}tr{break-inside:avoid}th,td{border:1px solid #bfc4ca;padding:7px;text-align:left;vertical-align:top;background:#fff!important;color:#111!important}th{font-size:10px;font-weight:700}td{font-size:10px}@media print{body{padding:0;margin:0;background:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}button{display:none}}</style></head><body>'+
  '<h1>'+htmlEscape(title)+'</h1><p>'+htmlEscape(institutionName)+' · Generated '+htmlEscape(new Date().toLocaleString())+' · '+rows.length+' records</p>'+
  '<table><thead><tr>'+tableHead+'</tr></thead><tbody>'+tableRows+'</tbody></table>'+
  '<script>window.addEventListener("load",()=>window.print())<\/script></body></html>'

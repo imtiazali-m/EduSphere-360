@@ -36,3 +36,6 @@
   .fin-table-pagination{align-items:flex-start;flex-direction:column}
   .fin-table-pagination>div{width:100%;justify-content:space-between}
 }
+
+
+.fin-export-bar{display:flex;align-items:center;justify-content:flex-end;gap:7px;flex-wrap:wrap;padding:10px 0 12px}.fin-export-bar>span{margin-right:auto;color:#64748b;font-size:11px;font-weight:700}.fin-export-bar .fin-button{min-height:32px}@media(max-width:680px){.fin-export-bar{justify-content:flex-start}.fin-export-bar>span{width:100%}.fin-export-bar .fin-button{flex:1}}
