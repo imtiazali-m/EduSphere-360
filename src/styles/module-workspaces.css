@@ -379,3 +379,38 @@
 .ed360-row-action-menu>div>button:focus-visible{
   outline:2px solid #7da8df;outline-offset:2px;
 }
+
+
+/* Unified module guidance: every dedicated screen explains its purpose and next steps. */
+.ed360-page-guide{display:grid;grid-template-columns:minmax(250px,1.05fr) minmax(360px,1.35fr);gap:16px 22px;margin:0 0 20px;padding:19px 21px;border:1px solid #e2eaf3;border-radius:16px;background:linear-gradient(135deg,#fff 0%,#f7faff 100%);box-shadow:0 7px 22px rgba(30,61,96,.045)}
+.ed360-page-guide-heading{display:flex;align-items:flex-start;gap:13px;min-width:0}
+.ed360-page-guide-icon{flex:0 0 38px;width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:#eaf2ff;color:#2f6fe4}
+.ed360-page-guide-heading>div{min-width:0}
+.ed360-page-guide-kicker,.ed360-page-purpose-heading>span,.ed360-page-purpose-outcome>span{display:block;color:#66809b;font-size:9px;font-weight:800;letter-spacing:1.25px}
+.ed360-page-guide-heading h2{margin:4px 0 5px;color:#173451;font:800 16px Manrope, sans-serif;letter-spacing:-.35px}
+.ed360-page-guide-heading p{margin:0;color:#61758c;font-size:12px;line-height:1.6}
+.ed360-page-guide-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;align-self:stretch}
+.ed360-page-guide-step{display:flex;align-items:flex-start;gap:9px;padding:11px 10px;border:1px solid #e8eef6;border-radius:11px;background:#fff;min-width:0}
+.ed360-page-guide-step-number{flex:0 0 23px;width:23px;height:23px;display:grid;place-items:center;border-radius:7px;background:#edf4ff;color:#2f6fe4;font-size:10px;font-weight:800}
+.ed360-page-guide-step p{margin:1px 0 0;color:#40566e;font-size:11px;line-height:1.5}
+.ed360-page-guide-outcome{grid-column:1/-1;display:flex;align-items:center;gap:9px;padding-top:11px;border-top:1px solid #e9eef5;color:#26805e}
+.ed360-page-guide-outcome span{display:flex;gap:7px;align-items:baseline;color:#60768c;font-size:11px;line-height:1.45}
+.ed360-page-guide-outcome b{color:#244b3d;white-space:nowrap}
+.ed360-page-guide-outcome>svg:last-child{margin-left:auto;flex:0 0 auto}
+.ed360-page-purpose{display:grid;grid-template-columns:minmax(230px,1.05fr) minmax(360px,1.45fr);gap:13px 18px;margin:15px 0 18px;padding:17px 18px;border:1px solid #e4ebf3;border-radius:15px;background:#fff}
+.ed360-page-purpose-heading strong{display:block;margin:5px 0 5px;color:#1b3654;font:800 14px Manrope,sans-serif}
+.ed360-page-purpose-heading p{margin:0;color:#60748a;font-size:11px;line-height:1.55}
+.ed360-page-purpose-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.ed360-page-purpose-steps>div{display:flex;gap:8px;align-items:flex-start;padding:10px;border-radius:10px;background:#f6f9fd}
+.ed360-page-purpose-steps b{color:#2f6fe4;font-size:10px}
+.ed360-page-purpose-steps span{color:#465b71;font-size:10px;line-height:1.5}
+.ed360-page-purpose-outcome{grid-column:1/-1;display:flex;align-items:baseline;gap:10px;padding-top:9px;border-top:1px solid #edf1f6}
+.ed360-page-purpose-outcome span{flex:0 0 auto;color:#26805e;font-size:9px;font-weight:800;letter-spacing:1px}
+.ed360-page-purpose-outcome p{margin:0;color:#5a7188;font-size:11px;line-height:1.5}
+.ed360-workspace-pulse{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px;margin:0 0 18px}
+.ed360-workspace-pulse article{min-width:0;padding:14px 15px;border:1px solid #e5ecf4;border-radius:13px;background:#fff;box-shadow:0 4px 14px rgba(35,63,95,.035)}
+.ed360-workspace-pulse article span{display:block;color:#6d8196;font-size:10px;font-weight:700}
+.ed360-workspace-pulse article strong{display:block;margin:6px 0 3px;color:#1c3958;font:800 22px Manrope,sans-serif;letter-spacing:-.6px}
+.ed360-workspace-pulse article small{display:block;color:#8999a9;font-size:9px;line-height:1.4}
+@media(max-width:900px){.ed360-page-guide,.ed360-page-purpose{grid-template-columns:1fr}.ed360-page-guide-steps,.ed360-page-purpose-steps{grid-template-columns:1fr}.ed360-page-guide-outcome,.ed360-page-purpose-outcome{grid-column:auto}.ed360-workspace-pulse{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.ed360-page-guide{padding:15px;gap:12px}.ed360-page-purpose{padding:14px;gap:12px}.ed360-workspace-pulse{gap:8px}.ed360-workspace-pulse article{padding:11px}.ed360-workspace-pulse article strong{font-size:19px}.ed360-page-purpose-outcome{display:block}.ed360-page-purpose-outcome p{margin-top:5px}.ed360-page-guide-outcome span{display:block}}
