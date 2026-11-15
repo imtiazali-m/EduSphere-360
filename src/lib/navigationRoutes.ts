@@ -439,7 +439,7 @@ function dedicatedRoute(groupKey: string, itemKey: string): string | undefined {
  */
 export function getNavigationRoute(groupKey: string, itemLabel: string, role?: string): string {
   const itemKey = slug(itemLabel)
-  if (groupKey === 'communication' && itemKey === 'internet-calling') return 'voice:openai'
+  if (groupKey === 'communication' && itemKey === 'internet-calling') return 'voice:native'
   if (groupKey === 'dashboard' && itemKey === 'dashboard') return 'overview'
   if (groupKey === 'people-hr') {
     const destinations: Record<string,string> = {
@@ -497,6 +497,7 @@ export function getNavigationRoute(groupKey: string, itemLabel: string, role?: s
       'homework':'homework-assignments',
       'learning-materials':'study-materials',
       'online-learning':'online-learning',
+      'live-online-classes':'live-online-classes',
       'classroom-activities':'classroom-activities',
       'academic-calendar':'academic-calendar',
       'learning-progress':'learning-progress',
