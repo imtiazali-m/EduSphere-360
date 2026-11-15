@@ -1044,7 +1044,7 @@ check('Required database safeguards and Cloudflare redirects remain in the proje
     assert.ok(migrations.includes(migration), `${migration} missing`)
   }
   const timestamped = migrations.filter(name => /^202611\d{8}_.+\.sql$/.test(name))
-  assert.equal(timestamped.length, 79, 'Expected seventy-nine timestamped migration sources: 77 matching remote versions plus two local-only migrations pending review')
+  assert.equal(timestamped.length, 81, 'Expected eighty-one timestamped migration sources: 79 matching remote versions plus two local-only migrations pending review')
   assert.ok(read('supabase/migrations/README.md').includes('fifty-seven timestamped migration files'))
   assert.equal(read('public/_redirects').trim(), '/* /index.html 200')
   const envExample = read('.env.example')
