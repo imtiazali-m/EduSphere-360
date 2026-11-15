@@ -372,7 +372,6 @@ const displayName = (row: RowData): string => {
   return String(name ?? 'Unnamed record') + tail + extra
 }
 const normalDate = () => new Date().toISOString().slice(0, 10)
-const csvValue = (value: unknown) => '"' + String(value ?? '').replace(/"/g, '""') + '"'
 
 interface Props { initialWindow?: string; onToast: (message: string, error?: boolean) => void }
 
