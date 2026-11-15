@@ -42,14 +42,6 @@ const domainTitles:Record<Domain,string>={
   visitors:'Visitor Management',
   facilities:'Rooms, Assets and Facility Maintenance',
 }
-const domainDescriptions:Record<Domain,string>={
-  'question-bank':'Build institution-owned question pools, assemble paper drafts and control review and approval.',
-  curriculum:'Plan subject and class units, record outcomes and publish the learning map for linked students and families.',
-  behaviour:'Maintain confidential student behaviour, skills, co-curricular recognition, competency and follow-up records with controlled family visibility.',
-  certificates:'Create and issue learner certificates, manage reusable document templates, generate batches and verify certificate codes.',
-  visitors:'Register visitors, approve access, record check-in/out, notify hosts and review visitor activity.',
-  facilities:'Reserve real rooms, track assets, manage maintenance requests and review facility availability and usage.',
-}
 const views:Record<Domain,View[]>={
   'question-bank':['pool','papers'],
   curriculum:['units','coverage'],
@@ -633,7 +625,6 @@ function renderCertificates(){
     </div>:null
   }
 
-  const recordCount=selectedDomain==='question-bank'?questions.length+papers.length:selectedDomain==='curriculum'?curriculum.length:selectedDomain==='behaviour'?behaviour.length:selectedDomain==='certificates'?certificates.length:selectedDomain==='visitors'?visitors.length:assets.length+maintenance.length
   const viewRowCount=selectedDomain==='question-bank'?Math.max(visibleQuestions.length,visiblePapers.length)
     :selectedDomain==='curriculum'?visibleCurriculum.length
     :selectedDomain==='behaviour'?visibleBehaviour.filter(row=>view==='positive'?row.event_type==='positive':view==='follow-up'?row.follow_up_required===true:view==='register'?row.event_type!=='positive':true).length
