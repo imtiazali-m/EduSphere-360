@@ -143,3 +143,24 @@
   .staff-id-card-note,.staff-workspace-heading,.staff-window-nav,.staff-context-bar{display:none!important}
   @page{size:85.6mm 54mm;margin:0}
 }
+
+/* Staff register controls: each faculty and HR register owns its search, sort, pages and office exports */
+.staff-records-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px}
+.staff-records-toolbar>label{display:flex;align-items:center;gap:8px;min-width:200px;flex:1;min-height:35px;padding:0 10px;border:1px solid #e0e7f1;border-radius:8px;background:#fff;color:#74859a}
+.staff-records-toolbar input{width:100%;min-width:0;border:0;outline:0;background:transparent;color:#253c57;font:inherit;font-size:11px}
+.staff-records-toolbar>span{color:#708299;font-size:10px;font-weight:750;white-space:nowrap}
+.staff-record-export{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.staff-record-export button{display:inline-flex;align-items:center;justify-content:center;gap:5px;min-height:30px;padding:0 9px;border:1px solid #dfe7f1;border-radius:7px;background:#fff;color:#536b86;font-size:9px;font-weight:800;cursor:pointer}
+.staff-record-export button:hover:not(:disabled){border-color:#b6a2dc;background:#f8f5ff;color:#5d36a5}
+.staff-record-export button:disabled{opacity:.45;cursor:not-allowed}
+.staff-table-sort{display:inline-flex;align-items:center;gap:6px;padding:0;border:0;background:transparent;color:inherit;font:inherit;font-size:inherit;font-weight:inherit;letter-spacing:inherit;text-align:left;cursor:pointer}
+.staff-table-sort span{color:#6c48b5;font-size:11px;font-weight:900}
+.staff-table-sort:focus-visible{outline:2px solid #8b67ce;outline-offset:3px;border-radius:3px}
+.staff-table-pagination{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 2px;color:#6b7d93;font-size:10px}
+.staff-table-pagination>span b{color:#243f5f}
+.staff-table-pagination>div{display:flex;align-items:center;gap:8px}
+.staff-table-pagination>div>span{color:#536a81;font-size:9px;font-weight:800;white-space:nowrap}
+.staff-table-pagination button{min-height:28px;padding:0 9px;border:1px solid #dce5ef;border-radius:7px;background:#fff;color:#405e7c;font-size:9px;font-weight:800;cursor:pointer}
+.staff-table-pagination button:disabled{opacity:.45;cursor:not-allowed}
+@media(max-width:620px){.staff-records-toolbar{align-items:stretch;flex-direction:column}.staff-records-toolbar>label{width:100%}.staff-record-export{width:100%}.staff-record-export button{flex:1}.staff-table-pagination{align-items:flex-start;flex-direction:column}.staff-table-pagination>div{width:100%;justify-content:space-between}}
+@media print{.staff-records-toolbar,.staff-table-pagination,.staff-table-sort span{display:none!important}}
