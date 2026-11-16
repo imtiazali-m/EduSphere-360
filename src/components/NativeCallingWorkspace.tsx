@@ -429,19 +429,14 @@ export function NativeCallingWorkspace({
   return <main className="page-content ed360-native-calling">
     <header className="ed360-native-header">
       <div>
-        <span>EDUSPHERE 360 · LIVE LEARNING</span>
+        <span>GIDC BADIN · LIVE LEARNING</span>
         <h1>{view === 'classes' ? 'Online Classes' : 'Voice & Video Calling'}</h1>
-        <p>Private, class-linked sessions for verified students, teachers and institution staff.</p>
+        <p>Schedule a class or start a voice/video call.</p>
       </div>
       <div className={'ed360-native-server-status ' + (serverConfigured ? 'ready' : 'pending')}>
         <i/>{serverConfigured ? 'Media server configured' : 'Media server setup pending'}
       </div>
     </header>
-
-    {!serverConfigured && <div className="ed360-native-notice" role="status">
-      <ShieldCheck size={18}/>
-      <div><b>EduSphere’s own calling system</b><span>Sessions can be scheduled now. Live voice/video becomes available after the EduSphere WebRTC media server is hosted and its private server keys are set. No Zoom or Meet account is used.</span></div>
-    </div>}
 
     {error && <div className="ed360-native-error" role="alert">{error}<button type="button" onClick={() => setError('')} aria-label="Dismiss error"><X size={15}/></button></div>}
 
@@ -479,7 +474,7 @@ export function NativeCallingWorkspace({
 
       {view === 'calls' ? <div className="ed360-native-columns">
         <section className="ed360-native-panel ed360-native-compose">
-          <header><div><b>Start a call</b><small>Invite an active EduSphere member</small></div><Phone size={20}/></header>
+          <header><div><b>Start a call</b><small>Select institution members</small></div><Phone size={20}/></header>
           {!canUseCalling && <p className="ed360-native-muted">Your account does not have calling permission.</p>}
           <label>Call type</label>
           <div className="ed360-native-choice">
@@ -547,6 +542,5 @@ export function NativeCallingWorkspace({
       </div>}
     </>}
 
-    <footer className="ed360-native-privacy"><ShieldCheck size={17}/><span><b>Privacy and safety:</b> only verified institution members can be invited; class sessions use assigned class/teacher and current student placement checks. Recording is off by default. Calls to ordinary telephone numbers are not part of this in-app feature.</span></footer>
   </main>
 }
