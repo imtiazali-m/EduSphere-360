@@ -520,7 +520,7 @@ export function InstitutionOperationsWorkspace({workspaceKey,initialWindow,onToa
     printWindow.document.close()
   }
 
-  async async function printStudentIdCard(student:Row){
+  async function printStudentIdCard(student:Row){
     const escapeHtml=(value:unknown)=>String(value??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')
     const studentCode=String(student.admission_no??'').trim()
     if(!studentCode){onToast('This learner needs an admission number before a scanner-compatible QR can be printed.',true);return}
