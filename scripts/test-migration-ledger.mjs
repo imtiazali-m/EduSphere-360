@@ -22,8 +22,7 @@ const remoteVersions = new Set(remote.map((entry) => entry.version))
 
 function normalizeMigrationName(value) {
   return String(value ?? '')
-    .replace(/^\d{14}_/, '')
-    .replace(/^\d{8}_/, '')
+    .replace(/^(?:\d{8,14}_)+/, '')
     .replace(/\.sql$/, '')
 }
 
@@ -67,6 +66,14 @@ const sameNameVersionMismatches = timestampedFiles
       : []
   })
   .sort((a, b) => a.name.localeCompare(b.name))
+
+
+test('nested historical timestamp prefixes normalize to the migration name', () => {
+  assert.equal(
+    normalizeMigrationName('20261111162922_20261111193000_academic_sessions_active_members_read.sql'),
+    'academic_sessions_active_members_read',
+  )
+})
 
 test('the snapshot identifies the repository and remote project baseline', () => {
   assert.equal(ledger.repository, 'imtiazali-m/EduSphere-360')
