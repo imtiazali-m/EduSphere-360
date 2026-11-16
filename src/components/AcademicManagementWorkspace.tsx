@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import {
   Activity, AlertCircle, BookOpen, BookOpenCheck, CalendarDays, CheckCircle2,
   ChevronRight, ClipboardList, Clock3, Download, ExternalLink, GraduationCap,
-  Layers3, Library, LockKeyhole, Pencil, Plus, Printer, RefreshCw, Search, ShieldCheck,
+  Layers3, Library, LockKeyhole, Pencil, Plus, Printer, RefreshCw, Search,
   Trash2, Upload, Users, Video, X,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
@@ -872,7 +872,7 @@ export function AcademicManagementWorkspace({ initialWindow = 'academic-sessions
           </div>
         }
         {filteredRows.length>pageSize?<nav className="ed360-academic-pagination" aria-label="Academic record pages"><span>Showing <b>{(currentPage-1)*pageSize+1}–{Math.min(currentPage*pageSize,sortedRows.length)}</b> of <b>{sortedRows.length}</b> matching records</span><div><button type="button" disabled={currentPage<=1} onClick={()=>setPage(currentPage-1)}>Previous</button><span>Page {currentPage} of {pageCount}</span><button type="button" disabled={currentPage>=pageCount} onClick={()=>setPage(currentPage+1)}>Next</button></div></nav>:null}
-        <footer className="ed360-academic-foot"><ShieldCheck size={14}/><span>Access is filtered by institution membership, assigned class and permitted role. Student and parent views are read-only unless a workflow explicitly permits a learner submission.</span><span>{filteredRows.length} matching · {rows.length} loaded</span></footer>
+        
       </section>
 
       {showEditor ? <div className="ed360-academic-modal-backdrop" role="presentation" onMouseDown={event => {if(event.target===event.currentTarget)setShowEditor(false)}}>
