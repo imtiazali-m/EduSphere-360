@@ -1204,3 +1204,35 @@
   .pro-window-panel .ed360-admin-account-filters { grid-template-columns:minmax(0,1fr); }
   .pro-window-panel .ed360-admin-account-search { grid-column:auto; }
 }
+
+/* Department and designation directories — sortable administrative catalogues. */
+.pro-window-panel .ed360-admin-directory-filters {
+  display:grid;
+  grid-template-columns:minmax(150px,180px) minmax(170px,210px) auto minmax(220px,1fr);
+  align-items:end;gap:10px;margin:2px 0 15px;
+}
+.pro-window-panel .ed360-admin-directory-filters>label {
+  display:flex;flex-direction:column;gap:6px;
+  color:var(--es-muted);font-size:11px;font-weight:800;
+}
+.pro-window-panel .ed360-admin-directory-filters select {
+  width:100%;min-width:0;min-height:39px;padding:8px 10px;
+}
+.pro-window-panel .ed360-admin-directory-search {
+  display:flex!important;align-items:center;flex-direction:row!important;gap:8px!important;
+  min-width:0;min-height:39px;padding:0 11px;border:1px solid var(--es-line);
+  border-radius:10px;background:#fff;color:var(--es-muted);
+}
+.pro-window-panel .ed360-admin-directory-search input {
+  width:100%;min-width:0;min-height:36px;padding:6px 0;border:0;outline:0;box-shadow:none!important;
+}
+.pro-window-panel .ed360-admin-directory-search input:focus { border:0;outline:0;box-shadow:none!important; }
+.pro-window-panel .ed360-admin-directory-filters>button { min-height:39px; }
+@media(max-width:900px) {
+  .pro-window-panel .ed360-admin-directory-filters { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .pro-window-panel .ed360-admin-directory-search { grid-column:1/-1; }
+}
+@media(max-width:560px) {
+  .pro-window-panel .ed360-admin-directory-filters { grid-template-columns:minmax(0,1fr); }
+  .pro-window-panel .ed360-admin-directory-search { grid-column:auto; }
+}
