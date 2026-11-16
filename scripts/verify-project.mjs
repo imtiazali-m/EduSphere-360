@@ -520,10 +520,6 @@ check('Stage 15 personal account pages use the authenticated session and respect
 })
 check('Institutional workspace includes real record CRUD and office-compatible exports', () => {
   const workspace = read('src/components/InstitutionalWorkspace.tsx')
-  const profile = read('src/components/AdministrationStage5Workspace.tsx')
-  const attendance = read('src/components/AttendanceWorkspace.tsx')
-  const academics = read('src/components/AcademicManagementWorkspace.tsx')
-  const calls = read('src/components/NativeCallingWorkspace.tsx')
   const exporters = read('src/lib/officeExport.ts')
   for (const value of ['institutional_records','created_by','updated_by','approval_status','CONTEXTUAL SUB-WINDOW']) assert.ok(workspace.includes(value))
   for (const value of ['exportXlsx','exportDocx','printOfficeReport']) assert.ok(workspace.includes(value))
@@ -534,6 +530,10 @@ check('Institutional workspace includes real record CRUD and office-compatible e
 check('GIDC signed-in submenus share one theme and do not show generic page guidance', () => {
   const theme = read('src/styles/premium-institutional-theme.css')
   const workspace = read('src/components/InstitutionalWorkspace.tsx')
+  const profile = read('src/components/AdministrationStage5Workspace.tsx')
+  const attendance = read('src/components/AttendanceWorkspace.tsx')
+  const academics = read('src/components/AcademicManagementWorkspace.tsx')
+  const calls = read('src/components/NativeCallingWorkspace.tsx')
   assert.ok(theme.includes('.ed360-page-guide,.ed360-page-purpose') && theme.includes('display:none !important'), 'Generic page guidance must not occupy each submenu')
   assert.ok(theme.includes('--workspace-accent:var(--es-primary-600) !important') && theme.includes('--workspace-soft:var(--es-primary-100) !important'), 'All fallback submenu accents must use the shared institutional teal palette')
   assert.ok(theme.includes('.rd-welcome-panel') && theme.includes('color:#1d2928'), 'The college welcome panel must retain readable black text')
