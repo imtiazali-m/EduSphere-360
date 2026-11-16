@@ -1333,3 +1333,35 @@
   .pro-window-panel .ed360-admin-audit-filters { grid-template-columns:minmax(0,1fr); }
   .pro-window-panel .ed360-admin-audit-search { grid-column:auto; }
 }
+
+/* Institution branding controls */
+.pro-window-panel .ed360-admin-branding-panel .ed360-admin-brand-preview {
+  display:flex;align-items:center;gap:13px;flex-wrap:wrap;
+  padding:14px 16px;border:1px solid var(--es-line,#e6e1ef);border-radius:12px;
+  background:var(--es-surface,#fff);
+}
+.pro-window-panel .ed360-admin-branding-panel .ed360-admin-brand-swatch {
+  width:34px;height:34px;flex:0 0 auto;border:1px solid rgba(36,32,51,.12);border-radius:10px;
+}
+.pro-window-panel .ed360-admin-brand-preview>span:nth-child(2) { display:grid;gap:3px; }
+.pro-window-panel .ed360-admin-brand-preview>span:nth-child(2) small,
+.pro-window-panel .ed360-admin-brand-preview>small { color:var(--es-muted,#6f697e);font-size:11px; }
+.pro-window-panel .ed360-admin-brand-colors {
+  display:flex;align-items:end;flex-wrap:wrap;gap:12px;margin-top:14px;
+  padding-top:14px;border-top:1px solid var(--es-line,#e6e1ef);
+}
+.pro-window-panel .ed360-admin-brand-colors label {
+  display:grid;gap:6px;min-width:145px;color:var(--es-ink,#242033);
+  font-size:11px;font-weight:800;
+}
+.pro-window-panel .ed360-admin-brand-colors input[type="color"] {
+  width:100%;height:40px;min-height:40px;padding:3px;
+  border:1px solid var(--es-line,#e6e1ef);border-radius:9px;background:#fff;
+  cursor:pointer;
+}
+.pro-window-panel .ed360-admin-brand-colors button { min-height:40px; }
+@media(max-width:560px) {
+  .pro-window-panel .ed360-admin-brand-colors { display:grid;grid-template-columns:1fr 1fr; }
+  .pro-window-panel .ed360-admin-brand-colors label { min-width:0; }
+  .pro-window-panel .ed360-admin-brand-colors button { grid-column:1/-1;width:100%; }
+}
