@@ -136,6 +136,9 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
   const [settingsSortKey,setSettingsSortKey]=useState<'category'|'setting_key'|'is_public'>('category')
   const [settingsSortDirection,setSettingsSortDirection]=useState<'asc'|'desc'>('asc')
   const [settingsPage,setSettingsPage]=useState(1),[approvalPage,setApprovalPage]=useState(1),[auditPage,setAuditPage]=useState(1),[securityPage,setSecurityPage]=useState(1)
+  const [securitySearch,setSecuritySearch]=useState('')
+  const [securitySortKey,setSecuritySortKey]=useState<'occurred_at'|'action'|'module_key'>('occurred_at')
+  const [securitySortDirection,setSecuritySortDirection]=useState<'desc'|'asc'>('desc')
   const pageSize=10
   const [membershipSavingId,setMembershipSavingId]=useState<string|null>(null)
   const [policyForm,setPolicyForm]=useState(false),[policyEditing,setPolicyEditing]=useState<Policy|null>(null)
@@ -850,13 +853,44 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
     </section>
   }
   function renderSecurity(){
-    const related=filteredAudit.filter(row=>/auth|login|session|security|access|membership/i.test(row.module_key+' '+row.record_type+' '+row.action))
-    const reportRows:Record<string,unknown>[]=related.map(row=>({occurred_at:row.occurred_at,action:label(row.action),module:label(row.module_key),record_type:label(row.record_type),record_id:row.record_id,actor_id:row.actor_id??'system'}))
+    const securityQuery=securitySearch.trim().toLowerCase()
+    const related=audit.filter(row=>
+      /auth|login|session|security|access|membership/i.test(row.module_key+' '+row.record_type+' '+row.action)&&
+      [row.action,row.module_key,row.record_type,row.actor_id,row.record_id].join(' ').toLowerCase().includes(securityQuery)
+    )
+    const orderedRelated=[...related].sort((a,b)=>{
+      const left=String(a[securitySortKey]??'')
+      const right=String(b[securitySortKey]??'')
+      const comparison=left.localeCompare(right,undefined,{numeric:true,sensitivity:'base'})
+      return securitySortDirection==='asc'?comparison:-comparison
+    })
+    const reportRows:Record<string,unknown>[]=orderedRelated.map(row=>({occurred_at:row.occurred_at,action:label(row.action),module:label(row.module_key),record_type:label(row.record_type),record_id:row.record_id,actor_id:row.actor_id??'system'}))
     const reportColumns:OfficeColumn[]=[{key:'occurred_at',label:'Occurred at'},{key:'action',label:'Action'},{key:'module',label:'Module'},{key:'record_type',label:'Record type'},{key:'record_id',label:'Record ID'},{key:'actor_id',label:'Actor ID'}]
-    const securityPageCount=Math.max(1,Math.ceil(related.length/pageSize))
+    const securityPageCount=Math.max(1,Math.ceil(orderedRelated.length/pageSize))
     const securityCurrentPage=Math.min(securityPage,securityPageCount)
-    const securityPageRows=related.slice((securityCurrentPage-1)*pageSize,securityCurrentPage*pageSize)
-    return <div className="ed360-admin-stage5"><section className="gov-panel"><header><div><h2>Security and access overview</h2><p>Current membership status and available administrative security evidence.</p></div><LockKeyhole size={20}/></header>{reportActions('Security access overview','security-access-overview',reportRows,reportColumns)}<div className="ed360-admin-security-grid"><article><b>{members.filter(row=>row.status==='active').length} active memberships</b><small>Active institution accounts recorded in memberships.</small></article><article><b>{members.filter(row=>row.status!=='active').length} non-active memberships</b><small>Invited, pending, suspended or inactive states where recorded.</small></article><article><b>{related.length} related audit events</b><small>Operational audit entries with security or access keywords.</small></article></div><div className="ed360-admin-callout warning">Login history, failed sign-in attempts and live session termination are not exposed by the current tenant-facing database API. No invented sign-in events or false zero counts are shown. A privileged, tenant-filtered authentication event feed is required before these controls can be enabled.</div></section><section className="gov-panel"><header><div><h2>Available access audit events</h2><p>Operational audit entries that reference authentication, security, access or memberships.</p></div></header>{related.length?<div className="gov-timeline">{securityPageRows.map(row=><article key={row.id}><i/><div><strong>{label(row.action)} · {label(row.module_key)}</strong><small>{dateLabel(row.occurred_at)} · {row.actor_id??'system'}</small></div></article>)}</div>:<div className="gov-empty">No security-labelled administrative events are available in the current feed.</div>}{pageControls(related.length,securityCurrentPage,securityPageCount,setSecurityPage)}</section></div>
+    const securityPageRows=orderedRelated.slice((securityCurrentPage-1)*pageSize,securityCurrentPage*pageSize)
+    return <div className="ed360-admin-stage5">
+      <section className="gov-panel">
+        <header><div><h2>Security and access overview</h2><p>Current membership status and available administrative security evidence.</p></div><LockKeyhole size={20}/></header>
+        <div className="ed360-admin-security-grid">
+          <article><b>{members.filter(row=>row.status==='active').length} active memberships</b><small>Active institution accounts recorded in memberships.</small></article>
+          <article><b>{members.filter(row=>row.status!=='active').length} non-active memberships</b><small>Invited, pending, suspended or inactive states where recorded.</small></article>
+          <article><b>{related.length} related audit events</b><small>Events matching the available access/security categories and current search.</small></article>
+        </div>
+        <div className="ed360-admin-callout warning">Login history, failed sign-in attempts and live session termination are not exposed by the current tenant-facing database API. This register shows only available institution audit evidence. No invented sign-in events or false zero counts are shown.</div>
+      </section>
+      <section className="gov-panel">
+        <header><div><h2>Available access audit events</h2><p>{orderedRelated.length} matching events in the loaded institution audit history.</p></div></header>
+        {reportActions('Security access audit events','security-access-audit-events',reportRows,reportColumns)}
+        <div className="ed360-admin-security-filters">
+          <label>Order by<select value={securitySortKey} onChange={e=>{setSecuritySortKey(e.target.value as typeof securitySortKey);setSecurityPage(1)}}><option value="occurred_at">Event date</option><option value="action">Action</option><option value="module_key">Module</option></select></label>
+          <button type="button" className="gov-button" onClick={()=>{setSecuritySortDirection(value=>value==='asc'?'desc':'asc');setSecurityPage(1)}} aria-label={'Sort '+(securitySortDirection==='asc'?'descending':'ascending')}>{securitySortDirection==='asc'?'Ascending ↑':'Descending ↓'}</button>
+          <label className="ed360-admin-security-search"><Search size={14}/><input value={securitySearch} onChange={e=>{setSecuritySearch(e.target.value);setSecurityPage(1)}} placeholder="Search action, module, actor or record…"/></label>
+        </div>
+        {orderedRelated.length?<div className="gov-timeline">{securityPageRows.map(row=><article key={row.id}><i/><div><strong>{label(row.action)} · {label(row.module_key)}</strong><small>{dateLabel(row.occurred_at)} · {row.actor_id??'system'}</small></div></article>)}</div>:<div className="gov-empty">No security-labelled audit events match this search.</div>}
+        {pageControls(orderedRelated.length,securityCurrentPage,securityPageCount,setSecurityPage)}
+      </section>
+    </div>
   }
   function renderContent(){
     if(section==='profile')return renderProfile()
