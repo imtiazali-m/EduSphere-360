@@ -28,6 +28,7 @@ const sectionByWindow:Record<string,Section>={profile:'profile',settings:'settin
 const dateLabel=(value:unknown)=>value?new Date(String(value)).toLocaleString():'—'
 const label=(value:unknown)=>String(value??'').replaceAll('_',' ').replace(/\b\w/g,c=>c.toUpperCase())
 const jsonObject=(value:unknown):Record<string,unknown>=>value&&typeof value==='object'&&!Array.isArray(value)?value as Record<string,unknown>:{}
+const safeInstitutionBrandColor=(value:unknown,fallback:string)=>typeof value==='string'&&/^#[0-9a-f]{6}$/i.test(value)?value:fallback
 
 async function fetchAllInstitutionAuditEvents(institutionId:string):Promise<{data:Audit[];error:unknown|null}>{
   if(!supabase)return {data:[],error:new Error('The institution database connection is unavailable.')}
@@ -145,6 +146,8 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
   const [departments,setDepartments]=useState<Department[]>([]),[designations,setDesignations]=useState<Designation[]>([]),[teachers,setTeachers]=useState<Teacher[]>([]),[members,setMembers]=useState<Member[]>([])
   const [academicSessions,setAcademicSessions]=useState<AcademicRow[]>([]),[classes,setClasses]=useState<AcademicRow[]>([]),[programs,setPrograms]=useState<AcademicRow[]>([]),[subjects,setSubjects]=useState<AcademicRow[]>([]),[rooms,setRooms]=useState<AcademicRow[]>([])
   const [institutePreferences,setInstitutePreferences]=useState<InstitutePreferences>(defaultInstitutePreferences)
+  const [primaryColorDraft,setPrimaryColorDraft]=useState('#6035B5')
+  const [accentColorDraft,setAccentColorDraft]=useState('#16877B')
   const [search,setSearch]=useState('')
   const [settingsSortKey,setSettingsSortKey]=useState<'category'|'setting_key'|'is_public'>('category')
   const [settingsSortDirection,setSettingsSortDirection]=useState<'asc'|'desc'>('asc')
@@ -237,6 +240,10 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
   }
   useEffect(()=>{void load()},[user?.id,user?.institutionId,user?.role])
   useEffect(()=>{if(!logoFile){setLogoPreviewUrl('');return}const url=URL.createObjectURL(logoFile);setLogoPreviewUrl(url);return()=>URL.revokeObjectURL(url)},[logoFile])
+  useEffect(()=>{
+    setPrimaryColorDraft(safeInstitutionBrandColor(settings.find(row=>row.category==='branding'&&row.setting_key==='primary_color')?.setting_value,'#6035B5'))
+    setAccentColorDraft(safeInstitutionBrandColor(settings.find(row=>row.category==='branding'&&row.setting_key==='accent_color')?.setting_value,'#16877B'))
+  },[settings])
 
   const filteredPolicies=useMemo(()=>policies.filter(row=>{
     const audience=String(jsonObject(row.payload).category??'').toLowerCase()
@@ -292,8 +299,8 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
   const auditPageCount=Math.max(1,Math.ceil(filteredAudit.length/pageSize))
   const auditCurrentPage=Math.min(auditPage,auditPageCount)
   const auditPageRows=filteredAudit.slice((auditCurrentPage-1)*pageSize,auditCurrentPage*pageSize)
-  const primaryColor=String(settings.find(row=>row.category==='branding'&&row.setting_key==='primary_color')?.setting_value??'#6035B5')
-  const accentColor=String(settings.find(row=>row.category==='branding'&&row.setting_key==='accent_color')?.setting_value??'#16877B')
+  const primaryColor=safeInstitutionBrandColor(settings.find(row=>row.category==='branding'&&row.setting_key==='primary_color')?.setting_value,'#6035B5')
+  const accentColor=safeInstitutionBrandColor(settings.find(row=>row.category==='branding'&&row.setting_key==='accent_color')?.setting_value,'#16877B')
 
   function toggleSettingsSort(key:'category'|'setting_key'|'is_public'){
     if(settingsSortKey===key)setSettingsSortDirection(direction=>direction==='asc'?'desc':'asc')
@@ -324,6 +331,30 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
     </div>
   }
 
+  async function saveBrandColors(event:FormEvent){
+    event.preventDefault()
+    if(!supabase||!admin)return
+    const colors=[['primary_color',primaryColorDraft],['accent_color',accentColorDraft]] as const
+    if(colors.some(([,value])=>!/^#[0-9a-f]{6}$/i.test(value))){onToast('Choose valid six-digit hexadecimal brand colours.',true);return}
+    setSaving(true)
+    try{
+      for(const [settingKey,settingValue] of colors){
+        const {data:existing,error:lookupError}=await supabase.from('institution_settings').select('id').eq('institution_id',user!.institutionId).eq('category','branding').eq('setting_key',settingKey).is('campus_id',null).maybeSingle()
+        if(lookupError)throw lookupError
+        const values={category:'branding',setting_key:settingKey,setting_value:settingValue,is_public:false,updated_by:user!.id,updated_at:new Date().toISOString()}
+        const result=existing
+          ?await supabase.from('institution_settings').update(values).eq('institution_id',user!.institutionId).eq('id',existing.id)
+          :await supabase.from('institution_settings').insert({...values,institution_id:user!.institutionId})
+        if(result.error)throw result.error
+      }
+      onToast('Institution brand colours saved.')
+      await load(true)
+    }catch(err){
+      onToast(userFacingError(err,'Institution brand colours could not be saved.'),true)
+      await load(true)
+    }finally{setSaving(false)}
+  }
+
   function openSetting(row?:Setting,category?:string){
     setSettingEditing(row??null);setSettingCategory(category??row?.category??(section==='system'?'system':section==='branding'?'branding':'general'))
     setSettingKey(row?.setting_key??'');setSettingValue(JSON.stringify(row?.setting_value??{},null,2));setSettingPublic(row?.is_public??false);setSettingForm(true)
@@ -347,17 +378,31 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
     }catch(err){onToast(userFacingError(err,'The setting could not be saved.'),true)}finally{setSaving(false)}
   }
   async function removeSetting(row:Setting){
-    if(!supabase||!admin||!window.confirm('Delete '+row.category+'/'+row.setting_key+'?'))return
-    const {error:removeError}=await supabase.from('institution_settings').delete().eq('institution_id',user!.institutionId).eq('id',row.id)
-    if(removeError)onToast(userFacingError(removeError,'The setting could not be deleted.'),true)
-    else{onToast('Setting deleted.');await load(true)}
+    if(!supabase||!admin||saving||!window.confirm('Delete '+row.category+'/'+row.setting_key+'?'))return
+    setSaving(true)
+    try{
+      const {error:removeError}=await supabase.from('institution_settings').delete().eq('institution_id',user!.institutionId).eq('id',row.id)
+      if(removeError)throw removeError
+      onToast('Setting deleted.')
+      await load(true)
+    }catch(err){onToast(userFacingError(err,'The setting could not be deleted.'),true)}
+    finally{setSaving(false)}
   }
 
   async function saveProfile(event:FormEvent){
     event.preventDefault();if(!supabase||!admin)return
     if(!profileDraft.name.trim()){onToast('Institution name is required.',true);return}
-    if(profileDraft.email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(profileDraft.email)){onToast('Enter a valid institution email address.',true);return}
-    if(profileDraft.website){try{new URL(profileDraft.website.startsWith('http')?profileDraft.website:'https://'+profileDraft.website)}catch{onToast('Enter a valid website address.',true);return}}
+    const email=profileDraft.email.trim()
+    if(email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){onToast('Enter a valid institution email address.',true);return}
+    const websiteInput=profileDraft.website.trim()
+    let normalizedWebsite:string|null=null
+    if(websiteInput){
+      try{
+        const parsedWebsite=new URL(/^[a-z][a-z0-9+.-]*:\/\//i.test(websiteInput)?websiteInput:'https://'+websiteInput)
+        if(!['https:','http:'].includes(parsedWebsite.protocol)||!parsedWebsite.hostname)throw new Error('Unsupported website address.')
+        normalizedWebsite=parsedWebsite.toString()
+      }catch{onToast('Enter a valid HTTP or HTTPS website address.',true);return}
+    }
     setSaving(true);let uploadedPath:string|undefined
     try{
       if(logoFile){
@@ -368,7 +413,7 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
         const {error:uploadError}=await supabase.storage.from('institution-files').upload(uploadedPath,logoFile,{contentType:logoFile.type,upsert:false})
         if(uploadError)throw uploadError
       }
-      const values={...profileDraft,name:profileDraft.name.trim(),email:profileDraft.email.trim()||null,website:profileDraft.website.trim()||null,phone:profileDraft.phone.trim()||null,tagline:profileDraft.tagline.trim()||null,address:profileDraft.address.trim()||null,country:profileDraft.country.trim()||null,...(uploadedPath?{logo_path:uploadedPath}:{})}
+      const values={...profileDraft,name:profileDraft.name.trim(),email:email||null,website:normalizedWebsite,phone:profileDraft.phone.trim()||null,tagline:profileDraft.tagline.trim()||null,address:profileDraft.address.trim()||null,country:profileDraft.country.trim()||null,...(uploadedPath?{logo_path:uploadedPath}:{})}
       const {error:updateError}=await supabase.from('institutions').update(values).eq('id',user!.institutionId)
       if(updateError)throw updateError
       if(uploadedPath&&institution?.logo_path)await supabase.storage.from('institution-files').remove([institution.logo_path])
@@ -480,8 +525,24 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
   async function saveInstitutePreferences(event:FormEvent){
     event.preventDefault()
     if(!supabase||!admin)return
+    const allowedTimezones=['Asia/Karachi','UTC']
+    const allowedDateFormats=['dd MMM yyyy','dd/MM/yyyy','yyyy-MM-dd']
+    const allowedCurrencies=['PKR','USD','GBP']
+    const allowedTermStructures=['annual','semester','trimester','quarter']
+    const startMonth=Number(institutePreferences.academic_year_start_month)
+    const studentPrefix=institutePreferences.student_id_prefix.trim().toUpperCase()
+    const employeePrefix=institutePreferences.employee_id_prefix.trim().toUpperCase()
+    const prefixPattern=/^[A-Z0-9][A-Z0-9-]{1,15}$/
+    if(!allowedTimezones.includes(institutePreferences.timezone)){onToast('Choose a supported institution time zone.',true);return}
+    if(!allowedDateFormats.includes(institutePreferences.date_format)){onToast('Choose a supported date format.',true);return}
+    if(!allowedCurrencies.includes(institutePreferences.currency)){onToast('Choose a supported currency.',true);return}
+    if(!Number.isInteger(startMonth)||startMonth<1||startMonth>12){onToast('Choose an academic year start month from January to December.',true);return}
+    if(!allowedTermStructures.includes(institutePreferences.term_structure)){onToast('Choose a supported academic term structure.',true);return}
+    if(!prefixPattern.test(studentPrefix)||!prefixPattern.test(employeePrefix)){onToast('Student and employee ID prefixes must be 2–16 characters using letters, numbers or hyphens.',true);return}
+    const preferences={...institutePreferences,academic_year_start_month:String(startMonth),student_id_prefix:studentPrefix,employee_id_prefix:employeePrefix}
+    setInstitutePreferences(preferences)
     setSaving(true)
-    const values={category:'general',setting_key:'institution_preferences',setting_value:institutePreferences,is_public:false,updated_by:user!.id,updated_at:new Date().toISOString()}
+    const values={category:'general',setting_key:'institution_preferences',setting_value:preferences,is_public:false,updated_by:user!.id,updated_at:new Date().toISOString()}
     try{
       const {data:existing,error:lookupError}=await supabase.from('institution_settings').select('id').eq('institution_id',user!.institutionId).eq('category','general').eq('setting_key','institution_preferences').is('campus_id',null).maybeSingle()
       if(lookupError)throw lookupError
@@ -749,7 +810,7 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
     const reportRows:Record<string,unknown>[]=orderedSettings.map(row=>({category:label(row.category),key:row.setting_key,value:JSON.stringify(row.setting_value),visibility:row.is_public?'Public':'Private',updated_at:row.updated_at??''}))
     const reportColumns:OfficeColumn[]=[{key:'category',label:'Category'},{key:'key',label:'Setting key'},{key:'value',label:'Value'},{key:'visibility',label:'Visibility'},{key:'updated_at',label:'Last updated'}]
     return <div className="ed360-admin-stage5">
-      {section==='branding'&&<section className="gov-panel"><header><div><h2>Brand preview</h2><p>Stored branding defaults. The private college logo is managed in Institute Profile.</p></div><Palette size={20}/></header><div className="ed360-admin-brand-preview"><span className="ed360-admin-brand-swatch" style={{background:primaryColor}}/><span><b>{displayInstitutionName(institution?.name)}</b><small style={{display:'block',color:'#859287',fontSize:10}}>Primary brand colour · {primaryColor}</small></span><span className="ed360-admin-brand-swatch" style={{background:accentColor}}/><small>Accent · {accentColor}</small></div></section>}
+      {section==='branding'&&<section className="gov-panel ed360-admin-branding-panel"><header><div><h2>Institution brand identity</h2><p>Choose the primary and accent colours used as this institution’s branding defaults. The college emblem is managed in Institute Profile.</p></div><Palette size={20}/></header><div className="ed360-admin-brand-preview"><span className="ed360-admin-brand-swatch" style={{background:primaryColorDraft}}/><span><b>{displayInstitutionName(institution?.name)}</b><small>Primary colour · {primaryColorDraft}</small></span><span className="ed360-admin-brand-swatch" style={{background:accentColorDraft}}/><small>Accent colour · {accentColorDraft}</small></div><form className="ed360-admin-brand-colors" onSubmit={saveBrandColors}><label><span>Primary colour</span><input type="color" value={primaryColorDraft} onChange={event=>setPrimaryColorDraft(event.target.value)} aria-label="Primary institution brand colour"/></label><label><span>Accent colour</span><input type="color" value={accentColorDraft} onChange={event=>setAccentColorDraft(event.target.value)} aria-label="Accent institution brand colour"/></label><button type="submit" className="gov-button primary" disabled={saving}><Save size={14}/>{saving?'Saving colours…':'Save brand colours'}</button></form></section>}
       <section className="gov-panel ed360-admin-settings-table-panel"><header><div><h2>{section==='system'?'System settings register':'Brand and document defaults'}</h2></div><div className="gov-row-actions">{section==='branding'?<><button className="gov-button primary" onClick={()=>openSetting(undefined,'branding')}><Plus size={14}/> Add brand setting</button><button className="gov-button" onClick={()=>openSetting(undefined,'documents')}><FileText size={14}/> Add document setting</button></>:<button className="gov-button primary" onClick={()=>openSetting(undefined,'system')}><Plus size={14}/> Add system setting</button>}</div></header>
         {reportActions(section==='system'?'System settings':'Branding and document settings','institution-'+section+'-settings',reportRows,reportColumns)}
         <label className="ed360-admin-search"><Search size={14}/><input value={search} onChange={e=>{setSearch(e.target.value);setSettingsPage(1)}} placeholder="Search settings…"/></label>
