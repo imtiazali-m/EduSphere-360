@@ -22,7 +22,7 @@ const pages:Record<PageKey,{title:string;eyebrow:string;intro:string}> = {
  'ai-providers':{title:'AI Provider Connections',eyebrow:'AI SERVICES',intro:'Check credential readiness and run a live test before an AI provider is used by institutional workflows.'},
  biometric:{title:'Biometric Attendance Devices',eyebrow:'ATTENDANCE HARDWARE',intro:'Connect a supported fingerprint reader or attendance terminal. A phone’s built-in biometric sensor verifies its own user, not a room full of students.'},
  whatsapp:{title:'WhatsApp Business',eyebrow:'COMMUNICATION CHANNEL',intro:'Prepare official WhatsApp messaging for verified institution numbers, approved templates, inbound webhooks and delivery tracking.'},
- canva:{title:'Canva Connect',eyebrow:'DESIGN & DOCUMENTS',intro:'Connect Canva so approved institutional templates and design exports can be used inside EduSphere rather than leaving the college portal.'},
+ canva:{title:'Canva Connect',eyebrow:'DESIGN & DOCUMENTS',intro:'Connect Canva so approved institutional templates and design exports can be used inside the GIDC portal.'},
  'google-classroom':{title:'Google Workspace & Classroom',eyebrow:'ACADEMIC CLOUD SERVICES',intro:'Plan the authorised Google connection for Classroom courses, rosters, assignments, course materials and grades.'},
  zoom:{title:'Zoom Meetings & Video',eyebrow:'LIVE TEACHING',intro:'Connect Zoom for scheduled meetings or embedded Video SDK sessions, including server-side token handling and meeting event webhooks.'},
  youtube:{title:'YouTube Education Media',eyebrow:'VIDEO LEARNING RESOURCES',intro:'Connect approved YouTube channels and videos for lesson libraries, embeds, channel metadata and permitted publishing workflows.'},
