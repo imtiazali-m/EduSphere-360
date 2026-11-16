@@ -3,7 +3,6 @@ import test from 'node:test'
 import { readFileSync, readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 
-const rootUrl = new URL('../', import.meta.url)
 const migrationDirectory = fileURLToPath(new URL('../supabase/migrations/', import.meta.url))
 const ledgerUrl = new URL('../docs/REMOTE_MIGRATION_LEDGER_2026-11-16.json', import.meta.url)
 const ledger = JSON.parse(readFileSync(ledgerUrl, 'utf8'))
