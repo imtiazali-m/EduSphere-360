@@ -161,6 +161,13 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
   const [departmentSortDirection,setDepartmentSortDirection]=useState<'asc'|'desc'>('asc')
   const [designationSortKey,setDesignationSortKey]=useState<'name'|'code'|'department'|'status'>('name')
   const [designationSortDirection,setDesignationSortDirection]=useState<'asc'|'desc'>('asc')
+  const [orgPage,setOrgPage]=useState(1)
+  const [orgDepartmentFilter,setOrgDepartmentFilter]=useState('all')
+  const [orgDesignationFilter,setOrgDesignationFilter]=useState('all')
+  const [orgEmploymentFilter,setOrgEmploymentFilter]=useState('all')
+  const [orgSortKey,setOrgSortKey]=useState<'full_name'|'department'|'designation'|'employment_status'>('department')
+  const [orgSortDirection,setOrgSortDirection]=useState<'asc'|'desc'>('asc')
+  const [orgSearch,setOrgSearch]=useState('')
 
   async function load(silent=false){
     if(!supabase||!user){setLoading(false);return}
@@ -622,6 +629,35 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
   }
   function renderOrganization(){
     const ownerMembers=members.filter(row=>row.role==='owner'),adminMembers=members.filter(row=>row.role==='admin')
+    const filteredStaff=teachers.filter(person=>{
+      const departmentName=departments.find(d=>d.id===person.department_id)?.name??person.department??'Not assigned'
+      const designationName=designations.find(d=>d.id===person.designation_id)?.name??'Not assigned'
+      return (orgDepartmentFilter==='all'||person.department_id===orgDepartmentFilter)&&
+        (orgDesignationFilter==='all'||person.designation_id===orgDesignationFilter)&&
+        (orgEmploymentFilter==='all'||String(person.employment_status??'not recorded')===orgEmploymentFilter)&&
+        [person.full_name,departmentName,designationName,person.employment_status,person.campus_id].join(' ').toLowerCase().includes(orgSearch.trim().toLowerCase())
+    })
+    const orderedStaff=[...filteredStaff].sort((a,b)=>{
+      const value=(person:Teacher)=>{
+        if(orgSortKey==='department')return departments.find(d=>d.id===person.department_id)?.name??person.department??'Not assigned'
+        if(orgSortKey==='designation')return designations.find(d=>d.id===person.designation_id)?.name??'Not assigned'
+        return String(person[orgSortKey]??'')
+      }
+      const comparison=value(a).localeCompare(value(b),undefined,{numeric:true,sensitivity:'base'})
+      return orgSortDirection==='asc'?comparison:-comparison
+    })
+    const pageCount=Math.max(1,Math.ceil(orderedStaff.length/pageSize))
+    const currentPage=Math.min(orgPage,pageCount)
+    const pageRows=orderedStaff.slice((currentPage-1)*pageSize,currentPage*pageSize)
+    const employmentStatuses=[...new Set(teachers.map(person=>String(person.employment_status??'not recorded')))].sort()
+    const reportRows:Record<string,unknown>[]=orderedStaff.map(person=>({
+      employee:person.full_name,
+      department:departments.find(d=>d.id===person.department_id)?.name??person.department??'Not assigned',
+      designation:designations.find(d=>d.id===person.designation_id)?.name??'Not assigned',
+      employment_status:label(person.employment_status??'not recorded'),
+      campus:person.campus_id??''
+    }))
+    const reportColumns:OfficeColumn[]=[{key:'employee',label:'Employee'},{key:'department',label:'Department'},{key:'designation',label:'Designation'},{key:'employment_status',label:'Employment status'},{key:'campus',label:'Campus ID'}]
     return <div className="ed360-admin-organization-page">
       <section className="gov-panel ed360-admin-organization-card">
         <header><div><h2>Reporting layers</h2><p>College authority, administration, department leadership and employee assignments.</p></div><div className="gov-row-actions"><button className="gov-button" onClick={()=>onNavigate('admin:departments')}>Departments <ArrowUpRight size={13}/></button><button className="gov-button" onClick={()=>onNavigate('employees:designations')}>Designations <ArrowUpRight size={13}/></button><button className="gov-button" onClick={()=>onNavigate('teachers')}>Faculty &amp; staff <ArrowUpRight size={13}/></button></div></header>
@@ -630,11 +666,28 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
           <div className="ed360-admin-org-root"><span>COLLEGE AUTHORITY</span><b>{ownerMembers.map(row=>row.full_name).join(', ')||'Institution Owner'}</b><small>Institute owner · highest authority</small></div>
           <div className="ed360-admin-org-connector" aria-hidden="true"/>
           <div className="ed360-admin-org-admins">{adminMembers.map(row=><span key={row.user_id}><b>{row.full_name}</b><br/>Administrator</span>)}</div>
-          <div className="ed360-admin-org-departments">{departments.map(department=>{const people=teachers.filter(person=>person.department_id===department.id||(person.department_id==null&&person.department===department.name));return <article className="ed360-admin-org-department" key={department.id}><header><div><h3>{department.name}</h3><p>{String(department.department_code??department.code??'Department')} · {String(department.head_name??'Head not assigned')}</p></div><span className="ed360-admin-status">{people.length} staff</span></header><div className="ed360-admin-org-staff">{people.length?people.map(person=><span key={person.id}><b>{person.full_name}</b><small>{designations.find(d=>d.id===person.designation_id)?.name??'Position not assigned'}</small></span>):<span className="ed360-admin-org-empty">No employee records are assigned to this department yet.</span>}</div></article>})}</div>
+          <div className="ed360-admin-org-departments">{departments.map(department=>{
+            const people=teachers.filter(person=>person.department_id===department.id||(person.department_id==null&&person.department===department.name))
+            return <article className="ed360-admin-org-department" key={department.id}>
+              <header><div><h3>{department.name}</h3><p>{String(department.department_code??department.code??'Department')} · {String(department.head_name??'Head not assigned')}</p></div><span className="ed360-admin-status">{people.length} staff</span></header>
+              {people.length?<details className="ed360-admin-org-staff-details"><summary>View assigned employees</summary><div className="ed360-admin-org-staff">{people.map(person=><span key={person.id}><b>{person.full_name}</b><small>{designations.find(d=>d.id===person.designation_id)?.name??'Position not assigned'}</small></span>)}</div></details>:<div className="ed360-admin-org-empty">No employee records are assigned to this department yet.</div>}
+            </article>
+          })}</div>
         </div>
       </section>
-      <section className="gov-panel ed360-admin-organization-roster"><header><div><h2>Faculty and staff roster</h2><p>All loaded employee records, organised by department and designation.</p></div></header>
-        {teachers.length?<div className="gov-table-wrap"><table className="ed360-admin-table"><thead><tr><th>Employee</th><th>Department</th><th>Designation</th><th>Employment status</th></tr></thead><tbody>{teachers.map(person=><tr key={person.id}><td><b>{person.full_name}</b></td><td>{departments.find(d=>d.id===person.department_id)?.name??person.department??'Not assigned'}</td><td>{designations.find(d=>d.id===person.designation_id)?.name??'Not assigned'}</td><td>{label(person.employment_status??'not recorded')}</td></tr>)}</tbody></table></div>:<div className="gov-empty">No faculty or staff profiles have been recorded yet.</div>}
+      <section className="gov-panel ed360-admin-organization-roster">
+        <header><div><h2>Faculty and staff roster</h2><p>{orderedStaff.length} matching employees · {teachers.length} total institution employee records</p></div></header>
+        {reportActions('Faculty and staff organization roster','organization-staff-roster',reportRows,reportColumns)}
+        <div className="ed360-admin-organization-filters">
+          <label>Department<select value={orgDepartmentFilter} onChange={e=>{setOrgDepartmentFilter(e.target.value);setOrgPage(1)}}><option value="all">All departments</option>{departments.map(row=><option key={row.id} value={row.id}>{row.name}</option>)}</select></label>
+          <label>Designation<select value={orgDesignationFilter} onChange={e=>{setOrgDesignationFilter(e.target.value);setOrgPage(1)}}><option value="all">All designations</option>{designations.map(row=><option key={row.id} value={row.id}>{row.name}</option>)}</select></label>
+          <label>Employment status<select value={orgEmploymentFilter} onChange={e=>{setOrgEmploymentFilter(e.target.value);setOrgPage(1)}}><option value="all">All statuses</option>{employmentStatuses.map(status=><option key={status} value={status}>{label(status)}</option>)}</select></label>
+          <label>Order by<select value={orgSortKey} onChange={e=>{setOrgSortKey(e.target.value as typeof orgSortKey);setOrgPage(1)}}><option value="department">Department</option><option value="designation">Designation</option><option value="full_name">Employee name</option><option value="employment_status">Employment status</option></select></label>
+          <button type="button" className="gov-button" onClick={()=>{setOrgSortDirection(value=>value==='asc'?'desc':'asc');setOrgPage(1)}} aria-label={'Sort '+(orgSortDirection==='asc'?'descending':'ascending')}>{orgSortDirection==='asc'?'Ascending ↑':'Descending ↓'}</button>
+          <label className="ed360-admin-organization-search"><Search size={14}/><input value={orgSearch} onChange={e=>{setOrgSearch(e.target.value);setOrgPage(1)}} placeholder="Search employee, department or position…"/></label>
+        </div>
+        {orderedStaff.length?<div className="gov-table-wrap"><table className="ed360-admin-table"><thead><tr><th>Employee</th><th>Department</th><th>Designation</th><th>Employment status</th></tr></thead><tbody>{pageRows.map(person=><tr key={person.id}><td><b>{person.full_name}</b></td><td>{departments.find(d=>d.id===person.department_id)?.name??person.department??'Not assigned'}</td><td>{designations.find(d=>d.id===person.designation_id)?.name??'Not assigned'}</td><td>{label(person.employment_status??'not recorded')}</td></tr>)}</tbody></table></div>:<div className="gov-empty">No employee records match these filters. Clear a filter or search, or add an employee in Faculty & Staff Management.</div>}
+        {pageControls(orderedStaff.length,currentPage,pageCount,setOrgPage)}
       </section>
     </div>
   }
