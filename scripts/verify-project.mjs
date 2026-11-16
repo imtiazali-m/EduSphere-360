@@ -903,13 +903,14 @@ check('Administration settings and approval queues support complete history, fil
   const administration = read('src/components/AdministrationStage5Workspace.tsx')
   const styles = read('src/styles/governance-workspace.css')
   const premium = read('src/styles/premium-institutional-theme.css')
-  for (const value of ['settingsSortKey', 'settingsSortDirection', 'orderedSettings', 'settingsPageRows', 'orderedApprovals', 'approvalPageRows', 'toggleSettingsSort', 'sortHeader', 'pageControls', 'fetchAllInstitutionApprovals', '.range(offset,offset+batchSize-1)', 'approvalStatusFilter', 'approvalSortKey', 'request_notes']) {
+  for (const value of ['settingsSortKey', 'settingsSortDirection', 'orderedSettings', 'settingsPageRows', 'orderedApprovals', 'approvalPageRows', 'toggleSettingsSort', 'sortHeader', 'pageControls', 'fetchAllInstitutionApprovals', 'fetchAllInstitutionPolicies', '.range(offset,offset+batchSize-1)', 'approvalStatusFilter', 'approvalSortKey', 'request_notes', 'policyStatusFilter', 'policySortKey', 'orderedPolicies', 'policyPageRows', 'policiesPageCount']) {
     assert.ok(administration.includes(value), 'Administration list interaction is missing: ' + value)
   }
   assert.ok(administration.includes("onChange={e=>{setSearch(e.target.value);setSettingsPage(1);setApprovalPage(1)}}"), 'Administration search must reset both page positions')
   assert.ok(administration.includes("row.workflow_key==='institution_setting_change'") && administration.includes('No decision handler is configured'), 'Unsupported approval types must not expose a non-functional decision action')
   assert.ok(styles.includes('.gov-sort-header:focus-visible') && styles.includes('.gov-pagination'), 'Administration controls need accessible responsive styles')
   assert.ok(premium.includes('.ed360-admin-approval-filters') && premium.includes('.ed360-admin-approval-search'), 'Approval filters need responsive institutional styling')
+  assert.ok(premium.includes('.ed360-admin-policy-filters') && premium.includes('.ed360-admin-policy-search'), 'Policy filters need responsive institutional styling')
 })
 
 check('Report tables show all rows through accessible sorting and pagination', () => {
