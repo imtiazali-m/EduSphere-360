@@ -1198,7 +1198,7 @@ check('Administration governance registers offer filtered export and A4 print ac
     assert.ok(administration.includes(route), 'Academic structure shortcut is missing: ' + route)
   }
   assert.ok(styles.includes('.ed360-admin-report-actions'), 'Administration report actions need shared responsive styling')
-  assert.ok(administration.includes('A privileged, tenant-filtered authentication event feed is required'), 'Security must not present unsupported sign-in history')
+  assert.ok(administration.includes('Login history, failed sign-in attempts and live session termination are not exposed') && administration.includes('This register shows only available institution audit evidence'), 'Security must distinguish the available audit feed from authentication history that is not exposed')
 })
 
 check('Student and employee ID cards are printed from selected verified records', () => {
