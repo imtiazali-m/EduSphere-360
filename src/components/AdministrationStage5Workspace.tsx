@@ -81,6 +81,43 @@ async function fetchAllInstitutionMemberships(institutionId:string):Promise<{dat
   }
 }
 
+async function fetchAllInstitutionDepartments(institutionId:string):Promise<{data:Department[];error:unknown|null}>{
+  if(!supabase)return {data:[],error:new Error('The institution database connection is unavailable.')}
+  const rows:Department[]=[]
+  const batchSize=500
+  for(let offset=0;;offset+=batchSize){
+    const {data,error}=await supabase.from('departments').select('*').eq('institution_id',institutionId).order('name').range(offset,offset+batchSize-1)
+    if(error)return {data:[],error}
+    const batch=(data??[]) as Department[]
+    rows.push(...batch)
+    if(batch.length<batchSize)return {data:rows,error:null}
+  }
+}
+async function fetchAllInstitutionDesignations(institutionId:string):Promise<{data:Designation[];error:unknown|null}>{
+  if(!supabase)return {data:[],error:new Error('The institution database connection is unavailable.')}
+  const rows:Designation[]=[]
+  const batchSize=500
+  for(let offset=0;;offset+=batchSize){
+    const {data,error}=await supabase.from('designations').select('*').eq('institution_id',institutionId).order('name').range(offset,offset+batchSize-1)
+    if(error)return {data:[],error}
+    const batch=(data??[]) as Designation[]
+    rows.push(...batch)
+    if(batch.length<batchSize)return {data:rows,error:null}
+  }
+}
+async function fetchAllInstitutionTeachers(institutionId:string):Promise<{data:Teacher[];error:unknown|null}>{
+  if(!supabase)return {data:[],error:new Error('The institution database connection is unavailable.')}
+  const rows:Teacher[]=[]
+  const batchSize=500
+  for(let offset=0;;offset+=batchSize){
+    const {data,error}=await supabase.from('teachers').select('id,full_name,department,department_id,designation_id,employment_status,campus_id').eq('institution_id',institutionId).order('full_name').range(offset,offset+batchSize-1)
+    if(error)return {data:[],error}
+    const batch=(data??[]) as Teacher[]
+    rows.push(...batch)
+    if(batch.length<batchSize)return {data:rows,error:null}
+  }
+}
+
 export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}:Props){
   const {user}=useAuth()
   const [section]=useState<Section>(sectionByWindow[initialWindow??'']??'profile')
@@ -117,6 +154,13 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
   const [memberRoleFilter,setMemberRoleFilter]=useState('all')
   const [memberSortKey,setMemberSortKey]=useState<'full_name'|'email'|'role'|'status'|'created_at'>('created_at')
   const [memberSortDirection,setMemberSortDirection]=useState<'asc'|'desc'>('desc')
+  const [departmentPage,setDepartmentPage]=useState(1),[designationPage,setDesignationPage]=useState(1)
+  const [departmentStatusFilter,setDepartmentStatusFilter]=useState<'all'|'active'|'inactive'>('all')
+  const [designationStatusFilter,setDesignationStatusFilter]=useState<'all'|'active'|'inactive'>('all')
+  const [departmentSortKey,setDepartmentSortKey]=useState<'name'|'department_code'|'head_name'|'status'>('name')
+  const [departmentSortDirection,setDepartmentSortDirection]=useState<'asc'|'desc'>('asc')
+  const [designationSortKey,setDesignationSortKey]=useState<'name'|'code'|'department'|'status'>('name')
+  const [designationSortDirection,setDesignationSortDirection]=useState<'asc'|'desc'>('asc')
 
   async function load(silent=false){
     if(!supabase||!user){setLoading(false);return}
@@ -128,9 +172,9 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
         admin?fetchAllInstitutionApprovals(user.institutionId):Promise.resolve({data:[],error:null}),
         admin?fetchAllInstitutionAuditEvents(user.institutionId):Promise.resolve({data:[],error:null}),
         admin?fetchAllInstitutionPolicies(user.institutionId):Promise.resolve({data:[],error:null}),
-        admin?supabase.from('departments').select('*').eq('institution_id',user.institutionId).order('name').limit(500):Promise.resolve({data:[],error:null}),
-        admin?supabase.from('designations').select('*').eq('institution_id',user.institutionId).order('name').limit(500):Promise.resolve({data:[],error:null}),
-        admin?supabase.from('teachers').select('id,full_name,department,department_id,designation_id,employment_status,campus_id').eq('institution_id',user.institutionId).order('full_name').limit(1000):Promise.resolve({data:[],error:null}),
+        admin?fetchAllInstitutionDepartments(user.institutionId):Promise.resolve({data:[],error:null}),
+        admin?fetchAllInstitutionDesignations(user.institutionId):Promise.resolve({data:[],error:null}),
+        admin?fetchAllInstitutionTeachers(user.institutionId):Promise.resolve({data:[],error:null}),
         admin?fetchAllInstitutionMemberships(user.institutionId):Promise.resolve({data:[],error:null}),
         admin?supabase.from('academic_sessions').select('*').eq('institution_id',user.institutionId).order('start_date',{ascending:false}).limit(200):Promise.resolve({data:[],error:null}),
         admin?supabase.from('classes').select('*').eq('institution_id',user.institutionId).order('name').limit(500):Promise.resolve({data:[],error:null}),
@@ -510,29 +554,72 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
   }
   function renderDepartments(){
     const q=search.trim().toLowerCase()
-    const departmentRows=departments.filter(row=>[row.name,row.department_code,row.head_name,row.email,row.phone].join(' ').toLowerCase().includes(q))
+    const filtered=departments.filter(row=>{
+      const status=row.is_active===false||row.status==='inactive'?'inactive':'active'
+      return (departmentStatusFilter==='all'||status===departmentStatusFilter)&&[row.name,row.department_code,row.head_name,row.email,row.phone].join(' ').toLowerCase().includes(q)
+    })
+    const departmentRows=[...filtered].sort((a,b)=>{
+      const left=departmentSortKey==='status'?(a.is_active===false||a.status==='inactive'?'inactive':'active'):String(a[departmentSortKey]??'')
+      const right=departmentSortKey==='status'?(b.is_active===false||b.status==='inactive'?'inactive':'active'):String(b[departmentSortKey]??'')
+      const comparison=left.localeCompare(right,undefined,{numeric:true,sensitivity:'base'})
+      return departmentSortDirection==='asc'?comparison:-comparison
+    })
+    const pageCount=Math.max(1,Math.ceil(departmentRows.length/pageSize))
+    const currentPage=Math.min(departmentPage,pageCount)
+    const pageRows=departmentRows.slice((currentPage-1)*pageSize,currentPage*pageSize)
+    const reportRows:Record<string,unknown>[]=departmentRows.map(row=>({code:row.department_code??row.code??'',department:row.name,head:row.head_name??'',email:row.email??'',phone:row.phone??'',status:row.is_active===false||row.status==='inactive'?'Inactive':'Active'}))
+    const reportColumns:OfficeColumn[]=[{key:'code',label:'Department code'},{key:'department',label:'Department'},{key:'head',label:'Department head'},{key:'email',label:'Email'},{key:'phone',label:'Phone'},{key:'status',label:'Status'}]
     return <div className="ed360-admin-directory-page">
       <section className="gov-panel ed360-admin-directory-card">
-        <header><div><h2>Department records</h2><p>Manage the college’s academic and administrative departments.</p></div><button className="gov-button primary" onClick={()=>onNavigate('admin:departments')}>Open Department Manager <ArrowUpRight size={14}/></button></header>
+        <header><div><h2>Department records</h2><p>{departmentRows.length} matching departments · {departments.length} total institution departments</p></div><button className="gov-button primary" onClick={()=>onNavigate('admin:departments')}>Open Department Manager <ArrowUpRight size={14}/></button></header>
         <div className="ed360-admin-kpis"><article><small>Departments</small><strong>{departments.length}</strong></article><article><small>Active departments</small><strong>{departments.filter(d=>d.is_active!==false&&d.status!=='inactive').length}</strong></article><article><small>Department heads</small><strong>{departments.filter(d=>Boolean(d.head_name)).length}</strong></article></div>
-        <label className="ed360-admin-search"><Search size={14}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search department, code, head or contact…"/></label>
-        {departmentRows.length?<div className="gov-table-wrap"><table className="ed360-admin-table"><thead><tr><th>Code</th><th>Department</th><th>Department head</th><th>Contact</th><th>Status</th></tr></thead><tbody>{departmentRows.map(row=><tr key={row.id}><td>{String(row.department_code??row.code??'—')}</td><td><b>{row.name}</b></td><td>{String(row.head_name??'Not assigned')}</td><td>{String(row.email??row.phone??'—')}</td><td><span className={'ed360-admin-status '+(row.is_active===false||row.status==='inactive'?'inactive':'')}>{row.is_active===false||row.status==='inactive'?'Inactive':'Active'}</span></td></tr>)}</tbody></table></div>:<div className="gov-empty">No departments have been recorded yet.</div>}
+        {reportActions('Department directory','department-directory',reportRows,reportColumns)}
+        <div className="ed360-admin-directory-filters">
+          <label>Status<select value={departmentStatusFilter} onChange={e=>{setDepartmentStatusFilter(e.target.value as typeof departmentStatusFilter);setDepartmentPage(1)}}><option value="all">All statuses</option><option value="active">Active</option><option value="inactive">Inactive</option></select></label>
+          <label>Order by<select value={departmentSortKey} onChange={e=>{setDepartmentSortKey(e.target.value as typeof departmentSortKey);setDepartmentPage(1)}}><option value="name">Department name</option><option value="department_code">Department code</option><option value="head_name">Department head</option><option value="status">Status</option></select></label>
+          <button type="button" className="gov-button" onClick={()=>{setDepartmentSortDirection(value=>value==='asc'?'desc':'asc');setDepartmentPage(1)}} aria-label={'Sort '+(departmentSortDirection==='asc'?'descending':'ascending')}>{departmentSortDirection==='asc'?'Ascending ↑':'Descending ↓'}</button>
+          <label className="ed360-admin-directory-search"><Search size={14}/><input value={search} onChange={e=>{setSearch(e.target.value);setDepartmentPage(1)}} placeholder="Search department, code, head or contact…"/></label>
+        </div>
+        {departmentRows.length?<div className="gov-table-wrap"><table className="ed360-admin-table"><thead><tr><th>Code</th><th>Department</th><th>Department head</th><th>Contact</th><th>Status</th></tr></thead><tbody>{pageRows.map(row=><tr key={row.id}><td>{String(row.department_code??row.code??'—')}</td><td><b>{row.name}</b></td><td>{String(row.head_name??'Not assigned')}</td><td>{String(row.email??row.phone??'—')}</td><td><span className={'ed360-admin-status '+(row.is_active===false||row.status==='inactive'?'inactive':'')}>{row.is_active===false||row.status==='inactive'?'Inactive':'Active'}</span></td></tr>)}</tbody></table></div>:<div className="gov-empty">No departments match these filters. Clear the search or status filter, or create a department in the Department Manager.</div>}
+        {pageControls(departmentRows.length,currentPage,pageCount,setDepartmentPage)}
       </section>
     </div>
   }
   function renderDesignations(){
     const q=search.trim().toLowerCase()
-    const designationRows=designations.filter(row=>[row.name,row.code,departments.find(d=>d.id===row.department_id)?.name].join(' ').toLowerCase().includes(q))
+    const filtered=designations.filter(row=>{
+      const status=row.is_active?'active':'inactive'
+      return (designationStatusFilter==='all'||status===designationStatusFilter)&&[row.name,row.code,departments.find(d=>d.id===row.department_id)?.name].join(' ').toLowerCase().includes(q)
+    })
+    const designationRows=[...filtered].sort((a,b)=>{
+      const departmentA=departments.find(d=>d.id===a.department_id)?.name??''
+      const departmentB=departments.find(d=>d.id===b.department_id)?.name??''
+      const left=designationSortKey==='department'?departmentA:designationSortKey==='status'?(a.is_active?'active':'inactive'):String(a[designationSortKey]??'')
+      const right=designationSortKey==='department'?departmentB:designationSortKey==='status'?(b.is_active?'active':'inactive'):String(b[designationSortKey]??'')
+      const comparison=left.localeCompare(right,undefined,{numeric:true,sensitivity:'base'})
+      return designationSortDirection==='asc'?comparison:-comparison
+    })
+    const pageCount=Math.max(1,Math.ceil(designationRows.length/pageSize))
+    const currentPage=Math.min(designationPage,pageCount)
+    const pageRows=designationRows.slice((currentPage-1)*pageSize,currentPage*pageSize)
+    const reportRows:Record<string,unknown>[]=designationRows.map(row=>({designation:row.name,code:row.code??'',department:departments.find(d=>d.id===row.department_id)?.name??'Institution-wide',employee_count:teachers.filter(person=>person.designation_id===row.id).length,status:row.is_active?'Active':'Inactive'}))
+    const reportColumns:OfficeColumn[]=[{key:'designation',label:'Designation'},{key:'code',label:'Code'},{key:'department',label:'Department'},{key:'employee_count',label:'Assigned employees'},{key:'status',label:'Status'}]
     return <div className="ed360-admin-directory-page">
       <section className="gov-panel ed360-admin-directory-card">
-        <header><div><h2>Designation Catalogue</h2><p>Maintain faculty and staff positions, with the department relationships used for assignments.</p></div><button className="gov-button primary" onClick={()=>onNavigate('employees:designations')}>Open Designation Manager <ArrowUpRight size={14}/></button></header>
+        <header><div><h2>Designation Catalogue</h2><p>{designationRows.length} matching designations · {designations.length} total institution positions</p></div><button className="gov-button primary" onClick={()=>onNavigate('employees:designations')}>Open Designation Manager <ArrowUpRight size={14}/></button></header>
         <div className="ed360-admin-kpis"><article><small>Designations</small><strong>{designations.length}</strong></article><article><small>Active positions</small><strong>{designations.filter(row=>row.is_active).length}</strong></article><article><small>Department-linked</small><strong>{designations.filter(row=>Boolean(row.department_id)).length}</strong></article></div>
-        <label className="ed360-admin-search"><Search size={14}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search designation, code or department…"/></label>
-        {designationRows.length?<div className="gov-table-wrap"><table className="ed360-admin-table"><thead><tr><th>Designation</th><th>Code</th><th>Department</th><th>Status</th></tr></thead><tbody>{designationRows.map(row=><tr key={row.id}><td><b>{row.name}</b></td><td>{row.code??'—'}</td><td>{departments.find(d=>d.id===row.department_id)?.name??'Institution-wide'}</td><td><span className={'ed360-admin-status '+(!row.is_active?'inactive':'')}>{row.is_active?'Active':'Inactive'}</span></td></tr>)}</tbody></table></div>:<div className="gov-empty">No designations have been recorded yet.</div>}
+        {reportActions('Designation catalogue','designation-catalogue',reportRows,reportColumns)}
+        <div className="ed360-admin-directory-filters">
+          <label>Status<select value={designationStatusFilter} onChange={e=>{setDesignationStatusFilter(e.target.value as typeof designationStatusFilter);setDesignationPage(1)}}><option value="all">All statuses</option><option value="active">Active</option><option value="inactive">Inactive</option></select></label>
+          <label>Order by<select value={designationSortKey} onChange={e=>{setDesignationSortKey(e.target.value as typeof designationSortKey);setDesignationPage(1)}}><option value="name">Designation</option><option value="code">Code</option><option value="department">Department</option><option value="status">Status</option></select></label>
+          <button type="button" className="gov-button" onClick={()=>{setDesignationSortDirection(value=>value==='asc'?'desc':'asc');setDesignationPage(1)}} aria-label={'Sort '+(designationSortDirection==='asc'?'descending':'ascending')}>{designationSortDirection==='asc'?'Ascending ↑':'Descending ↓'}</button>
+          <label className="ed360-admin-directory-search"><Search size={14}/><input value={search} onChange={e=>{setSearch(e.target.value);setDesignationPage(1)}} placeholder="Search designation, code or department…"/></label>
+        </div>
+        {designationRows.length?<div className="gov-table-wrap"><table className="ed360-admin-table"><thead><tr><th>Designation</th><th>Code</th><th>Department</th><th>Assigned employees</th><th>Status</th></tr></thead><tbody>{pageRows.map(row=><tr key={row.id}><td><b>{row.name}</b></td><td>{row.code??'—'}</td><td>{departments.find(d=>d.id===row.department_id)?.name??'Institution-wide'}</td><td>{teachers.filter(person=>person.designation_id===row.id).length}</td><td><span className={'ed360-admin-status '+(!row.is_active?'inactive':'')}>{row.is_active?'Active':'Inactive'}</span></td></tr>)}</tbody></table></div>:<div className="gov-empty">No designations match these filters. Clear the search or status filter, or add a position in the Designation Manager.</div>}
+        {pageControls(designationRows.length,currentPage,pageCount,setDesignationPage)}
       </section>
     </div>
   }
-
   function renderOrganization(){
     const ownerMembers=members.filter(row=>row.role==='owner'),adminMembers=members.filter(row=>row.role==='admin')
     return <div className="ed360-admin-organization-page">
