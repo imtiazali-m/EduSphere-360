@@ -42,6 +42,19 @@ async function fetchAllInstitutionAuditEvents(institutionId:string):Promise<{dat
   }
 }
 
+async function fetchAllInstitutionSettings(institutionId:string):Promise<{data:Setting[];error:unknown|null}>{
+  if(!supabase)return {data:[],error:new Error('The institution database connection is unavailable.')}
+  const rows:Setting[]=[]
+  const batchSize=500
+  for(let offset=0;;offset+=batchSize){
+    const {data,error}=await supabase.from('institution_settings').select('*').eq('institution_id',institutionId).order('category').order('setting_key').range(offset,offset+batchSize-1)
+    if(error)return {data:[],error}
+    const batch=(data??[]) as Setting[]
+    rows.push(...batch)
+    if(batch.length<batchSize)return {data:rows,error:null}
+  }
+}
+
 async function fetchAllInstitutionApprovals(institutionId:string):Promise<{data:Approval[];error:unknown|null}>{
   if(!supabase)return {data:[],error:new Error('The institution database connection is unavailable.')}
   const rows:Approval[]=[]
@@ -136,6 +149,9 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
   const [settingsSortKey,setSettingsSortKey]=useState<'category'|'setting_key'|'is_public'>('category')
   const [settingsSortDirection,setSettingsSortDirection]=useState<'asc'|'desc'>('asc')
   const [settingsPage,setSettingsPage]=useState(1),[approvalPage,setApprovalPage]=useState(1),[auditPage,setAuditPage]=useState(1),[securityPage,setSecurityPage]=useState(1)
+  const [auditSearch,setAuditSearch]=useState('')
+  const [auditSortKey,setAuditSortKey]=useState<'occurred_at'|'action'|'module_key'>('occurred_at')
+  const [auditSortDirection,setAuditSortDirection]=useState<'desc'|'asc'>('desc')
   const [securitySearch,setSecuritySearch]=useState('')
   const [securitySortKey,setSecuritySortKey]=useState<'occurred_at'|'action'|'module_key'>('occurred_at')
   const [securitySortDirection,setSecuritySortDirection]=useState<'desc'|'asc'>('desc')
@@ -178,7 +194,7 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
     try{
       const [institutionResult,settingsResult,approvalResult,auditResult,policyResult,departmentResult,designationResult,teacherResult,membershipResult,academicSessionResult,classResult,programResult,subjectResult,roomResult]=await Promise.all([
         supabase.from('institutions').select('id,name,institution_type,tagline,phone,email,website,address,country,logo_path,created_by').eq('id',user.institutionId).maybeSingle(),
-        admin?supabase.from('institution_settings').select('*').eq('institution_id',user.institutionId).order('category').order('setting_key').limit(1000):Promise.resolve({data:[],error:null}),
+        admin?fetchAllInstitutionSettings(user.institutionId):Promise.resolve({data:[],error:null}),
         admin?fetchAllInstitutionApprovals(user.institutionId):Promise.resolve({data:[],error:null}),
         admin?fetchAllInstitutionAuditEvents(user.institutionId):Promise.resolve({data:[],error:null}),
         admin?fetchAllInstitutionPolicies(user.institutionId):Promise.resolve({data:[],error:null}),
@@ -237,7 +253,12 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
   const policiesPageCount=Math.max(1,Math.ceil(orderedPolicies.length/pageSize))
   const policiesCurrentPage=Math.min(policyPage,policiesPageCount)
   const policyPageRows=orderedPolicies.slice((policiesCurrentPage-1)*pageSize,policiesCurrentPage*pageSize)
-  const filteredAudit=useMemo(()=>audit.filter(row=>[row.action,row.module_key,row.record_type,row.actor_id,row.record_id].join(' ').toLowerCase().includes(search.trim().toLowerCase())),[audit,search])
+  const filteredAudit=useMemo(()=>audit.filter(row=>[row.action,row.module_key,row.record_type,row.actor_id,row.record_id].join(' ').toLowerCase().includes(auditSearch.trim().toLowerCase())).sort((a,b)=>{
+    const left=String(a[auditSortKey]??'')
+    const right=String(b[auditSortKey]??'')
+    const comparison=left.localeCompare(right,undefined,{numeric:true,sensitivity:'base'})
+    return auditSortDirection==='asc'?comparison:-comparison
+  }),[audit,auditSearch,auditSortKey,auditSortDirection])
   const filteredMembers=useMemo(()=>members.filter(row=>(memberStatusFilter==='all'||row.status===memberStatusFilter)&&(memberRoleFilter==='all'||row.role===memberRoleFilter)&&[row.full_name,row.email,row.role,row.status].join(' ').toLowerCase().includes(search.trim().toLowerCase())),[members,search,memberStatusFilter,memberRoleFilter])
   const orderedMembers=useMemo(()=>[...filteredMembers].sort((a,b)=>{
     const left=String(a[memberSortKey]??'')
@@ -825,7 +846,12 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
         <article><small>Modules</small><strong>{modules}</strong><em>Modules represented in this feed</em></article>
       </div>
       <section className="gov-panel ed360-admin-audit-feed">
-        <div className="ed360-admin-search-row"><label className="ed360-admin-search"><Search size={14}/><input value={search} onChange={e=>{setSearch(e.target.value);setAuditPage(1);setSecurityPage(1)}} placeholder="Search actor, action, module or record…"/></label><span className="gov-readonly">Read-only audit feed</span></div>
+        <div className="ed360-admin-audit-filters">
+          <label>Order by<select value={auditSortKey} onChange={e=>{setAuditSortKey(e.target.value as typeof auditSortKey);setAuditPage(1)}}><option value="occurred_at">Event date</option><option value="action">Action</option><option value="module_key">Module</option></select></label>
+          <button type="button" className="gov-button" onClick={()=>{setAuditSortDirection(value=>value==='asc'?'desc':'asc');setAuditPage(1)}} aria-label={'Sort '+(auditSortDirection==='asc'?'descending':'ascending')}>{auditSortDirection==='asc'?'Ascending ↑':'Descending ↓'}</button>
+          <label className="ed360-admin-audit-search"><Search size={14}/><input value={auditSearch} onChange={e=>{setAuditSearch(e.target.value);setAuditPage(1)}} placeholder="Search actor, action, module or record…"/></label>
+          <span className="gov-readonly">Read-only audit feed</span>
+        </div>
         {reportActions('Administrative audit','administrative-audit',reportRows,reportColumns)}
         {filteredAudit.length?<div className="gov-timeline">{auditPageRows.map(row=><article key={row.id}><i/><div><strong>{label(row.action)} · {label(row.module_key)} / {label(row.record_type)}</strong><small>{dateLabel(row.occurred_at)} · Actor {String(row.actor_id??'system')} · Record {String(row.record_id)}</small><details><summary>View recorded values</summary><div><div><b>Before</b><pre>{JSON.stringify(row.old_values??null,null,2)}</pre></div><div><b>After</b><pre>{JSON.stringify(row.new_values??null,null,2)}</pre></div></div></details></div></article>)}</div>:<div className="gov-empty">No administrative audit events match this search.</div>}{pageControls(filteredAudit.length,auditCurrentPage,auditPageCount,setAuditPage)}
       </section>
