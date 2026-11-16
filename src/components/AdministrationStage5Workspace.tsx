@@ -55,6 +55,19 @@ async function fetchAllInstitutionApprovals(institutionId:string):Promise<{data:
   }
 }
 
+async function fetchAllInstitutionPolicies(institutionId:string):Promise<{data:Policy[];error:unknown|null}>{
+  if(!supabase)return {data:[],error:new Error('The institution database connection is unavailable.')}
+  const rows:Policy[]=[]
+  const batchSize=500
+  for(let offset=0;;offset+=batchSize){
+    const {data,error}=await supabase.from('institutional_records').select('*').eq('institution_id',institutionId).eq('module_key','administration').eq('record_type','institutional-policy').order('updated_at',{ascending:false}).range(offset,offset+batchSize-1)
+    if(error)return {data:[],error}
+    const batch=(data??[]) as Policy[]
+    rows.push(...batch)
+    if(batch.length<batchSize)return {data:rows,error:null}
+  }
+}
+
 export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}:Props){
   const {user}=useAuth()
   const [section]=useState<Section>(sectionByWindow[initialWindow??'']??'profile')
@@ -77,6 +90,10 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
   const [membershipSavingId,setMembershipSavingId]=useState<string|null>(null)
   const [policyForm,setPolicyForm]=useState(false),[policyEditing,setPolicyEditing]=useState<Policy|null>(null)
   const [policyTitle,setPolicyTitle]=useState(''),[policyCode,setPolicyCode]=useState(''),[policyCategory,setPolicyCategory]=useState('general'),[policyDescription,setPolicyDescription]=useState(''),[policyStatus,setPolicyStatus]=useState('draft'),[policyEffectiveDate,setPolicyEffectiveDate]=useState('')
+  const [policyPage,setPolicyPage]=useState(1)
+  const [policyStatusFilter,setPolicyStatusFilter]=useState<'all'|'draft'|'published'|'archived'>('all')
+  const [policySortKey,setPolicySortKey]=useState<'title'|'status'|'effective_date'|'updated_at'>('updated_at')
+  const [policySortDirection,setPolicySortDirection]=useState<'asc'|'desc'>('desc')
   const [settingForm,setSettingForm]=useState(false),[settingEditing,setSettingEditing]=useState<Setting|null>(null),[settingCategory,setSettingCategory]=useState('general'),[settingKey,setSettingKey]=useState(''),[settingValue,setSettingValue]=useState('{}'),[settingPublic,setSettingPublic]=useState(false)
   const [approvalForm,setApprovalForm]=useState(false),[approvalKey,setApprovalKey]=useState(''),[approvalValue,setApprovalValue]=useState('{}'),[approvalNotes,setApprovalNotes]=useState(''),[approvalPublic,setApprovalPublic]=useState(false)
   const [approvalStatusFilter,setApprovalStatusFilter]=useState<'all'|'pending'|'approved'|'rejected'>('all')
@@ -92,7 +109,7 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
         admin?supabase.from('institution_settings').select('*').eq('institution_id',user.institutionId).order('category').order('setting_key').limit(1000):Promise.resolve({data:[],error:null}),
         admin?fetchAllInstitutionApprovals(user.institutionId):Promise.resolve({data:[],error:null}),
         admin?fetchAllInstitutionAuditEvents(user.institutionId):Promise.resolve({data:[],error:null}),
-        admin?supabase.from('institutional_records').select('*').eq('institution_id',user.institutionId).eq('module_key','administration').eq('record_type','institutional-policy').order('updated_at',{ascending:false}).limit(500):Promise.resolve({data:[],error:null}),
+        admin?fetchAllInstitutionPolicies(user.institutionId):Promise.resolve({data:[],error:null}),
         admin?supabase.from('departments').select('*').eq('institution_id',user.institutionId).order('name').limit(500):Promise.resolve({data:[],error:null}),
         admin?supabase.from('designations').select('*').eq('institution_id',user.institutionId).order('name').limit(500):Promise.resolve({data:[],error:null}),
         admin?supabase.from('teachers').select('id,full_name,department,department_id,designation_id,employment_status,campus_id').eq('institution_id',user.institutionId).order('full_name').limit(1000):Promise.resolve({data:[],error:null}),
@@ -131,8 +148,18 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
   const filteredPolicies=useMemo(()=>policies.filter(row=>{
     const audience=String(jsonObject(row.payload).category??'').toLowerCase()
     const audienceMatches=section==='policies-students'?['student','students'].includes(audience):section==='policies-faculty'?['faculty','staff','teacher','teachers'].includes(audience):false
-    return audienceMatches&&[row.title,row.reference_code,row.description,row.status,JSON.stringify(row.payload)].join(' ').toLowerCase().includes(search.trim().toLowerCase())
-  }),[policies,search,section])
+    const statusMatches=policyStatusFilter==='all'||row.status===policyStatusFilter
+    return audienceMatches&&statusMatches&&[row.title,row.reference_code,row.description,row.status,JSON.stringify(row.payload)].join(' ').toLowerCase().includes(search.trim().toLowerCase())
+  }),[policies,search,section,policyStatusFilter])
+  const orderedPolicies=useMemo(()=>[...filteredPolicies].sort((a,b)=>{
+    const left=String(a[policySortKey]??'')
+    const right=String(b[policySortKey]??'')
+    const comparison=left.localeCompare(right,undefined,{numeric:true,sensitivity:'base'})
+    return policySortDirection==='asc'?comparison:-comparison
+  }),[filteredPolicies,policySortKey,policySortDirection])
+  const policiesPageCount=Math.max(1,Math.ceil(orderedPolicies.length/pageSize))
+  const policiesCurrentPage=Math.min(policyPage,policiesPageCount)
+  const policyPageRows=orderedPolicies.slice((policiesCurrentPage-1)*pageSize,policiesCurrentPage*pageSize)
   const filteredAudit=useMemo(()=>audit.filter(row=>[row.action,row.module_key,row.record_type,row.actor_id,row.record_id].join(' ').toLowerCase().includes(search.trim().toLowerCase())),[audit,search])
   const filteredMembers=useMemo(()=>members.filter(row=>[row.full_name,row.email,row.role,row.status].join(' ').toLowerCase().includes(search.trim().toLowerCase())),[members,search])
   const visibleSettings=useMemo(()=>settings.filter(row=>section==='system'?row.category==='system':section==='branding'?['branding','documents'].includes(row.category):section==='settings'?false:true).filter(row=>[row.category,row.setting_key,JSON.stringify(row.setting_value)].join(' ').toLowerCase().includes(search.trim().toLowerCase())),[settings,section,search])
@@ -577,12 +604,19 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
   }
   function renderPolicies(){
     const audience=section==='policies-faculty'?'Faculty':'Student'
-    const reportRows:Record<string,unknown>[]=filteredPolicies.map(row=>({title:row.title,reference:row.reference_code??'',audience:label(row.payload.category??''),revision:Number(row.payload.revision??1),effective_date:row.effective_date??'',status:label(row.status),description:row.description??''}))
-    const reportColumns:OfficeColumn[]=[{key:'title',label:'Policy title'},{key:'reference',label:'Reference'},{key:'audience',label:'Audience'},{key:'revision',label:'Revision'},{key:'effective_date',label:'Effective date'},{key:'status',label:'Status'},{key:'description',label:'Policy text'}]
-    return <section className="gov-panel ed360-admin-policy-page"><header><div><h2>{audience} policy register</h2><p>{filteredPolicies.length} matching policies</p></div><button className="gov-button primary" onClick={()=>openPolicy()}><Plus size={14}/> Add {audience.toLowerCase()} policy</button></header>
+    const reportRows:Record<string,unknown>[]=orderedPolicies.map(row=>({title:row.title,reference:row.reference_code??'',audience:label(row.payload.category??''),revision:Number(row.payload.revision??1),effective_date:row.effective_date??'',status:label(row.status),updated_at:row.updated_at??'',description:row.description??''}))
+    const reportColumns:OfficeColumn[]=[{key:'title',label:'Policy title'},{key:'reference',label:'Reference'},{key:'audience',label:'Audience'},{key:'revision',label:'Revision'},{key:'effective_date',label:'Effective date'},{key:'status',label:'Status'},{key:'updated_at',label:'Last updated'},{key:'description',label:'Policy text'}]
+    return <section className="gov-panel ed360-admin-policy-page">
+      <header><div><h2>{audience} policy register</h2><p>{orderedPolicies.length} matching policies · {policies.filter(row=>String(jsonObject(row.payload).category??'').toLowerCase().includes(audience.toLowerCase()==='faculty'?'fac':'stu')).length} records for this audience</p></div><button className="gov-button primary" onClick={()=>openPolicy()}><Plus size={14}/> Add {audience.toLowerCase()} policy</button></header>
       {reportActions(audience+' policies',audience.toLowerCase()+'-policies',reportRows,reportColumns)}
-      <label className="ed360-admin-search"><Search size={14}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder={'Search '+audience.toLowerCase()+' policy title, reference or text…'}/></label>
-      {filteredPolicies.length?<div className="ed360-admin-policy-list">{filteredPolicies.map(row=>{const revisions=audit.filter(event=>event.record_id===row.id).sort((a,b)=>String(b.occurred_at).localeCompare(String(a.occurred_at)));return <article className="ed360-admin-policy-card" key={row.id}><header><div><h3>{row.title}</h3><div className="ed360-admin-policy-meta"><span>{row.reference_code??'No reference'}</span><span>Revision {Number(row.payload?.revision??1)}</span><span>Effective {row.effective_date??'Not set'}</span></div></div><span className={'ed360-admin-status '+row.status}>{label(row.status)}</span></header>{row.description&&<p>{row.description}</p>}<div className="gov-row-actions"><button className="gov-button" onClick={()=>openPolicy(row)}>Edit / revise</button><button className="gov-button danger" onClick={()=>void removePolicy(row)}>Delete</button></div><details><summary>Revision and audit history ({revisions.length} events)</summary>{revisions.length?revisions.map(event=><p key={event.id}>{dateLabel(event.occurred_at)} · {label(event.action)} by {event.actor_id??'system'}</p>):<p>No previous revisions are linked to this policy.</p>}</details></article>})}</div>:<div className="gov-empty">No {audience.toLowerCase()} policies have been added yet. Create the first policy for this audience.</div>}
+      <div className="ed360-admin-policy-filters">
+        <label>Status<select value={policyStatusFilter} onChange={e=>{setPolicyStatusFilter(e.target.value as typeof policyStatusFilter);setPolicyPage(1)}}><option value="all">All statuses</option><option value="draft">Draft</option><option value="published">Published</option><option value="archived">Archived</option></select></label>
+        <label>Order by<select value={policySortKey} onChange={e=>{setPolicySortKey(e.target.value as typeof policySortKey);setPolicyPage(1)}}><option value="updated_at">Last updated</option><option value="title">Policy title</option><option value="status">Status</option><option value="effective_date">Effective date</option></select></label>
+        <button type="button" className="gov-button" onClick={()=>{setPolicySortDirection(value=>value==='asc'?'desc':'asc');setPolicyPage(1)}} aria-label={'Sort '+(policySortDirection==='asc'?'descending':'ascending')}>{policySortDirection==='asc'?'Ascending ↑':'Descending ↓'}</button>
+        <label className="ed360-admin-policy-search"><Search size={14}/><input value={search} onChange={e=>{setSearch(e.target.value);setPolicyPage(1)}} placeholder={'Search '+audience.toLowerCase()+' policy title, reference or text…'}/></label>
+      </div>
+      {orderedPolicies.length?<div className="ed360-admin-policy-list">{policyPageRows.map(row=>{const revisions=audit.filter(event=>event.record_id===row.id).sort((a,b)=>String(b.occurred_at).localeCompare(String(a.occurred_at)));return <article className="ed360-admin-policy-card" key={row.id}><header><div><h3>{row.title}</h3><div className="ed360-admin-policy-meta"><span>{row.reference_code??'No reference'}</span><span>Revision {Number(row.payload?.revision??1)}</span><span>Effective {row.effective_date??'Not set'}</span><span>Updated {dateLabel(row.updated_at)}</span></div></div><span className={'ed360-admin-status '+row.status}>{label(row.status)}</span></header>{row.description&&<p>{row.description}</p>}<div className="gov-row-actions"><button className="gov-button" onClick={()=>openPolicy(row)}>Edit / revise</button><button className="gov-button danger" disabled={saving} onClick={()=>void removePolicy(row)}>Delete</button></div><details><summary>Revision and audit history ({revisions.length} events)</summary>{revisions.length?revisions.map(event=><p key={event.id}>{dateLabel(event.occurred_at)} · {label(event.action)} by {event.actor_id??'system'}</p>):<p>No previous revisions are linked to this policy.</p>}</details></article>})}</div>:<div className="gov-empty">No {audience.toLowerCase()} policies match these filters. Clear the search or status filter, or create the first policy.</div>}
+      {pageControls(orderedPolicies.length,policiesCurrentPage,policiesPageCount,setPolicyPage)}
     </section>
   }
 
