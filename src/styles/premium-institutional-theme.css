@@ -1075,3 +1075,30 @@
   .pro-window-panel .bdw-page-intro .bdw-intro-action,
   .pro-window-panel .bdw-page-intro .bdw-button { width:100%; }
 }
+
+/* Governance controls inherit the institutional palette, while semantic danger/warning states stay distinct. */
+.pro-window-panel .gov-button:not(.primary):not(.danger) {
+  color:var(--es-brand-800);
+  background:var(--es-surface);
+  border-color:var(--es-line);
+}
+.pro-window-panel .gov-button:not(.primary):not(.danger):hover {
+  color:var(--es-primary-700);
+  background:var(--es-primary-050);
+  border-color:#cdbde7;
+}
+.pro-window-panel .gov-sort-header:hover { color:var(--es-primary-700); }
+.pro-window-panel .gov-sort-header:focus-visible {
+  outline:2px solid rgba(96,53,181,.45);
+  outline-offset:3px;
+}
+.pro-window-panel .gov-pagination { color:var(--es-muted); }
+.pro-window-panel .gov-note {
+  color:var(--es-muted);
+  background:var(--es-primary-050);
+  border:1px solid var(--es-line);
+}
+.pro-window-panel .gov-timeline article>i {
+  background:var(--es-teal-700);
+  box-shadow:0 0 0 4px var(--es-teal-100);
+}
