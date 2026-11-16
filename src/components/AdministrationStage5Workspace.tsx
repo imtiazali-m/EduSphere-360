@@ -635,7 +635,7 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
             <div><small>ADDRESS</small><b>{profileDraft.address||'Not provided'}</b></div>
             <div><small>WEBSITE</small><b>{profileDraft.website||'Not provided'}</b></div>
           </div>
-          <footer><span>{displayInstitutionName(institutionName)}</span><span>EDUSPHERE 360</span></footer>
+          <footer><span>{displayInstitutionName(institutionName)}</span><span>GIDC BADIN</span></footer>
         </article>
         <p className="ed360-profile-preview-caption">This preview reflects the form values. The official institute record changes only after saving.</p>
       </aside>
