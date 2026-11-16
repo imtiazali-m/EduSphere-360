@@ -162,8 +162,9 @@ For every role, test direct REST/Data API reads and writes (SELECT/INSERT/UPDATE
 1. Re-read the current main SHA, all ten open PRs, changed paths, base/head dependencies, mergeability, discussions, review submissions, inline review threads and exact-head Actions runs.
 2. Read the live Supabase migration versions, public table/RLS counts, selected function definitions/ACLs, Edge Function inventory and security/performance advisors using read-only operations only.
 3. Confirmed the current main teacher-provisioning guard source and the live `create-user` v10 deployment match at the entrypoint.
-4. Added a machine-readable migration snapshot and a Node built-in regression test/workflow in isolated [PR #95](https://github.com/imtiazali-m/EduSphere-360/pull/95). The migration-ledger test passed 8/8 and the full project PR workflow passed on code-bearing head `54a8da3a`; a later docs-only refresh is being rechecked. No existing feature branch or shared application component was overwritten.\n5. Posted concise migration/shared-file sequencing notes to PRs #94, #85, #84, #72, #61 and #62.
-5. Recorded the current PR integration sequence and release gates here.
+4. Added a machine-readable migration snapshot and a Node built-in regression test/workflow in isolated [PR #95](https://github.com/imtiazali-m/EduSphere-360/pull/95). The migration-ledger test passed 8/8 and the full project PR workflow passed on code-bearing head `54a8da3a`; later CI/docs follow-up checks are being rerun. No existing feature branch or shared application component was overwritten.
+5. Posted concise migration/shared-file sequencing notes to PRs #94, #85, #84, #72, #61 and #62.
+6. Recorded the current PR integration sequence and release gates here.
 
 **Live Supabase changes this run: none.**  
 **Main-branch commits this run: none.**  
