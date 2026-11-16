@@ -42,6 +42,19 @@ async function fetchAllInstitutionAuditEvents(institutionId:string):Promise<{dat
   }
 }
 
+async function fetchAllInstitutionApprovals(institutionId:string):Promise<{data:Approval[];error:unknown|null}>{
+  if(!supabase)return {data:[],error:new Error('The institution database connection is unavailable.')}
+  const rows:Approval[]=[]
+  const batchSize=500
+  for(let offset=0;;offset+=batchSize){
+    const {data,error}=await supabase.from('workflow_approvals').select('*').eq('institution_id',institutionId).order('requested_at',{ascending:false}).range(offset,offset+batchSize-1)
+    if(error)return {data:[],error}
+    const batch=(data??[]) as Approval[]
+    rows.push(...batch)
+    if(batch.length<batchSize)return {data:rows,error:null}
+  }
+}
+
 export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}:Props){
   const {user}=useAuth()
   const [section]=useState<Section>(sectionByWindow[initialWindow??'']??'profile')
@@ -66,6 +79,9 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
   const [policyTitle,setPolicyTitle]=useState(''),[policyCode,setPolicyCode]=useState(''),[policyCategory,setPolicyCategory]=useState('general'),[policyDescription,setPolicyDescription]=useState(''),[policyStatus,setPolicyStatus]=useState('draft'),[policyEffectiveDate,setPolicyEffectiveDate]=useState('')
   const [settingForm,setSettingForm]=useState(false),[settingEditing,setSettingEditing]=useState<Setting|null>(null),[settingCategory,setSettingCategory]=useState('general'),[settingKey,setSettingKey]=useState(''),[settingValue,setSettingValue]=useState('{}'),[settingPublic,setSettingPublic]=useState(false)
   const [approvalForm,setApprovalForm]=useState(false),[approvalKey,setApprovalKey]=useState(''),[approvalValue,setApprovalValue]=useState('{}'),[approvalNotes,setApprovalNotes]=useState(''),[approvalPublic,setApprovalPublic]=useState(false)
+  const [approvalStatusFilter,setApprovalStatusFilter]=useState<'all'|'pending'|'approved'|'rejected'>('all')
+  const [approvalSortKey,setApprovalSortKey]=useState<'requested_at'|'status'|'workflow_key'>('requested_at')
+  const [approvalSortDirection,setApprovalSortDirection]=useState<'asc'|'desc'>('desc')
 
   async function load(silent=false){
     if(!supabase||!user){setLoading(false);return}
@@ -74,7 +90,7 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
       const [institutionResult,settingsResult,approvalResult,auditResult,policyResult,departmentResult,designationResult,teacherResult,membershipResult,academicSessionResult,classResult,programResult,subjectResult,roomResult]=await Promise.all([
         supabase.from('institutions').select('id,name,institution_type,tagline,phone,email,website,address,country,logo_path,created_by').eq('id',user.institutionId).maybeSingle(),
         admin?supabase.from('institution_settings').select('*').eq('institution_id',user.institutionId).order('category').order('setting_key').limit(1000):Promise.resolve({data:[],error:null}),
-        admin?supabase.from('workflow_approvals').select('*').eq('institution_id',user.institutionId).order('requested_at',{ascending:false}).limit(500):Promise.resolve({data:[],error:null}),
+        admin?fetchAllInstitutionApprovals(user.institutionId):Promise.resolve({data:[],error:null}),
         admin?fetchAllInstitutionAuditEvents(user.institutionId):Promise.resolve({data:[],error:null}),
         admin?supabase.from('institutional_records').select('*').eq('institution_id',user.institutionId).eq('module_key','administration').eq('record_type','institutional-policy').order('updated_at',{ascending:false}).limit(500):Promise.resolve({data:[],error:null}),
         admin?supabase.from('departments').select('*').eq('institution_id',user.institutionId).order('name').limit(500):Promise.resolve({data:[],error:null}),
@@ -129,7 +145,12 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
   const settingsPageCount=Math.max(1,Math.ceil(orderedSettings.length/pageSize))
   const settingsCurrentPage=Math.min(settingsPage,settingsPageCount)
   const settingsPageRows=orderedSettings.slice((settingsCurrentPage-1)*pageSize,settingsCurrentPage*pageSize)
-  const orderedApprovals=useMemo(()=>approvals.filter(row=>[row.workflow_key,row.target_type,row.status,JSON.stringify(row.payload)].join(' ').toLowerCase().includes(search.trim().toLowerCase())).sort((a,b)=>String(b.requested_at??'').localeCompare(String(a.requested_at??''))),[approvals,search])
+  const orderedApprovals=useMemo(()=>approvals.filter(row=>(approvalStatusFilter==='all'||row.status===approvalStatusFilter)&&[row.workflow_key,row.target_type,row.status,JSON.stringify(row.payload)].join(' ').toLowerCase().includes(search.trim().toLowerCase())).sort((a,b)=>{
+    const left=String(a[approvalSortKey]??'')
+    const right=String(b[approvalSortKey]??'')
+    const comparison=left.localeCompare(right,undefined,{numeric:true,sensitivity:'base'})
+    return approvalSortDirection==='asc'?comparison:-comparison
+  }),[approvals,search,approvalStatusFilter,approvalSortKey,approvalSortDirection])
   const approvalsPageCount=Math.max(1,Math.ceil(orderedApprovals.length/pageSize))
   const approvalsCurrentPage=Math.min(approvalPage,approvalsPageCount)
   const approvalPageRows=orderedApprovals.slice((approvalsCurrentPage-1)*pageSize,approvalPage*pageSize)
@@ -508,13 +529,48 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
   }
   function renderApprovals(){
     const rows=orderedApprovals
-    const reportRows:Record<string,unknown>[]=rows.map(row=>({workflow:label(row.workflow_key),target_type:label(row.target_type),target_id:row.target_id??'',status:label(row.status),requested_at:row.requested_at,requested_by:row.requested_by??'',decision_notes:row.decision_notes??'',setting:row.payload.setting_key??'',requested_value:JSON.stringify(row.payload.setting_value??'')}))
-    const reportColumns:OfficeColumn[]=[{key:'workflow',label:'Workflow'},{key:'target_type',label:'Target type'},{key:'target_id',label:'Target ID'},{key:'status',label:'Status'},{key:'requested_at',label:'Requested at'},{key:'requested_by',label:'Requested by'},{key:'setting',label:'Setting key'},{key:'requested_value',label:'Requested value'},{key:'decision_notes',label:'Decision notes'}]
+    const reportRows:Record<string,unknown>[]=rows.map(row=>({
+      workflow:label(row.workflow_key),target_type:label(row.target_type),target_id:row.target_id??'',
+      status:label(row.status),requested_at:row.requested_at,
+      requested_by:members.find(member=>member.user_id===row.requested_by)?.full_name??row.requested_by??'Institution member',
+      request_notes:String(row.payload?.request_notes??''),decision_notes:row.decision_notes??'',
+      setting:row.payload.setting_key??'',requested_value:JSON.stringify(row.payload.setting_value??'')
+    }))
+    const reportColumns:OfficeColumn[]=[
+      {key:'workflow',label:'Workflow'},{key:'target_type',label:'Target type'},{key:'target_id',label:'Target ID'},
+      {key:'status',label:'Status'},{key:'requested_at',label:'Requested at'},{key:'requested_by',label:'Requester'},
+      {key:'request_notes',label:'Request rationale'},{key:'setting',label:'Setting key'},
+      {key:'requested_value',label:'Requested value'},{key:'decision_notes',label:'Decision notes'}
+    ]
     return <div className="ed360-admin-approval-page">
-      <section className="gov-panel ed360-admin-approval-panel"><header><div><h2>Approval register</h2><p>{rows.length} matching workflow requests</p></div><div className="gov-header-actions"><span className="gov-pending">{pendingApprovals} pending</span><button className="gov-button primary" onClick={()=>setApprovalForm(true)}><Plus size={14}/> Request approval</button></div></header>
+      <section className="gov-panel ed360-admin-approval-panel">
+        <header><div><h2>Approval register</h2><p>{rows.length} matching workflow requests across the full institution history</p></div><div className="gov-header-actions"><span className="gov-pending">{pendingApprovals} pending in total</span><button className="gov-button primary" onClick={()=>setApprovalForm(true)}><Plus size={14}/> Request approval</button></div></header>
         {reportActions('Approval register','approval-workflows',reportRows,reportColumns)}
-        <label className="ed360-admin-search"><Search size={14}/><input value={search} onChange={e=>{setSearch(e.target.value);setSettingsPage(1);setApprovalPage(1)}} placeholder="Search workflow, status or target…"/></label>
-        {rows.length?<div className="gov-approval-list">{approvalPageRows.map(row=><article key={row.id}><div className="gov-approval-heading"><div><small>{label(row.workflow_key)}</small><strong>{label(row.target_type)}</strong></div><span className={'gov-status '+row.status}>{label(row.status)}</span></div><dl><div><dt>Requested</dt><dd>{dateLabel(row.requested_at)}</dd></div><div><dt>Requester</dt><dd>{String(row.requested_by??'Institution member')}</dd></div><div><dt>Target</dt><dd className="gov-mono">{String(row.target_id)}</dd></div></dl>{row.workflow_key==='institution_setting_change'&&<div className="gov-payload"><b>{String(row.payload.category??'general')} / {String(row.payload.setting_key??'setting')}</b><pre>{JSON.stringify(row.payload.setting_value??{},null,2)}</pre></div>}{row.decision_notes&&<p className="gov-decision-note">{row.decision_notes}</p>}{admin&&row.status==='pending'&&<div className="gov-row-actions"><button className="gov-button primary" disabled={saving} onClick={()=>void decideApproval(row,'approved')}><CheckCircle2 size={13}/> Approve and apply</button><button className="gov-button danger" disabled={saving} onClick={()=>void decideApproval(row,'rejected')}>Reject</button></div>}</article>)}</div>:<div className="gov-empty">No approval requests match this view.</div>}
+        <div className="ed360-admin-approval-filters">
+          <label>Status
+            <select value={approvalStatusFilter} onChange={e=>{setApprovalStatusFilter(e.target.value as typeof approvalStatusFilter);setApprovalPage(1)}}>
+              <option value="all">All statuses</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option>
+            </select>
+          </label>
+          <label>Order by
+            <select value={approvalSortKey} onChange={e=>{setApprovalSortKey(e.target.value as typeof approvalSortKey);setApprovalPage(1)}}>
+              <option value="requested_at">Request date</option><option value="status">Status</option><option value="workflow_key">Workflow</option>
+            </select>
+          </label>
+          <button type="button" className="gov-button" onClick={()=>{setApprovalSortDirection(value=>value==='asc'?'desc':'asc');setApprovalPage(1)}} aria-label={'Sort '+approvalSortDirection==='asc'?'descending':'ascending'}>
+            {approvalSortDirection==='asc'?'Ascending ↑':'Descending ↓'}
+          </button>
+          <label className="ed360-admin-approval-search"><Search size={14}/><input value={search} onChange={e=>{setSearch(e.target.value);setSettingsPage(1);setApprovalPage(1)}} placeholder="Search workflow, status, target or notes…"/></label>
+        </div>
+        {rows.length?<div className="gov-approval-list">{approvalPageRows.map(row=><article key={row.id}>
+          <div className="gov-approval-heading"><div><small>{label(row.workflow_key)}</small><strong>{label(row.target_type)}</strong></div><span className={'gov-status '+row.status}>{label(row.status)}</span></div>
+          <dl><div><dt>Requested</dt><dd>{dateLabel(row.requested_at)}</dd></div><div><dt>Requester</dt><dd>{members.find(member=>member.user_id===row.requested_by)?.full_name??String(row.requested_by??'Institution member')}</dd></div><div><dt>Target</dt><dd className="gov-mono">{String(row.target_id)}</dd></div></dl>
+          {row.payload?.request_notes&&<div className="gov-decision-note"><b>Request rationale</b><p>{String(row.payload.request_notes)}</p></div>}
+          {row.workflow_key==='institution_setting_change'&&<div className="gov-payload"><b>{String(row.payload.category??'general')} / {String(row.payload.setting_key??'setting')}</b><pre>{JSON.stringify(row.payload.setting_value??{},null,2)}</pre></div>}
+          {row.decision_notes&&<p className="gov-decision-note"><b>Decision note</b> · {row.decision_notes}</p>}
+          {admin&&row.status==='pending'&&row.workflow_key==='institution_setting_change'&&<div className="gov-row-actions"><button className="gov-button primary" disabled={saving} onClick={()=>void decideApproval(row,'approved')}><CheckCircle2 size={13}/> Approve and apply</button><button className="gov-button danger" disabled={saving} onClick={()=>void decideApproval(row,'rejected')}>Reject</button></div>}
+          {admin&&row.status==='pending'&&row.workflow_key!=='institution_setting_change'&&<div className="gov-note">No decision handler is configured for this workflow type. It remains pending and cannot be approved from this page.</div>}
+        </article>)}</div>:<div className="gov-empty">No approval requests match this status and search.</div>}
         {pageControls(orderedApprovals.length,approvalsCurrentPage,approvalsPageCount,setApprovalPage)}
       </section>
     </div>
