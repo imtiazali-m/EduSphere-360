@@ -68,6 +68,19 @@ async function fetchAllInstitutionPolicies(institutionId:string):Promise<{data:P
   }
 }
 
+async function fetchAllInstitutionMemberships(institutionId:string):Promise<{data:Member[];error:unknown|null}>{
+  if(!supabase)return {data:[],error:new Error('The institution database connection is unavailable.')}
+  const rows:Member[]=[]
+  const batchSize=500
+  for(let offset=0;;offset+=batchSize){
+    const {data,error}=await supabase.from('memberships').select('id,user_id,role,status,created_at').eq('institution_id',institutionId).order('created_at',{ascending:false}).range(offset,offset+batchSize-1)
+    if(error)return {data:[],error}
+    const batch=(data??[]) as Member[]
+    rows.push(...batch)
+    if(batch.length<batchSize)return {data:rows,error:null}
+  }
+}
+
 export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}:Props){
   const {user}=useAuth()
   const [section]=useState<Section>(sectionByWindow[initialWindow??'']??'profile')
@@ -99,6 +112,11 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
   const [approvalStatusFilter,setApprovalStatusFilter]=useState<'all'|'pending'|'approved'|'rejected'>('all')
   const [approvalSortKey,setApprovalSortKey]=useState<'requested_at'|'status'|'workflow_key'>('requested_at')
   const [approvalSortDirection,setApprovalSortDirection]=useState<'asc'|'desc'>('desc')
+  const [memberPage,setMemberPage]=useState(1)
+  const [memberStatusFilter,setMemberStatusFilter]=useState('all')
+  const [memberRoleFilter,setMemberRoleFilter]=useState('all')
+  const [memberSortKey,setMemberSortKey]=useState<'full_name'|'email'|'role'|'status'|'created_at'>('created_at')
+  const [memberSortDirection,setMemberSortDirection]=useState<'asc'|'desc'>('desc')
 
   async function load(silent=false){
     if(!supabase||!user){setLoading(false);return}
@@ -113,7 +131,7 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
         admin?supabase.from('departments').select('*').eq('institution_id',user.institutionId).order('name').limit(500):Promise.resolve({data:[],error:null}),
         admin?supabase.from('designations').select('*').eq('institution_id',user.institutionId).order('name').limit(500):Promise.resolve({data:[],error:null}),
         admin?supabase.from('teachers').select('id,full_name,department,department_id,designation_id,employment_status,campus_id').eq('institution_id',user.institutionId).order('full_name').limit(1000):Promise.resolve({data:[],error:null}),
-        admin?supabase.from('memberships').select('id,user_id,role,status,created_at').eq('institution_id',user.institutionId).order('created_at').limit(1000):Promise.resolve({data:[],error:null}),
+        admin?fetchAllInstitutionMemberships(user.institutionId):Promise.resolve({data:[],error:null}),
         admin?supabase.from('academic_sessions').select('*').eq('institution_id',user.institutionId).order('start_date',{ascending:false}).limit(200):Promise.resolve({data:[],error:null}),
         admin?supabase.from('classes').select('*').eq('institution_id',user.institutionId).order('name').limit(500):Promise.resolve({data:[],error:null}),
         admin?supabase.from('programs').select('*').eq('institution_id',user.institutionId).order('name').limit(500):Promise.resolve({data:[],error:null}),
@@ -127,9 +145,14 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
       const membershipRows=(membershipResult.data??[]) as Member[]
       if(membershipRows.length){
         const ids=membershipRows.map(row=>row.user_id).filter(Boolean)
-        const {data:profiles,error:profilesError}=await supabase.from('profiles').select('id,full_name,email').in('id',ids)
-        if(profilesError)throw profilesError
-        const profileMap=new Map((profiles??[]).map((profile:any)=>[profile.id,profile]))
+        const profiles:Array<{id:string;full_name?:string|null;email?:string|null}>=[]
+        const profileBatchSize=500
+        for(let offset=0;offset<ids.length;offset+=profileBatchSize){
+          const {data:profileBatch,error:profilesError}=await supabase.from('profiles').select('id,full_name,email').in('id',ids.slice(offset,offset+profileBatchSize))
+          if(profilesError)throw profilesError
+          profiles.push(...(profileBatch??[]))
+        }
+        const profileMap=new Map(profiles.map(profile=>[profile.id,profile]))
         setMembers(membershipRows.map(row=>({...row,full_name:profileMap.get(row.user_id)?.full_name??'Institution member',email:profileMap.get(row.user_id)?.email??''})))
       }else setMembers([])
       setSettings((settingsResult.data??[]) as Setting[]);setApprovals((approvalResult.data??[]) as Approval[]);setAudit((auditResult.data??[]) as Audit[])
@@ -161,7 +184,16 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
   const policiesCurrentPage=Math.min(policyPage,policiesPageCount)
   const policyPageRows=orderedPolicies.slice((policiesCurrentPage-1)*pageSize,policiesCurrentPage*pageSize)
   const filteredAudit=useMemo(()=>audit.filter(row=>[row.action,row.module_key,row.record_type,row.actor_id,row.record_id].join(' ').toLowerCase().includes(search.trim().toLowerCase())),[audit,search])
-  const filteredMembers=useMemo(()=>members.filter(row=>[row.full_name,row.email,row.role,row.status].join(' ').toLowerCase().includes(search.trim().toLowerCase())),[members,search])
+  const filteredMembers=useMemo(()=>members.filter(row=>(memberStatusFilter==='all'||row.status===memberStatusFilter)&&(memberRoleFilter==='all'||row.role===memberRoleFilter)&&[row.full_name,row.email,row.role,row.status].join(' ').toLowerCase().includes(search.trim().toLowerCase())),[members,search,memberStatusFilter,memberRoleFilter])
+  const orderedMembers=useMemo(()=>[...filteredMembers].sort((a,b)=>{
+    const left=String(a[memberSortKey]??'')
+    const right=String(b[memberSortKey]??'')
+    const comparison=left.localeCompare(right,undefined,{numeric:true,sensitivity:'base'})
+    return memberSortDirection==='asc'?comparison:-comparison
+  }),[filteredMembers,memberSortKey,memberSortDirection])
+  const membersPageCount=Math.max(1,Math.ceil(orderedMembers.length/pageSize))
+  const membersCurrentPage=Math.min(memberPage,membersPageCount)
+  const memberPageRows=orderedMembers.slice((membersCurrentPage-1)*pageSize,membersCurrentPage*pageSize)
   const visibleSettings=useMemo(()=>settings.filter(row=>section==='system'?row.category==='system':section==='branding'?['branding','documents'].includes(row.category):section==='settings'?false:true).filter(row=>[row.category,row.setting_key,JSON.stringify(row.setting_value)].join(' ').toLowerCase().includes(search.trim().toLowerCase())),[settings,section,search])
   const orderedSettings=useMemo(()=>[...visibleSettings].sort((a,b)=>{
     const left=settingsSortKey==='is_public'?String(a.is_public):String(a[settingsSortKey]??'')
@@ -657,9 +689,25 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
     </div>
   }
   function renderAccounts(){
-    const reportRows:Record<string,unknown>[]=filteredMembers.map(row=>({name:row.full_name??'',email:row.email??'',role:label(row.role),status:label(row.status),added:row.created_at??'',user_id:row.user_id}))
+    const reportRows:Record<string,unknown>[]=orderedMembers.map(row=>({name:row.full_name??'',email:row.email??'',role:label(row.role),status:label(row.status),added:row.created_at??'',user_id:row.user_id}))
     const reportColumns:OfficeColumn[]=[{key:'name',label:'User'},{key:'email',label:'Email'},{key:'role',label:'Role'},{key:'status',label:'Access status'},{key:'added',label:'Membership created'},{key:'user_id',label:'User ID'}]
-    return <section className="gov-panel"><header><div><h2>User access and invitations</h2><p>Institution memberships, role assignments and account activation status.</p></div><Users size={20}/></header>{reportActions('User access register','user-access-register',reportRows,reportColumns)}<div className="ed360-admin-kpis"><article><small>Total memberships</small><strong>{members.length}</strong></article><article><small>Active</small><strong>{members.filter(row=>row.status==='active').length}</strong></article><article><small>Invited / pending</small><strong>{members.filter(row=>['invited','pending'].includes(row.status)).length}</strong></article><article><small>Suspended / inactive</small><strong>{members.filter(row=>['suspended','inactive'].includes(row.status)).length}</strong></article></div><label className="ed360-admin-search"><Search size={14}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search name, email, role or status…"/></label>{filteredMembers.length?<div className="gov-table-wrap"><table className="ed360-admin-table"><thead><tr><th>User</th><th>Email</th><th>Role</th><th>Access status</th><th>Added</th><th>Access action</th></tr></thead><tbody>{filteredMembers.map(row=><tr key={row.user_id}><td><b>{row.full_name}</b>{row.user_id===user?.id&&<small className="gov-note">Your account</small>}</td><td>{row.email}</td><td>{label(row.role)}</td><td><span className={'ed360-admin-status '+row.status}>{label(row.status)}</span></td><td>{dateLabel(row.created_at)}</td><td>{row.role==='owner'?<span className="gov-readonly">Protected owner</span>:row.user_id===user?.id?<span className="gov-readonly">Protected account</span>:['active','suspended'].includes(row.status)?<button type="button" className={'gov-button '+(row.status==='active'?'danger':'primary')} disabled={membershipSavingId===row.id} onClick={()=>void changeMembershipStatus(row)}>{membershipSavingId===row.id?'Updating…':row.status==='active'?'Suspend access':'Reactivate access'}</button>:<span className="gov-readonly">Use account provisioning</span>}</td></tr>)}</tbody></table></div>:<div className="gov-empty">No memberships match this search.</div>}<div className="gov-row-actions" style={{marginTop:14}}><button className="gov-button primary" onClick={()=>onNavigate('accounts')}>Open User Account Manager <ArrowUpRight size={14}/></button></div><div className="gov-note">Create and invite accounts in the linked Account Manager. This register can activate or suspend established memberships; pending and invited accounts remain under account provisioning.</div></section>
+    const roles=[...new Set(members.map(row=>row.role).filter(Boolean))].sort()
+    return <section className="gov-panel">
+      <header><div><h2>User access and invitations</h2><p>{orderedMembers.length} matching memberships · {members.length} total institution memberships</p></div><Users size={20}/></header>
+      {reportActions('User access register','user-access-register',reportRows,reportColumns)}
+      <div className="ed360-admin-kpis"><article><small>Total memberships</small><strong>{members.length}</strong></article><article><small>Active</small><strong>{members.filter(row=>row.status==='active').length}</strong></article><article><small>Invited / pending</small><strong>{members.filter(row=>['invited','pending'].includes(row.status)).length}</strong></article><article><small>Suspended / inactive</small><strong>{members.filter(row=>['suspended','inactive'].includes(row.status)).length}</strong></article></div>
+      <div className="ed360-admin-account-filters">
+        <label>Status<select value={memberStatusFilter} onChange={e=>{setMemberStatusFilter(e.target.value);setMemberPage(1)}}><option value="all">All statuses</option>{['active','invited','pending','suspended','inactive'].map(status=><option key={status} value={status}>{label(status)}</option>)}</select></label>
+        <label>Role<select value={memberRoleFilter} onChange={e=>{setMemberRoleFilter(e.target.value);setMemberPage(1)}}><option value="all">All roles</option>{roles.map(role=><option key={role} value={role}>{label(role)}</option>)}</select></label>
+        <label>Order by<select value={memberSortKey} onChange={e=>{setMemberSortKey(e.target.value as typeof memberSortKey);setMemberPage(1)}}><option value="created_at">Date added</option><option value="full_name">Name</option><option value="email">Email</option><option value="role">Role</option><option value="status">Status</option></select></label>
+        <button type="button" className="gov-button" onClick={()=>{setMemberSortDirection(value=>value==='asc'?'desc':'asc');setMemberPage(1)}} aria-label={'Sort '+(memberSortDirection==='asc'?'descending':'ascending')}>{memberSortDirection==='asc'?'Ascending ↑':'Descending ↓'}</button>
+        <label className="ed360-admin-account-search"><Search size={14}/><input value={search} onChange={e=>{setSearch(e.target.value);setMemberPage(1)}} placeholder="Search name, email, role or status…"/></label>
+      </div>
+      {orderedMembers.length?<div className="gov-table-wrap"><table className="ed360-admin-table"><thead><tr><th>User</th><th>Email</th><th>Role</th><th>Access status</th><th>Added</th><th>Access action</th></tr></thead><tbody>{memberPageRows.map(row=><tr key={row.user_id}><td><b>{row.full_name}</b>{row.user_id===user?.id&&<small className="gov-note">Your account</small>}</td><td>{row.email}</td><td>{label(row.role)}</td><td><span className={'ed360-admin-status '+row.status}>{label(row.status)}</span></td><td>{dateLabel(row.created_at)}</td><td>{row.role==='owner'?<span className="gov-readonly">Protected owner</span>:row.user_id===user?.id?<span className="gov-readonly">Protected account</span>:['active','suspended'].includes(row.status)?<button type="button" className={'gov-button '+(row.status==='active'?'danger':'primary')} disabled={membershipSavingId===row.id} onClick={()=>void changeMembershipStatus(row)}>{membershipSavingId===row.id?'Updating…':row.status==='active'?'Suspend access':'Reactivate access'}</button>:<span className="gov-readonly">Use account provisioning</span>}</td></tr>)}</tbody></table></div>:<div className="gov-empty">No memberships match these filters. Clear a filter or search, or invite an institution member through the Account Manager.</div>}
+      {pageControls(orderedMembers.length,membersCurrentPage,membersPageCount,setMemberPage)}
+      <div className="gov-row-actions" style={{marginTop:14}}><button className="gov-button primary" onClick={()=>onNavigate('accounts')}>Open User Account Manager <ArrowUpRight size={14}/></button></div>
+      <div className="gov-note">Create and invite accounts in the linked Account Manager. This register can activate or suspend established memberships; pending and invited accounts remain under account provisioning.</div>
+    </section>
   }
   function renderSecurity(){
     const related=filteredAudit.filter(row=>/auth|login|session|security|access|membership/i.test(row.module_key+' '+row.record_type+' '+row.action))
