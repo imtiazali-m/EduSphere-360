@@ -8,8 +8,6 @@ on:
       - 'scripts/test-migration-ledger.mjs'
       - '.github/workflows/migration-ledger-integrity.yml'
   push:
-    branches:
-      - main
     paths:
       - 'supabase/migrations/**'
       - 'docs/REMOTE_MIGRATION_LEDGER_2026-11-16.json'
