@@ -124,8 +124,8 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
   const auditPageCount=Math.max(1,Math.ceil(filteredAudit.length/pageSize))
   const auditCurrentPage=Math.min(auditPage,auditPageCount)
   const auditPageRows=filteredAudit.slice((auditCurrentPage-1)*pageSize,auditCurrentPage*pageSize)
-  const primaryColor=String(settings.find(row=>row.category==='branding'&&row.setting_key==='primary_color')?.setting_value??'#205b43')
-  const accentColor=String(settings.find(row=>row.category==='branding'&&row.setting_key==='accent_color')?.setting_value??'#9bc85b')
+  const primaryColor=String(settings.find(row=>row.category==='branding'&&row.setting_key==='primary_color')?.setting_value??'#6035B5')
+  const accentColor=String(settings.find(row=>row.category==='branding'&&row.setting_key==='accent_color')?.setting_value??'#16877B')
 
   function toggleSettingsSort(key:'category'|'setting_key'|'is_public'){
     if(settingsSortKey===key)setSettingsSortDirection(direction=>direction==='asc'?'desc':'asc')
