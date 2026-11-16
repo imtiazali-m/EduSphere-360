@@ -14,8 +14,8 @@
 - The existing React/TypeScript/Vite application remains the product baseline; Supabase is the existing Auth/Postgres/Storage/Edge Functions project and Cloudflare Pages is the production host.
 - The application baseline is **online-only**. Offline persistence/synchronisation is not implemented and is not claimed.
 - Current `main` source verification, TypeScript/Vite build, Cloudflare asset validation, public responsive checks and the main-branch Cloudflare deployment job succeeded on the exact main SHA.
-- The latest observed main workflow deployed the `edusphere360` Pages project. This automation did not initiate that deployment. A separate production HTTP/browser smoke test and a rollback record are still missing.
-- Ten pull requests are open. Only PR #94 is based on the current main SHA and reports mergeable=true. Several older branches overlap in shared dashboard/navigation/workflow files and need an explicit rebase/retarget sequence.
+- The latest observed main workflow deployed the `edusphere360` Pages project. This automation did not initiate that deployment. A separate production HTTP/browser smoke test and a rollback record are still missing; the available public fetch returned no page content and the browser smoke could not be started, so no successful production smoke is claimed.
+- Ten pre-existing pull requests were open at the start of this run; this assurance work then opened PR #95, so **11 are open now**. PR #94 is the only pre-existing feature PR based on the current main SHA; the new assurance PR #95 is also based on that SHA. Several older branches overlap in shared dashboard/navigation/workflow files and need an explicit rebase/retarget sequence.
 - No Supabase schema, migration history, policy, grant, function, Auth user, record, Storage object or secret was changed in this checkpoint.
 
 ## Main branch and exact CI evidence
@@ -31,7 +31,7 @@ The run's source/build job passed the route and responsive audits, modal keyboar
 
 ## Open pull-request graph
 
-All ten open PRs were inspected for base/head SHAs, changed paths, mergeability, exact-head Actions runs, conversation comments, review submissions and inline review threads. No submitted human reviews or inline review threads were present at this snapshot; conversation comments were automated Vercel status messages.
+All ten pre-existing open PRs were inspected for base/head SHAs, changed paths, mergeability, exact-head Actions runs, conversation comments, review submissions and inline review threads. No submitted human reviews or inline review threads were present at the snapshot; coordination comments from this run were posted to #94, #85, #84, #72, #61 and #62 in addition to the automated Vercel status messages.
 
 | PR | Base → exact head | State / mergeability | Exact-head Actions | Integration decision |
 |---|---|---|---|---|
@@ -161,7 +161,7 @@ For every role, test direct REST/Data API reads and writes (SELECT/INSERT/UPDATE
 1. Re-read the current main SHA, all ten open PRs, changed paths, base/head dependencies, mergeability, discussions, review submissions, inline review threads and exact-head Actions runs.
 2. Read the live Supabase migration versions, public table/RLS counts, selected function definitions/ACLs, Edge Function inventory and security/performance advisors using read-only operations only.
 3. Confirmed the current main teacher-provisioning guard source and the live `create-user` v10 deployment match at the entrypoint.
-4. Added a machine-readable migration snapshot and a Node built-in regression test/workflow in an isolated branch. No existing feature branch or shared application component was overwritten.
+4. Added a machine-readable migration snapshot and a Node built-in regression test/workflow in isolated [PR #95](https://github.com/imtiazali-m/EduSphere-360/pull/95). The migration-ledger test passed 8/8 on the code-bearing head; the full project PR workflow was still in progress at this checkpoint. No existing feature branch or shared application component was overwritten.\n5. Posted concise migration/shared-file sequencing notes to PRs #94, #85, #84, #72, #61 and #62.
 5. Recorded the current PR integration sequence and release gates here.
 
 **Live Supabase changes this run: none.**  
