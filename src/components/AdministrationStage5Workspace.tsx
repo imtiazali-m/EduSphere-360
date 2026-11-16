@@ -251,20 +251,33 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
     let parsed:unknown;try{parsed=JSON.parse(approvalValue)}catch{onToast('Enter a valid JSON setting value.',true);return}
     if(!approvalKey.trim()){onToast('Enter a setting key.',true);return}
     setSaving(true)
-    const {error:requestError}=await supabase.from('workflow_approvals').insert({institution_id:user!.institutionId,workflow_key:'institution_setting_change',target_type:'institution_settings',target_id:crypto.randomUUID(),requested_by:user!.id,status:'pending',payload:{category:'general',setting_key:approvalKey.trim(),setting_value:parsed,is_public:approvalPublic,request_notes:approvalNotes.trim()||null}})
-    if(requestError)onToast(userFacingError(requestError,'Approval request could not be submitted.'),true)
-    else{setApprovalForm(false);setApprovalKey('');setApprovalValue('{}');setApprovalNotes('');onToast('Approval request submitted.');await load(true)}
-    setSaving(false)
+    try{
+      const {error:requestError}=await supabase.from('workflow_approvals').insert({institution_id:user!.institutionId,workflow_key:'institution_setting_change',target_type:'institution_settings',target_id:crypto.randomUUID(),requested_by:user!.id,status:'pending',payload:{category:'general',setting_key:approvalKey.trim(),setting_value:parsed,is_public:approvalPublic,request_notes:approvalNotes.trim()||null}})
+      if(requestError)throw requestError
+      setApprovalForm(false);setApprovalKey('');setApprovalValue('{}');setApprovalNotes('')
+      onToast('Approval request submitted.')
+      await load(true)
+    }catch(err){
+      onToast(userFacingError(err,'Approval request could not be submitted.'),true)
+    }finally{
+      setSaving(false)
+    }
   }
   async function decideApproval(row:Approval,decision:'approved'|'rejected'){
     if(!supabase||!admin)return
     const notes=window.prompt(decision==='approved'?'Optional approval note:':'Reason for rejection (recommended):','')??''
     if(decision==='rejected'&&!notes.trim()){onToast('Add a reason before rejecting this request.',true);return}
     setSaving(true)
-    const {error:decisionError}=await supabase.rpc('decide_institution_setting_approval',{p_institution_id:user!.institutionId,p_approval_id:row.id,p_decision:decision,p_notes:notes})
-    if(decisionError)onToast(userFacingError(decisionError,'Approval decision could not be saved.'),true)
-    else{onToast(decision==='approved'?'Approved and applied.':'Request rejected.');await load(true)}
-    setSaving(false)
+    try{
+      const {error:decisionError}=await supabase.rpc('decide_institution_setting_approval',{p_institution_id:user!.institutionId,p_approval_id:row.id,p_decision:decision,p_notes:notes})
+      if(decisionError)throw decisionError
+      onToast(decision==='approved'?'Approved and applied.':'Request rejected.')
+      await load(true)
+    }catch(err){
+      onToast(userFacingError(err,'Approval decision could not be saved.'),true)
+    }finally{
+      setSaving(false)
+    }
   }
 
   async function changeMembershipStatus(member:Member){
