@@ -46,6 +46,14 @@
   --brand-success: var(--es-success);
   --brand-warning: var(--es-warning);
   --brand-danger: var(--es-danger);
+  --primary: #28716e;
+  --primary-soft: #e3efec;
+  --line: #dee6e2;
+  --surface: #ffffff;
+  --surface-muted: #f4f7f5;
+  --surface-hover: #fafcfb;
+  --ink: #1d2928;
+  --muted: #657570;
   accent-color: var(--es-primary-600);
 }
 
@@ -1514,3 +1522,151 @@
   border-color:var(--es-line);box-shadow:var(--es-shadow-sm);
 }
 .pro-window-panel .ed360-profile-public-note { display:none!important; }
+
+
+/* Shared GIDC tokens for specialist workspace families. Layout stays task-specific. */
+.pro-window-panel .gov-stage,
+.pro-window-panel .people-hr-workspace,
+.pro-window-panel .staff-workspace,
+.pro-window-panel .crp-workspace { color:var(--es-ink); }
+
+.pro-window-panel .gov-heading h1,
+.pro-window-panel .ed360-admin-profile-preview h3,
+.pro-window-panel .ed360-admin-org-department h3 { color:var(--es-brand-900); }
+.pro-window-panel .gov-heading>div>span,
+.pro-window-panel .gov-live,
+.pro-window-panel .gov-context small,
+.pro-window-panel .gov-panel>header p,
+.pro-window-panel .gov-readonly,
+.pro-window-panel .gov-note,
+.pro-window-panel .gov-search,
+.pro-window-panel .gov-search input,
+.pro-window-panel .gov-form label,
+.pro-window-panel .gov-table-wrap th { color:var(--es-muted); }
+.pro-window-panel .gov-nav,
+.pro-window-panel .gov-button,
+.pro-window-panel .gov-panel,
+.pro-window-panel .gov-context { border-color:var(--es-line); }
+.pro-window-panel .gov-nav { background:var(--es-canvas); }
+.pro-window-panel .gov-nav button.active {
+  color:var(--es-primary-700);
+  background:#fff;
+  box-shadow:inset 0 -2px var(--es-primary-600);
+}
+.pro-window-panel .gov-button.primary {
+  color:#fff;
+  background:var(--es-primary-600);
+  border-color:var(--es-primary-600);
+}
+.pro-window-panel .gov-button.primary:hover { background:var(--es-primary-700); }
+.pro-window-panel .gov-panel,
+.pro-window-panel .gov-context,
+.pro-window-panel .ed360-admin-profile-preview { background:#fff; }
+.pro-window-panel .gov-profile-grid article,
+.pro-window-panel .gov-payload,
+.pro-window-panel .gov-footer { background:var(--es-surface-soft); }
+.pro-window-panel .gov-profile-grid strong,
+.pro-window-panel .gov-panel td,
+.pro-window-panel .ed360-admin-profile-preview dl { color:var(--es-ink); }
+.pro-window-panel .gov-sort-header:hover { color:var(--es-primary-700); }
+.pro-window-panel .gov-sort-header:focus-visible { outline-color:var(--es-primary-500); }
+
+.pro-window-panel .people-hr-subnav button.active,
+.pro-window-panel .people-hr-secondary-nav button.active {
+  color:var(--es-primary-700);
+  border-color:#b9d6ce;
+  background:var(--es-primary-100);
+}
+.pro-window-panel .people-hr-inline-note { border-color:var(--es-line);background:var(--es-canvas); }
+.pro-window-panel .people-hr-inline-note svg,
+.pro-window-panel .people-hr-icon-button:hover,
+.pro-window-panel .people-hr-sort span { color:var(--es-primary-600); }
+.pro-window-panel .people-hr-icon-button:hover { border-color:var(--es-primary-500); }
+.pro-window-panel .people-hr-sort:focus-visible { outline-color:var(--es-primary-500); }
+
+.pro-window-panel .staff-workspace-heading h1,
+.pro-window-panel .staff-panel>header h2,
+.pro-window-panel .staff-full-panel>header h2,
+.pro-window-panel .staff-profile-summary strong,
+.pro-window-panel .staff-process-grid b,
+.pro-window-panel .staff-subheading,
+.pro-window-panel .staff-profile-grid h3 { color:var(--es-brand-900); }
+.pro-window-panel .staff-workspace-heading p,
+.pro-window-panel .staff-kicker,
+.pro-window-panel .staff-panel>header p,
+.pro-window-panel .staff-summary-list,
+.pro-window-panel .staff-record-count,
+.pro-window-panel .staff-profile-grid article>span { color:var(--es-muted); }
+.pro-window-panel .staff-button-primary,
+.pro-window-panel .staff-window-nav button.active {
+  color:#fff;
+  background:var(--es-primary-600);
+  border-color:var(--es-primary-600);
+}
+.pro-window-panel .staff-button-primary:hover:not(:disabled),
+.pro-window-panel .staff-window-nav button.active:hover { background:var(--es-primary-700); }
+.pro-window-panel .staff-window-nav,
+.pro-window-panel .staff-panel,
+.pro-window-panel .staff-metric-card,
+.pro-window-panel .staff-table-wrap,
+.pro-window-panel .staff-dialog,
+.pro-window-panel .staff-profile-grid article,
+.pro-window-panel .staff-document-form,
+.pro-window-panel .staff-process-grid article,
+.pro-window-panel .staff-report-grid article { border-color:var(--es-line);background:#fff; }
+.pro-window-panel .staff-window-nav button { color:var(--es-muted); }
+.pro-window-panel .staff-window-nav button:hover,
+.pro-window-panel .staff-operation-links button:hover,
+.pro-window-panel .staff-row-actions button:hover,
+.pro-window-panel .staff-empty>span {
+  color:var(--es-primary-700);
+  background:var(--es-primary-100);
+}
+.pro-window-panel .staff-metric-card>span,
+.pro-window-panel .staff-operation-links svg,
+.pro-window-panel .staff-panel>header button,
+.pro-window-panel .staff-row-actions button { color:var(--es-primary-600); }
+.pro-window-panel .staff-table th { background:var(--es-canvas);color:var(--es-muted); }
+.pro-window-panel .staff-table td,
+.pro-window-panel .staff-table strong,
+.pro-window-panel .staff-field,
+.pro-window-panel .staff-toolbar input,
+.pro-window-panel .staff-profile-grid dd { color:var(--es-ink); }
+.pro-window-panel .staff-context-bar { background:var(--es-surface-soft);border-color:var(--es-line); }
+.pro-window-panel .staff-context-bar>div strong { color:var(--es-brand-900); }
+.pro-window-panel .staff-empty { border-color:var(--es-line);color:var(--es-muted); }
+.pro-window-panel .staff-empty>strong { color:var(--es-brand-900); }
+
+.pro-window-panel .crp-workspace { color:var(--es-ink); }
+.pro-window-panel .crp-intro {
+  background:linear-gradient(110deg,#193e4b,#28716e);
+  box-shadow:var(--es-shadow-sm);
+}
+.pro-window-panel .crp-panel,
+.pro-window-panel .crp-role-card,
+.pro-window-panel .crp-table-wrap,
+.pro-window-panel .crp-summary-grid article,
+.pro-window-panel .crp-template-row { border-color:var(--es-line);background:#fff; }
+.pro-window-panel .crp-summary-grid strong,
+.pro-window-panel .crp-panel>header h3,
+.pro-window-panel .crp-role-card h4,
+.pro-window-panel .crp-table-wrap td b { color:var(--es-brand-900); }
+.pro-window-panel .crp-summary-grid span,
+.pro-window-panel .crp-summary-grid small,
+.pro-window-panel .crp-panel>header p,
+.pro-window-panel .crp-role-card p,
+.pro-window-panel .crp-role-meta,
+.pro-window-panel .crp-table-wrap td,
+.pro-window-panel .crp-form-grid label>span { color:var(--es-muted); }
+.pro-window-panel .crp-button-primary {
+  color:#fff;
+  background:var(--es-primary-600);
+  border-color:var(--es-primary-600);
+}
+.pro-window-panel .crp-button-primary:hover { background:var(--es-primary-700);border-color:var(--es-primary-700); }
+.pro-window-panel .crp-security-note { border-color:var(--es-line);background:var(--es-primary-050);color:var(--es-muted); }
+.pro-window-panel .crp-security-note svg,
+.pro-window-panel .crp-role-icon,
+.pro-window-panel .crp-empty svg { color:var(--es-primary-600); }
+.pro-window-panel .crp-role-icon { background:var(--es-primary-100); }
+.pro-window-panel .crp-form-grid :is(input,select,textarea):focus { outline-color:rgba(40,113,110,.22);border-color:var(--es-primary-500); }
