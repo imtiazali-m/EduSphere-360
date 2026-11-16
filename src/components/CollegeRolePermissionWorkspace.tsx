@@ -320,26 +320,32 @@ export function CollegeRolePermissionWorkspace({
   }
 
   async function setAssignmentStatus(row:RoleAssignment,status:RoleAssignment['status']) {
-    if(!supabase)return
+    if(!supabase||saving)return
     const action=status==='active'?'reactivate':'suspend or end'
     if(!window.confirm('Are you sure you want to '+action+' this role assignment? An assigned member only retains the permissions in their active role profiles.'))return
     setSaving(true)
-    const updateValues={status,updated_at:new Date().toISOString(),...(status==='active'?{starts_at:new Date().toISOString(),ends_at:null}:{})}
-    const {error:updateError}=await supabase.from('institution_user_role_assignments').update(updateValues).eq('institution_id',institutionId).eq('id',row.id)
-    if(updateError)onToast(userFacingError(updateError,'The assignment status could not be changed.'),true)
-    else{onToast(status==='active'?'Role assignment reactivated.':'Role assignment status changed.');await load(true)}
-    setSaving(false)
+    try{
+      const updateValues={status,updated_at:new Date().toISOString(),...(status==='active'?{starts_at:new Date().toISOString(),ends_at:null}:{})}
+      const {error:updateError}=await supabase.from('institution_user_role_assignments').update(updateValues).eq('institution_id',institutionId).eq('id',row.id)
+      if(updateError)throw updateError
+      onToast(status==='active'?'Role assignment reactivated.':'Role assignment status changed.')
+      await load(true)
+    }catch(cause){onToast(userFacingError(cause,'The assignment status could not be changed.'),true)}
+    finally{setSaving(false)}
   }
 
   async function toggleProfileStatus(profile:RoleProfile) {
-    if(!supabase)return
+    if(!supabase||saving)return
     const next=!profile.is_active
     if(!window.confirm(next?'Reactivate this role profile?':'Deactivate this role profile? Members assigned only this profile will lose its permissions.'))return
     setSaving(true)
-    const {error:updateError}=await supabase.from('institution_role_profiles').update({is_active:next,updated_by:currentUserId,updated_at:new Date().toISOString()}).eq('institution_id',institutionId).eq('id',profile.id)
-    if(updateError)onToast(userFacingError(updateError,'The role profile status could not be changed.'),true)
-    else{onToast(next?'Role profile reactivated.':'Role profile deactivated.');await load(true)}
-    setSaving(false)
+    try{
+      const {error:updateError}=await supabase.from('institution_role_profiles').update({is_active:next,updated_by:currentUserId,updated_at:new Date().toISOString()}).eq('institution_id',institutionId).eq('id',profile.id)
+      if(updateError)throw updateError
+      onToast(next?'Role profile reactivated.':'Role profile deactivated.')
+      await load(true)
+    }catch(cause){onToast(userFacingError(cause,'The role profile status could not be changed.'),true)}
+    finally{setSaving(false)}
   }
 
   const matchingProfiles=profiles.filter(profile=>profile.base_role===memberById.get(assignUserId)?.role && profile.is_active)
