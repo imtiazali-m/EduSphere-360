@@ -580,7 +580,7 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
  function exportCsv(){downloadCsv(baseName+'.csv',exportRows as unknown as Record<string,unknown>[],columns)}
  function exportExcel(){exportXlsx(baseName+'.xlsx',group.label+' — '+item.label,exportRows as unknown as Record<string,unknown>[],columns)}
  function exportWord(){exportDocx(baseName+'.docx',group.label+' — '+item.label,exportRows as unknown as Record<string,unknown>[],columns)}
- function print(){try{printOfficeReport(group.label+' — '+item.label,exportRows as unknown as Record<string,unknown>[],columns,user?.institutionName??'EduSphere 360')}catch(error){onToast(error instanceof Error?error.message:'Print view could not be opened.',true)}}
+ function print(){try{printOfficeReport(group.label+' — '+item.label,exportRows as unknown as Record<string,unknown>[],columns,user?.institutionName??'Government Islamia Degree College Badin')}catch(error){onToast(error instanceof Error?error.message:'Print view could not be opened.',true)}}
 
  return <main className="page-content ed360-module-page ed360-institutional-workspace" data-workspace-group={group.key} data-workspace-theme={group.theme} data-workspace-layout={workspaceLayout} style={{'--workspace-accent':theme.accent,'--workspace-soft':theme.soft,'--workspace-ink':theme.ink} as CSSProperties}>
   <header className="ed360-workspace-hero">
