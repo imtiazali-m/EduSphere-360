@@ -290,9 +290,17 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
   }
   async function removePolicy(row:Policy){
     if(!supabase||!admin||!window.confirm('Delete policy “'+row.title+'”? Its audit event remains available to administrators.'))return
-    const {error:removeError}=await supabase.from('institutional_records').delete().eq('institution_id',user!.institutionId).eq('id',row.id)
-    if(removeError)onToast(userFacingError(removeError,'The policy could not be deleted.'),true)
-    else{onToast('Policy removed.');await load(true)}
+    setSaving(true)
+    try{
+      const {error:removeError}=await supabase.from('institutional_records').delete().eq('institution_id',user!.institutionId).eq('id',row.id)
+      if(removeError)throw removeError
+      onToast('Policy removed.')
+      await load(true)
+    }catch(err){
+      onToast(userFacingError(err,'The policy could not be deleted.'),true)
+    }finally{
+      setSaving(false)
+    }
   }
   async function submitApproval(event:FormEvent){
     event.preventDefault();if(!supabase)return
@@ -604,10 +612,14 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
   }
   function renderPolicies(){
     const audience=section==='policies-faculty'?'Faculty':'Student'
+    const audiencePolicies=policies.filter(row=>{
+      const category=String(jsonObject(row.payload).category??'').toLowerCase()
+      return audience==='Faculty'?['faculty','staff','teacher','teachers'].includes(category):['student','students'].includes(category)
+    })
     const reportRows:Record<string,unknown>[]=orderedPolicies.map(row=>({title:row.title,reference:row.reference_code??'',audience:label(row.payload.category??''),revision:Number(row.payload.revision??1),effective_date:row.effective_date??'',status:label(row.status),updated_at:row.updated_at??'',description:row.description??''}))
     const reportColumns:OfficeColumn[]=[{key:'title',label:'Policy title'},{key:'reference',label:'Reference'},{key:'audience',label:'Audience'},{key:'revision',label:'Revision'},{key:'effective_date',label:'Effective date'},{key:'status',label:'Status'},{key:'updated_at',label:'Last updated'},{key:'description',label:'Policy text'}]
     return <section className="gov-panel ed360-admin-policy-page">
-      <header><div><h2>{audience} policy register</h2><p>{orderedPolicies.length} matching policies · {policies.filter(row=>String(jsonObject(row.payload).category??'').toLowerCase().includes(audience.toLowerCase()==='faculty'?'fac':'stu')).length} records for this audience</p></div><button className="gov-button primary" onClick={()=>openPolicy()}><Plus size={14}/> Add {audience.toLowerCase()} policy</button></header>
+      <header><div><h2>{audience} policy register</h2><p>{orderedPolicies.length} matching policies · {audiencePolicies.length} records for this audience</p></div><button className="gov-button primary" onClick={()=>openPolicy()}><Plus size={14}/> Add {audience.toLowerCase()} policy</button></header>
       {reportActions(audience+' policies',audience.toLowerCase()+'-policies',reportRows,reportColumns)}
       <div className="ed360-admin-policy-filters">
         <label>Status<select value={policyStatusFilter} onChange={e=>{setPolicyStatusFilter(e.target.value as typeof policyStatusFilter);setPolicyPage(1)}}><option value="all">All statuses</option><option value="draft">Draft</option><option value="published">Published</option><option value="archived">Archived</option></select></label>
