@@ -557,7 +557,7 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
               <option value="requested_at">Request date</option><option value="status">Status</option><option value="workflow_key">Workflow</option>
             </select>
           </label>
-          <button type="button" className="gov-button" onClick={()=>{setApprovalSortDirection(value=>value==='asc'?'desc':'asc');setApprovalPage(1)}} aria-label={'Sort '+approvalSortDirection==='asc'?'descending':'ascending'}>
+          <button type="button" className="gov-button" onClick={()=>{setApprovalSortDirection(value=>value==='asc'?'desc':'asc');setApprovalPage(1)}} aria-label={'Sort '+(approvalSortDirection==='asc'?'descending':'ascending')}>
             {approvalSortDirection==='asc'?'Ascending ↑':'Descending ↓'}
           </button>
           <label className="ed360-admin-approval-search"><Search size={14}/><input value={search} onChange={e=>{setSearch(e.target.value);setSettingsPage(1);setApprovalPage(1)}} placeholder="Search workflow, status, target or notes…"/></label>
