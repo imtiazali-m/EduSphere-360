@@ -526,6 +526,26 @@ check('Institutional workspace includes real record CRUD and office-compatible e
   for (const value of ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','application/vnd.openxmlformats-officedocument.wordprocessingml.document','window.print']) assert.ok(exporters.includes(value))
 })
 
+ 
+check('GIDC signed-in submenus share one theme and do not show generic page guidance', () => {
+  const theme = read('src/styles/premium-institutional-theme.css')
+  const workspace = read('src/components/InstitutionalWorkspace.tsx')
+  assert.ok(theme.includes('.ed360-page-guide,.ed360-page-purpose') && theme.includes('display:none !important'), 'Generic page guidance must not occupy each submenu')
+  assert.ok(theme.includes('--workspace-accent:var(--es-primary-600) !important') && theme.includes('--workspace-soft:var(--es-primary-100) !important'), 'All fallback submenu accents must use the shared royal-plum palette')
+  assert.ok(theme.includes('.rd-welcome-panel') && theme.includes('color:#211832'), 'The college welcome panel must retain readable black text')
+  assert.ok(workspace.includes('data-workspace-theme') && workspace.includes('ed360-workspace-hero'), 'Submenus must retain their own title, navigation and workspace content')
+})
+
+check('GIDC print reports and student ID cards render their official branding and QR before print', () => {
+  const office = read('src/lib/officeExport.ts')
+  const operations = read('src/components/InstitutionOperationsWorkspace.tsx')
+  assert.ok(office.includes('GIDC Badin Management Portal') && !office.includes('EduSphere 360'), 'Office reports must carry GIDC branding')
+  assert.ok(office.includes('@page{size:A4') && office.includes('document.fonts&&document.fonts.ready'), 'A4 report print must wait for fonts and images')
+  assert.ok(operations.includes('<script src="/vendor/qrcode.min.js"></script>'), 'The student ID print view must load the local QR generator')
+  assert.ok(operations.includes('document.querySelector(".id-qr")') && operations.includes('new window.QRCode(node'), 'The printed student ID must populate its QR')
+  assert.ok(operations.includes('document.querySelector(".certificate-qr-code")'), 'The certificate print view must populate its verification QR')
+})
+
 
 check('Institutional registers and windows are tailored by workspace domain', () => {
   const workspace = read('src/components/InstitutionalWorkspace.tsx')
