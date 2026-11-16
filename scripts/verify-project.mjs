@@ -544,6 +544,8 @@ check('GIDC print reports and student ID cards render their official branding an
   assert.ok(operations.includes('<script src="/vendor/qrcode.min.js"></script>'), 'The student ID print view must load the local QR generator')
   assert.ok(operations.includes('document.querySelector(".id-qr")') && operations.includes('new window.QRCode(node'), 'The printed student ID must populate its QR')
   assert.ok(operations.includes('document.querySelector(".certificate-qr-code")'), 'The certificate print view must populate its verification QR')
+  assert.ok(operations.includes("async function printStudentIdCard") && operations.includes("createSignedUrl(photoPath,300)") && operations.includes("idCardPreviewPhotoUrl?<img"), 'Student ID preview and print must use a short-lived signed private photo URL when a student photo exists')
+  assert.ok(read('src/styles/premium-institutional-theme.css').includes('.iop-idcard-avatar img'), 'GIDC student photo must be cropped inside the ID card avatar frame')
 })
 
 
