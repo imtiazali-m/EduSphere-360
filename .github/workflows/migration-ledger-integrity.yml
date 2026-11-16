@@ -1,0 +1,39 @@
+name: Migration ledger integrity
+
+on:
+  pull_request:
+    paths:
+      - 'supabase/migrations/**'
+      - 'docs/REMOTE_MIGRATION_LEDGER_2026-11-16.json'
+      - 'docs/RELEASE_ASSURANCE_REGISTER_2026-11-16.md'
+      - 'docs/THIRD_AI_INTEGRATION_ASSURANCE.md'
+      - 'scripts/test-migration-ledger.mjs'
+      - '.github/workflows/migration-ledger-integrity.yml'
+  push:
+    paths:
+      - 'supabase/migrations/**'
+      - 'docs/REMOTE_MIGRATION_LEDGER_2026-11-16.json'
+      - 'docs/RELEASE_ASSURANCE_REGISTER_2026-11-16.md'
+      - 'docs/THIRD_AI_INTEGRATION_ASSURANCE.md'
+      - 'scripts/test-migration-ledger.mjs'
+      - '.github/workflows/migration-ledger-integrity.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-migration-ledger:
+    name: Verify migration ledger snapshot
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Verify timestamped files, legacy SQL and remote version drift
+        run: node --test scripts/test-migration-ledger.mjs
