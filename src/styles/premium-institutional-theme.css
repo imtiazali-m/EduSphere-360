@@ -1365,3 +1365,104 @@
   .pro-window-panel .ed360-admin-brand-colors label { min-width:0; }
   .pro-window-panel .ed360-admin-brand-colors button { grid-column:1/-1;width:100%; }
 }
+
+
+/* GIDC unified submenu polish — shared across every signed-in workspace. */
+/* No generic guidance panel is rendered as page content. Task-specific instructions stay with their controls. */
+.pro-window-panel :is(.ed360-page-guide,.ed360-page-purpose) {
+  display:none !important;
+}
+
+/* Override old per-menu accent palettes with one college identity. */
+.pro-window-panel .ed360-institutional-workspace[data-workspace-theme] {
+  --workspace-accent:var(--es-primary-600) !important;
+  --workspace-soft:var(--es-primary-100) !important;
+  --workspace-ink:var(--es-brand-900) !important;
+}
+
+/* Integration and document workspaces use the same unboxed page heading. */
+.pro-window-panel .ed360-integration-heading {
+  color:var(--es-ink);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+  background:transparent;
+  border:0;
+  border-bottom:1px solid var(--es-line);
+  border-radius:0;
+  box-shadow:none;
+  padding:4px 2px 16px;
+  margin:0 0 18px;
+}
+.pro-window-panel .ed360-integration-heading h1 {
+  margin:6px 0 0;
+  color:var(--es-ink);
+  font-size:clamp(28px,2.5vw,34px);
+  font-weight:900;
+  letter-spacing:-.8px;
+}
+.pro-window-panel .ed360-integration-heading>div>span {
+  color:var(--es-muted);
+  font-size:11px;
+  font-weight:850;
+  letter-spacing:1.1px;
+}
+.pro-window-panel :is(.ed360-integration-card,.ed360-integration-provider,.ed360-integration-status-card,.ed360-integration-steps,.ed360-integration-secrets,.ed360-data-card) {
+  color:var(--es-ink);
+  background:#fff;
+  border:1px solid var(--es-line);
+  border-radius:var(--es-radius-lg);
+  box-shadow:var(--es-shadow-sm);
+}
+.pro-window-panel .ed360-integration-card h2,
+.pro-window-panel .ed360-integration-provider h2,
+.pro-window-panel .ed360-integration-steps h2,
+.pro-window-panel .ed360-integration-secrets h2 {
+  color:var(--es-brand-900);
+}
+
+/* Improve the readability of dense registers without changing their data or behaviour. */
+.pro-window-panel :is(.ed360-institutional-workspace,.ed360-integration-workspace,.ed360-certificate-forms) {
+  font-size:14px;
+}
+.pro-window-panel :is(.ed360-workspace-toolbar,.ed360-workspace-filter,.ed360-workspace-search,.ed360-export-actions) {
+  font-size:13px;
+}
+.pro-window-panel :is(.ed360-workspace-record-card,.ed360-integration-workspace,.ed360-certificate-forms) table th {
+  font-size:12px;
+  line-height:1.45;
+}
+.pro-window-panel :is(.ed360-workspace-record-card,.ed360-integration-workspace,.ed360-certificate-forms) table td {
+  font-size:13px;
+  line-height:1.5;
+}
+.pro-window-panel :is(.ed360-data-card,.ed360-integration-card,.ed360-integration-provider) :is(h2,h3) {
+  font-size:16px;
+}
+
+/* Preserve the existing purple welcome mask and ensure every heading remains black. */
+.pro-app-shell .rd-welcome-panel,
+.pro-app-shell .rd-welcome-panel :is(h1,h2,h3,p,strong,small,em) {
+  color:#211832;
+}
+.pro-app-shell .rd-welcome-panel .rd-welcome-fact {
+  background:rgba(255,255,255,.72);
+  border-color:rgba(77,54,119,.18);
+}
+.pro-app-shell .rd-welcome-panel .rd-welcome-fact :is(small,strong,em) {
+  color:#211832;
+}
+
+/* Mobile keeps the refresh action large and reachable, without squeezing the title. */
+@media (max-width:700px) {
+  .pro-window-panel .ed360-integration-heading {
+    align-items:stretch;
+    flex-direction:column;
+  }
+  .pro-window-panel .ed360-integration-heading>.button,
+  .pro-window-panel .ed360-integration-heading>.button-primary {
+    width:100%;
+    min-height:48px;
+  }
+}
