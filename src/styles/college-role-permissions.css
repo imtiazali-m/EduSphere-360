@@ -82,3 +82,70 @@
 @media(max-width:1050px){.crp-role-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:720px){.crp-summary-grid{grid-template-columns:1fr 1fr}.crp-summary-grid article:last-child{grid-column:1/-1}.crp-role-grid{grid-template-columns:1fr 1fr}.crp-intro{padding:17px}.crp-panel{padding:14px}.crp-permission-list{grid-template-columns:1fr}}
 @media(max-width:520px){.crp-summary-grid{grid-template-columns:1fr}.crp-summary-grid article:last-child{grid-column:auto}.crp-role-grid{grid-template-columns:1fr}.crp-template-row{align-items:stretch;flex-direction:column}.crp-form-grid{grid-template-columns:1fr}.crp-form-wide{grid-column:auto}.crp-permission-list article{grid-template-columns:1fr}.crp-action-options{justify-content:flex-start}.crp-modal{padding:15px}.crp-intro{flex-direction:column;gap:10px}}
+
+/* Premium institutional theme: keep role governance visually consistent with the rest of EduSphere 360. */
+.crp-workspace { color:#242033; font-family:inherit; }
+.crp-intro {
+  background:linear-gradient(115deg,#6035B5,#4c2b91);
+  box-shadow:0 12px 26px rgba(55,35,100,.14);
+}
+.crp-intro-icon { background:rgba(255,255,255,.14); color:#d9cbff; }
+.crp-kicker { color:#16877B; }
+.crp-intro .crp-kicker { color:#e3d9ff; }
+.crp-intro h2,.crp-panel>header h3,.crp-modal>header h3,.crp-permission-heading h4 {
+  font-family:inherit; letter-spacing:-.02em;
+}
+.crp-security-note {
+  border-color:#ddd4ef; background:#f4f0fb; color:#40365c;
+}
+.crp-security-note svg { color:#6035B5; }
+.crp-summary-grid article,.crp-panel {
+  background:#fff; border-color:#e6e1ef; box-shadow:0 4px 15px rgba(36,32,51,.045);
+}
+.crp-summary-grid strong,.crp-panel>header h3,.crp-modal>header h3,
+.crp-role-card h4,.crp-empty b,.crp-table-wrap td b { color:#242033; font-family:inherit; }
+.crp-summary-grid span,.crp-summary-grid small,.crp-panel>header p,
+.crp-role-card p,.crp-role-meta,.crp-empty,.crp-modal>header p { color:#6f697e; }
+.crp-button,.crp-text-button,.crp-icon-button {
+  border-color:#ddd6eb; background:#fff; color:#4a3a70; border-radius:8px;
+}
+.crp-button:hover,.crp-text-button:hover,.crp-icon-button:hover {
+  border-color:#b9a8df; background:#f6f2fc; color:#4d2b92;
+}
+.crp-button-primary { background:#6035B5; border-color:#6035B5; color:#fff; }
+.crp-button-primary:hover { background:#4e2b99; border-color:#4e2b99; color:#fff; }
+.crp-template-row { background:#f5f3fa; border-color:#e6e1ef; }
+.crp-template-row label>span,.crp-form-grid label>span { color:#51476b; }
+.crp-template-row select,.crp-form-grid input,.crp-form-grid select,.crp-form-grid textarea {
+  border-color:#dcd6e8; background:#fff; color:#242033; border-radius:8px; font:inherit;
+}
+.crp-template-row select:focus,.crp-form-grid :is(input,select,textarea):focus {
+  outline:2px solid rgba(96,53,181,.18); border-color:#8b6bc8;
+}
+.crp-role-card { border-color:#e6e1ef; background:#fff; border-radius:10px; }
+.crp-role-card.is-inactive { background:#f7f5fa; }
+.crp-role-icon { background:#f0ebfa; color:#6035B5; }
+.crp-role-actions { border-top-color:#eeeaf4; }
+.crp-status.active { background:#e5f4f1; color:#117368; }
+.crp-status.inactive { background:#f2edf8; color:#665c78; }
+.crp-empty svg { color:#16877B; }
+.crp-table-wrap { border-color:#e6e1ef; border-radius:9px; }
+.crp-table-wrap th { background:#f5f3fa; color:#4c4266; }
+.crp-table-wrap td,.crp-table-wrap th { border-bottom-color:#eeeaf4; }
+.crp-table-wrap td { color:#5e586e; }
+.crp-table-wrap td small { color:#847d92; }
+.crp-text-button { color:#4f3591; }
+.crp-modal-backdrop { background:rgba(36,32,51,.62); }
+.crp-modal { background:#fff; border-color:#e2dced; border-radius:12px; }
+.crp-modal>header,.crp-modal>footer,.crp-permission-heading { border-color:#e9e4f0; }
+.crp-permission-heading>span { color:#16877B; }
+.crp-permission-list article { border-color:#e6e1ef; background:#fff; border-radius:8px; }
+.crp-permission-list article>div:first-child b { color:#242033; }
+.crp-permission-list article>div:first-child small,.crp-action-options label { color:#716a80; }
+.crp-action-options input { accent-color:#6035B5; }
+.crp-assignment-warning { background:#fff6e9; border-color:#efdfc4; color:#805b2c; }
+.crp-error { background:#fff1f1; border-color:#efcece; color:#923d45; }
+@media(max-width:520px) {
+  .crp-modal-backdrop { padding:10px; }
+  .crp-modal { max-height:96vh; }
+}
