@@ -46,7 +46,7 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
   const [search,setSearch]=useState('')
   const [settingsSortKey,setSettingsSortKey]=useState<'category'|'setting_key'|'is_public'>('category')
   const [settingsSortDirection,setSettingsSortDirection]=useState<'asc'|'desc'>('asc')
-  const [settingsPage,setSettingsPage]=useState(1),[approvalPage,setApprovalPage]=useState(1)
+  const [settingsPage,setSettingsPage]=useState(1),[approvalPage,setApprovalPage]=useState(1),[auditPage,setAuditPage]=useState(1),[securityPage,setSecurityPage]=useState(1)
   const pageSize=10
   const [membershipSavingId,setMembershipSavingId]=useState<string|null>(null)
   const [policyForm,setPolicyForm]=useState(false),[policyEditing,setPolicyEditing]=useState<Policy|null>(null)
@@ -121,6 +121,9 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
   const approvalsCurrentPage=Math.min(approvalPage,approvalsPageCount)
   const approvalPageRows=orderedApprovals.slice((approvalsCurrentPage-1)*pageSize,approvalPage*pageSize)
   const pendingApprovals=approvals.filter(row=>row.status==='pending').length
+  const auditPageCount=Math.max(1,Math.ceil(filteredAudit.length/pageSize))
+  const auditCurrentPage=Math.min(auditPage,auditPageCount)
+  const auditPageRows=filteredAudit.slice((auditCurrentPage-1)*pageSize,auditCurrentPage*pageSize)
   const primaryColor=String(settings.find(row=>row.category==='branding'&&row.setting_key==='primary_color')?.setting_value??'#205b43')
   const accentColor=String(settings.find(row=>row.category==='branding'&&row.setting_key==='accent_color')?.setting_value??'#9bc85b')
 
@@ -509,6 +512,9 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
     const recent=filteredAudit.filter(row=>Date.now()-new Date(row.occurred_at).getTime()<=30*24*60*60*1000).length
     const reportRows:Record<string,unknown>[]=filteredAudit.map(row=>({occurred_at:row.occurred_at,action:label(row.action),module:label(row.module_key),record_type:label(row.record_type),record_id:row.record_id,actor_id:row.actor_id??'system'}))
     const reportColumns:OfficeColumn[]=[{key:'occurred_at',label:'Occurred at'},{key:'action',label:'Action'},{key:'module',label:'Module'},{key:'record_type',label:'Record type'},{key:'record_id',label:'Record ID'},{key:'actor_id',label:'Actor ID'}]
+    const securityPageCount=Math.max(1,Math.ceil(related.length/pageSize))
+    const securityCurrentPage=Math.min(securityPage,securityPageCount)
+    const securityPageRows=related.slice((securityCurrentPage-1)*pageSize,securityCurrentPage*pageSize)
     const actors=new Set(filteredAudit.map(row=>row.actor_id).filter(Boolean)).size
     const modules=new Set(filteredAudit.map(row=>row.module_key).filter(Boolean)).size
     return <div className="ed360-admin-audit-page">
@@ -519,9 +525,9 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
         <article><small>Modules</small><strong>{modules}</strong><em>Modules represented in this feed</em></article>
       </div>
       <section className="gov-panel ed360-admin-audit-feed">
-        <div className="ed360-admin-search-row"><label className="ed360-admin-search"><Search size={14}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search actor, action, module or record…"/></label><span className="gov-readonly">Read-only audit feed</span></div>
+        <div className="ed360-admin-search-row"><label className="ed360-admin-search"><Search size={14}/><input value={search} onChange={e=>{setSearch(e.target.value);setAuditPage(1);setSecurityPage(1)}} placeholder="Search actor, action, module or record…"/></label><span className="gov-readonly">Read-only audit feed</span></div>
         {reportActions('Administrative audit','administrative-audit',reportRows,reportColumns)}
-        {filteredAudit.length?<div className="gov-timeline">{filteredAudit.map(row=><article key={row.id}><i/><div><strong>{label(row.action)} · {label(row.module_key)} / {label(row.record_type)}</strong><small>{dateLabel(row.occurred_at)} · Actor {String(row.actor_id??'system')} · Record {String(row.record_id)}</small><details><summary>View recorded values</summary><div><div><b>Before</b><pre>{JSON.stringify(row.old_values??null,null,2)}</pre></div><div><b>After</b><pre>{JSON.stringify(row.new_values??null,null,2)}</pre></div></div></details></div></article>)}</div>:<div className="gov-empty">No administrative audit events match this search.</div>}
+        {filteredAudit.length?<div className="gov-timeline">{auditPageRows.map(row=><article key={row.id}><i/><div><strong>{label(row.action)} · {label(row.module_key)} / {label(row.record_type)}</strong><small>{dateLabel(row.occurred_at)} · Actor {String(row.actor_id??'system')} · Record {String(row.record_id)}</small><details><summary>View recorded values</summary><div><div><b>Before</b><pre>{JSON.stringify(row.old_values??null,null,2)}</pre></div><div><b>After</b><pre>{JSON.stringify(row.new_values??null,null,2)}</pre></div></div></details></div></article>)}</div>:<div className="gov-empty">No administrative audit events match this search.</div>}{pageControls(filteredAudit.length,auditCurrentPage,auditPageCount,setAuditPage)}
       </section>
     </div>
   }
@@ -534,7 +540,7 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
     const related=filteredAudit.filter(row=>/auth|login|session|security|access|membership/i.test(row.module_key+' '+row.record_type+' '+row.action))
     const reportRows:Record<string,unknown>[]=related.map(row=>({occurred_at:row.occurred_at,action:label(row.action),module:label(row.module_key),record_type:label(row.record_type),record_id:row.record_id,actor_id:row.actor_id??'system'}))
     const reportColumns:OfficeColumn[]=[{key:'occurred_at',label:'Occurred at'},{key:'action',label:'Action'},{key:'module',label:'Module'},{key:'record_type',label:'Record type'},{key:'record_id',label:'Record ID'},{key:'actor_id',label:'Actor ID'}]
-    return <div className="ed360-admin-stage5"><section className="gov-panel"><header><div><h2>Security and access overview</h2><p>Current membership status and available administrative security evidence.</p></div><LockKeyhole size={20}/></header>{reportActions('Security access overview','security-access-overview',reportRows,reportColumns)}<div className="ed360-admin-security-grid"><article><b>{members.filter(row=>row.status==='active').length} active memberships</b><small>Active institution accounts recorded in memberships.</small></article><article><b>{members.filter(row=>row.status!=='active').length} non-active memberships</b><small>Invited, pending, suspended or inactive states where recorded.</small></article><article><b>{related.length} related audit events</b><small>Operational audit entries with security or access keywords.</small></article></div><div className="ed360-admin-callout warning">Login history, failed sign-in attempts and live session termination are not exposed by the current tenant-facing database API. No invented sign-in events or false zero counts are shown. A privileged, tenant-filtered authentication event feed is required before these controls can be enabled.</div></section><section className="gov-panel"><header><div><h2>Available access audit events</h2><p>Operational audit entries that reference authentication, security, access or memberships.</p></div></header>{related.length?<div className="gov-timeline">{related.slice(0,100).map(row=><article key={row.id}><i/><div><strong>{label(row.action)} · {label(row.module_key)}</strong><small>{dateLabel(row.occurred_at)} · {row.actor_id??'system'}</small></div></article>)}</div>:<div className="gov-empty">No security-labelled administrative events are available in the current feed.</div>}</section></div>
+    return <div className="ed360-admin-stage5"><section className="gov-panel"><header><div><h2>Security and access overview</h2><p>Current membership status and available administrative security evidence.</p></div><LockKeyhole size={20}/></header>{reportActions('Security access overview','security-access-overview',reportRows,reportColumns)}<div className="ed360-admin-security-grid"><article><b>{members.filter(row=>row.status==='active').length} active memberships</b><small>Active institution accounts recorded in memberships.</small></article><article><b>{members.filter(row=>row.status!=='active').length} non-active memberships</b><small>Invited, pending, suspended or inactive states where recorded.</small></article><article><b>{related.length} related audit events</b><small>Operational audit entries with security or access keywords.</small></article></div><div className="ed360-admin-callout warning">Login history, failed sign-in attempts and live session termination are not exposed by the current tenant-facing database API. No invented sign-in events or false zero counts are shown. A privileged, tenant-filtered authentication event feed is required before these controls can be enabled.</div></section><section className="gov-panel"><header><div><h2>Available access audit events</h2><p>Operational audit entries that reference authentication, security, access or memberships.</p></div></header>{related.length?<div className="gov-timeline">{securityPageRows.map(row=><article key={row.id}><i/><div><strong>{label(row.action)} · {label(row.module_key)}</strong><small>{dateLabel(row.occurred_at)} · {row.actor_id??'system'}</small></div></article>)}</div>:<div className="gov-empty">No security-labelled administrative events are available in the current feed.</div>}{pageControls(related.length,securityCurrentPage,securityPageCount,setSecurityPage)}</section></div>
   }
   function renderContent(){
     if(section==='profile')return renderProfile()
