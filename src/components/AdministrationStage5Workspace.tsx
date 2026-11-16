@@ -614,10 +614,10 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
             <label className="ed360-admin-field ed360-profile-span">Official tagline<input maxLength={220} value={profileDraft.tagline} onChange={e=>setProfileDraft(v=>({...v,tagline:e.target.value}))} placeholder="A short official description of the institution"/></label>
             <label className="ed360-admin-field ed360-profile-span">Official website<input type="text" inputMode="url" maxLength={240} value={profileDraft.website} onChange={e=>setProfileDraft(v=>({...v,website:e.target.value}))} placeholder="https://www.example.edu"/></label>
           </div>
-          <div className="ed360-profile-public-note"><ShieldCheck size={16}/><span>Only the institution fields supported by the current profile record are saved here. A separate public-visibility switch is not shown until its publication control is connected.</span></div>
+          
         </section>
 
-        <div className="ed360-profile-savebar"><span><ShieldCheck size={16}/> Changes apply to this institution’s official profile.</span><button type="submit" className="gov-button primary" disabled={saving}>{saving?'Saving profile…':'Save Institute Profile'} <Save size={15}/></button></div>
+        <div className="ed360-profile-savebar"><button type="submit" className="gov-button primary" disabled={saving}>{saving?'Saving profile…':'Save Institute Profile'} <Save size={15}/></button></div>
       </form>
 
       <aside className="ed360-profile-preview-panel">
