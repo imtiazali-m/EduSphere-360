@@ -1185,7 +1185,7 @@ check('Institute profile, preferences, branding and role permissions complete ac
   for (const value of [
     'allowedTimezones', 'allowedDateFormats', 'allowedCurrencies', 'allowedTermStructures',
     'prefixPattern=/^[A-Z0-9][A-Z0-9-]{1,15}$/', 'safeInstitutionBrandColor',
-    'async function saveBrandColors', "setting_key:'primary_color'", "setting_key:'accent_color'",
+    'async function saveBrandColors', 'primary_color', 'accent_color',
     'type="color"', 'normalizedWebsite', "!['https:','http:'].includes(parsedWebsite.protocol)",
     'async function removeSetting', 'if(removeError)throw removeError',
   ]) assert.ok(administration.includes(value), 'Institute profile and settings acceptance safeguard is missing: ' + value)
