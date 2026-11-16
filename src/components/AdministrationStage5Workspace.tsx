@@ -29,6 +29,19 @@ const dateLabel=(value:unknown)=>value?new Date(String(value)).toLocaleString():
 const label=(value:unknown)=>String(value??'').replaceAll('_',' ').replace(/\b\w/g,c=>c.toUpperCase())
 const jsonObject=(value:unknown):Record<string,unknown>=>value&&typeof value==='object'&&!Array.isArray(value)?value as Record<string,unknown>:{}
 
+async function fetchAllInstitutionAuditEvents(institutionId:string):Promise<{data:Audit[];error:unknown|null}>{
+  if(!supabase)return {data:[],error:new Error('The institution database connection is unavailable.')}
+  const rows:Audit[]=[]
+  const batchSize=500
+  for(let offset=0;;offset+=batchSize){
+    const {data,error}=await supabase.from('institutional_audit_events').select('*').eq('institution_id',institutionId).order('occurred_at',{ascending:false}).range(offset,offset+batchSize-1)
+    if(error)return {data:[],error}
+    const batch=(data??[]) as Audit[]
+    rows.push(...batch)
+    if(batch.length<batchSize)return {data:rows,error:null}
+  }
+}
+
 export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}:Props){
   const {user}=useAuth()
   const [section]=useState<Section>(sectionByWindow[initialWindow??'']??'profile')
@@ -62,7 +75,7 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
         supabase.from('institutions').select('id,name,institution_type,tagline,phone,email,website,address,country,logo_path,created_by').eq('id',user.institutionId).maybeSingle(),
         admin?supabase.from('institution_settings').select('*').eq('institution_id',user.institutionId).order('category').order('setting_key').limit(1000):Promise.resolve({data:[],error:null}),
         admin?supabase.from('workflow_approvals').select('*').eq('institution_id',user.institutionId).order('requested_at',{ascending:false}).limit(500):Promise.resolve({data:[],error:null}),
-        admin?supabase.from('institutional_audit_events').select('*').eq('institution_id',user.institutionId).order('occurred_at',{ascending:false}).limit(500):Promise.resolve({data:[],error:null}),
+        admin?fetchAllInstitutionAuditEvents(user.institutionId):Promise.resolve({data:[],error:null}),
         admin?supabase.from('institutional_records').select('*').eq('institution_id',user.institutionId).eq('module_key','administration').eq('record_type','institutional-policy').order('updated_at',{ascending:false}).limit(500):Promise.resolve({data:[],error:null}),
         admin?supabase.from('departments').select('*').eq('institution_id',user.institutionId).order('name').limit(500):Promise.resolve({data:[],error:null}),
         admin?supabase.from('designations').select('*').eq('institution_id',user.institutionId).order('name').limit(500):Promise.resolve({data:[],error:null}),
