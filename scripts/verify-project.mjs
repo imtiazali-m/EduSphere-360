@@ -1203,7 +1203,7 @@ check('Institute profile, preferences, branding and role permissions complete ac
     assert.ok(rolePolicy.includes(value), 'Role permissions must retain tenant-scoped database policy: ' + value)
   }
 
-  for (const value of ['#6035B5', '#16877B', '#F5F3FA', '#242033', 'Premium institutional theme']) {
+  for (const value of ['#6035B5', '#16877B', '#f5f3fa', '#242033', 'Premium institutional theme']) {
     if (value !== 'Premium institutional theme') assert.ok(roleStyles.includes(value), 'Role permission styles must use the institutional palette: ' + value)
   }
   assert.ok(themeStyles.includes('.ed360-admin-brand-colors') && themeStyles.includes('input[type="color"]'), 'Brand colour controls need dedicated responsive styling')
