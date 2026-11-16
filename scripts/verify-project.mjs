@@ -1187,7 +1187,7 @@ check('Administration membership controls use the protected tenant access proced
 check('Administration governance registers offer filtered export and A4 print actions', () => {
   const administration = read('src/components/AdministrationStage5Workspace.tsx')
   const styles = read('src/styles/governance-workspace.css')
-  for (const value of ["reportActions('Approval register'", "reportActions(audience+' policies'", "reportActions('Administrative audit'", "reportActions('User access register'", "reportActions('Security access overview'", "reportActions(section==='system'?'System settings'"]) {
+  for (const value of ["reportActions('Approval register'", "reportActions(audience+' policies'", "reportActions('Administrative audit'", "reportActions('User access register'", "reportActions('Security access audit events'", "reportActions(section==='system'?'System settings'"]) {
     assert.ok(administration.includes(value), 'Administration report action is missing: ' + value)
   }
   for (const value of ['downloadCsv(', 'exportXlsx(', 'exportDocx(', 'printOfficeReport(', 'Print A4', 'ed360-admin-report-actions']) {
