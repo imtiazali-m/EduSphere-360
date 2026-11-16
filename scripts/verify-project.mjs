@@ -1174,6 +1174,41 @@ check('Administration settings, approvals and audit are connected to governance 
   assert.ok(read('supabase/migrations/20261109151231_atomic_institution_setting_approval.sql').includes('decide_institution_setting_approval'))
 })
 
+check('Institute profile, preferences, branding and role permissions complete acceptance safeguards', () => {
+  const administration = read('src/components/AdministrationStage5Workspace.tsx')
+  const profilePolicy = read('supabase/migrations/20261111161307_stage5_administration_profile_campus_and_access_controls.sql')
+  const roles = read('src/components/CollegeRolePermissionWorkspace.tsx')
+  const rolePolicy = read('supabase/migrations/20261113173320_college_custom_role_profiles_and_scope_policies.sql')
+  const roleStyles = read('src/styles/college-role-permissions.css')
+  const themeStyles = read('src/styles/premium-institutional-theme.css')
+
+  for (const value of [
+    'allowedTimezones', 'allowedDateFormats', 'allowedCurrencies', 'allowedTermStructures',
+    'prefixPattern=/^[A-Z0-9][A-Z0-9-]{1,15}$/', 'safeInstitutionBrandColor',
+    'async function saveBrandColors', "setting_key:'primary_color'", "setting_key:'accent_color'",
+    'type="color"', 'normalizedWebsite', "!['https:','http:'].includes(parsedWebsite.protocol)",
+    'async function removeSetting', 'if(removeError)throw removeError',
+  ]) assert.ok(administration.includes(value), 'Institute profile and settings acceptance safeguard is missing: ' + value)
+
+  assert.ok(profilePolicy.includes('institutions_owner_admin_update') && profilePolicy.includes("has_institution_role(id, array['owner','admin']::text[])"), 'Institute Profile updates must remain owner/admin restricted in the database')
+
+  for (const value of [
+    'async function setAssignmentStatus', 'async function toggleProfileStatus',
+    "catch(cause){onToast(userFacingError(cause,'The assignment status could not be changed.'),true)}",
+    "catch(cause){onToast(userFacingError(cause,'The role profile status could not be changed.'),true)}",
+    'finally{setSaving(false)}',
+  ]) assert.ok(roles.includes(value), 'Role permission status handling is missing: ' + value)
+
+  for (const value of ['college_role_profiles_admin_insert', 'college_role_profiles_admin_update', 'college_user_role_assignments_admin_insert', 'college_user_role_assignments_admin_update']) {
+    assert.ok(rolePolicy.includes(value), 'Role permissions must retain tenant-scoped database policy: ' + value)
+  }
+
+  for (const value of ['#6035B5', '#16877B', '#F5F3FA', '#242033', 'Premium institutional theme']) {
+    if (value !== 'Premium institutional theme') assert.ok(roleStyles.includes(value), 'Role permission styles must use the institutional palette: ' + value)
+  }
+  assert.ok(themeStyles.includes('.ed360-admin-brand-colors') && themeStyles.includes('input[type="color"]'), 'Brand colour controls need dedicated responsive styling')
+})
+
 check('Administration membership controls use the protected tenant access procedure', () => {
   const administration = read('src/components/AdministrationStage5Workspace.tsx')
   const migration = read('supabase/migrations/20261111161307_stage5_administration_profile_campus_and_access_controls.sql')
