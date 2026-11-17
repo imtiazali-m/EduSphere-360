@@ -378,9 +378,9 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
  const hasQuantityField=hasSchemaField(/quantity|\\bqty\\b|copies|capacity|stock|beds|seats|pages|allocated/i)
  const hasDueField=hasSchemaField(/due|deadline|expiry|expires|follow.?up|expected.*date|return date|next review/i)
  const hasApprovalField=hasSchemaField(/approval|approver|decision|review status|verification result/i)
- const hasSchemaStatus=hasSchemaField(/status|state|stage|decision|result|verification/i)
+ const hasPrimaryStatusField=structuredFields.some(field=>['status','record_status','workflow_status'].includes(field.key.toLowerCase())||/^(record )?status$/i.test(field.label))
  const hasNarrativeField=structuredFields.some(field=>field.type==='textarea'||/description|notes|reason|purpose|message|comment|summary|instruction|finding/i.test(field.key+' '+field.label))
- const showStatusField=!hasSchemaStatus
+ const showStatusField=!hasPrimaryStatusField
  const showDescription=!hasNarrativeField&&/incident|complaint|request|application|policy|plan|notice|message|activity|event|observation|recommendation|maintenance|review|feedback|enquiry|visitor|support|follow.?up|details/i.test(itemName)
  const hasReferenceField=hasSchemaField(/reference|code|serial|number|isbn|sku|admission|employee.?no/i)
  const hasDateField=structuredFields.some(field=>['date','datetime-local','time'].includes(field.type??'text')||/date|time|period|session|year/i.test(field.key+' '+field.label))
@@ -396,7 +396,7 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
  const tableMetaColumns=metaColumnKeys
   .filter(key=>{
    if(key==='approval_status')return canViewInternalApproval(user?.role)&&showApproval
-   if(key==='status')return !hasSchemaStatus
+   if(key==='status')return !hasPrimaryStatusField
    if(key==='amount')return showAmount
    if(key==='quantity')return showQuantity
    if(key==='due_date')return showDueDate
@@ -503,14 +503,14 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
   finally{setSaving(false)}
  }
  async function remove(row:OperationalRow){
-  if(!supabase||!user||!canAdmin)return
+  if(!supabase||!user||!canAdmin||readOnlyPage)return
   if(!window.confirm('Delete '+row.title+'? This action will be recorded in the audit history.'))return
   const {error}=await supabase.from('institutional_records').delete().eq('id',row.id).eq('institution_id',user.institutionId)
   if(error){onToast(error.message,true);return}
   setDetail(null);onToast('Record deleted.');await load()
  }
  async function decide(row:OperationalRow,decision:'approved'|'rejected'){
-  if(!supabase||!user||!canAdmin)return
+  if(!supabase||!user||!canAdmin||readOnlyPage)return
   const {data,error}=await supabase.from('institutional_records').update({approval_status:decision,reviewed_by:user.id,reviewed_at:new Date().toISOString(),updated_by:user.id}).eq('id',row.id).eq('institution_id',user.institutionId).select().single()
   if(error){onToast(error.message,true);return}
   setDetail(data as OperationalRow);onToast('Approval decision saved.');await load()
@@ -585,10 +585,10 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
    </form>
   </section></div>}
   {detail&&<div className="modal-backdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setDetail(null)}}><section className="modal-card ed360-record-details ed360-context-detail" role="dialog" aria-modal="true" aria-labelledby="ed360-detail-heading">
-   <div className="modal-heading"><div><div className="eyebrow">CONTEXTUAL SUB-WINDOW / {group.label.toUpperCase()}</div><h2 id="ed360-detail-heading">{detail.title}</h2><p>{detail.reference_code||detail.record_type.replaceAll('-',' ')}{!hasSchemaStatus?' · '+detail.status:''}</p></div><button type="button" className="icon-button" onClick={()=>setDetail(null)} aria-label="Close"><X size={18}/></button></div>
+   <div className="modal-heading"><div><div className="eyebrow">CONTEXTUAL SUB-WINDOW / {group.label.toUpperCase()}</div><h2 id="ed360-detail-heading">{detail.title}</h2><p>{detail.reference_code||detail.record_type.replaceAll('-',' ')}{!hasPrimaryStatusField?' · '+detail.status:''}</p></div><button type="button" className="icon-button" onClick={()=>setDetail(null)} aria-label="Close"><X size={18}/></button></div>
    <div className="ed360-context-detail-callout"><div>{canAdmin&&<><span>RECORD WORKFLOW</span><strong>{detail.approval_status.replaceAll('_',' ')}</strong></>}{detail.description&&<p>{detail.description}</p>}</div><aside><b>Responsible workspace</b><p>{group.label} / {item.label}</p><b>Updated</b><p>{detail.updated_at?new Date(detail.updated_at).toLocaleString():'Not available'}</p></aside></div>
    <div className="ed360-record-details-grid">
-    {!hasSchemaStatus&&<div className="ed360-record-detail"><small>Status</small><b>{detail.status}</b></div>}
+    {!hasPrimaryStatusField&&<div className="ed360-record-detail"><small>Status</small><b>{detail.status}</b></div>}
     {showRecordDate&&<div className="ed360-record-detail"><small>Record date</small><b>{displayDate(detail.record_date)}</b></div>}
     {showDueDate&&<div className="ed360-record-detail"><small>Due date</small><b>{displayDate(detail.due_date)}</b></div>}
     {showAmount&&<div className="ed360-record-detail"><small>Amount</small><b>{money(detail.amount)}</b></div>}
@@ -597,7 +597,7 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
    </div>
    {Object.keys(detail.payload??{}).length>0&&<section className="ed360-payload-section"><h3>{item.label} details</h3><div className="ed360-record-details-grid">{Object.entries(detail.payload).map(([key,value])=><div className="ed360-record-detail" key={key}><small>{structuredFields.find(field=>field.key===key)?.label??key.replaceAll('_',' ')}</small><b>{typeof value==='boolean'?(value?'Yes':'No'):String(value??'—')}</b></div>)}</div></section>}
    <div className="modal-actions">
-    {canAdmin&&detail.approval_status==='pending'&&<><button type="button" className="button button-outline" onClick={()=>void decide(detail,'rejected')}>Reject</button><button type="button" className="button button-primary" onClick={()=>void decide(detail,'approved')}><CheckCircle2 size={15}/> Approve</button></>}
+    {canAdmin&&!readOnlyPage&&detail.approval_status==='pending'&&<><button type="button" className="button button-outline" onClick={()=>void decide(detail,'rejected')}>Reject</button><button type="button" className="button button-primary" onClick={()=>void decide(detail,'approved')}><CheckCircle2 size={15}/> Approve</button></>}
     {canWrite&&<button type="button" className="button button-outline" onClick={()=>{const row=detail;setDetail(null);resetForm(row)}}>Edit record</button>}
     {canAdmin&&!readOnlyPage&&<button type="button" className="button button-danger" onClick={()=>void remove(detail)}>Delete</button>}
     <button type="button" className="button button-primary" onClick={()=>setDetail(null)}>Close</button>
