@@ -444,11 +444,30 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
  if(!user)return null
  const attendanceTitles:Record<string,string>={students:'Student Attendance',teachers:'Teacher Attendance',staff:'Staff Attendance',devices:'Automatic Attendance',history:'Attendance History','qr-scan':'QR / Barcode Attendance',biometric:'Biometric Attendance','cards-students':'Student Attendance Cards','cards-teachers':'Teacher Attendance Cards','cards-staff':'Staff Attendance Cards'}
  const attendanceTitle=autoTab==='register'?attendanceTitles[population]:attendanceTitles[autoTab]
+ const registerStats=useMemo(()=>{
+  const values=visiblePeople.map(person=>effectiveMarks[person.id]??'unmarked')
+  return {
+   total:values.length,
+   present:values.filter(value=>value==='present').length,
+   absent:values.filter(value=>value==='absent').length,
+   leave:values.filter(value=>value==='approved_leave').length,
+   pending:values.filter(value=>value==='unmarked'||value==='leave_pending').length,
+   completion:values.length?Math.round(values.filter(value=>value!=='unmarked').length/values.length*100):0
+  }
+ },[visiblePeople,effectiveMarks])
  return <main className="page-content ed360-module-page ed360-attendance-workspace">
   <header className="ed360-attendance-hero">
    <div><span>{(user.institutionName?.trim()||'GOVERNMENT ISLAMIA DEGREE COLLEGE').toUpperCase()} / ATTENDANCE / {attendanceTitle.toUpperCase()}</span><h1>{attendanceTitle}</h1></div>
    <button type="button" className="ed360-attendance-refresh" onClick={()=>{void loadRoster();void loadAttendance();if(['devices','biometric'].includes(autoTab))void loadDevices()}} disabled={loading||deviceBusy}><RefreshCw size={15}/>{loading||deviceBusy?'Refreshing…':'Refresh'}</button>
   </header>
+  {autoTab==='register'&&<section className="ed360-attendance-summary" aria-label="Attendance register summary">
+   <article className="attendance-summary-total"><span>ROSTER SIZE</span><strong>{loading?'—':registerStats.total.toLocaleString()}</strong><small>{population==='students'?'Active students':population==='teachers'?'Active teachers':'Active staff'}</small></article>
+   <article className="attendance-summary-present"><span>PRESENT</span><strong>{loading?'—':registerStats.present.toLocaleString()}</strong><small>Marked present</small></article>
+   <article className="attendance-summary-absent"><span>ABSENT</span><strong>{loading?'—':registerStats.absent.toLocaleString()}</strong><small>Marked absent</small></article>
+   <article className="attendance-summary-leave"><span>ON LEAVE</span><strong>{loading?'—':registerStats.leave.toLocaleString()}</strong><small>Approved leave</small></article>
+   <article className="attendance-summary-pending"><span>REQUIRES ACTION</span><strong>{loading?'—':registerStats.pending.toLocaleString()}</strong><small>Unmarked or leave pending</small></article>
+   <article className="attendance-summary-progress"><span>REGISTER COMPLETION</span><strong>{loading?'—':registerStats.completion+'%'}</strong><div className="attendance-progress-track"><i style={{width:registerStats.completion+'%'}}/></div><small>Based on the filtered roster</small></article>
+  </section>}
   <div className="ed360-attendance-main-tabs">
    <button className={autoTab==='register'?'active':''} onClick={()=>setAutoTab('register')}>Manual register</button>
    <button className={autoTab==='history'?'active':''} onClick={()=>setAutoTab('history')}>Attendance history</button>
