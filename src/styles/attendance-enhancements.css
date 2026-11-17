@@ -55,3 +55,90 @@
 .ed360-review-reject{color:#a44a31;border-color:rgba(164,74,49,.35)}
 @media(max-width:840px){.ed360-device-event-card{grid-template-columns:1fr 1fr}.ed360-device-event-card>button,.ed360-device-event-card>.ed360-device-event-closed{justify-self:start}.ed360-review-full{grid-column:1/-1}}
 @media(max-width:560px){.ed360-device-event-card{grid-template-columns:1fr}.ed360-review-actions>*{flex:1}}
+
+
+/* Attendance Register 2.0 — purpose-built, high-clarity institutional register. */
+.ed360-attendance-workspace{--att-ink:#211a31;--att-muted:#756e83;--att-line:#e7e1ef;--att-canvas:#f7f4fb;--att-purple:#6546a5;--att-purple-dark:#493078;--att-lavender:#f0eafb;--att-green:#237653;--att-red:#b54755;--att-amber:#9b6a1d;color:var(--att-ink);gap:18px}
+.ed360-attendance-workspace .ed360-attendance-hero{align-items:center;justify-content:space-between;gap:18px;padding:5px 0 17px;border-bottom:1px solid var(--att-line)}
+.ed360-attendance-workspace .ed360-attendance-hero>div{min-width:0}
+.ed360-attendance-workspace .ed360-attendance-hero>div>span{color:var(--att-purple);font-size:10px;letter-spacing:1.25px;font-weight:850}
+.ed360-attendance-workspace .ed360-attendance-hero h1{color:var(--att-ink);font-size:clamp(25px,2.5vw,34px);letter-spacing:-.9px;font-weight:850}
+.ed360-attendance-workspace .ed360-attendance-refresh{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px;padding:0 15px;border:1px solid var(--att-line);border-radius:11px;background:#fff;color:var(--att-purple-dark);font-size:12px;font-weight:750;box-shadow:0 3px 12px rgba(54,35,82,.045)}
+.ed360-attendance-summary{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
+.ed360-attendance-summary article{min-width:0;display:flex;flex-direction:column;gap:5px;padding:14px 15px;border:1px solid var(--att-line);border-radius:14px;background:#fff;box-shadow:0 4px 16px rgba(54,35,82,.035)}
+.ed360-attendance-summary article>span{font-size:9px;font-weight:850;letter-spacing:.8px;color:var(--att-muted)}
+.ed360-attendance-summary article>strong{font-size:27px;line-height:1.1;letter-spacing:-.8px;color:var(--att-ink);font-variant-numeric:tabular-nums}
+.ed360-attendance-summary article>small{font-size:10px;color:var(--att-muted)}
+.ed360-attendance-summary .attendance-summary-present{border-top:3px solid #398568}
+.ed360-attendance-summary .attendance-summary-present>strong{color:var(--att-green)}
+.ed360-attendance-summary .attendance-summary-absent{border-top:3px solid #c45b67}
+.ed360-attendance-summary .attendance-summary-absent>strong{color:var(--att-red)}
+.ed360-attendance-summary .attendance-summary-leave{border-top:3px solid #b18a43}
+.ed360-attendance-summary .attendance-summary-leave>strong{color:var(--att-amber)}
+.ed360-attendance-summary .attendance-summary-pending{border-top:3px solid #8b6ac2}
+.ed360-attendance-summary .attendance-summary-pending>strong{color:var(--att-purple)}
+.ed360-attendance-summary .attendance-progress-track{height:6px;overflow:hidden;border-radius:99px;background:#eee9f5;margin:2px 0}
+.ed360-attendance-summary .attendance-progress-track i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#6546a5,#9a7acb);transition:width .2s ease}
+.ed360-attendance-workspace .ed360-attendance-filter-card,.ed360-attendance-workspace .ed360-attendance-board{border:1px solid var(--att-line);border-radius:16px;background:#fff;box-shadow:0 5px 22px rgba(54,35,82,.04)}
+.ed360-attendance-workspace .ed360-attendance-filter-card{padding:16px;background:linear-gradient(180deg,#fff 0%,#fcfaff 100%)}
+.ed360-attendance-workspace .ed360-attendance-filter{gap:12px;align-items:end}
+.ed360-attendance-workspace .ed360-attendance-filter>label{display:grid;gap:6px;color:var(--att-muted);font-size:10px;font-weight:800}
+.ed360-attendance-workspace .ed360-attendance-filter :is(input,select){width:100%;min-height:40px;padding:8px 10px;border:1px solid #e4deec;border-radius:9px;background:#fff;color:var(--att-ink);font:inherit;font-size:12px}
+.ed360-attendance-workspace .ed360-attendance-filter :is(input,select):focus{outline:3px solid rgba(101,70,165,.14);border-color:#9d86c6}
+.ed360-attendance-workspace .ed360-attendance-search{display:flex!important;align-items:center;gap:8px;min-height:40px;padding:0 10px;border:1px solid #e4deec;border-radius:9px;background:#fff;color:var(--att-muted)}
+.ed360-attendance-workspace .ed360-attendance-search input{min-width:0;width:100%;min-height:36px;padding:4px 0;border:0;outline:0;box-shadow:none!important}
+.ed360-attendance-workspace .ed360-attendance-roster-meta{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:16px;padding-top:14px;border-top:1px solid var(--att-line)}
+.ed360-attendance-workspace .ed360-attendance-roster-meta>div:first-child{display:grid;gap:4px}
+.ed360-attendance-workspace .ed360-attendance-roster-meta>div:first-child strong{font-size:14px;color:var(--att-ink)}
+.ed360-attendance-workspace .ed360-attendance-roster-meta>div:first-child span{font-size:11px;color:var(--att-muted)}
+.ed360-attendance-workspace .ed360-attendance-bulk{display:flex;flex-wrap:wrap;gap:7px}
+.ed360-attendance-workspace .ed360-attendance-bulk button{display:inline-flex;align-items:center;gap:6px;min-height:34px;padding:0 10px;border:1px solid var(--att-line);border-radius:9px;background:#fff;color:var(--att-ink);font-size:10px;font-weight:750}
+.ed360-attendance-workspace .ed360-attendance-bulk button:hover{border-color:#b7a5d4;background:var(--att-lavender)}
+.ed360-attendance-workspace .ed360-attendance-board{overflow:hidden}
+.ed360-attendance-workspace .ed360-attendance-board-head{padding:18px 20px;border-bottom:1px solid var(--att-line);background:linear-gradient(105deg,#fbf9ff,#fff)}
+.ed360-attendance-workspace .ed360-attendance-board-head>div>span{font-size:9px;letter-spacing:1px;font-weight:850;color:var(--att-purple)}
+.ed360-attendance-workspace .ed360-attendance-board-head h2{margin:5px 0;color:var(--att-ink);font-size:18px;letter-spacing:-.35px}
+.ed360-attendance-workspace .ed360-attendance-board-head p{margin:4px 0 0;color:var(--att-muted);font-size:11px;line-height:1.55}
+.ed360-attendance-workspace .ed360-attendance-grid-table{overflow-x:auto}
+.ed360-attendance-workspace .attendance-grid-head,.ed360-attendance-workspace .attendance-grid-row{min-width:1040px;display:grid;grid-template-columns:105px minmax(150px,1.15fr) minmax(120px,.9fr) minmax(125px,.9fr) 152px minmax(220px,1.25fr);gap:12px;align-items:center;padding:11px 16px}
+.ed360-attendance-workspace .attendance-grid-head{position:sticky;top:0;z-index:1;background:#f7f4fb;color:#6e647e;font-size:9px;font-weight:850;letter-spacing:.55px;text-transform:uppercase;border-bottom:1px solid var(--att-line)}
+.ed360-attendance-workspace .attendance-grid-row{min-height:67px;border-bottom:1px solid #f0ecf4;background:#fff}
+.ed360-attendance-workspace .attendance-grid-row:nth-child(odd){background:#fdfcff}
+.ed360-attendance-workspace .attendance-grid-row>strong{font-size:12px;color:var(--att-ink)}
+.ed360-attendance-workspace .attendance-grid-row>span{font-size:10px;color:var(--att-muted)}
+.ed360-attendance-workspace .attendance-grid-id{font-weight:800;color:var(--att-purple)!important;font-variant-numeric:tabular-nums}
+.ed360-attendance-workspace .attendance-mark-options{display:flex;gap:5px}
+.ed360-attendance-workspace .attendance-mark-button{width:31px;height:31px;border:1px solid #e5deee;border-radius:9px;background:#fff;color:#716982;font-size:10px;font-weight:850}
+.ed360-attendance-workspace .attendance-mark-button[aria-pressed=true]{border-color:transparent;box-shadow:0 0 0 2px rgba(101,70,165,.12)}
+.ed360-attendance-workspace .attendance-mark-button.mark-p[aria-pressed=true]{background:#e5f3eb;color:#176744}
+.ed360-attendance-workspace .attendance-mark-button.mark-a[aria-pressed=true]{background:#ffeaec;color:#a83343}
+.ed360-attendance-workspace .attendance-mark-button.mark-leave[aria-pressed=true]{background:#fff4df;color:#916018}
+.ed360-attendance-workspace .attendance-mark-button.mark-pending[aria-pressed=true]{background:#f0eafb;color:#6546a5}
+.ed360-attendance-workspace .attendance-time-fields{display:grid;grid-template-columns:78px 78px 1fr;gap:5px;align-items:center}
+.ed360-attendance-workspace .attendance-time-fields input{width:100%;min-width:0;min-height:32px;padding:5px 7px;border:1px solid #e7e1ed;border-radius:7px;background:#fff;color:var(--att-ink);font:inherit;font-size:10px}
+.ed360-attendance-workspace .attendance-time-fields input[type=number]{max-width:72px}
+.ed360-attendance-workspace .attendance-time-fields .attendance-note-input{grid-column:1/-1}
+.ed360-attendance-workspace .ed360-attendance-board-footer{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 18px;border-top:1px solid var(--att-line);background:#fcfaff}
+.ed360-attendance-workspace .ed360-attendance-board-footer>div:last-child{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ed360-attendance-workspace .ed360-attendance-board-footer .button-primary{min-height:41px;padding:0 17px;border-radius:10px;background:var(--att-purple);border-color:var(--att-purple);font-size:11px;font-weight:800}
+.ed360-attendance-workspace .ed360-attendance-board-footer .button-primary:hover{background:var(--att-purple-dark);border-color:var(--att-purple-dark)}
+.ed360-attendance-workspace .ed360-attendance-method-note{margin:0;padding:11px 14px;border:1px solid #e6def1;border-radius:10px;background:#f5f0fb;color:#6f6480;font-size:10px;line-height:1.6}
+.ed360-attendance-workspace .ed360-attendance-empty{padding:36px 18px;text-align:center;color:var(--att-muted);font-size:12px}
+.ed360-attendance-workspace .ed360-attendance-history-controls{display:flex;gap:10px;align-items:end;flex-wrap:wrap}
+.ed360-attendance-workspace .ed360-attendance-history-controls label{display:grid;gap:5px;color:var(--att-muted);font-size:10px;font-weight:800}
+.ed360-attendance-workspace .ed360-attendance-history-controls :is(select,input){min-height:38px;padding:7px 9px;border:1px solid var(--att-line);border-radius:8px;background:#fff;color:var(--att-ink)}
+.ed360-attendance-workspace .ed360-attendance-history-list{display:grid;gap:0;padding:0 18px}
+.ed360-attendance-workspace .ed360-attendance-history-list>div{display:grid;grid-template-columns:minmax(170px,1fr) 130px minmax(120px,.8fr);gap:12px;align-items:center;padding:13px 4px;border-bottom:1px solid #f0ecf4}
+.ed360-attendance-workspace .ed360-attendance-history-list>div>span{display:grid;gap:4px}
+.ed360-attendance-workspace .ed360-attendance-history-list b{font-size:11px;color:var(--att-ink)}
+.ed360-attendance-workspace .ed360-attendance-history-list small{font-size:10px;color:var(--att-muted)}
+.ed360-attendance-workspace :is(.ed360-device-secret-panel,.ed360-device-event-card,.ed360-device-review-identity,.ed360-biometric-grid,.ed360-mobile-scan-panel){border-color:var(--att-line);border-radius:14px;background:#fff}
+.ed360-attendance-workspace :is(.ed360-scan-controls input,.ed360-scan-controls select,.ed360-card-toolbar select,.ed360-scan-input input){border-color:var(--att-line);border-radius:9px;color:var(--att-ink)}
+.ed360-attendance-workspace .ed360-scan-result{border-color:#c9e5d5;background:#edf8f1;color:#216847;border-radius:10px}
+.ed360-attendance-workspace .ed360-biometric-mark{background:var(--att-lavender);color:var(--att-purple)}
+.ed360-attendance-workspace .ed360-biometric-status{background:#fff4df;border-color:#efdfbd;color:#8b5d18}
+.ed360-attendance-workspace .ed360-device-event-card{box-shadow:0 3px 14px rgba(54,35,82,.035)}
+.ed360-attendance-workspace :is(button,input,select,textarea):focus-visible{outline:3px solid rgba(101,70,165,.2);outline-offset:2px}
+@media(max-width:1100px){.ed360-attendance-summary{grid-template-columns:repeat(3,minmax(0,1fr))}.ed360-attendance-workspace .ed360-attendance-filter{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:700px){.ed360-attendance-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.ed360-attendance-workspace .ed360-attendance-hero{align-items:flex-start;flex-direction:column}.ed360-attendance-workspace .ed360-attendance-refresh{width:100%}.ed360-attendance-workspace .ed360-attendance-filter{grid-template-columns:repeat(2,minmax(0,1fr))}.ed360-attendance-workspace .ed360-attendance-roster-meta,.ed360-attendance-workspace .ed360-attendance-board-footer{align-items:stretch;flex-direction:column}.ed360-attendance-workspace .ed360-attendance-bulk{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.ed360-attendance-workspace .ed360-attendance-board-footer>div:last-child{align-items:stretch}.ed360-attendance-workspace .ed360-attendance-export-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.ed360-attendance-workspace .ed360-attendance-export-actions .button{min-height:38px}.ed360-attendance-workspace .ed360-attendance-history-list>div{grid-template-columns:1fr 1fr}.ed360-attendance-workspace .ed360-attendance-history-list>div>small{grid-column:1/-1}}
+@media(max-width:420px){.ed360-attendance-summary{gap:7px}.ed360-attendance-summary article{padding:11px}.ed360-attendance-summary article>strong{font-size:23px}.ed360-attendance-workspace .ed360-attendance-filter{grid-template-columns:1fr}}
