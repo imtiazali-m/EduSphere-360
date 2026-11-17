@@ -357,7 +357,9 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
  const [quantity,setQuantity]=useState('')
  const [payloadData,setPayloadData]=useState<Record<string,unknown>>({})
  useEffect(()=>{setSelectedItem(initialItem.key);setSearch('');setRange('all');setCampus('');setPage(1);setShowForm(false);setDetail(null);setEditing(null)},[workspaceKey])
- const structuredFields=completionItemFields[group.key+':'+item.key]??itemWorkspaceFields[group.key+':'+item.key]??getWorkspaceFields(group.key,item.label)
+ const itemName=item.label.toLowerCase()
+ const readOnlyPage=/dashboard|overview|history|reports?|analytics|audit|logs?|summary|notifications?|performance|insights?|statistics|delivery history|access history|change history/i.test(itemName)
+ const structuredFields=completionItemFields[group.key+':'+item.key]??itemWorkspaceFields[group.key+':'+item.key]??(readOnlyPage?[]:getWorkspaceFields(group.key,item.label))
  const preferredFieldKeys=workspaceTableFieldOrder[group.key]??workspaceTableFieldOrder[group.dataModule]??structuredFields.map(field=>field.key)
  const preferredTableFields=preferredFieldKeys.flatMap(key=>{
   const field=structuredFields.find(candidate=>candidate.key===key)
@@ -365,8 +367,6 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
  })
  const tableFields=(preferredTableFields.length?preferredTableFields:structuredFields).slice(0,4)
  const canAdmin=Boolean(user&&['owner','admin'].includes(user.role))
- const itemName=item.label.toLowerCase()
- const readOnlyPage=/dashboard|overview|history|reports?|analytics|audit|logs?|summary|notifications?|performance|insights?|statistics|delivery history|access history|change history/i.test(itemName)
  const canWrite=Boolean(user&&!readOnlyPage&&(
   canAdmin||
   (user.role==='teacher'&&['academic_setup','attendance','timetable','teaching','behaviour','communication','question_bank','examinations','tests','curriculum','front_office','forms_documents','hostel','sports'].includes(group.dataModule))||
