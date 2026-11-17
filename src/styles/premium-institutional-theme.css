@@ -1670,3 +1670,23 @@
 .pro-window-panel .crp-empty svg { color:var(--es-primary-600); }
 .pro-window-panel .crp-role-icon { background:var(--es-primary-100); }
 .pro-window-panel .crp-form-grid :is(input,select,textarea):focus { outline-color:rgba(40,113,110,.22);border-color:var(--es-primary-500); }
+
+
+/* Unified premium identity refresh: restrained royal violet, charcoal and lavender-white. */
+:root{
+ --es-brand-950:#20182f;--es-brand-900:#2b2140;--es-brand-800:#40315c;--es-brand-700:#59427d;
+ --es-primary-700:#50357f;--es-primary-600:#67499b;--es-primary-500:#8c70bb;
+ --es-primary-100:#eee8f7;--es-primary-050:#f7f4fb;--es-violet:#67499b;--es-violet-bg:#eee8f7;
+ --es-teal-700:#67499b;--es-teal-100:#eee8f7;--es-ink:#241e30;--es-muted:#716a7c;--es-subtle:#938ca0;
+ --es-line:#e5dfed;--es-line-soft:#f0ecf4;--es-canvas:#f7f5fa;--es-surface:#fff;--es-surface-soft:#fcfbfe;
+ --es-shadow-sm:0 2px 9px rgba(43,33,64,.045);--es-shadow-md:0 10px 28px rgba(43,33,64,.075);--es-shadow-lg:0 22px 52px rgba(43,33,64,.12);
+ --primary:#67499b;--primary-soft:#eee8f7;--line:#e5dfed;--surface-muted:#f7f5fa;--ink:#241e30;--muted:#716a7c;
+ accent-color:#67499b;
+}
+.pro-app-shell,.pro-main-shell,.pro-workspace,.pro-module-stage{color:var(--es-ink);background:var(--es-canvas)}
+.pro-sidebar{background:linear-gradient(180deg,#2b2140 0%,#20182f 100%);border-right:1px solid rgba(255,255,255,.09)}
+.pro-nav-link.active,.pro-nav-link[aria-current=page],.pro-nav-group-trigger[aria-expanded=true]{background:rgba(140,112,187,.24);box-shadow:inset 3px 0 #b9a4dc}
+.pro-window-panel :is(.button-primary,.gov-button.primary,.primary-button,.ed360-academic-primary,.ed360-native-primary){background:#67499b;border-color:#67499b}
+.pro-window-panel :is(.button-primary,.gov-button.primary,.primary-button,.ed360-academic-primary,.ed360-native-primary):hover{background:#50357f;border-color:#50357f}
+.pro-window-panel :is(button,a,input,select,textarea):focus-visible{outline-color:rgba(103,73,155,.25)}
+.pro-window-panel .ed360-institutional-workspace[data-workspace-theme]{--workspace-accent:#67499b!important;--workspace-soft:#eee8f7!important;--workspace-ink:#2b2140!important}
