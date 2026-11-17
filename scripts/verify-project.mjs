@@ -534,6 +534,10 @@ check('GIDC signed-in submenus share one theme and do not show generic page guid
   const attendance = read('src/components/AttendanceWorkspace.tsx')
   const academics = read('src/components/AcademicManagementWorkspace.tsx')
   const calls = read('src/components/NativeCallingWorkspace.tsx')
+  const workspaceExperience = read('src/lib/workspaceExperience.ts')
+  const operations = read('src/components/InstitutionOperationsWorkspace.tsx')
+  const routes = read('src/lib/navigationRoutes.ts')
+  const routeViewAudit = read('scripts/generate-route-view-audit.mjs')
   assert.ok(theme.includes('.ed360-page-guide,.ed360-page-purpose') && theme.includes('display:none !important'), 'Generic page guidance must not occupy each submenu')
   assert.ok(theme.includes('--workspace-accent:var(--es-primary-600) !important') && theme.includes('--workspace-soft:var(--es-primary-100) !important'), 'All fallback submenu accents must use the shared institutional teal palette')
   assert.ok(theme.includes('.rd-welcome-panel') && theme.includes('color:#1d2928'), 'The college welcome panel must retain readable black text')
@@ -542,6 +546,11 @@ check('GIDC signed-in submenus share one theme and do not show generic page guid
   assert.ok(!academics.includes('Access is filtered by institution membership'), 'Academic registers must not repeat access-policy footer copy')
   assert.ok(!calls.includes('Privacy and safety:') && !calls.includes('ordinary telephone numbers are not part'), 'Online classes must not show unrelated privacy/legal footer copy')
   assert.ok(workspace.includes('data-workspace-theme') && workspace.includes('ed360-workspace-hero'), 'Submenus must retain their own title, navigation and workspace content')
+  assert.ok(!workspace.includes('const workspaceFields:Record') && !workspace.includes('Messaging provider status') && !workspace.includes('Refresh records'), 'Fallback submenu screens must not inherit group-wide fields, provider notices or duplicate refresh actions')
+  assert.ok(workspace.includes('const showAmount=!hasMoneyField') && workspace.includes('const showQuantity=!hasQuantityField') && workspace.includes('const showPortalVisibility='), 'Fallback controls must be derived from the selected submenu schema')
+  assert.ok(!workspaceExperience.includes('This view is ready for real institution records') && !workspaceExperience.includes("field('record_reference','Related record / reference')"), 'Unmapped submenus must not receive generic placeholder copy or fabricated fields')
+  assert.ok(operations.includes("facilities:['dashboard','assets','maintenance','history','reservations','reports']") && operations.includes("facilities:'dashboard'") && operations.includes("if(view==='dashboard')"), 'Facilities must have a dashboard view distinct from the asset register')
+  assert.ok(routes.includes("'facilities-dashboard':'dashboard'") && routeViewAudit.includes("facilities: new Set(['dashboard','assets'"), 'Facilities dashboard route, component and audit contract must agree')
 })
 
 check('GIDC print reports and student ID cards render their official branding and QR before print', () => {
