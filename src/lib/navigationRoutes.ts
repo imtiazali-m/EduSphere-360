@@ -268,7 +268,7 @@ const institutionalOperationsItems: Record<string, Record<string,string>> = {
     'visitor-passes':'log','entry-and-exit-records':'checked-in','visit-history':'history',
   },
   facilities: {
-    'facilities-dashboard':'assets','facility-maintenance':'maintenance','facility-history':'history',
+    'facilities-dashboard':'dashboard','facility-maintenance':'maintenance','facility-history':'history',
   },
 }
 
@@ -665,7 +665,7 @@ function resolveNavigationRoute(groupKey: string, itemLabel: string, role?: stri
   if (groupKey === 'inventory' && itemKey === 'inventory-dashboard') return 'institutional:inventory:stock-reports'
   if (groupKey === 'library' && itemKey === 'library-dashboard') return 'institutional:library:library-reports'
   if (groupKey === 'transport' && (itemKey === 'transport-dashboard' || itemKey === 'transport-fees' || itemKey === 'transport-history')) return 'institutional:transport:transport-reports'
-  if (groupKey === 'facilities' && itemKey === 'facilities-dashboard') return 'operations:facilities:assets'
+  if (groupKey === 'facilities' && itemKey === 'facilities-dashboard') return 'operations:facilities:dashboard'
   if (groupKey === 'reports' && itemKey === 'comparative-analytics') return 'reports:overview'
   if (groupKey === 'dashboard') {
     if (itemKey === 'employee-performance') return 'unavailable:dashboard:employee-performance'
