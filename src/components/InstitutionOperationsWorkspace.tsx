@@ -18,7 +18,7 @@ type Draft = Record<string,string>
 
 const viewLabels:Record<View,string>={
   pool:'Question bank',papers:'Question papers',units:'Curriculum units',coverage:'Curriculum coverage',
-  dashboard:'Behaviour dashboard',register:'Behaviour records',positive:'Positive behaviour','follow-up':'Follow-up cases',
+  dashboard:'Dashboard',register:'Behaviour records',positive:'Positive behaviour','follow-up':'Follow-up cases',
   incidents:'Disciplinary incidents',recognition:'Rewards & recognition',warnings:'Warnings',skills:'Student skills',
   activities:'Co-curricular activities',competencies:'Competency tracking',progress:'Student progress history',
   analytics:'Behaviour analytics',downloads:'Downloadable behaviour reports',reports:'Operational reports',
@@ -48,9 +48,9 @@ const views:Record<Domain,View[]>={
   behaviour:['dashboard','register','positive','follow-up','incidents','recognition','warnings','skills','activities','competencies','progress','history','analytics','downloads','reports'],
   certificates:['verify','issue','templates','bulk','history'],
   visitors:['log','checked-in','approvals','notifications','history','reports'],
-  facilities:['assets','maintenance','history','reservations','reports'],
+  facilities:['dashboard','assets','maintenance','history','reservations','reports'],
 }
-const initialViews:Record<Domain,string>={'question-bank':'pool',curriculum:'units',behaviour:'register',certificates:'verify',visitors:'log',facilities:'assets'}
+const initialViews:Record<Domain,string>={'question-bank':'pool',curriculum:'units',behaviour:'register',certificates:'verify',visitors:'log',facilities:'dashboard'}
 
 export function InstitutionOperationsWorkspace({workspaceKey,initialWindow,onToast}:Props){
   const {user,mode}=useAuth()
