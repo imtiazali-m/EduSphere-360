@@ -444,7 +444,7 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
  if(!user)return null
  const attendanceTitles:Record<string,string>={students:'Student Attendance',teachers:'Teacher Attendance',staff:'Staff Attendance',devices:'Automatic Attendance',history:'Attendance History','qr-scan':'QR / Barcode Attendance',biometric:'Biometric Attendance','cards-students':'Student Attendance Cards','cards-teachers':'Teacher Attendance Cards','cards-staff':'Staff Attendance Cards'}
  const attendanceTitle=autoTab==='register'?attendanceTitles[population]:attendanceTitles[autoTab]
- const registerStats=useMemo(()=>{
+ const registerStats=(()=>{
   const values=visiblePeople.map(person=>effectiveMarks[person.id]??'unmarked')
   return {
    total:values.length,
@@ -454,7 +454,7 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
    pending:values.filter(value=>value==='unmarked'||value==='leave_pending').length,
    completion:values.length?Math.round(values.filter(value=>value!=='unmarked').length/values.length*100):0
   }
- },[visiblePeople,effectiveMarks])
+ })()
  return <main className="page-content ed360-module-page ed360-attendance-workspace">
   <header className="ed360-attendance-hero">
    <div><span>{(user.institutionName?.trim()||'GOVERNMENT ISLAMIA DEGREE COLLEGE').toUpperCase()} / ATTENDANCE / {attendanceTitle.toUpperCase()}</span><h1>{attendanceTitle}</h1></div>
