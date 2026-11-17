@@ -673,7 +673,6 @@ function renderCertificates(){
     :selectedDomain==='behaviour'?visibleBehaviour.filter(row=>view==='positive'?row.event_type==='positive':view==='follow-up'?row.follow_up_required===true:view==='register'?row.event_type!=='positive':true).length
     :selectedDomain==='certificates'?visibleCertificates.length
     :selectedDomain==='visitors'?visibleVisitors.filter(row=>view==='checked-in'?row.status==='checked_in':view==='history'?['checked_out','denied','cancelled'].includes(String(row.status)):true).length
-    :view==='history'?maintenance.filter(row=>['completed','cancelled'].includes(String(row.status))).length
     :selectedDomain==='facilities'?view==='assets'?visibleAssets.length:view==='maintenance'?visibleMaintenance.length:view==='history'?maintenance.filter(row=>['completed','cancelled'].includes(String(row.status))).length:view==='reservations'?roomReservations.length:0
     :0
 
