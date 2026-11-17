@@ -96,7 +96,7 @@ export function getWorkspaceExperience(groupKey:string,itemLabel:string):Workspa
   outcome:tailored.outcome,
   actionLabel:tailored.action,
   emptyTitle:'No '+itemLabel.toLowerCase()+' records yet',
-  emptyDescription:'This view is ready for real institution records. Create the first authorised record, then use the filters, review actions and exports to manage the work. No sample records are displayed.'
+  emptyDescription:''
  }
 }
 const attendanceFields=(item:string):WorkspaceFieldDefinition[]=>{
@@ -158,5 +158,5 @@ export function getWorkspaceFields(groupKey:string,itemLabel:string):WorkspaceFi
  if(groupKey==='question-bank')return [field('question_type','Question type','select',['Multiple choice','Short answer','Long answer','True / false','Matching','Practical']),field('subject','Subject'),field('chapter','Chapter / topic'),field('difficulty','Difficulty','select',['Easy','Medium','Hard']),field('marks','Marks','number'),field('prompt','Question','textarea'),field('answer_key','Answer key','textarea')]
  if(groupKey==='library')return /issue|return|reading|reader|card/.test(item)?[field('book_reference','Book / resource reference'),field('reader_reference','Student / member reference'),field('issue_date','Issue / reading date','date'),field('due_date','Due date','date'),field('return_date','Return date','date'),field('circulation_status','Status','select',['Issued','Returned','Overdue','Lost','Reading']),field('fine_amount','Fine (PKR)','number')]:[field('book_code','ISBN / book code'),field('title','Book / resource title'),field('author','Author / creator'),field('publisher','Publisher'),field('category','Category'),field('total_copies','Total copies','number'),field('available_copies','Available copies','number'),field('shelf_location','Shelf / location'),field('digital_url','Digital resource URL','url')]
  if(groupKey==='communication'&&/sports|club|team|coach|competition|participation|achievement/.test(item))return [field('activity_name','Activity / club'),field('team_name','Team'),field('coach','Coach / supervisor'),field('participant_reference','Student / member reference'),field('event_date','Event date','date'),field('venue','Venue'),field('result','Result / achievement','textarea')]
- return [field('record_reference','Related record / reference'),field('responsible_person','Responsible person'),field('effective_date','Effective date','date'),field('review_date','Review / due date','date'),field('details','Details / notes','textarea')]
+ return []
 }
