@@ -365,25 +365,30 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
  })
  const tableFields=(preferredTableFields.length?preferredTableFields:structuredFields).slice(0,4)
  const canAdmin=Boolean(user&&['owner','admin'].includes(user.role))
- const canWrite=Boolean(user&&(
+ const itemName=item.label.toLowerCase()
+ const readOnlyPage=/dashboard|overview|history|reports?|analytics|audit|logs?|summary|notifications?|performance|insights?|statistics|delivery history|access history|change history/i.test(itemName)
+ const canWrite=Boolean(user&&!readOnlyPage&&(
   canAdmin||
   (user.role==='teacher'&&['academic_setup','attendance','timetable','teaching','behaviour','communication','question_bank','examinations','tests','curriculum','front_office','forms_documents','hostel','sports'].includes(group.dataModule))||
   (user.role==='accountant'&&['finance','fees','receivables','payments','receipts','payroll','reconciliation','inventory','cafeteria','assets','procurement','hostel'].includes(group.dataModule))||
   (user.role==='exam_officer'&&['question_bank','examinations','tests','reports'].includes(group.dataModule))
  ))
- const itemName=item.label.toLowerCase()
  const hasSchemaField=(pattern:RegExp)=>structuredFields.some(field=>pattern.test(field.key+' '+field.label))
  const hasMoneyField=hasSchemaField(/amount|fee|cost|price|revenue|debit|credit|refund|salary|balance|budget|paid|payment|income|expense/i)
  const hasQuantityField=hasSchemaField(/quantity|\\bqty\\b|copies|capacity|stock|beds|seats|pages|allocated/i)
  const hasDueField=hasSchemaField(/due|deadline|expiry|expires|follow.?up|expected.*date|return date|next review/i)
  const hasApprovalField=hasSchemaField(/approval|approver|decision|review status|verification result/i)
+ const hasSchemaStatus=hasSchemaField(/status|state|stage|decision|result|verification/i)
+ const hasNarrativeField=structuredFields.some(field=>field.type==='textarea'||/description|notes|reason|purpose|message|comment|summary|instruction|finding/i.test(field.key+' '+field.label))
+ const showStatusField=!hasSchemaStatus
+ const showDescription=!hasNarrativeField&&/incident|complaint|request|application|policy|plan|notice|message|activity|event|observation|recommendation|maintenance|review|feedback|enquiry|visitor|support|follow.?up|details/i.test(itemName)
  const hasReferenceField=hasSchemaField(/reference|code|serial|number|isbn|sku|admission|employee.?no/i)
  const hasDateField=structuredFields.some(field=>['date','datetime-local','time'].includes(field.type??'text')||/date|time|period|session|year/i.test(field.key+' '+field.label))
  const showAmount=!hasMoneyField&&/fee|payment|receipt|refund|invoice|receivable|balance|salary|payroll|income|expense|cost|budget|collection|reconciliation/i.test(itemName)
  const showQuantity=!hasQuantityField&&/stock|inventory|catalogue|catalog|book|copies|capacity|class|section|room|bed|vehicle|asset|allocation/i.test(itemName)
  const showDueDate=!hasDueField&&/due|deadline|follow.?up|assignment|homework|contract|warranty|maintenance|reservation|leave|invoice|fee|payment|application|session|schedule/i.test(itemName)
  const showRecordDate=!hasDateField&&/attendance|history|report|audit|transaction|payment|collection|assessment|examination|event|visit|issue|certificate|session|application|maintenance|reservation|progress|performance/i.test(itemName)
- const showApproval=canAdmin&&!hasApprovalField&&/approval|approver|review|verification|permission|policy|access|request|reservation|purchase|certificate|visitor|audit/i.test(itemName)
+ const showApproval=canAdmin&&!readOnlyPage&&!hasApprovalField&&/approval|approver|review|verification|permission|policy|access|request|reservation|purchase|certificate|visitor|audit/i.test(itemName)
  const showPortalVisibility=/notice|circular|announcement|message|homework|assignment|learning material|resource|curriculum|form|submission|document|certificate|event|activity|classroom/i.test(itemName)
  const showReference=!hasReferenceField&&/reference|directory|catalog|register|history|report|request|invoice|receipt|certificate|document|id card|code|number|asset|vehicle|route|book|account|class|subject|session|fee|payment|employee|student|visitor|purchase|stock|attendance|question|policy|permission|case|form|submission|transfer|allocation|reservation|application|enquiry|complaint|supplier|payroll|audit/i.test(itemName)
  const showCreatedDateFilter=hasDateField||/dashboard|history|report|log|attendance|assessment|examination|event|visit|transaction|payment|invoice|receipt|session|audit/i.test(itemName)
@@ -391,6 +396,7 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
  const tableMetaColumns=metaColumnKeys
   .filter(key=>{
    if(key==='approval_status')return canViewInternalApproval(user?.role)&&showApproval
+   if(key==='status')return !hasSchemaStatus
    if(key==='amount')return showAmount
    if(key==='quantity')return showQuantity
    if(key==='due_date')return showDueDate
@@ -569,8 +575,8 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
    <form onSubmit={save} className="ed360-context-form-grid">
     <label>Record title *<input required value={title} onChange={e=>setTitle(e.target.value)} maxLength={180} placeholder={'Enter '+item.label.toLowerCase()}/></label>
     {showReference&&<label>Reference / number<input value={reference} onChange={e=>setReference(e.target.value)} maxLength={80} placeholder="Optional reference"/></label>}
-    <label>Description / notes<textarea value={description} onChange={e=>setDescription(e.target.value)} rows={3} maxLength={3000}/></label>
-    <div className="ed360-form-row"><label>Status<select value={status} onChange={e=>setStatus(e.target.value)}>{statusOptions.map(s=><option value={s} key={s}>{s.replaceAll('_',' ')}</option>)}</select></label>{showApproval&&<label>Approval<select value={approval} onChange={e=>setApproval(e.target.value)}><option value="not_required">Not required</option><option value="draft">Draft</option><option value="pending">Needs approval</option></select></label>}</div>
+    {showDescription&&<label>Description / notes<textarea value={description} onChange={e=>setDescription(e.target.value)} rows={3} maxLength={3000}/></label>}
+    {(showStatusField||showApproval)&&<div className="ed360-form-row">{showStatusField&&<label>Status<select value={status} onChange={e=>setStatus(e.target.value)}>{statusOptions.map(s=><option value={s} key={s}>{s.replaceAll('_',' ')}</option>)}</select></label>}{showApproval&&<label>Approval<select value={approval} onChange={e=>setApproval(e.target.value)}><option value="not_required">Not required</option><option value="draft">Draft</option><option value="pending">Needs approval</option></select></label>}</div>}
     {(showRecordDate||showDueDate)&&<div className="ed360-form-row">{showRecordDate&&<label>Record date<input type="date" value={recordDate} onChange={e=>setRecordDate(e.target.value)}/></label>}{showDueDate&&<label>Due date<input type="date" value={dueDate} onChange={e=>setDueDate(e.target.value)}/></label>}</div>}
     {showPortalVisibility&&<div className="ed360-form-row"><label>Portal visibility<select value={visibility} onChange={e=>setVisibility(e.target.value)}><option value="staff_only">Staff only</option><option value="student_portal">Student portal (one linked student)</option><option value="parent_portal">Parent portal (one linked student)</option><option value="institution_portal">Institution portal (shared notice)</option></select></label>{canWrite&&visibility!=='staff_only'&&visibility!=='institution_portal'&&<label>Linked student *<select required value={selectedStudentId} onChange={e=>setSelectedStudentId(e.target.value)}><option value="">Select the relevant student</option>{studentOptions.map(student=><option key={student.id} value={student.id}>{student.name}{student.reference?' · '+student.reference:''}</option>)}</select></label>}</div>}
     {(showAmount||showQuantity)&&<div className="ed360-form-row">{showAmount&&<label>Amount (PKR)<input type="number" min="0" step="0.01" value={amount} onChange={e=>setAmount(e.target.value)}/></label>}{showQuantity&&<label>Quantity<input type="number" min="0" step="0.001" value={quantity} onChange={e=>setQuantity(e.target.value)}/></label>}</div>}
@@ -579,10 +585,10 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
    </form>
   </section></div>}
   {detail&&<div className="modal-backdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setDetail(null)}}><section className="modal-card ed360-record-details ed360-context-detail" role="dialog" aria-modal="true" aria-labelledby="ed360-detail-heading">
-   <div className="modal-heading"><div><div className="eyebrow">CONTEXTUAL SUB-WINDOW / {group.label.toUpperCase()}</div><h2 id="ed360-detail-heading">{detail.title}</h2><p>{detail.reference_code||detail.record_type.replaceAll('-',' ')} · {detail.status}</p></div><button type="button" className="icon-button" onClick={()=>setDetail(null)} aria-label="Close"><X size={18}/></button></div>
+   <div className="modal-heading"><div><div className="eyebrow">CONTEXTUAL SUB-WINDOW / {group.label.toUpperCase()}</div><h2 id="ed360-detail-heading">{detail.title}</h2><p>{detail.reference_code||detail.record_type.replaceAll('-',' ')}{!hasSchemaStatus?' · '+detail.status:''}</p></div><button type="button" className="icon-button" onClick={()=>setDetail(null)} aria-label="Close"><X size={18}/></button></div>
    <div className="ed360-context-detail-callout"><div>{canAdmin&&<><span>RECORD WORKFLOW</span><strong>{detail.approval_status.replaceAll('_',' ')}</strong></>}{detail.description&&<p>{detail.description}</p>}</div><aside><b>Responsible workspace</b><p>{group.label} / {item.label}</p><b>Updated</b><p>{detail.updated_at?new Date(detail.updated_at).toLocaleString():'Not available'}</p></aside></div>
    <div className="ed360-record-details-grid">
-    <div className="ed360-record-detail"><small>Status</small><b>{detail.status}</b></div>
+    {!hasSchemaStatus&&<div className="ed360-record-detail"><small>Status</small><b>{detail.status}</b></div>}
     {showRecordDate&&<div className="ed360-record-detail"><small>Record date</small><b>{displayDate(detail.record_date)}</b></div>}
     {showDueDate&&<div className="ed360-record-detail"><small>Due date</small><b>{displayDate(detail.due_date)}</b></div>}
     {showAmount&&<div className="ed360-record-detail"><small>Amount</small><b>{money(detail.amount)}</b></div>}
@@ -593,7 +599,7 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
    <div className="modal-actions">
     {canAdmin&&detail.approval_status==='pending'&&<><button type="button" className="button button-outline" onClick={()=>void decide(detail,'rejected')}>Reject</button><button type="button" className="button button-primary" onClick={()=>void decide(detail,'approved')}><CheckCircle2 size={15}/> Approve</button></>}
     {canWrite&&<button type="button" className="button button-outline" onClick={()=>{const row=detail;setDetail(null);resetForm(row)}}>Edit record</button>}
-    {canAdmin&&<button type="button" className="button button-danger" onClick={()=>void remove(detail)}>Delete</button>}
+    {canAdmin&&!readOnlyPage&&<button type="button" className="button button-danger" onClick={()=>void remove(detail)}>Delete</button>}
     <button type="button" className="button button-primary" onClick={()=>setDetail(null)}>Close</button>
    </div>
   </section></div>}
