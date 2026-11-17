@@ -444,6 +444,7 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
  if(!user)return null
  const attendanceTitles:Record<string,string>={students:'Student Attendance',teachers:'Teacher Attendance',staff:'Staff Attendance',devices:'Automatic Attendance',history:'Attendance History','qr-scan':'QR / Barcode Attendance',biometric:'Biometric Attendance','cards-students':'Student Attendance Cards','cards-teachers':'Teacher Attendance Cards','cards-staff':'Staff Attendance Cards'}
  const attendanceTitle=autoTab==='register'?attendanceTitles[population]:attendanceTitles[autoTab]
+ const registerStats=(()=>{const rows=people.map(person=>effectiveMarks[person.id]??'unmarked');const count=(status:AttendanceMark)=>rows.filter(value=>value===status).length;const marked=rows.filter(value=>value!=='unmarked').length;return {total:rows.length,present:count('present'),absent:count('absent'),approvedLeave:count('approved_leave'),leavePending:count('leave_pending'),unmarked:count('unmarked'),marked,completion:rows.length?Math.round(marked/rows.length*100):0}})()
  return <main className="page-content ed360-module-page ed360-attendance-workspace">
   <header className="ed360-attendance-hero">
    <div><span>{(user.institutionName?.trim()||'GOVERNMENT ISLAMIA DEGREE COLLEGE').toUpperCase()} / ATTENDANCE / {attendanceTitle.toUpperCase()}</span><h1>{attendanceTitle}</h1></div>
@@ -457,6 +458,16 @@ export function AttendanceWorkspace({initialWindow='students',onToast}:Props){
    {canManageStaff&&<button className={['cards-students','cards-teachers','cards-staff'].includes(autoTab)?'active':''} onClick={()=>setAutoTab(population==='students'?'cards-students':population==='teachers'?'cards-teachers':'cards-staff')}>ID cards</button>}
   </div>
   {autoTab==='register'&&<>
+   <section className="ed360-attendance-register-summary" aria-label="Attendance register summary">
+    <div className="ed360-attendance-summary-top"><div><span>DAILY REGISTER OVERVIEW</span><strong>{registerStats.total} <small>{population==='students'?'students':population==='teachers'?'teachers':'staff'} in selected roster</small></strong></div><div className="ed360-attendance-completion"><div><span>Register completion</span><b>{registerStats.completion}%</b></div><div className="ed360-attendance-progress" role="progressbar" aria-valuenow={registerStats.completion} aria-valuemin={0} aria-valuemax={100}><i style={{width:registerStats.completion+'%'}}/></div></div></div>
+    <div className="ed360-attendance-summary-metrics">
+     <article className="is-present"><span>Present</span><strong>{registerStats.present}</strong><small>Marked present</small></article>
+     <article className="is-absent"><span>Absent</span><strong>{registerStats.absent}</strong><small>Marked absent</small></article>
+     <article className="is-leave"><span>Approved leave</span><strong>{registerStats.approvedLeave}</strong><small>Authorised leave</small></article>
+     <article className="is-pending"><span>Leave pending</span><strong>{registerStats.leavePending}</strong><small>Awaiting approval</small></article>
+     <article className="is-unmarked"><span>Not marked</span><strong>{registerStats.unmarked}</strong><small>Requires action</small></article>
+    </div>
+   </section>
    <section className="ed360-attendance-filter-card">
     <div className="ed360-attendance-filter">
      <label>Attendance type<select value={population} onChange={e=>{setPopulation(e.target.value as 'students'|'teachers'|'staff');setSearch('')}} disabled={readOnly}><option value="students">Student attendance</option>{canManageStaff?<><option value="teachers">Teacher attendance</option><option value="staff">Staff attendance</option></>:user?.role==='teacher'?<option value="teachers">My teacher attendance</option>:null}</select></label>
