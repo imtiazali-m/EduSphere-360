@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type CSSProperties, type FormEvent } from 'react'
-import { ArrowUpRight, CheckCircle2, Download, FileSpreadsheet, FileText, Filter, Plus, Printer, RefreshCw, Search, X } from 'lucide-react'
+import { CheckCircle2, Download, FileSpreadsheet, FileText, Filter, Plus, Printer, RefreshCw, Search, X } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { getWorkspaceGroup, getWorkspaceItem, institutionalMenu } from '../lib/institutionalCatalog'
