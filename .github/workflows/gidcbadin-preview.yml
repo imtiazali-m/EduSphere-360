@@ -1,16 +1,17 @@
-name: GIDC Badin — Cloudflare Pages preview
+name: GIDC Badin — Cloudflare Pages
 
 on:
   push:
     branches:
       - premium-institutional-theme
+      - main
 
 permissions:
   contents: read
 
 jobs:
   verify-and-build:
-    name: Verify GIDC branch and build preview assets
+    name: Verify GIDC source and build deployment assets
     runs-on: ubuntu-24.04
     env:
       VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
@@ -84,9 +85,9 @@ jobs:
           retention-days: 7
 
   deploy-preview:
-    name: Deploy preview to the GIDC Cloudflare Pages project only
+    name: Deploy GIDC Pages site for this branch
     needs: verify-and-build
-    if: github.ref == 'refs/heads/premium-institutional-theme'
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/premium-institutional-theme'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -98,7 +99,7 @@ jobs:
           name: gidcbadin-preview-dist
           path: dist
 
-      - name: Verify preview-only Cloudflare configuration
+      - name: Verify GIDC Cloudflare deployment target
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -108,11 +109,11 @@ jobs:
           test -n "$CLOUDFLARE_ACCOUNT_ID"
           test -s dist/index.html
           test -s dist/_redirects
-          echo "Target is gidcbadin preview branch: premium-institutional-theme"
+          echo "Target is GIDC Cloudflare Pages project: gidcbadin; branch: $GITHUB_REF_NAME"
 
-      - name: Deploy preview to gidcbadin (not production)
+      - name: Deploy GIDC Badin to Cloudflare Pages
         uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=gidcbadin --branch=premium-institutional-theme
+          command: pages deploy dist --project-name=gidcbadin --branch=${{ github.ref_name }}
