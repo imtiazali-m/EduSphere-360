@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ChangeEvent, type ReactNode } from 'react'
-import { Activity, AlertTriangle, Archive, ArrowDownToLine, CheckCircle2, Cloud, Database, History, RefreshCw, ShieldCheck, Upload } from 'lucide-react'
+import { Activity, AlertTriangle, Archive, ArrowDownToLine, CheckCircle2, Cloud, History, RefreshCw, ShieldCheck, Upload } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { listRecords, createRecord } from '../lib/data'
 import { supabase } from '../lib/supabase'
@@ -139,8 +139,8 @@ function validateRows(table:string,rows:DataRow[]){
 function InfoStat({label,value,detail}:{label:string;value:string;detail:string}){
   return <article className="bdw-stat"><small>{label}</small><strong>{value}</strong><span>{detail}</span></article>
 }
-function PageIntro({icon:Icon,title,description,action}:{icon:typeof Database;title:string;description:string;action?:ReactNode}){
-  return <header className="bdw-page-intro"><span className="bdw-intro-icon"><Icon size={22}/></span><div><h2>{title}</h2><p>{description}</p></div>{action&&<div className="bdw-intro-action">{action}</div>}</header>
+function PageIntro({breadcrumb,title,action}:{breadcrumb:string;title:string;action?:ReactNode}){
+  return <header className="bdw-page-intro"><div><span className="bdw-page-breadcrumb">{breadcrumb}</span><h1>{title}</h1></div>{action&&<div className="bdw-intro-action">{action}</div>}</header>
 }
 export function BackupDataWorkspace({initialWindow,onToast}:Props){
   const {user,mode}=useAuth()
@@ -306,10 +306,9 @@ export function BackupDataWorkspace({initialWindow,onToast}:Props){
   },[validationTable,validationRows])
   if(!admin)return <div className="bdw-page"><div className="bdw-notice warning">Backup and data management is restricted to the institution owner and authorised administrators.</div></div>
 
-  const refreshButton=<button className="bdw-button secondary" type="button" onClick={()=>view==='dashboard'?void loadDashboardCounts():view.endsWith('history')?void loadHistory():view==='integrations'?void checkIntegration():view==='validation'||view==='duplicates'||view==='integrity'?void loadValidation():void loadTable()}><RefreshCw size={15}/> Refresh</button>
-  const showRefresh=['dashboard','backup-history','import-history','export-history','export','validation','duplicates','integrity','integrations'].includes(view)
+  const refreshButton=<button className="bdw-button primary" type="button" onClick={()=>view==='dashboard'?void loadDashboardCounts():view.endsWith('history')?void loadHistory():view==='integrations'?void checkIntegration():view==='validation'||view==='duplicates'||view==='integrity'?void loadValidation():void loadTable()}><RefreshCw size={15}/> Refresh</button>
   const tableOptions=dataTables.map(item=><option key={item.key} value={item.key}>{item.label}</option>)
-  const pageHeader=<PageIntro icon={Database} title={currentTitle} description="Institution-scoped data tools for Government Islamia Degree College, Badin." action={showRefresh?refreshButton:undefined}/>
+  const pageHeader=<PageIntro breadcrumb={(user?.institutionName?.trim()||'GOVERNMENT ISLAMIA DEGREE COLLEGE').toUpperCase()+' / BACKUP & DATA / '+currentTitle.toUpperCase()} title={currentTitle} action={refreshButton}/>
   const historyView=(heading:string,detail:string)=>{
     const rows=historyRows.filter(row=>heading==='Import History'?/import/i.test(String(row.action??'')+' '+String(row.module_key??'')):heading==='Export History'?/export/i.test(String(row.action??'')+' '+String(row.module_key??'')):true)
     return <><div className="bdw-stats"><InfoStat label="Recorded events" value={String(rows.length)} detail="Matching entries in the institution audit feed"/><InfoStat label="Audit feed" value={auditBusy?'Loading':String(auditRows.length)} detail="Server-recorded institutional events"/></div><section className="bdw-panel"><h3>{heading}</h3><p>{detail}</p>{rows.length?<div className="bdw-table-wrap"><table><thead><tr><th>When</th><th>Action</th><th>Module</th><th>Record type</th><th>Actor</th></tr></thead><tbody>{rows.map(row=><tr key={row.id}><td>{row.occurred_at?new Date(row.occurred_at).toLocaleString():'—'}</td><td>{String(row.action??'—')}</td><td>{String(row.module_key??'—')}</td><td>{String(row.record_type??'—')}</td><td>{String(row.actor_id??'—')}</td></tr>)}</tbody></table></div>:<div className="bdw-empty"><History size={20}/><strong>No matching events recorded</strong><span>This list only shows actions already written to the server audit feed. Browser downloads are not falsely added to cloud history.</span></div>}</section></>

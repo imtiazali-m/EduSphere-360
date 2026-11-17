@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { ArrowUpRight, Building2, CheckCircle2, FileText, LockKeyhole, Palette, Plus, RefreshCw, Save, Search, ShieldCheck, Upload, Users, X } from 'lucide-react'
+import { ArrowUpRight, Building2, CheckCircle2, Download, FileSpreadsheet, FileText, LockKeyhole, Palette, Plus, Printer, RefreshCw, Save, Search, ShieldCheck, Upload, Users, X } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { userFacingError } from '../lib/userErrors'
+import { downloadCsv } from '../lib/csv'
+import { exportDocx, exportXlsx, printOfficeReport, type OfficeColumn } from '../lib/officeExport'
 import { CollegeRolePermissionWorkspace } from './CollegeRolePermissionWorkspace'
 import type { RecordRow } from '../lib/types'
 import { displayInstitutionName } from '../lib/collegeIdentity'
@@ -17,7 +19,7 @@ type Audit=RecordRow & {id:string;record_id:string;action:string;module_key:stri
 type Department=RecordRow & {id:string;name:string;department_code?:string;head_name?:string|null;email?:string|null;phone?:string|null;status?:string;is_active?:boolean;campus_id?:string|null}
 type Designation=RecordRow & {id:string;name:string;code?:string|null;department_id?:string|null;is_active:boolean}
 type Teacher=RecordRow & {id:string;full_name:string;department?:string|null;department_id?:string|null;designation_id?:string|null;employment_status?:string;campus_id?:string|null}
-type Member=RecordRow & {user_id:string;role:string;status:string;full_name?:string;email?:string}
+type Member=RecordRow & {id:string;user_id:string;role:string;status:string;created_at?:string;full_name?:string;email?:string}
 type Policy=RecordRow & {id:string;title:string;reference_code?:string|null;description?:string|null;status:string;effective_date?:string|null;payload:Record<string,unknown>}
 type AcademicRow=RecordRow & {id:string;[key:string]:unknown}
 type InstitutePreferences={timezone:string;date_format:string;currency:string;academic_year_start_month:string;term_structure:string;student_id_prefix:string;employee_id_prefix:string}
@@ -26,6 +28,109 @@ const sectionByWindow:Record<string,Section>={profile:'profile',settings:'settin
 const dateLabel=(value:unknown)=>value?new Date(String(value)).toLocaleString():'—'
 const label=(value:unknown)=>String(value??'').replaceAll('_',' ').replace(/\b\w/g,c=>c.toUpperCase())
 const jsonObject=(value:unknown):Record<string,unknown>=>value&&typeof value==='object'&&!Array.isArray(value)?value as Record<string,unknown>:{}
+const safeInstitutionBrandColor=(value:unknown,fallback:string)=>typeof value==='string'&&/^#[0-9a-f]{6}$/i.test(value)?value:fallback
+
+async function fetchAllInstitutionAuditEvents(institutionId:string):Promise<{data:Audit[];error:unknown|null}>{
+  if(!supabase)return {data:[],error:new Error('The institution database connection is unavailable.')}
+  const rows:Audit[]=[]
+  const batchSize=500
+  for(let offset=0;;offset+=batchSize){
+    const {data,error}=await supabase.from('institutional_audit_events').select('*').eq('institution_id',institutionId).order('occurred_at',{ascending:false}).range(offset,offset+batchSize-1)
+    if(error)return {data:[],error}
+    const batch=(data??[]) as Audit[]
+    rows.push(...batch)
+    if(batch.length<batchSize)return {data:rows,error:null}
+  }
+}
+
+async function fetchAllInstitutionSettings(institutionId:string):Promise<{data:Setting[];error:unknown|null}>{
+  if(!supabase)return {data:[],error:new Error('The institution database connection is unavailable.')}
+  const rows:Setting[]=[]
+  const batchSize=500
+  for(let offset=0;;offset+=batchSize){
+    const {data,error}=await supabase.from('institution_settings').select('*').eq('institution_id',institutionId).order('category').order('setting_key').range(offset,offset+batchSize-1)
+    if(error)return {data:[],error}
+    const batch=(data??[]) as Setting[]
+    rows.push(...batch)
+    if(batch.length<batchSize)return {data:rows,error:null}
+  }
+}
+
+async function fetchAllInstitutionApprovals(institutionId:string):Promise<{data:Approval[];error:unknown|null}>{
+  if(!supabase)return {data:[],error:new Error('The institution database connection is unavailable.')}
+  const rows:Approval[]=[]
+  const batchSize=500
+  for(let offset=0;;offset+=batchSize){
+    const {data,error}=await supabase.from('workflow_approvals').select('*').eq('institution_id',institutionId).order('requested_at',{ascending:false}).range(offset,offset+batchSize-1)
+    if(error)return {data:[],error}
+    const batch=(data??[]) as Approval[]
+    rows.push(...batch)
+    if(batch.length<batchSize)return {data:rows,error:null}
+  }
+}
+
+async function fetchAllInstitutionPolicies(institutionId:string):Promise<{data:Policy[];error:unknown|null}>{
+  if(!supabase)return {data:[],error:new Error('The institution database connection is unavailable.')}
+  const rows:Policy[]=[]
+  const batchSize=500
+  for(let offset=0;;offset+=batchSize){
+    const {data,error}=await supabase.from('institutional_records').select('*').eq('institution_id',institutionId).eq('module_key','administration').eq('record_type','institutional-policy').order('updated_at',{ascending:false}).range(offset,offset+batchSize-1)
+    if(error)return {data:[],error}
+    const batch=(data??[]) as Policy[]
+    rows.push(...batch)
+    if(batch.length<batchSize)return {data:rows,error:null}
+  }
+}
+
+async function fetchAllInstitutionMemberships(institutionId:string):Promise<{data:Member[];error:unknown|null}>{
+  if(!supabase)return {data:[],error:new Error('The institution database connection is unavailable.')}
+  const rows:Member[]=[]
+  const batchSize=500
+  for(let offset=0;;offset+=batchSize){
+    const {data,error}=await supabase.from('memberships').select('id,user_id,role,status,created_at').eq('institution_id',institutionId).order('created_at',{ascending:false}).range(offset,offset+batchSize-1)
+    if(error)return {data:[],error}
+    const batch=(data??[]) as Member[]
+    rows.push(...batch)
+    if(batch.length<batchSize)return {data:rows,error:null}
+  }
+}
+
+async function fetchAllInstitutionDepartments(institutionId:string):Promise<{data:Department[];error:unknown|null}>{
+  if(!supabase)return {data:[],error:new Error('The institution database connection is unavailable.')}
+  const rows:Department[]=[]
+  const batchSize=500
+  for(let offset=0;;offset+=batchSize){
+    const {data,error}=await supabase.from('departments').select('*').eq('institution_id',institutionId).order('name').range(offset,offset+batchSize-1)
+    if(error)return {data:[],error}
+    const batch=(data??[]) as Department[]
+    rows.push(...batch)
+    if(batch.length<batchSize)return {data:rows,error:null}
+  }
+}
+async function fetchAllInstitutionDesignations(institutionId:string):Promise<{data:Designation[];error:unknown|null}>{
+  if(!supabase)return {data:[],error:new Error('The institution database connection is unavailable.')}
+  const rows:Designation[]=[]
+  const batchSize=500
+  for(let offset=0;;offset+=batchSize){
+    const {data,error}=await supabase.from('designations').select('*').eq('institution_id',institutionId).order('name').range(offset,offset+batchSize-1)
+    if(error)return {data:[],error}
+    const batch=(data??[]) as Designation[]
+    rows.push(...batch)
+    if(batch.length<batchSize)return {data:rows,error:null}
+  }
+}
+async function fetchAllInstitutionTeachers(institutionId:string):Promise<{data:Teacher[];error:unknown|null}>{
+  if(!supabase)return {data:[],error:new Error('The institution database connection is unavailable.')}
+  const rows:Teacher[]=[]
+  const batchSize=500
+  for(let offset=0;;offset+=batchSize){
+    const {data,error}=await supabase.from('teachers').select('id,full_name,department,department_id,designation_id,employment_status,campus_id').eq('institution_id',institutionId).order('full_name').range(offset,offset+batchSize-1)
+    if(error)return {data:[],error}
+    const batch=(data??[]) as Teacher[]
+    rows.push(...batch)
+    if(batch.length<batchSize)return {data:rows,error:null}
+  }
+}
 
 export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}:Props){
   const {user}=useAuth()
@@ -36,19 +141,55 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
   const [institution,setInstitution]=useState<Institution|null>(null)
   const [profileDraft,setProfileDraft]=useState({name:'',institution_type:'school',tagline:'',phone:'',email:'',website:'',address:'',country:''})
   const [logoFile,setLogoFile]=useState<File|null>(null),[logoUrl,setLogoUrl]=useState('')
+  const [logoPreviewUrl,setLogoPreviewUrl]=useState('')
   const [settings,setSettings]=useState<Setting[]>([]),[approvals,setApprovals]=useState<Approval[]>([]),[audit,setAudit]=useState<Audit[]>([]),[policies,setPolicies]=useState<Policy[]>([])
   const [departments,setDepartments]=useState<Department[]>([]),[designations,setDesignations]=useState<Designation[]>([]),[teachers,setTeachers]=useState<Teacher[]>([]),[members,setMembers]=useState<Member[]>([])
   const [academicSessions,setAcademicSessions]=useState<AcademicRow[]>([]),[classes,setClasses]=useState<AcademicRow[]>([]),[programs,setPrograms]=useState<AcademicRow[]>([]),[subjects,setSubjects]=useState<AcademicRow[]>([]),[rooms,setRooms]=useState<AcademicRow[]>([])
   const [institutePreferences,setInstitutePreferences]=useState<InstitutePreferences>(defaultInstitutePreferences)
+  const [primaryColorDraft,setPrimaryColorDraft]=useState('#6035B5')
+  const [accentColorDraft,setAccentColorDraft]=useState('#16877B')
   const [search,setSearch]=useState('')
   const [settingsSortKey,setSettingsSortKey]=useState<'category'|'setting_key'|'is_public'>('category')
   const [settingsSortDirection,setSettingsSortDirection]=useState<'asc'|'desc'>('asc')
-  const [settingsPage,setSettingsPage]=useState(1),[approvalPage,setApprovalPage]=useState(1)
+  const [settingsPage,setSettingsPage]=useState(1),[approvalPage,setApprovalPage]=useState(1),[auditPage,setAuditPage]=useState(1),[securityPage,setSecurityPage]=useState(1)
+  const [auditSearch,setAuditSearch]=useState('')
+  const [auditSortKey,setAuditSortKey]=useState<'occurred_at'|'action'|'module_key'>('occurred_at')
+  const [auditSortDirection,setAuditSortDirection]=useState<'desc'|'asc'>('desc')
+  const [securitySearch,setSecuritySearch]=useState('')
+  const [securitySortKey,setSecuritySortKey]=useState<'occurred_at'|'action'|'module_key'>('occurred_at')
+  const [securitySortDirection,setSecuritySortDirection]=useState<'desc'|'asc'>('desc')
   const pageSize=10
+  const [membershipSavingId,setMembershipSavingId]=useState<string|null>(null)
   const [policyForm,setPolicyForm]=useState(false),[policyEditing,setPolicyEditing]=useState<Policy|null>(null)
   const [policyTitle,setPolicyTitle]=useState(''),[policyCode,setPolicyCode]=useState(''),[policyCategory,setPolicyCategory]=useState('general'),[policyDescription,setPolicyDescription]=useState(''),[policyStatus,setPolicyStatus]=useState('draft'),[policyEffectiveDate,setPolicyEffectiveDate]=useState('')
+  const [policyPage,setPolicyPage]=useState(1)
+  const [policyStatusFilter,setPolicyStatusFilter]=useState<'all'|'draft'|'published'|'archived'>('all')
+  const [policySortKey,setPolicySortKey]=useState<'title'|'status'|'effective_date'|'updated_at'>('updated_at')
+  const [policySortDirection,setPolicySortDirection]=useState<'asc'|'desc'>('desc')
   const [settingForm,setSettingForm]=useState(false),[settingEditing,setSettingEditing]=useState<Setting|null>(null),[settingCategory,setSettingCategory]=useState('general'),[settingKey,setSettingKey]=useState(''),[settingValue,setSettingValue]=useState('{}'),[settingPublic,setSettingPublic]=useState(false)
   const [approvalForm,setApprovalForm]=useState(false),[approvalKey,setApprovalKey]=useState(''),[approvalValue,setApprovalValue]=useState('{}'),[approvalNotes,setApprovalNotes]=useState(''),[approvalPublic,setApprovalPublic]=useState(false)
+  const [approvalStatusFilter,setApprovalStatusFilter]=useState<'all'|'pending'|'approved'|'rejected'>('all')
+  const [approvalSortKey,setApprovalSortKey]=useState<'requested_at'|'status'|'workflow_key'>('requested_at')
+  const [approvalSortDirection,setApprovalSortDirection]=useState<'asc'|'desc'>('desc')
+  const [memberPage,setMemberPage]=useState(1)
+  const [memberStatusFilter,setMemberStatusFilter]=useState('all')
+  const [memberRoleFilter,setMemberRoleFilter]=useState('all')
+  const [memberSortKey,setMemberSortKey]=useState<'full_name'|'email'|'role'|'status'|'created_at'>('created_at')
+  const [memberSortDirection,setMemberSortDirection]=useState<'asc'|'desc'>('desc')
+  const [departmentPage,setDepartmentPage]=useState(1),[designationPage,setDesignationPage]=useState(1)
+  const [departmentStatusFilter,setDepartmentStatusFilter]=useState<'all'|'active'|'inactive'>('all')
+  const [designationStatusFilter,setDesignationStatusFilter]=useState<'all'|'active'|'inactive'>('all')
+  const [departmentSortKey,setDepartmentSortKey]=useState<'name'|'department_code'|'head_name'|'status'>('name')
+  const [departmentSortDirection,setDepartmentSortDirection]=useState<'asc'|'desc'>('asc')
+  const [designationSortKey,setDesignationSortKey]=useState<'name'|'code'|'department'|'status'>('name')
+  const [designationSortDirection,setDesignationSortDirection]=useState<'asc'|'desc'>('asc')
+  const [orgPage,setOrgPage]=useState(1)
+  const [orgDepartmentFilter,setOrgDepartmentFilter]=useState('all')
+  const [orgDesignationFilter,setOrgDesignationFilter]=useState('all')
+  const [orgEmploymentFilter,setOrgEmploymentFilter]=useState('all')
+  const [orgSortKey,setOrgSortKey]=useState<'full_name'|'department'|'designation'|'employment_status'>('department')
+  const [orgSortDirection,setOrgSortDirection]=useState<'asc'|'desc'>('asc')
+  const [orgSearch,setOrgSearch]=useState('')
 
   async function load(silent=false){
     if(!supabase||!user){setLoading(false);return}
@@ -56,14 +197,14 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
     try{
       const [institutionResult,settingsResult,approvalResult,auditResult,policyResult,departmentResult,designationResult,teacherResult,membershipResult,academicSessionResult,classResult,programResult,subjectResult,roomResult]=await Promise.all([
         supabase.from('institutions').select('id,name,institution_type,tagline,phone,email,website,address,country,logo_path,created_by').eq('id',user.institutionId).maybeSingle(),
-        admin?supabase.from('institution_settings').select('*').eq('institution_id',user.institutionId).order('category').order('setting_key').limit(1000):Promise.resolve({data:[],error:null}),
-        admin?supabase.from('workflow_approvals').select('*').eq('institution_id',user.institutionId).order('requested_at',{ascending:false}).limit(500):Promise.resolve({data:[],error:null}),
-        admin?supabase.from('institutional_audit_events').select('*').eq('institution_id',user.institutionId).order('occurred_at',{ascending:false}).limit(500):Promise.resolve({data:[],error:null}),
-        admin?supabase.from('institutional_records').select('*').eq('institution_id',user.institutionId).eq('module_key','administration').eq('record_type','institutional-policy').order('updated_at',{ascending:false}).limit(500):Promise.resolve({data:[],error:null}),
-        admin?supabase.from('departments').select('*').eq('institution_id',user.institutionId).order('name').limit(500):Promise.resolve({data:[],error:null}),
-        admin?supabase.from('designations').select('*').eq('institution_id',user.institutionId).order('name').limit(500):Promise.resolve({data:[],error:null}),
-        admin?supabase.from('teachers').select('id,full_name,department,department_id,designation_id,employment_status,campus_id').eq('institution_id',user.institutionId).order('full_name').limit(1000):Promise.resolve({data:[],error:null}),
-        admin?supabase.from('memberships').select('user_id,role,status,created_at').eq('institution_id',user.institutionId).order('created_at').limit(1000):Promise.resolve({data:[],error:null}),
+        admin?fetchAllInstitutionSettings(user.institutionId):Promise.resolve({data:[],error:null}),
+        admin?fetchAllInstitutionApprovals(user.institutionId):Promise.resolve({data:[],error:null}),
+        admin?fetchAllInstitutionAuditEvents(user.institutionId):Promise.resolve({data:[],error:null}),
+        admin?fetchAllInstitutionPolicies(user.institutionId):Promise.resolve({data:[],error:null}),
+        admin?fetchAllInstitutionDepartments(user.institutionId):Promise.resolve({data:[],error:null}),
+        admin?fetchAllInstitutionDesignations(user.institutionId):Promise.resolve({data:[],error:null}),
+        admin?fetchAllInstitutionTeachers(user.institutionId):Promise.resolve({data:[],error:null}),
+        admin?fetchAllInstitutionMemberships(user.institutionId):Promise.resolve({data:[],error:null}),
         admin?supabase.from('academic_sessions').select('*').eq('institution_id',user.institutionId).order('start_date',{ascending:false}).limit(200):Promise.resolve({data:[],error:null}),
         admin?supabase.from('classes').select('*').eq('institution_id',user.institutionId).order('name').limit(500):Promise.resolve({data:[],error:null}),
         admin?supabase.from('programs').select('*').eq('institution_id',user.institutionId).order('name').limit(500):Promise.resolve({data:[],error:null}),
@@ -77,9 +218,14 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
       const membershipRows=(membershipResult.data??[]) as Member[]
       if(membershipRows.length){
         const ids=membershipRows.map(row=>row.user_id).filter(Boolean)
-        const {data:profiles,error:profilesError}=await supabase.from('profiles').select('id,full_name,email').in('id',ids)
-        if(profilesError)throw profilesError
-        const profileMap=new Map((profiles??[]).map((profile:any)=>[profile.id,profile]))
+        const profiles:Array<{id:string;full_name?:string|null;email?:string|null}>=[]
+        const profileBatchSize=500
+        for(let offset=0;offset<ids.length;offset+=profileBatchSize){
+          const {data:profileBatch,error:profilesError}=await supabase.from('profiles').select('id,full_name,email').in('id',ids.slice(offset,offset+profileBatchSize))
+          if(profilesError)throw profilesError
+          profiles.push(...(profileBatch??[]))
+        }
+        const profileMap=new Map(profiles.map(profile=>[profile.id,profile]))
         setMembers(membershipRows.map(row=>({...row,full_name:profileMap.get(row.user_id)?.full_name??'Institution member',email:profileMap.get(row.user_id)?.email??''})))
       }else setMembers([])
       setSettings((settingsResult.data??[]) as Setting[]);setApprovals((approvalResult.data??[]) as Approval[]);setAudit((auditResult.data??[]) as Audit[])
@@ -93,14 +239,43 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
     finally{setLoading(false)}
   }
   useEffect(()=>{void load()},[user?.id,user?.institutionId,user?.role])
+  useEffect(()=>{if(!logoFile){setLogoPreviewUrl('');return}const url=URL.createObjectURL(logoFile);setLogoPreviewUrl(url);return()=>URL.revokeObjectURL(url)},[logoFile])
+  useEffect(()=>{
+    setPrimaryColorDraft(safeInstitutionBrandColor(settings.find(row=>row.category==='branding'&&row.setting_key==='primary_color')?.setting_value,'#6035B5'))
+    setAccentColorDraft(safeInstitutionBrandColor(settings.find(row=>row.category==='branding'&&row.setting_key==='accent_color')?.setting_value,'#16877B'))
+  },[settings])
 
   const filteredPolicies=useMemo(()=>policies.filter(row=>{
     const audience=String(jsonObject(row.payload).category??'').toLowerCase()
     const audienceMatches=section==='policies-students'?['student','students'].includes(audience):section==='policies-faculty'?['faculty','staff','teacher','teachers'].includes(audience):false
-    return audienceMatches&&[row.title,row.reference_code,row.description,row.status,JSON.stringify(row.payload)].join(' ').toLowerCase().includes(search.trim().toLowerCase())
-  }),[policies,search,section])
-  const filteredAudit=useMemo(()=>audit.filter(row=>[row.action,row.module_key,row.record_type,row.actor_id,row.record_id].join(' ').toLowerCase().includes(search.trim().toLowerCase())),[audit,search])
-  const filteredMembers=useMemo(()=>members.filter(row=>[row.full_name,row.email,row.role,row.status].join(' ').toLowerCase().includes(search.trim().toLowerCase())),[members,search])
+    const statusMatches=policyStatusFilter==='all'||row.status===policyStatusFilter
+    return audienceMatches&&statusMatches&&[row.title,row.reference_code,row.description,row.status,JSON.stringify(row.payload)].join(' ').toLowerCase().includes(search.trim().toLowerCase())
+  }),[policies,search,section,policyStatusFilter])
+  const orderedPolicies=useMemo(()=>[...filteredPolicies].sort((a,b)=>{
+    const left=String(a[policySortKey]??'')
+    const right=String(b[policySortKey]??'')
+    const comparison=left.localeCompare(right,undefined,{numeric:true,sensitivity:'base'})
+    return policySortDirection==='asc'?comparison:-comparison
+  }),[filteredPolicies,policySortKey,policySortDirection])
+  const policiesPageCount=Math.max(1,Math.ceil(orderedPolicies.length/pageSize))
+  const policiesCurrentPage=Math.min(policyPage,policiesPageCount)
+  const policyPageRows=orderedPolicies.slice((policiesCurrentPage-1)*pageSize,policiesCurrentPage*pageSize)
+  const filteredAudit=useMemo(()=>audit.filter(row=>[row.action,row.module_key,row.record_type,row.actor_id,row.record_id].join(' ').toLowerCase().includes(auditSearch.trim().toLowerCase())).sort((a,b)=>{
+    const left=String(a[auditSortKey]??'')
+    const right=String(b[auditSortKey]??'')
+    const comparison=left.localeCompare(right,undefined,{numeric:true,sensitivity:'base'})
+    return auditSortDirection==='asc'?comparison:-comparison
+  }),[audit,auditSearch,auditSortKey,auditSortDirection])
+  const filteredMembers=useMemo(()=>members.filter(row=>(memberStatusFilter==='all'||row.status===memberStatusFilter)&&(memberRoleFilter==='all'||row.role===memberRoleFilter)&&[row.full_name,row.email,row.role,row.status].join(' ').toLowerCase().includes(search.trim().toLowerCase())),[members,search,memberStatusFilter,memberRoleFilter])
+  const orderedMembers=useMemo(()=>[...filteredMembers].sort((a,b)=>{
+    const left=String(a[memberSortKey]??'')
+    const right=String(b[memberSortKey]??'')
+    const comparison=left.localeCompare(right,undefined,{numeric:true,sensitivity:'base'})
+    return memberSortDirection==='asc'?comparison:-comparison
+  }),[filteredMembers,memberSortKey,memberSortDirection])
+  const membersPageCount=Math.max(1,Math.ceil(orderedMembers.length/pageSize))
+  const membersCurrentPage=Math.min(memberPage,membersPageCount)
+  const memberPageRows=orderedMembers.slice((membersCurrentPage-1)*pageSize,membersCurrentPage*pageSize)
   const visibleSettings=useMemo(()=>settings.filter(row=>section==='system'?row.category==='system':section==='branding'?['branding','documents'].includes(row.category):section==='settings'?false:true).filter(row=>[row.category,row.setting_key,JSON.stringify(row.setting_value)].join(' ').toLowerCase().includes(search.trim().toLowerCase())),[settings,section,search])
   const orderedSettings=useMemo(()=>[...visibleSettings].sort((a,b)=>{
     const left=settingsSortKey==='is_public'?String(a.is_public):String(a[settingsSortKey]??'')
@@ -111,14 +286,19 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
   const settingsPageCount=Math.max(1,Math.ceil(orderedSettings.length/pageSize))
   const settingsCurrentPage=Math.min(settingsPage,settingsPageCount)
   const settingsPageRows=orderedSettings.slice((settingsCurrentPage-1)*pageSize,settingsCurrentPage*pageSize)
-  const orderedApprovals=useMemo(()=>approvals.filter(row=>[row.workflow_key,row.target_type,row.status,JSON.stringify(row.payload)].join(' ').toLowerCase().includes(search.trim().toLowerCase())).sort((a,b)=>String(b.requested_at??'').localeCompare(String(a.requested_at??''))),[approvals,search])
+  const orderedApprovals=useMemo(()=>approvals.filter(row=>(approvalStatusFilter==='all'||row.status===approvalStatusFilter)&&[row.workflow_key,row.target_type,row.status,JSON.stringify(row.payload)].join(' ').toLowerCase().includes(search.trim().toLowerCase())).sort((a,b)=>{
+    const left=String(a[approvalSortKey]??'')
+    const right=String(b[approvalSortKey]??'')
+    const comparison=left.localeCompare(right,undefined,{numeric:true,sensitivity:'base'})
+    return approvalSortDirection==='asc'?comparison:-comparison
+  }),[approvals,search,approvalStatusFilter,approvalSortKey,approvalSortDirection])
   const approvalsPageCount=Math.max(1,Math.ceil(orderedApprovals.length/pageSize))
   const approvalsCurrentPage=Math.min(approvalPage,approvalsPageCount)
   const approvalPageRows=orderedApprovals.slice((approvalsCurrentPage-1)*pageSize,approvalPage*pageSize)
   const pendingApprovals=approvals.filter(row=>row.status==='pending').length
-  const primaryColor=String(settings.find(row=>row.category==='branding'&&row.setting_key==='primary_color')?.setting_value??'#205b43')
-  const accentColor=String(settings.find(row=>row.category==='branding'&&row.setting_key==='accent_color')?.setting_value??'#9bc85b')
-
+  const auditPageCount=Math.max(1,Math.ceil(filteredAudit.length/pageSize))
+  const auditCurrentPage=Math.min(auditPage,auditPageCount)
+  const auditPageRows=filteredAudit.slice((auditCurrentPage-1)*pageSize,auditCurrentPage*pageSize)
   function toggleSettingsSort(key:'category'|'setting_key'|'is_public'){
     if(settingsSortKey===key)setSettingsSortDirection(direction=>direction==='asc'?'desc':'asc')
     else{setSettingsSortKey(key);setSettingsSortDirection('asc')}
@@ -129,6 +309,47 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
   }
   function pageControls(total:number,page:number,pageCount:number,onPage:(next:number)=>void){
     return total>pageSize?<div className="gov-pagination"><span>Showing <b>{(page-1)*pageSize+1}–{Math.min(page*pageSize,total)}</b> of <b>{total}</b></span><div><button type="button" className="gov-button" disabled={page<=1} onClick={()=>onPage(page-1)}>Previous</button><span>Page {page} of {pageCount}</span><button type="button" className="gov-button" disabled={page>=pageCount} onClick={()=>onPage(page+1)}>Next</button></div></div>:null
+  }
+
+  function reportActions(title:string,fileName:string,rows:Record<string,unknown>[],columns:OfficeColumn[]){
+    const run=(format:'csv'|'excel'|'word'|'print')=>{
+      try{
+        if(format==='csv')downloadCsv(fileName+'.csv',rows,columns)
+        else if(format==='excel')exportXlsx(fileName+'.xlsx',title,rows,columns)
+        else if(format==='word')exportDocx(fileName+'.docx',title,rows,columns)
+        else printOfficeReport(title,rows,columns,user?.institutionName??'Institution')
+      }catch(error){onToast(error instanceof Error?error.message:'The administration report could not be opened.',true)}
+    }
+    return <div className="gov-row-actions ed360-admin-report-actions" aria-label={title+' exports'}>
+      <button type="button" className="gov-button" onClick={()=>run('csv')}><Download size={13}/> CSV</button>
+      <button type="button" className="gov-button" onClick={()=>run('excel')}><FileSpreadsheet size={13}/> Excel</button>
+      <button type="button" className="gov-button" onClick={()=>run('word')}><FileText size={13}/> Word</button>
+      <button type="button" className="gov-button primary" onClick={()=>run('print')}><Printer size={13}/> Print A4</button>
+    </div>
+  }
+
+  async function saveBrandColors(event:FormEvent){
+    event.preventDefault()
+    if(!supabase||!admin)return
+    const colors=[['primary_color',primaryColorDraft],['accent_color',accentColorDraft]] as const
+    if(colors.some(([,value])=>!/^#[0-9a-f]{6}$/i.test(value))){onToast('Choose valid six-digit hexadecimal brand colours.',true);return}
+    setSaving(true)
+    try{
+      for(const [settingKey,settingValue] of colors){
+        const {data:existing,error:lookupError}=await supabase.from('institution_settings').select('id').eq('institution_id',user!.institutionId).eq('category','branding').eq('setting_key',settingKey).is('campus_id',null).maybeSingle()
+        if(lookupError)throw lookupError
+        const values={category:'branding',setting_key:settingKey,setting_value:settingValue,is_public:false,updated_by:user!.id,updated_at:new Date().toISOString()}
+        const result=existing
+          ?await supabase.from('institution_settings').update(values).eq('institution_id',user!.institutionId).eq('id',existing.id)
+          :await supabase.from('institution_settings').insert({...values,institution_id:user!.institutionId})
+        if(result.error)throw result.error
+      }
+      onToast('Institution brand colours saved.')
+      await load(true)
+    }catch(err){
+      onToast(userFacingError(err,'Institution brand colours could not be saved.'),true)
+      await load(true)
+    }finally{setSaving(false)}
   }
 
   function openSetting(row?:Setting,category?:string){
@@ -154,17 +375,31 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
     }catch(err){onToast(userFacingError(err,'The setting could not be saved.'),true)}finally{setSaving(false)}
   }
   async function removeSetting(row:Setting){
-    if(!supabase||!admin||!window.confirm('Delete '+row.category+'/'+row.setting_key+'?'))return
-    const {error:removeError}=await supabase.from('institution_settings').delete().eq('institution_id',user!.institutionId).eq('id',row.id)
-    if(removeError)onToast(userFacingError(removeError,'The setting could not be deleted.'),true)
-    else{onToast('Setting deleted.');await load(true)}
+    if(!supabase||!admin||saving||!window.confirm('Delete '+row.category+'/'+row.setting_key+'?'))return
+    setSaving(true)
+    try{
+      const {error:removeError}=await supabase.from('institution_settings').delete().eq('institution_id',user!.institutionId).eq('id',row.id)
+      if(removeError)throw removeError
+      onToast('Setting deleted.')
+      await load(true)
+    }catch(err){onToast(userFacingError(err,'The setting could not be deleted.'),true)}
+    finally{setSaving(false)}
   }
 
   async function saveProfile(event:FormEvent){
     event.preventDefault();if(!supabase||!admin)return
     if(!profileDraft.name.trim()){onToast('Institution name is required.',true);return}
-    if(profileDraft.email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(profileDraft.email)){onToast('Enter a valid institution email address.',true);return}
-    if(profileDraft.website){try{new URL(profileDraft.website.startsWith('http')?profileDraft.website:'https://'+profileDraft.website)}catch{onToast('Enter a valid website address.',true);return}}
+    const email=profileDraft.email.trim()
+    if(email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){onToast('Enter a valid institution email address.',true);return}
+    const websiteInput=profileDraft.website.trim()
+    let normalizedWebsite:string|null=null
+    if(websiteInput){
+      try{
+        const parsedWebsite=new URL(/^[a-z][a-z0-9+.-]*:\/\//i.test(websiteInput)?websiteInput:'https://'+websiteInput)
+        if(!['https:','http:'].includes(parsedWebsite.protocol)||!parsedWebsite.hostname)throw new Error('Unsupported website address.')
+        normalizedWebsite=parsedWebsite.toString()
+      }catch{onToast('Enter a valid HTTP or HTTPS website address.',true);return}
+    }
     setSaving(true);let uploadedPath:string|undefined
     try{
       if(logoFile){
@@ -175,7 +410,7 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
         const {error:uploadError}=await supabase.storage.from('institution-files').upload(uploadedPath,logoFile,{contentType:logoFile.type,upsert:false})
         if(uploadError)throw uploadError
       }
-      const values={...profileDraft,name:profileDraft.name.trim(),email:profileDraft.email.trim()||null,website:profileDraft.website.trim()||null,phone:profileDraft.phone.trim()||null,tagline:profileDraft.tagline.trim()||null,address:profileDraft.address.trim()||null,country:profileDraft.country.trim()||null,...(uploadedPath?{logo_path:uploadedPath}:{})}
+      const values={...profileDraft,name:profileDraft.name.trim(),email:email||null,website:normalizedWebsite,phone:profileDraft.phone.trim()||null,tagline:profileDraft.tagline.trim()||null,address:profileDraft.address.trim()||null,country:profileDraft.country.trim()||null,...(uploadedPath?{logo_path:uploadedPath}:{})}
       const {error:updateError}=await supabase.from('institutions').update(values).eq('id',user!.institutionId)
       if(updateError)throw updateError
       if(uploadedPath&&institution?.logo_path)await supabase.storage.from('institution-files').remove([institution.logo_path])
@@ -204,36 +439,107 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
   }
   async function removePolicy(row:Policy){
     if(!supabase||!admin||!window.confirm('Delete policy “'+row.title+'”? Its audit event remains available to administrators.'))return
-    const {error:removeError}=await supabase.from('institutional_records').delete().eq('institution_id',user!.institutionId).eq('id',row.id)
-    if(removeError)onToast(userFacingError(removeError,'The policy could not be deleted.'),true)
-    else{onToast('Policy removed.');await load(true)}
+    setSaving(true)
+    try{
+      const {error:removeError}=await supabase.from('institutional_records').delete().eq('institution_id',user!.institutionId).eq('id',row.id)
+      if(removeError)throw removeError
+      onToast('Policy removed.')
+      await load(true)
+    }catch(err){
+      onToast(userFacingError(err,'The policy could not be deleted.'),true)
+    }finally{
+      setSaving(false)
+    }
   }
   async function submitApproval(event:FormEvent){
     event.preventDefault();if(!supabase)return
     let parsed:unknown;try{parsed=JSON.parse(approvalValue)}catch{onToast('Enter a valid JSON setting value.',true);return}
     if(!approvalKey.trim()){onToast('Enter a setting key.',true);return}
     setSaving(true)
-    const {error:requestError}=await supabase.from('workflow_approvals').insert({institution_id:user!.institutionId,workflow_key:'institution_setting_change',target_type:'institution_settings',target_id:crypto.randomUUID(),requested_by:user!.id,status:'pending',payload:{category:'general',setting_key:approvalKey.trim(),setting_value:parsed,is_public:approvalPublic,request_notes:approvalNotes.trim()||null}})
-    if(requestError)onToast(userFacingError(requestError,'Approval request could not be submitted.'),true)
-    else{setApprovalForm(false);setApprovalKey('');setApprovalValue('{}');setApprovalNotes('');onToast('Approval request submitted.');await load(true)}
-    setSaving(false)
+    try{
+      const {error:requestError}=await supabase.from('workflow_approvals').insert({institution_id:user!.institutionId,workflow_key:'institution_setting_change',target_type:'institution_settings',target_id:crypto.randomUUID(),requested_by:user!.id,status:'pending',payload:{category:'general',setting_key:approvalKey.trim(),setting_value:parsed,is_public:approvalPublic,request_notes:approvalNotes.trim()||null}})
+      if(requestError)throw requestError
+      setApprovalForm(false);setApprovalKey('');setApprovalValue('{}');setApprovalNotes('')
+      onToast('Approval request submitted.')
+      await load(true)
+    }catch(err){
+      onToast(userFacingError(err,'Approval request could not be submitted.'),true)
+    }finally{
+      setSaving(false)
+    }
   }
   async function decideApproval(row:Approval,decision:'approved'|'rejected'){
     if(!supabase||!admin)return
     const notes=window.prompt(decision==='approved'?'Optional approval note:':'Reason for rejection (recommended):','')??''
     if(decision==='rejected'&&!notes.trim()){onToast('Add a reason before rejecting this request.',true);return}
     setSaving(true)
-    const {error:decisionError}=await supabase.rpc('decide_institution_setting_approval',{p_institution_id:user!.institutionId,p_approval_id:row.id,p_decision:decision,p_notes:notes})
-    if(decisionError)onToast(userFacingError(decisionError,'Approval decision could not be saved.'),true)
-    else{onToast(decision==='approved'?'Approved and applied.':'Request rejected.');await load(true)}
-    setSaving(false)
+    try{
+      const {error:decisionError}=await supabase.rpc('decide_institution_setting_approval',{p_institution_id:user!.institutionId,p_approval_id:row.id,p_decision:decision,p_notes:notes})
+      if(decisionError)throw decisionError
+      onToast(decision==='approved'?'Approved and applied.':'Request rejected.')
+      await load(true)
+    }catch(err){
+      onToast(userFacingError(err,'Approval decision could not be saved.'),true)
+    }finally{
+      setSaving(false)
+    }
+  }
+
+  async function changeMembershipStatus(member:Member){
+    if(!supabase||!admin)return
+    if(member.role==='owner'){
+      onToast('The institution owner membership cannot be suspended from this workspace.',true)
+      return
+    }
+    if(member.user_id===user?.id){
+      onToast('You cannot change the access status of your own account.',true)
+      return
+    }
+    if(!['active','suspended'].includes(member.status)){
+      onToast('Pending and invited memberships must be completed through account provisioning.',true)
+      return
+    }
+    const nextStatus=member.status==='active'?'suspended':'active'
+    const displayName=member.full_name||member.email||'this member'
+    if(!window.confirm(`${nextStatus==='suspended'?'Suspend':'Reactivate'} access for ${displayName}?`))return
+    setMembershipSavingId(member.id)
+    try{
+      const {error:statusError}=await supabase.rpc('set_institution_membership_status',{
+        p_institution_id:user!.institutionId,
+        p_membership_id:member.id,
+        p_status:nextStatus,
+      })
+      if(statusError)throw statusError
+      onToast(nextStatus==='suspended'?'Institution access suspended.':'Institution access reactivated.')
+      await load(true)
+    }catch(err){
+      onToast(userFacingError(err,'The membership access status could not be changed.'),true)
+    }finally{
+      setMembershipSavingId(null)
+    }
   }
 
   async function saveInstitutePreferences(event:FormEvent){
     event.preventDefault()
     if(!supabase||!admin)return
+    const allowedTimezones=['Asia/Karachi','UTC']
+    const allowedDateFormats=['dd MMM yyyy','dd/MM/yyyy','yyyy-MM-dd']
+    const allowedCurrencies=['PKR','USD','GBP']
+    const allowedTermStructures=['annual','semester','trimester','quarter']
+    const startMonth=Number(institutePreferences.academic_year_start_month)
+    const studentPrefix=institutePreferences.student_id_prefix.trim().toUpperCase()
+    const employeePrefix=institutePreferences.employee_id_prefix.trim().toUpperCase()
+    const prefixPattern=/^[A-Z0-9][A-Z0-9-]{1,15}$/
+    if(!allowedTimezones.includes(institutePreferences.timezone)){onToast('Choose a supported institution time zone.',true);return}
+    if(!allowedDateFormats.includes(institutePreferences.date_format)){onToast('Choose a supported date format.',true);return}
+    if(!allowedCurrencies.includes(institutePreferences.currency)){onToast('Choose a supported currency.',true);return}
+    if(!Number.isInteger(startMonth)||startMonth<1||startMonth>12){onToast('Choose an academic year start month from January to December.',true);return}
+    if(!allowedTermStructures.includes(institutePreferences.term_structure)){onToast('Choose a supported academic term structure.',true);return}
+    if(!prefixPattern.test(studentPrefix)||!prefixPattern.test(employeePrefix)){onToast('Student and employee ID prefixes must be 2–16 characters using letters, numbers or hyphens.',true);return}
+    const preferences={...institutePreferences,academic_year_start_month:String(startMonth),student_id_prefix:studentPrefix,employee_id_prefix:employeePrefix}
+    setInstitutePreferences(preferences)
     setSaving(true)
-    const values={category:'general',setting_key:'institution_preferences',setting_value:institutePreferences,is_public:false,updated_by:user!.id,updated_at:new Date().toISOString()}
+    const values={category:'general',setting_key:'institution_preferences',setting_value:preferences,is_public:false,updated_by:user!.id,updated_at:new Date().toISOString()}
     try{
       const {data:existing,error:lookupError}=await supabase.from('institution_settings').select('id').eq('institution_id',user!.institutionId).eq('category','general').eq('setting_key','institution_preferences').is('campus_id',null).maybeSingle()
       if(lookupError)throw lookupError
@@ -271,80 +577,199 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
     return rows.length?<div className="gov-table-wrap"><table className="ed360-admin-table"><thead><tr>{sortHeader('Category','category')}{sortHeader('Key','setting_key')}<th>Value</th>{sortHeader('Visibility','is_public')}<th>Actions</th></tr></thead><tbody>{rows.map(row=><tr key={row.id}><td>{label(row.category)}</td><td><b>{row.setting_key}</b></td><td><code>{JSON.stringify(row.setting_value)}</code></td><td>{row.is_public?'Public':'Private'}</td><td><div className="gov-row-actions"><button className="gov-button" onClick={()=>openSetting(row)}>Edit</button><button className="gov-button danger" onClick={()=>void removeSetting(row)}>Delete</button></div></td></tr>)}</tbody></table></div>:<div className="gov-empty">{empty}</div>
   }
   function renderProfile(){
-    return <div className="ed360-admin-profile">
-      <section className="gov-panel"><header><div><h2>Institution identity</h2><p>Update the public institution details used across this tenant.</p></div><span className="gov-readonly">Owner / admin</span></header>
-        <form className="gov-form ed360-admin-profile-form" onSubmit={saveProfile}>
-          <label className="ed360-admin-field">Institute name *<input required value={profileDraft.name} onChange={e=>setProfileDraft(v=>({...v,name:e.target.value}))}/></label>
-          <label className="ed360-admin-field">Institution type<select value={profileDraft.institution_type} onChange={e=>setProfileDraft(v=>({...v,institution_type:e.target.value}))}><option value="school">School</option><option value="college">College</option><option value="university">University</option><option value="multi_institution">Multi-institution</option></select></label>
-          <label className="ed360-admin-field full">Tagline<input value={profileDraft.tagline} onChange={e=>setProfileDraft(v=>({...v,tagline:e.target.value}))} placeholder="A short institutional statement"/></label>
-          <label className="ed360-admin-field">Phone<input value={profileDraft.phone} onChange={e=>setProfileDraft(v=>({...v,phone:e.target.value}))}/></label>
-          <label className="ed360-admin-field">Email<input type="email" value={profileDraft.email} onChange={e=>setProfileDraft(v=>({...v,email:e.target.value}))}/></label>
-          <label className="ed360-admin-field full">Website<input value={profileDraft.website} onChange={e=>setProfileDraft(v=>({...v,website:e.target.value}))} placeholder="https://example.edu"/></label>
-          <label className="ed360-admin-field full">Address<textarea value={profileDraft.address} onChange={e=>setProfileDraft(v=>({...v,address:e.target.value}))}/></label>
-          <label className="ed360-admin-field">Country<input value={profileDraft.country} onChange={e=>setProfileDraft(v=>({...v,country:e.target.value}))}/></label>
-          <div className="ed360-admin-field"><span>Institution logo</span><label className="gov-button"><Upload size={14}/> Choose logo<input type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={e=>setLogoFile(e.target.files?.[0]??null)}/></label><small>{logoFile?logoFile.name:'PNG, JPG or WebP · up to 5 MB'}</small></div>
-          <div className="gov-row-actions full"><button className="gov-button primary" disabled={saving}>{saving?'Saving…':'Update Profile'} <Save size={14}/></button></div>
-        </form>
-      </section>
-      <div className="ed360-admin-stage5">
-        <section className="ed360-admin-profile-preview gov-panel">
-          <header>
-            {logoUrl?<img src={logoUrl} alt="Institution logo"/>:<div className="ed360-admin-profile-placeholder">{(profileDraft.name||'I').slice(0,1).toUpperCase()}</div>}
-            <div><h3>{profileDraft.name||'Institute name'}</h3><p>{profileDraft.tagline||'Institution tagline'}</p></div>
-          </header>
-          <dl>
-            <div><dt>Institution type</dt><dd>{label(profileDraft.institution_type)}</dd></div>
-            <div><dt>Phone</dt><dd>{profileDraft.phone||'—'}</dd></div>
-            <div><dt>Email</dt><dd>{profileDraft.email||'—'}</dd></div>
-            <div><dt>Website</dt><dd>{profileDraft.website||'—'}</dd></div>
-            <div><dt>Address</dt><dd>{profileDraft.address||'—'}</dd></div>
-            <div><dt>Country</dt><dd>{profileDraft.country||'—'}</dd></div>
-          </dl>
-          <p className="ed360-admin-profile-footnote">Institution identity card · updates when you save the profile</p>
+    const previewLogo=logoPreviewUrl||logoUrl
+    const institutionName=profileDraft.name.trim()||'Government Islamia Degree College'
+    return <div className="ed360-admin-profile-v2">
+      <nav className="ed360-admin-profile-nav" aria-label="Institute profile sections">
+        <a href="#institute-identity"><Building2 size={15}/> Institute Identity</a>
+        <a href="#institute-contact"><Users size={15}/> Contact Details</a>
+        <a href="#institute-public-profile"><ArrowUpRight size={15}/> Public Profile</a>
+      </nav>
+      <form className="ed360-admin-profile-form-v2" onSubmit={saveProfile}>
+        <section className="gov-panel ed360-profile-section" id="institute-identity">
+          <header><div><span className="ed360-profile-kicker">OFFICIAL RECORD</span><h2>Institute Identity</h2><p>Legal name, institute category and official emblem.</p></div><span className="ed360-profile-index">01</span></header>
+          <div className="ed360-profile-identity-grid">
+            <label className="ed360-admin-field">Official institute name *<input required maxLength={180} value={profileDraft.name} onChange={e=>setProfileDraft(v=>({...v,name:e.target.value}))} placeholder="Enter the official institute name"/></label>
+            <label className="ed360-admin-field">Institute category<select value={profileDraft.institution_type} onChange={e=>setProfileDraft(v=>({...v,institution_type:e.target.value}))}><option value="school">School</option><option value="college">College</option><option value="university">University</option><option value="multi_institution">Multi-institution</option></select></label>
+            <div className="ed360-profile-logo-field">
+              <div className="ed360-profile-logo-preview">{previewLogo?<img src={previewLogo} alt="Institute emblem preview"/>:<span>{(institutionName||'I').slice(0,1).toUpperCase()}</span>}</div>
+              <div className="ed360-profile-logo-copy"><b>Official institute emblem</b><small>PNG, JPG or WebP · maximum 5 MB</small><label className="gov-button ed360-profile-upload"><Upload size={14}/> {logoFile?'Choose another logo':'Upload emblem'}<input type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={e=>setLogoFile(e.target.files?.[0]??null)}/></label>{logoFile&&<button type="button" className="ed360-profile-clear-file" onClick={()=>setLogoFile(null)}>Discard selected file</button>}</div>
+            </div>
+          </div>
         </section>
-      </div>
+
+        <section className="gov-panel ed360-profile-section" id="institute-contact">
+          <header><div><span className="ed360-profile-kicker">OFFICIAL CHANNELS</span><h2>Contact Details</h2><p>Verified contact channels and registered postal address.</p></div><span className="ed360-profile-index">02</span></header>
+          <div className="ed360-profile-contact-grid">
+            <label className="ed360-admin-field">Official phone<input type="tel" maxLength={40} value={profileDraft.phone} onChange={e=>setProfileDraft(v=>({...v,phone:e.target.value}))} placeholder="+92 …"/></label>
+            <label className="ed360-admin-field">Official email<input type="email" maxLength={180} value={profileDraft.email} onChange={e=>setProfileDraft(v=>({...v,email:e.target.value}))} placeholder="office@institution.edu"/></label>
+            <label className="ed360-admin-field ed360-profile-span">Registered address<textarea rows={3} maxLength={500} value={profileDraft.address} onChange={e=>setProfileDraft(v=>({...v,address:e.target.value}))} placeholder="Street, area, city and district"/></label>
+            <label className="ed360-admin-field">Country<input maxLength={80} value={profileDraft.country} onChange={e=>setProfileDraft(v=>({...v,country:e.target.value}))} placeholder="Pakistan"/></label>
+          </div>
+        </section>
+
+        <section className="gov-panel ed360-profile-section" id="institute-public-profile">
+          <header><div><span className="ed360-profile-kicker">PUBLIC-FACING INFORMATION</span><h2>Public Profile</h2><p>The short introduction and website shown in the institute profile preview.</p></div><span className="ed360-profile-index">03</span></header>
+          <div className="ed360-profile-public-grid">
+            <label className="ed360-admin-field ed360-profile-span">Official tagline<input maxLength={220} value={profileDraft.tagline} onChange={e=>setProfileDraft(v=>({...v,tagline:e.target.value}))} placeholder="A short official description of the institution"/></label>
+            <label className="ed360-admin-field ed360-profile-span">Official website<input type="text" inputMode="url" maxLength={240} value={profileDraft.website} onChange={e=>setProfileDraft(v=>({...v,website:e.target.value}))} placeholder="https://www.example.edu"/></label>
+          </div>
+          
+        </section>
+
+        <div className="ed360-profile-savebar"><button type="submit" className="gov-button primary" disabled={saving}>{saving?'Saving profile…':'Save Institute Profile'} <Save size={15}/></button></div>
+      </form>
+
+      <aside className="ed360-profile-preview-panel">
+        <div className="ed360-profile-preview-heading"><div><span className="ed360-profile-kicker">LIVE PREVIEW</span><h2>Official Institute Identity</h2></div><span className="ed360-profile-preview-state">Preview</span></div>
+        <article className="ed360-profile-public-card">
+          <div className="ed360-profile-card-accent"/>
+          <header>
+            <div className="ed360-profile-card-logo">{previewLogo?<img src={previewLogo} alt="Institute emblem"/>:<span>{institutionName.slice(0,1).toUpperCase()}</span>}</div>
+            <div><span>OFFICIAL INSTITUTION</span><h3>{institutionName}</h3><p>{label(profileDraft.institution_type)}{profileDraft.country?' · '+profileDraft.country:''}</p></div>
+          </header>
+          {profileDraft.tagline&&<p className="ed360-profile-card-tagline">{profileDraft.tagline}</p>}
+          <div className="ed360-profile-card-details">
+            <div><small>PHONE</small><b>{profileDraft.phone||'Not provided'}</b></div>
+            <div><small>EMAIL</small><b>{profileDraft.email||'Not provided'}</b></div>
+            <div><small>ADDRESS</small><b>{profileDraft.address||'Not provided'}</b></div>
+            <div><small>WEBSITE</small><b>{profileDraft.website||'Not provided'}</b></div>
+          </div>
+          <footer><span>{displayInstitutionName(institutionName)}</span><span>GIDC BADIN</span></footer>
+        </article>
+        <p className="ed360-profile-preview-caption">This preview reflects the form values. The official institute record changes only after saving.</p>
+      </aside>
     </div>
   }
   function renderDepartments(){
     const q=search.trim().toLowerCase()
-    const departmentRows=departments.filter(row=>[row.name,row.department_code,row.head_name,row.email,row.phone].join(' ').toLowerCase().includes(q))
+    const filtered=departments.filter(row=>{
+      const status=row.is_active===false||row.status==='inactive'?'inactive':'active'
+      return (departmentStatusFilter==='all'||status===departmentStatusFilter)&&[row.name,row.department_code,row.head_name,row.email,row.phone].join(' ').toLowerCase().includes(q)
+    })
+    const departmentRows=[...filtered].sort((a,b)=>{
+      const left=departmentSortKey==='status'?(a.is_active===false||a.status==='inactive'?'inactive':'active'):String(a[departmentSortKey]??'')
+      const right=departmentSortKey==='status'?(b.is_active===false||b.status==='inactive'?'inactive':'active'):String(b[departmentSortKey]??'')
+      const comparison=left.localeCompare(right,undefined,{numeric:true,sensitivity:'base'})
+      return departmentSortDirection==='asc'?comparison:-comparison
+    })
+    const pageCount=Math.max(1,Math.ceil(departmentRows.length/pageSize))
+    const currentPage=Math.min(departmentPage,pageCount)
+    const pageRows=departmentRows.slice((currentPage-1)*pageSize,currentPage*pageSize)
+    const reportRows:Record<string,unknown>[]=departmentRows.map(row=>({code:row.department_code??row.code??'',department:row.name,head:row.head_name??'',email:row.email??'',phone:row.phone??'',status:row.is_active===false||row.status==='inactive'?'Inactive':'Active'}))
+    const reportColumns:OfficeColumn[]=[{key:'code',label:'Department code'},{key:'department',label:'Department'},{key:'head',label:'Department head'},{key:'email',label:'Email'},{key:'phone',label:'Phone'},{key:'status',label:'Status'}]
     return <div className="ed360-admin-directory-page">
       <section className="gov-panel ed360-admin-directory-card">
-        <header><div><h2>Department records</h2><p>Manage the college’s academic and administrative departments.</p></div><button className="gov-button primary" onClick={()=>onNavigate('admin:departments')}>Open Department Manager <ArrowUpRight size={14}/></button></header>
+        <header><div><h2>Department records</h2><p>{departmentRows.length} matching departments · {departments.length} total institution departments</p></div><button className="gov-button primary" onClick={()=>onNavigate('admin:departments')}>Open Department Manager <ArrowUpRight size={14}/></button></header>
         <div className="ed360-admin-kpis"><article><small>Departments</small><strong>{departments.length}</strong></article><article><small>Active departments</small><strong>{departments.filter(d=>d.is_active!==false&&d.status!=='inactive').length}</strong></article><article><small>Department heads</small><strong>{departments.filter(d=>Boolean(d.head_name)).length}</strong></article></div>
-        <label className="ed360-admin-search"><Search size={14}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search department, code, head or contact…"/></label>
-        {departmentRows.length?<div className="gov-table-wrap"><table className="ed360-admin-table"><thead><tr><th>Code</th><th>Department</th><th>Department head</th><th>Contact</th><th>Status</th></tr></thead><tbody>{departmentRows.map(row=><tr key={row.id}><td>{String(row.department_code??row.code??'—')}</td><td><b>{row.name}</b></td><td>{String(row.head_name??'Not assigned')}</td><td>{String(row.email??row.phone??'—')}</td><td><span className={'ed360-admin-status '+(row.is_active===false||row.status==='inactive'?'inactive':'')}>{row.is_active===false||row.status==='inactive'?'Inactive':'Active'}</span></td></tr>)}</tbody></table></div>:<div className="gov-empty">No departments have been recorded yet.</div>}
+        {reportActions('Department directory','department-directory',reportRows,reportColumns)}
+        <div className="ed360-admin-directory-filters">
+          <label>Status<select value={departmentStatusFilter} onChange={e=>{setDepartmentStatusFilter(e.target.value as typeof departmentStatusFilter);setDepartmentPage(1)}}><option value="all">All statuses</option><option value="active">Active</option><option value="inactive">Inactive</option></select></label>
+          <label>Order by<select value={departmentSortKey} onChange={e=>{setDepartmentSortKey(e.target.value as typeof departmentSortKey);setDepartmentPage(1)}}><option value="name">Department name</option><option value="department_code">Department code</option><option value="head_name">Department head</option><option value="status">Status</option></select></label>
+          <button type="button" className="gov-button" onClick={()=>{setDepartmentSortDirection(value=>value==='asc'?'desc':'asc');setDepartmentPage(1)}} aria-label={'Sort '+(departmentSortDirection==='asc'?'descending':'ascending')}>{departmentSortDirection==='asc'?'Ascending ↑':'Descending ↓'}</button>
+          <label className="ed360-admin-directory-search"><Search size={14}/><input value={search} onChange={e=>{setSearch(e.target.value);setDepartmentPage(1)}} placeholder="Search department, code, head or contact…"/></label>
+        </div>
+        {departmentRows.length?<div className="gov-table-wrap"><table className="ed360-admin-table"><thead><tr><th>Code</th><th>Department</th><th>Department head</th><th>Contact</th><th>Status</th></tr></thead><tbody>{pageRows.map(row=><tr key={row.id}><td>{String(row.department_code??row.code??'—')}</td><td><b>{row.name}</b></td><td>{String(row.head_name??'Not assigned')}</td><td>{String(row.email??row.phone??'—')}</td><td><span className={'ed360-admin-status '+(row.is_active===false||row.status==='inactive'?'inactive':'')}>{row.is_active===false||row.status==='inactive'?'Inactive':'Active'}</span></td></tr>)}</tbody></table></div>:<div className="gov-empty">No departments match these filters. Clear the search or status filter, or create a department in the Department Manager.</div>}
+        {pageControls(departmentRows.length,currentPage,pageCount,setDepartmentPage)}
       </section>
     </div>
   }
   function renderDesignations(){
     const q=search.trim().toLowerCase()
-    const designationRows=designations.filter(row=>[row.name,row.code,departments.find(d=>d.id===row.department_id)?.name].join(' ').toLowerCase().includes(q))
+    const filtered=designations.filter(row=>{
+      const status=row.is_active?'active':'inactive'
+      return (designationStatusFilter==='all'||status===designationStatusFilter)&&[row.name,row.code,departments.find(d=>d.id===row.department_id)?.name].join(' ').toLowerCase().includes(q)
+    })
+    const designationRows=[...filtered].sort((a,b)=>{
+      const departmentA=departments.find(d=>d.id===a.department_id)?.name??''
+      const departmentB=departments.find(d=>d.id===b.department_id)?.name??''
+      const left=designationSortKey==='department'?departmentA:designationSortKey==='status'?(a.is_active?'active':'inactive'):String(a[designationSortKey]??'')
+      const right=designationSortKey==='department'?departmentB:designationSortKey==='status'?(b.is_active?'active':'inactive'):String(b[designationSortKey]??'')
+      const comparison=left.localeCompare(right,undefined,{numeric:true,sensitivity:'base'})
+      return designationSortDirection==='asc'?comparison:-comparison
+    })
+    const pageCount=Math.max(1,Math.ceil(designationRows.length/pageSize))
+    const currentPage=Math.min(designationPage,pageCount)
+    const pageRows=designationRows.slice((currentPage-1)*pageSize,currentPage*pageSize)
+    const reportRows:Record<string,unknown>[]=designationRows.map(row=>({designation:row.name,code:row.code??'',department:departments.find(d=>d.id===row.department_id)?.name??'Institution-wide',employee_count:teachers.filter(person=>person.designation_id===row.id).length,status:row.is_active?'Active':'Inactive'}))
+    const reportColumns:OfficeColumn[]=[{key:'designation',label:'Designation'},{key:'code',label:'Code'},{key:'department',label:'Department'},{key:'employee_count',label:'Assigned employees'},{key:'status',label:'Status'}]
     return <div className="ed360-admin-directory-page">
       <section className="gov-panel ed360-admin-directory-card">
-        <header><div><h2>Designation Catalogue</h2><p>Maintain faculty and staff positions, with the department relationships used for assignments.</p></div><button className="gov-button primary" onClick={()=>onNavigate('employees:designations')}>Open Designation Manager <ArrowUpRight size={14}/></button></header>
+        <header><div><h2>Designation Catalogue</h2><p>{designationRows.length} matching designations · {designations.length} total institution positions</p></div><button className="gov-button primary" onClick={()=>onNavigate('employees:designations')}>Open Designation Manager <ArrowUpRight size={14}/></button></header>
         <div className="ed360-admin-kpis"><article><small>Designations</small><strong>{designations.length}</strong></article><article><small>Active positions</small><strong>{designations.filter(row=>row.is_active).length}</strong></article><article><small>Department-linked</small><strong>{designations.filter(row=>Boolean(row.department_id)).length}</strong></article></div>
-        <label className="ed360-admin-search"><Search size={14}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search designation, code or department…"/></label>
-        {designationRows.length?<div className="gov-table-wrap"><table className="ed360-admin-table"><thead><tr><th>Designation</th><th>Code</th><th>Department</th><th>Status</th></tr></thead><tbody>{designationRows.map(row=><tr key={row.id}><td><b>{row.name}</b></td><td>{row.code??'—'}</td><td>{departments.find(d=>d.id===row.department_id)?.name??'Institution-wide'}</td><td><span className={'ed360-admin-status '+(!row.is_active?'inactive':'')}>{row.is_active?'Active':'Inactive'}</span></td></tr>)}</tbody></table></div>:<div className="gov-empty">No designations have been recorded yet.</div>}
+        {reportActions('Designation catalogue','designation-catalogue',reportRows,reportColumns)}
+        <div className="ed360-admin-directory-filters">
+          <label>Status<select value={designationStatusFilter} onChange={e=>{setDesignationStatusFilter(e.target.value as typeof designationStatusFilter);setDesignationPage(1)}}><option value="all">All statuses</option><option value="active">Active</option><option value="inactive">Inactive</option></select></label>
+          <label>Order by<select value={designationSortKey} onChange={e=>{setDesignationSortKey(e.target.value as typeof designationSortKey);setDesignationPage(1)}}><option value="name">Designation</option><option value="code">Code</option><option value="department">Department</option><option value="status">Status</option></select></label>
+          <button type="button" className="gov-button" onClick={()=>{setDesignationSortDirection(value=>value==='asc'?'desc':'asc');setDesignationPage(1)}} aria-label={'Sort '+(designationSortDirection==='asc'?'descending':'ascending')}>{designationSortDirection==='asc'?'Ascending ↑':'Descending ↓'}</button>
+          <label className="ed360-admin-directory-search"><Search size={14}/><input value={search} onChange={e=>{setSearch(e.target.value);setDesignationPage(1)}} placeholder="Search designation, code or department…"/></label>
+        </div>
+        {designationRows.length?<div className="gov-table-wrap"><table className="ed360-admin-table"><thead><tr><th>Designation</th><th>Code</th><th>Department</th><th>Assigned employees</th><th>Status</th></tr></thead><tbody>{pageRows.map(row=><tr key={row.id}><td><b>{row.name}</b></td><td>{row.code??'—'}</td><td>{departments.find(d=>d.id===row.department_id)?.name??'Institution-wide'}</td><td>{teachers.filter(person=>person.designation_id===row.id).length}</td><td><span className={'ed360-admin-status '+(!row.is_active?'inactive':'')}>{row.is_active?'Active':'Inactive'}</span></td></tr>)}</tbody></table></div>:<div className="gov-empty">No designations match these filters. Clear the search or status filter, or add a position in the Designation Manager.</div>}
+        {pageControls(designationRows.length,currentPage,pageCount,setDesignationPage)}
       </section>
     </div>
   }
-
   function renderOrganization(){
     const ownerMembers=members.filter(row=>row.role==='owner'),adminMembers=members.filter(row=>row.role==='admin')
+    const filteredStaff=teachers.filter(person=>{
+      const departmentName=departments.find(d=>d.id===person.department_id)?.name??person.department??'Not assigned'
+      const designationName=designations.find(d=>d.id===person.designation_id)?.name??'Not assigned'
+      return (orgDepartmentFilter==='all'||person.department_id===orgDepartmentFilter)&&
+        (orgDesignationFilter==='all'||person.designation_id===orgDesignationFilter)&&
+        (orgEmploymentFilter==='all'||String(person.employment_status??'not recorded')===orgEmploymentFilter)&&
+        [person.full_name,departmentName,designationName,person.employment_status,person.campus_id].join(' ').toLowerCase().includes(orgSearch.trim().toLowerCase())
+    })
+    const orderedStaff=[...filteredStaff].sort((a,b)=>{
+      const value=(person:Teacher)=>{
+        if(orgSortKey==='department')return departments.find(d=>d.id===person.department_id)?.name??person.department??'Not assigned'
+        if(orgSortKey==='designation')return designations.find(d=>d.id===person.designation_id)?.name??'Not assigned'
+        return String(person[orgSortKey]??'')
+      }
+      const comparison=value(a).localeCompare(value(b),undefined,{numeric:true,sensitivity:'base'})
+      return orgSortDirection==='asc'?comparison:-comparison
+    })
+    const pageCount=Math.max(1,Math.ceil(orderedStaff.length/pageSize))
+    const currentPage=Math.min(orgPage,pageCount)
+    const pageRows=orderedStaff.slice((currentPage-1)*pageSize,currentPage*pageSize)
+    const employmentStatuses=[...new Set(teachers.map(person=>String(person.employment_status??'not recorded')))].sort()
+    const reportRows:Record<string,unknown>[]=orderedStaff.map(person=>({
+      employee:person.full_name,
+      department:departments.find(d=>d.id===person.department_id)?.name??person.department??'Not assigned',
+      designation:designations.find(d=>d.id===person.designation_id)?.name??'Not assigned',
+      employment_status:label(person.employment_status??'not recorded'),
+      campus:person.campus_id??''
+    }))
+    const reportColumns:OfficeColumn[]=[{key:'employee',label:'Employee'},{key:'department',label:'Department'},{key:'designation',label:'Designation'},{key:'employment_status',label:'Employment status'},{key:'campus',label:'Campus ID'}]
     return <div className="ed360-admin-organization-page">
       <section className="gov-panel ed360-admin-organization-card">
-        <header><div><h2>Reporting layers</h2><p>College authority, administration, department leadership and employee assignments.</p></div><span className="gov-readonly">Current records</span></header>
+        <header><div><h2>Reporting layers</h2><p>College authority, administration, department leadership and employee assignments.</p></div><div className="gov-row-actions"><button className="gov-button" onClick={()=>onNavigate('admin:departments')}>Departments <ArrowUpRight size={13}/></button><button className="gov-button" onClick={()=>onNavigate('employees:designations')}>Designations <ArrowUpRight size={13}/></button><button className="gov-button" onClick={()=>onNavigate('teachers')}>Faculty &amp; staff <ArrowUpRight size={13}/></button></div></header>
         <div className="ed360-admin-kpis"><article><small>Departments</small><strong>{departments.length}</strong></article><article><small>Faculty & staff records</small><strong>{teachers.length}</strong></article><article><small>Designations</small><strong>{designations.length}</strong></article><article><small>Administrators</small><strong>{adminMembers.length}</strong></article></div>
         <div className="ed360-admin-org">
           <div className="ed360-admin-org-root"><span>COLLEGE AUTHORITY</span><b>{ownerMembers.map(row=>row.full_name).join(', ')||'Institution Owner'}</b><small>Institute owner · highest authority</small></div>
           <div className="ed360-admin-org-connector" aria-hidden="true"/>
           <div className="ed360-admin-org-admins">{adminMembers.map(row=><span key={row.user_id}><b>{row.full_name}</b><br/>Administrator</span>)}</div>
-          <div className="ed360-admin-org-departments">{departments.map(department=>{const people=teachers.filter(person=>person.department_id===department.id||(person.department_id==null&&person.department===department.name));return <article className="ed360-admin-org-department" key={department.id}><header><div><h3>{department.name}</h3><p>{String(department.department_code??department.code??'Department')} · {String(department.head_name??'Head not assigned')}</p></div><span className="ed360-admin-status">{people.length} staff</span></header><div className="ed360-admin-org-staff">{people.length?people.map(person=><span key={person.id}><b>{person.full_name}</b><small>{designations.find(d=>d.id===person.designation_id)?.name??'Position not assigned'}</small></span>):<span className="ed360-admin-org-empty">No employee records are assigned to this department yet.</span>}</div></article>})}</div>
+          <div className="ed360-admin-org-departments">{departments.map(department=>{
+            const people=teachers.filter(person=>person.department_id===department.id||(person.department_id==null&&person.department===department.name))
+            return <article className="ed360-admin-org-department" key={department.id}>
+              <header><div><h3>{department.name}</h3><p>{String(department.department_code??department.code??'Department')} · {String(department.head_name??'Head not assigned')}</p></div><span className="ed360-admin-status">{people.length} staff</span></header>
+              {people.length?<details className="ed360-admin-org-staff-details"><summary>View assigned employees</summary><div className="ed360-admin-org-staff">{people.map(person=><span key={person.id}><b>{person.full_name}</b><small>{designations.find(d=>d.id===person.designation_id)?.name??'Position not assigned'}</small></span>)}</div></details>:<div className="ed360-admin-org-empty">No employee records are assigned to this department yet.</div>}
+            </article>
+          })}</div>
         </div>
       </section>
-      <section className="gov-panel ed360-admin-organization-roster"><header><div><h2>Faculty and staff roster</h2><p>All loaded employee records, organised by department and designation.</p></div></header>
-        {teachers.length?<div className="gov-table-wrap"><table className="ed360-admin-table"><thead><tr><th>Employee</th><th>Department</th><th>Designation</th><th>Employment status</th></tr></thead><tbody>{teachers.map(person=><tr key={person.id}><td><b>{person.full_name}</b></td><td>{departments.find(d=>d.id===person.department_id)?.name??person.department??'Not assigned'}</td><td>{designations.find(d=>d.id===person.designation_id)?.name??'Not assigned'}</td><td>{label(person.employment_status??'not recorded')}</td></tr>)}</tbody></table></div>:<div className="gov-empty">No faculty or staff profiles have been recorded yet.</div>}
+      <section className="gov-panel ed360-admin-organization-roster">
+        <header><div><h2>Faculty and staff roster</h2><p>{orderedStaff.length} matching employees · {teachers.length} total institution employee records</p></div></header>
+        {reportActions('Faculty and staff organization roster','organization-staff-roster',reportRows,reportColumns)}
+        <div className="ed360-admin-organization-filters">
+          <label>Department<select value={orgDepartmentFilter} onChange={e=>{setOrgDepartmentFilter(e.target.value);setOrgPage(1)}}><option value="all">All departments</option>{departments.map(row=><option key={row.id} value={row.id}>{row.name}</option>)}</select></label>
+          <label>Designation<select value={orgDesignationFilter} onChange={e=>{setOrgDesignationFilter(e.target.value);setOrgPage(1)}}><option value="all">All designations</option>{designations.map(row=><option key={row.id} value={row.id}>{row.name}</option>)}</select></label>
+          <label>Employment status<select value={orgEmploymentFilter} onChange={e=>{setOrgEmploymentFilter(e.target.value);setOrgPage(1)}}><option value="all">All statuses</option>{employmentStatuses.map(status=><option key={status} value={status}>{label(status)}</option>)}</select></label>
+          <label>Order by<select value={orgSortKey} onChange={e=>{setOrgSortKey(e.target.value as typeof orgSortKey);setOrgPage(1)}}><option value="department">Department</option><option value="designation">Designation</option><option value="full_name">Employee name</option><option value="employment_status">Employment status</option></select></label>
+          <button type="button" className="gov-button" onClick={()=>{setOrgSortDirection(value=>value==='asc'?'desc':'asc');setOrgPage(1)}} aria-label={'Sort '+(orgSortDirection==='asc'?'descending':'ascending')}>{orgSortDirection==='asc'?'Ascending ↑':'Descending ↓'}</button>
+          <label className="ed360-admin-organization-search"><Search size={14}/><input value={orgSearch} onChange={e=>{setOrgSearch(e.target.value);setOrgPage(1)}} placeholder="Search employee, department or position…"/></label>
+        </div>
+        {orderedStaff.length?<div className="gov-table-wrap"><table className="ed360-admin-table"><thead><tr><th>Employee</th><th>Department</th><th>Designation</th><th>Employment status</th></tr></thead><tbody>{pageRows.map(person=><tr key={person.id}><td><b>{person.full_name}</b></td><td>{departments.find(d=>d.id===person.department_id)?.name??person.department??'Not assigned'}</td><td>{designations.find(d=>d.id===person.designation_id)?.name??'Not assigned'}</td><td>{label(person.employment_status??'not recorded')}</td></tr>)}</tbody></table></div>:<div className="gov-empty">No employee records match these filters. Clear a filter or search, or add an employee in Faculty & Staff Management.</div>}
+        {pageControls(orderedStaff.length,currentPage,pageCount,setOrgPage)}
       </section>
     </div>
   }
@@ -359,19 +784,19 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
         <article><small>Rooms</small><strong>{rooms.length}</strong><em>Teaching and campus spaces</em></article>
       </section>
       <div className="ed360-admin-academic-grid">
-        <section className="gov-panel"><header><div><h2>Academic sessions</h2><p>Saved academic years and their current status.</p></div></header>
+        <section className="gov-panel"><header><div><h2>Academic sessions</h2><p>Saved academic years and their current status.</p></div><button className="gov-button" onClick={()=>onNavigate('admin:academic_sessions')}>Manage sessions <ArrowUpRight size={14}/></button></header>
           {academicSessions.length?<div className="gov-table-wrap"><table className="ed360-admin-table"><thead><tr><th>Session</th><th>Start</th><th>End</th><th>Status</th></tr></thead><tbody>{academicSessions.map(row=><tr key={row.id}><td><b>{String(row.session_name??row.name??'Academic session')}</b></td><td>{dateLabel(row.start_date)}</td><td>{dateLabel(row.end_date)}</td><td>{label(row.status??(row.is_current?'current':'active'))}</td></tr>)}</tbody></table></div>:<div className="gov-empty">No academic sessions have been saved yet.</div>}
         </section>
-        <section className="gov-panel"><header><div><h2>Classes and sections</h2><p>Classes, grade levels and section names currently on file.</p></div></header>
+        <section className="gov-panel"><header><div><h2>Classes and sections</h2><p>Classes, grade levels and section names currently on file.</p></div><button className="gov-button" onClick={()=>onNavigate('admin:classes')}>Manage classes <ArrowUpRight size={14}/></button></header>
           {classes.length?<div className="gov-table-wrap"><table className="ed360-admin-table"><thead><tr><th>Class</th><th>Grade / level</th><th>Section</th><th>Status</th></tr></thead><tbody>{classes.map(row=><tr key={row.id}><td><b>{String(row.name??'Class')}</b></td><td>{String(row.grade_level??'—')}</td><td>{String(row.section??'—')}</td><td>{row.is_active===false?'Inactive':'Active'}</td></tr>)}</tbody></table></div>:<div className="gov-empty">No classes or sections have been saved yet.</div>}
         </section>
-        <section className="gov-panel"><header><div><h2>Programmes</h2><p>Institution programmes with their connected departments.</p></div></header>
+        <section className="gov-panel"><header><div><h2>Programmes</h2><p>Institution programmes with their connected departments.</p></div><button className="gov-button" onClick={()=>onNavigate('admin:programs')}>Manage programmes <ArrowUpRight size={14}/></button></header>
           {programs.length?<div className="ed360-admin-academic-list">{programs.map(row=><article key={row.id}><b>{String(row.name??'Programme')}</b><span>{String(row.code??'No programme code')}</span><small>{departments.find(d=>d.id===row.department_id)?.name??'Department not assigned'}</small></article>)}</div>:<div className="gov-empty">No programmes have been saved yet.</div>}
         </section>
-        <section className="gov-panel"><header><div><h2>Subjects</h2><p>Registered subjects and their available department links.</p></div></header>
+        <section className="gov-panel"><header><div><h2>Subjects</h2><p>Registered subjects and their available department links.</p></div><button className="gov-button" onClick={()=>onNavigate('admin:subjects')}>Manage subjects <ArrowUpRight size={14}/></button></header>
           {subjects.length?<div className="ed360-admin-academic-list">{subjects.map(row=><article key={row.id}><b>{String(row.name??'Subject')}</b><span>{String(row.code??'No subject code')}</span><small>{departments.find(d=>d.id===row.department_id)?.name??'Department not assigned'}</small></article>)}</div>:<div className="gov-empty">No subjects have been saved yet.</div>}
         </section>
-        <section className="gov-panel"><header><div><h2>Rooms and teaching spaces</h2><p>Rooms available in the college facilities register.</p></div></header>
+        <section className="gov-panel"><header><div><h2>Rooms and teaching spaces</h2><p>Rooms available in the college facilities register.</p></div><button className="gov-button" onClick={()=>onNavigate('admin:rooms')}>Manage rooms <ArrowUpRight size={14}/></button></header>
           {rooms.length?<div className="ed360-admin-academic-list">{rooms.map(row=><article key={row.id}><b>{String(row.name??row.room_number??'Room')}</b><span>{String(row.code??row.room_type??'Teaching space')}</span><small>{String(row.building??row.location??'College campus')}</small></article>)}</div>:<div className="gov-empty">No rooms have been saved yet.</div>}
         </section>
       </div>
@@ -379,9 +804,12 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
   }
 
   function renderSettingsPage(){
+    const reportRows:Record<string,unknown>[]=orderedSettings.map(row=>({category:label(row.category),key:row.setting_key,value:JSON.stringify(row.setting_value),visibility:row.is_public?'Public':'Private',updated_at:row.updated_at??''}))
+    const reportColumns:OfficeColumn[]=[{key:'category',label:'Category'},{key:'key',label:'Setting key'},{key:'value',label:'Value'},{key:'visibility',label:'Visibility'},{key:'updated_at',label:'Last updated'}]
     return <div className="ed360-admin-stage5">
-      {section==='branding'&&<section className="gov-panel"><header><div><h2>Brand preview</h2><p>Stored branding defaults. The private college logo is managed in Institute Profile.</p></div><Palette size={20}/></header><div className="ed360-admin-brand-preview"><span className="ed360-admin-brand-swatch" style={{background:primaryColor}}/><span><b>{displayInstitutionName(institution?.name)}</b><small style={{display:'block',color:'#859287',fontSize:10}}>Primary brand colour · {primaryColor}</small></span><span className="ed360-admin-brand-swatch" style={{background:accentColor}}/><small>Accent · {accentColor}</small></div></section>}
+      {section==='branding'&&<section className="gov-panel ed360-admin-branding-panel"><header><div><h2>Institution brand identity</h2><p>Choose the primary and accent colours used as this institution’s branding defaults. The college emblem is managed in Institute Profile.</p></div><Palette size={20}/></header><div className="ed360-admin-brand-preview"><span className="ed360-admin-brand-swatch" style={{background:primaryColorDraft}}/><span><b>{displayInstitutionName(institution?.name)}</b><small>Primary colour · {primaryColorDraft}</small></span><span className="ed360-admin-brand-swatch" style={{background:accentColorDraft}}/><small>Accent colour · {accentColorDraft}</small></div><form className="ed360-admin-brand-colors" onSubmit={saveBrandColors}><label><span>Primary colour</span><input type="color" value={primaryColorDraft} onChange={event=>setPrimaryColorDraft(event.target.value)} aria-label="Primary institution brand colour"/></label><label><span>Accent colour</span><input type="color" value={accentColorDraft} onChange={event=>setAccentColorDraft(event.target.value)} aria-label="Accent institution brand colour"/></label><button type="submit" className="gov-button primary" disabled={saving}><Save size={14}/>{saving?'Saving colours…':'Save brand colours'}</button></form></section>}
       <section className="gov-panel ed360-admin-settings-table-panel"><header><div><h2>{section==='system'?'System settings register':'Brand and document defaults'}</h2></div><div className="gov-row-actions">{section==='branding'?<><button className="gov-button primary" onClick={()=>openSetting(undefined,'branding')}><Plus size={14}/> Add brand setting</button><button className="gov-button" onClick={()=>openSetting(undefined,'documents')}><FileText size={14}/> Add document setting</button></>:<button className="gov-button primary" onClick={()=>openSetting(undefined,'system')}><Plus size={14}/> Add system setting</button>}</div></header>
+        {reportActions(section==='system'?'System settings':'Branding and document settings','institution-'+section+'-settings',reportRows,reportColumns)}
         <label className="ed360-admin-search"><Search size={14}/><input value={search} onChange={e=>{setSearch(e.target.value);setSettingsPage(1)}} placeholder="Search settings…"/></label>
         {renderSettingRows(settingsPageRows,section==='system'?'No system settings have been configured.':'No branding or document settings have been configured.')}
         {pageControls(orderedSettings.length,settingsCurrentPage,settingsPageCount,setSettingsPage)}
@@ -390,19 +818,71 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
   }
   function renderApprovals(){
     const rows=orderedApprovals
+    const reportRows:Record<string,unknown>[]=rows.map(row=>({
+      workflow:label(row.workflow_key),target_type:label(row.target_type),target_id:row.target_id??'',
+      status:label(row.status),requested_at:row.requested_at,
+      requested_by:members.find(member=>member.user_id===row.requested_by)?.full_name??row.requested_by??'Institution member',
+      request_notes:String(row.payload?.request_notes??''),decision_notes:row.decision_notes??'',
+      setting:row.payload.setting_key??'',requested_value:JSON.stringify(row.payload.setting_value??'')
+    }))
+    const reportColumns:OfficeColumn[]=[
+      {key:'workflow',label:'Workflow'},{key:'target_type',label:'Target type'},{key:'target_id',label:'Target ID'},
+      {key:'status',label:'Status'},{key:'requested_at',label:'Requested at'},{key:'requested_by',label:'Requester'},
+      {key:'request_notes',label:'Request rationale'},{key:'setting',label:'Setting key'},
+      {key:'requested_value',label:'Requested value'},{key:'decision_notes',label:'Decision notes'}
+    ]
     return <div className="ed360-admin-approval-page">
-      <section className="gov-panel ed360-admin-approval-panel"><header><div></div><div className="gov-header-actions"><span className="gov-pending">{pendingApprovals} pending</span><button className="gov-button primary" onClick={()=>setApprovalForm(true)}><Plus size={14}/> Request approval</button></div></header>
-        <label className="ed360-admin-search"><Search size={14}/><input value={search} onChange={e=>{setSearch(e.target.value);setSettingsPage(1);setApprovalPage(1)}} placeholder="Search workflow, status or target…"/></label>
-        {rows.length?<div className="gov-approval-list">{approvalPageRows.map(row=><article key={row.id}><div className="gov-approval-heading"><div><small>{label(row.workflow_key)}</small><strong>{label(row.target_type)}</strong></div><span className={'gov-status '+row.status}>{label(row.status)}</span></div><dl><div><dt>Requested</dt><dd>{dateLabel(row.requested_at)}</dd></div><div><dt>Requester</dt><dd>{String(row.requested_by??'Institution member')}</dd></div><div><dt>Target</dt><dd className="gov-mono">{String(row.target_id)}</dd></div></dl>{row.workflow_key==='institution_setting_change'&&<div className="gov-payload"><b>{String(row.payload.category??'general')} / {String(row.payload.setting_key??'setting')}</b><pre>{JSON.stringify(row.payload.setting_value??{},null,2)}</pre></div>}{row.decision_notes&&<p className="gov-decision-note">{row.decision_notes}</p>}{admin&&row.status==='pending'&&<div className="gov-row-actions"><button className="gov-button primary" disabled={saving} onClick={()=>void decideApproval(row,'approved')}><CheckCircle2 size={13}/> Approve and apply</button><button className="gov-button danger" disabled={saving} onClick={()=>void decideApproval(row,'rejected')}>Reject</button></div>}</article>)}</div>:<div className="gov-empty">No approval requests match this view.</div>}
+      <section className="gov-panel ed360-admin-approval-panel">
+        <header><div><h2>Approval register</h2><p>{rows.length} matching workflow requests across the full institution history</p></div><div className="gov-header-actions"><span className="gov-pending">{pendingApprovals} pending in total</span><button className="gov-button primary" onClick={()=>setApprovalForm(true)}><Plus size={14}/> Request approval</button></div></header>
+        {reportActions('Approval register','approval-workflows',reportRows,reportColumns)}
+        <div className="ed360-admin-approval-filters">
+          <label>Status
+            <select value={approvalStatusFilter} onChange={e=>{setApprovalStatusFilter(e.target.value as typeof approvalStatusFilter);setApprovalPage(1)}}>
+              <option value="all">All statuses</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option>
+            </select>
+          </label>
+          <label>Order by
+            <select value={approvalSortKey} onChange={e=>{setApprovalSortKey(e.target.value as typeof approvalSortKey);setApprovalPage(1)}}>
+              <option value="requested_at">Request date</option><option value="status">Status</option><option value="workflow_key">Workflow</option>
+            </select>
+          </label>
+          <button type="button" className="gov-button" onClick={()=>{setApprovalSortDirection(value=>value==='asc'?'desc':'asc');setApprovalPage(1)}} aria-label={'Sort '+(approvalSortDirection==='asc'?'descending':'ascending')}>
+            {approvalSortDirection==='asc'?'Ascending ↑':'Descending ↓'}
+          </button>
+          <label className="ed360-admin-approval-search"><Search size={14}/><input value={search} onChange={e=>{setSearch(e.target.value);setSettingsPage(1);setApprovalPage(1)}} placeholder="Search workflow, status, target or notes…"/></label>
+        </div>
+        {rows.length?<div className="gov-approval-list">{approvalPageRows.map(row=><article key={row.id}>
+          <div className="gov-approval-heading"><div><small>{label(row.workflow_key)}</small><strong>{label(row.target_type)}</strong></div><span className={'gov-status '+row.status}>{label(row.status)}</span></div>
+          <dl><div><dt>Requested</dt><dd>{dateLabel(row.requested_at)}</dd></div><div><dt>Requester</dt><dd>{members.find(member=>member.user_id===row.requested_by)?.full_name??String(row.requested_by??'Institution member')}</dd></div><div><dt>Target</dt><dd className="gov-mono">{String(row.target_id)}</dd></div></dl>
+          {Boolean(row.payload?.request_notes)&&<div className="gov-decision-note"><b>Request rationale</b><p>{String(row.payload.request_notes)}</p></div>}
+          {row.workflow_key==='institution_setting_change'&&<div className="gov-payload"><b>{String(row.payload.category??'general')} / {String(row.payload.setting_key??'setting')}</b><pre>{JSON.stringify(row.payload.setting_value??{},null,2)}</pre></div>}
+          {row.decision_notes&&<p className="gov-decision-note"><b>Decision note</b> · {row.decision_notes}</p>}
+          {admin&&row.status==='pending'&&row.workflow_key==='institution_setting_change'&&<div className="gov-row-actions"><button className="gov-button primary" disabled={saving} onClick={()=>void decideApproval(row,'approved')}><CheckCircle2 size={13}/> Approve and apply</button><button className="gov-button danger" disabled={saving} onClick={()=>void decideApproval(row,'rejected')}>Reject</button></div>}
+          {admin&&row.status==='pending'&&row.workflow_key!=='institution_setting_change'&&<div className="gov-note">No decision handler is configured for this workflow type. It remains pending and cannot be approved from this page.</div>}
+        </article>)}</div>:<div className="gov-empty">No approval requests match this status and search.</div>}
         {pageControls(orderedApprovals.length,approvalsCurrentPage,approvalsPageCount,setApprovalPage)}
       </section>
     </div>
   }
   function renderPolicies(){
     const audience=section==='policies-faculty'?'Faculty':'Student'
-    return <section className="gov-panel ed360-admin-policy-page"><header><div></div><button className="gov-button primary" onClick={()=>openPolicy()}><Plus size={14}/> Add {audience.toLowerCase()} policy</button></header>
-      <label className="ed360-admin-search"><Search size={14}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder={'Search '+audience.toLowerCase()+' policy title, reference or text…'}/></label>
-      {filteredPolicies.length?<div className="ed360-admin-policy-list">{filteredPolicies.map(row=>{const revisions=audit.filter(event=>event.record_id===row.id).sort((a,b)=>String(b.occurred_at).localeCompare(String(a.occurred_at)));return <article className="ed360-admin-policy-card" key={row.id}><header><div><h3>{row.title}</h3><div className="ed360-admin-policy-meta"><span>{row.reference_code??'No reference'}</span><span>Revision {Number(row.payload?.revision??1)}</span><span>Effective {row.effective_date??'Not set'}</span></div></div><span className={'ed360-admin-status '+row.status}>{label(row.status)}</span></header>{row.description&&<p>{row.description}</p>}<div className="gov-row-actions"><button className="gov-button" onClick={()=>openPolicy(row)}>Edit / revise</button><button className="gov-button danger" onClick={()=>void removePolicy(row)}>Delete</button></div><details><summary>Revision and audit history ({revisions.length} events)</summary>{revisions.length?revisions.map(event=><p key={event.id}>{dateLabel(event.occurred_at)} · {label(event.action)} by {event.actor_id??'system'}</p>):<p>No previous revisions are linked to this policy.</p>}</details></article>})}</div>:<div className="gov-empty">No {audience.toLowerCase()} policies have been added yet. Create the first policy for this audience.</div>}
+    const audiencePolicies=policies.filter(row=>{
+      const category=String(jsonObject(row.payload).category??'').toLowerCase()
+      return audience==='Faculty'?['faculty','staff','teacher','teachers'].includes(category):['student','students'].includes(category)
+    })
+    const reportRows:Record<string,unknown>[]=orderedPolicies.map(row=>({title:row.title,reference:row.reference_code??'',audience:label(row.payload.category??''),revision:Number(row.payload.revision??1),effective_date:row.effective_date??'',status:label(row.status),updated_at:row.updated_at??'',description:row.description??''}))
+    const reportColumns:OfficeColumn[]=[{key:'title',label:'Policy title'},{key:'reference',label:'Reference'},{key:'audience',label:'Audience'},{key:'revision',label:'Revision'},{key:'effective_date',label:'Effective date'},{key:'status',label:'Status'},{key:'updated_at',label:'Last updated'},{key:'description',label:'Policy text'}]
+    return <section className="gov-panel ed360-admin-policy-page">
+      <header><div><h2>{audience} policy register</h2><p>{orderedPolicies.length} matching policies · {audiencePolicies.length} records for this audience</p></div><button className="gov-button primary" onClick={()=>openPolicy()}><Plus size={14}/> Add {audience.toLowerCase()} policy</button></header>
+      {reportActions(audience+' policies',audience.toLowerCase()+'-policies',reportRows,reportColumns)}
+      <div className="ed360-admin-policy-filters">
+        <label>Status<select value={policyStatusFilter} onChange={e=>{setPolicyStatusFilter(e.target.value as typeof policyStatusFilter);setPolicyPage(1)}}><option value="all">All statuses</option><option value="draft">Draft</option><option value="published">Published</option><option value="archived">Archived</option></select></label>
+        <label>Order by<select value={policySortKey} onChange={e=>{setPolicySortKey(e.target.value as typeof policySortKey);setPolicyPage(1)}}><option value="updated_at">Last updated</option><option value="title">Policy title</option><option value="status">Status</option><option value="effective_date">Effective date</option></select></label>
+        <button type="button" className="gov-button" onClick={()=>{setPolicySortDirection(value=>value==='asc'?'desc':'asc');setPolicyPage(1)}} aria-label={'Sort '+(policySortDirection==='asc'?'descending':'ascending')}>{policySortDirection==='asc'?'Ascending ↑':'Descending ↓'}</button>
+        <label className="ed360-admin-policy-search"><Search size={14}/><input value={search} onChange={e=>{setSearch(e.target.value);setPolicyPage(1)}} placeholder={'Search '+audience.toLowerCase()+' policy title, reference or text…'}/></label>
+      </div>
+      {orderedPolicies.length?<div className="ed360-admin-policy-list">{policyPageRows.map(row=>{const revisions=audit.filter(event=>event.record_id===row.id).sort((a,b)=>String(b.occurred_at).localeCompare(String(a.occurred_at)));return <article className="ed360-admin-policy-card" key={row.id}><header><div><h3>{row.title}</h3><div className="ed360-admin-policy-meta"><span>{row.reference_code??'No reference'}</span><span>Revision {Number(row.payload?.revision??1)}</span><span>Effective {row.effective_date??'Not set'}</span><span>Updated {dateLabel(row.updated_at)}</span></div></div><span className={'ed360-admin-status '+row.status}>{label(row.status)}</span></header>{row.description&&<p>{row.description}</p>}<div className="gov-row-actions"><button className="gov-button" onClick={()=>openPolicy(row)}>Edit / revise</button><button className="gov-button danger" disabled={saving} onClick={()=>void removePolicy(row)}>Delete</button></div><details><summary>Revision and audit history ({revisions.length} events)</summary>{revisions.length?revisions.map(event=><p key={event.id}>{dateLabel(event.occurred_at)} · {label(event.action)} by {event.actor_id??'system'}</p>):<p>No previous revisions are linked to this policy.</p>}</details></article>})}</div>:<div className="gov-empty">No {audience.toLowerCase()} policies match these filters. Clear the search or status filter, or create the first policy.</div>}
+      {pageControls(orderedPolicies.length,policiesCurrentPage,policiesPageCount,setPolicyPage)}
     </section>
   }
 
@@ -412,6 +892,8 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
   }
   function renderAudit(){
     const recent=filteredAudit.filter(row=>Date.now()-new Date(row.occurred_at).getTime()<=30*24*60*60*1000).length
+    const reportRows:Record<string,unknown>[]=filteredAudit.map(row=>({occurred_at:row.occurred_at,action:label(row.action),module:label(row.module_key),record_type:label(row.record_type),record_id:row.record_id,actor_id:row.actor_id??'system'}))
+    const reportColumns:OfficeColumn[]=[{key:'occurred_at',label:'Occurred at'},{key:'action',label:'Action'},{key:'module',label:'Module'},{key:'record_type',label:'Record type'},{key:'record_id',label:'Record ID'},{key:'actor_id',label:'Actor ID'}]
     const actors=new Set(filteredAudit.map(row=>row.actor_id).filter(Boolean)).size
     const modules=new Set(filteredAudit.map(row=>row.module_key).filter(Boolean)).size
     return <div className="ed360-admin-audit-page">
@@ -422,17 +904,77 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
         <article><small>Modules</small><strong>{modules}</strong><em>Modules represented in this feed</em></article>
       </div>
       <section className="gov-panel ed360-admin-audit-feed">
-        <div className="ed360-admin-search-row"><label className="ed360-admin-search"><Search size={14}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search actor, action, module or record…"/></label><span className="gov-readonly">Read-only audit feed</span></div>
-        {filteredAudit.length?<div className="gov-timeline">{filteredAudit.map(row=><article key={row.id}><i/><div><strong>{label(row.action)} · {label(row.module_key)} / {label(row.record_type)}</strong><small>{dateLabel(row.occurred_at)} · Actor {String(row.actor_id??'system')} · Record {String(row.record_id)}</small><details><summary>View recorded values</summary><div><div><b>Before</b><pre>{JSON.stringify(row.old_values??null,null,2)}</pre></div><div><b>After</b><pre>{JSON.stringify(row.new_values??null,null,2)}</pre></div></div></details></div></article>)}</div>:<div className="gov-empty">No administrative audit events match this search.</div>}
+        <div className="ed360-admin-audit-filters">
+          <label>Order by<select value={auditSortKey} onChange={e=>{setAuditSortKey(e.target.value as typeof auditSortKey);setAuditPage(1)}}><option value="occurred_at">Event date</option><option value="action">Action</option><option value="module_key">Module</option></select></label>
+          <button type="button" className="gov-button" onClick={()=>{setAuditSortDirection(value=>value==='asc'?'desc':'asc');setAuditPage(1)}} aria-label={'Sort '+(auditSortDirection==='asc'?'descending':'ascending')}>{auditSortDirection==='asc'?'Ascending ↑':'Descending ↓'}</button>
+          <label className="ed360-admin-audit-search"><Search size={14}/><input value={auditSearch} onChange={e=>{setAuditSearch(e.target.value);setAuditPage(1)}} placeholder="Search actor, action, module or record…"/></label>
+          <span className="gov-readonly">Read-only audit feed</span>
+        </div>
+        {reportActions('Administrative audit','administrative-audit',reportRows,reportColumns)}
+        {filteredAudit.length?<div className="gov-timeline">{auditPageRows.map(row=><article key={row.id}><i/><div><strong>{label(row.action)} · {label(row.module_key)} / {label(row.record_type)}</strong><small>{dateLabel(row.occurred_at)} · Actor {String(row.actor_id??'system')} · Record {String(row.record_id)}</small><details><summary>View recorded values</summary><div><div><b>Before</b><pre>{JSON.stringify(row.old_values??null,null,2)}</pre></div><div><b>After</b><pre>{JSON.stringify(row.new_values??null,null,2)}</pre></div></div></details></div></article>)}</div>:<div className="gov-empty">No administrative audit events match this search.</div>}{pageControls(filteredAudit.length,auditCurrentPage,auditPageCount,setAuditPage)}
       </section>
     </div>
   }
   function renderAccounts(){
-    return <section className="gov-panel"><header><div><h2>User access and invitations</h2><p>Institution memberships, role assignments and account activation status.</p></div><Users size={20}/></header><div className="ed360-admin-kpis"><article><small>Total memberships</small><strong>{members.length}</strong></article><article><small>Active</small><strong>{members.filter(row=>row.status==='active').length}</strong></article><article><small>Invited / pending</small><strong>{members.filter(row=>['invited','pending'].includes(row.status)).length}</strong></article><article><small>Suspended / inactive</small><strong>{members.filter(row=>['suspended','inactive'].includes(row.status)).length}</strong></article></div><label className="ed360-admin-search"><Search size={14}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search name, email, role or status…"/></label>{filteredMembers.length?<div className="gov-table-wrap"><table className="ed360-admin-table"><thead><tr><th>User</th><th>Email</th><th>Role</th><th>Access status</th><th>Added</th></tr></thead><tbody>{filteredMembers.map(row=><tr key={row.user_id}><td><b>{row.full_name}</b></td><td>{row.email}</td><td>{label(row.role)}</td><td><span className={'ed360-admin-status '+row.status}>{label(row.status)}</span></td><td>{dateLabel(row.created_at)}</td></tr>)}</tbody></table></div>:<div className="gov-empty">No memberships match this search.</div>}<div className="gov-row-actions" style={{marginTop:14}}><button className="gov-button primary" onClick={()=>onNavigate('accounts')}>Open User Account Manager <ArrowUpRight size={14}/></button></div><div className="gov-note">Account provisioning is handled in the linked account manager. Email invitation resends and membership suspension changes are not exposed by the current account API, so status is read-only here.</div></section>
+    const reportRows:Record<string,unknown>[]=orderedMembers.map(row=>({name:row.full_name??'',email:row.email??'',role:label(row.role),status:label(row.status),added:row.created_at??'',user_id:row.user_id}))
+    const reportColumns:OfficeColumn[]=[{key:'name',label:'User'},{key:'email',label:'Email'},{key:'role',label:'Role'},{key:'status',label:'Access status'},{key:'added',label:'Membership created'},{key:'user_id',label:'User ID'}]
+    const roles=[...new Set(members.map(row=>row.role).filter(Boolean))].sort()
+    return <section className="gov-panel">
+      <header><div><h2>User access and invitations</h2><p>{orderedMembers.length} matching memberships · {members.length} total institution memberships</p></div><Users size={20}/></header>
+      {reportActions('User access register','user-access-register',reportRows,reportColumns)}
+      <div className="ed360-admin-kpis"><article><small>Total memberships</small><strong>{members.length}</strong></article><article><small>Active</small><strong>{members.filter(row=>row.status==='active').length}</strong></article><article><small>Invited / pending</small><strong>{members.filter(row=>['invited','pending'].includes(row.status)).length}</strong></article><article><small>Suspended / inactive</small><strong>{members.filter(row=>['suspended','inactive'].includes(row.status)).length}</strong></article></div>
+      <div className="ed360-admin-account-filters">
+        <label>Status<select value={memberStatusFilter} onChange={e=>{setMemberStatusFilter(e.target.value);setMemberPage(1)}}><option value="all">All statuses</option>{['active','invited','pending','suspended','inactive'].map(status=><option key={status} value={status}>{label(status)}</option>)}</select></label>
+        <label>Role<select value={memberRoleFilter} onChange={e=>{setMemberRoleFilter(e.target.value);setMemberPage(1)}}><option value="all">All roles</option>{roles.map(role=><option key={role} value={role}>{label(role)}</option>)}</select></label>
+        <label>Order by<select value={memberSortKey} onChange={e=>{setMemberSortKey(e.target.value as typeof memberSortKey);setMemberPage(1)}}><option value="created_at">Date added</option><option value="full_name">Name</option><option value="email">Email</option><option value="role">Role</option><option value="status">Status</option></select></label>
+        <button type="button" className="gov-button" onClick={()=>{setMemberSortDirection(value=>value==='asc'?'desc':'asc');setMemberPage(1)}} aria-label={'Sort '+(memberSortDirection==='asc'?'descending':'ascending')}>{memberSortDirection==='asc'?'Ascending ↑':'Descending ↓'}</button>
+        <label className="ed360-admin-account-search"><Search size={14}/><input value={search} onChange={e=>{setSearch(e.target.value);setMemberPage(1)}} placeholder="Search name, email, role or status…"/></label>
+      </div>
+      {orderedMembers.length?<div className="gov-table-wrap"><table className="ed360-admin-table"><thead><tr><th>User</th><th>Email</th><th>Role</th><th>Access status</th><th>Added</th><th>Access action</th></tr></thead><tbody>{memberPageRows.map(row=><tr key={row.user_id}><td><b>{row.full_name}</b>{row.user_id===user?.id&&<small className="gov-note">Your account</small>}</td><td>{row.email}</td><td>{label(row.role)}</td><td><span className={'ed360-admin-status '+row.status}>{label(row.status)}</span></td><td>{dateLabel(row.created_at)}</td><td>{row.role==='owner'?<span className="gov-readonly">Protected owner</span>:row.user_id===user?.id?<span className="gov-readonly">Protected account</span>:['active','suspended'].includes(row.status)?<button type="button" className={'gov-button '+(row.status==='active'?'danger':'primary')} disabled={membershipSavingId===row.id} onClick={()=>void changeMembershipStatus(row)}>{membershipSavingId===row.id?'Updating…':row.status==='active'?'Suspend access':'Reactivate access'}</button>:<span className="gov-readonly">Use account provisioning</span>}</td></tr>)}</tbody></table></div>:<div className="gov-empty">No memberships match these filters. Clear a filter or search, or invite an institution member through the Account Manager.</div>}
+      {pageControls(orderedMembers.length,membersCurrentPage,membersPageCount,setMemberPage)}
+      <div className="gov-row-actions" style={{marginTop:14}}><button className="gov-button primary" onClick={()=>onNavigate('accounts')}>Open User Account Manager <ArrowUpRight size={14}/></button></div>
+      <div className="gov-note">Create and invite accounts in the linked Account Manager. This register can activate or suspend established memberships; pending and invited accounts remain under account provisioning.</div>
+    </section>
   }
   function renderSecurity(){
-    const related=filteredAudit.filter(row=>/auth|login|session|security|access|membership/i.test(row.module_key+' '+row.record_type+' '+row.action))
-    return <div className="ed360-admin-stage5"><section className="gov-panel"><header><div><h2>Security and access overview</h2><p>Current membership status and available administrative security evidence.</p></div><LockKeyhole size={20}/></header><div className="ed360-admin-security-grid"><article><b>{members.filter(row=>row.status==='active').length} active memberships</b><small>Active institution accounts recorded in memberships.</small></article><article><b>{members.filter(row=>row.status!=='active').length} non-active memberships</b><small>Invited, pending, suspended or inactive states where recorded.</small></article><article><b>{related.length} related audit events</b><small>Operational audit entries with security or access keywords.</small></article></div><div className="ed360-admin-callout warning">Login history, failed sign-in attempts and live session termination are not exposed by the current tenant-facing database API. No invented sign-in events or false zero counts are shown. A privileged, tenant-filtered authentication event feed is required before these controls can be enabled.</div></section><section className="gov-panel"><header><div><h2>Available access audit events</h2><p>Operational audit entries that reference authentication, security, access or memberships.</p></div></header>{related.length?<div className="gov-timeline">{related.slice(0,100).map(row=><article key={row.id}><i/><div><strong>{label(row.action)} · {label(row.module_key)}</strong><small>{dateLabel(row.occurred_at)} · {row.actor_id??'system'}</small></div></article>)}</div>:<div className="gov-empty">No security-labelled administrative events are available in the current feed.</div>}</section></div>
+    const securityQuery=securitySearch.trim().toLowerCase()
+    const related=audit.filter(row=>
+      /auth|login|session|security|access|membership/i.test(row.module_key+' '+row.record_type+' '+row.action)&&
+      [row.action,row.module_key,row.record_type,row.actor_id,row.record_id].join(' ').toLowerCase().includes(securityQuery)
+    )
+    const orderedRelated=[...related].sort((a,b)=>{
+      const left=String(a[securitySortKey]??'')
+      const right=String(b[securitySortKey]??'')
+      const comparison=left.localeCompare(right,undefined,{numeric:true,sensitivity:'base'})
+      return securitySortDirection==='asc'?comparison:-comparison
+    })
+    const reportRows:Record<string,unknown>[]=orderedRelated.map(row=>({occurred_at:row.occurred_at,action:label(row.action),module:label(row.module_key),record_type:label(row.record_type),record_id:row.record_id,actor_id:row.actor_id??'system'}))
+    const reportColumns:OfficeColumn[]=[{key:'occurred_at',label:'Occurred at'},{key:'action',label:'Action'},{key:'module',label:'Module'},{key:'record_type',label:'Record type'},{key:'record_id',label:'Record ID'},{key:'actor_id',label:'Actor ID'}]
+    const securityPageCount=Math.max(1,Math.ceil(orderedRelated.length/pageSize))
+    const securityCurrentPage=Math.min(securityPage,securityPageCount)
+    const securityPageRows=orderedRelated.slice((securityCurrentPage-1)*pageSize,securityCurrentPage*pageSize)
+    return <div className="ed360-admin-stage5">
+      <section className="gov-panel">
+        <header><div><h2>Security and access overview</h2><p>Current membership status and available administrative security evidence.</p></div><LockKeyhole size={20}/></header>
+        <div className="ed360-admin-security-grid">
+          <article><b>{members.filter(row=>row.status==='active').length} active memberships</b><small>Active institution accounts recorded in memberships.</small></article>
+          <article><b>{members.filter(row=>row.status!=='active').length} non-active memberships</b><small>Invited, pending, suspended or inactive states where recorded.</small></article>
+          <article><b>{related.length} related audit events</b><small>Events matching the available access/security categories and current search.</small></article>
+        </div>
+        <div className="ed360-admin-callout warning">Login history, failed sign-in attempts and live session termination are not exposed by the current tenant-facing database API. This register shows only available institution audit evidence. No invented sign-in events or false zero counts are shown.</div>
+      </section>
+      <section className="gov-panel">
+        <header><div><h2>Available access audit events</h2><p>{orderedRelated.length} matching events in the loaded institution audit history.</p></div></header>
+        {reportActions('Security access audit events','security-access-audit-events',reportRows,reportColumns)}
+        <div className="ed360-admin-security-filters">
+          <label>Order by<select value={securitySortKey} onChange={e=>{setSecuritySortKey(e.target.value as typeof securitySortKey);setSecurityPage(1)}}><option value="occurred_at">Event date</option><option value="action">Action</option><option value="module_key">Module</option></select></label>
+          <button type="button" className="gov-button" onClick={()=>{setSecuritySortDirection(value=>value==='asc'?'desc':'asc');setSecurityPage(1)}} aria-label={'Sort '+(securitySortDirection==='asc'?'descending':'ascending')}>{securitySortDirection==='asc'?'Ascending ↑':'Descending ↓'}</button>
+          <label className="ed360-admin-security-search"><Search size={14}/><input value={securitySearch} onChange={e=>{setSecuritySearch(e.target.value);setSecurityPage(1)}} placeholder="Search action, module, actor or record…"/></label>
+        </div>
+        {orderedRelated.length?<div className="gov-timeline">{securityPageRows.map(row=><article key={row.id}><i/><div><strong>{label(row.action)} · {label(row.module_key)}</strong><small>{dateLabel(row.occurred_at)} · {row.actor_id??'system'}</small></div></article>)}</div>:<div className="gov-empty">No security-labelled audit events match this search.</div>}
+        {pageControls(orderedRelated.length,securityCurrentPage,securityPageCount,setSecurityPage)}
+      </section>
+    </div>
   }
   function renderContent(){
     if(section==='profile')return renderProfile()
@@ -452,7 +994,7 @@ export function AdministrationStage5Workspace({initialWindow,onToast,onNavigate}
   }
   if(!admin)return <main className="page-content"><div className="gov-error">Administration is restricted to authorised institution owners and administrators.</div></main>
   return <main className={"gov-stage page-content ed360-module-page ed360-admin-stage5" + (section === "profile" ? " is-profile" : "")}>
-    <header className="gov-heading"><div><span>{(user?.institutionName?.trim()||'INSTITUTION').toUpperCase()} / ADMINISTRATION</span><h1>{pageMeta[section].title}</h1><p>{pageMeta[section].description}</p></div><button type="button" className="gov-button" onClick={()=>void load()} disabled={loading}><RefreshCw size={14}/> Refresh</button></header>
+    <header className="gov-heading"><div><span>{(profileDraft.name.trim()||user?.institutionName?.trim()||'GOVERNMENT ISLAMIA DEGREE COLLEGE').toUpperCase()} / ADMINISTRATION / {section==='profile'?'OFFICIAL INSTITUTE PROFILE':pageMeta[section].title.toUpperCase()}</span><h1>{pageMeta[section].title}</h1></div><button type="button" className="gov-button primary" onClick={()=>void load()} disabled={loading}><RefreshCw size={15}/> {loading?'Refreshing…':'Refresh'}</button></header>
     {error&&<div className="gov-error" role="alert">{error}</div>}
     {loading?<div className="gov-empty"><RefreshCw size={18}/> Loading Administration records…</div>:renderContent()}
     {settingForm&&<div className="modal-backdrop"><section className="modal-card gov-modal" role="dialog" aria-modal="true"><div className="modal-heading"><div><div className="eyebrow">INSTITUTION CONFIGURATION</div><h2>{settingEditing?'Edit setting':'Create setting'}</h2><p>Save an institution-scoped value. Public visibility is off by default.</p></div><button className="icon-button" onClick={()=>setSettingForm(false)}><X size={18}/></button></div><form className="gov-form" onSubmit={saveSetting}><label>Category *<input required value={settingCategory} onChange={e=>setSettingCategory(e.target.value)}/></label><label>Setting key *<input required value={settingKey} onChange={e=>setSettingKey(e.target.value)}/></label><label>Value (JSON) *<textarea rows={6} required value={settingValue} onChange={e=>setSettingValue(e.target.value)}/></label><label className="gov-check"><input type="checkbox" checked={settingPublic} onChange={e=>setSettingPublic(e.target.checked)}/> Publicly visible to unauthenticated visitors</label><div className="modal-actions"><button type="button" className="gov-button" onClick={()=>setSettingForm(false)}>Cancel</button><button className="gov-button primary" disabled={saving}><Save size={14}/> Save setting</button></div></form></section></div>}

@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { Coffee, Download, RefreshCw } from 'lucide-react'
+import { Download, RefreshCw } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import '../styles/data-management.css'
@@ -10,15 +10,6 @@ const titleByPage:Record<string,string>={
  'cafeteria-dashboard':'Cafeteria Dashboard','menu-price-list':'Menu & Price List',
  'daily-availability':'Daily Availability','sales-transactions':'Sales Transactions',
  'meal-plans':'Meal Plans','cafeteria-inventory':'Cafeteria Inventory','cafeteria-reports':'Cafeteria Reports'
-}
-const info:Record<string,string>={
- 'cafeteria-dashboard':'Monitor today’s menu availability, sales, serving counts and stock-linked menu items.',
- 'menu-price-list':'Maintain cafeteria menu items, prices, categories and optional links to inventory stock items.',
- 'daily-availability':'Set the quantity of each menu item available for a specific service date.',
- 'sales-transactions':'Record a cafeteria sale against today’s available items. Daily servings and linked inventory stock are updated transactionally.',
- 'meal-plans':'Maintain meal-plan offers, audience, meal period, price and validity dates.',
- 'cafeteria-inventory':'Review menu items linked to the institution inventory stock ledger.',
- 'cafeteria-reports':'Review sales, serving volumes and menu performance from saved cafeteria transactions.'
 }
 const money=(v:unknown)=>'PKR '+Number(v??0).toLocaleString(undefined,{maximumFractionDigits:2})
 const label=(v:unknown)=>String(v??'').replaceAll('_',' ').replace(/\b\w/g,c=>c.toUpperCase())
@@ -160,7 +151,7 @@ export function CafeteriaWorkspace({workspaceKey,onToast}:{workspaceKey:string;o
  const renderReports=()=> <section className="ed360-data-card"><header><h2>Cafeteria sales report</h2><p>Summary from recorded cafeteria transactions and daily availability. Cash/card/mobile payments are only marked as received when selected by the authorised operator.</p><button className="button button-outline" type="button" onClick={()=>window.print()}><Download size={15}/> Print</button></header><div className="ed360-workspace-kpis"><article><span>Sales</span><strong>{sales.length}</strong><small>All saved transactions</small></article><article><span>Paid total</span><strong>{money(sales.filter(s=>s.payment_status==='paid').reduce((n,s)=>n+Number(s.total_amount),0))}</strong><small>Operator-recorded paid state</small></article><article><span>Unpaid / account</span><strong>{sales.filter(s=>['unpaid','on_account'].includes(s.payment_status)).length}</strong><small>Requires collection</small></article><article><span>Servings</span><strong>{saleItems.reduce((n,s)=>n+Number(s.quantity),0)}</strong><small>All recorded sales lines</small></article></div><div className="table-scroll"><table><thead><tr><th>Menu item</th><th>Number of lines</th><th>Servings sold</th><th>Gross value</th></tr></thead><tbody>{menu.map(m=>{const rows=saleItems.filter(i=>i.menu_item_id===m.id);return <tr key={m.id}><td>{m.name}</td><td>{rows.length}</td><td>{rows.reduce((n,x)=>n+Number(x.quantity),0)}</td><td>{money(rows.reduce((n,x)=>n+Number(x.line_total),0))}</td></tr>})}</tbody></table></div></section>
  if(!user)return null
  if(!finance)return <main className="page-content ed360-module-page"><section className="ed360-workspace-empty">Cafeteria operations are available to the owner, administrator and accountant roles.</section></main>
- return <main className="page-content ed360-module-page ed360-cafeteria-workspace"><header className="ed360-workspace-hero"><div className="ed360-workspace-hero-icon"><Coffee size={21}/></div><div className="ed360-workspace-hero-copy"><span>INVENTORY / CAFETERIA</span><h1>{title}</h1><p>{info[page]??'Manage cafeteria menu, service and transactions.'}</p></div><div className="ed360-workspace-hero-tools"><span className="ed360-data-state"><i/> Institution-scoped service</span><button className="button button-outline" type="button" onClick={()=>void load()}><RefreshCw size={15}/> Refresh</button></div></header>{error&&<div className="ed360-data-error">{error}</div>}{loading?<div className="ed360-workspace-empty">Loading cafeteria records…</div>:null}
+ return <main className="page-content ed360-module-page ed360-cafeteria-workspace"><header className="ed360-workspace-hero"><div className="ed360-workspace-hero-copy"><span>{(user?.institutionName?.trim()||'GOVERNMENT ISLAMIA DEGREE COLLEGE').toUpperCase()} / CAFETERIA / {title.toUpperCase()}</span><h1>{title}</h1></div><div className="ed360-workspace-hero-tools"><button className="button button-primary" type="button" onClick={()=>void load()} disabled={loading}><RefreshCw size={15}/>{loading?'Refreshing…':'Refresh'}</button></div></header>{error&&<div className="ed360-data-error">{error}</div>}{loading?<div className="ed360-workspace-empty">Loading cafeteria records…</div>:null}
   {page==='cafeteria-dashboard'?renderDashboard():page==='menu-price-list'?renderMenu():page==='daily-availability'?renderAvailability():page==='sales-transactions'?renderSales():page==='meal-plans'?renderPlans():page==='cafeteria-inventory'?renderInventory():renderReports()}
  </main>
 }

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { Package, RefreshCw } from 'lucide-react'
+import { RefreshCw } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import '../styles/data-management.css'
@@ -10,18 +10,6 @@ const titles:Record<string,string>={
  'supplier-directory':'Supplier Directory','suppliers':'Supplier Directory','purchase-records':'Purchase Order Records',
  'purchase-requests':'Purchase Requests','quotation-comparison':'Quotation Comparison','purchase-approvals':'Purchase Approvals',
  'purchase-orders':'Purchase Orders','goods-receipt':'Goods Receipt','supplier-invoices':'Supplier Invoices','procurement-reports':'Procurement Reports'
-}
-const descriptions:Record<string,string>={
- 'supplier-directory':'Maintain approved supplier details and trading status for this institution.',
- 'suppliers':'Maintain approved supplier details and trading status for this institution.',
- 'purchase-records':'Review purchase orders, receiving progress and supplier costs.',
- 'purchase-requests':'Raise, itemise and submit purchase requests for approval.',
- 'quotation-comparison':'Capture supplier quotations against approved requests and compare totals before selection.',
- 'purchase-approvals':'Review submitted purchase requests and approve or reject draft purchase orders.',
- 'purchase-orders':'Create orders from approved requests, add inventory lines and approve the order.',
- 'goods-receipt':'Record actual deliveries and post received quantities into the existing inventory stock ledger.',
- 'supplier-invoices':'Record supplier invoices and review their approval status. This does not trigger a bank payment.',
- 'procurement-reports':'Review request pipeline, supplier spend, purchase orders, receipts and invoices.'
 }
 const date=(v:unknown)=>v?new Date(String(v)).toLocaleDateString():'—'
 const money=(v:unknown)=>'PKR '+Number(v??0).toLocaleString(undefined,{maximumFractionDigits:2})
@@ -234,7 +222,7 @@ export function ProcurementWorkspace({workspaceKey,onToast}:{workspaceKey:string
  if(!user)return null
  if(!canRequest)return <main className="page-content ed360-module-page"><section className="ed360-workspace-empty">Procurement access is not enabled for this role.</section></main>
  if(!financeAccess&&page!=='purchase-requests')return <main className="page-content ed360-module-page"><section className="ed360-workspace-empty"><strong>Procurement finance access required</strong><span>Supplier, quotation, purchase order and invoice records are visible to owner, administrator and accountant roles. Requesters can still raise and track their own purchase requests.</span></section></main>
- return <main className="page-content ed360-module-page ed360-procurement-workspace"><header className="ed360-workspace-hero"><div className="ed360-workspace-hero-icon"><Package size={21}/></div><div className="ed360-workspace-hero-copy"><span>INVENTORY / PROCUREMENT</span><h1>{title}</h1><p>{descriptions[page]??'Manage procurement and supplier workflows.'}</p></div><div className="ed360-workspace-hero-tools"><span className="ed360-data-state"><i/> Institution-scoped purchasing</span><button className="button button-outline" type="button" onClick={()=>void load()}><RefreshCw size={15}/> Refresh</button></div></header>{error&&<div className="ed360-data-error">{error}</div>}{loading?<div className="ed360-workspace-empty">Loading procurement records…</div>:null}
+ return <main className="page-content ed360-module-page ed360-procurement-workspace"><header className="ed360-workspace-hero"><div className="ed360-workspace-hero-copy"><span>{(user?.institutionName?.trim()||'GOVERNMENT ISLAMIA DEGREE COLLEGE').toUpperCase()} / PROCUREMENT / {title.toUpperCase()}</span><h1>{title}</h1></div><div className="ed360-workspace-hero-tools"><button className="button button-primary" type="button" onClick={()=>void load()} disabled={loading||busy}><RefreshCw size={15}/>{loading||busy?'Refreshing…':'Refresh'}</button></div></header>{error&&<div className="ed360-data-error">{error}</div>}{loading?<div className="ed360-workspace-empty">Loading procurement records…</div>:null}
   {page==='supplier-directory'||page==='suppliers'?renderSuppliers():page==='purchase-requests'?renderRequests():page==='quotation-comparison'?renderQuotes():page==='purchase-approvals'?renderApprovals():page==='purchase-orders'||page==='purchase-records'?renderOrders():page==='goods-receipt'?renderReceipts():page==='supplier-invoices'?renderInvoices():renderReports()}
  </main>
 }

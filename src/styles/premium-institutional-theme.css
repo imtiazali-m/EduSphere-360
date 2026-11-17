@@ -1,0 +1,1672 @@
+/* Premium Government Academic Identity — shared visual layer for every signed-in workspace. */
+:root {
+  color-scheme: light;
+  --es-brand-950: #142b36;
+  --es-brand-900: #193e4b;
+  --es-brand-800: #24525a;
+  --es-brand-700: #326d70;
+  --es-primary-700: #1d5a5a;
+  --es-primary-600: #28716e;
+  --es-primary-500: #4e8c84;
+  --es-primary-100: #e3efec;
+  --es-primary-050: #f3f8f6;
+  --es-violet: #28716e;
+  --es-violet-bg: #eaf3f0;
+  --es-teal-700: #28716e;
+  --es-teal-100: #e3efec;
+  --es-ink: #1d2928;
+  --es-muted: #657570;
+  --es-subtle: #89948f;
+  --es-line: #dee6e2;
+  --es-line-soft: #edf2ef;
+  --es-canvas: #f4f7f5;
+  --es-surface: #ffffff;
+  --es-surface-soft: #fafcfb;
+  --es-success: #24734f;
+  --es-success-bg: #e9f4ed;
+  --es-warning: #94651c;
+  --es-warning-bg: #fff5e4;
+  --es-danger: #ad4148;
+  --es-danger-bg: #fff0f0;
+  --es-shadow-sm: 0 2px 8px rgba(26, 54, 49, .045);
+  --es-shadow-md: 0 10px 28px rgba(26, 54, 49, .075);
+  --es-shadow-lg: 0 22px 52px rgba(26, 54, 49, .12);
+  --es-radius-sm: 8px;
+  --es-radius-md: 12px;
+  --es-radius-lg: 16px;
+  --es-radius-xl: 20px;
+  --brand-navy: var(--es-brand-900);
+  --brand-blue: var(--es-primary-600);
+  --brand-blue-dark: var(--es-primary-700);
+  --brand-bg: var(--es-canvas);
+  --brand-surface: var(--es-surface);
+  --brand-ink: var(--es-ink);
+  --brand-muted: var(--es-muted);
+  --brand-line: var(--es-line);
+  --brand-success: var(--es-success);
+  --brand-warning: var(--es-warning);
+  --brand-danger: var(--es-danger);
+  --primary: #28716e;
+  --primary-soft: #e3efec;
+  --line: #dee6e2;
+  --surface: #ffffff;
+  --surface-muted: #f4f7f5;
+  --surface-hover: #fafcfb;
+  --ink: #1d2928;
+  --muted: #657570;
+  accent-color: var(--es-primary-600);
+}
+
+.pro-app-shell,
+.pro-main-shell,
+.pro-workspace,
+.pro-module-stage {
+  color: var(--es-ink);
+  background: var(--es-canvas);
+  font-family: 'DM Sans', Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.pro-sidebar {
+  color: #f8f5ff;
+  background: linear-gradient(180deg, #193e4b 0%, #142f3a 100%);
+  border-right: 1px solid rgba(255,255,255,.09);
+  box-shadow: 6px 0 24px rgba(30, 19, 49, .09);
+}
+.pro-sidebar-brand-copy b { color: #fff; }
+.pro-sidebar-brand-copy small { color: #c4d8d1; }
+.pro-institution-card {
+  border-color: rgba(255,255,255,.13);
+  background: rgba(255,255,255,.065);
+}
+.pro-institution-card b { color: #fff; }
+.pro-institution-card small { color: #cad9d4; }
+.pro-nav-link,
+.pro-nav-group-trigger { color: #e2dced; }
+.pro-nav-link:hover,
+.pro-nav-group-trigger:hover { color: #fff; background: rgba(255,255,255,.09); }
+.pro-nav-link.active,
+.pro-nav-link[aria-current="page"],
+.pro-nav-group-trigger[aria-expanded="true"] {
+  color: #fff;
+  background: rgba(128, 96, 207, .29);
+  box-shadow: inset 3px 0 #8bb8ad;
+}
+.pro-nav-section-label { color: #c4d8d1; }
+
+.pro-topbar {
+  color: var(--es-ink);
+  background: rgba(255,255,255,.96);
+  border-bottom: 1px solid var(--es-line);
+  box-shadow: 0 2px 12px rgba(39,27,61,.035);
+}
+.pro-window-stack { color: var(--es-ink); }
+.pro-window-panel {
+  color: var(--es-ink);
+  background: transparent;
+}
+.pro-module-stage { padding-top: 20px; }
+
+/* Consistent page heading: plain canvas, no repeated guidance/hero card. */
+.pro-window-panel :is(
+  .ed360-workspace-hero,
+  .ed360-attendance-hero,
+  .ed360-assess-hero,
+  .ed360-operations-heading,
+  .gov-heading,
+  .iop-heading,
+  .fin-page-heading,
+  .payroll-heading,
+  .page-title-row,
+  .students-page-heading,
+  .faculty-page-heading,
+  .admin-heading,
+  .rd-page-head
+) {
+  color: var(--es-ink);
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--es-line);
+  border-radius: 0;
+  box-shadow: none;
+  padding: 4px 2px 16px;
+  margin: 0 0 18px;
+}
+.pro-window-panel :is(
+  .ed360-workspace-hero h1,
+  .ed360-attendance-hero h1,
+  .ed360-assess-hero h1,
+  .ed360-operations-heading h1,
+  .gov-heading h1,
+  .iop-heading h1,
+  .fin-page-heading h1,
+  .payroll-heading h1,
+  .page-title-row h1,
+  .students-page-heading h1,
+  .faculty-page-heading h1,
+  .admin-heading h1,
+  .rd-page-head h1
+) {
+  color: var(--es-ink);
+  font-size: clamp(26px, 2.3vw, 32px);
+  font-weight: 850;
+  letter-spacing: -.7px;
+}
+.pro-window-panel :is(
+  .ed360-workspace-hero p,
+  .ed360-attendance-hero p,
+  .ed360-assess-hero p,
+  .ed360-operations-heading p,
+  .gov-heading p,
+  .iop-heading p,
+  .fin-page-heading p,
+  .payroll-heading p,
+  .page-title-row p,
+  .students-page-heading p,
+  .faculty-page-heading p,
+  .admin-heading p,
+  .rd-page-head p
+) {
+  color: var(--es-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.pro-window-panel .ed360-workspace-hero {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.pro-window-panel .ed360-workspace-hero-icon { display: none; }
+
+/* Functional content surfaces share one material language. */
+.pro-window-panel :is(
+  .ed360-panel,
+  .ed360-record-card,
+  .ed360-workspace-record-card,
+  .ed360-workspace-chart,
+  .ed360-workspace-chart-card,
+  .ed360-metric-card,
+  .ed360-workspace-kpis article,
+  .gov-panel,
+  .iop-panel,
+  .fin-panel,
+  .payroll-panel,
+  .admin-panel,
+  .s7-panel
+) {
+  color: var(--es-ink);
+  background: var(--es-surface);
+  border: 1px solid var(--es-line);
+  border-radius: var(--es-radius-lg);
+  box-shadow: var(--es-shadow-sm);
+}
+.pro-window-panel :is(
+  h1,h2,h3,h4,
+  .ed360-panel-heading h2,
+  .ed360-panel-title,
+  .gov-panel h2,
+  .iop-panel h2
+) { color: var(--es-brand-900); }
+.pro-window-panel :is(p,.muted,.help-text,.field-help,.ed360-chart-footnote) { color: var(--es-muted); }
+
+.pro-window-panel :is(
+  button.primary,
+  button.primary-button,
+  .primary-button,
+  .button-primary,
+  .mw-primary,
+  .gov-button.primary,
+  .iop-button.primary,
+  .rd-header-cta
+) {
+  min-height: 42px;
+  color: #fff;
+  background: var(--es-primary-600);
+  border: 1px solid var(--es-primary-600);
+  border-radius: 11px;
+  box-shadow: 0 5px 14px rgba(96,53,181,.19);
+  font-weight: 800;
+}
+.pro-window-panel :is(
+  button.primary,button.primary-button,.primary-button,.button-primary,
+  .mw-primary,.gov-button.primary,.iop-button.primary,.rd-header-cta
+):hover {
+  color: #fff;
+  background: var(--es-primary-700);
+  border-color: var(--es-primary-700);
+}
+.pro-window-panel :is(
+  .ed360-admin-top-refresh,
+  .ed360-table-refresh button,
+  button[aria-label*="refresh" i],
+  button[title*="refresh" i]
+) {
+  min-height: 46px;
+  padding: 0 20px;
+  color: #fff;
+  background: var(--es-primary-600);
+  border: 1px solid var(--es-primary-600);
+  border-radius: 12px;
+  box-shadow: 0 6px 16px rgba(96,53,181,.2);
+  font-size: 14px;
+  font-weight: 850;
+}
+.pro-window-panel :is(
+  .ed360-admin-top-refresh,
+  .ed360-table-refresh button,
+  button[aria-label*="refresh" i],
+  button[title*="refresh" i]
+):hover { color:#fff; background:var(--es-primary-700); }
+
+.pro-window-panel :is(input:not([type="checkbox"]):not([type="radio"]),select,textarea) {
+  min-height: 42px;
+  color: var(--es-ink);
+  background: #fff;
+  border: 1px solid #dee6e2;
+  border-radius: 10px;
+  font-size: 14px;
+}
+.pro-window-panel textarea { min-height: 100px; }
+.pro-window-panel :is(input,select,textarea):focus {
+  outline: 0;
+  border-color: var(--es-primary-500);
+  box-shadow: 0 0 0 3px rgba(96,53,181,.12);
+}
+.pro-window-panel label,
+.pro-window-panel .field-label { color: var(--es-ink); font-size: 13px; font-weight: 700; }
+
+.pro-window-panel :is(.table-scroll,.table-responsive,.table-container,.data-table-wrap,.table-card) {
+  overflow-x: auto;
+  border: 1px solid var(--es-line);
+  border-radius: var(--es-radius-lg);
+  background: #fff;
+}
+.pro-window-panel table { width: 100%; border-collapse: separate; border-spacing: 0; }
+.pro-window-panel table th {
+  color: #657570;
+  background: #f4f7f5;
+  border-bottom: 1px solid var(--es-line);
+  font-size: 12px;
+  font-weight: 850;
+}
+.pro-window-panel table td {
+  color: #1d2928;
+  border-bottom: 1px solid var(--es-line-soft);
+  font-size: 13px;
+}
+.pro-window-panel table tbody tr:hover { background: #fafcfb; }
+
+.pro-window-panel :is(.status-pill,.status-badge,.badge) {
+  border-radius: 999px;
+  font-weight: 800;
+}
+.pro-window-panel :is(.modal-header,.dialog-header) { border-bottom:1px solid var(--es-line); }
+.pro-window-panel :is(.modal-footer,.dialog-footer) { border-top:1px solid var(--es-line); }
+
+/* The requested institute welcome panel: purple-tinted mask, black readable text,
+   and one full-width content column instead of an unused half-card. */
+.pro-app-shell .rd-welcome-panel {
+  grid-template-columns: minmax(0,1fr);
+  min-height: 0;
+  gap: 18px;
+  padding: 25px 28px;
+  color: #1d2928;
+  background:
+    radial-gradient(circle at 94% 8%, rgba(128,96,207,.13), transparent 28%),
+    linear-gradient(115deg, #eaf3f0 0%, #e3efec 58%, #c5ddd6 100%);
+  border: 1px solid #cadfd8;
+  border-radius: 20px;
+  box-shadow: 0 10px 26px rgba(51,35,81,.075);
+}
+.pro-app-shell .rd-welcome-copy { width:100%; }
+.pro-app-shell .rd-welcome-kicker { color:#526b66; }
+.pro-app-shell .rd-welcome-kicker-dot { background:var(--es-primary-600); box-shadow:0 0 0 4px rgba(96,53,181,.12); }
+.pro-app-shell .rd-welcome-copy h2,
+.pro-app-shell .rd-welcome-copy h3 { color:#1d2928; }
+.pro-app-shell .rd-welcome-copy h2 { margin-top:7px; font-size:clamp(30px,3vw,40px); }
+.pro-app-shell .rd-welcome-copy h3 { max-width:100%; font-size:clamp(21px,2.2vw,29px); line-height:1.25; }
+.pro-app-shell .rd-welcome-facts { grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-top:20px; }
+.pro-app-shell .rd-welcome-fact {
+  padding:12px 14px;
+  border:1px solid rgba(77,54,119,.15);
+  border-radius:12px;
+  background:rgba(255,255,255,.66);
+  backdrop-filter:blur(8px);
+}
+.pro-app-shell .rd-welcome-fact>small { color:#657570; }
+.pro-app-shell .rd-welcome-fact>strong { color:#1d2928; font-size:14px; }
+.pro-app-shell .rd-welcome-weather { grid-column:auto; }
+.pro-app-shell .rd-welcome-weather>strong { color:#1d2928; font-size:22px; }
+.pro-app-shell .rd-welcome-weather>strong span,
+.pro-app-shell .rd-welcome-weather>em,
+.pro-app-shell .rd-welcome-fact .rd-weather-unavailable { color:#526b66; }
+
+@media (max-width: 900px) {
+  .pro-app-shell .rd-welcome-facts { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media (max-width: 700px) {
+  .pro-app-shell .rd-welcome-panel { padding:19px 16px; border-radius:16px; }
+  .pro-app-shell .rd-welcome-facts { grid-template-columns:minmax(0,1fr); }
+  .pro-app-shell .rd-welcome-weather { grid-column:auto; }
+  .pro-window-panel :is(
+    .ed360-workspace-hero,.ed360-attendance-hero,.ed360-assess-hero,.gov-heading,
+    .iop-heading,.fin-page-heading,.payroll-heading,.page-title-row,
+    .students-page-heading,.faculty-page-heading,.admin-heading,.rd-page-head
+  ) { align-items:flex-start; flex-direction:column; }
+}
+
+.pro-window-panel :is(button,a,input,select,textarea):focus-visible {
+  outline: 3px solid rgba(96,53,181,.3);
+  outline-offset: 2px;
+}
+::selection { color:#1d2928; background:#dbece6; }
+
+
+/* Certificate and ID-card workspaces use the shared institutional surface. */
+.pro-window-panel .iop-panel {
+  color:var(--es-ink); background:#fff; border:1px solid var(--es-line);
+  border-radius:16px; box-shadow:var(--es-shadow-sm);
+}
+.pro-window-panel .iop-panel>header h2 { color:var(--es-brand-900); font-size:18px; }
+.pro-window-panel .iop-panel>header p { color:var(--es-muted); font-size:12px; line-height:1.55; }
+.pro-window-panel .iop-button.primary {
+  min-height:40px; color:#fff; background:var(--es-primary-600);
+  border:1px solid var(--es-primary-600); border-radius:10px;
+}
+.iop-idcard-designer { margin-top:16px; }
+.iop-idcard-preview-stage { display:grid; justify-items:center; gap:14px; padding:18px; border:1px dashed #d8cce9; border-radius:14px; background:#faf8fd; }
+.iop-idcard-preview {
+  width:min(100%,420px); aspect-ratio:1.586; overflow:hidden; display:flex; flex-direction:column;
+  border:1px solid #dee6e2; border-radius:15px;
+  background:linear-gradient(145deg,#fff 0%,#f3f8f6 100%);
+  box-shadow:0 14px 30px rgba(39,27,61,.12);
+}
+.iop-idcard-preview>header {
+  display:flex; align-items:center; gap:11px; padding:12px 14px;
+  color:#fff; background:linear-gradient(105deg,#193e4b,#28716e);
+}
+.iop-idcard-preview>header img { width:42px;height:42px;object-fit:contain;padding:3px;border-radius:8px;background:#fff; }
+.iop-idcard-preview>header span { min-width:0;display:grid;gap:4px; }
+.iop-idcard-preview>header b { color:#fff;font-size:13px;line-height:1.25; }
+.iop-idcard-preview>header small { color:#e5efeb;font-size:9px;font-weight:800;letter-spacing:1px; }
+.iop-idcard-preview>section {
+  display:grid;grid-template-columns:64px minmax(0,1fr) 74px;align-items:center;gap:13px;
+  flex:1;padding:13px 15px;
+}
+.iop-idcard-avatar {
+  width:60px;height:72px;display:grid;place-items:center;border:1px solid #c8ddd5;
+  border-radius:10px;color:#fff;background:linear-gradient(145deg,#28716e,#4e8c84);
+  font-size:22px;font-weight:900;
+}
+.iop-idcard-info { min-width:0;display:grid;gap:5px; }
+.iop-idcard-info strong { color:#193e4b;font-size:14px;line-height:1.25;overflow-wrap:anywhere; }
+.iop-idcard-info small { color:#657570;font-size:10px;line-height:1.3;overflow-wrap:anywhere; }
+.iop-idcard-qr { width:70px;height:70px;object-fit:contain;padding:3px;border:1px solid #dee6e2;border-radius:7px;background:#fff; }
+.iop-idcard-preview>footer {
+  display:flex;justify-content:space-between;gap:10px;padding:8px 13px;color:#fff;background:#193e4b;
+  font-size:9px;font-weight:800;letter-spacing:.6px;
+}
+.iop-idcard-actions { display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center; }
+.iop-idcard-actions>span { color:var(--es-muted);font-size:11px; }
+@media(max-width:560px) {
+  .iop-idcard-preview>section { grid-template-columns:50px minmax(0,1fr) 58px;gap:8px;padding:9px; }
+  .iop-idcard-avatar { width:48px;height:58px;font-size:18px; }
+  .iop-idcard-qr { width:56px;height:56px; }
+  .iop-idcard-preview>header b { font-size:11px; }
+  .iop-idcard-info strong { font-size:12px; }
+}
+
+
+/* All refresh controls are a consistent primary action, regardless of workspace. */
+.pro-window-panel button:has(svg.lucide-refresh-cw),
+.pro-window-panel button:has(svg.lucide-refresh-ccw) {
+  min-height:44px;
+  padding:0 18px;
+  color:#fff;
+  background:var(--es-primary-600);
+  border:1px solid var(--es-primary-600);
+  border-radius:11px;
+  box-shadow:0 6px 16px rgba(96,53,181,.2);
+  font-size:13px;
+  font-weight:850;
+}
+.pro-window-panel button:has(svg.lucide-refresh-cw):hover,
+.pro-window-panel button:has(svg.lucide-refresh-ccw):hover {
+  color:#fff;background:var(--es-primary-700);border-color:var(--es-primary-700);
+}
+.pro-window-panel .gov-heading>.gov-button {
+  min-height:46px;padding:0 20px;color:#fff;background:var(--es-primary-600);
+  border:1px solid var(--es-primary-600);border-radius:12px;font-size:14px;font-weight:850;
+  box-shadow:0 6px 16px rgba(96,53,181,.2);
+}
+.pro-window-panel .iop-heading { align-items:center; }
+.pro-window-panel .iop-heading h1 { color:var(--es-ink);font-size:clamp(26px,2.3vw,32px);font-weight:850; }
+.pro-window-panel .iop-heading>div>span { color:var(--es-muted);font-size:10px;font-weight:850;letter-spacing:1.3px; }
+.pro-window-panel .iop-panel .iop-kpis article { border:1px solid var(--es-line);border-radius:12px;background:#fafcfb; }
+
+
+/* Attendance cards: QR payloads match the existing roster scanner's admission/employee lookup. */
+.pro-window-panel .ed360-attendance-card-grid { gap:16px; }
+.pro-window-panel .ed360-print-id-card {
+  overflow:hidden; min-height:164px; color:var(--es-ink);
+  border:1px solid #dee6e2; border-radius:15px;
+  background:linear-gradient(145deg,#fff 0%,#f3f8f6 100%);
+  box-shadow:0 9px 24px rgba(39,27,61,.085);
+}
+.pro-window-panel .ed360-print-id-head {
+  padding:13px 15px;color:#fff;
+  background:linear-gradient(105deg,#193e4b,#28716e);
+}
+.pro-window-panel .ed360-print-id-head b { color:#fff;font-size:13px;line-height:1.25; }
+.pro-window-panel .ed360-print-id-head small { color:#e3efec;font-size:9px;font-weight:800;letter-spacing:.9px; }
+.pro-window-panel .ed360-print-id-body {
+  display:grid;grid-template-columns:54px minmax(0,1fr) 62px;
+  gap:12px;align-items:center;padding:12px 14px;
+}
+.pro-window-panel .ed360-print-id-photo {
+  width:52px;height:64px;display:grid;place-items:center;
+  border:1px solid #c8ddd5;border-radius:10px;color:#fff;
+  background:linear-gradient(145deg,#28716e,#4e8c84);font-size:21px;font-weight:900;
+}
+.pro-window-panel .ed360-print-id-details { min-width:0;display:grid;gap:4px; }
+.pro-window-panel .ed360-print-id-details h3 { margin:0;color:#193e4b;font-size:14px;line-height:1.25; }
+.pro-window-panel .ed360-print-id-details p { margin:0;color:#657570;font-size:10px; }
+.pro-window-panel .ed360-print-id-details b { color:#1d5a5a;font-size:11px;letter-spacing:.3px; }
+.pro-window-panel .ed360-print-id-details small { color:#657570;font-size:9px;line-height:1.25;overflow-wrap:anywhere; }
+.pro-window-panel .ed360-print-id-qr {
+  width:60px;height:60px;object-fit:contain;padding:3px;
+  border:1px solid #dee6e2;border-radius:8px;background:#fff;
+}
+.pro-window-panel .ed360-print-id-foot {
+  display:flex;justify-content:space-between;gap:8px;padding:8px 13px;
+  color:#fff;background:#193e4b;font-size:9px;font-weight:800;letter-spacing:.5px;
+}
+@media(max-width:600px) {
+  .pro-window-panel .ed360-print-id-body { grid-template-columns:46px minmax(0,1fr) 50px;gap:8px;padding:9px; }
+  .pro-window-panel .ed360-print-id-photo { width:44px;height:54px;font-size:18px; }
+  .pro-window-panel .ed360-print-id-qr { width:48px;height:48px; }
+}
+
+
+.pro-window-panel .ed360-integration-heading {
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  color:var(--es-ink);background:transparent;border:0;border-bottom:1px solid var(--es-line);
+  border-radius:0;box-shadow:none;padding:4px 2px 16px;margin:0 0 18px;
+}
+.pro-window-panel .ed360-integration-heading h1 {
+  margin:5px 0 0;color:var(--es-ink);font-size:clamp(26px,2.3vw,32px);
+  line-height:1.18;font-weight:850;letter-spacing:-.7px;
+}
+.pro-window-panel .ed360-integration-heading>div>span {
+  color:var(--es-muted);font-size:10px;font-weight:850;letter-spacing:1.2px;
+}
+.pro-window-panel .ed360-integration-card {
+  border:1px solid var(--es-line);border-radius:16px;background:#fff;box-shadow:var(--es-shadow-sm);
+}
+.pro-window-panel .ed360-integration-card h2 { color:var(--es-brand-900);font-size:18px; }
+.pro-window-panel .ed360-integration-card p { color:var(--es-muted);font-size:13px;line-height:1.55; }
+.pro-window-panel .ed360-integration-card-foot .button {
+  min-height:40px;color:var(--es-primary-700);background:var(--es-primary-050);
+  border:1px solid #d3e3dd;border-radius:10px;font-weight:800;
+}
+.pro-window-panel .ed360-provider-setup-card,
+.pro-window-panel .ed360-data-card {
+  color:var(--es-ink);background:#fff;border:1px solid var(--es-line);
+  border-radius:16px;box-shadow:var(--es-shadow-sm);
+}
+.pro-window-panel .ed360-provider-setup-card>header {
+  display:flex;align-items:flex-start;justify-content:space-between;gap:16px;
+}
+.pro-window-panel .ed360-provider-setup-card>header h2,
+.pro-window-panel .ed360-provider-requirements h3 { color:var(--es-brand-900);font-size:18px; }
+.pro-window-panel .ed360-provider-setup-card>header p { color:var(--es-muted);font-size:13px;line-height:1.6; }
+.pro-window-panel .ed360-provider-requirements {
+  margin-top:18px;padding:18px;border:1px solid var(--es-line);border-radius:13px;background:#fafcfb;
+}
+.pro-window-panel .ed360-provider-requirements ol { margin:12px 0 0;padding-left:22px;display:grid;gap:10px;color:#1d2928;font-size:13px;line-height:1.55; }
+.pro-window-panel .ed360-provider-config {
+  display:grid;gap:8px;margin-top:14px;padding:16px;border-radius:12px;background:#f4f7f5;
+}
+.pro-window-panel .ed360-provider-config b { color:var(--es-brand-900);font-size:12px; }
+.pro-window-panel .ed360-provider-config code {
+  display:block;overflow-wrap:anywhere;padding:8px 10px;border-radius:8px;
+  color:#24525a;background:#fff;border:1px solid var(--es-line);font-size:11px;
+}
+.pro-window-panel .ed360-provider-config small { color:var(--es-muted);font-size:11px;line-height:1.55; }
+.pro-window-panel .ed360-provider-doc-link { display:inline-flex;margin-top:14px;color:var(--es-primary-700);font-weight:800;font-size:12px; }
+.pro-window-panel .iop-idcard-no-qr {
+  display:grid;place-items:center;width:70px;height:70px;padding:6px;
+  border:1px dashed #cad9d4;border-radius:7px;color:var(--es-muted);font-size:9px;text-align:center;
+}
+@media(max-width:600px) {
+  .pro-window-panel .ed360-provider-setup-card>header { flex-direction:column; }
+  .pro-window-panel .ed360-integration-heading { align-items:flex-start;flex-direction:column; }
+}
+
+
+/* Administration / Institute Profile — identity, contact and public profile. */
+.pro-window-panel .gov-stage { color:var(--es-ink); }
+.pro-window-panel .ed360-admin-profile-v2 {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(300px,360px);
+  align-items:start;
+  gap:16px;
+}
+.pro-window-panel .ed360-admin-profile-nav {
+  grid-column:1/-1;
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  padding:7px;border:1px solid var(--es-line);border-radius:14px;background:#fff;
+  box-shadow:var(--es-shadow-sm);
+}
+.pro-window-panel .ed360-admin-profile-nav a {
+  display:inline-flex;align-items:center;gap:8px;min-height:38px;padding:0 14px;
+  color:#536b67;text-decoration:none;font-size:12px;font-weight:800;
+  border-radius:10px;transition:background .15s ease,color .15s ease;
+}
+.pro-window-panel .ed360-admin-profile-nav a:hover,
+.pro-window-panel .ed360-admin-profile-nav a:focus-visible {
+  color:var(--es-primary-700);background:var(--es-primary-050);outline:none;
+}
+.pro-window-panel .ed360-admin-profile-form-v2 { display:grid;gap:15px;min-width:0; }
+.pro-window-panel .ed360-profile-section {
+  scroll-margin-top:22px;padding:20px 21px;
+}
+.pro-window-panel .ed360-profile-section>header {
+  display:flex;align-items:flex-start;justify-content:space-between;gap:14px;
+  padding-bottom:14px;margin-bottom:17px;border-bottom:1px solid var(--es-line-soft);
+}
+.pro-window-panel .ed360-profile-section>header h2 {
+  margin:4px 0 5px;color:var(--es-brand-900);font-size:19px;line-height:1.25;font-weight:850;
+}
+.pro-window-panel .ed360-profile-section>header p {
+  margin:0;color:var(--es-muted);font-size:12px;line-height:1.55;
+}
+.pro-window-panel .ed360-profile-kicker {
+  color:var(--es-primary-700);font-size:9px;font-weight:900;letter-spacing:1.35px;
+}
+.pro-window-panel .ed360-profile-index {
+  display:grid;place-items:center;width:35px;height:35px;flex:0 0 35px;
+  color:var(--es-primary-700);background:var(--es-primary-050);
+  border:1px solid #e3efec;border-radius:11px;font-size:12px;font-weight:900;
+}
+.pro-window-panel .ed360-profile-identity-grid,
+.pro-window-panel .ed360-profile-contact-grid,
+.pro-window-panel .ed360-profile-public-grid {
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 16px;
+}
+.pro-window-panel .ed360-profile-span { grid-column:1/-1; }
+.pro-window-panel .ed360-profile-logo-field {
+  grid-column:1/-1;display:flex;align-items:center;gap:15px;flex-wrap:wrap;
+  padding:14px;border:1px dashed #dee6e2;border-radius:13px;background:#fafcfb;
+}
+.pro-window-panel .ed360-profile-logo-preview {
+  display:grid;place-items:center;width:76px;height:76px;flex:0 0 76px;overflow:hidden;
+  color:var(--es-primary-700);background:#fff;border:1px solid var(--es-line);
+  border-radius:14px;font-size:28px;font-weight:900;
+}
+.pro-window-panel .ed360-profile-logo-preview img {
+  width:100%;height:100%;object-fit:contain;padding:5px;
+}
+.pro-window-panel .ed360-profile-logo-copy { display:grid;justify-items:start;gap:6px; }
+.pro-window-panel .ed360-profile-logo-copy b { color:var(--es-brand-900);font-size:13px; }
+.pro-window-panel .ed360-profile-logo-copy small { color:var(--es-muted);font-size:11px; }
+.pro-window-panel .ed360-profile-upload {
+  min-height:36px!important;padding:0 12px!important;
+  color:var(--es-primary-700)!important;background:#fff!important;
+  border:1px solid #d7e6df!important;border-radius:9px!important;box-shadow:none!important;
+  cursor:pointer;
+}
+.pro-window-panel .ed360-profile-clear-file {
+  border:0;background:transparent;color:var(--es-danger);font-size:11px;font-weight:800;cursor:pointer;
+}
+.pro-window-panel .ed360-profile-public-note {
+  display:flex;align-items:flex-start;gap:9px;margin-top:15px;padding:12px 13px;
+  border:1px solid #dfece8;border-radius:11px;background:#f5faf8;
+  color:#356d60;font-size:11px;line-height:1.55;
+}
+.pro-window-panel .ed360-profile-public-note svg { flex:0 0 auto;margin-top:1px; }
+.pro-window-panel .ed360-profile-savebar {
+  display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  padding:14px 16px;border:1px solid #dee6e2;border-radius:14px;background:#fafcfb;
+}
+.pro-window-panel .ed360-profile-savebar>span {
+  display:inline-flex;align-items:center;gap:8px;color:var(--es-muted);font-size:11px;font-weight:700;
+}
+.pro-window-panel .ed360-profile-savebar .gov-button.primary {
+  min-height:46px;padding:0 19px;color:#fff;background:var(--es-primary-600);
+  border:1px solid var(--es-primary-600);border-radius:11px;font-size:13px;font-weight:850;
+  box-shadow:0 7px 17px rgba(96,53,181,.2);
+}
+.pro-window-panel .ed360-profile-preview-panel {
+  position:sticky;top:18px;min-width:0;padding:18px;
+  border:1px solid var(--es-line);border-radius:17px;background:#fff;box-shadow:var(--es-shadow-md);
+}
+.pro-window-panel .ed360-profile-preview-heading {
+  display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:13px;
+}
+.pro-window-panel .ed360-profile-preview-heading h2 {
+  margin:4px 0 0;color:var(--es-brand-900);font-size:17px;font-weight:850;
+}
+.pro-window-panel .ed360-profile-preview-state {
+  padding:5px 9px;border:1px solid #d3e3dd;border-radius:999px;
+  color:var(--es-primary-700);background:var(--es-primary-050);font-size:9px;font-weight:900;
+}
+.pro-window-panel .ed360-profile-public-card {
+  overflow:hidden;border:1px solid #dee6e2;border-radius:15px;
+  background:linear-gradient(145deg,#fff 0%,#fafcfb 100%);
+}
+.pro-window-panel .ed360-profile-card-accent {
+  height:7px;background:linear-gradient(90deg,#193e4b 0%,#28716e 68%,#28716e 100%);
+}
+.pro-window-panel .ed360-profile-public-card>header {
+  display:flex;align-items:center;gap:12px;padding:17px 15px 13px;
+}
+.pro-window-panel .ed360-profile-card-logo {
+  display:grid;place-items:center;width:62px;height:62px;flex:0 0 62px;overflow:hidden;
+  border:1px solid var(--es-line);border-radius:12px;background:#fff;
+  color:var(--es-primary-700);font-size:24px;font-weight:900;
+}
+.pro-window-panel .ed360-profile-card-logo img { width:100%;height:100%;object-fit:contain;padding:4px; }
+.pro-window-panel .ed360-profile-public-card>header>div:last-child { min-width:0; }
+.pro-window-panel .ed360-profile-public-card>header>div:last-child>span {
+  color:var(--es-primary-700);font-size:8px;font-weight:900;letter-spacing:1.15px;
+}
+.pro-window-panel .ed360-profile-public-card h3 {
+  margin:4px 0;color:var(--es-brand-900);font-size:15px;line-height:1.3;font-weight:900;overflow-wrap:anywhere;
+}
+.pro-window-panel .ed360-profile-public-card>header p {
+  margin:0;color:var(--es-muted);font-size:10px;
+}
+.pro-window-panel .ed360-profile-card-tagline {
+  margin:0 15px 14px;color:#536b67;font-size:11px;line-height:1.55;
+}
+.pro-window-panel .ed360-profile-card-details {
+  display:grid;gap:0;padding:0 15px;
+}
+.pro-window-panel .ed360-profile-card-details>div {
+  display:grid;gap:4px;padding:10px 0;border-top:1px solid var(--es-line-soft);
+}
+.pro-window-panel .ed360-profile-card-details small {
+  color:var(--es-subtle);font-size:8px;font-weight:900;letter-spacing:1px;
+}
+.pro-window-panel .ed360-profile-card-details b {
+  color:var(--es-ink);font-size:11px;font-weight:750;line-height:1.45;overflow-wrap:anywhere;
+}
+.pro-window-panel .ed360-profile-public-card>footer {
+  display:flex;justify-content:space-between;gap:8px;margin-top:7px;padding:11px 15px;
+  color:#e5efeb;background:var(--es-brand-900);font-size:8px;font-weight:800;letter-spacing:.55px;
+}
+.pro-window-panel .ed360-profile-preview-caption {
+  margin:11px 1px 0;color:var(--es-muted);font-size:10px;line-height:1.5;
+}
+@media(max-width:1100px) {
+  .pro-window-panel .ed360-admin-profile-v2 { grid-template-columns:minmax(0,1fr); }
+  .pro-window-panel .ed360-admin-profile-nav { grid-column:auto; }
+  .pro-window-panel .ed360-profile-preview-panel { position:static; }
+}
+@media(max-width:640px) {
+  .pro-window-panel .ed360-admin-profile-nav { display:grid;grid-template-columns:1fr; }
+  .pro-window-panel .ed360-admin-profile-nav a { width:100%; }
+  .pro-window-panel .ed360-profile-section { padding:15px; }
+  .pro-window-panel .ed360-profile-identity-grid,
+  .pro-window-panel .ed360-profile-contact-grid,
+  .pro-window-panel .ed360-profile-public-grid { grid-template-columns:minmax(0,1fr); }
+  .pro-window-panel .ed360-profile-span { grid-column:auto; }
+  .pro-window-panel .ed360-profile-savebar { align-items:stretch;flex-direction:column; }
+  .pro-window-panel .ed360-profile-savebar .gov-button { width:100%;justify-content:center; }
+}
+
+
+/* Academic workspace: one clear page heading, no duplicate hero copy, and a primary refresh action. */
+.pro-window-panel .ed360-academic-page { color:var(--es-ink); }
+.pro-window-panel .ed360-academic-heading {
+  align-items:center;justify-content:space-between;gap:16px;
+  padding:4px 2px 16px;border:0;border-bottom:1px solid var(--es-line);
+  border-radius:0;background:transparent;box-shadow:none;
+}
+.pro-window-panel .ed360-academic-heading-copy>span {
+  color:var(--es-muted);font-size:10px;font-weight:850;letter-spacing:1.15px;line-height:1.5;
+}
+.pro-window-panel .ed360-academic-heading-copy h1 {
+  margin:5px 0 0;color:var(--es-ink);font-size:clamp(26px,2.3vw,32px);
+  font-weight:850;letter-spacing:-.7px;line-height:1.18;
+}
+.pro-window-panel .ed360-academic-refresh {
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  min-height:46px;padding:0 20px;color:#fff;background:var(--es-primary-600);
+  border:1px solid var(--es-primary-600);border-radius:12px;
+  box-shadow:0 6px 16px rgba(96,53,181,.2);font-size:13px;font-weight:850;cursor:pointer;
+}
+.pro-window-panel .ed360-academic-refresh:hover { color:#fff;background:var(--es-primary-700);border-color:var(--es-primary-700); }
+.pro-window-panel .ed360-academic-refresh:disabled { opacity:.6;cursor:wait; }
+.pro-window-panel .ed360-academic-nav button {
+  min-height:52px;color:#536b67;background:#fff;border:1px solid var(--es-line);
+  border-radius:12px;font-size:11px;
+}
+.pro-window-panel .ed360-academic-nav button.active {
+  color:var(--es-primary-700);background:var(--es-primary-050);
+  border-color:#d6e4de;box-shadow:inset 0 0 0 1px rgba(96,53,181,.08);
+}
+.pro-window-panel .ed360-academic-nav-number {
+  color:var(--es-primary-700);background:#f4f7f5;border-radius:8px;
+}
+.pro-window-panel .ed360-academic-workspace {
+  padding:17px;border:1px solid var(--es-line);border-radius:16px;
+  background:#fff;box-shadow:var(--es-shadow-sm);
+}
+.pro-window-panel .ed360-academic-mode-tabs {
+  border-bottom:1px solid var(--es-line);
+}
+.pro-window-panel .ed360-academic-mode-tabs button {
+  color:var(--es-muted);font-size:12px;font-weight:800;
+}
+.pro-window-panel .ed360-academic-mode-tabs button.active {
+  color:var(--es-primary-700);border-color:var(--es-primary-600);
+}
+.pro-window-panel .ed360-academic-toolbar-copy strong { color:var(--es-brand-900);font-size:14px; }
+.pro-window-panel .ed360-academic-toolbar-copy span { color:var(--es-muted);font-size:11px;line-height:1.5; }
+.pro-window-panel .ed360-academic-primary {
+  min-height:42px;color:#fff;background:var(--es-primary-600);
+  border:1px solid var(--es-primary-600);border-radius:10px;font-weight:850;
+}
+.pro-window-panel .ed360-academic-primary:hover { color:#fff;background:var(--es-primary-700); }
+.pro-window-panel .ed360-academic-secondary {
+  min-height:39px;color:#536b67;background:#fff;border:1px solid var(--es-line);
+  border-radius:9px;font-weight:750;
+}
+.pro-window-panel .ed360-academic-table-wrap {
+  border:1px solid var(--es-line);border-radius:12px;
+}
+.pro-window-panel .ed360-academic-table th {
+  color:#657570;background:#f3f8f6;border-bottom:1px solid var(--es-line);
+}
+.pro-window-panel .ed360-academic-table td { color:#1d2928;border-bottom:1px solid var(--es-line-soft); }
+.pro-window-panel .ed360-academic-online-control {
+  border:1px solid #dee6e2;border-radius:12px;background:#fafcfb;
+}
+@media(max-width:800px) {
+  .pro-window-panel .ed360-academic-heading { align-items:flex-start;flex-direction:column; }
+  .pro-window-panel .ed360-academic-refresh { width:100%; }
+}
+
+/* People & HR and Faculty workspaces use the shared institutional heading and button hierarchy. */
+.pro-window-panel .staff-workspace-heading {
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding:4px 2px 16px;border:0;border-bottom:1px solid var(--es-line);
+  border-radius:0;background:transparent;box-shadow:none;
+}
+.pro-window-panel .staff-workspace-heading .staff-kicker {
+  color:var(--es-muted);font-size:10px;font-weight:850;letter-spacing:1.15px;line-height:1.5;
+}
+.pro-window-panel .staff-workspace-heading h1 {
+  margin:5px 0 0;color:var(--es-ink);font-size:clamp(26px,2.3vw,32px);
+  line-height:1.18;font-weight:850;letter-spacing:-.7px;
+}
+.pro-window-panel .staff-heading-actions { display:flex;align-items:center;gap:9px;flex-wrap:wrap; }
+.pro-window-panel .staff-workspace-heading .staff-button-primary {
+  min-height:44px;padding:0 18px;color:#fff;background:var(--es-primary-600);
+  border:1px solid var(--es-primary-600);border-radius:11px;
+  box-shadow:0 6px 16px rgba(96,53,181,.18);font-size:13px;font-weight:850;
+}
+.pro-window-panel .staff-workspace-heading .staff-button-primary:hover {
+  color:#fff;background:var(--es-primary-700);border-color:var(--es-primary-700);
+}
+.pro-window-panel .staff-workspace-heading .staff-button-outline {
+  min-height:42px;padding:0 15px;color:var(--es-primary-700);background:#fff;
+  border:1px solid #dee6e2;border-radius:10px;font-size:12px;font-weight:800;
+}
+.pro-window-panel .people-hr-subnav {
+  display:flex;gap:7px;flex-wrap:wrap;padding:7px;border:1px solid var(--es-line);
+  border-radius:13px;background:#fff;box-shadow:var(--es-shadow-sm);
+}
+.pro-window-panel .people-hr-subnav button {
+  min-height:40px;padding:0 14px;color:var(--es-muted);background:transparent;border-radius:9px;
+  font-size:11px;font-weight:800;
+}
+.pro-window-panel .people-hr-subnav button.active {
+  color:var(--es-primary-700);background:var(--es-primary-050);
+  box-shadow:inset 0 0 0 1px #d6e4de;
+}
+.pro-window-panel .people-hr-data-panel,
+.pro-window-panel .staff-panel {
+  color:var(--es-ink);background:#fff;border:1px solid var(--es-line);
+  border-radius:16px;box-shadow:var(--es-shadow-sm);
+}
+.pro-window-panel .people-hr-data-panel>header h2,
+.pro-window-panel .staff-panel>header h2 { color:var(--es-brand-900);font-size:17px;font-weight:850; }
+.pro-window-panel .people-hr-data-panel>header p,
+.pro-window-panel .staff-panel>header p { color:var(--es-muted);font-size:11px;line-height:1.55; }
+.pro-window-panel .staff-id-card-print {
+  border:1px solid #dee6e2;border-radius:15px;
+  background:linear-gradient(145deg,#fff 0%,#f3f8f6 100%);
+  color:var(--es-ink);box-shadow:var(--es-shadow-md);
+}
+.pro-window-panel .staff-id-card-brand {
+  background:linear-gradient(105deg,#193e4b,#28716e);
+}
+.pro-window-panel .staff-id-card-brand strong { color:#fff; }
+.pro-window-panel .staff-id-card-brand small { color:#e3efec; }
+.pro-window-panel .staff-id-card-info { min-width:0;display:grid;gap:7px; }
+.pro-window-panel .staff-id-card-info strong { color:var(--es-brand-900);font-size:19px;line-height:1.2;overflow-wrap:anywhere; }
+.pro-window-panel .staff-id-card-info small { color:var(--es-muted);font-size:10px;line-height:1.3; }
+.pro-window-panel .staff-id-card-qr { display:grid;justify-items:center;gap:5px; }
+.pro-window-panel .staff-id-card-qr>small { color:var(--es-muted);font-size:7px;font-weight:900;letter-spacing:.6px;text-align:center; }
+.pro-window-panel .staff-id-card-footer { color:var(--es-muted);border-top:1px solid var(--es-line); }
+.pro-window-panel .staff-id-card-footer b { color:var(--es-primary-700); }
+@media(max-width:720px) {
+  .pro-window-panel .staff-workspace-heading { align-items:flex-start;flex-direction:column; }
+  .pro-window-panel .staff-heading-actions { width:100%; }
+}
+
+
+/* Attendance uses the same plain page heading and primary refresh control as all modules. */
+.pro-window-panel .ed360-attendance-hero {
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding:4px 2px 16px;margin:0 0 18px;border:0;border-bottom:1px solid var(--es-line);
+  border-radius:0;background:transparent;box-shadow:none;
+}
+.pro-window-panel .ed360-attendance-hero>div>span {
+  color:var(--es-muted);font-size:10px;font-weight:850;letter-spacing:1.1px;line-height:1.5;
+}
+.pro-window-panel .ed360-attendance-hero h1 {
+  margin:5px 0 0;color:var(--es-ink);font-size:clamp(26px,2.3vw,32px);
+  line-height:1.18;font-weight:850;letter-spacing:-.7px;
+}
+.pro-window-panel .ed360-attendance-refresh {
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:46px;
+  padding:0 20px;color:#fff;background:var(--es-primary-600);
+  border:1px solid var(--es-primary-600);border-radius:12px;
+  box-shadow:0 6px 16px rgba(96,53,181,.2);font-size:13px;font-weight:850;cursor:pointer;
+}
+.pro-window-panel .ed360-attendance-refresh:hover { color:#fff;background:var(--es-primary-700);border-color:var(--es-primary-700); }
+.pro-window-panel .ed360-attendance-refresh:disabled { opacity:.6;cursor:wait; }
+.pro-window-panel .ed360-attendance-main-tabs {
+  display:flex;flex-wrap:wrap;gap:7px;padding:7px;border:1px solid var(--es-line);
+  border-radius:13px;background:#fff;box-shadow:var(--es-shadow-sm);
+}
+.pro-window-panel .ed360-attendance-main-tabs button {
+  min-height:40px;padding:0 14px;color:var(--es-muted);background:transparent;border-radius:9px;
+  font-size:11px;font-weight:800;
+}
+.pro-window-panel .ed360-attendance-main-tabs button.active {
+  color:var(--es-primary-700);background:var(--es-primary-050);
+  box-shadow:inset 0 0 0 1px #d6e4de;
+}
+.pro-window-panel .ed360-attendance-board {
+  border:1px solid var(--es-line);border-radius:16px;background:#fff;box-shadow:var(--es-shadow-sm);
+}
+.pro-window-panel .ed360-attendance-board-head h2 { color:var(--es-brand-900);font-size:17px;font-weight:850; }
+.pro-window-panel .ed360-attendance-board-head p { color:var(--es-muted);font-size:11px;line-height:1.55; }
+@media(max-width:700px) {
+  .pro-window-panel .ed360-attendance-hero { align-items:flex-start;flex-direction:column; }
+  .pro-window-panel .ed360-attendance-refresh { width:100%; }
+}
+
+
+/* Examinations: task-selected page title and one prominent refresh action. */
+.pro-window-panel .ed360-assess-hero {
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding:4px 2px 16px;margin:0 0 18px;border:0;border-bottom:1px solid var(--es-line);
+  border-radius:0;background:transparent;box-shadow:none;
+}
+.pro-window-panel .ed360-assess-hero>div>span {
+  color:var(--es-muted);font-size:10px;font-weight:850;letter-spacing:1.1px;line-height:1.5;
+}
+.pro-window-panel .ed360-assess-hero h1 {
+  margin:5px 0 0;color:var(--es-ink);font-size:clamp(26px,2.3vw,32px);
+  line-height:1.18;font-weight:850;letter-spacing:-.7px;
+}
+.pro-window-panel .ed360-assess-refresh {
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:46px;
+  padding:0 20px;color:#fff;background:var(--es-primary-600);
+  border:1px solid var(--es-primary-600);border-radius:12px;
+  box-shadow:0 6px 16px rgba(96,53,181,.2);font-size:13px;font-weight:850;cursor:pointer;
+}
+.pro-window-panel .ed360-assess-refresh:hover { color:#fff;background:var(--es-primary-700);border-color:var(--es-primary-700); }
+.pro-window-panel .ed360-assess-refresh:disabled { opacity:.6;cursor:wait; }
+.pro-window-panel .ed360-assess-tabs {
+  display:flex;flex-wrap:wrap;gap:7px;padding:7px;border:1px solid var(--es-line);
+  border-radius:13px;background:#fff;box-shadow:var(--es-shadow-sm);
+}
+.pro-window-panel .ed360-assess-tabs button {
+  min-height:40px;padding:0 13px;color:var(--es-muted);background:transparent;
+  border:0;border-radius:9px;font-size:11px;font-weight:800;
+}
+.pro-window-panel .ed360-assess-tabs button.active {
+  color:var(--es-primary-700);background:var(--es-primary-050);
+  box-shadow:inset 0 0 0 1px #d6e4de;
+}
+.pro-window-panel .ed360-assess-panel {
+  color:var(--es-ink);background:#fff;border:1px solid var(--es-line);
+  border-radius:16px;box-shadow:var(--es-shadow-sm);
+}
+.pro-window-panel .ed360-assess-panel-head h3 { color:var(--es-brand-900);font-size:17px;font-weight:850; }
+.pro-window-panel .ed360-assess-panel-head p { color:var(--es-muted);font-size:11px;line-height:1.55; }
+.pro-window-panel .ed360-assess-table-wrap { border:1px solid var(--es-line);border-radius:12px; }
+.pro-window-panel .ed360-assess-table-wrap th { color:#657570;background:#f3f8f6;border-bottom:1px solid var(--es-line); }
+.pro-window-panel .ed360-assess-table-wrap td { color:#1d2928;border-bottom:1px solid var(--es-line-soft); }
+
+/* Finance pages: each finance window is the page title, not a duplicate context card. */
+.pro-window-panel .fin-page-heading {
+  align-items:center;gap:16px;padding:4px 2px 16px;margin:0 0 18px;
+  color:var(--es-ink);background:transparent;border:0;border-bottom:1px solid var(--es-line);
+  border-radius:0;box-shadow:none;
+}
+.pro-window-panel .fin-page-heading>div>span {
+  color:var(--es-muted);font-size:10px;font-weight:850;letter-spacing:1.1px;line-height:1.5;
+}
+.pro-window-panel .fin-page-heading h1 {
+  margin:5px 0 0;color:var(--es-ink);font-size:clamp(26px,2.3vw,32px);
+  line-height:1.18;font-weight:850;letter-spacing:-.7px;
+}
+.pro-window-panel .fin-top-refresh {
+  min-height:46px;padding:0 20px;color:#fff;background:var(--es-primary-600);
+  border:1px solid var(--es-primary-600);border-radius:12px;
+  box-shadow:0 6px 16px rgba(96,53,181,.2);font-size:13px;font-weight:850;
+}
+.pro-window-panel .fin-top-refresh:hover { color:#fff;background:var(--es-primary-700);border-color:var(--es-primary-700); }
+.pro-window-panel .fin-top-refresh:disabled { opacity:.6;cursor:wait; }
+.pro-window-panel .fin-window-nav {
+  display:flex;flex-wrap:wrap;gap:7px;padding:7px;border:1px solid var(--es-line);
+  border-radius:13px;background:#fff;box-shadow:var(--es-shadow-sm);
+}
+.pro-window-panel .fin-window-nav button {
+  min-height:40px;padding:0 13px;color:var(--es-muted);background:transparent;
+  border:0;border-radius:9px;font-size:11px;font-weight:800;
+}
+.pro-window-panel .fin-window-nav button.active {
+  color:var(--es-primary-700);background:var(--es-primary-050);
+  box-shadow:inset 0 0 0 1px #d6e4de;
+}
+.pro-window-panel .fin-export-bar {
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 12px;
+  border:1px solid var(--es-line);border-radius:12px;background:#fff;
+}
+.pro-window-panel .fin-export-bar>span { color:var(--es-muted);font-size:11px;font-weight:800;margin-right:auto; }
+.pro-window-panel .fin-panel {
+  color:var(--es-ink);background:#fff;border:1px solid var(--es-line);
+  border-radius:16px;box-shadow:var(--es-shadow-sm);
+}
+.pro-window-panel .fin-panel>header h2 { color:var(--es-brand-900);font-size:17px;font-weight:850; }
+.pro-window-panel .fin-panel>header p { color:var(--es-muted);font-size:11px;line-height:1.55; }
+.pro-window-panel .fin-button.primary {
+  color:#fff;background:var(--es-primary-600);border:1px solid var(--es-primary-600);
+  border-radius:10px;font-weight:850;
+}
+.pro-window-panel .fin-button.primary:hover { color:#fff;background:var(--es-primary-700); }
+.pro-window-panel .fin-button:not(.primary):not(.danger) {
+  color:#536b67;background:#fff;border-color:var(--es-line);border-radius:9px;
+}
+.pro-window-panel .fin-panel th { color:#657570;background:#f3f8f6;border-bottom:1px solid var(--es-line); }
+.pro-window-panel .fin-panel td { color:#1d2928;border-bottom:1px solid var(--es-line-soft); }
+.pro-window-panel .fin-select-card { color:var(--es-ink);border-color:var(--es-line);border-radius:11px; }
+.pro-window-panel .fin-select-card.selected { border-color:#c8ddd5;background:var(--es-primary-050);box-shadow:inset 3px 0 var(--es-primary-600); }
+.pro-window-panel .fin-journal-lines { border-color:var(--es-line);background:#fafcfb; }
+.pro-window-panel .fin-balance-check { background:#f4f7f5;color:#526b66; }
+.pro-window-panel .fin-balance-check b { color:var(--es-brand-900); }
+@media(max-width:700px) {
+  .pro-window-panel .ed360-assess-hero,.pro-window-panel .fin-page-heading {
+    align-items:flex-start;flex-direction:column;
+  }
+  .pro-window-panel .ed360-assess-refresh,.pro-window-panel .fin-top-refresh { width:100%; }
+  .pro-window-panel .fin-export-bar { align-items:stretch; }
+  .pro-window-panel .fin-export-bar button { flex:1 1 calc(50% - 8px); }
+}
+
+
+/* Behaviour & Skills: current submenu is the title; permissions and actions stay visible. */
+.pro-window-panel .ed360-behaviour-header {
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding:4px 2px 16px;margin:0 0 18px;border:0;border-bottom:1px solid var(--es-line);
+  border-radius:0;background:transparent;box-shadow:none;
+}
+.pro-window-panel .ed360-behaviour-header>div>span {
+  color:var(--es-muted);font-size:10px;font-weight:850;letter-spacing:1.1px;line-height:1.5;
+}
+.pro-window-panel .ed360-behaviour-header h1 {
+  margin:5px 0 0;color:var(--es-ink);font-size:clamp(26px,2.3vw,32px);
+  line-height:1.18;font-weight:850;letter-spacing:-.7px;
+}
+.pro-window-panel .ed360-behaviour-header-actions { display:flex;align-items:center;gap:9px;flex-wrap:wrap; }
+.pro-window-panel .ed360-behaviour-header-actions .button-primary,
+.pro-window-panel .ed360-front-office-refresh-top {
+  min-height:46px;padding:0 20px;color:#fff;background:var(--es-primary-600);
+  border:1px solid var(--es-primary-600);border-radius:12px;
+  box-shadow:0 6px 16px rgba(96,53,181,.2);font-size:13px;font-weight:850;
+}
+.pro-window-panel .ed360-behaviour-header-actions .button-primary:hover,
+.pro-window-panel .ed360-front-office-refresh-top:hover { color:#fff;background:var(--es-primary-700);border-color:var(--es-primary-700); }
+.pro-window-panel .ed360-behaviour-header-actions .button-outline {
+  min-height:42px;padding:0 15px;color:var(--es-primary-700);background:#fff;border:1px solid #dee6e2;border-radius:10px;font-size:12px;font-weight:800;
+}
+.pro-window-panel .ed360-front-office-hero {
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding:4px 2px 16px;margin:0 0 18px;border:0;border-bottom:1px solid var(--es-line);
+  border-radius:0;background:transparent;box-shadow:none;
+}
+.pro-window-panel .ed360-front-office-hero>div>span {
+  color:var(--es-muted);font-size:10px;font-weight:850;letter-spacing:1.1px;line-height:1.5;
+}
+.pro-window-panel .ed360-front-office-hero h1 {
+  margin:5px 0 0;color:var(--es-ink);font-size:clamp(26px,2.3vw,32px);
+  line-height:1.18;font-weight:850;letter-spacing:-.7px;
+}
+.pro-window-panel .ed360-front-office-result-count { color:var(--es-muted);font-size:11px;font-weight:800; }
+.pro-window-panel .ed360-front-office-panel { border:1px solid var(--es-line);border-radius:16px;background:#fff;box-shadow:var(--es-shadow-sm); }
+.pro-window-panel .ed360-front-office-refresh-top:disabled { opacity:.6;cursor:wait; }
+@media(max-width:700px) {
+  .pro-window-panel .ed360-behaviour-header,.pro-window-panel .ed360-front-office-hero { align-items:flex-start;flex-direction:column; }
+  .pro-window-panel .ed360-front-office-refresh-top { width:100%; }
+}
+
+
+/* Backup, restore and data-transfer centre uses the shared plain page heading. */
+.pro-window-panel .bdw-page-intro {
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding:4px 2px 16px;margin:0 0 18px;border:0;border-bottom:1px solid var(--es-line);
+  border-radius:0;background:transparent;box-shadow:none;
+}
+.pro-window-panel .bdw-page-intro .bdw-page-breadcrumb {
+  color:var(--es-muted);font-size:10px;font-weight:850;letter-spacing:1.1px;line-height:1.5;
+}
+.pro-window-panel .bdw-page-intro h1 {
+  margin:5px 0 0;color:var(--es-ink);font-size:clamp(26px,2.3vw,32px);
+  line-height:1.18;font-weight:850;letter-spacing:-.7px;
+}
+.pro-window-panel .bdw-page-intro .bdw-button.primary {
+  min-height:46px;padding:0 20px;color:#fff;background:var(--es-primary-600);
+  border:1px solid var(--es-primary-600);border-radius:12px;
+  box-shadow:0 6px 16px rgba(96,53,181,.2);font-size:13px;font-weight:850;
+}
+.pro-window-panel .bdw-page-intro .bdw-button.primary:hover { color:#fff;background:var(--es-primary-700); }
+@media(max-width:700px) {
+  .pro-window-panel .bdw-page-intro { align-items:flex-start;flex-direction:column; }
+  .pro-window-panel .bdw-page-intro .bdw-intro-action,
+  .pro-window-panel .bdw-page-intro .bdw-button { width:100%; }
+}
+
+/* Governance controls inherit the institutional palette, while semantic danger/warning states stay distinct. */
+.pro-window-panel .gov-button:not(.primary):not(.danger) {
+  color:var(--es-brand-800);
+  background:var(--es-surface);
+  border-color:var(--es-line);
+}
+.pro-window-panel .gov-button:not(.primary):not(.danger):hover {
+  color:var(--es-primary-700);
+  background:var(--es-primary-050);
+  border-color:#c8ddd5;
+}
+.pro-window-panel .gov-sort-header:hover { color:var(--es-primary-700); }
+.pro-window-panel .gov-sort-header:focus-visible {
+  outline:2px solid rgba(96,53,181,.45);
+  outline-offset:3px;
+}
+.pro-window-panel .gov-pagination { color:var(--es-muted); }
+.pro-window-panel .gov-note {
+  color:var(--es-muted);
+  background:var(--es-primary-050);
+  border:1px solid var(--es-line);
+}
+.pro-window-panel .gov-timeline article>i {
+  background:var(--es-teal-700);
+  box-shadow:0 0 0 4px var(--es-teal-100);
+}
+
+/* Administration approval register — compact filters with a responsive search field. */
+.pro-window-panel .ed360-admin-approval-filters {
+  display:grid;
+  grid-template-columns:minmax(150px,180px) minmax(150px,180px) auto minmax(220px,1fr);
+  align-items:end;
+  gap:10px;
+  margin:2px 0 15px;
+}
+.pro-window-panel .ed360-admin-approval-filters>label {
+  display:flex;flex-direction:column;gap:6px;
+  color:var(--es-muted);font-size:11px;font-weight:800;
+}
+.pro-window-panel .ed360-admin-approval-filters select {
+  width:100%;min-width:0;min-height:39px;padding:8px 10px;
+}
+.pro-window-panel .ed360-admin-approval-search {
+  display:flex!important;align-items:center;flex-direction:row!important;gap:8px!important;
+  min-width:0;min-height:39px;padding:0 11px;border:1px solid var(--es-line);
+  border-radius:10px;background:#fff;color:var(--es-muted);
+}
+.pro-window-panel .ed360-admin-approval-search input {
+  width:100%;min-width:0;min-height:36px;padding:6px 0;border:0;outline:0;box-shadow:none!important;
+}
+.pro-window-panel .ed360-admin-approval-search input:focus { border:0;outline:0;box-shadow:none!important; }
+.pro-window-panel .ed360-admin-approval-filters>button { min-height:39px; }
+.pro-window-panel .ed360-admin-approval-list .gov-decision-note p { margin:5px 0 0; }
+@media(max-width:900px) {
+  .pro-window-panel .ed360-admin-approval-filters { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .pro-window-panel .ed360-admin-approval-search { grid-column:1/-1; }
+}
+@media(max-width:560px) {
+  .pro-window-panel .ed360-admin-approval-filters { grid-template-columns:minmax(0,1fr); }
+  .pro-window-panel .ed360-admin-approval-search { grid-column:auto; }
+}
+
+/* Administration policy registers — audience-specific status and ordering controls. */
+.pro-window-panel .ed360-admin-policy-filters {
+  display:grid;
+  grid-template-columns:minmax(150px,180px) minmax(160px,200px) auto minmax(220px,1fr);
+  align-items:end;gap:10px;margin:2px 0 15px;
+}
+.pro-window-panel .ed360-admin-policy-filters>label {
+  display:flex;flex-direction:column;gap:6px;
+  color:var(--es-muted);font-size:11px;font-weight:800;
+}
+.pro-window-panel .ed360-admin-policy-filters select {
+  width:100%;min-width:0;min-height:39px;padding:8px 10px;
+}
+.pro-window-panel .ed360-admin-policy-search {
+  display:flex!important;align-items:center;flex-direction:row!important;gap:8px!important;
+  min-width:0;min-height:39px;padding:0 11px;border:1px solid var(--es-line);
+  border-radius:10px;background:#fff;color:var(--es-muted);
+}
+.pro-window-panel .ed360-admin-policy-search input {
+  width:100%;min-width:0;min-height:36px;padding:6px 0;border:0;outline:0;box-shadow:none!important;
+}
+.pro-window-panel .ed360-admin-policy-search input:focus { border:0;outline:0;box-shadow:none!important; }
+.pro-window-panel .ed360-admin-policy-filters>button { min-height:39px; }
+.pro-window-panel .ed360-admin-policy-card>header { align-items:flex-start; }
+.pro-window-panel .ed360-admin-policy-card details { color:var(--es-muted);font-size:11px; }
+.pro-window-panel .ed360-admin-policy-card details summary { cursor:pointer;font-weight:800; }
+@media(max-width:900px) {
+  .pro-window-panel .ed360-admin-policy-filters { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .pro-window-panel .ed360-admin-policy-search { grid-column:1/-1; }
+}
+@media(max-width:560px) {
+  .pro-window-panel .ed360-admin-policy-filters { grid-template-columns:minmax(0,1fr); }
+  .pro-window-panel .ed360-admin-policy-search { grid-column:auto; }
+}
+
+/* User access register — tenant membership controls with compact responsive filters. */
+.pro-window-panel .ed360-admin-account-filters {
+  display:grid;
+  grid-template-columns:repeat(3,minmax(125px,1fr)) auto minmax(220px,1.4fr);
+  align-items:end;gap:10px;margin:2px 0 15px;
+}
+.pro-window-panel .ed360-admin-account-filters>label {
+  display:flex;flex-direction:column;gap:6px;
+  color:var(--es-muted);font-size:11px;font-weight:800;
+}
+.pro-window-panel .ed360-admin-account-filters select {
+  width:100%;min-width:0;min-height:39px;padding:8px 10px;
+}
+.pro-window-panel .ed360-admin-account-search {
+  display:flex!important;align-items:center;flex-direction:row!important;gap:8px!important;
+  min-width:0;min-height:39px;padding:0 11px;border:1px solid var(--es-line);
+  border-radius:10px;background:#fff;color:var(--es-muted);
+}
+.pro-window-panel .ed360-admin-account-search input {
+  width:100%;min-width:0;min-height:36px;padding:6px 0;border:0;outline:0;box-shadow:none!important;
+}
+.pro-window-panel .ed360-admin-account-search input:focus { border:0;outline:0;box-shadow:none!important; }
+.pro-window-panel .ed360-admin-account-filters>button { min-height:39px; }
+@media(max-width:1000px) {
+  .pro-window-panel .ed360-admin-account-filters { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .pro-window-panel .ed360-admin-account-search { grid-column:1/-1; }
+}
+@media(max-width:560px) {
+  .pro-window-panel .ed360-admin-account-filters { grid-template-columns:minmax(0,1fr); }
+  .pro-window-panel .ed360-admin-account-search { grid-column:auto; }
+}
+
+/* Department and designation directories — sortable administrative catalogues. */
+.pro-window-panel .ed360-admin-directory-filters {
+  display:grid;
+  grid-template-columns:minmax(150px,180px) minmax(170px,210px) auto minmax(220px,1fr);
+  align-items:end;gap:10px;margin:2px 0 15px;
+}
+.pro-window-panel .ed360-admin-directory-filters>label {
+  display:flex;flex-direction:column;gap:6px;
+  color:var(--es-muted);font-size:11px;font-weight:800;
+}
+.pro-window-panel .ed360-admin-directory-filters select {
+  width:100%;min-width:0;min-height:39px;padding:8px 10px;
+}
+.pro-window-panel .ed360-admin-directory-search {
+  display:flex!important;align-items:center;flex-direction:row!important;gap:8px!important;
+  min-width:0;min-height:39px;padding:0 11px;border:1px solid var(--es-line);
+  border-radius:10px;background:#fff;color:var(--es-muted);
+}
+.pro-window-panel .ed360-admin-directory-search input {
+  width:100%;min-width:0;min-height:36px;padding:6px 0;border:0;outline:0;box-shadow:none!important;
+}
+.pro-window-panel .ed360-admin-directory-search input:focus { border:0;outline:0;box-shadow:none!important; }
+.pro-window-panel .ed360-admin-directory-filters>button { min-height:39px; }
+@media(max-width:900px) {
+  .pro-window-panel .ed360-admin-directory-filters { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .pro-window-panel .ed360-admin-directory-search { grid-column:1/-1; }
+}
+@media(max-width:560px) {
+  .pro-window-panel .ed360-admin-directory-filters { grid-template-columns:minmax(0,1fr); }
+  .pro-window-panel .ed360-admin-directory-search { grid-column:auto; }
+}
+
+/* Administration organisation chart and staff roster filters. */
+.pro-window-panel .ed360-admin-organization-filters {
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  align-items:end;gap:10px;margin:2px 0 15px;
+}
+.pro-window-panel .ed360-admin-organization-filters>label {
+  display:flex;flex-direction:column;gap:6px;
+  color:var(--es-muted);font-size:11px;font-weight:800;
+}
+.pro-window-panel .ed360-admin-organization-filters select {
+  width:100%;min-width:0;min-height:39px;padding:8px 10px;
+}
+.pro-window-panel .ed360-admin-organization-search {
+  display:flex!important;align-items:center;flex-direction:row!important;gap:8px!important;
+  min-width:0;min-height:39px;padding:0 11px;border:1px solid var(--es-line);
+  border-radius:10px;background:#fff;color:var(--es-muted);
+}
+.pro-window-panel .ed360-admin-organization-search input {
+  width:100%;min-width:0;min-height:36px;padding:6px 0;border:0;outline:0;box-shadow:none!important;
+}
+.pro-window-panel .ed360-admin-organization-search input:focus { border:0;outline:0;box-shadow:none!important; }
+.pro-window-panel .ed360-admin-organization-filters>button { min-height:39px; }
+.pro-window-panel .ed360-admin-org-staff-details { margin-top:10px;color:var(--es-muted);font-size:11px; }
+.pro-window-panel .ed360-admin-org-staff-details>summary { cursor:pointer;font-weight:800; }
+.pro-window-panel .ed360-admin-org-staff-details[open] { padding-top:4px; }
+@media(max-width:900px) {
+  .pro-window-panel .ed360-admin-organization-filters { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .pro-window-panel .ed360-admin-organization-search { grid-column:1/-1; }
+}
+@media(max-width:560px) {
+  .pro-window-panel .ed360-admin-organization-filters { grid-template-columns:minmax(0,1fr); }
+  .pro-window-panel .ed360-admin-organization-search { grid-column:auto; }
+}
+
+/* Security history search and sort controls, separate from the general audit page. */
+.pro-window-panel .ed360-admin-security-filters {
+  display:grid;grid-template-columns:minmax(160px,210px) auto minmax(230px,1fr);
+  align-items:end;gap:10px;margin:2px 0 15px;
+}
+.pro-window-panel .ed360-admin-security-filters>label:first-child {
+  display:flex;flex-direction:column;gap:6px;
+  color:var(--es-muted);font-size:11px;font-weight:800;
+}
+.pro-window-panel .ed360-admin-security-filters select {
+  width:100%;min-height:39px;padding:8px 10px;
+}
+.pro-window-panel .ed360-admin-security-search {
+  display:flex!important;align-items:center;flex-direction:row!important;gap:8px!important;
+  min-width:0;min-height:39px;padding:0 11px;border:1px solid var(--es-line);
+  border-radius:10px;background:#fff;color:var(--es-muted);
+}
+.pro-window-panel .ed360-admin-security-search input {
+  width:100%;min-width:0;min-height:36px;padding:6px 0;border:0;outline:0;box-shadow:none!important;
+}
+.pro-window-panel .ed360-admin-security-search input:focus { border:0;outline:0;box-shadow:none!important; }
+.pro-window-panel .ed360-admin-security-filters>button { min-height:39px; }
+@media(max-width:700px) {
+  .pro-window-panel .ed360-admin-security-filters { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .pro-window-panel .ed360-admin-security-search { grid-column:1/-1; }
+}
+@media(max-width:560px) {
+  .pro-window-panel .ed360-admin-security-filters { grid-template-columns:minmax(0,1fr); }
+  .pro-window-panel .ed360-admin-security-search { grid-column:auto; }
+}
+
+/* Administrative audit filters are independent of security and other workspace searches. */
+.pro-window-panel .ed360-admin-audit-filters {
+  display:grid;grid-template-columns:minmax(160px,210px) auto minmax(230px,1fr) auto;
+  align-items:end;gap:10px;margin:2px 0 15px;
+}
+.pro-window-panel .ed360-admin-audit-filters>label:first-child {
+  display:flex;flex-direction:column;gap:6px;
+  color:var(--es-muted);font-size:11px;font-weight:800;
+}
+.pro-window-panel .ed360-admin-audit-filters select {
+  width:100%;min-height:39px;padding:8px 10px;
+}
+.pro-window-panel .ed360-admin-audit-search {
+  display:flex!important;align-items:center;flex-direction:row!important;gap:8px!important;
+  min-width:0;min-height:39px;padding:0 11px;border:1px solid var(--es-line);
+  border-radius:10px;background:#fff;color:var(--es-muted);
+}
+.pro-window-panel .ed360-admin-audit-search input {
+  width:100%;min-width:0;min-height:36px;padding:6px 0;border:0;outline:0;box-shadow:none!important;
+}
+.pro-window-panel .ed360-admin-audit-search input:focus { border:0;outline:0;box-shadow:none!important; }
+.pro-window-panel .ed360-admin-audit-filters>button { min-height:39px; }
+@media(max-width:900px) {
+  .pro-window-panel .ed360-admin-audit-filters { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .pro-window-panel .ed360-admin-audit-search { grid-column:1/-1; }
+}
+@media(max-width:560px) {
+  .pro-window-panel .ed360-admin-audit-filters { grid-template-columns:minmax(0,1fr); }
+  .pro-window-panel .ed360-admin-audit-search { grid-column:auto; }
+}
+
+/* Institution branding controls */
+.pro-window-panel .ed360-admin-branding-panel .ed360-admin-brand-preview {
+  display:flex;align-items:center;gap:13px;flex-wrap:wrap;
+  padding:14px 16px;border:1px solid var(--es-line,#dee6e2);border-radius:12px;
+  background:var(--es-surface,#fff);
+}
+.pro-window-panel .ed360-admin-branding-panel .ed360-admin-brand-swatch {
+  width:34px;height:34px;flex:0 0 auto;border:1px solid rgba(36,32,51,.12);border-radius:10px;
+}
+.pro-window-panel .ed360-admin-brand-preview>span:nth-child(2) { display:grid;gap:3px; }
+.pro-window-panel .ed360-admin-brand-preview>span:nth-child(2) small,
+.pro-window-panel .ed360-admin-brand-preview>small { color:var(--es-muted,#657570);font-size:11px; }
+.pro-window-panel .ed360-admin-brand-colors {
+  display:flex;align-items:end;flex-wrap:wrap;gap:12px;margin-top:14px;
+  padding-top:14px;border-top:1px solid var(--es-line,#dee6e2);
+}
+.pro-window-panel .ed360-admin-brand-colors label {
+  display:grid;gap:6px;min-width:145px;color:var(--es-ink,#1d2928);
+  font-size:11px;font-weight:800;
+}
+.pro-window-panel .ed360-admin-brand-colors input[type="color"] {
+  width:100%;height:40px;min-height:40px;padding:3px;
+  border:1px solid var(--es-line,#dee6e2);border-radius:9px;background:#fff;
+  cursor:pointer;
+}
+.pro-window-panel .ed360-admin-brand-colors button { min-height:40px; }
+@media(max-width:560px) {
+  .pro-window-panel .ed360-admin-brand-colors { display:grid;grid-template-columns:1fr 1fr; }
+  .pro-window-panel .ed360-admin-brand-colors label { min-width:0; }
+  .pro-window-panel .ed360-admin-brand-colors button { grid-column:1/-1;width:100%; }
+}
+
+
+/* GIDC unified submenu polish — shared across every signed-in workspace. */
+/* No generic guidance panel is rendered as page content. Task-specific instructions stay with their controls. */
+.pro-window-panel :is(.ed360-page-guide,.ed360-page-purpose) {
+  display:none !important;
+}
+
+/* Override old per-menu accent palettes with one college identity. */
+.pro-window-panel .ed360-institutional-workspace[data-workspace-theme] {
+  --workspace-accent:var(--es-primary-600) !important;
+  --workspace-soft:var(--es-primary-100) !important;
+  --workspace-ink:var(--es-brand-900) !important;
+}
+
+/* Integration and document workspaces use the same unboxed page heading. */
+.pro-window-panel .ed360-integration-heading {
+  color:var(--es-ink);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+  background:transparent;
+  border:0;
+  border-bottom:1px solid var(--es-line);
+  border-radius:0;
+  box-shadow:none;
+  padding:4px 2px 16px;
+  margin:0 0 18px;
+}
+.pro-window-panel .ed360-integration-heading h1 {
+  margin:6px 0 0;
+  color:var(--es-ink);
+  font-size:clamp(28px,2.5vw,34px);
+  font-weight:900;
+  letter-spacing:-.8px;
+}
+.pro-window-panel .ed360-integration-heading>div>span {
+  color:var(--es-muted);
+  font-size:11px;
+  font-weight:850;
+  letter-spacing:1.1px;
+}
+.pro-window-panel :is(.ed360-integration-card,.ed360-integration-provider,.ed360-integration-status-card,.ed360-integration-steps,.ed360-integration-secrets,.ed360-data-card) {
+  color:var(--es-ink);
+  background:#fff;
+  border:1px solid var(--es-line);
+  border-radius:var(--es-radius-lg);
+  box-shadow:var(--es-shadow-sm);
+}
+.pro-window-panel .ed360-integration-card h2,
+.pro-window-panel .ed360-integration-provider h2,
+.pro-window-panel .ed360-integration-steps h2,
+.pro-window-panel .ed360-integration-secrets h2 {
+  color:var(--es-brand-900);
+}
+
+/* Improve the readability of dense registers without changing their data or behaviour. */
+.pro-window-panel :is(.ed360-institutional-workspace,.ed360-integration-workspace,.ed360-certificate-forms) {
+  font-size:14px;
+}
+.pro-window-panel :is(.ed360-workspace-toolbar,.ed360-workspace-filter,.ed360-workspace-search,.ed360-export-actions) {
+  font-size:13px;
+}
+.pro-window-panel :is(.ed360-workspace-record-card,.ed360-integration-workspace,.ed360-certificate-forms) table th {
+  font-size:12px;
+  line-height:1.45;
+}
+.pro-window-panel :is(.ed360-workspace-record-card,.ed360-integration-workspace,.ed360-certificate-forms) table td {
+  font-size:13px;
+  line-height:1.5;
+}
+.pro-window-panel :is(.ed360-data-card,.ed360-integration-card,.ed360-integration-provider) :is(h2,h3) {
+  font-size:16px;
+}
+
+/* Preserve the existing purple welcome mask and ensure every heading remains black. */
+.pro-app-shell .rd-welcome-panel,
+.pro-app-shell .rd-welcome-panel :is(h1,h2,h3,p,strong,small,em) {
+  color:#1d2928;
+}
+.pro-app-shell .rd-welcome-panel .rd-welcome-fact {
+  background:rgba(255,255,255,.72);
+  border-color:rgba(77,54,119,.18);
+}
+.pro-app-shell .rd-welcome-panel .rd-welcome-fact :is(small,strong,em) {
+  color:#1d2928;
+}
+
+/* Mobile keeps the refresh action large and reachable, without squeezing the title. */
+@media (max-width:700px) {
+  .pro-window-panel .ed360-integration-heading {
+    align-items:stretch;
+    flex-direction:column;
+  }
+  .pro-window-panel .ed360-integration-heading>.button,
+  .pro-window-panel .ed360-integration-heading>.button-primary {
+    width:100%;
+    min-height:48px;
+  }
+}
+
+
+/* GIDC identity card photo treatment — private photo is displayed only with a signed URL. */
+.iop-idcard-avatar { overflow:hidden; }
+.iop-idcard-avatar img {
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  border-radius:inherit;
+}
+
+
+/* GIDC visual correction: one calm institutional palette across page families. */
+.pro-sidebar { color:#f5faf8;background:linear-gradient(180deg,#193e4b 0%,#142f3a 100%); }
+.pro-sidebar-brand-copy small,.pro-institution-card small { color:#c4d8d1; }
+.pro-nav-link,.pro-nav-group-trigger { color:#e1ece8; }
+.pro-nav-link.active,.pro-nav-link[aria-current="page"],.pro-nav-group-trigger[aria-expanded="true"] {
+  color:#fff;background:rgba(78,140,132,.23);box-shadow:inset 3px 0 #8bb8ad;
+}
+.pro-window-panel :is(.button-primary,.gov-button.primary,.primary-button,.ed360-academic-primary,.ed360-native-primary) {
+  color:#fff;border-color:#1d5a5a;background:#28716e;box-shadow:0 3px 9px rgba(29,90,90,.12);
+}
+.pro-window-panel :is(.button-primary,.gov-button.primary,.primary-button,.ed360-academic-primary,.ed360-native-primary):hover {
+  background:#225e59;border-color:#225e59;
+}
+.pro-window-panel :is(button,a,input,select,textarea):focus-visible { outline:3px solid rgba(40,113,110,.24);outline-offset:2px; }
+.pro-window-panel .ed360-academic-page { color:var(--es-ink); }
+.pro-window-panel .ed360-academic-heading-copy h1,
+.pro-window-panel .ed360-academic-workspace-top h2,
+.pro-window-panel .ed360-academic-modal>header h2 { color:var(--es-brand-900); }
+.pro-window-panel .ed360-academic-nav button.active,
+.pro-window-panel .ed360-academic-mode-tabs button.active {
+  border-color:#bed8d1;background:#edf5f1;color:#205e59;
+}
+.pro-window-panel .ed360-academic-primary,.pro-window-panel .ed360-native-primary { background:#28716e;color:#fff; }
+.pro-window-panel .ed360-native-tabs button.active {
+  border-color:#d5e5de;background:#edf5f1;color:#205e59;
+}
+.pro-window-panel .ed360-native-choice button.selected {
+  border-color:#bed8d1;background:#edf5f1;color:#205e59;
+}
+.pro-window-panel .ed360-native-contact input,.pro-window-panel .ed360-academic-toggle input { accent-color:#28716e; }
+.pro-window-panel .ed360-profile-section,.pro-window-panel .ed360-native-panel,
+.pro-window-panel .ed360-native-live,.pro-window-panel .ed360-academic-workspace {
+  border-color:var(--es-line);box-shadow:var(--es-shadow-sm);
+}
+.pro-window-panel .ed360-profile-public-note { display:none!important; }
+
+
+/* Shared GIDC tokens for specialist workspace families. Layout stays task-specific. */
+.pro-window-panel .gov-stage,
+.pro-window-panel .people-hr-workspace,
+.pro-window-panel .staff-workspace,
+.pro-window-panel .crp-workspace { color:var(--es-ink); }
+
+.pro-window-panel .gov-heading h1,
+.pro-window-panel .ed360-admin-profile-preview h3,
+.pro-window-panel .ed360-admin-org-department h3 { color:var(--es-brand-900); }
+.pro-window-panel .gov-heading>div>span,
+.pro-window-panel .gov-live,
+.pro-window-panel .gov-context small,
+.pro-window-panel .gov-panel>header p,
+.pro-window-panel .gov-readonly,
+.pro-window-panel .gov-note,
+.pro-window-panel .gov-search,
+.pro-window-panel .gov-search input,
+.pro-window-panel .gov-form label,
+.pro-window-panel .gov-table-wrap th { color:var(--es-muted); }
+.pro-window-panel .gov-nav,
+.pro-window-panel .gov-button,
+.pro-window-panel .gov-panel,
+.pro-window-panel .gov-context { border-color:var(--es-line); }
+.pro-window-panel .gov-nav { background:var(--es-canvas); }
+.pro-window-panel .gov-nav button.active {
+  color:var(--es-primary-700);
+  background:#fff;
+  box-shadow:inset 0 -2px var(--es-primary-600);
+}
+.pro-window-panel .gov-button.primary {
+  color:#fff;
+  background:var(--es-primary-600);
+  border-color:var(--es-primary-600);
+}
+.pro-window-panel .gov-button.primary:hover { background:var(--es-primary-700); }
+.pro-window-panel .gov-panel,
+.pro-window-panel .gov-context,
+.pro-window-panel .ed360-admin-profile-preview { background:#fff; }
+.pro-window-panel .gov-profile-grid article,
+.pro-window-panel .gov-payload,
+.pro-window-panel .gov-footer { background:var(--es-surface-soft); }
+.pro-window-panel .gov-profile-grid strong,
+.pro-window-panel .gov-panel td,
+.pro-window-panel .ed360-admin-profile-preview dl { color:var(--es-ink); }
+.pro-window-panel .gov-sort-header:hover { color:var(--es-primary-700); }
+.pro-window-panel .gov-sort-header:focus-visible { outline-color:var(--es-primary-500); }
+
+.pro-window-panel .people-hr-subnav button.active,
+.pro-window-panel .people-hr-secondary-nav button.active {
+  color:var(--es-primary-700);
+  border-color:#b9d6ce;
+  background:var(--es-primary-100);
+}
+.pro-window-panel .people-hr-inline-note { border-color:var(--es-line);background:var(--es-canvas); }
+.pro-window-panel .people-hr-inline-note svg,
+.pro-window-panel .people-hr-icon-button:hover,
+.pro-window-panel .people-hr-sort span { color:var(--es-primary-600); }
+.pro-window-panel .people-hr-icon-button:hover { border-color:var(--es-primary-500); }
+.pro-window-panel .people-hr-sort:focus-visible { outline-color:var(--es-primary-500); }
+
+.pro-window-panel .staff-workspace-heading h1,
+.pro-window-panel .staff-panel>header h2,
+.pro-window-panel .staff-full-panel>header h2,
+.pro-window-panel .staff-profile-summary strong,
+.pro-window-panel .staff-process-grid b,
+.pro-window-panel .staff-subheading,
+.pro-window-panel .staff-profile-grid h3 { color:var(--es-brand-900); }
+.pro-window-panel .staff-workspace-heading p,
+.pro-window-panel .staff-kicker,
+.pro-window-panel .staff-panel>header p,
+.pro-window-panel .staff-summary-list,
+.pro-window-panel .staff-record-count,
+.pro-window-panel .staff-profile-grid article>span { color:var(--es-muted); }
+.pro-window-panel .staff-button-primary,
+.pro-window-panel .staff-window-nav button.active {
+  color:#fff;
+  background:var(--es-primary-600);
+  border-color:var(--es-primary-600);
+}
+.pro-window-panel .staff-button-primary:hover:not(:disabled),
+.pro-window-panel .staff-window-nav button.active:hover { background:var(--es-primary-700); }
+.pro-window-panel .staff-window-nav,
+.pro-window-panel .staff-panel,
+.pro-window-panel .staff-metric-card,
+.pro-window-panel .staff-table-wrap,
+.pro-window-panel .staff-dialog,
+.pro-window-panel .staff-profile-grid article,
+.pro-window-panel .staff-document-form,
+.pro-window-panel .staff-process-grid article,
+.pro-window-panel .staff-report-grid article { border-color:var(--es-line);background:#fff; }
+.pro-window-panel .staff-window-nav button { color:var(--es-muted); }
+.pro-window-panel .staff-window-nav button:hover,
+.pro-window-panel .staff-operation-links button:hover,
+.pro-window-panel .staff-row-actions button:hover,
+.pro-window-panel .staff-empty>span {
+  color:var(--es-primary-700);
+  background:var(--es-primary-100);
+}
+.pro-window-panel .staff-metric-card>span,
+.pro-window-panel .staff-operation-links svg,
+.pro-window-panel .staff-panel>header button,
+.pro-window-panel .staff-row-actions button { color:var(--es-primary-600); }
+.pro-window-panel .staff-table th { background:var(--es-canvas);color:var(--es-muted); }
+.pro-window-panel .staff-table td,
+.pro-window-panel .staff-table strong,
+.pro-window-panel .staff-field,
+.pro-window-panel .staff-toolbar input,
+.pro-window-panel .staff-profile-grid dd { color:var(--es-ink); }
+.pro-window-panel .staff-context-bar { background:var(--es-surface-soft);border-color:var(--es-line); }
+.pro-window-panel .staff-context-bar>div strong { color:var(--es-brand-900); }
+.pro-window-panel .staff-empty { border-color:var(--es-line);color:var(--es-muted); }
+.pro-window-panel .staff-empty>strong { color:var(--es-brand-900); }
+
+.pro-window-panel .crp-workspace { color:var(--es-ink); }
+.pro-window-panel .crp-intro {
+  background:linear-gradient(110deg,#193e4b,#28716e);
+  box-shadow:var(--es-shadow-sm);
+}
+.pro-window-panel .crp-panel,
+.pro-window-panel .crp-role-card,
+.pro-window-panel .crp-table-wrap,
+.pro-window-panel .crp-summary-grid article,
+.pro-window-panel .crp-template-row { border-color:var(--es-line);background:#fff; }
+.pro-window-panel .crp-summary-grid strong,
+.pro-window-panel .crp-panel>header h3,
+.pro-window-panel .crp-role-card h4,
+.pro-window-panel .crp-table-wrap td b { color:var(--es-brand-900); }
+.pro-window-panel .crp-summary-grid span,
+.pro-window-panel .crp-summary-grid small,
+.pro-window-panel .crp-panel>header p,
+.pro-window-panel .crp-role-card p,
+.pro-window-panel .crp-role-meta,
+.pro-window-panel .crp-table-wrap td,
+.pro-window-panel .crp-form-grid label>span { color:var(--es-muted); }
+.pro-window-panel .crp-button-primary {
+  color:#fff;
+  background:var(--es-primary-600);
+  border-color:var(--es-primary-600);
+}
+.pro-window-panel .crp-button-primary:hover { background:var(--es-primary-700);border-color:var(--es-primary-700); }
+.pro-window-panel .crp-security-note { border-color:var(--es-line);background:var(--es-primary-050);color:var(--es-muted); }
+.pro-window-panel .crp-security-note svg,
+.pro-window-panel .crp-role-icon,
+.pro-window-panel .crp-empty svg { color:var(--es-primary-600); }
+.pro-window-panel .crp-role-icon { background:var(--es-primary-100); }
+.pro-window-panel .crp-form-grid :is(input,select,textarea):focus { outline-color:rgba(40,113,110,.22);border-color:var(--es-primary-500); }

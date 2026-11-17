@@ -55,7 +55,7 @@ const operationTabs = {
   behaviour: new Set(['register','positive','follow-up','dashboard','incidents','recognition','warnings','skills','activities','competencies','progress','history','analytics','downloads','reports']),
   certificates: new Set(['verify','issue','templates','bulk','history']),
   visitors: new Set(['log','checked-in','approvals','notifications','history','reports']),
-  facilities: new Set(['assets','maintenance','history','reservations','reports']),
+  facilities: new Set(['dashboard','assets','maintenance','history','reservations','reports']),
 }
 const adminKeys = new Set(['departments','programs','classes','academic_sessions','subjects','rooms'])
 const linkedKeys = new Set([

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type CSSProperties, type FormEvent } from 'react'
-import { Activity, ArrowUpRight, CheckCircle2, Download, FileSpreadsheet, FileText, Filter, Plus, Printer, Search, X } from 'lucide-react'
+import { CheckCircle2, Download, FileSpreadsheet, FileText, Filter, Plus, Printer, RefreshCw, Search, X } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { getWorkspaceGroup, getWorkspaceItem, institutionalMenu } from '../lib/institutionalCatalog'
@@ -17,87 +17,6 @@ type OperationalRow = RecordRow & {
 type Props={workspaceKey:string;onToast:(message:string,error?:boolean)=>void}
 type WorkspaceField={key:string;label:string;type?:'text'|'email'|'date'|'number'|'time'|'datetime-local'|'url'|'textarea'|'select';options?:string[];placeholder?:string}
 const fld=(key:string,label:string,type:WorkspaceField['type']='text',options?:string[]):WorkspaceField=>({key,label,type,options})
-const workspaceFields:Record<string,WorkspaceField[]>={
- ai:[fld('insight_type','Insight type','select',['Student analysis','Academic performance','Fee collection','Examination','Timetable','Attendance','Behaviour','Institutional']),fld('source_dataset','Source data / report','text'),fld('confidence_percent','Confidence (%)','number'),fld('assumptions','Assumptions and limitations','textarea'),fld('human_review','Human review','select',['Required','Reviewed','Not reviewed'])],
- administration:[fld('entity_code','Institution / department code'),fld('contact_name','Responsible contact'),fld('email','Contact email','email'),fld('phone','Telephone'),fld('address','Address','textarea'),fld('effective_date','Effective date','date')],
- academic_setup:[fld('academic_level','Education / grade level'),fld('academic_year','Academic year'),fld('start_date','Start date','date'),fld('end_date','End date','date'),fld('class_teacher','Class teacher'),fld('capacity','Capacity','number')],
- students:[fld('student_reference','Student / admission reference'),fld('class_name','Class / section'),fld('guardian_name','Parent / guardian'),fld('document_type','Document / card type'),fld('issue_date','Issue date','date'),fld('alumni_year','Alumni / completion year','number')],
- employees:[fld('employee_number','Employee number'),fld('employee_category','Employee category','select',['Teaching','Non-teaching','Administration','Support']),fld('department','Department'),fld('designation','Designation'),fld('employment_type','Employment type','select',['Full-time','Part-time','Contract','Temporary']),fld('joining_date','Joining date','date')],
- finance:[fld('account_code','Account code'),fld('account_category','Account category','select',['Asset','Liability','Equity','Income','Expense']),fld('transaction_type','Transaction type','select',['Income','Expense','Transfer','Journal']),fld('debit','Debit (PKR)','number'),fld('credit','Credit (PKR)','number'),fld('bank_reference','Bank / voucher reference')],
- fees:[fld('fee_category','Fee category','select',['Tuition','Admission','Examination','Transport','Library','Other']),fld('fee_frequency','Billing frequency','select',['One-time','Monthly','Quarterly','Term','Annual']),fld('class_name','Class / section'),fld('academic_session','Academic session'),fld('discount_percent','Discount (%)','number'),fld('scholarship_reference','Scholarship reference')],
- receivables:[fld('invoice_reference','Invoice reference'),fld('student_reference','Student / admission reference'),fld('ageing_bucket','Ageing band','select',['Current','1–30 days','31–60 days','61–90 days','90+ days']),fld('follow_up_date','Next follow-up date','date'),fld('follow_up_outcome','Follow-up outcome','textarea'),fld('promised_amount','Promised amount (PKR)','number')],
- payments:[fld('payment_method','Payment method','select',['Cash','Bank transfer','Card','Cheque','Online','Other']),fld('transaction_reference','Transaction reference'),fld('bank_name','Bank name'),fld('cheque_number','Cheque number'),fld('verification_status','Verification status','select',['Pending','Verified','Rejected']),fld('payment_date','Payment date','date')],
- receipts:[fld('receipt_number','Receipt number'),fld('receipt_template','Receipt design / template'),fld('payment_reference','Payment / invoice reference'),fld('issued_to','Issued to'),fld('issue_date','Issue date','date'),fld('signatory_name','Authorized signatory')],
- payroll:[fld('employee_reference','Employee / staff reference'),fld('salary_component','Salary component','select',['Basic salary','Allowance','Deduction','Advance recovery','Bonus']),fld('base_salary','Base salary (PKR)','number'),fld('allowance','Allowance (PKR)','number'),fld('deduction','Deduction (PKR)','number'),fld('pay_period','Payroll period')],
- attendance:[fld('register_period','Period / session'),fld('marking_source','Marking source','select',['Manual register','CSV import','QR','RFID','Biometric','Provider']),fld('marking_status','Register status','select',['Draft','Saved','Published','Locked']),fld('device_reference','Device / source reference')],
- timetable:[fld('weekday','Weekday','select',['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']),fld('period_label','Period / slot'),fld('start_time','Start time','time'),fld('end_time','End time','time'),fld('teacher_name','Teacher'),fld('room_name','Room / facility'),fld('subject_name','Subject')],
- teaching:[fld('subject_name','Subject'),fld('class_name','Class / section'),fld('chapter','Chapter / unit'),fld('submission_date','Submission / due date','date'),fld('maximum_marks','Maximum marks','number'),fld('attachment_url','Learning attachment URL','url')],
- behaviour:[fld('behaviour_type','Behaviour type','select',['Positive','Recognition','Warning','Incident','Safeguarding referral','Skill']),fld('severity','Severity','select',['Low','Medium','High','Urgent']),fld('observed_date','Observed date','date'),fld('recorded_by_name','Recorded by'),fld('action_taken','Action / follow-up','textarea')],
- communication:[fld('channel','Communication channel','select',['In-app','Email','WhatsApp','SMS','Notice']),fld('audience','Audience','select',['Everyone','Students','Parents','Teachers','Class / section','Individual']),fld('message_template','Message template'),fld('delivery_status','Delivery status','select',['Draft','Queued','Sent','Delivered','Failed','Not configured']),fld('scheduled_at','Schedule date/time','datetime-local'),fld('provider_reference','Provider reference')],
- question_bank:[fld('question_type','Question type','select',['Multiple choice','Short answer','Long answer','True / false','Matching','Practical']),fld('subject_name','Subject'),fld('chapter','Chapter / topic'),fld('difficulty','Difficulty','select',['Easy','Medium','Hard']),fld('marks','Marks','number'),fld('correct_answer','Answer / key','textarea')],
- examinations:[fld('exam_type','Examination type','select',['Midterm','Final','Quiz','Practical','Entrance','Other']),fld('class_name','Class / section'),fld('subject_name','Subject'),fld('exam_date','Examination date','date'),fld('total_marks','Total marks','number'),fld('room_name','Room / venue'),fld('invigilator','Invigilator')],
- tests:[fld('test_format','Test format','select',['Online','Written','Practical','Oral']),fld('subject_name','Subject'),fld('class_name','Class / section'),fld('test_date','Test date','date'),fld('duration_minutes','Duration (minutes)','number'),fld('total_marks','Total marks','number')],
- reports:[fld('report_type','Report type','select',['Student','Employee','Attendance','Academic','Examination','Fee','Payroll','Financial','Custom']),fld('date_from','From date','date'),fld('date_to','To date','date'),fld('schedule_frequency','Schedule','select',['One-time','Daily','Weekly','Monthly','Term']),fld('recipient','Recipient / email','email')],
- certificates:[fld('certificate_type','Certificate type','select',['Character','Leaving','Enrollment','Bonafide','Achievement','Experience','ID card','Other']),fld('certificate_number','Serial / certificate number'),fld('recipient_name','Student / employee name'),fld('issue_date','Issue date','date'),fld('signatory_name','Authorized signatory'),fld('template_name','Document template')],
- curriculum:[fld('education_level','Education / grade level'),fld('subject_name','Subject'),fld('chapter','Chapter / unit'),fld('learning_outcome','Learning outcome','textarea'),fld('resource_type','Resource type','select',['Syllabus','Lesson plan','Learning material','Worksheet','Video','Assessment','Other']),fld('coverage_status','Coverage status','select',['Not started','In progress','Covered','Reviewed'])],
- library:[fld('isbn','ISBN / book code'),fld('author','Author'),fld('publisher','Publisher'),fld('category','Book category'),fld('edition','Edition / year'),fld('total_copies','Total copies','number'),fld('fine_per_day','Overdue fine per day (PKR)','number'),fld('shelf_location','Shelf / location'),fld('digital_url','Digital resource URL','url')],
- transport:[fld('registration_number','Vehicle registration number'),fld('route_code','Route code'),fld('driver_name','Driver name'),fld('stop_name','Route stop'),fld('seat_capacity','Seat capacity','number'),fld('transport_fee','Transport fee (PKR)','number'),fld('maintenance_due','Maintenance due date','date')],
- inventory:[fld('sku','Item SKU / code'),fld('item_category','Item category'),fld('unit_of_measure','Unit of measure'),fld('supplier','Supplier'),fld('unit_cost','Unit cost (PKR)','number'),fld('reorder_level','Reorder level','number'),fld('storage_location','Store / location')],
- facilities:[fld('room_number','Room number / code'),fld('facility_type','Facility type','select',['Classroom','Laboratory','Library','Hall','Office','Sports','Other']),fld('building','Building / block'),fld('floor','Floor'),fld('capacity','Capacity','number'),fld('availability_status','Availability','select',['Available','Occupied','Reserved','Maintenance']),fld('maintenance_due','Maintenance due date','date')],
- visitors:[fld('visitor_name','Visitor full name'),fld('organization','Organization / company'),fld('host_name','Host / staff member'),fld('purpose','Visit purpose','textarea'),fld('pass_number','Visitor pass number'),fld('entry_time','Entry time','datetime-local'),fld('exit_time','Exit time','datetime-local')],
- institution_config:[fld('setting_category','Setting category'),fld('setting_key','Setting key'),fld('setting_value','Setting value','textarea'),fld('education_level','Education level'),fld('permission_scope','Permission scope','select',['Institution','Campus','Module','Role','Approval']),fld('access_role','Role / user group')],
- reconciliation:[fld('account_name','Bank / cash account'),fld('statement_period','Statement period'),fld('opening_balance','Opening balance (PKR)','number'),fld('closing_balance','Closing balance (PKR)','number'),fld('matched_total','Matched total (PKR)','number'),fld('unmatched_total','Unmatched total (PKR)','number'),fld('variance','Variance (PKR)','number'),fld('bank_reference','Bank reference')],
- backup:[fld('backup_type','Backup type','select',['Database','Files','Full institution export','Module export']),fld('backup_window','Backup schedule / window'),fld('export_format','Export format','select',['ZIP','CSV','JSON','XLSX','DOCX','PDF']),fld('integrity_check','Validation status','select',['Not run','Passed','Failed','Requires platform action']),fld('platform_job_reference','Platform job reference'),fld('recovery_status','Recovery status','select',['Not requested','Pending approval','Restored','Failed'])],
-}
-workspaceFields['academic-sessions']=[fld('session_code','Session code'),fld('start_date','Session start date','date'),fld('end_date','Session end date','date'),fld('is_current','Current session','select',['Yes','No']),fld('student_rollover_status','Student rollover status','select',['Not started','In progress','Completed'])]
-workspaceFields['classes-sections']=[fld('grade_level','Grade / academic level'),fld('section','Section'),fld('class_teacher','Class teacher'),fld('capacity','Maximum capacity','number'),fld('room_name','Room / classroom'),fld('promotion_status','Promotion status','select',['Not started','In progress','Completed'])]
-workspaceFields.subjects=[fld('subject_code','Subject code'),fld('subject_category','Subject category'),fld('department','Department'),fld('grade_level','Academic level'),fld('credit_hours','Credit hours','number'),fld('syllabus_reference','Syllabus reference')]
-workspaceFields.front_office=[
- fld('contact_name','Contact / visitor name'),fld('contact_phone','Phone number'),fld('contact_email','Email address','email'),
- fld('enquiry_source','Enquiry source','select',['Walk-in','Phone','Website','Referral','Email','Other']),
- fld('assigned_to','Assigned staff member'),fld('follow_up_date','Follow-up date','date'),fld('request_status','Request status','select',['New','Assigned','In progress','Waiting for response','Resolved','Closed']),
- fld('audience','Target audience','select',['All institution','Parents','Students','Teachers','Staff','Selected class']),
- fld('event_venue','Venue / meeting location'),fld('event_start','Event start','datetime-local'),fld('event_end','Event end','datetime-local'),
- fld('visit_purpose','Purpose / request details','textarea'),fld('resolution_notes','Resolution / next action','textarea')
-]
-workspaceFields.forms_documents=[
- fld('form_category','Form category','select',['Admission','Leave','Feedback','Event registration','Profile update','General']),
- fld('audience','Who can submit','select',['Staff','Teachers','Students','Parents','Public','Selected group']),
- fld('field_schema','Form fields / instructions','textarea'),fld('submission_deadline','Submission deadline','date'),
- fld('submission_reference','Submission reference'),fld('reviewer','Assigned reviewer'),fld('review_status','Review status','select',['Received','Under review','Needs correction','Approved','Rejected']),
- fld('document_category','Document category','select',['Student','Employee','Institution','Finance','Academic','Policy','Other']),
- fld('related_record','Related record / person'),fld('file_reference','Private file reference'),fld('expiry_date','Expiry date','date'),
- fld('verification_code','Verification code'),fld('verification_status','Verification status','select',['Not checked','Verified','Rejected','Expired']),
- fld('import_file','Import filename'),fld('import_type','Import record type'),fld('validation_summary','Validation summary','textarea'),fld('export_scope','Export scope')
-]
-workspaceFields.hostel=[
- fld('building_name','Hostel / building'),fld('floor','Floor / block'),fld('room_number','Room number'),fld('bed_number','Bed number'),
- fld('room_capacity','Room capacity','number'),fld('resident_reference','Student / resident reference'),fld('allocation_start','Allocation start','date'),fld('allocation_end','Expected checkout','date'),
- fld('occupancy_status','Occupancy','select',['Available','Part occupied','Full','Maintenance']),fld('hostel_fee','Accommodation fee','number'),fld('warden_name','Warden / supervisor')
-]
-workspaceFields.cafeteria=[
- fld('menu_category','Menu category'),fld('item_code','Menu item code'),fld('unit_price','Unit price','number'),fld('availability','Availability','select',['Available','Unavailable','Seasonal']),
- fld('quantity_sold','Quantity sold','number'),fld('transaction_date','Transaction date','datetime-local'),fld('payment_method','Payment method','select',['Cash','Card','Account','Other']),
- fld('meal_plan','Meal plan'),fld('supplier','Supplier'),fld('stock_reference','Stock reference')
-]
-workspaceFields.assets=[
- fld('asset_tag','Asset tag / serial'),fld('asset_category','Asset category','select',['IT equipment','Furniture','Laboratory','Vehicle','Facility','Other']),
- fld('purchase_date','Purchase date','date'),fld('purchase_cost','Purchase cost','number'),fld('assigned_to','Assigned person / department'),
- fld('location','Current location'),fld('asset_condition','Condition','select',['New','Good','Needs repair','Damaged','Disposed']),
- fld('warranty_expiry','Warranty expiry','date'),fld('maintenance_due','Next maintenance','date'),fld('disposal_date','Disposal date','date')
-]
-workspaceFields.procurement=[
- fld('requesting_department','Requesting department'),fld('requested_by','Requested by'),fld('supplier','Supplier'),fld('quotation_reference','Quotation reference'),
- fld('requested_quantity','Requested quantity','number'),fld('estimated_cost','Estimated cost','number'),fld('approved_amount','Approved amount','number'),
- fld('purchase_order','Purchase order reference'),fld('delivery_due','Expected delivery','date'),fld('received_quantity','Quantity received','number'),
- fld('receiving_status','Receiving status','select',['Not ordered','Ordered','Part received','Received','Rejected'])
-]
-workspaceFields.sports=[
- fld('activity_type','Activity type','select',['Sport','Club','Arts','Competition','Community','Other']),fld('supervisor','Coach / supervisor'),
- fld('venue','Venue / facility'),fld('schedule_start','Start date/time','datetime-local'),fld('schedule_end','End date/time','datetime-local'),
- fld('eligibility','Eligibility / class'),fld('team_name','Team / club'),fld('participant_count','Participants','number'),
- fld('competition','Competition / event'),fld('achievement','Achievement / result','textarea')
-]
 const itemWorkspaceFields:Record<string,WorkspaceField[]> = {
  'front-office:reception-enquiries':[fld('contact_name','Applicant / contact name'),fld('contact_phone','Phone number'),fld('contact_email','Email address','email'),fld('requested_program','Requested class / program'),fld('enquiry_source','Enquiry source','select',['Walk-in','Phone','Website','Referral','Email','Other']),fld('assigned_to','Assigned counsellor'),fld('follow_up_date','Next follow-up','date'),fld('conversion_status','Application conversion','select',['Not started','Follow-up required','Converted to application','Closed'])],
  'front-office:complaints-helpdesk':[fld('requester_name','Submitted by'),fld('requester_role','Requester role'),fld('category','Request category','select',['Technical','Academic','Finance','Facilities','Transport','Safety','Other']),fld('priority','Priority','select',['Low','Normal','High','Urgent']),fld('assigned_to','Assigned staff'),fld('target_resolution','Target resolution date','date'),fld('resolution_notes','Resolution notes','textarea'),fld('request_status','Request status','select',['Open','Assigned','In progress','Waiting','Resolved','Closed','Reopened'])],
@@ -438,34 +357,51 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
  const [quantity,setQuantity]=useState('')
  const [payloadData,setPayloadData]=useState<Record<string,unknown>>({})
  useEffect(()=>{setSelectedItem(initialItem.key);setSearch('');setRange('all');setCampus('');setPage(1);setShowForm(false);setDetail(null);setEditing(null)},[workspaceKey])
- const structuredFields=completionItemFields[group.key+':'+item.key]??itemWorkspaceFields[group.key+':'+item.key]??getWorkspaceFields(group.key,item.label)??workspaceFields[group.key]??workspaceFields[group.dataModule]??[]
+ const structuredFields=completionItemFields[group.key+':'+item.key]??itemWorkspaceFields[group.key+':'+item.key]??getWorkspaceFields(group.key,item.label)
  const preferredFieldKeys=workspaceTableFieldOrder[group.key]??workspaceTableFieldOrder[group.dataModule]??structuredFields.map(field=>field.key)
  const preferredTableFields=preferredFieldKeys.flatMap(key=>{
   const field=structuredFields.find(candidate=>candidate.key===key)
   return field?[field]:[]
  })
- // Submenu-specific forms provide their own columns when the broader
- // legacy workspace does not define an ordering for those field keys.
  const tableFields=(preferredTableFields.length?preferredTableFields:structuredFields).slice(0,4)
  const canAdmin=Boolean(user&&['owner','admin'].includes(user.role))
- const metaColumnKeys:RecordMetaKey[]=recordMetaColumnPlan[group.key]??recordMetaColumnPlan[group.dataModule]??['reference_code','status','record_date']
- const tableMetaColumns=metaColumnKeys
-  .filter(key=>canViewInternalApproval(user?.role)||key!=='approval_status')
-  .map(key=>({key,label:recordMetaLabels[key]}))
- const recordLabel=workspaceRecordLabels[group.key]??workspaceRecordLabels[group.dataModule]??'Record'
- const workspaceLayout=workspaceLayouts[group.key]??workspaceLayouts[group.dataModule]??'registry'
- const theme=themes[group.theme]||themes.blue
  const canWrite=Boolean(user&&(
   canAdmin||
   (user.role==='teacher'&&['academic_setup','attendance','timetable','teaching','behaviour','communication','question_bank','examinations','tests','curriculum','front_office','forms_documents','hostel','sports'].includes(group.dataModule))||
   (user.role==='accountant'&&['finance','fees','receivables','payments','receipts','payroll','reconciliation','inventory','cafeteria','assets','procurement','hostel'].includes(group.dataModule))||
   (user.role==='exam_officer'&&['question_bank','examinations','tests','reports'].includes(group.dataModule))
  ))
-
- const showAmount=['accounts-finance','fees','receivables','payments','receipts','payroll','reconciliation','transport','inventory'].includes(group.key)||['finance','fees','receivables','payments','receipts','payroll','reconciliation'].includes(group.dataModule)
- const showQuantity=['classes-sections','library','transport','inventory','facilities'].includes(group.key)
- const showDueDate=['academic-sessions','fees','receivables','timetable','teaching','examinations','class-tests','reports','certificates','transport','facilities','visitors','backup'].includes(group.key)||['fees','receivables','timetable','teaching','examinations','tests','reports','certificates'].includes(group.dataModule)
- const showPortalVisibility=['communication','front-office','forms-documents','curriculum','certificates','teaching','library','transport','behaviour'].includes(group.key)
+ const itemName=item.label.toLowerCase()
+ const hasSchemaField=(pattern:RegExp)=>structuredFields.some(field=>pattern.test(field.key+' '+field.label))
+ const hasMoneyField=hasSchemaField(/amount|fee|cost|price|revenue|debit|credit|refund|salary|balance|budget|paid|payment|income|expense/i)
+ const hasQuantityField=hasSchemaField(/quantity|\\bqty\\b|copies|capacity|stock|beds|seats|pages|allocated/i)
+ const hasDueField=hasSchemaField(/due|deadline|expiry|expires|follow.?up|expected.*date|return date|next review/i)
+ const hasApprovalField=hasSchemaField(/approval|approver|decision|review status|verification result/i)
+ const hasReferenceField=hasSchemaField(/reference|code|serial|number|isbn|sku|admission|employee.?no/i)
+ const hasDateField=structuredFields.some(field=>['date','datetime-local','time'].includes(field.type??'text')||/date|time|period|session|year/i.test(field.key+' '+field.label))
+ const showAmount=!hasMoneyField&&/fee|payment|receipt|refund|invoice|receivable|balance|salary|payroll|income|expense|cost|budget|collection|reconciliation/i.test(itemName)
+ const showQuantity=!hasQuantityField&&/stock|inventory|catalogue|catalog|book|copies|capacity|class|section|room|bed|vehicle|asset|allocation/i.test(itemName)
+ const showDueDate=!hasDueField&&/due|deadline|follow.?up|assignment|homework|contract|warranty|maintenance|reservation|leave|invoice|fee|payment|application|session|schedule/i.test(itemName)
+ const showRecordDate=!hasDateField&&/attendance|history|report|audit|transaction|payment|collection|assessment|examination|event|visit|issue|certificate|session|application|maintenance|reservation|progress|performance/i.test(itemName)
+ const showApproval=canAdmin&&!hasApprovalField&&/approval|approver|review|verification|permission|policy|access|request|reservation|purchase|certificate|visitor|audit/i.test(itemName)
+ const showPortalVisibility=/notice|circular|announcement|message|homework|assignment|learning material|resource|curriculum|form|submission|document|certificate|event|activity|classroom/i.test(itemName)
+ const showReference=!hasReferenceField&&/reference|directory|catalog|register|history|report|request|invoice|receipt|certificate|document|id card|code|number|asset|vehicle|route|book|account|class|subject|session|fee|payment|employee|student|visitor|purchase|stock|attendance|question|policy|permission|case|form|submission|transfer|allocation|reservation|application|enquiry|complaint|supplier|payroll|audit/i.test(itemName)
+ const showCreatedDateFilter=hasDateField||/dashboard|history|report|log|attendance|assessment|examination|event|visit|transaction|payment|invoice|receipt|session|audit/i.test(itemName)
+ const metaColumnKeys:RecordMetaKey[]=recordMetaColumnPlan[group.key]??recordMetaColumnPlan[group.dataModule]??['reference_code','status']
+ const tableMetaColumns=metaColumnKeys
+  .filter(key=>{
+   if(key==='approval_status')return canViewInternalApproval(user?.role)&&showApproval
+   if(key==='amount')return showAmount
+   if(key==='quantity')return showQuantity
+   if(key==='due_date')return showDueDate
+   if(key==='record_date')return showRecordDate
+   if(key==='reference_code')return showReference
+   return true
+  })
+  .map(key=>({key,label:recordMetaLabels[key]}))
+ const recordLabel=workspaceRecordLabels[group.key]??workspaceRecordLabels[group.dataModule]??'Record'
+ const workspaceLayout=workspaceLayouts[group.key]??workspaceLayouts[group.dataModule]??'registry'
+ const theme=themes[group.theme]||themes.blue
  
  const load=useCallback(async()=>{
   if(!supabase||!user||!group.dataModule){setRows([]);setLoading(false);return}
@@ -524,11 +460,6 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
  const overdue=rows.filter(row=>row.due_date&&row.due_date<new Date().toISOString().slice(0,10)&&!['completed','cancelled','closed','approved'].includes(row.status)).length
  const totalAmount=rows.reduce((sum,row)=>sum+Number(row.amount??0),0)
  const statusCounts=reviewMetrics.statusCounts
- const actionableRows=rows.filter(row=>!['completed','closed','approved','cancelled','rejected'].includes(String(row.status??'').toLowerCase()))
- const completedRows=rows.filter(row=>['completed','closed','approved'].includes(String(row.status??'').toLowerCase()))
- const completionRate=rows.length?Math.round(completedRows.length/rows.length*100):0
- const last30Days=Date.now()-30*86400000
- const recentRows=rows.filter(row=>row.created_at&&new Date(row.created_at).getTime()>=last30Days).length
 
  function resetForm(row?:OperationalRow){
   setEditing(row??null);setTitle(row?.title??'');setReference(row?.reference_code??'');setDescription(row?.description??'')
@@ -585,35 +516,26 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
  function exportCsv(){downloadCsv(baseName+'.csv',exportRows as unknown as Record<string,unknown>[],columns)}
  function exportExcel(){exportXlsx(baseName+'.xlsx',group.label+' — '+item.label,exportRows as unknown as Record<string,unknown>[],columns)}
  function exportWord(){exportDocx(baseName+'.docx',group.label+' — '+item.label,exportRows as unknown as Record<string,unknown>[],columns)}
- function print(){try{printOfficeReport(group.label+' — '+item.label,exportRows as unknown as Record<string,unknown>[],columns,user?.institutionName??'EduSphere 360')}catch(error){onToast(error instanceof Error?error.message:'Print view could not be opened.',true)}}
+ function print(){try{printOfficeReport(group.label+' — '+item.label,exportRows as unknown as Record<string,unknown>[],columns,user?.institutionName??'Government Islamia Degree College Badin')}catch(error){onToast(error instanceof Error?error.message:'Print view could not be opened.',true)}}
 
  return <main className="page-content ed360-module-page ed360-institutional-workspace" data-workspace-group={group.key} data-workspace-theme={group.theme} data-workspace-layout={workspaceLayout} style={{'--workspace-accent':theme.accent,'--workspace-soft':theme.soft,'--workspace-ink':theme.ink} as CSSProperties}>
   <header className="ed360-workspace-hero">
-   <div className="ed360-workspace-hero-icon"><Activity size={21}/></div>
-   <div className="ed360-workspace-hero-copy"><span>{group.label.toUpperCase()} / INSTITUTIONAL WORKSPACE</span><h1>{group.label}</h1><p>{group.description}</p></div>
-   <div className="ed360-workspace-hero-tools"><span className="ed360-data-state"><i/> Live institution records</span>{canWrite&&<button className="button button-primary" onClick={()=>resetForm()}><Plus size={16}/> New record</button>}</div>
+   <div className="ed360-workspace-hero-copy">
+    <span>{(user?.institutionName||'Government Islamia Degree College, Badin').toUpperCase()} / {group.label.toUpperCase()}</span>
+    <h1>{item.label}</h1>
+   </div>
+   <div className="ed360-workspace-hero-tools">
+    <button type="button" className="button button-primary" onClick={()=>void load()} disabled={loading}><RefreshCw size={16}/> {loading?'Refreshing…':'Refresh'}</button>
+    {canWrite&&<button type="button" className="button button-outline" onClick={()=>resetForm()}><Plus size={16}/> New record</button>}
+   </div>
   </header>
   <nav className="ed360-operations-window-nav ed360-workspace-tabs" aria-label={group.label+' submenus'}>
    {group.items.map(menu=><button key={menu.key} type="button" className={selectedItem===menu.key?'active':''} aria-current={selectedItem===menu.key?'page':undefined} onClick={()=>setSelectedItem(menu.key)}>{menu.label}</button>)}
   </nav>
-  <section className="ed360-operations-context-window ed360-workspace-subwindow">
-   <div><span>MAIN MENU / {group.label.toUpperCase()}</span><h2>{item.label}</h2><p>{experience.purpose}</p></div>
-   <div className="ed360-workspace-window-number"><strong>{filtered.length.toLocaleString()}</strong><small>{dashboard?'records in this module':'records in this view'}</small></div>
-  </section>
-  <section className="ed360-page-purpose" aria-label={item.label+' instructions'}>
-   <div className="ed360-page-purpose-heading"><span>PAGE PURPOSE</span><strong>How to use this workspace</strong><p>{experience.purpose}</p></div>
-   <div className="ed360-page-purpose-steps">{experience.workflow.map((step,index)=><div key={step}><b>{String(index+1).padStart(2,'0')}</b><span>{step}</span></div>)}</div>
-   <div className="ed360-page-purpose-outcome"><span>EXPECTED OUTCOME</span><p>{experience.outcome}</p></div>
-  </section>
-  {!dashboard&&<section className="ed360-workspace-pulse" aria-label={item.label+' live metrics'}>
-   <article><span>Records in this view</span><strong>{loading?'—':rows.length.toLocaleString()}</strong><small>Institution-scoped records</small></article>
-   <article><span>Needs follow-up</span><strong>{loading?'—':actionableRows.length.toLocaleString()}</strong><small>Not yet closed or approved</small></article>
-   <article><span>Completed / approved</span><strong>{loading?'—':completionRate+'%'}</strong><small>{completedRows.length.toLocaleString()} completed records</small></article>
-   <article><span>Added in 30 days</span><strong>{loading?'—':recentRows.toLocaleString()}</strong><small>Recent activity in this view</small></article>
-  </section>}
   <div className="ed360-workspace-toolbar">
-   <div className="ed360-workspace-filter"><Filter size={15}/><select value={range} onChange={e=>setRange(e.target.value)} aria-label="Date range"><option value="30">Last 30 days</option><option value="90">Last 90 days</option><option value="365">Last 12 months</option><option value="all">All dates</option></select>
-    {campuses.length>0&&<select value={campus} onChange={e=>setCampus(e.target.value)} aria-label="Campus filter"><option value="">All campuses</option>{campuses.map(c=><option value={c.id} key={c.id}>{c.name}</option>)}</select>}
+   <div className="ed360-workspace-filter">
+    {showCreatedDateFilter&&<><Filter size={15}/><label className="ed360-filter-label">Created<select value={range} onChange={e=>setRange(e.target.value)} aria-label="Created date range"><option value="30">Last 30 days</option><option value="90">Last 90 days</option><option value="365">Last 12 months</option><option value="all">All dates</option></select></label></>}
+    {campuses.length>0&&<label className="ed360-filter-label">Campus<select value={campus} onChange={e=>setCampus(e.target.value)} aria-label="Campus filter"><option value="">All campuses</option>{campuses.map(c=><option value={c.id} key={c.id}>{c.name}</option>)}</select></label>}
    </div>
    <label className="ed360-workspace-search"><Search size={16}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search this workspace..." aria-label="Search records"/></label>
    <div className="ed360-export-actions">
@@ -624,49 +546,49 @@ export function InstitutionalWorkspace({workspaceKey,onToast}:Props){
    </div>
   </div>
   {loadError&&<div className="ed360-workspace-error" role="alert">{loadError}</div>}
-  {group.key==='ai'&&<div className="ed360-workspace-integration-note"><b>AI provider not configured</b><span>This workspace stores manually authored, reviewable insight records. Predictions and generated answers are not produced until an AI provider is connected and tested.</span></div>}
-  {group.key==='communication'&&<div className="ed360-workspace-integration-note"><b>Messaging provider status</b><span>Not connected. This workspace records communication plans and delivery metadata; WhatsApp, SMS and email delivery require an approved provider integration.</span></div>}
-  {group.key==='backup'&&<div className="ed360-workspace-integration-note"><b>Platform backup / restore connection required</b><span>Requests can be tracked here, but a backup or restore is only complete when Supabase or the configured storage provider confirms the operation.</span></div>}
-  {group.key==='reports'&&<div className="ed360-workspace-integration-note"><b>Report execution status</b><span>Report definitions, templates and run history can be managed here. Automatic scheduled execution and email distribution require a configured server scheduler and delivery provider.</span></div>}
-  {group.key==='visitors'&&item.key==='visitor-notifications'&&<div className="ed360-workspace-integration-note"><b>Notification provider status</b><span>Visitor notification records can be prepared and tracked here. Email and SMS delivery require an approved provider integration.</span></div>}
-  {group.key==='transport'&&item.key==='transport-attendance'&&<div className="ed360-workspace-integration-note"><b>Route attendance mode</b><span>Boarding and alighting events can be recorded in this register. GPS, RFID or vehicle-device feeds are not claimed until a provider is connected and tested.</span></div>}
-  {group.key==='inventory'&&['sales-transactions','daily-availability','cafeteria-inventory'].includes(item.key)&&<div className="ed360-workspace-integration-note"><b>Cafeteria integration status</b><span>Menu, availability, stock and sales records can be managed here. Live point-of-sale terminals and payment devices require their own integration.</span></div>}
   {dashboard&&<section className="ed360-workspace-kpis">
-   <article><span>Total records</span><strong>{loading?'—':rows.length.toLocaleString()}</strong><small>From this institution’s records</small></article>
-   {pendingReviewCount!==null&&<article><span>Pending review</span><strong>{loading?'—':pendingReviewCount.toLocaleString()}</strong><small>Draft and pending approvals</small></article>}
-   <article><span>Overdue items</span><strong>{loading?'—':overdue.toLocaleString()}</strong><small>Past due date, not closed</small></article>
-   <article><span>Recorded value</span><strong>{loading?'—':money(totalAmount)}</strong><small>Only where records have a numeric amount</small></article>
+   <article><span>{item.label} records</span><strong>{loading?'—':rows.length.toLocaleString()}</strong></article>
+   {canAdmin&&showApproval&&pendingReviewCount!==null&&<article><span>Pending review</span><strong>{loading?'—':pendingReviewCount.toLocaleString()}</strong></article>}
+   {showDueDate&&<article><span>Overdue</span><strong>{loading?'—':overdue.toLocaleString()}</strong></article>}
+   {showAmount&&<article><span>Recorded value</span><strong>{loading?'—':money(totalAmount)}</strong></article>}
   </section>}
   {dashboard&&<section className="ed360-workspace-chart">
-   <div className="ed360-workspace-section-title"><div><span>LIVE DISTRIBUTION</span><h3>Workflow status</h3></div><span>Calculated from loaded records</span></div>
-   {statusCounts.length?statusCounts.map(s=><div className="ed360-workspace-bar" key={s.status}><label>{s.status.replaceAll('_',' ')}</label><div><i style={{width:Math.max(2,(s.count/Math.max(1,rows.length))*100)+'%'}}/></div><b>{s.count}</b></div>):<p className="ed360-workspace-empty-inline">No workflow statuses have been recorded in this module yet.</p>}
+   <div className="ed360-workspace-section-title"><div><span>RECORD STATUS</span><h3>{item.label} status</h3></div></div>
+   {statusCounts.length?statusCounts.map(s=><div className="ed360-workspace-bar" key={s.status}><label>{s.status.replaceAll('_',' ')}</label><div><i style={{width:Math.max(2,(s.count/Math.max(1,rows.length))*100)+'%'}}/></div><b>{s.count}</b></div>):<p className="ed360-workspace-empty-inline">No statuses recorded.</p>}
   </section>}
   <section className="table-card ed360-workspace-record-card">
-   <div className="table-toolbar"><div className="table-count"><strong>{filtered.length.toLocaleString()}</strong> {item.label.toLowerCase()} <span>·</span> Institution scope</div><span className="ed360-table-refresh"><button type="button" onClick={()=>void load()}>Refresh records <ArrowUpRight size={13}/></button></span></div>
-   {loading?<div className="ed360-workspace-empty">Loading institution records…</div>:filtered.length===0?<div className="ed360-workspace-empty"><strong>{experience.emptyTitle}</strong><span>{experience.emptyDescription}</span>{canWrite&&<button type="button" className="button button-primary" onClick={()=>resetForm()}><Plus size={15}/> {experience.actionLabel}</button>}</div>:
+   <div className="table-toolbar"><div className="table-count"><strong>{filtered.length.toLocaleString()}</strong> {item.label.toLowerCase()} </div></div>
+   {loading?<div className="ed360-workspace-empty">Loading…</div>:filtered.length===0?<div className="ed360-workspace-empty"><strong>{experience.emptyTitle}</strong>{experience.emptyDescription&&<span>{experience.emptyDescription}</span>}{canWrite&&<button type="button" className="button button-primary" onClick={()=>resetForm()}><Plus size={15}/> {experience.actionLabel}</button>}</div>:
    <div className="table-scroll"><table aria-label={group.label+' '+item.label+' register'}><thead><tr><th scope="col">{recordLabel}</th>{tableMetaColumns.map(column=><th key={column.key} scope="col" data-column={column.key}>{column.label}</th>)}{tableFields.map(field=><th key={field.key} scope="col">{field.label}</th>)}<th scope="col">Actions</th></tr></thead><tbody>
     {pageRows.map(row=><tr key={row.id}><td><button className="ed360-record-open" type="button" onClick={()=>setDetail(row)}>{row.title}</button><small className="ed360-record-subtitle">{row.description||row.record_type.replaceAll('-',' ')}</small></td>{tableMetaColumns.map(column=><td key={column.key} data-column={column.key}>{column.key==='reference_code'?row.reference_code||'—':column.key==='status'?<span className={'ed360-state-pill state-'+row.status}>{row.status.replaceAll('_',' ')}</span>:column.key==='approval_status'?row.approval_status.replaceAll('_',' '):column.key==='record_date'?displayDate(row.record_date):column.key==='due_date'?displayDate(row.due_date):column.key==='amount'?money(row.amount):row.quantity??'—'}</td>)}{tableFields.map(field=><td key={field.key} data-column={field.key}>{String(row.payload?.[field.key]??'—')}</td>)}<td><div className="ed360-row-actions"><button type="button" onClick={()=>setDetail(row)}>Open</button>{canWrite&&<button type="button" onClick={()=>resetForm(row)}>Edit</button>}</div></td></tr>)}
    </tbody></table></div>}
    {!loading&&filtered.length>pageSize&&<div className="ed360-record-pagination"><span>Showing <b>{(currentPage-1)*pageSize+1}–{Math.min(currentPage*pageSize,filtered.length)}</b> of <b>{filtered.length}</b> records</span><div><button type="button" disabled={currentPage<=1} onClick={()=>setPage(value=>Math.max(1,value-1))}>Previous</button><span>Page {currentPage} of {pageCount}</span><button type="button" disabled={currentPage>=pageCount} onClick={()=>setPage(value=>Math.min(pageCount,value+1))}>Next</button></div></div>}
   </section>
   {showForm&&<div className="modal-backdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setShowForm(false)}}><section className="modal-card ed360-context-form" role="dialog" aria-modal="true" aria-labelledby="ed360-form-heading">
-   <div className="modal-heading"><div><div className="eyebrow">{group.label.toUpperCase()} / {item.label.toUpperCase()}</div><h2 id="ed360-form-heading">{editing?'Edit':'Create'} {item.label}</h2><p>This form saves a real institution-scoped record.</p></div><button type="button" className="icon-button" onClick={()=>setShowForm(false)} aria-label="Close"><X size={18}/></button></div>
+   <div className="modal-heading"><div><div className="eyebrow">{group.label.toUpperCase()} / {item.label.toUpperCase()}</div><h2 id="ed360-form-heading">{editing?'Edit':'Create'} {item.label}</h2></div><button type="button" className="icon-button" onClick={()=>setShowForm(false)} aria-label="Close"><X size={18}/></button></div>
    <form onSubmit={save} className="ed360-context-form-grid">
     <label>Record title *<input required value={title} onChange={e=>setTitle(e.target.value)} maxLength={180} placeholder={'Enter '+item.label.toLowerCase()}/></label>
-    <label>Reference / number<input value={reference} onChange={e=>setReference(e.target.value)} maxLength={80} placeholder="Optional reference"/></label>
+    {showReference&&<label>Reference / number<input value={reference} onChange={e=>setReference(e.target.value)} maxLength={80} placeholder="Optional reference"/></label>}
     <label>Description / notes<textarea value={description} onChange={e=>setDescription(e.target.value)} rows={3} maxLength={3000}/></label>
-    <div className="ed360-form-row"><label>Status<select value={status} onChange={e=>setStatus(e.target.value)}>{statusOptions.map(s=><option value={s} key={s}>{s.replaceAll('_',' ')}</option>)}</select></label>{canAdmin&&<label>Approval<select value={approval} onChange={e=>setApproval(e.target.value)}><option value="not_required">Not required</option><option value="draft">Draft</option><option value="pending">Needs approval</option></select></label>}</div>
-    <div className="ed360-form-row"><label>Record date<input type="date" value={recordDate} onChange={e=>setRecordDate(e.target.value)}/></label>{showDueDate&&<label>Due date<input type="date" value={dueDate} onChange={e=>setDueDate(e.target.value)}/></label>}</div>
-    {showPortalVisibility&&<div className="ed360-form-row"><label>Portal visibility<select value={visibility} onChange={e=>setVisibility(e.target.value)}><option value="staff_only">Staff only</option><option value="student_portal">Student portal (one linked student)</option><option value="parent_portal">Parent portal (one linked student)</option><option value="institution_portal">Institution portal (shared notice)</option></select><small>Student and parent portal records are linked to one student. Institution-wide notices use the shared institution portal.</small></label>{canWrite&&visibility!=='staff_only'&&visibility!=='institution_portal'&&<label>Linked student *<select required value={selectedStudentId} onChange={e=>setSelectedStudentId(e.target.value)}><option value="">Select the relevant student</option>{studentOptions.map(student=><option key={student.id} value={student.id}>{student.name}{student.reference?' · '+student.reference:''}</option>)}</select><small>Only permitted linked guardians/students can read this portal record.</small></label>}</div>}
+    <div className="ed360-form-row"><label>Status<select value={status} onChange={e=>setStatus(e.target.value)}>{statusOptions.map(s=><option value={s} key={s}>{s.replaceAll('_',' ')}</option>)}</select></label>{showApproval&&<label>Approval<select value={approval} onChange={e=>setApproval(e.target.value)}><option value="not_required">Not required</option><option value="draft">Draft</option><option value="pending">Needs approval</option></select></label>}</div>
+    {(showRecordDate||showDueDate)&&<div className="ed360-form-row">{showRecordDate&&<label>Record date<input type="date" value={recordDate} onChange={e=>setRecordDate(e.target.value)}/></label>}{showDueDate&&<label>Due date<input type="date" value={dueDate} onChange={e=>setDueDate(e.target.value)}/></label>}</div>}
+    {showPortalVisibility&&<div className="ed360-form-row"><label>Portal visibility<select value={visibility} onChange={e=>setVisibility(e.target.value)}><option value="staff_only">Staff only</option><option value="student_portal">Student portal (one linked student)</option><option value="parent_portal">Parent portal (one linked student)</option><option value="institution_portal">Institution portal (shared notice)</option></select></label>{canWrite&&visibility!=='staff_only'&&visibility!=='institution_portal'&&<label>Linked student *<select required value={selectedStudentId} onChange={e=>setSelectedStudentId(e.target.value)}><option value="">Select the relevant student</option>{studentOptions.map(student=><option key={student.id} value={student.id}>{student.name}{student.reference?' · '+student.reference:''}</option>)}</select></label>}</div>}
     {(showAmount||showQuantity)&&<div className="ed360-form-row">{showAmount&&<label>Amount (PKR)<input type="number" min="0" step="0.01" value={amount} onChange={e=>setAmount(e.target.value)}/></label>}{showQuantity&&<label>Quantity<input type="number" min="0" step="0.001" value={quantity} onChange={e=>setQuantity(e.target.value)}/></label>}</div>}
-    {structuredFields.length>0&&<section className="ed360-module-specific-form"><div className="ed360-module-specific-heading"><span>MODULE-SPECIFIC INFORMATION</span><p>Fields for {item.label.toLowerCase()}.</p></div><div className="ed360-context-form-fields">{structuredFields.map(field=><label key={field.key}>{field.label}{field.type==='select'?<select value={String(payloadData[field.key]??'')} onChange={e=>setPayloadData(old=>({...old,[field.key]:e.target.value}))}><option value="">Select / not set</option>{(field.options??[]).map(option=><option value={option} key={option}>{option}</option>)}</select>:field.type==='textarea'?<textarea rows={3} value={String(payloadData[field.key]??'')} onChange={e=>setPayloadData(old=>({...old,[field.key]:e.target.value}))} placeholder={field.placeholder??''}/>:<input type={field.type??'text'} step={field.type==='number'?'0.01':undefined} value={String(payloadData[field.key]??'')} onChange={e=>setPayloadData(old=>({...old,[field.key]:e.target.value}))} placeholder={field.placeholder??''}/>}</label>)}</div></section>}
+    {structuredFields.length>0&&<section className="ed360-module-specific-form"><div className="ed360-module-specific-heading"><span>ADDITIONAL DETAILS</span></div><div className="ed360-context-form-fields">{structuredFields.map(field=><label key={field.key}>{field.label}{field.type==='select'?<select value={String(payloadData[field.key]??'')} onChange={e=>setPayloadData(old=>({...old,[field.key]:e.target.value}))}><option value="">Select / not set</option>{(field.options??[]).map(option=><option value={option} key={option}>{option}</option>)}</select>:field.type==='textarea'?<textarea rows={3} value={String(payloadData[field.key]??'')} onChange={e=>setPayloadData(old=>({...old,[field.key]:e.target.value}))} placeholder={field.placeholder??''}/>:<input type={field.type??'text'} step={field.type==='number'?'0.01':undefined} value={String(payloadData[field.key]??'')} onChange={e=>setPayloadData(old=>({...old,[field.key]:e.target.value}))} placeholder={field.placeholder??''}/>}</label>)}</div></section>}
     <div className="modal-actions"><button type="button" className="button button-outline" onClick={()=>setShowForm(false)}>Cancel</button><button type="submit" className="button button-primary" disabled={saving}>{saving?'Saving…':editing?'Save changes':'Create record'}</button></div>
    </form>
   </section></div>}
   {detail&&<div className="modal-backdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setDetail(null)}}><section className="modal-card ed360-record-details ed360-context-detail" role="dialog" aria-modal="true" aria-labelledby="ed360-detail-heading">
    <div className="modal-heading"><div><div className="eyebrow">CONTEXTUAL SUB-WINDOW / {group.label.toUpperCase()}</div><h2 id="ed360-detail-heading">{detail.title}</h2><p>{detail.reference_code||detail.record_type.replaceAll('-',' ')} · {detail.status}</p></div><button type="button" className="icon-button" onClick={()=>setDetail(null)} aria-label="Close"><X size={18}/></button></div>
-   <div className="ed360-context-detail-callout"><div>{canAdmin&&<><span>RECORD WORKFLOW</span><strong>{detail.approval_status.replaceAll('_',' ')}</strong></>}<p>{detail.description||'No additional description supplied.'}</p></div><aside><b>Responsible workspace</b><p>{group.label} / {item.label}</p><b>Updated</b><p>{detail.updated_at?new Date(detail.updated_at).toLocaleString():'Not available'}</p></aside></div>
-   <div className="ed360-record-details-grid"><div className="ed360-record-detail"><small>Status</small><b>{detail.status}</b></div><div className="ed360-record-detail"><small>Record date</small><b>{displayDate(detail.record_date)}</b></div><div className="ed360-record-detail"><small>Due date</small><b>{displayDate(detail.due_date)}</b></div><div className="ed360-record-detail"><small>Amount</small><b>{money(detail.amount)}</b></div><div className="ed360-record-detail"><small>Quantity</small><b>{detail.quantity??'—'}</b></div><div className="ed360-record-detail"><small>Created</small><b>{detail.created_at?new Date(detail.created_at).toLocaleString():'—'}</b></div></div>
+   <div className="ed360-context-detail-callout"><div>{canAdmin&&<><span>RECORD WORKFLOW</span><strong>{detail.approval_status.replaceAll('_',' ')}</strong></>}{detail.description&&<p>{detail.description}</p>}</div><aside><b>Responsible workspace</b><p>{group.label} / {item.label}</p><b>Updated</b><p>{detail.updated_at?new Date(detail.updated_at).toLocaleString():'Not available'}</p></aside></div>
+   <div className="ed360-record-details-grid">
+    <div className="ed360-record-detail"><small>Status</small><b>{detail.status}</b></div>
+    {showRecordDate&&<div className="ed360-record-detail"><small>Record date</small><b>{displayDate(detail.record_date)}</b></div>}
+    {showDueDate&&<div className="ed360-record-detail"><small>Due date</small><b>{displayDate(detail.due_date)}</b></div>}
+    {showAmount&&<div className="ed360-record-detail"><small>Amount</small><b>{money(detail.amount)}</b></div>}
+    {showQuantity&&<div className="ed360-record-detail"><small>Quantity</small><b>{detail.quantity??'—'}</b></div>}
+    <div className="ed360-record-detail"><small>Created</small><b>{detail.created_at?new Date(detail.created_at).toLocaleString():'—'}</b></div>
+   </div>
    {Object.keys(detail.payload??{}).length>0&&<section className="ed360-payload-section"><h3>{item.label} details</h3><div className="ed360-record-details-grid">{Object.entries(detail.payload).map(([key,value])=><div className="ed360-record-detail" key={key}><small>{structuredFields.find(field=>field.key===key)?.label??key.replaceAll('_',' ')}</small><b>{typeof value==='boolean'?(value?'Yes':'No'):String(value??'—')}</b></div>)}</div></section>}
    <div className="modal-actions">
     {canAdmin&&detail.approval_status==='pending'&&<><button type="button" className="button button-outline" onClick={()=>void decide(detail,'rejected')}>Reject</button><button type="button" className="button button-primary" onClick={()=>void decide(detail,'approved')}><CheckCircle2 size={15}/> Approve</button></>}

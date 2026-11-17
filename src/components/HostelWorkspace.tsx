@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { Building2, Download, RefreshCw } from 'lucide-react'
+import { Download, RefreshCw } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import '../styles/data-management.css'
@@ -14,18 +14,6 @@ const titles:Record<string,string>={
  'room-transfers':'Room Transfers','check-in-check-out':'Check-in & Check-out',
  'hostel-visitor-register':'Hostel Visitor Register','hostel-fees':'Hostel Fees',
  'accommodation-maintenance':'Accommodation Maintenance','occupancy-reports':'Occupancy Reports'
-}
-const descriptions:Record<string,string>={
- 'hostel-dashboard':'See occupancy, available beds, arrivals, departures and maintenance from live residence records.',
- 'hostel-buildings':'Register residence buildings, assign wardens and maintain their operating status.',
- 'room-bed-register':'Manage room capacity, room types and the individual bed inventory.',
- 'resident-allocation':'Allocate an eligible student to an available bed using a transaction that checks bed and resident conflicts.',
- 'room-transfers':'Transfer an active resident to another available bed and retain the movement history.',
- 'check-in-check-out':'Record check-in, temporary exit, return and final check-out against active residence allocations.',
- 'hostel-visitor-register':'Record visitors for resident visits and retain their check-in/check-out details.',
- 'hostel-fees':'Create accommodation charges and track paid amounts, balances and due dates. These are not automatically posted to the main fee ledger.',
- 'accommodation-maintenance':'Report, assign and resolve accommodation maintenance requests.',
- 'occupancy-reports':'Review occupancy and bed availability by building, room and resident status.'
 }
 const fmt=(v:unknown)=>v?new Date(String(v)).toLocaleDateString():'—'
 const dateTime=(v:unknown)=>v?new Date(String(v)).toLocaleString():'—'
@@ -162,7 +150,7 @@ export function HostelWorkspace({workspaceKey,onToast}:{workspaceKey:string;onTo
  const field=(caption:string,key:string,type='text',required=true,options?:{label:string;value:string}[])=> <label className="iop-field" key={key}>{caption}{options?<select required={required} value={form[key]??''} onChange={e=>setForm(x=>({...x,[key]:e.target.value}))}><option value="">Select {caption.toLowerCase()}</option>{options.map(o=><option key={o.value} value={o.value}>{o.label}</option>)}</select>:<input required={required} type={type} value={form[key]??''} onChange={e=>setForm(x=>({...x,[key]:e.target.value}))}/>}</label>
  const textArea=(caption:string,key:string)=> <label className="iop-field" key={key}>{caption}<textarea rows={3} value={form[key]??''} onChange={e=>setForm(x=>({...x,[key]:e.target.value}))}/></label>
  const submitBar=(caption:string)=><div className="modal-actions"><button className="iop-button primary" disabled={busy}>{busy?'Saving…':caption}</button></div>
- const header=<header className="ed360-workspace-hero"><div className="ed360-workspace-hero-icon"><Building2 size={21}/></div><div className="ed360-workspace-hero-copy"><span>ROOMS & FACILITIES / HOSTEL</span><h1>{title}</h1><p>{descriptions[page]??'Manage student residence operations.'}</p></div><div className="ed360-workspace-hero-tools"><span className="ed360-data-state"><i/> Live institution records</span><button type="button" className="button button-outline" onClick={()=>void load()}><RefreshCw size={15}/> Refresh</button></div></header>
+ const header=<header className="ed360-workspace-hero"><div className="ed360-workspace-hero-copy"><span>{(user?.institutionName?.trim()||'GOVERNMENT ISLAMIA DEGREE COLLEGE').toUpperCase()} / HOSTEL / {title.toUpperCase()}</span><h1>{title}</h1></div><div className="ed360-workspace-hero-tools"><button type="button" className="button button-primary" onClick={()=>void load()} disabled={loading}><RefreshCw size={15}/>{loading?'Refreshing…':'Refresh'}</button></div></header>
  if(!user)return null
  return <main className="page-content ed360-module-page ed360-hostel-workspace">
   {header}

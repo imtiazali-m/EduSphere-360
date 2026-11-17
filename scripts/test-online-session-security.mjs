@@ -87,10 +87,16 @@ check('Calling and online classes use the native EduSphere workspace', () => {
   assert.ok(calling.includes("user?.role === 'parent' ? 'classes' : initialView"))
 })
 
-check('Zoom, Google Meet and YouTube are not dependencies for online classrooms', () => {
-  for (const integration of ['zoom:', 'google:', 'youtube:']) assert.ok(!integrations.includes(integration))
-  assert.ok(integrations.includes('AI Provider Connections'))
-  assert.ok(integrations.includes('Biometric Attendance Devices'))
+check('Native online classrooms use the EduSphere WebRTC media layer independently of third-party meeting providers', () => {
+  const packageJson = JSON.parse(read('package.json'))
+  const dependencies = Object.keys(packageJson.dependencies ?? {})
+  assert.ok(dependencies.includes('livekit-client'), 'EduSphere calling must use the native LiveKit WebRTC client')
+  for (const dependency of ['@zoomus/websdk','@zoom/videosdk','@googleworkspace/classroom','gapi-script','youtube-player']) {
+    assert.ok(!dependencies.includes(dependency), 'Native classroom workflow should not require a third-party meeting dependency: ' + dependency)
+  }
+  assert.ok(calling.includes("from 'livekit-client'"), 'Native calling must use the LiveKit room client')
+  assert.ok(integrations.includes('Zoom Meetings & Video') && integrations.includes('Google Workspace & Classroom') && integrations.includes('YouTube Education Media'), 'Optional external integrations must remain separately discoverable')
+  assert.ok(integrations.includes('Not connected') && integrations.includes('setup required'), 'External integrations must remain disabled until separately authorised and tested')
 })
 
 if (process.exitCode) process.exit(process.exitCode)

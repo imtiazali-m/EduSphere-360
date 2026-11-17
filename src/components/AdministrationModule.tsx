@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Activity, BookOpen, Building2, CalendarDays, DoorOpen, Layers3, Users } from 'lucide-react'
+import { Activity, BookOpen, Building2, CalendarDays, Download, DoorOpen, FileSpreadsheet, FileText, Layers3, Printer, Users } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { createRecord, deleteRecord as deleteDataRecord, listRecords, updateRecord } from '../lib/data'
 import { userFacingError } from '../lib/userErrors'
+import { downloadCsv } from '../lib/csv'
+import { exportDocx, exportXlsx, printOfficeReport, type OfficeColumn } from '../lib/officeExport'
 
 type AdminModuleKey =
   | 'departments'
@@ -48,6 +50,8 @@ type AdvancedField = {
   options?: { label: string; value: string }[]
   source?: 'departments' | 'programs' | 'academic_sessions'
 }
+
+type DirectoryColumn = OfficeColumn
 
 const MODULES: ModuleConfig[] = [
   {
@@ -135,6 +139,25 @@ const relatedSources: Record<AdminModuleKey, string[]> = {
   rooms: ['timetable_entries'],
 }
 
+const DIRECTORY_COLUMNS: Record<AdminModuleKey, DirectoryColumn[]> = {
+  departments: [{ key: 'program_count', label: 'Programs' }],
+  programs: [{ key: 'department_name', label: 'Department' }, { key: 'class_count', label: 'Class sections' }],
+  classes: [
+    { key: 'grade_level', label: 'Grade / level' }, { key: 'section', label: 'Section' },
+    { key: 'program_name', label: 'Program' }, { key: 'session_name', label: 'Academic session' },
+    { key: 'capacity', label: 'Capacity' },
+  ],
+  academic_sessions: [
+    { key: 'start_date', label: 'Start date' }, { key: 'end_date', label: 'End date' },
+    { key: 'current_label', label: 'Session status' },
+  ],
+  subjects: [
+    { key: 'department_name', label: 'Department' }, { key: 'subject_type', label: 'Subject type' },
+    { key: 'credit_hours', label: 'Credit hours' },
+  ],
+  rooms: [{ key: 'room_type', label: 'Facility type' }, { key: 'capacity', label: 'Capacity' }],
+}
+
 function AdminWorkspaceInsights({ activeKey, records, references, loading }: {
   activeKey: AdminModuleKey; records: AdminRecord[]; references: Record<string, AdminRecord[]>; loading: boolean
 }) {
@@ -208,6 +231,8 @@ export default function AdministrationModule({ initialKey = 'departments' }: { i
   const [notice, setNotice] = useState('')
   const [search, setSearch] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
+  const [sortKey, setSortKey] = useState('display_name')
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
   const [viewingRecord, setViewingRecord] = useState<AdminRecord | null>(null)
   const pageSize = 10
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -234,6 +259,12 @@ export default function AdministrationModule({ initialKey = 'departments' }: { i
     rooms:{overview:'Facilities Overview',directory:'Room & Facility Register',editor:'Facility Setup',scope:'Room types, capacity and timetable usage.'},
   }
   const currentWindow = windowLabels[activeKey]
+  const directoryColumns = useMemo<DirectoryColumn[]>(() => [
+    { key: 'display_name', label: activeModule.singular },
+    { key: 'code', label: 'Code' },
+    ...DIRECTORY_COLUMNS[activeKey],
+    { key: 'status_label', label: 'Status' },
+  ], [activeKey, activeModule.singular])
 
   const loadRecords = useCallback(async () => {
     setLoading(true)
@@ -386,14 +417,56 @@ export default function AdministrationModule({ initialKey = 'departments' }: { i
     }
   }
 
-  const filteredRecords = records.filter((record) => {
+  const directoryRows = useMemo<AdminRecord[]>(() => records.map((record) => {
+    const departments = references.departments ?? []
+    const programs = references.programs ?? []
+    const classes = references.classes ?? []
+    const sessions = references.academic_sessions ?? []
+    return {
+      ...record,
+      display_name: getDisplayName(record),
+      department_name: departments.find((row) => row.id === record.department_id)?.name ?? 'Institution-wide',
+      program_name: programs.find((row) => row.id === record.program_id)?.name ?? 'Not assigned',
+      session_name: sessions.find((row) => row.id === record.academic_session_id)?.name ?? 'Not assigned',
+      program_count: programs.filter((row) => row.department_id === record.id).length,
+      class_count: classes.filter((row) => activeKey === 'programs' ? row.program_id === record.id : row.academic_session_id === record.id).length,
+      current_label: record.is_current === true ? 'Current session' : 'Not current',
+      status_label: record.is_active === false ? 'Inactive' : 'Active',
+    }
+  }), [records, references, activeKey])
+  const filteredRecords = directoryRows.filter((record) => {
     const query = search.trim().toLowerCase()
     if (!query) return true
-    return [record.name, record.title, record.code, record.description]
+    return [...directoryColumns.map((column) => record[column.key]), record.description]
       .some((value) => String(value ?? '').toLowerCase().includes(query))
   })
-  const pageCount = Math.max(1, Math.ceil(filteredRecords.length / pageSize))
-  const pagedRecords = filteredRecords.slice((currentPage - 1) * pageSize, currentPage * pageSize)
+  const sortedRecords = useMemo(() => [...filteredRecords].sort((left, right) => {
+    const a = left[sortKey]
+    const b = right[sortKey]
+    const comparison = typeof a === 'number' && typeof b === 'number'
+      ? a - b
+      : String(a ?? '').localeCompare(String(b ?? ''), undefined, { numeric: true, sensitivity: 'base' })
+    return sortDirection === 'asc' ? comparison : -comparison
+  }), [filteredRecords, sortKey, sortDirection])
+  const pageCount = Math.max(1, Math.ceil(sortedRecords.length / pageSize))
+  const pagedRecords = sortedRecords.slice((currentPage - 1) * pageSize, currentPage * pageSize)
+  const reportRows = sortedRecords.map((record) => Object.fromEntries(
+    directoryColumns.map((column) => [column.key, record[column.key] ?? ''])
+  ))
+
+  function exportRegister(format: 'csv' | 'excel' | 'word' | 'print') {
+    const filename = activeKey.replaceAll('_', '-') + '-register'
+    const title = activeModule.label + ' Register'
+    setError('')
+    try {
+      if (format === 'csv') downloadCsv(filename + '.csv', reportRows, directoryColumns)
+      else if (format === 'excel') exportXlsx(filename + '.xlsx', title, reportRows, directoryColumns)
+      else if (format === 'word') exportDocx(filename + '.docx', title, reportRows, directoryColumns)
+      else printOfficeReport(title, reportRows, directoryColumns, user?.institutionName ?? 'Institution')
+    } catch (exportError) {
+      setError(exportError instanceof Error ? exportError.message : 'The register report could not be opened.')
+    }
+  }
 
   if (!user || !['owner', 'admin'].includes(user.role)) {
     return <section className="admin-page"><div className="admin-alert error" role="alert">You do not have permission to manage institution settings.</div></section>
@@ -421,11 +494,17 @@ export default function AdministrationModule({ initialKey = 'departments' }: { i
         .admin-button.primary{background:var(--primary,#2457d6);color:#fff;border-color:var(--primary,#2457d6)}
         .admin-button.danger{color:#b42318}
         .admin-list-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
-        .admin-search{max-width:260px}
+        .admin-search{max-width:300px}
+        .admin-directory-tools{display:flex;align-items:center;justify-content:flex-end;gap:9px;flex-wrap:wrap}
+        .admin-export-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+        .admin-export-actions .admin-button{display:inline-flex;align-items:center;gap:5px;padding:8px 10px;font-size:11px}
         .admin-table-wrap{overflow:auto}
         .admin-table{width:100%;border-collapse:collapse;font-size:13px}
         .admin-table th,.admin-table td{text-align:left;padding:12px 9px;border-bottom:1px solid var(--border-color,#e2e8f0);vertical-align:middle}
-        .admin-table th{color:var(--text-secondary,#64748b);font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+        .admin-table th{color:var(--text-secondary,#64748b);font-size:11px;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+        .admin-sort-button{display:inline-flex;align-items:center;gap:6px;padding:0;border:0;background:transparent;color:inherit;font:inherit;font-weight:750;text-transform:inherit;letter-spacing:inherit;cursor:pointer}
+        .admin-sort-button:focus-visible{outline:2px solid var(--primary,#6035b5);outline-offset:3px;border-radius:3px}
+        .admin-sort-button span{color:#8b99ac;font-size:10px}
         .admin-status{display:inline-block;border-radius:99px;padding:4px 8px;background:#e8f7ee;color:#187443;font-size:11px;font-weight:700}
         .admin-status.off{background:#f1f5f9;color:#64748b}
         .admin-alert{padding:11px 13px;border-radius:9px;font-size:13px}
@@ -539,15 +618,23 @@ export default function AdministrationModule({ initialKey = 'departments' }: { i
           <div className="admin-list-head">
             <div>
               <h2>{activeModule.label}</h2>
-              <p className="admin-muted">{records.length} total records</p>
+              <p className="admin-muted">{filteredRecords.length} matching of {records.length} records</p>
             </div>
-            <input
-              className="admin-search"
-              value={search}
-              onChange={(event) => { setSearch(event.target.value); setCurrentPage(1) }}
-              placeholder="Search records…"
-              aria-label="Search records"
-            />
+            <div className="admin-directory-tools">
+              <input
+                className="admin-search"
+                value={search}
+                onChange={(event) => { setSearch(event.target.value); setCurrentPage(1) }}
+                placeholder={`Search ${activeModule.singular.toLowerCase()} records…`}
+                aria-label={`Search ${activeModule.label}`}
+              />
+              <div className="admin-export-actions" aria-label="Export register reports">
+                <button className="admin-button" type="button" onClick={() => exportRegister('csv')} aria-label="Download CSV"><Download size={14}/> CSV</button>
+                <button className="admin-button" type="button" onClick={() => exportRegister('excel')} aria-label="Download Excel"><FileSpreadsheet size={14}/> Excel</button>
+                <button className="admin-button" type="button" onClick={() => exportRegister('word')} aria-label="Download Word"><FileText size={14}/> Word</button>
+                <button className="admin-button" type="button" onClick={() => exportRegister('print')} aria-label="Print A4 register"><Printer size={14}/> Print A4</button>
+              </div>
+            </div>
           </div>
 
           {loading ? (
@@ -560,17 +647,12 @@ export default function AdministrationModule({ initialKey = 'departments' }: { i
             <div className="admin-table-wrap">
               <table className="admin-table">
                 <thead>
-                  <tr><th>Name</th><th>Code</th><th>Status</th><th>Actions</th></tr>
+                  <tr>{directoryColumns.map((column) => <th key={column.key} aria-sort={sortKey === column.key ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}><button type="button" className="admin-sort-button" onClick={() => { setSortKey(column.key); setSortDirection(current => sortKey === column.key && current === 'asc' ? 'desc' : 'asc'); setCurrentPage(1) }}>{column.label}<span aria-hidden="true">{sortKey === column.key ? (sortDirection === 'asc' ? '↑' : '↓') : '↕'}</span></button></th>)}<th>Actions</th></tr>
                 </thead>
                 <tbody>
                   {pagedRecords.map((record) => (
                     <tr key={record.id}>
-                      <td>
-                        <strong>{getDisplayName(record)}</strong>
-                        {record.description && <div className="admin-muted">{String(record.description)}</div>}
-                      </td>
-                      <td>{String(record.code ?? '—')}</td>
-                      <td><span className={`admin-status${record.is_active === false ? ' off' : ''}`}>{record.is_active === false ? 'Inactive' : 'Active'}</span></td>
+                      {directoryColumns.map((column) => <td key={column.key}>{column.key === 'status_label' ? <span className={`admin-status${record.is_active === false ? ' off' : ''}`}>{String(record[column.key])}</span> : (record[column.key] === null || record[column.key] === undefined || record[column.key] === '' ? '—' : String(record[column.key]))}</td>)}
                       <td>
                         <div className="admin-actions">
                           <button className="admin-button" type="button" onClick={() => setViewingRecord(record)}>View</button>

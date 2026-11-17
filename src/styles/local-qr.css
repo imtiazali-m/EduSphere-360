@@ -1,0 +1,25 @@
+/* Local QR output shared by identity cards and certificate previews. */
+.ed360-local-qr {
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  flex:0 0 auto;
+  padding:3px;
+  border:1px solid #e2daed;
+  border-radius:8px;
+  background:#fff;
+}
+.ed360-local-qr canvas,
+.ed360-local-qr img {
+  display:block;
+  width:100%!important;
+  height:100%!important;
+  max-width:100%;
+  max-height:100%;
+  object-fit:contain;
+}
+.ed360-local-qr:not(:has(canvas)):not(:has(img)) {
+  color:#746b80;
+  font-size:9px;
+  text-align:center;
+}

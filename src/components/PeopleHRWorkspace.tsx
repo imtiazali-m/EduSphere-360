@@ -13,7 +13,7 @@ type RecruitTab = 'vacancies' | 'candidates' | 'interviews'
 type Field = { name: string; label: string; type?: 'text'|'email'|'tel'|'date'|'datetime-local'|'number'|'textarea'|'select'|'checkbox'; required?: boolean; options?: {value:string;label:string}[]; help?: string }
 type Props = { initialWindow?: string; onToast: (message:string,error?:boolean)=>void; onNavigate:(route:string)=>void }
 
-const dateToday = () => new Date().toISOString().slice(0,10)
+const dateToday = () => { const now=new Date();return now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0') }
 const title = (value:unknown) => String(value??'').replaceAll('_',' ').replace(/\b\w/g,c=>c.toUpperCase())
 const dateLabel = (value:unknown) => value ? new Date(String(value).slice(0,10)+'T00:00:00').toLocaleDateString() : '—'
 const makeId = (prefix:string) => prefix+'-'+new Date().getFullYear()+'-'+crypto.randomUUID().replaceAll('-','').slice(0,7).toUpperCase()
@@ -42,6 +42,10 @@ export function PeopleHRWorkspace({initialWindow,onToast,onNavigate}:Props) {
   const [loading,setLoading]=useState(true)
   const [saving,setSaving]=useState(false)
   const [query,setQuery]=useState('')
+  const [page,setPage]=useState(1)
+  const [sortKey,setSortKey]=useState('')
+  const [sortDirection,setSortDirection]=useState<'asc'|'desc'>('asc')
+  const pageSize=25
   const [formOpen,setFormOpen]=useState(false)
   const [editing,setEditing]=useState<RecordRow|null>(null)
   const [values,setValues]=useState<Record<string,string>>({})
@@ -73,9 +77,17 @@ export function PeopleHRWorkspace({initialWindow,onToast,onNavigate}:Props) {
     if(!silent)setLoading(true)
     try {
       const results=await Promise.all(loadTables.map(async table=>{
-        const {data:rows,error}=await supabase!.from(table).select('*').eq('institution_id',user!.institutionId).order('created_at',{ascending:false}).limit(500)
-        if(error) throw error
-        return [table,(rows??[]) as RecordRow[]] as const
+        const collected:RecordRow[]=[]
+        let offset=0
+        while(true){
+          const {data:batch,error}=await supabase!.from(table).select('*').eq('institution_id',user!.institutionId).order('created_at',{ascending:false}).range(offset,offset+499)
+          if(error)throw error
+          const chunk=(batch??[]) as RecordRow[]
+          collected.push(...chunk)
+          if(chunk.length<500)break
+          offset+=chunk.length
+        }
+        return [table,collected] as const
       }))
       setData(old=>({...old,...Object.fromEntries(results)}))
     } catch(error) {
@@ -83,6 +95,7 @@ export function PeopleHRWorkspace({initialWindow,onToast,onNavigate}:Props) {
     } finally {setLoading(false)}
   }
   useEffect(()=>{void load()},[user?.id,user?.institutionId,user?.role,loadTables])
+  useEffect(()=>{setPage(1);setSortKey('');setSortDirection('asc')},[windowKey,recruitTab])
 
   const config = useMemo<{table:string;heading:string;description:string;columns:[string,string][];fields:Field[]}>(() => {
     if(windowKey==='admissions') return {
@@ -232,6 +245,20 @@ export function PeopleHRWorkspace({initialWindow,onToast,onNavigate}:Props) {
     return [value,employee?.full_name,student?.full_name,candidate?.full_name,job?.title].some(v=>String(v??'').toLowerCase().includes(query.trim().toLowerCase()))
   })),[currentRows,tableColumns,query,employees,students,candidates,vacancies])
 
+  const activeSortKey=tableColumns.some(([key])=>key===sortKey)?sortKey:(tableColumns[0]?.[0]??'created_at')
+  const sortedRows=useMemo(()=>[...filteredRows].sort((left,right)=>{
+    const leftRaw=left[activeSortKey],rightRaw=right[activeSortKey]
+    let comparison=0
+    if(typeof leftRaw==='number'&&typeof rightRaw==='number')comparison=leftRaw-rightRaw
+    else if(activeSortKey.includes('date')||activeSortKey.endsWith('_at'))comparison=(Date.parse(String(leftRaw??''))||0)-(Date.parse(String(rightRaw??''))||0)
+    else comparison=displayValue(left,activeSortKey).localeCompare(displayValue(right,activeSortKey),undefined,{numeric:true,sensitivity:'base'})
+    return sortDirection==='asc'?comparison:-comparison
+  }),[filteredRows,activeSortKey,sortDirection,employees,students,candidates,vacancies,documents])
+  const pageCount=Math.max(1,Math.ceil(sortedRows.length/pageSize))
+  const currentPage=Math.min(page,pageCount)
+  const pageRows=sortedRows.slice((currentPage-1)*pageSize,currentPage*pageSize)
+  function toggleSort(key:string){if(activeSortKey===key)setSortDirection(current=>current==='asc'?'desc':'asc');else{setSortKey(key);setSortDirection('asc')}setPage(1)}
+
   function displayValue(row:RecordRow,key:string) {
     if(key==='teacher_id') return textValue(employees.find(item=>item.id===row.teacher_id)?.full_name)
     if(key==='student_id') return textValue(students.find(item=>item.id===row.student_id)?.full_name)
@@ -293,6 +320,35 @@ export function PeopleHRWorkspace({initialWindow,onToast,onNavigate}:Props) {
     if(!editing) payload.created_by=user.id
     setSaving(true)
     try {
+      const rangeChecks:[string,string,string,string][]=[
+        ['start_date','end_date','Contract start date','Contract end date'],
+        ['start_date','probation_end_date','Contract start date','Probation end date'],
+        ['review_period_start','review_period_end','Review period start','Review period end'],
+        ['review_period_end','next_review_date','Review period end','Next review date'],
+      ]
+      for(const [startKey,endKey,startLabel,endLabel] of rangeChecks){
+        const start=String(payload[startKey]??'')
+        const end=String(payload[endKey]??'')
+        if(start&&end&&end<start)throw new Error(endLabel+' cannot be earlier than '+startLabel.toLowerCase()+'.')
+      }
+      const nonNegativeKeys=['salary_range_min','salary_range_max','years_experience','expected_salary','notice_period_days','openings','score','overall_rating']
+      for(const key of nonNegativeKeys){
+        if(payload[key]!==null&&payload[key]!==undefined&&(!Number.isFinite(Number(payload[key]))||Number(payload[key])<0))throw new Error(title(key)+' must be a valid non-negative number.')
+      }
+      if(windowKey==='recruitment'&&recruitTab==='vacancies'){
+        const openings=Number(payload.openings)
+        if(!Number.isInteger(openings)||openings<1||openings>500)throw new Error('Number of openings must be a whole number between 1 and 500.')
+        if(payload.salary_range_min!==null&&payload.salary_range_min!==undefined&&payload.salary_range_max!==null&&payload.salary_range_max!==undefined&&Number(payload.salary_range_max)<Number(payload.salary_range_min))throw new Error('The maximum salary cannot be below the minimum salary.')
+      }
+      if(windowKey==='recruitment'&&recruitTab==='candidates'&&payload.notice_period_days!==null&&payload.notice_period_days!==undefined&&!Number.isInteger(Number(payload.notice_period_days)))throw new Error('Notice period must be a whole number of days.')
+      if(windowKey==='recruitment'&&recruitTab==='interviews'&&payload.score!==null&&payload.score!==undefined&&(Number(payload.score)<0||Number(payload.score)>100))throw new Error('Interview score must be between 0 and 100.')
+      if(windowKey==='contracts'){
+        if(payload.notice_period_days!==null&&payload.notice_period_days!==undefined&&!Number.isInteger(Number(payload.notice_period_days)))throw new Error('Notice period must be a whole number of days.')
+        if(payload.status==='active'&&contracts.some(row=>row.teacher_id===payload.teacher_id&&row.status==='active'&&row.id!==editing?.id))throw new Error('This employee already has an active contract. End or supersede it before activating another contract.')
+      }
+      if(windowKey==='performance'&&payload.overall_rating!==null&&payload.overall_rating!==undefined&&(Number(payload.overall_rating)<1||Number(payload.overall_rating)>5))throw new Error('Performance rating must be between 1 and 5.')
+      if(windowKey==='admissions'&&payload.date_of_birth&&String(payload.date_of_birth)>dateToday())throw new Error('Date of birth cannot be in the future.')
+      if(windowKey==='alumni'&&payload.graduation_date&&String(payload.graduation_date)>dateToday())throw new Error('Graduation date cannot be in the future.')
       if(editing) {
         const {error}=await supabase.from(config.table).update(payload).eq('id',editing.id).eq('institution_id',user.institutionId)
         if(error)throw error
@@ -378,12 +434,12 @@ export function PeopleHRWorkspace({initialWindow,onToast,onNavigate}:Props) {
 
   return <main className="page-content people-hr-workspace">
     <header className="staff-workspace-heading">
-      <div><span className="staff-kicker">STAGE 6 · PEOPLE MANAGEMENT & HUMAN RESOURCES</span><h1>{titleText}</h1><p>{windowKey==='admissions'?'Enquiry intake, application conversion and admission follow-up.':windowKey==='recruitment'?'Vacancy planning, applicant screening, interviews and hiring.':windowKey==='contracts'?'Contract lifecycle, signing dates, expiry controls and employee documents.':windowKey==='performance'?'Structured employee reviews, appraisal outcomes and development plans.':'Graduate history, contact preferences and consent-based alumni relations.'}</p></div>
-      <button type="button" className="staff-button staff-button-outline" onClick={()=>void load()} disabled={loading}><RefreshCw size={15}/> Refresh</button>
+      <div><span className="staff-kicker">{(user?.institutionName?.trim()||'GOVERNMENT ISLAMIA DEGREE COLLEGE').toUpperCase()} / PEOPLE &amp; HUMAN RESOURCES / {titleText.toUpperCase()}</span><h1>{titleText}</h1></div>
+      <button type="button" className="staff-button staff-button-primary" onClick={()=>void load()} disabled={loading}><RefreshCw size={15}/>{loading?'Refreshing…':'Refresh'}</button>
     </header>
 
     {(isAdmin||canViewOwnEmployeeRecords)&&<nav className="people-hr-subnav" aria-label="People management workspaces">
-      {(isAdmin?(['admissions','recruitment','contracts','performance','alumni'] as WindowKey[]):(['contracts','performance'] as WindowKey[])).map(key=><button type="button" key={key} className={windowKey===key?'active':''} onClick={()=>{setWindowKey(key);setQuery('')}}>{key==='admissions'?<Users size={15}/>:key==='recruitment'?<ClipboardList size={15}/>:key==='contracts'?<FileText size={15}/>:key==='performance'?<ShieldCheck size={15}/>:<CalendarDays size={15}/>}<span>{viewLabels[key]}</span></button>)}
+      {(isAdmin?(['admissions','recruitment','contracts','performance','alumni'] as WindowKey[]):(['contracts','performance'] as WindowKey[])).map(key=><button type="button" key={key} className={windowKey===key?'active':''} onClick={()=>{setWindowKey(key);setQuery('');setPage(1);setSortKey('')}}>{key==='admissions'?<Users size={15}/>:key==='recruitment'?<ClipboardList size={15}/>:key==='contracts'?<FileText size={15}/>:key==='performance'?<ShieldCheck size={15}/>:<CalendarDays size={15}/>}<span>{viewLabels[key]}</span></button>)}
     </nav>}
 
     {windowKey==='admissions'&&<section className="people-hr-metric-row">
@@ -391,22 +447,23 @@ export function PeopleHRWorkspace({initialWindow,onToast,onNavigate}:Props) {
       <article><small>Follow-ups due</small><strong>{enquiries.filter(row=>row.follow_up_date&&String(row.follow_up_date)<=dateToday()&&!['converted','not_interested'].includes(String(row.status))).length}</strong><span>Due today or earlier</span></article>
       <article><small>Applications in review</small><strong>{totalEnrolledApplications}</strong><span>Existing student application workflow</span></article>
     </section>}
-    {windowKey==='recruitment'&&<nav className="people-hr-secondary-nav" aria-label="Recruitment workflow">{recruitTabs.map(item=><button type="button" className={recruitTab===item.key?'active':''} key={item.key} onClick={()=>{setRecruitTab(item.key);setQuery('')}}>{item.label}{item.key==='vacancies'?' · '+vacancies.length:item.key==='candidates'?' · '+candidates.length:' · '+interviews.length}</button>)}</nav>}
+    {windowKey==='recruitment'&&<nav className="people-hr-secondary-nav" aria-label="Recruitment workflow">{recruitTabs.map(item=><button type="button" className={recruitTab===item.key?'active':''} key={item.key} onClick={()=>{setRecruitTab(item.key);setQuery('');setPage(1);setSortKey('')}}>{item.label}{item.key==='vacancies'?' · '+vacancies.length:item.key==='candidates'?' · '+candidates.length:' · '+interviews.length}</button>)}</nav>}
     {windowKey==='contracts'&&<div className="people-hr-inline-note"><ShieldCheck size={16}/> Signed contract metadata is restricted to the employee and authorised administrators. Private contract files are managed in the existing staff document vault.</div>}
     {windowKey==='performance'&&canViewOwnEmployeeRecords&&!isAdmin&&<div className="people-hr-inline-note"><ShieldCheck size={16}/> Only your own reviewed appraisals are shown. Acknowledge a review and optionally record your response.</div>}
 
     <section className="staff-panel people-hr-data-panel">
       <header><div><h2>{config.heading}</h2><p>{config.description}</p></div><div className="people-hr-header-actions">{windowKey==='contracts'&&<button type="button" className="staff-button staff-button-outline" onClick={()=>onNavigate('employees:documents')}><FileText size={14}/> Open private document vault</button>}{isAdmin&&<button type="button" className="staff-button staff-button-primary" onClick={()=>openForm()}><Plus size={15}/> {windowKey==='admissions'?'New enquiry':windowKey==='recruitment'?'New '+(recruitTab==='vacancies'?'vacancy':recruitTab==='candidates'?'candidate':'interview'):windowKey==='contracts'?'New contract':windowKey==='performance'?'New review':'Register graduate'}</button>}</div></header>
-       <div className="people-hr-toolbar"><label><Search size={16}/><input value={query} onChange={event=>setQuery(event.target.value)} placeholder="Search this register…"/></label><span>{filteredRows.length} records</span><div className="people-hr-export-actions"><button type="button" className="staff-button staff-button-outline" onClick={()=>exportCurrent('csv')} disabled={!filteredRows.length}>CSV</button><button type="button" className="staff-button staff-button-outline" onClick={()=>exportCurrent('xlsx')} disabled={!filteredRows.length}>Excel</button><button type="button" className="staff-button staff-button-outline" onClick={()=>exportCurrent('docx')} disabled={!filteredRows.length}>Word</button><button type="button" className="staff-button staff-button-outline" onClick={()=>exportCurrent('print')} disabled={!filteredRows.length}><Printer size={14}/> Print / PDF</button></div></div>
-      {loading?<div className="staff-empty"><RefreshCw size={18}/> Loading institution records…</div>:filteredRows.length===0?<div className="staff-empty"><span><Users size={22}/></span><strong>No records in this register yet</strong><p>{config.description}</p></div>:<div className="staff-table-wrap people-hr-table-wrap"><table className="staff-table"><thead><tr>{tableColumns.map(([key,label])=><th key={key}>{label}</th>)}{(isAdmin||(windowKey==='performance'&&canViewOwnEmployeeRecords))&&<th>Workflow / Actions</th>}</tr></thead><tbody>{filteredRows.map(row=><tr key={row.id}>{tableColumns.map(([key])=><td key={key}>{key==='status'||key==='stage'?<span className={'staff-status staff-status-'+String(row[key]??'draft')}>{title(row[key])}</span>:displayValue(row,key)}</td>)}{(isAdmin||(windowKey==='performance'&&canViewOwnEmployeeRecords))&&<td className="people-hr-row-actions">
+       <div className="people-hr-toolbar"><label><Search size={16}/><input value={query} onChange={event=>{setQuery(event.target.value);setPage(1)}} placeholder="Search this register…"/></label><span>{filteredRows.length} records</span><div className="people-hr-export-actions"><button type="button" className="staff-button staff-button-outline" onClick={()=>exportCurrent('csv')} disabled={!filteredRows.length}>CSV</button><button type="button" className="staff-button staff-button-outline" onClick={()=>exportCurrent('xlsx')} disabled={!filteredRows.length}>Excel</button><button type="button" className="staff-button staff-button-outline" onClick={()=>exportCurrent('docx')} disabled={!filteredRows.length}>Word</button><button type="button" className="staff-button staff-button-outline" onClick={()=>exportCurrent('print')} disabled={!filteredRows.length}><Printer size={14}/> Print / PDF</button></div></div>
+      {loading?<div className="staff-empty"><RefreshCw size={18}/> Loading institution records…</div>:filteredRows.length===0?<div className="staff-empty"><span><Users size={22}/></span><strong>No records in this register yet</strong><p>{config.description}</p></div>:<div className="staff-table-wrap people-hr-table-wrap"><table className="staff-table"><thead><tr>{tableColumns.map(([key,label])=><th key={key} aria-sort={activeSortKey===key?(sortDirection==='asc'?'ascending':'descending'):'none'}><button type="button" className="people-hr-sort" onClick={()=>toggleSort(key)}>{label}<span aria-hidden="true">{activeSortKey===key?(sortDirection==='asc'?'↑':'↓'):'↕'}</span></button></th>)}{(isAdmin||(windowKey==='performance'&&canViewOwnEmployeeRecords))&&<th>Workflow / Actions</th>}</tr></thead><tbody>{pageRows.map(row=><tr key={row.id}>{tableColumns.map(([key])=><td key={key}>{key==='status'||key==='stage'?<span className={'staff-status staff-status-'+String(row[key]??'draft')}>{title(row[key])}</span>:displayValue(row,key)}</td>)}{(isAdmin||(windowKey==='performance'&&canViewOwnEmployeeRecords))&&<td className="people-hr-row-actions">
         {!isAdmin&&windowKey==='performance'&&row.status==='reviewed'&&<button type="button" className="staff-button staff-button-primary" disabled={saving} onClick={()=>void acknowledgeAppraisal(row)}>Acknowledge review</button>}
         {!isAdmin&&windowKey==='performance'&&row.status==='acknowledged'&&<span className="staff-status staff-status-acknowledged">Acknowledged</span>}
         {statusField&&<select aria-label={'Update '+String(row.id)+' workflow stage'} value={String(row[statusField]??statusOptions[0])} disabled={saving||['converted','hired'].includes(String(row.status??row.stage))} onChange={event=>void updateStatus(row,statusField,event.target.value)}>{statusOptions.map(option=><option key={option} value={option}>{title(option)}</option>)}</select>}
         {windowKey==='admissions'&&row.status!=='converted'&&row.status!=='not_interested'&&<button type="button" className="staff-button staff-button-primary" disabled={saving} onClick={()=>void convertEnquiry(row)}>Convert to application</button>}
         {windowKey==='recruitment'&&recruitTab==='candidates'&&row.stage!=='hired'&&row.stage!=='rejected'&&row.stage!=='withdrawn'&&<button type="button" className="staff-button staff-button-primary" disabled={saving||!row.job_posting_id} onClick={()=>void hireCandidate(row)}>Hire</button>}
-        {windowKey!=='recruitment'||recruitTab==='vacancies'?<button type="button" className="people-hr-icon-button" title="Edit record" onClick={()=>openForm(row)}><FileText size={14}/></button>:null}
-        {['admissions','recruitment','contracts','performance','alumni'].includes(windowKey)&&<button type="button" className="people-hr-icon-button danger" title="Delete record" onClick={()=>void remove(row)}><X size={14}/></button>}
+         {isAdmin&&<button type="button" className="people-hr-icon-button" title="Edit record" onClick={()=>openForm(row)}><FileText size={14}/></button>}
+         {isAdmin&&['admissions','recruitment','contracts','performance','alumni'].includes(windowKey)&&<button type="button" className="people-hr-icon-button danger" title="Delete record" onClick={()=>void remove(row)}><X size={14}/></button>}
       </td>}</tr>)}</tbody></table></div>}
+       {filteredRows.length>pageSize&&<nav className="people-hr-pagination" aria-label="People and HR record pages"><span>Showing <b>{(currentPage-1)*pageSize+1}–{Math.min(currentPage*pageSize,sortedRows.length)}</b> of <b>{sortedRows.length}</b> matching records</span><div><button type="button" disabled={currentPage<=1} onClick={()=>setPage(currentPage-1)}>Previous</button><span>Page {currentPage} of {pageCount}</span><button type="button" disabled={currentPage>=pageCount} onClick={()=>setPage(currentPage+1)}>Next</button></div></nav>}
       {windowKey==='admissions'&&<footer className="people-hr-panel-footer"><span>Formal admission applications, document review, approval and enrolment remain in the existing Student Admissions workspace.</span><button type="button" className="staff-button staff-button-outline" onClick={()=>onNavigate('students:admissions')}>Open applications <ArrowRight size={14}/></button></footer>}
       {windowKey==='recruitment'&&recruitTab==='interviews'&&<footer className="people-hr-panel-footer"><span>Candidate pipeline: New → Screening → Shortlisted → Interview → Offer → Hired.</span><button type="button" className="staff-button staff-button-outline" onClick={()=>setRecruitTab('candidates')}>Review candidates <ArrowRight size={14}/></button></footer>}
       {windowKey==='contracts'&&<footer className="people-hr-panel-footer"><span>{documents.length} private employee documents are already registered in the institution vault.</span><span>Contract renewals create a new history row; they do not overwrite signed agreements.</span></footer>}

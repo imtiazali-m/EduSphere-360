@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from 'react'
-import { CloudDownload, Database, RefreshCw, ShieldCheck, Upload } from 'lucide-react'
+import { CloudDownload, RefreshCw, ShieldCheck, Upload } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { createRecord, listRecords } from '../lib/data'
@@ -29,23 +29,6 @@ const systemFields=new Set(['id','institution_id','created_at','updated_at','cre
 const labels:Record<string,string>={
  'backup-dashboard':'Backup & Data Management','create-backup':'Create Backup','scheduled-cloud-backups':'Scheduled Cloud Backups','backup-history':'Backup History','restore-data':'Restore Data','data-recovery':'Data Recovery','import-data':'Import Data','export-data':'Export Data','bulk-data-import':'Bulk Data Import','data-validation':'Data Validation','import-history':'Import History','export-history':'Export History','data-integrity-reports':'Data Integrity Reports','duplicate-detection':'Duplicate Detection','integration-status':'Integration Status'
 }
-const descriptions:Record<string,string>={
- 'backup-dashboard':'Review transfer activity, export outcomes and platform backup readiness.',
- 'create-backup':'Prepare an institution-scoped application-data export request. This is not a database snapshot.',
- 'scheduled-cloud-backups':'Record a schedule request. A server-side backup runner is required before scheduled backups can execute.',
- 'backup-history':'Review exports, backup requests, outcomes and responsible users.',
- 'restore-data':'Restore records from an EduSphere JSON export. This does not restore the full database or private storage.',
- 'data-recovery':'Review failed transfers and safely re-run validated record imports.',
- 'import-data':'Import a validated EduSphere JSON export into a selected institution module.',
- 'export-data':'Download institution records from a supported module as JSON.',
- 'bulk-data-import':'Preview, validate and import multiple records with row-level results.',
- 'data-validation':'Check required fields and duplicate identifiers before writing data.',
- 'import-history':'Review import counts, rejected rows and validation errors.',
- 'export-history':'Review generated exports and backup requests.',
- 'data-integrity-reports':'Run read-only checks for missing required values and duplicate references.',
- 'duplicate-detection':'Compare duplicate identifiers without modifying records.',
- 'integration-status':'See which data services are configured and which still need a provider.'
-}
 function cleanObject(value:unknown):Record<string,unknown>|null{return value&&typeof value==='object'&&!Array.isArray(value)?value as Record<string,unknown>:null}
 function moduleLabel(key:string){return specs.find(x=>x.key===key)?.label??key.replaceAll('_',' ')}
 export function DataManagementWorkspace({workspaceKey,onToast}:{workspaceKey:string;onToast:(message:string,error?:boolean)=>void}){
@@ -64,7 +47,6 @@ export function DataManagementWorkspace({workspaceKey,onToast}:{workspaceKey:str
  const [search,setSearch]=useState('')
  const [statusFilter,setStatusFilter]=useState('all')
  const title=labels[itemKey]??'Backup & Data Management'
- const description=descriptions[itemKey]??'Manage institution data transfer and recovery operations.'
  const spec=specs.find(x=>x.key===selectedTable)??specs[0]
  async function loadJobs(){
   if(!supabase||!user||!admin){setJobs([]);setLoading(false);return}
@@ -190,7 +172,7 @@ export function DataManagementWorkspace({workspaceKey,onToast}:{workspaceKey:str
  const isImport=['import-data','bulk-data-import','restore-data','data-validation','duplicate-detection','data-integrity-reports'].includes(itemKey)
  const showJobs=['backup-dashboard','backup-history','data-recovery','import-history','export-history'].includes(itemKey)
  return <main className="page-content ed360-module-page ed360-data-management">
-  <header className="ed360-workspace-hero"><div className="ed360-workspace-hero-icon"><Database size={21}/></div><div className="ed360-workspace-hero-copy"><span>ADMINISTRATION / BACKUP & DATA</span><h1>{title}</h1><p>{description}</p></div><div className="ed360-workspace-hero-tools"><span className="ed360-data-state"><i/> Institution-scoped records</span><button className="button button-outline" type="button" onClick={()=>void loadJobs()}><RefreshCw size={15}/> Refresh</button></div></header>
+  <header className="ed360-workspace-hero"><div className="ed360-workspace-hero-copy"><span>{(user?.institutionName?.trim()||'GOVERNMENT ISLAMIA DEGREE COLLEGE').toUpperCase()} / BACKUP & DATA / {title.toUpperCase()}</span><h1>{title}</h1></div><div className="ed360-workspace-hero-tools"><button className="button button-primary" type="button" onClick={()=>void loadJobs()} disabled={loading}><RefreshCw size={15}/>{loading?'Refreshing…':'Refresh'}</button></div></header>
   {['backup-dashboard','backup-history','data-recovery'].includes(itemKey)&&<section className="ed360-workspace-kpis"><article><span>Transfer jobs</span><strong>{stats.total}</strong><small>All data-transfer records</small></article><article><span>Completed</span><strong>{stats.complete}</strong><small>Imports and exports</small></article><article><span>Awaiting service</span><strong>{stats.waiting}</strong><small>External platform requests</small></article><article><span>Failed</span><strong>{stats.failed}</strong><small>Requires review</small></article></section>}
   {isRequest&&<section className="ed360-data-card"><header><h2>{itemKey==='create-backup'?'Prepare a backup request':'Backup schedule request'}</h2><p>Requests are logged against your institution. A server-side database backup runner is not connected in this release.</p></header><form className="ed360-data-form" onSubmit={requestBackup}><label>Backup scope<select value={backupScope} onChange={e=>setBackupScope(e.target.value)}><option value="institution_records">Institution application records</option><option value="full_institution">Full institution, including private files (platform action required)</option></select></label>{itemKey==='scheduled-cloud-backups'&&<><label>Frequency<select value={frequency} onChange={e=>setFrequency(e.target.value)}><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option></select></label><label>Preferred run time<input type="time" value={runTime} onChange={e=>setRunTime(e.target.value)}/></label></>}<p className="ed360-data-warning"><ShieldCheck size={17}/> This creates a tracked request only. It does not create or schedule a Supabase snapshot. A managed backup runner must confirm execution.</p><button className="button button-primary" disabled={busy}>{busy?'Saving…':'Record backup request'}</button></form></section>}
   {itemKey==='export-data'&&<section className="ed360-data-card"><header><h2>Export an institution module</h2><p>Downloads records visible to your signed-in account. This is an application-data export, not a full database dump.</p></header><form className="ed360-data-form" onSubmit={e=>{e.preventDefault();void exportModule(selectedTable).catch(err=>onToast(err instanceof Error?err.message:'Export failed.',true))}}><label>Data module<select value={selectedTable} onChange={e=>setSelectedTable(e.target.value)}>{specs.map(s=><option value={s.key} key={s.key}>{s.label}</option>)}</select></label><button className="button button-primary"><CloudDownload size={16}/> Download JSON export</button></form></section>}
