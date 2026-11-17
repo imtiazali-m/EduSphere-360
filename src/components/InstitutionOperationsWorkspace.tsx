@@ -668,12 +668,13 @@ function renderCertificates(){
     </div>:null
   }
 
+  const isHistoryView=String(view)==='history'
   const viewRowCount=selectedDomain==='question-bank'?Math.max(visibleQuestions.length,visiblePapers.length)
     :selectedDomain==='curriculum'?visibleCurriculum.length
     :selectedDomain==='behaviour'?visibleBehaviour.filter(row=>view==='positive'?row.event_type==='positive':view==='follow-up'?row.follow_up_required===true:view==='register'?row.event_type!=='positive':true).length
     :selectedDomain==='certificates'?visibleCertificates.length
     :selectedDomain==='visitors'?visibleVisitors.filter(row=>view==='checked-in'?row.status==='checked_in':view==='history'?['checked_out','denied','cancelled'].includes(String(row.status)):true).length
-    :selectedDomain==='facilities'?view==='assets'?visibleAssets.length:view==='maintenance'?visibleMaintenance.length:view==='history'?maintenance.filter(row=>['completed','cancelled'].includes(String(row.status))).length:view==='reservations'?roomReservations.length:0
+    :selectedDomain==='facilities'?view==='assets'?visibleAssets.length:view==='maintenance'?visibleMaintenance.length:isHistoryView?maintenance.filter(row=>['completed','cancelled'].includes(String(row.status))).length:view==='reservations'?roomReservations.length:0
     :0
 
   return <main className="iop-stage page-content ed360-module-page">
