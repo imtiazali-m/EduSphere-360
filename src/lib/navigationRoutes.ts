@@ -360,7 +360,7 @@ function dedicatedRoute(groupKey: string, itemKey: string): string | undefined {
     if(itemKey==='document-records')return 'files'
     if(['form-builder','form-submissions','letters-applications','experience-certificate','id-card-designer','certificate-templates','editable-document-templates','bulk-certificate-generation','certificate-history'].includes(itemKey))return 'unavailable:certificates:'+itemKey
   }
-  if (groupKey === 'facilities' && itemKey === 'asset-register') return 'operations:facilities:assets'
+  if (groupKey === 'facilities' && itemKey === 'asset-register') return 'operations:facilities:dashboard'
   if (groupKey === 'communication' && itemKey === 'reception-enquiries') return 'frontoffice:enquiries'
   if (groupKey === 'communication' && itemKey === 'circulars-notices') return 'frontoffice:announcements'
   if (groupKey === 'communication' && itemKey === 'events-activities') return 'frontoffice:events'
