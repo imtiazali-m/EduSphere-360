@@ -1,3 +1,5 @@
+> **Current authoritative checkpoint (23 November 2026):** see [the release assurance register](RELEASE_ASSURANCE_REGISTER_2026-11-23.md) and its [machine-readable remote migration ledger](REMOTE_MIGRATION_LEDGER_2026-11-23.json). The 16 November register and older audit sections are historical evidence; use the 23 November register for current main/PR/CI/Supabase status.
+
 # EduSphere 360 — Third-AI Integration & Engineering Assurance
 
 **Audit date:** 11 November 2026 (Asia/Karachi)  
