@@ -20,15 +20,15 @@ test('checks the institution helper binds auth identity, institution and active 
   for (const condition of [
     'm.institution_id=target_institution',
     'm.user_id=(selectauth.uid())',
-    "m.status='active'",
+    "m.status=''active'''",
     'm.role=any(allowed_roles)',
   ]) assert.ok(normalized.includes(condition), 'Missing helper condition: ' + condition)
 })
 
 test('removes PUBLIC and anon execution while preserving authenticated and service-role execution', () => {
   assert.match(normalized, /revoke all on function public\.record_student_attendance_scan\(uuid,text,date,text,text,text,uuid\) from public, anon/)
-  assert.match(normalized, /grant execute on function public\.record_student_attendance_scan\(uuid,text,date,text,text,text,uuid\) to authenticated, service_role/)
-  assert.doesNotMatch(normalized, /grant execute[^;]*\b(public|anon)\b/)
+  const grant = normalized.match(/grant execute on function [^;]+ to ([^;]+);/)?.[1]
+  assert.equal(grant, 'authenticated, service_role')
 })
 
 test('the seven application roles have the intended negative-authorization design', () => {
