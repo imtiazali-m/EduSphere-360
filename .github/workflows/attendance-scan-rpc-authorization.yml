@@ -1,0 +1,29 @@
+name: Attendance scan RPC authorization regression
+
+on:
+  pull_request:
+    paths:
+      - 'supabase/migrations/20261123100000_revoke_anon_execute_record_student_attendance_scan.sql'
+      - 'scripts/test-attendance-scan-rpc-authorization.mjs'
+      - '.github/workflows/attendance-scan-rpc-authorization.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/migrations/20261123100000_revoke_anon_execute_record_student_attendance_scan.sql'
+      - 'scripts/test-attendance-scan-rpc-authorization.mjs'
+      - '.github/workflows/attendance-scan-rpc-authorization.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  attendance-scan-rpc-authorization:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify attendance-scan RPC ACL and seven-role denial design
+        run: node --test scripts/test-attendance-scan-rpc-authorization.mjs

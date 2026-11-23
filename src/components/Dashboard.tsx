@@ -37,7 +37,6 @@ import { Stage7CareWorkspace } from './Stage7CareWorkspace'
 import { LinkedOperationsWorkspace } from './LinkedOperationsWorkspace'
 import { NotificationCenter } from './NotificationCenter'
 import { WorkspaceUnavailable } from './WorkspaceUnavailable'
-import { WorkspacePageGuide } from './WorkspacePageGuide'
 import { FinanceWorkspace } from './FinanceWorkspace'
 import { PayrollWorkspace } from './PayrollWorkspace'
 import { PeopleHRWorkspace } from './PeopleHRWorkspace'
@@ -70,6 +69,7 @@ import { BackupDataWorkspace } from './BackupDataWorkspace'
 import { IntegrationManagementWorkspace } from './IntegrationManagementWorkspace'
 import { BehaviourSkillsWorkspace } from './BehaviourSkillsWorkspace'
 import { NativeCallingWorkspace } from './NativeCallingWorkspace'
+import '../styles/premium-institutional-theme.css'
 
 interface Props { onToast: (message: string, error?: boolean) => void }
 type Dataset = Record<string, RecordRow[]>
@@ -1100,7 +1100,6 @@ export function Dashboard({ onToast }: Props) {
               'transport:transport-reports'
             ]
             return <section className="pro-window-panel" key={tab.id} hidden={activeTabId !== tab.id} aria-label={tab.title}>
-              {tab.groupKey && tab.itemKey && tab.targetKey !== 'unavailable' && (tab.targetKey !== 'institutional' || tab.targetWindow.startsWith('examinations:') || linkedWorkspaceKeys.includes(tab.targetWindow)) && <WorkspacePageGuide groupKey={tab.groupKey} itemKey={tab.itemKey}/>}
               {tab.targetKey === 'backup' ? <BackupDataWorkspace initialWindow={tab.targetWindow} onToast={onToast}/> :
                 tab.targetKey === 'notifications' ? <NotificationCenter onToast={onToast} onUnreadCountChange={setUnreadAnnouncementCount}/> :
                 tab.targetKey === 'overview' ? <RoleDashboard onNavigate={navigateChild}/> :

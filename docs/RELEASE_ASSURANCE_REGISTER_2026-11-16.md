@@ -1,3 +1,5 @@
+> **Historical snapshot — superseded 23 November 2026.** The current main SHA, open PR graph, exact CI and live Supabase migration/security evidence are maintained in [the 23 November release assurance register](RELEASE_ASSURANCE_REGISTER_2026-11-23.md) and [23 November migration ledger](REMOTE_MIGRATION_LEDGER_2026-11-23.json). Keep this file as historical evidence only; do not use its 16 November migration counts as current.
+
 # EduSphere 360 — Release assurance register
 
 **Snapshot:** 16 November 2026, Asia/Karachi  

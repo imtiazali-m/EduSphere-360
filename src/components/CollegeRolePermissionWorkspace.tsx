@@ -218,10 +218,11 @@ export function CollegeRolePermissionWorkspace({
 
   const memberById=useMemo(()=>new Map(members.map(member=>[member.user_id,member])),[members])
   const profileById=useMemo(()=>new Map(profiles.map(profile=>[profile.id,profile])),[profiles])
-  const activeAssignments=assignments.filter(item=>item.status==='active' && (!item.ends_at || new Date(item.ends_at).getTime()>Date.now()))
+  const assignmentIsActive=(item:RoleAssignment)=>item.status==='active'&&(!item.starts_at||new Date(item.starts_at).getTime()<=Date.now())&&(!item.ends_at||new Date(item.ends_at).getTime()>Date.now())
+  const activeAssignments=assignments.filter(assignmentIsActive)
   const activeMembers=members.filter(member=>member.status==='active' && member.user_id!==currentUserId)
   const eligibleMembers=activeMembers.filter(member=>profiles.some(profile=>profile.base_role===member.role && profile.is_active))
-  const profileCount=(profileId:string)=>assignments.filter(item=>item.role_profile_id===profileId && item.status==='active').length
+  const profileCount=(profileId:string)=>assignments.filter(item=>item.role_profile_id===profileId&&assignmentIsActive(item)).length
 
   function newProfile(template?:typeof templates[number]) {
     setEditingProfile(null)
@@ -301,7 +302,8 @@ export function CollegeRolePermissionWorkspace({
     if(!member || !profile || member.role!==profile.base_role || member.status!=='active'){
       onToast('This role profile does not match the member’s active account role.',true);return
     }
-    const duplicate=assignments.some(row=>row.user_id===assignUserId&&row.role_profile_id===assignProfileId&&row.campus_id===(assignCampusId||null)&&row.department_id===(assignDepartmentId||null)&&row.status==='active')
+    if(assignEndDate&&(!Number.isFinite(new Date(assignEndDate).getTime())||new Date(assignEndDate).getTime()<=Date.now())){onToast('The access end date must be in the future.',true);return}
+    const duplicate=assignments.some(row=>row.user_id===assignUserId&&row.role_profile_id===assignProfileId&&row.campus_id===(assignCampusId||null)&&row.department_id===(assignDepartmentId||null)&&assignmentIsActive(row))
     if(duplicate){onToast('This member already has that active assignment and scope.',true);return}
     setSaving(true)
     try{
@@ -318,25 +320,32 @@ export function CollegeRolePermissionWorkspace({
   }
 
   async function setAssignmentStatus(row:RoleAssignment,status:RoleAssignment['status']) {
-    if(!supabase)return
+    if(!supabase||saving)return
     const action=status==='active'?'reactivate':'suspend or end'
     if(!window.confirm('Are you sure you want to '+action+' this role assignment? An assigned member only retains the permissions in their active role profiles.'))return
     setSaving(true)
-    const {error:updateError}=await supabase.from('institution_user_role_assignments').update({status,updated_at:new Date().toISOString()}).eq('institution_id',institutionId).eq('id',row.id)
-    if(updateError)onToast(userFacingError(updateError,'The assignment status could not be changed.'),true)
-    else{onToast(status==='active'?'Role assignment reactivated.':'Role assignment status changed.');await load(true)}
-    setSaving(false)
+    try{
+      const updateValues={status,updated_at:new Date().toISOString(),...(status==='active'?{starts_at:new Date().toISOString(),ends_at:null}:{})}
+      const {error:updateError}=await supabase.from('institution_user_role_assignments').update(updateValues).eq('institution_id',institutionId).eq('id',row.id)
+      if(updateError)throw updateError
+      onToast(status==='active'?'Role assignment reactivated.':'Role assignment status changed.')
+      await load(true)
+    }catch(cause){onToast(userFacingError(cause,'The assignment status could not be changed.'),true)}
+    finally{setSaving(false)}
   }
 
   async function toggleProfileStatus(profile:RoleProfile) {
-    if(!supabase)return
+    if(!supabase||saving)return
     const next=!profile.is_active
     if(!window.confirm(next?'Reactivate this role profile?':'Deactivate this role profile? Members assigned only this profile will lose its permissions.'))return
     setSaving(true)
-    const {error:updateError}=await supabase.from('institution_role_profiles').update({is_active:next,updated_by:currentUserId,updated_at:new Date().toISOString()}).eq('institution_id',institutionId).eq('id',profile.id)
-    if(updateError)onToast(userFacingError(updateError,'The role profile status could not be changed.'),true)
-    else{onToast(next?'Role profile reactivated.':'Role profile deactivated.');await load(true)}
-    setSaving(false)
+    try{
+      const {error:updateError}=await supabase.from('institution_role_profiles').update({is_active:next,updated_by:currentUserId,updated_at:new Date().toISOString()}).eq('institution_id',institutionId).eq('id',profile.id)
+      if(updateError)throw updateError
+      onToast(next?'Role profile reactivated.':'Role profile deactivated.')
+      await load(true)
+    }catch(cause){onToast(userFacingError(cause,'The role profile status could not be changed.'),true)}
+    finally{setSaving(false)}
   }
 
   const matchingProfiles=profiles.filter(profile=>profile.base_role===memberById.get(assignUserId)?.role && profile.is_active)
@@ -382,8 +391,9 @@ export function CollegeRolePermissionWorkspace({
           const member=memberById.get(row.user_id)
           const profile=profileById.get(row.role_profile_id)
           const scope=[campuses.find(item=>item.id===row.campus_id)?.name,departments.find(item=>item.id===row.department_id)?.name].filter(Boolean).join(' · ')||'All campuses / departments'
-          const active=row.status==='active'&&(!row.ends_at||new Date(row.ends_at).getTime()>Date.now())
-          return <tr key={row.id}><td><b>{member?.full_name??'College account'}</b><small>{member?.email??row.user_id}</small></td><td>{profile?.name??'Unavailable profile'}</td><td>{profile?.base_role??member?.role??'—'}</td><td>{scope}</td><td><span className={'crp-status '+(active?'active':'inactive')}>{active?'Active':row.status}</span></td><td><button type="button" className="crp-text-button" disabled={saving||!profile?.is_active} onClick={()=>void setAssignmentStatus(row,active?'suspended':'active')}>{active?'Suspend':'Reactivate'}</button></td></tr>
+          const active=assignmentIsActive(row)
+           const stateLabel=active?'Active':row.status==='active'&&row.ends_at&&new Date(row.ends_at).getTime()<=Date.now()?'Expired':row.status==='active'&&row.starts_at&&new Date(row.starts_at).getTime()>Date.now()?'Scheduled':row.status
+          return <tr key={row.id}><td><b>{member?.full_name??'College account'}</b><small>{member?.email??row.user_id}</small></td><td>{profile?.name??'Unavailable profile'}</td><td>{profile?.base_role??member?.role??'—'}</td><td>{scope}</td><td><span className={'crp-status '+(active?'active':'inactive')}>{stateLabel}</span></td><td><button type="button" className="crp-text-button" disabled={saving||!profile?.is_active} onClick={()=>void setAssignmentStatus(row,active?'suspended':'active')}>{active?'Suspend':'Reactivate'}</button></td></tr>
         })}
       </tbody></table></div>:<div className="crp-empty"><Users size={25}/><b>No role assignments yet.</b><span>Role profiles can be created first, then assigned to active members of the matching base account role.</span></div>}
     </section>

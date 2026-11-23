@@ -4,16 +4,16 @@ on:
   pull_request:
     paths:
       - 'supabase/migrations/**'
-      - 'docs/REMOTE_MIGRATION_LEDGER_2026-11-16.json'
-      - 'docs/RELEASE_ASSURANCE_REGISTER_2026-11-16.md'
+      - 'docs/REMOTE_MIGRATION_LEDGER_2026-11-23.json'
+      - 'docs/RELEASE_ASSURANCE_REGISTER_2026-11-23.md'
       - 'docs/THIRD_AI_INTEGRATION_ASSURANCE.md'
       - 'scripts/test-migration-ledger.mjs'
       - '.github/workflows/migration-ledger-integrity.yml'
   push:
     paths:
       - 'supabase/migrations/**'
-      - 'docs/REMOTE_MIGRATION_LEDGER_2026-11-16.json'
-      - 'docs/RELEASE_ASSURANCE_REGISTER_2026-11-16.md'
+      - 'docs/REMOTE_MIGRATION_LEDGER_2026-11-23.json'
+      - 'docs/RELEASE_ASSURANCE_REGISTER_2026-11-23.md'
       - 'docs/THIRD_AI_INTEGRATION_ASSURANCE.md'
       - 'scripts/test-migration-ledger.mjs'
       - '.github/workflows/migration-ledger-integrity.yml'

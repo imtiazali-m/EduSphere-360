@@ -12,13 +12,17 @@ const check = (label, fn) => {
 }
 
 const packageJson = JSON.parse(read('package.json'))
-check('External provider center exposes only AI and biometric hardware integrations', () => {
+check('External provider centre exposes AI, biometric, messaging, design and online-class integration workspaces', () => {
   const integrations = read('src/components/IntegrationManagementWorkspace.tsx')
   const dashboard = read('src/components/Dashboard.tsx')
-  for (const key of ["'ai-providers'", "biometric:"]) assert.ok(integrations.includes(key), 'Missing integration workspace: ' + key)
-  for (const key of ["zoom:", "google:", "youtube:"]) assert.ok(!integrations.includes(key), 'Third-party classroom integration should not be required: ' + key)
+  for (const key of ["'ai-providers'", "biometric:", "whatsapp:", "canva:", "'google-classroom':", "zoom:", "youtube:"]) {
+    assert.ok(integrations.includes(key), 'Missing integration workspace: ' + key)
+  }
   assert.ok(integrations.includes("action:'status'") && integrations.includes("action:'generate'"), 'AI credentials need a live status and provider test')
-  assert.ok(integrations.includes('Not connected'), 'External integrations must not be claimed connected before verification')
+  assert.ok(integrations.includes('Not connected') && integrations.includes('setup required'), 'External integrations must remain unconnected until verified')
+  for (const key of ['WHATSAPP_ACCESS_TOKEN','CANVA_CLIENT_ID','GOOGLE_CLIENT_ID','ZOOM_CLIENT_ID','YOUTUBE_API_KEY']) {
+    assert.ok(integrations.includes(key), 'Missing server-side integration prerequisite: ' + key)
+  }
   assert.ok(dashboard.includes('<IntegrationManagementWorkspace'), 'Dashboard must dispatch the Integration workspace')
   assert.ok(dashboard.includes('<NativeCallingWorkspace'), 'Native calling and online classes must be dispatched by EduSphere')
 })
@@ -172,6 +176,17 @@ check('Formal fee receipts are issued through the secured ledger and can be retr
   assert.ok(finance.includes('function printReceipt(') && finance.includes('Print receipt'), 'Official receipts must be printable from the ledger')
   assert.ok(migration.includes('create table if not exists public.fee_receipt_ledger'), 'Receipt ledger schema must exist in migrations')
 })
+check('Identity cards and certificates generate QR codes locally without sending identifiers to third-party QR services', () => {
+  const qr = read('src/components/LocalQrCode.tsx')
+  const attendance = read('src/components/AttendanceWorkspace.tsx')
+  const operations = read('src/components/InstitutionOperationsWorkspace.tsx')
+  const index = read('index.html')
+  assert.ok(index.includes('/vendor/qrcode.min.js'), 'Bundled QR generator must load from the college application')
+  assert.ok(qr.includes('new QRCode(host') && qr.includes('value.trim()'), 'Visible QR previews must be generated in the browser')
+  assert.ok(attendance.includes('<LocalQrCode') && attendance.includes('data-qr-value=') && attendance.includes('/vendor/qrcode.min.js'), 'Attendance cards and print sheets must use the local QR generator')
+  assert.ok(operations.includes('<LocalQrCode') && operations.includes('certificate-qr-code') && operations.includes('data-qr-value='), 'Student ID cards and certificates must use local QR generation')
+  assert.ok(!attendance.includes('api.qrserver.com') && !operations.includes('api.qrserver.com'), 'Student and staff identifiers must not be sent to an external QR-image service')
+})
 check('Vite development and production scripts exist', () => {
   assert.equal(packageJson.scripts.dev, 'vite --host 0.0.0.0')
   assert.equal(packageJson.scripts.build, 'tsc -b && vite build')
@@ -205,7 +220,7 @@ const requiredFiles = [
   'src/components/TransportAttendanceWorkspace.tsx',
   'src/styles/data-management.css',
   'src/styles/library-reading.css',
-  'index.html', 'src/main.tsx', 'src/App.tsx', 'src/components/Dashboard.tsx', 'src/components/RoleDashboard.tsx', 'src/components/role-dashboard.css', 'src/components/WorkspaceUnavailable.tsx', 'src/components/BackupDataWorkspace.tsx', 'src/components/backup-data-workspace.css', 'src/components/IntegrationManagementWorkspace.tsx', 'src/styles/integrations-workspace.css', 'src/components/BehaviourSkillsWorkspace.tsx', 'src/styles/behaviour-skills-workspace.css',
+  'index.html', 'src/main.tsx', 'src/App.tsx', 'src/components/Dashboard.tsx', 'src/components/RoleDashboard.tsx', 'src/components/role-dashboard.css', 'src/components/WorkspaceUnavailable.tsx', 'src/components/BackupDataWorkspace.tsx', 'src/components/backup-data-workspace.css', 'src/components/IntegrationManagementWorkspace.tsx', 'src/styles/integrations-workspace.css', 'src/components/LocalQrCode.tsx', 'src/styles/local-qr.css', 'public/vendor/qrcode.min.js', 'public/vendor/qrcodejs.LICENSE.txt', 'src/styles/premium-institutional-theme.css', 'src/components/BehaviourSkillsWorkspace.tsx', 'src/styles/behaviour-skills-workspace.css',
   'src/components/FinanceWorkspace.tsx', 'src/styles/finance-workspace.css', 'src/styles/student-promotion-workspace.css', 'src/styles/navigation-refinement.css',
   'src/components/PayrollWorkspace.tsx', 'src/styles/payroll-workspace.css',
   'src/components/GovernanceWorkspace.tsx', 'src/components/AdministrationStage5Workspace.tsx', 'src/components/PeopleHRWorkspace.tsx', 'src/components/EmployeeQualificationsPanel.tsx', 'src/styles/people-hr-workspace.css', 'src/styles/governance-workspace.css',
@@ -511,6 +526,48 @@ check('Institutional workspace includes real record CRUD and office-compatible e
   for (const value of ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','application/vnd.openxmlformats-officedocument.wordprocessingml.document','window.print']) assert.ok(exporters.includes(value))
 })
 
+ 
+check('GIDC signed-in submenus share one theme and do not show generic page guidance', () => {
+  const theme = read('src/styles/premium-institutional-theme.css')
+  const workspace = read('src/components/InstitutionalWorkspace.tsx')
+  const profile = read('src/components/AdministrationStage5Workspace.tsx')
+  const attendance = read('src/components/AttendanceWorkspace.tsx')
+  const academics = read('src/components/AcademicManagementWorkspace.tsx')
+  const calls = read('src/components/NativeCallingWorkspace.tsx')
+  const workspaceExperience = read('src/lib/workspaceExperience.ts')
+  const operations = read('src/components/InstitutionOperationsWorkspace.tsx')
+  const routes = read('src/lib/navigationRoutes.ts')
+  const routeViewAudit = read('scripts/generate-route-view-audit.mjs')
+  assert.ok(theme.includes('.ed360-page-guide,.ed360-page-purpose') && theme.includes('display:none !important'), 'Generic page guidance must not occupy each submenu')
+  assert.ok(theme.includes('--workspace-accent:var(--es-primary-600) !important') && theme.includes('--workspace-soft:var(--es-primary-100) !important'), 'All fallback submenu accents must use the shared institutional teal palette')
+  assert.ok(theme.includes('.rd-welcome-panel') && theme.includes('color:#1d2928'), 'The college welcome panel must retain readable black text')
+  assert.ok(!profile.includes('Only the institution fields supported by the current profile record'), 'Institute Profile must not show a publication-control disclaimer')
+  assert.ok(!attendance.includes('Camera and external scanner supported.') && !attendance.includes('Phone camera scanning uses the browser'), 'QR attendance must not repeat scanner implementation explanations')
+  assert.ok(!academics.includes('Access is filtered by institution membership'), 'Academic registers must not repeat access-policy footer copy')
+  assert.ok(!calls.includes('Privacy and safety:') && !calls.includes('ordinary telephone numbers are not part'), 'Online classes must not show unrelated privacy/legal footer copy')
+  assert.ok(workspace.includes('data-workspace-theme') && workspace.includes('ed360-workspace-hero'), 'Submenus must retain their own title, navigation and workspace content')
+  assert.ok(!workspace.includes('const workspaceFields:Record') && !workspace.includes('Messaging provider status') && !workspace.includes('Refresh records'), 'Fallback submenu screens must not inherit group-wide fields, provider notices or duplicate refresh actions')
+  assert.ok(workspace.includes('const showAmount=!hasMoneyField') && workspace.includes('const showQuantity=!hasQuantityField') && workspace.includes('const showPortalVisibility='), 'Fallback controls must be derived from the selected submenu schema')
+  assert.ok(workspace.includes('(readOnlyPage?[]:getWorkspaceFields(group.key,item.label))') && workspace.includes('user&&!readOnlyPage'), 'Read-only dashboards, histories and reports must not inherit generic forms or write actions')
+  assert.ok(workspace.includes('const showStatusField=!hasPrimaryStatusField') && workspace.includes('{showDescription&&<label>Description / notes'), 'Do not duplicate a page-specific status or narrative field with generic form controls')
+  assert.ok(workspace.includes('if(!supabase||!user||!canAdmin||readOnlyPage)return') && workspace.includes("canAdmin&&!readOnlyPage&&detail.approval_status==='pending'"), 'Read-only pages must not expose delete or approval write actions')
+  assert.ok(!workspaceExperience.includes('This view is ready for real institution records') && !workspaceExperience.includes("field('record_reference','Related record / reference')"), 'Unmapped submenus must not receive generic placeholder copy or fabricated fields')
+  assert.ok(operations.includes("facilities:['dashboard','assets','maintenance','history','reservations','reports']") && operations.includes("facilities:'dashboard'") && operations.includes("if(view==='dashboard')"), 'Facilities must have a dashboard view distinct from the asset register')
+  assert.ok(routes.includes("'facilities-dashboard':'dashboard'") && routeViewAudit.includes("facilities: new Set(['dashboard','assets'"), 'Facilities dashboard route, component and audit contract must agree')
+})
+
+check('GIDC print reports and student ID cards render their official branding and QR before print', () => {
+  const office = read('src/lib/officeExport.ts')
+  const operations = read('src/components/InstitutionOperationsWorkspace.tsx')
+  assert.ok(office.includes('GIDC Badin Management Portal') && !office.includes('EduSphere 360'), 'Office reports must carry GIDC branding')
+  assert.ok(office.includes('@page{size:A4') && office.includes('document.fonts&&document.fonts.ready'), 'A4 report print must wait for fonts and images')
+  assert.ok(operations.includes('<script src="/vendor/qrcode.min.js"></script>'), 'The student ID print view must load the local QR generator')
+  assert.ok(operations.includes('document.querySelector(".id-qr")') && operations.includes('new window.QRCode(node'), 'The printed student ID must populate its QR')
+  assert.ok(operations.includes('document.querySelector(".certificate-qr-code")'), 'The certificate print view must populate its verification QR')
+  assert.ok(operations.includes("async function printStudentIdCard") && operations.includes("createSignedUrl(photoPath,300)") && operations.includes("idCardPreviewPhotoUrl?<img"), 'Student ID preview and print must use a short-lived signed private photo URL when a student photo exists')
+  assert.ok(read('src/styles/premium-institutional-theme.css').includes('.iop-idcard-avatar img'), 'GIDC student photo must be cropped inside the ID card avatar frame')
+})
+
 
 check('Institutional registers and windows are tailored by workspace domain', () => {
   const workspace = read('src/components/InstitutionalWorkspace.tsx')
@@ -746,6 +803,17 @@ check('Operational modules expose distinct nested workspace windows and contextu
   assert.ok(styles.includes('.ed360-operations-window-nav') && styles.includes('.ed360-contextual-subwindow'), 'Nested workspace hierarchy styles are required')
 })
 
+check('Administration catalogues provide register-specific sorting and complete report output', () => {
+  const administration = read('src/components/AdministrationModule.tsx')
+  for (const value of ['DIRECTORY_COLUMNS', 'program_count', 'department_name', 'program_name', 'session_name', 'credit_hours', 'room_type', 'sortDirection', 'aria-sort={sortKey === column.key']) {
+    assert.ok(administration.includes(value), 'Administration register detail or sorting is missing: ' + value)
+  }
+  for (const value of ['downloadCsv(', 'exportXlsx(', 'exportDocx(', 'printOfficeReport(', "exportRegister('csv')", "exportRegister('excel')", "exportRegister('word')", "exportRegister('print')"]) {
+    assert.ok(administration.includes(value), 'Administration register report action is missing: ' + value)
+  }
+  assert.ok(administration.includes('const reportRows = sortedRecords.map') && administration.includes('directoryColumns.map((column) => [column.key, record[column.key] ?? \'\'])'), 'Register exports must include all sorted, filtered rows and their module-specific columns')
+})
+
 check('Attendance history is searchable and independently date-filterable', () => {
   const attendance = read('src/components/AttendanceWorkspace.tsx')
   const styles = read('src/styles/module-workspaces.css')
@@ -792,6 +860,19 @@ check('PeopleHRWorkspace exposes recruitment, contracts, performance and alumni 
   for (const value of ['hr_job_postings','hr_candidates','hr_interviews','admission_enquiries','employee_contracts','employee_appraisals','alumni_records','hire_hr_candidate','convert_admission_enquiry','acknowledge_employee_appraisal']) {
     assert.ok(people.includes(value), 'People & HR workflow is missing ' + value)
   }
+  const hrSql = read('supabase/migrations/20261111162254_stage_6_people_hr_and_payroll_controls.sql')
+  const peopleStyles = read('src/styles/people-hr-workspace.css')
+  assert.ok(people.includes("range(offset,offset+499)") && people.includes('collected.push(...chunk)') && people.includes('pageRows.map(row=>'), 'People & HR registers must load full tenant data in batches and paginate visible rows')
+  assert.ok(people.includes('const sortedRows=useMemo') && people.includes('aria-sort=') && people.includes('const pageSize=25'), 'People & HR registers must support sortable 25-row pages')
+  assert.ok(people.includes('isAdmin&&<button type="button" className="people-hr-icon-button" title="Edit record"') && people.includes('title="Delete record"'), 'Only owners and administrators may edit or delete employee HR workflows')
+  assert.ok(people.includes('Number of openings must be a whole number between 1 and 500') && people.includes('maximum salary cannot be below the minimum salary') && people.includes('Interview score must be between 0 and 100') && people.includes('Performance rating must be between 1 and 5'), 'HR forms must validate vacancy, interview and appraisal constraints')
+  assert.ok(people.includes('This employee already has an active contract') && people.includes('probation_end_date') && people.includes('review_period_end'), 'Contract and appraisal validation must enforce valid date boundaries and active contract rules')
+  assert.ok(people.includes('getFullYear()') && !people.includes("new Date().toISOString().slice(0,10)"), 'HR date defaults must use the local calendar date')
+  const exportStart=people.indexOf('function exportCurrent(')
+  const exportEnd=people.indexOf('function openForm(',exportStart)
+  assert.ok(exportStart>=0 && exportEnd>exportStart && people.slice(exportStart,exportEnd).includes('filteredRows.map'), 'HR exports must include all filtered records, not only the current page')
+  for(const value of ['hr_job_postings_salary_range_ck','hr_job_postings_institution_code_uq','employee_contracts_date_ck','employee_contracts_probation_ck','employee_contracts_one_active_idx','employee_appraisals_period_ck','score>=0 and score<=100']) assert.ok(hrSql.includes(value), 'HR database constraint is missing: '+value)
+  assert.ok(peopleStyles.includes('.people-hr-sort') && peopleStyles.includes('.people-hr-pagination'), 'HR sorting and pagination must use responsive styles')
   const qualifications = read('src/components/EmployeeQualificationsPanel.tsx')
   assert.ok(qualifications.includes('employee_qualifications'), 'Qualifications must use institution-scoped employee qualification records')
   assert.ok(read('src/components/Dashboard.tsx').includes('<PeopleHRWorkspace '), 'PeopleHRWorkspace must be connected to the signed-in dashboard')
@@ -800,6 +881,30 @@ check('PeopleHRWorkspace exposes recruitment, contracts, performance and alumni 
   assert.deepEqual(roleNavigationGroups('parent').find(group => group.key === 'people-hr')?.items, ['Students','Parents & Guardians'])
   assert.deepEqual(roleNavigationGroups('accountant').find(group => group.key === 'people-hr')?.items, ['Payroll & Salary Records'])
   assert.ok(!roleNavigationGroups('exam_officer').some(group => group.key === 'people-hr'))
+})
+
+check('Faculty registers, assignments, leave and confidential documents follow their database safeguards', () => {
+  const faculty = read('src/components/FacultyWorkspace.tsx')
+  const facultyStyles = read('src/styles/faculty-workspace.css')
+  const facultySql = read('supabase/migrations/20261109085154_faculty_employee_management.sql')
+  for(const value of ['function localDate()', 'joining_date:localDate()', 'attendance_date:localDate()', 'localDate().slice(0,7)', 'Contract end date cannot precede the employee joining date.', 'weeklyPeriods=Number(v.weekly_periods)', 'Number.isInteger(weeklyPeriods)', 'Teaching allocations can only be assigned to an active employee.', 'duplicateScope=assignments.find', 'This employee already has an allocation for the same subject', 'This leave request overlaps another pending or approved request', 'issue_date:docIssueDate||null', 'Document expiry date cannot precede its issue date.', 'private file could not be deleted']) {
+    assert.ok(faculty.includes(value), 'Faculty & Staff workflow validation is missing: '+value)
+  }
+  assert.ok(faculty.includes('function StaffRecordsTable') && faculty.includes('const filtered=useMemo') && faculty.includes('const sorted=useMemo') && faculty.includes('const pageSize=25') && faculty.includes('aria-sort=') && faculty.includes('exportRows=sorted.map'), 'Each Faculty register needs searchable, sortable, paginated records and complete report exports')
+  for(const value of ['exportXlsx(', 'exportDocx(', 'printOfficeReport(', 'staff-files', 'createSignedUrl(String(row.storage_path),600)', 'storageError']) assert.ok(faculty.includes(value), 'Confidential staff documents and reports are missing: '+value)
+  assert.ok(facultyStyles.includes('.staff-records-toolbar') && facultyStyles.includes('.staff-table-pagination') && facultyStyles.includes('@media print'), 'Faculty registers need responsive controls and print-safe styling')
+  for(const value of ['teacher_assignments_date_range_check','teacher_assignments_unique_scope_uq','employee_leave_date_range_check','employee_leave_overlap_guard','employee_attendance_unique_day','staff_documents_expiry_check','file_size > 0 and file_size <= 10485760']) assert.ok(facultySql.includes(value), 'Faculty database safeguard is missing: '+value)
+  assert.ok(facultySql.includes('daterange(r.start_date, r.end_date, \'[]\') &&') && facultySql.includes('pg_advisory_xact_lock'), 'Leave overlap protection must remain concurrent-safe in the database')
+})
+
+check('Employee qualification certificates track effective expiry and support complete branded reports', () => {
+  const qualifications = read('src/components/EmployeeQualificationsPanel.tsx')
+  const qualificationSql = read('supabase/migrations/20261111164407_stage_6_employee_qualification_records.sql')
+  for(const value of ['range(offset,offset+499)', 'Date awarded cannot be in the future.', 'Expiry date cannot precede the date awarded.', 'effectiveStatus(row)', "'expired'", 'sorted.slice', 'pageRows.map(row=>', 'const reportRows=sorted.map(row=>', 'printOfficeReport(', 'institutionName', 'aria-sort=', 'const pageSize=25']) {
+    assert.ok(qualifications.includes(value), 'Employee qualification workflow is missing: '+value)
+  }
+  assert.ok(qualificationSql.includes('employee_qualifications_dates_ck') && qualificationSql.includes('employee_qualifications_admin_all') && qualificationSql.includes('employee_qualifications_own_read'), 'Qualification date and owner/employee RLS policies must remain enforced')
+  assert.ok(read('src/components/FacultyWorkspace.tsx').includes('institutionName={user?.institutionName??'), 'Qualification print reports must use the current institution name')
 })
 
 check('Finance and payroll registers support searchable sortable pagination', () => {
@@ -836,14 +941,23 @@ check('Student, employee and operational records expose accessible row action me
   assert.ok(styles.includes('.ed360-row-action-menu>summary:focus-visible') && styles.includes('.ed360-row-action-menu>div>button:focus-visible'), 'Row menus need visible keyboard focus')
 })
 
-check('Administration settings and approval queues support sorting and pagination', () => {
+check('Administration settings and approval queues support complete history, filtering, sorting and pagination', () => {
   const administration = read('src/components/AdministrationStage5Workspace.tsx')
   const styles = read('src/styles/governance-workspace.css')
-  for (const value of ['settingsSortKey', 'settingsSortDirection', 'orderedSettings', 'settingsPageRows', 'orderedApprovals', 'approvalPageRows', 'toggleSettingsSort', 'sortHeader', 'pageControls']) {
+  const premium = read('src/styles/premium-institutional-theme.css')
+  for (const value of ['settingsSortKey', 'settingsSortDirection', 'orderedSettings', 'settingsPageRows', 'orderedApprovals', 'approvalPageRows', 'toggleSettingsSort', 'sortHeader', 'pageControls', 'fetchAllInstitutionApprovals', 'fetchAllInstitutionSettings', 'auditSearch', 'auditSortKey', 'fetchAllInstitutionPolicies', '.range(offset,offset+batchSize-1)', 'approvalStatusFilter', 'approvalSortKey', 'request_notes', 'policyStatusFilter', 'policySortKey', 'orderedPolicies', 'policyPageRows', 'policiesPageCount', 'fetchAllInstitutionMemberships', 'memberStatusFilter', 'memberRoleFilter', 'orderedMembers', 'memberPageRows', 'membersPageCount', 'fetchAllInstitutionDepartments', 'fetchAllInstitutionDesignations', 'fetchAllInstitutionTeachers', 'departmentStatusFilter', 'designationStatusFilter', 'const departmentRows=[...filtered]', 'const designationRows=[...filtered]', 'pageControls(departmentRows.length', 'pageControls(designationRows.length', 'orgPage', 'securitySearch', 'securitySortKey', 'orderedRelated', 'securityPageRows', 'orgDepartmentFilter', 'orgDesignationFilter', 'orgEmploymentFilter', 'orderedStaff', 'pageRows.map(person=>', 'organization-staff-roster']) {
     assert.ok(administration.includes(value), 'Administration list interaction is missing: ' + value)
   }
   assert.ok(administration.includes("onChange={e=>{setSearch(e.target.value);setSettingsPage(1);setApprovalPage(1)}}"), 'Administration search must reset both page positions')
+  assert.ok(administration.includes("row.workflow_key==='institution_setting_change'") && administration.includes('No decision handler is configured'), 'Unsupported approval types must not expose a non-functional decision action')
   assert.ok(styles.includes('.gov-sort-header:focus-visible') && styles.includes('.gov-pagination'), 'Administration controls need accessible responsive styles')
+  assert.ok(premium.includes('.ed360-admin-approval-filters') && premium.includes('.ed360-admin-approval-search'), 'Approval filters need responsive institutional styling')
+  assert.ok(premium.includes('.ed360-admin-policy-filters') && premium.includes('.ed360-admin-policy-search'), 'Policy filters need responsive institutional styling')
+  assert.ok(premium.includes('.ed360-admin-account-filters') && premium.includes('.ed360-admin-account-search'), 'User access filters need responsive institutional styling')
+  assert.ok(premium.includes('.ed360-admin-directory-filters') && premium.includes('.ed360-admin-directory-search'), 'Department and designation filters need responsive institutional styling')
+  assert.ok(premium.includes('.ed360-admin-organization-filters') && premium.includes('.ed360-admin-organization-search'), 'Organisation roster filters need responsive institutional styling')
+  assert.ok(premium.includes('.ed360-admin-security-filters') && premium.includes('.ed360-admin-security-search'), 'Security history filters need responsive institutional styling')
+  assert.ok(premium.includes('.ed360-admin-audit-filters') && premium.includes('.ed360-admin-audit-search'), 'Administrative audit filters need responsive institutional styling')
 })
 
 check('Report tables show all rows through accessible sorting and pagination', () => {
@@ -1096,8 +1210,72 @@ check('Administration settings, approvals and audit are connected to governance 
   for (const value of ['institution_settings', 'workflow_approvals', 'institutional_audit_events', 'decide_institution_setting_approval']) {
     assert.ok(administration.includes(value), 'Administration workspace is missing ' + value)
   }
-  assert.ok(administration.includes('Update Profile') && administration.includes("supabase.from('institutions').update(values)"), 'Institution profile must use the existing owner/admin update path')
+  assert.ok(administration.includes('Save Institute Profile') && administration.includes("supabase.from('institutions').update(values)"), 'Institute Profile must use its existing owner/admin update path')
+  for (const section of ['Institute Identity','Contact Details','Public Profile']) assert.ok(administration.includes(section), 'Institute Profile is missing its dedicated section: ' + section)
+  assert.ok(administration.includes('ed360-admin-profile-v2') && administration.includes('ed360-profile-public-card') && administration.includes('logoPreviewUrl'), 'Institute Profile must render the live identity preview and local logo preview')
   assert.ok(read('supabase/migrations/20261109151231_atomic_institution_setting_approval.sql').includes('decide_institution_setting_approval'))
+})
+
+check('Institute profile, preferences, branding and role permissions complete acceptance safeguards', () => {
+  const administration = read('src/components/AdministrationStage5Workspace.tsx')
+  const profilePolicy = read('supabase/migrations/20261111161307_stage5_administration_profile_campus_and_access_controls.sql')
+  const roles = read('src/components/CollegeRolePermissionWorkspace.tsx')
+  const rolePolicy = read('supabase/migrations/20261113173320_college_custom_role_profiles_and_scope_policies.sql')
+  const roleStyles = read('src/styles/college-role-permissions.css')
+  const themeStyles = read('src/styles/premium-institutional-theme.css')
+
+  for (const value of [
+    'allowedTimezones', 'allowedDateFormats', 'allowedCurrencies', 'allowedTermStructures',
+    'prefixPattern=/^[A-Z0-9][A-Z0-9-]{1,15}$/', 'safeInstitutionBrandColor',
+    'async function saveBrandColors', 'primary_color', 'accent_color',
+    'type="color"', 'normalizedWebsite', "!['https:','http:'].includes(parsedWebsite.protocol)",
+    'async function removeSetting', 'if(removeError)throw removeError',
+  ]) assert.ok(administration.includes(value), 'Institute profile and settings acceptance safeguard is missing: ' + value)
+
+  assert.ok(profilePolicy.includes('institutions_owner_admin_update') && profilePolicy.includes("has_institution_role(id, array['owner','admin']::text[])"), 'Institute Profile updates must remain owner/admin restricted in the database')
+
+  for (const value of [
+    'async function setAssignmentStatus', 'async function toggleProfileStatus',
+    "catch(cause){onToast(userFacingError(cause,'The assignment status could not be changed.'),true)}",
+    "catch(cause){onToast(userFacingError(cause,'The role profile status could not be changed.'),true)}",
+    'finally{setSaving(false)}',
+  ]) assert.ok(roles.includes(value), 'Role permission status handling is missing: ' + value)
+
+  for (const value of ['college_role_profiles_admin_insert', 'college_role_profiles_admin_update', 'college_user_role_assignments_admin_insert', 'college_user_role_assignments_admin_update']) {
+    assert.ok(rolePolicy.includes(value), 'Role permissions must retain tenant-scoped database policy: ' + value)
+  }
+
+  for (const value of ['#6035B5', '#16877B', '#f5f3fa', '#242033', 'Premium institutional theme']) {
+    if (value !== 'Premium institutional theme') assert.ok(roleStyles.includes(value), 'Role permission styles must use the institutional palette: ' + value)
+  }
+  assert.ok(themeStyles.includes('.ed360-admin-brand-colors') && themeStyles.includes('input[type="color"]'), 'Brand colour controls need dedicated responsive styling')
+})
+
+check('Administration membership controls use the protected tenant access procedure', () => {
+  const administration = read('src/components/AdministrationStage5Workspace.tsx')
+  const migration = read('supabase/migrations/20261111161307_stage5_administration_profile_campus_and_access_controls.sql')
+  for (const value of ["select('id,user_id,role,status,created_at')", "set_institution_membership_status", 'p_institution_id:user!.institutionId', 'p_membership_id:member.id', "member.role==='owner'", 'member.user_id===user?.id', "['active','suspended'].includes(member.status)", 'Reactivate access', 'Suspend access']) {
+    assert.ok(administration.includes(value), 'Administration membership access control is missing: ' + value)
+  }
+  for (const value of ["p_status not in ('active','suspended')", "array['owner','admin']::text[]", 'v_membership.role = \'owner\'', 'v_membership.user_id = auth.uid()', 'p_membership_id', 'p_institution_id']) {
+    assert.ok(migration.includes(value), 'Membership access procedure is missing safeguard: ' + value)
+  }
+})
+
+check('Administration governance registers offer filtered export and A4 print actions', () => {
+  const administration = read('src/components/AdministrationStage5Workspace.tsx')
+  const styles = read('src/styles/governance-workspace.css')
+  for (const value of ["reportActions('Approval register'", "reportActions(audience+' policies'", "reportActions('Administrative audit'", "reportActions('User access register'", "reportActions('Security access audit events'", "reportActions(section==='system'?'System settings'"]) {
+    assert.ok(administration.includes(value), 'Administration report action is missing: ' + value)
+  }
+  for (const value of ['downloadCsv(', 'exportXlsx(', 'exportDocx(', 'printOfficeReport(', 'Print A4', 'ed360-admin-report-actions']) {
+    assert.ok(administration.includes(value), 'Administration export implementation is missing: ' + value)
+  }
+  for (const route of ["onNavigate('admin:academic_sessions')", "onNavigate('admin:classes')", "onNavigate('admin:programs')", "onNavigate('admin:subjects')", "onNavigate('admin:rooms')", "onNavigate('employees:designations')"]) {
+    assert.ok(administration.includes(route), 'Academic structure shortcut is missing: ' + route)
+  }
+  assert.ok(styles.includes('.ed360-admin-report-actions'), 'Administration report actions need shared responsive styling')
+  assert.ok(administration.includes('Login history, failed sign-in attempts and live session termination are not exposed') && administration.includes('This register shows only available institution audit evidence'), 'Security must distinguish the available audit feed from authentication history that is not exposed')
 })
 
 check('Student and employee ID cards are printed from selected verified records', () => {
@@ -1381,6 +1559,29 @@ check('Stage 8 provides all 12 connected academic work areas', () => {
 })
 
 
+check('Academic records validate date ranges, marks and overlapping timetable allocations', () => {
+  const academic = read('src/components/AcademicManagementWorkspace.tsx')
+  const academicStyles = read('src/styles/academic-management.css')
+  const timetable = read('supabase/migrations/20261111165921_stage8_academic_data_tables.sql')
+  const guards = read('supabase/migrations/20261111170722_stage8_timetable_session_and_student_submission_guards.sql')
+  for (const value of ['function timetableConflictReason', 'if(existing.id&&candidate.id&&existing.id===candidate.id)', 'candidateSession&&existingSession&&candidateSession!==existingSession', 'end<start', 'completion percentage must be between 0 and 100', 'Marks awarded cannot exceed the assignment maximum', 'Timetable conflict: this', "academic_session_id.eq.", ".lt('start_time'", ".gt('end_time'"]) {
+    assert.ok(academic.toLowerCase().includes(value.toLowerCase()), 'Academic validation is missing: ' + value)
+  }
+  assert.ok(academic.includes('getFullYear()') && !academic.includes("new Date().toISOString().slice(0, 10)"), "Academic date defaults must use the user local calendar date")
+  assert.ok(academic.includes('async function fetchTable(table: string, loadAll = false)') && academic.includes('query.range(offset, offset + 499)') && academic.includes('fetchTable(activeMode.table,true)'), 'Academic primary records must load in batches rather than stop at 500')
+  assert.ok(academic.includes('activeMode.fields.map(field=>field.source)') && academic.includes('fetchTable(sourceTables[source])'), 'Academic forms must load the linked options used by the active record type')
+  assert.ok(academic.includes('const sortedRows=useMemo') && academic.includes('const pageRows=sortedRows.slice') && academic.includes('const pageSize = 25') && academic.includes('aria-sort='), 'Academic registers need sorting and pagination')
+  const exportStart=academic.indexOf('function exportRows(')
+  const exportEnd=academic.indexOf('function renderField(',exportStart)
+  const exportHandler=academic.slice(exportStart,exportEnd)
+  assert.ok(exportStart>=0 && exportEnd>exportStart && exportHandler.includes('filteredRows.map') && !exportHandler.includes('pageRows'), 'Academic exports and print reports must include every filtered record, not only the visible page')
+  assert.ok(academicStyles.includes('.ed360-academic-sort') && academicStyles.includes('.ed360-academic-pagination') && academicStyles.includes('@media print{.ed360-academic-pagination'), 'Academic sorting and pagination need responsive and print-aware styles')
+  assert.ok(timetable.includes('create trigger timetable_entries_prevent_conflicts') && timetable.includes('pg_advisory_xact_lock'), 'Timetable collision enforcement must remain database-backed and concurrency-safe')
+  for (const value of ['new.end_time<=new.start_time', 'e.id is distinct from new.id', 'new.start_time<e.end_time and new.end_time>e.start_time', 'e.academic_session_id is not distinct from new.academic_session_id', 'e.academic_session_id is null or new.academic_session_id is null']) {
+    assert.ok(guards.includes(value), 'Database timetable guard is missing: ' + value)
+  }
+})
+
 check('Single dashboard layout preserves role data and accessible display preferences', () => {
   const dashboard = read('src/components/Dashboard.tsx')
   const preferences = read('src/lib/displayPreferences.js')
@@ -1409,7 +1610,7 @@ check('Internal account and institute profile controls remain connected to secur
   assert.ok(account.includes('updateAccountName') && account.includes("from('profiles').update({full_name:fullName})"), 'Users must be able to edit their own account name')
   assert.ok(account.includes("updateUser({email:address}") && account.includes('updatePassword') && account.includes('Request email change'), 'Account settings must include secure email and password changes')
   assert.ok(auth.includes('supabase.auth.getUser()') && auth.includes('authData.user?.email'), 'The verified Auth email must be used for the signed-in account')
-  assert.ok(institute.includes('ed360-admin-profile-preview') && institute.includes('logoUrl') && !institute.includes('showProfileCard'), 'Institute identity card with its logo must be visible without an extra toggle')
+  assert.ok(institute.includes('ed360-profile-public-card') && institute.includes('logoUrl') && institute.includes('previewLogo') && !institute.includes('showProfileCard'), 'Institute identity preview with its logo must be visible without an extra toggle')
   for (const item of ['institutional_audit_events', 'Recent database changes', 'Live database activity', 'GLOBAL INSTITUTION OVERSIGHT', 'Live updates']) assert.ok(!roleDashboard.includes(item), 'Dashboard-only audit or live-feed UI should be removed: ' + item)
   assert.ok(roleDashboard.includes('studentPresentToday') && roleDashboard.includes('studentAbsentToday') && roleDashboard.includes('studentAttendancePercent'), 'Student attendance must be reported separately from staff attendance')
   assert.ok(internalTheme.includes('linear-gradient(128deg,#321943') && internalTheme.includes('.pro-app-shell'), 'The purple / pink canvas must be scoped to the signed-in internal shell')
@@ -1441,6 +1642,16 @@ check('Student admission is a dedicated, accessible workspace window', () => {
   assert.ok(recordModule.includes('Save student admission') && recordModule.includes('Back to students'), 'The admission window must provide clear save and return actions')
   assert.ok(admissionStyles.includes('.ed360-admission-workspace') && admissionStyles.includes('@media(max-width:680px)'), 'The admission workspace must have dedicated responsive styles')
   assert.ok(mainEntry.includes("import './styles/student-admission-workspace.css'"), 'Dedicated admission styles must be loaded by the application')
+})
+
+check('College role assignment expiry controls use effective dates and clear old expiry on reactivation', () => {
+  const roles = read('src/components/CollegeRolePermissionWorkspace.tsx')
+  const policy = read('supabase/migrations/20261113173320_college_custom_role_profiles_and_scope_policies.sql')
+  for (const value of ['assignmentIsActive', 'assignEndDate', 'must be in the future', 'ends_at:null', 'starts_at:new Date().toISOString()', "'Expired'", "'Scheduled'"]) {
+    assert.ok(roles.includes(value), 'Role assignment date handling is missing: ' + value)
+  }
+  assert.ok(roles.includes('assignments.filter(assignmentIsActive)') && roles.includes('assignmentIsActive(row)'), 'Role assignment counts and duplicate checks must use effective dates')
+  assert.ok(policy.includes('a.starts_at<=now()') && policy.includes('(a.ends_at is null or a.ends_at>now())') && policy.includes('p.is_active'), 'Database permission checks must enforce assignment start, expiry and profile state')
 })
 
 check('Admission transitions are enforced by the database and reviewed with trusted identity', () => {

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
-import { CalendarDays, ClipboardList, Megaphone, Plus, RefreshCw, Search, X } from 'lucide-react'
+import { CalendarDays, ClipboardList, Megaphone, Plus, RefreshCw, Search, Trash2, X } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import '../styles/front-office-workspace.css'
@@ -9,8 +9,9 @@ type Enquiry={
  id:string;enquiry_no:string;student_name:string;class_applied_for:string;guardian_name:string;guardian_phone:string;
  guardian_email:string|null;source:string;follow_up_date:string|null;status:string;notes:string|null;created_at:string
 }
-type Announcement={id:string;title:string;body:string;audience:string;created_at:string}
-type EventRow={id:string;title:string;event_type:string;description:string|null;start_date:string;end_date:string;all_day:boolean;audience:string;status:string;created_at:string}
+type Announcement={id:string;title:string;body:string;audience:string;created_at:string;created_by?:string}
+// Event ownership is checked again by database RLS before deletion.
+type EventRow={id:string;title:string;event_type:string;description:string|null;start_date:string;end_date:string;all_day:boolean;audience:string;status:string;created_at:string;created_by?:string}
 const viewOptions:{key:FrontOfficeView;label:string;description:string;icon:typeof ClipboardList}[]=[
  {key:'enquiries',label:'Reception & Enquiries',description:'Track prospective families and follow-ups.',icon:ClipboardList},
  {key:'announcements',label:'Circulars & Notices',description:'Publish notices to the correct institution audience.',icon:Megaphone},
@@ -69,11 +70,11 @@ export function FrontOfficeWorkspace({initialView='enquiries',onToast}:{initialV
     if(error)throw error
     setEnquiries((data??[]) as Enquiry[])
    }else if(view==='announcements'){
-    const {data,error}=await supabase.from('announcements').select('id,title,body,audience,created_at').eq('institution_id',user.institutionId).order('created_at',{ascending:false}).limit(300)
+    const {data,error}=await supabase.from('announcements').select('id,title,body,audience,created_at,created_by').eq('institution_id',user.institutionId).order('created_at',{ascending:false}).limit(300)
     if(error)throw error
     setAnnouncements((data??[]) as Announcement[])
    }else if(view==='events'){
-    const {data,error}=await supabase.from('academic_calendar_events').select('id,title,event_type,description,start_date,end_date,all_day,audience,status,created_at').eq('institution_id',user.institutionId).order('start_date',{ascending:false}).limit(300)
+    const {data,error}=await supabase.from('academic_calendar_events').select('id,title,event_type,description,start_date,end_date,all_day,audience,status,created_at,created_by').eq('institution_id',user.institutionId).order('start_date',{ascending:false}).limit(300)
     if(error)throw error
     setEvents((data??[]) as EventRow[])
    }
@@ -97,7 +98,7 @@ export function FrontOfficeWorkspace({initialView='enquiries',onToast}:{initialV
   setSource(row?.source??'Walk-in');setFollowUpDate(row?.follow_up_date??'');setEnquiryStatus(row?.status??'new')
   setEnquiryNotes(row?.notes??'');setShowForm(true)
  }
- function resetNotice(){setEditingId(null);setNoticeTitle('');setNoticeBody('');setNoticeAudience('all');setShowForm(true)}
+ function resetNotice(row?:Announcement){setEditingId(row?.id??null);setNoticeTitle(row?.title??'');setNoticeBody(row?.body??'');setNoticeAudience(row?.audience??'all');setShowForm(true)}
  function resetEvent(row?:EventRow){
   setEditingId(row?.id??null);setEventTitle(row?.title??'');setEventType(row?.event_type??'event')
   setEventDescription(row?.description??'');setEventStart(row?.start_date??today());setEventEnd(row?.end_date??today())
@@ -155,20 +156,44 @@ export function FrontOfficeWorkspace({initialView='enquiries',onToast}:{initialV
   finally{setSaving(false)}
  }
 
+ async function removeEnquiry(row:Enquiry){
+  if(!supabase||!user||!canManage)return
+  if(!window.confirm('Delete this admission enquiry? This cannot be undone.'))return
+  setSaving(true)
+  try{const {error}=await supabase.from('admission_enquiries').delete().eq('id',row.id).eq('institution_id',user.institutionId);if(error)throw error;setSelectedEnquiry(null);onToast('Admission enquiry deleted.');await load()}
+  catch(error){onToast(error instanceof Error?error.message:'The enquiry could not be deleted.',true)}
+  finally{setSaving(false)}
+ }
+ async function removeAnnouncement(row:Announcement){
+  if(!supabase||!user||!(canManage||row.created_by===user?.id))return
+  if(!window.confirm('Delete this notice?'))return
+  setSaving(true)
+  try{const {error}=await supabase.from('announcements').delete().eq('id',row.id).eq('institution_id',user.institutionId);if(error)throw error;onToast('Notice deleted.');await load()}
+  catch(error){onToast(error instanceof Error?error.message:'The notice could not be deleted.',true)}
+  finally{setSaving(false)}
+ }
+ async function removeEvent(row:EventRow){
+  if(!supabase||!user||!(canManage||(row.created_by===user?.id&&row.status==='draft')))return
+  if(!window.confirm('Delete this draft calendar event? Published events should be cancelled instead.'))return
+  setSaving(true)
+  try{const {error}=await supabase.from('academic_calendar_events').delete().eq('id',row.id).eq('institution_id',user.institutionId);if(error)throw error;onToast('Draft calendar event deleted.');await load()}
+  catch(error){onToast(error instanceof Error?error.message:'The calendar event could not be deleted.',true)}
+  finally{setSaving(false)}
+ }
  const activeLabel=viewOptions.find(item=>item.key===view)?.label??'Front Office'
  const rowsCount=view==='enquiries'?enquiries.length:view==='announcements'?announcements.length:events.length
 
  return <main className="ed360-front-office">
-  <header className="ed360-front-office-hero"><div><span>FRONT OFFICE & COMMUNICATION</span><h1>Front Office & Communication</h1><p>Manage prospective-family enquiries, official notices and the institution calendar in their correct registers.</p></div><div className="ed360-front-office-count"><b>{rowsCount}</b><span>{activeLabel.toLowerCase()} records</span></div></header>
+  <header className="ed360-front-office-hero"><div><span>{(user?.institutionName?.trim()||'GOVERNMENT ISLAMIA DEGREE COLLEGE').toUpperCase()} / FRONT OFFICE / {activeLabel.toUpperCase()}</span><h1>{activeLabel}</h1></div><button type="button" className="ed360-front-office-refresh ed360-front-office-refresh-top" onClick={()=>void load()} disabled={loading}><RefreshCw size={15}/>{loading?'Refreshing…':'Refresh'}</button></header>
   <nav className="ed360-front-office-tabs" aria-label="Front office workspaces">
    {viewOptions.filter(item=>item.key!=='enquiries'||canManage).map(item=>{const Icon=item.icon;return <button type="button" key={item.key} className={view===item.key?'active':''} aria-current={view===item.key?'page':undefined} onClick={()=>{setView(item.key);setSearch('');setShowForm(false);setSelectedEnquiry(null)}}><Icon size={16}/><span>{item.label}</span></button>})}
   </nav>
   <section className="ed360-front-office-panel">
-   <div className="ed360-front-office-toolbar"><div><h2>{activeLabel}</h2><p>{viewOptions.find(item=>item.key===view)?.description}</p></div><div className="ed360-front-office-actions"><label className="ed360-front-office-search"><Search size={15}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder={'Search '+activeLabel.toLowerCase()}/></label><button type="button" className="ed360-front-office-refresh" onClick={()=>void load()} disabled={loading}><RefreshCw size={15}/> Refresh</button>{((view==='enquiries'&&canManage)||(view!=='enquiries'&&canPublish))&&<button type="button" className="ed360-front-office-primary" onClick={()=>view==='enquiries'?resetEnquiry():view==='announcements'?resetNotice():resetEvent()}><Plus size={16}/>{view==='enquiries'?'Record Enquiry':view==='announcements'?'Publish Notice':'Add Event'}</button>}</div></div>
+   <div className="ed360-front-office-toolbar"><span className="ed360-front-office-result-count">{rowsCount.toLocaleString()} {activeLabel.toLowerCase()} records</span><div className="ed360-front-office-actions"><label className="ed360-front-office-search"><Search size={15}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder={'Search '+activeLabel.toLowerCase()}/></label>{((view==='enquiries'&&canManage)||(view!=='enquiries'&&canPublish))&&<button type="button" className="ed360-front-office-primary" onClick={()=>view==='enquiries'?resetEnquiry():view==='announcements'?resetNotice():resetEvent()}><Plus size={16}/>{view==='enquiries'?'Record Enquiry':view==='announcements'?'Publish Notice':'Add Event'}</button>}</div></div>
    {loadError&&<div className="ed360-front-office-error" role="alert">{loadError}<button type="button" onClick={()=>void load()}>Try again</button></div>}
-   {loading?<div className="ed360-front-office-empty">Loading {activeLabel.toLowerCase()}…</div>:view==='enquiries'?<div className="ed360-front-office-table-wrap">{filteredEnquiries.length?<table><thead><tr><th>Enquiry No.</th><th>Applicant</th><th>Requested class</th><th>Guardian</th><th>Source</th><th>Follow-up</th><th>Status</th><th>Actions</th></tr></thead><tbody>{filteredEnquiries.map(row=><tr key={row.id}><td><b>{row.enquiry_no}</b></td><td>{row.student_name}</td><td>{row.class_applied_for}</td><td>{row.guardian_name}<small>{row.guardian_phone}</small></td><td>{row.source}</td><td>{row.follow_up_date??'—'}</td><td><span className={'ed360-front-office-status state-'+row.status}>{titleCase(row.status)}</span></td><td><button type="button" onClick={()=>{setSelectedEnquiry(row);resetEnquiry(row)}}>Edit</button><button type="button" onClick={()=>setSelectedEnquiry(row)}>View</button></td></tr>)}</tbody></table>:<div className="ed360-front-office-empty"><b>No admission enquiries found</b><span>Record a new enquiry to start the admissions follow-up workflow.</span></div>}</div>
-    :view==='announcements'?<div className="ed360-front-office-table-wrap">{filteredAnnouncements.length?<table><thead><tr><th>Notice</th><th>Audience</th><th>Published</th></tr></thead><tbody>{filteredAnnouncements.map(row=><tr key={row.id}><td><b>{row.title}</b><small>{row.body}</small></td><td>{titleCase(row.audience)}</td><td>{new Date(row.created_at).toLocaleDateString()}</td></tr>)}</tbody></table>:<div className="ed360-front-office-empty"><b>No notices have been published</b><span>Publish a notice for all users, students or parents when you are ready.</span></div>}</div>
-    :<div className="ed360-front-office-table-wrap">{filteredEvents.length?<table><thead><tr><th>Event</th><th>Type</th><th>Dates</th><th>Audience</th><th>Status</th><th>Actions</th></tr></thead><tbody>{filteredEvents.map(row=><tr key={row.id}><td><b>{row.title}</b><small>{row.description??''}</small></td><td>{titleCase(row.event_type)}</td><td>{row.start_date}{row.end_date!==row.start_date?' – '+row.end_date:''}</td><td>{titleCase(row.audience)}</td><td><span className={'ed360-front-office-status state-'+row.status}>{titleCase(row.status)}</span></td><td>{canPublish&&<button type="button" onClick={()=>resetEvent(row)}>Edit</button>}</td></tr>)}</tbody></table>:<div className="ed360-front-office-empty"><b>No calendar events found</b><span>Add an event, holiday, examination or institutional deadline.</span></div>}</div>}
+   {loading?<div className="ed360-front-office-empty">Loading {activeLabel.toLowerCase()}…</div>:view==='enquiries'?<div className="ed360-front-office-table-wrap">{filteredEnquiries.length?<table><thead><tr><th>Enquiry No.</th><th>Applicant</th><th>Requested class</th><th>Guardian</th><th>Source</th><th>Follow-up</th><th>Status</th><th>Actions</th></tr></thead><tbody>{filteredEnquiries.map(row=><tr key={row.id}><td><b>{row.enquiry_no}</b></td><td>{row.student_name}</td><td>{row.class_applied_for}</td><td>{row.guardian_name}<small>{row.guardian_phone}</small></td><td>{row.source}</td><td>{row.follow_up_date??'—'}</td><td><span className={'ed360-front-office-status state-'+row.status}>{titleCase(row.status)}</span></td><td><button type="button" onClick={()=>{setSelectedEnquiry(row);resetEnquiry(row)}}>Edit</button><button type="button" onClick={()=>setSelectedEnquiry(row)}>View</button><button type="button" className="danger" onClick={()=>void removeEnquiry(row)} disabled={saving} aria-label={'Delete enquiry '+row.enquiry_no}><Trash2 size={14}/></button></td></tr>)}</tbody></table>:<div className="ed360-front-office-empty"><b>No admission enquiries found</b><span>Record a new enquiry to start the admissions follow-up workflow.</span></div>}</div>
+    :view==='announcements'?<div className="ed360-front-office-table-wrap">{filteredAnnouncements.length?<table><thead><tr><th>Notice</th><th>Audience</th><th>Published</th><th>Actions</th></tr></thead><tbody>{filteredAnnouncements.map(row=><tr key={row.id}><td><b>{row.title}</b><small>{row.body}</small></td><td>{titleCase(row.audience)}</td><td>{new Date(row.created_at).toLocaleDateString()}</td><td>{(canManage||row.created_by===user?.id)&&<button type="button" onClick={()=>resetNotice(row)}>Edit</button>}{(canManage||row.created_by===user?.id)&&<button type="button" className="danger" disabled={saving} onClick={()=>void removeAnnouncement(row)} aria-label={'Delete notice '+row.title}><Trash2 size={14}/></button>}</td></tr>)}</tbody></table>:<div className="ed360-front-office-empty"><b>No notices have been published</b><span>Publish a notice for all users, students or parents when you are ready.</span></div>}</div>
+    :<div className="ed360-front-office-table-wrap">{filteredEvents.length?<table><thead><tr><th>Event</th><th>Type</th><th>Dates</th><th>Audience</th><th>Status</th><th>Actions</th></tr></thead><tbody>{filteredEvents.map(row=><tr key={row.id}><td><b>{row.title}</b><small>{row.description??''}</small></td><td>{titleCase(row.event_type)}</td><td>{row.start_date}{row.end_date!==row.start_date?' – '+row.end_date:''}</td><td>{titleCase(row.audience)}</td><td><span className={'ed360-front-office-status state-'+row.status}>{titleCase(row.status)}</span></td><td>{(canManage||row.created_by===user?.id)&&<button type="button" onClick={()=>resetEvent(row)}>Edit</button>}{(canManage||(row.created_by===user?.id&&row.status==='draft'))&&<button type="button" className="danger" disabled={saving} onClick={()=>void removeEvent(row)} aria-label={'Delete calendar event '+row.title}><Trash2 size={14}/></button>}</td></tr>)}</tbody></table>:<div className="ed360-front-office-empty"><b>No calendar events found</b><span>Add an event, holiday, examination or institutional deadline.</span></div>}</div>}
   </section>
   {selectedEnquiry&&view==='enquiries'&&!showForm&&<aside className="ed360-front-office-detail"><button className="close" type="button" onClick={()=>setSelectedEnquiry(null)} aria-label="Close details"><X size={16}/></button><small>ENQUIRY DETAIL</small><h3>{selectedEnquiry.student_name}</h3><p>{selectedEnquiry.enquiry_no} · {selectedEnquiry.class_applied_for}</p><dl><div><dt>Guardian</dt><dd>{selectedEnquiry.guardian_name}</dd></div><div><dt>Phone</dt><dd>{selectedEnquiry.guardian_phone}</dd></div><div><dt>Email</dt><dd>{selectedEnquiry.guardian_email??'—'}</dd></div><div><dt>Notes</dt><dd>{selectedEnquiry.notes??'—'}</dd></div></dl><button type="button" className="ed360-front-office-primary" onClick={()=>resetEnquiry(selectedEnquiry)}>Edit enquiry</button></aside>}
   {showForm&&<div className="ed360-front-office-modal-backdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setShowForm(false)}}><section className="ed360-front-office-modal" role="dialog" aria-modal="true" aria-labelledby="ed360-front-office-form-title">

@@ -10,8 +10,10 @@ import { createRecord, deleteRecord, listAccounts, listRecords, updateRecord } f
 import { supabase } from '../lib/supabase'
 import { userFacingError } from '../lib/userErrors'
 import { downloadCsv } from '../lib/csv'
+import { exportDocx, exportXlsx, printOfficeReport, type OfficeColumn } from '../lib/officeExport'
 import type { RecordRow } from '../lib/types'
 import { EmployeeQualificationsPanel } from './EmployeeQualificationsPanel'
+import { LocalQrCode } from './LocalQrCode'
 import '../styles/faculty-workspace.css'
 
 interface Props { onToast: (message: string, error?: boolean) => void; onNavigate: (key: string) => void; initialWindow?: string }
@@ -64,13 +66,14 @@ function dateLabel(raw: unknown) {
   const date = new Date(String(raw) + (String(raw).length === 10 ? 'T00:00:00' : ''))
   return Number.isNaN(date.getTime()) ? String(raw) : date.toLocaleDateString()
 }
+function localDate(){const now=new Date();return now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0')}
 function newEmployeeNumber() { return 'EMP-' + new Date().getFullYear() + '-' + crypto.randomUUID().replaceAll('-','').slice(0,8).toUpperCase() }
 function getDefaults(kind: Kind, row: RecordRow|null, employeeId: string, admin: boolean): Record<string,string> {
   if (row) return Object.fromEntries(Object.entries(row).map(([k,v]) => [k, v === null || v === undefined ? '' : String(v)]))
-  if (kind === 'employee') return {employee_no:newEmployeeNumber(),full_name:'',email:'',phone:'',employee_type:'teaching',employment_type:'full_time',employment_status:'active',department_id:'',designation_id:'',joining_date:new Date().toISOString().slice(0,10),contract_end_date:'',work_location:'',emergency_contact:'',user_id:''}
+  if (kind === 'employee') return {employee_no:newEmployeeNumber(),full_name:'',email:'',phone:'',employee_type:'teaching',employment_type:'full_time',employment_status:'active',department_id:'',designation_id:'',joining_date:localDate(),contract_end_date:'',work_location:'',emergency_contact:'',user_id:''}
   if (kind === 'designation') return {name:'',code:'',department_id:'',description:'',is_active:'true'}
   if (kind === 'assignment') return {teacher_id:'',subject_id:'',class_id:'',academic_session_id:'',weekly_periods:'0',assignment_type:'teaching',start_date:'',end_date:'',status:'active',notes:''}
-  if (kind === 'attendance') return {teacher_id:'',attendance_date:new Date().toISOString().slice(0,10),check_in_time:'',check_out_time:'',status:'present',notes:''}
+  if (kind === 'attendance') return {teacher_id:'',attendance_date:localDate(),check_in_time:'',check_out_time:'',status:'present',notes:''}
   if (kind === 'leave') return {teacher_id:admin?'':employeeId,leave_type:'annual',start_date:'',end_date:'',day_count:'1',reason:''}
   return {status:'approved',review_notes:''}
 }
@@ -80,6 +83,52 @@ function Field({label,children,wide=false}:{label:string;children:ReactNode;wide
 function Status({value:raw}:{value:unknown}) {
   const s=String(raw??'unknown').toLowerCase()
   return <span className={'staff-status staff-status-'+s}>{label(raw)}</span>
+}
+
+type StaffColumn={key:string;label:string}
+type StaffRecordsTableProps={rows:RecordRow[];cols:StaffColumn[];empty:string;actions?:(row:RecordRow)=>ReactNode;reportTitle:string;institutionName:string;onToast:(message:string,error?:boolean)=>void}
+function StaffRecordsTable({rows,cols,empty,actions,reportTitle,institutionName,onToast}:StaffRecordsTableProps){
+  const [search,setSearch]=useState('')
+  const [sortKey,setSortKey]=useState(cols[0]?.key??'')
+  const [sortDirection,setSortDirection]=useState<'asc'|'desc'>('asc')
+  const [page,setPage]=useState(1)
+  const pageSize=25
+  const filtered=useMemo(()=>rows.filter(row=>cols.some(col=>String(row[col.key]??'').toLowerCase().includes(search.trim().toLowerCase()))),[rows,cols,search])
+  const activeSortKey=cols.some(col=>col.key===sortKey)?sortKey:(cols[0]?.key??'')
+  const sorted=useMemo(()=>[...filtered].sort((left,right)=>{
+    const a=left[activeSortKey],b=right[activeSortKey]
+    let comparison=0
+    if(typeof a==='number'&&typeof b==='number')comparison=a-b
+    else comparison=String(a??'').localeCompare(String(b??''),undefined,{numeric:true,sensitivity:'base'})
+    return sortDirection==='asc'?comparison:-comparison
+  }),[filtered,activeSortKey,sortDirection])
+  const pageCount=Math.max(1,Math.ceil(sorted.length/pageSize))
+  const currentPage=Math.min(page,pageCount)
+  const pageRows=sorted.slice((currentPage-1)*pageSize,currentPage*pageSize)
+  const display=(row:RecordRow,key:string)=>{
+    const raw=row[key]
+    if(['status','employment_status','verification_status'].includes(key))return label(raw)
+    if(key.endsWith('_date')||key==='created_at'||key==='effective_date')return dateLabel(raw)
+    return value(raw)
+  }
+  const officeColumns:OfficeColumn[]=cols.map(col=>({key:col.key,label:col.label}))
+  const exportRows=sorted.map(row=>Object.fromEntries(cols.map(col=>[col.key,display(row,col.key)])))
+  const filename='edusphere360-'+reportTitle.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-'+localDate()
+  function exportReport(format:'csv'|'xlsx'|'docx'|'print'){
+    if(!exportRows.length){onToast('There are no matching staff records to export.',true);return}
+    try{
+      if(format==='csv')downloadCsv(filename+'.csv',exportRows,officeColumns)
+      else if(format==='xlsx')exportXlsx(filename+'.xlsx',reportTitle,exportRows,officeColumns)
+      else if(format==='docx')exportDocx(filename+'.docx',reportTitle,exportRows,officeColumns)
+      else printOfficeReport(reportTitle,exportRows,officeColumns,institutionName)
+    }catch(error){onToast(error instanceof Error?error.message:'The staff report could not be generated.',true)}
+  }
+  if(!rows.length)return <div className="staff-empty"><span><BriefcaseBusiness size={21}/></span><strong>No records yet</strong><p>{empty}</p></div>
+  return <div className="staff-records-table">
+    <div className="staff-records-toolbar"><label><Search size={14}/><input value={search} onChange={event=>{setSearch(event.target.value);setPage(1)}} placeholder="Search these records…"/></label><span>{filtered.length} matching records</span><div className="staff-record-export"><button type="button" onClick={()=>exportReport('csv')} disabled={!filtered.length}>CSV</button><button type="button" onClick={()=>exportReport('xlsx')} disabled={!filtered.length}>Excel</button><button type="button" onClick={()=>exportReport('docx')} disabled={!filtered.length}>Word</button><button type="button" onClick={()=>exportReport('print')} disabled={!filtered.length}><Printer size={13}/> Print / PDF</button></div></div>
+    {filtered.length?<div className="staff-table-wrap"><table className="staff-table"><thead><tr>{cols.map(col=><th key={col.key} aria-sort={activeSortKey===col.key?(sortDirection==='asc'?'ascending':'descending'):'none'}><button type="button" className="staff-table-sort" onClick={()=>{if(activeSortKey===col.key)setSortDirection(current=>current==='asc'?'desc':'asc');else{setSortKey(col.key);setSortDirection('asc')}setPage(1)}}>{col.label}<span aria-hidden="true">{activeSortKey===col.key?(sortDirection==='asc'?'↑':'↓'):'↕'}</span></button></th>)}{actions&&<th>Actions</th>}</tr></thead><tbody>{pageRows.map(row=><tr key={row.id}>{cols.map(col=><td key={col.key}>{['status','employment_status'].includes(col.key)?<Status value={row[col.key]}/>:display(row,col.key)}</td>)}{actions&&<td><div className="staff-row-actions">{actions(row)}</div></td>}</tr>)}</tbody></table></div>:<div className="staff-empty"><strong>No matching records</strong><p>Change the search terms to see records in this register.</p></div>}
+    {filtered.length>pageSize&&<nav className="staff-table-pagination" aria-label="Staff record pages"><span>Showing <b>{(currentPage-1)*pageSize+1}–{Math.min(currentPage*pageSize,sorted.length)}</b> of <b>{sorted.length}</b></span><div><button type="button" disabled={currentPage<=1} onClick={()=>setPage(currentPage-1)}>Previous</button><span>Page {currentPage} of {pageCount}</span><button type="button" disabled={currentPage>=pageCount} onClick={()=>setPage(currentPage+1)}>Next</button></div></nav>}
+  </div>
 }
 
 export function FacultyWorkspace({onToast,onNavigate,initialWindow}:Props) {
@@ -97,6 +146,7 @@ export function FacultyWorkspace({onToast,onNavigate,initialWindow}:Props) {
   const [docFile,setDocFile]=useState<File|null>(null)
   const [docType,setDocType]=useState('contract')
   const [docTitle,setDocTitle]=useState('')
+  const [docIssueDate,setDocIssueDate]=useState('')
   const [docExpiry,setDocExpiry]=useState('')
   const [docNotes,setDocNotes]=useState('')
   const [uploading,setUploading]=useState(false)
@@ -153,6 +203,9 @@ export function FacultyWorkspace({onToast,onNavigate,initialWindow}:Props) {
         if(duplicate)throw new Error('That employee number or email is already registered in this institution.')
         const account=accounts.find(a=>a.id===v.user_id)
         if(v.user_id&&(!account||account.email.toLowerCase()!==v.email.trim().toLowerCase()))throw new Error('Choose the existing teacher account with the same employee email.')
+        if(v.joining_date&&v.contract_end_date&&v.contract_end_date<v.joining_date)throw new Error('Contract end date cannot precede the employee joining date.')
+        const chosenDesignation=designations.find(r=>r.id===v.designation_id)
+        if(chosenDesignation?.department_id&&v.department_id&&chosenDesignation.department_id!==v.department_id)throw new Error('Choose a designation assigned to the selected department, or clear the department-specific designation.')
         const department=departments.find(r=>r.id===v.department_id)
         const p={employee_no:v.employee_no.trim(),full_name:v.full_name.trim(),email:v.email.trim(),phone:v.phone.trim()||null,department:department?.name??null,department_id:v.department_id||null,designation_id:v.designation_id||null,employee_type:v.employee_type,employment_type:v.employment_type,employment_status:v.employment_status,joining_date:v.joining_date||null,contract_end_date:v.contract_end_date||null,work_location:v.work_location.trim()||null,emergency_contact:v.emergency_contact.trim()||null,user_id:v.user_id||null,updated_at:new Date().toISOString()}
         if(dialog.row)await updateRecord(mode,user!,'teachers',dialog.row.id,p);else await createRecord(mode,user!,'teachers',p)
@@ -162,9 +215,14 @@ export function FacultyWorkspace({onToast,onNavigate,initialWindow}:Props) {
         if(dialog.row)await updateRecord(mode,user!,'designations',dialog.row.id,p);else await createRecord(mode,user!,'designations',p)
       }else if(dialog.kind==='assignment'){
         if(!v.teacher_id||!v.subject_id||!v.class_id||!v.academic_session_id)throw new Error('Select an employee, subject, class and academic session.')
-        if(Number(v.weekly_periods)<0)throw new Error('Weekly periods cannot be negative.')
+        const weeklyPeriods=Number(v.weekly_periods)
+        if(!Number.isInteger(weeklyPeriods)||weeklyPeriods<0)throw new Error('Weekly periods must be a whole number of zero or more.')
         if(v.start_date&&v.end_date&&v.end_date<v.start_date)throw new Error('Assignment end date cannot precede start date.')
-        const p={teacher_id:v.teacher_id,subject_id:v.subject_id,class_id:v.class_id,academic_session_id:v.academic_session_id,weekly_periods:Number(v.weekly_periods),assignment_type:v.assignment_type,start_date:v.start_date||null,end_date:v.end_date||null,status:v.status,notes:v.notes.trim()||null,updated_at:new Date().toISOString()}
+        const assignedEmployee=employees.find(r=>r.id===v.teacher_id)
+        if(!assignedEmployee||assignedEmployee.employment_status!=='active')throw new Error('Teaching allocations can only be assigned to an active employee.')
+        const duplicateScope=assignments.find(r=>r.id!==dialog.row?.id&&r.teacher_id===v.teacher_id&&r.subject_id===v.subject_id&&r.class_id===v.class_id&&r.academic_session_id===v.academic_session_id&&String(r.start_date??'0001-01-01')===String(v.start_date||'0001-01-01'))
+        if(duplicateScope)throw new Error('This employee already has an allocation for the same subject, class, session and start date.')
+        const p={teacher_id:v.teacher_id,subject_id:v.subject_id,class_id:v.class_id,academic_session_id:v.academic_session_id,weekly_periods:weeklyPeriods,assignment_type:v.assignment_type,start_date:v.start_date||null,end_date:v.end_date||null,status:v.status,notes:v.notes.trim()||null,updated_at:new Date().toISOString()}
         if(dialog.row)await updateRecord(mode,user!,'teacher_assignments',dialog.row.id,p);else await createRecord(mode,user!,'teacher_assignments',p)
       }else if(dialog.kind==='attendance'){
         if(!v.teacher_id||!v.attendance_date)throw new Error('Select an employee and attendance date.')
@@ -176,8 +234,11 @@ export function FacultyWorkspace({onToast,onNavigate,initialWindow}:Props) {
       }else if(dialog.kind==='leave'){
         if(!v.teacher_id||!v.start_date||!v.end_date||!v.reason.trim())throw new Error('Employee, dates and reason are required.')
         if(v.end_date<v.start_date)throw new Error('Leave end date cannot precede start date.')
-        if(!(Number(v.day_count)>0))throw new Error('Leave duration must be greater than zero.')
-        await createRecord(mode,user!,'employee_leave_requests',{teacher_id:v.teacher_id,leave_type:v.leave_type,start_date:v.start_date,end_date:v.end_date,day_count:Number(v.day_count),reason:v.reason.trim(),status:'pending',created_by:user!.id})
+        const leaveDays=Number(v.day_count)
+        if(!Number.isFinite(leaveDays)||leaveDays<=0)throw new Error('Leave duration must be a valid number greater than zero.')
+        const overlap=leaves.find(r=>r.teacher_id===v.teacher_id&&['pending','approved'].includes(String(r.status))&&!(v.end_date<String(r.start_date??'')||v.start_date>String(r.end_date??'')))
+        if(overlap)throw new Error('This leave request overlaps another pending or approved request for this employee.')
+        await createRecord(mode,user!,'employee_leave_requests',{teacher_id:v.teacher_id,leave_type:v.leave_type,start_date:v.start_date,end_date:v.end_date,day_count:leaveDays,reason:v.reason.trim(),status:'pending',created_by:user!.id})
       }else if(dialog.kind==='leaveReview'&&dialog.row){
         if(!['approved','rejected'].includes(v.status))throw new Error('Choose approve or reject.')
         await updateRecord(mode,user!,'employee_leave_requests',dialog.row.id,{status:v.status,review_notes:v.review_notes.trim()||null,reviewed_by:user!.id,reviewed_at:new Date().toISOString(),updated_at:new Date().toISOString()})
@@ -196,6 +257,7 @@ export function FacultyWorkspace({onToast,onNavigate,initialWindow}:Props) {
   async function uploadDocument(e:FormEvent){
     e.preventDefault();if(!selected||!docFile||!supabase)return
     if(!docTitle.trim()){onToast('Enter a document title.',true);return}
+    if(docIssueDate&&docExpiry&&docExpiry<docIssueDate){onToast('Document expiry date cannot precede its issue date.',true);return}
     if(docFile.size<=0||docFile.size>10*1024*1024){onToast('Staff documents must be 10 MB or smaller.',true);return}
     const allowed=['application/pdf','image/png','image/jpeg','image/webp','text/plain','application/msword','application/vnd.openxmlformats-officedocument.wordprocessingml.document','application/vnd.ms-excel','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']
     if(!allowed.includes(docFile.type)){onToast('Choose a PDF, image, text, Word or Excel document.',true);return}
@@ -205,9 +267,9 @@ export function FacultyWorkspace({onToast,onNavigate,initialWindow}:Props) {
     try{
       const {error}=await supabase.storage.from('staff-files').upload(path,docFile,{cacheControl:'3600',contentType:docFile.type,upsert:false})
       if(error)throw error
-      try{await createRecord(mode,user!,'staff_documents',{teacher_id:selected.id,document_type:docType,title:docTitle.trim(),file_name:docFile.name,storage_path:path,mime_type:docFile.type,file_size:docFile.size,expiry_date:docExpiry||null,notes:docNotes.trim()||null,uploaded_by:user!.id})}
+      try{await createRecord(mode,user!,'staff_documents',{teacher_id:selected.id,document_type:docType,title:docTitle.trim(),file_name:docFile.name,storage_path:path,mime_type:docFile.type,file_size:docFile.size,issue_date:docIssueDate||null,expiry_date:docExpiry||null,notes:docNotes.trim()||null,uploaded_by:user!.id})}
       catch(err){await supabase.storage.from('staff-files').remove([path]);throw err}
-      setDocFile(null);setDocTitle('');setDocExpiry('');setDocNotes('');onToast('Confidential staff document uploaded.');await load(true)
+      setDocFile(null);setDocTitle('');setDocIssueDate('');setDocExpiry('');setDocNotes('');onToast('Confidential staff document uploaded.');await load(true)
     }catch(err){onToast(userFacingError(err,'The staff document could not be uploaded.'),true)}
     finally{setUploading(false)}
   }
@@ -217,16 +279,22 @@ export function FacultyWorkspace({onToast,onNavigate,initialWindow}:Props) {
     catch(err){onToast(userFacingError(err,'The document is unavailable to this account.'),true)}
   }
   async function deleteDocument(row:RecordRow){
-    try{await deleteRecord(mode,user!,'staff_documents',row.id);if(supabase)await supabase.storage.from('staff-files').remove([String(row.storage_path)]);onToast('Staff document removed.');await load(true)}
-    catch(err){onToast(userFacingError(err,'The staff document could not be removed.'),true)}
+    if (!(admin || row.uploaded_by === user!.id)) return
+    if (!window.confirm('Remove this confidential staff document and its private file? This cannot be undone.')) return
+    try{
+      await deleteRecord(mode,user!,'staff_documents',row.id)
+      const {error:storageError}=supabase?await supabase.storage.from('staff-files').remove([String(row.storage_path)]):{error:new Error('Supabase storage is unavailable.')}
+      if(storageError)onToast('The document record was removed, but its private file could not be deleted. Ask an administrator to complete secure file cleanup.',true)
+      else onToast('Staff document and private file removed.')
+      await load(true)
+    }catch(err){onToast(userFacingError(err,'The staff document could not be removed.'),true)}
   }
   function exportCsv(){downloadCsv('edusphere360-staff-report.csv',employees,[{key:'employee_no',label:'Employee ID'},{key:'full_name',label:'Employee'},{key:'email',label:'Email'},{key:'employee_type',label:'Category'},{key:'department',label:'Department'},{key:'employment_status',label:'Status'},{key:'joining_date',label:'Joining date'}])}
 
-  const table=(rows:RecordRow[],cols:{key:string;label:string}[],empty:string,actions?: (row:RecordRow)=>ReactNode)=>{
-    if(!rows.length)return <div className="staff-empty"><span><BriefcaseBusiness size={21}/></span><strong>No records yet</strong><p>{empty}</p></div>
-    return <div className="staff-table-wrap"><table className="staff-table"><thead><tr>{cols.map(c=><th key={c.key}>{c.label}</th>)}{actions&&<th>Actions</th>}</tr></thead><tbody>{rows.map(row=><tr key={row.id}>{cols.map(c=><td key={c.key}>{['status','employment_status'].includes(c.key)?<Status value={row[c.key]}/>:c.key.endsWith('_date')||c.key==='created_at'?dateLabel(row[c.key]):value(row[c.key])}</td>)}{actions&&<td><div className="staff-row-actions">{actions(row)}</div></td>}</tr>)}</tbody></table></div>
-  }
-  const header=<header className="staff-workspace-heading"><div><span className="staff-kicker">PEOPLE / HUMAN RESOURCES</span><h1>Faculty &amp; Employee Management</h1><p>{admin?'Employee records, teaching allocation, attendance, leave, confidential documents and workforce reporting.':'Your employee information, assignments, attendance, leave, documents and history.'}</p></div><div className="staff-heading-actions"><button type="button" className="staff-button staff-button-outline" onClick={()=>void load()} disabled={loading}><RefreshCw size={15}/> Refresh</button>{admin&&<button type="button" className="staff-button staff-button-primary" onClick={()=>{setTab('registration');open('employee')}}><Plus size={15}/> Register employee</button>}</div></header>
+  const table=(rows:RecordRow[],cols:{key:string;label:string}[],empty:string,actions?: (row:RecordRow)=>ReactNode)=>
+    <StaffRecordsTable rows={rows} cols={cols} empty={empty} actions={actions} reportTitle={currentStaffPage} institutionName={user?.institutionName??'Institution name not set'} onToast={onToast}/>
+  const currentStaffPage=tab==='overview'?'Faculty & Employee Management':tabs.find(item=>item.key===tab)?.label??'Faculty & Employee Management'
+  const header=<header className="staff-workspace-heading"><div><span className="staff-kicker">{(user?.institutionName?.trim()||'GOVERNMENT ISLAMIA DEGREE COLLEGE').toUpperCase()} / PEOPLE &amp; HR / {currentStaffPage.toUpperCase()}</span><h1>{currentStaffPage}</h1></div><div className="staff-heading-actions"><button type="button" className="staff-button staff-button-primary" onClick={()=>void load()} disabled={loading}><RefreshCw size={15}/>{loading?'Refreshing…':'Refresh'}</button>{admin&&<button type="button" className="staff-button staff-button-outline" onClick={()=>{setTab('registration');open('employee')}}><Plus size={15}/> Register employee</button>}</div></header>
 
   const employeeActions=(row:RecordRow)=><><button type="button" title="Open profile" onClick={()=>{setEmployeeId(row.id);setTab('profile')}}><Eye size={14}/></button>{admin&&<button type="button" title="Edit employee" onClick={()=>{setEmployeeId(row.id);open('employee',row)}}><Edit3 size={14}/></button>}{admin&&<button type="button" className="staff-action-danger" title="Delete employee" onClick={()=>void remove('teachers',row)}><Trash2 size={14}/></button>}</>
   const visibleEmployees=useMemo(()=>employees.filter(row=>{const q=query.trim().toLowerCase();const match=!q||[row.employee_no,row.full_name,row.email,row.department].some(v=>String(v??'').toLowerCase().includes(q));const typeMatch=tab==='directory-teaching'?(row.employee_type==='teaching'||!row.employee_type):tab==='directory-staff'?row.employee_type==='non_teaching':true;return match&&typeMatch&&(statusFilter==='all'||String(row.employment_status??'active')===statusFilter)}),[employees,query,statusFilter,tab])
@@ -235,7 +303,7 @@ export function FacultyWorkspace({onToast,onNavigate,initialWindow}:Props) {
   const ownLeaveRows=leaves.filter(row=>row.teacher_id===selected?.id)
   const ownDocRows=documents.filter(row=>row.teacher_id===selected?.id)
   const ownHistoryRows=history.filter(row=>row.teacher_id===selected?.id)
-  const thisMonth=attendance.filter(row=>String(row.attendance_date??'').slice(0,7)===new Date().toISOString().slice(0,7))
+  const thisMonth=attendance.filter(row=>String(row.attendance_date??'').slice(0,7)===localDate().slice(0,7))
   const activeStaff=employees.filter(row=>row.employment_status==='active')
   const pendingLeave=leaves.filter(row=>row.status==='pending')
   const activeAllocation=assignments.filter(row=>row.status==='active')
@@ -258,7 +326,7 @@ export function FacultyWorkspace({onToast,onNavigate,initialWindow}:Props) {
 
     {tab==='profile'&&<section className="staff-panel staff-full-panel"><header><div><h2>Employee profile</h2><p>Personal, employment and institutional assignment information.</p></div>{admin&&selected&&<button type="button" className="staff-button staff-button-outline" onClick={()=>open('employee',selected)}><Edit3 size={14}/> Edit profile</button>}</header>{selected?<div className="staff-profile-grid"><article><span>Employee identity</span><h3>{value(selected.full_name)}</h3><dl><div><dt>Employee number</dt><dd>{value(selected.employee_no)}</dd></div><div><dt>Email</dt><dd>{value(selected.email)}</dd></div><div><dt>Phone</dt><dd>{value(selected.phone)}</dd></div><div><dt>Category</dt><dd>{label(selected.employee_type)}</dd></div></dl></article><article><span>Employment</span><h3>{label(selected.employment_status)}</h3><dl><div><dt>Type</dt><dd>{label(selected.employment_type)}</dd></div><div><dt>Department</dt><dd>{value(departmentFor(selected.department_id)?.name??selected.department)}</dd></div><div><dt>Designation</dt><dd>{value(designationFor(selected.designation_id)?.name)}</dd></div><div><dt>Joining date</dt><dd>{dateLabel(selected.joining_date)}</dd></div><div><dt>Contract end</dt><dd>{dateLabel(selected.contract_end_date)}</dd></div><div><dt>Work location</dt><dd>{value(selected.work_location)}</dd></div></dl></article><article><span>Emergency contact</span><h3>Contact details</h3><dl><div><dt>Emergency contact</dt><dd>{value(selected.emergency_contact)}</dd></div><div><dt>Department ID</dt><dd>{value(selected.department_id)}</dd></div><div><dt>Designation ID</dt><dd>{value(selected.designation_id)}</dd></div></dl></article></div>:<div className="staff-empty"><strong>No employee record linked</strong><p>An administrator must link this teacher login to a staff record.</p></div>}</section>}
 
-    {tab==='id-cards'&&<section className="staff-panel staff-full-panel staff-id-card-workspace"><header><div><h2>{admin?'Employee identity card':'My employee identity card'}</h2><p>Print a card from the selected verified staff record. This does not create a new account or change employment data.</p></div>{selected&&<button type="button" className="staff-button staff-button-primary" onClick={()=>window.print()}><Printer size={14}/> Print ID card</button>}</header>{selected?<div className="staff-id-card-print"><div className="staff-id-card-brand"><div><strong>{user?.institutionName??'EduSphere 360 Institution'}</strong><small>EMPLOYEE IDENTITY CARD</small></div><span>STAFF</span></div><div className="staff-id-card-body"><div className="staff-id-card-avatar">{String(selected.full_name??'E').trim().slice(0,1).toUpperCase()}</div><div><strong>{value(selected.full_name)}</strong><small>Employee No. {value(selected.employee_no)}</small><small>{value(designationFor(selected.designation_id)?.name,'Staff member')}</small><small>{value(departmentFor(selected.department_id)?.name??selected.department,'Department not assigned')}</small><small>Joined: {dateLabel(selected.joining_date)}</small></div></div><div className="staff-id-card-footer"><span>{user?.institutionName??'Institution'}</span><b>{String(selected.id).slice(0,8).toUpperCase()}</b></div></div>:<div className="staff-empty"><strong>No employee record linked</strong><p>Select an employee from the record selector or ask an administrator to link this staff account.</p></div>}<p className="staff-id-card-note">Confirm the employee name, number and department before printing. The ID card displays only the selected staff record.</p></section>}
+    {tab==='id-cards'&&<section className="staff-panel staff-full-panel staff-id-card-workspace"><header><div><h2>{admin?'Employee identity card':'My employee identity card'}</h2><p>Print a card from the selected verified staff record. This does not create a new account or change employment data.</p></div>{selected&&<button type="button" className="staff-button staff-button-primary" onClick={()=>window.print()}><Printer size={14}/> Print ID card</button>}</header>{selected?<div className="staff-id-card-print"><div className="staff-id-card-brand"><div><strong>{user?.institutionName??'EduSphere 360 Institution'}</strong><small>EMPLOYEE IDENTITY CARD</small></div><span>STAFF</span></div><div className="staff-id-card-body"><div className="staff-id-card-avatar">{String(selected.full_name??'E').trim().slice(0,1).toUpperCase()}</div><div className="staff-id-card-info"><strong>{value(selected.full_name)}</strong><small>Employee No. {value(selected.employee_no)}</small><small>{value(designationFor(selected.designation_id)?.name,'Staff member')}</small><small>{value(departmentFor(selected.department_id)?.name??selected.department,'Department not assigned')}</small><small>Joined: {dateLabel(selected.joining_date)}</small></div><div className="staff-id-card-qr"><LocalQrCode value={String(selected.employee_no??'')} size={70} label={'Attendance QR for '+String(selected.full_name??'employee')}/><small>SCAN FOR ATTENDANCE</small></div></div><div className="staff-id-card-footer"><span>{user?.institutionName??'Institution'}</span><b>{String(selected.id).slice(0,8).toUpperCase()}</b></div></div>:<div className="staff-empty"><strong>No employee record linked</strong><p>Select an employee from the record selector or ask an administrator to link this staff account.</p></div>}<p className="staff-id-card-note">Confirm the employee name, number and department before printing. The ID card displays only the selected staff record.</p></section>}
 
     {tab==='departments'&&admin&&<section className="staff-panel staff-full-panel"><header><div><h2>Department staffing</h2><p>Employee distribution across the existing Institute Administration departments. Department creation remains in the canonical administration workspace.</p></div><button type="button" className="staff-button staff-button-outline" onClick={()=>onNavigate('admin:departments')}>Manage departments <ArrowUpRight size={14}/></button></header>{table(departments.map(d=>({...d,staff_count:employees.filter(e=>e.department_id===d.id).length,active_count:employees.filter(e=>e.department_id===d.id&&e.employment_status==='active').length})),[{key:'department_code',label:'Code'},{key:'name',label:'Department'},{key:'head_name',label:'Department head'},{key:'staff_count',label:'Employees'},{key:'active_count',label:'Active'}],'Create departments in Institute Administration, then assign employees here.')}</section>}
 
@@ -272,8 +340,8 @@ export function FacultyWorkspace({onToast,onNavigate,initialWindow}:Props) {
 
     {tab==='workload'&&<section className="staff-panel staff-full-panel"><header><div><h2>{admin?'Workload & timetable':'My workload & timetable'}</h2><p>Teaching allocations show expected periods; actual class slots remain in Academic Management.</p></div><button type="button" className="staff-button staff-button-outline" onClick={()=>onNavigate('timetable')}>Open Academic Timetable <CalendarDays size={14}/></button></header>{table((admin?assignments:ownAssignmentRows).map(r=>({...r,subject_label:subjects.find(s=>s.id===r.subject_id)?.name??'—',class_label:classes.find(c=>c.id===r.class_id)?.name??'—',session_label:sessions.find(s=>s.id===r.academic_session_id)?.session_name??'—'})),[{key:'subject_label',label:'Subject'},{key:'class_label',label:'Class'},{key:'session_label',label:'Session'},{key:'weekly_periods',label:'Expected periods / week'},{key:'status',label:'Status'}],'Teaching allocations define workload for each session.')}<h3 className="staff-subheading">Timetable entries</h3>{table((admin?timetable:timetable.filter(r=>String(r.teacher_name??'').toLowerCase()===String(selected?.full_name??'').toLowerCase())),[{key:'weekday',label:'Day'},{key:'start_time',label:'Start'},{key:'end_time',label:'End'},{key:'class_name',label:'Class'},{key:'subject',label:'Subject'},{key:'room',label:'Room'}],'No timetable entries are currently linked to this employee.')}</section>}
 
-    {tab==='qualifications'&&<EmployeeQualificationsPanel employeeId={selected?.id??''} institutionId={user!.institutionId} canManage={admin} onToast={onToast}/>}
-    {tab==='documents'&&<section className="staff-panel staff-full-panel"><header><div><h2>{admin?'Confidential staff documents':'My confidential documents'}</h2><p>Stored in the separate private staff-files bucket, not the general institution file store.</p></div></header>{selected&&(admin||selected.user_id===user!.id)&&<form className="staff-document-form" onSubmit={uploadDocument}><label>Document type<select value={docType} onChange={e=>setDocType(e.target.value)}>{documentTypes.map(d=><option key={d.value} value={d.value}>{d.label}</option>)}</select></label><label>Title<input value={docTitle} onChange={e=>setDocTitle(e.target.value)} placeholder="Employment contract, qualification certificate…" required/></label><label>Expiry date<input type="date" value={docExpiry} onChange={e=>setDocExpiry(e.target.value)}/></label><label>File<input type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.doc,.docx,.xls,.xlsx" onChange={e=>setDocFile(e.target.files?.[0]??null)} required/></label><label>Notes<input value={docNotes} onChange={e=>setDocNotes(e.target.value)} placeholder="Optional notes"/></label><button className="staff-button staff-button-primary" type="submit" disabled={!docFile||uploading}>{uploading?'Uploading…':'Upload confidential document'}</button></form>}{table((admin?documents:ownDocuments).map(r=>({...r,employee_label:employees.find(e=>e.id===r.teacher_id)?.full_name??'—'})),[{key:'employee_label',label:'Employee'},{key:'document_type',label:'Type'},{key:'title',label:'Title'},{key:'file_name',label:'File'},{key:'expiry_date',label:'Expiry'},{key:'created_at',label:'Uploaded'}],'No confidential staff documents have been uploaded.',row=><><button type="button" title="Open secure document" onClick={()=>void viewDocument(row)}><Eye size={14}/></button>{admin&&<button type="button" className="staff-action-danger" title="Delete document" onClick={()=>void deleteDocument(row)}><Trash2 size={14}/></button>}</>)}</section>}
+    {tab==='qualifications'&&<EmployeeQualificationsPanel employeeId={selected?.id??''} institutionId={user!.institutionId} institutionName={user?.institutionName??'Institution name not set'} canManage={admin} onToast={onToast}/>}
+    {tab==='documents'&&<section className="staff-panel staff-full-panel"><header><div><h2>{admin?'Confidential staff documents':'My confidential documents'}</h2><p>Stored in the separate private staff-files bucket, not the general institution file store.</p></div></header>{selected&&(admin||selected.user_id===user!.id)&&<form className="staff-document-form" onSubmit={uploadDocument}><label>Document type<select value={docType} onChange={e=>setDocType(e.target.value)}>{documentTypes.map(d=><option key={d.value} value={d.value}>{d.label}</option>)}</select></label><label>Title<input value={docTitle} onChange={e=>setDocTitle(e.target.value)} placeholder="Employment contract, qualification certificate…" required/></label><label>Issue date<input type="date" value={docIssueDate} onChange={e=>setDocIssueDate(e.target.value)}/></label><label>Expiry date<input type="date" min={docIssueDate||undefined} value={docExpiry} onChange={e=>setDocExpiry(e.target.value)}/></label><label>File<input type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.doc,.docx,.xls,.xlsx" onChange={e=>setDocFile(e.target.files?.[0]??null)} required/></label><label>Notes<input value={docNotes} onChange={e=>setDocNotes(e.target.value)} placeholder="Optional notes"/></label><button className="staff-button staff-button-primary" type="submit" disabled={!docFile||uploading}>{uploading?'Uploading…':'Upload confidential document'}</button></form>}{table((admin?documents:ownDocuments).map(r=>({...r,employee_label:employees.find(e=>e.id===r.teacher_id)?.full_name??'—'})),[{key:'employee_label',label:'Employee'},{key:'document_type',label:'Type'},{key:'title',label:'Title'},{key:'file_name',label:'File'},{key:'expiry_date',label:'Expiry'},{key:'created_at',label:'Uploaded'}],'No confidential staff documents have been uploaded.',row=><><button type="button" title="Open secure document" onClick={()=>void viewDocument(row)}><Eye size={14}/></button>{(admin||row.uploaded_by===user!.id)&&<button type="button" className="staff-action-danger" title="Delete document" onClick={()=>void deleteDocument(row)}><Trash2 size={14}/></button>}</>)}</section>}
 
     {tab==='history'&&<section className="staff-panel staff-full-panel"><header><div><h2>{admin?'Employment history':'My employment history'}</h2><p>Database-audited employee registration and employment profile changes.</p></div></header>{table((admin?history:ownHistory).map(r=>({...r,employee_label:employees.find(e=>e.id===r.teacher_id)?.full_name??'Employee record',event_label:r.event_type==='employee_registered'?'Employee registered':'Employment profile updated'})),[{key:'employee_label',label:'Employee'},{key:'event_label',label:'Event'},{key:'effective_date',label:'Effective date'},{key:'created_at',label:'Recorded at'}],'Employment history is created by database audit triggers after registration and profile changes.')}</section>}
 

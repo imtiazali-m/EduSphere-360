@@ -13,7 +13,7 @@ export function WorkspaceUnavailable({ groupKey, itemKey, onNavigate }: Props) {
   const title = item?.label ?? itemKey.replaceAll('-', ' ').replace(/\b\w/g, value => value.toUpperCase())
   const description = item?.description ?? group?.description ?? 'This destination belongs to the institution workspace.'
   const reason = groupKey === 'ai'
-    ? 'EduSphere AI is not connected to a configured model provider yet. This screen will remain unavailable until generation, evidence-grounding, data-scope controls and human-review rules are implemented and tested.'
+    ? 'GIDC AI is not connected to a configured model provider yet. This screen will remain unavailable until generation, evidence-grounding, data-scope controls and human-review rules are implemented and tested.'
     : groupKey === 'backup'
       ? 'Automated cloud backups and restore operations are platform-level services that are not connected to this project yet. No backup or restore is being created by this screen.'
       : groupKey === 'communication'

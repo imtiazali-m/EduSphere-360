@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import {
   Activity, AlertCircle, BookOpen, BookOpenCheck, CalendarDays, CheckCircle2,
   ChevronRight, ClipboardList, Clock3, Download, ExternalLink, GraduationCap,
-  Layers3, Library, LockKeyhole, Pencil, Plus, Printer, RefreshCw, Search, ShieldCheck,
+  Layers3, Library, LockKeyhole, Pencil, Plus, Printer, RefreshCw, Search,
   Trash2, Upload, Users, Video, X,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
@@ -371,7 +371,27 @@ const displayName = (row: RowData): string => {
   const extra = row.admission_no ? ' · ' + row.admission_no : row.employee_no ? ' · ' + row.employee_no : ''
   return String(name ?? 'Unnamed record') + tail + extra
 }
-const normalDate = () => new Date().toISOString().slice(0, 10)
+const normalDate = () => {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  return year + '-' + month + '-' + day
+}
+
+function timetableConflictReason(candidate:RowData,existing:RowData):string|null {
+  if(existing.id&&candidate.id&&existing.id===candidate.id)return null
+  const candidateSession=String(candidate.academic_session_id??'')
+  const existingSession=String(existing.academic_session_id??'')
+  if(candidateSession&&existingSession&&candidateSession!==existingSession)return null
+  if(String(existing.start_time??'')>=String(candidate.end_time??'')||String(existing.end_time??'')<=String(candidate.start_time??''))return null
+  if(existing.class_name===candidate.class_name)return 'class'
+  const teacher=String(candidate.teacher_name??'').trim().toLowerCase()
+  if(teacher&&String(existing.teacher_name??'').trim().toLowerCase()===teacher)return 'teacher'
+  const room=String(candidate.room??'').trim().toLowerCase()
+  if(room&&String(existing.room??'').trim().toLowerCase()===room)return 'room'
+  return null
+}
 
 interface Props { initialWindow?: string; onToast: (message: string, error?: boolean) => void }
 
@@ -384,6 +404,10 @@ export function AcademicManagementWorkspace({ initialWindow = 'academic-sessions
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [search, setSearch] = useState('')
+  const [page, setPage] = useState(1)
+  const [sortKey, setSortKey] = useState('')
+  const [sortDirection, setSortDirection] = useState<'asc'|'desc'>('asc')
+  const pageSize = 25
   const [showEditor, setShowEditor] = useState(false)
   const [editing, setEditing] = useState<RowData | null>(null)
   const [values, setValues] = useState<Record<string, string | boolean>>({})
@@ -392,7 +416,8 @@ export function AcademicManagementWorkspace({ initialWindow = 'academic-sessions
   const [preferenceLoading, setPreferenceLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
 
-  useEffect(() => { setActiveKey(initialWindow) }, [initialWindow])
+  useEffect(() => { setActiveKey(initialWindow);setPage(1);setSortKey('') }, [initialWindow])
+  useEffect(() => { setPage(1);setSortKey('');setSortDirection('asc') }, [activeKey,modeKey])
 
   const section = useMemo(() => academicSections.find(item => item.key === activeKey) ?? academicSections[0], [activeKey])
   const activeMode = useMemo(() => section.modes.find(item => item.key === modeKey) ?? section.modes[0], [section, modeKey])
@@ -401,13 +426,21 @@ export function AcademicManagementWorkspace({ initialWindow = 'academic-sessions
   const visibleFields = activeMode.fields.filter(field => !(field.staffOnly && (user?.role === 'student' || user?.role === 'parent')) && !(field.studentOnly && user?.role === 'parent') && !(isStudent && activeMode.table === 'assignment_submissions' && field.key === 'status'))
   const isOnlineLearning = section.key === 'online-learning'
 
-  async function fetchTable(table: string): Promise<RowData[]> {
+  async function fetchTable(table: string, loadAll = false): Promise<RowData[]> {
     if (!supabase || !user) return []
-    let query = supabase.from(table).select('*').eq('institution_id', user.institutionId)
-    if (table !== 'academic_preferences') query = query.order('created_at', { ascending: false })
-    const { data, error } = await query.limit(500)
-    if (error) throw error
-    return (data ?? []) as RowData[]
+    const collected:RowData[]=[]
+    let offset=0
+    while(true){
+      let query = supabase.from(table).select('*').eq('institution_id', user.institutionId)
+      if (table !== 'academic_preferences') query = query.order('created_at', { ascending: false })
+      const { data, error } = await query.range(offset, offset + 499)
+      if (error) throw error
+      const batch=(data??[]) as RowData[]
+      collected.push(...batch)
+      if(!loadAll||batch.length<500)break
+      offset+=batch.length
+    }
+    return collected
   }
 
   async function reload() {
@@ -419,13 +452,10 @@ export function AcademicManagementWorkspace({ initialWindow = 'academic-sessions
     setLoading(true)
     setErrorMessage('')
     try {
-      const sourceList = Object.keys(sourceTables) as OptionSource[]
+      const sourceList = [...new Set(activeMode.fields.map(field=>field.source).filter(Boolean))] as OptionSource[]
       const [primary, refs, preference] = await Promise.all([
-        fetchTable(activeMode.table),
-        Promise.all(sourceList.map(async source => {
-          try { return [source, await fetchTable(sourceTables[source])] as const }
-          catch { return [source, [] as RowData[]] as const }
-        })),
+        fetchTable(activeMode.table,true),
+        Promise.all(sourceList.map(async source => [source, await fetchTable(sourceTables[source])] as const)),
         supabase.from('academic_preferences').select('online_learning_enabled').eq('institution_id', user.institutionId).maybeSingle(),
       ])
       setRows(primary)
@@ -555,6 +585,48 @@ export function AcademicManagementWorkspace({ initialWindow = 'academic-sessions
     try {
       const payload = buildPayload()
       payload.institution_id = user.institutionId
+
+      const dateRanges:[string,string,string,string][]=[
+        ['start_date','end_date','Start date','End date'],
+        ['effective_from','effective_to','Effective from','Effective until'],
+        ['planned_start','planned_end','Planned start','Planned completion'],
+        ['available_from','available_until','Available from','Available until'],
+      ]
+      for(const [startKey,endKey,startLabel,endLabel] of dateRanges){
+        const start=String(payload[startKey]??'')
+        const end=String(payload[endKey]??'')
+        if(start&&end&&end<start)throw new Error(`${endLabel} cannot be earlier than ${startLabel.toLowerCase()}.`)
+      }
+
+      const nonNegativeFields:{[key:string]:string}={
+        capacity:'Capacity',credit_hours:'Credit hours',weekly_periods:'Weekly periods',
+        duration_minutes:'Duration',term_order:'Term sequence',sequence_no:'Unit sequence',
+        unit_order:'Learning unit order',points:'Maximum marks',marks_obtained:'Marks awarded',
+        completion_percent:'Completion percentage',assessment_score:'Assessment score',
+      }
+      for(const [key,fieldLabel] of Object.entries(nonNegativeFields)){
+        if(payload[key]!==undefined&&payload[key]!==null&&Number(payload[key])<0)throw new Error(fieldLabel+' cannot be negative.')
+      }
+      for(const key of ['completion_percent']){
+        if(payload[key]!==undefined&&payload[key]!==null&&Number(payload[key])>100)throw new Error('Completion percentage must be between 0 and 100.')
+      }
+      if(activeMode.table==='assignment_submissions'&&payload.marks_obtained!==undefined){
+        const assignment=resolveOption('assignments',payload.assignment_id)
+        if(assignment?.points!==undefined&&Number(payload.marks_obtained)>Number(assignment.points))throw new Error('Marks awarded cannot exceed the assignment maximum of '+assignment.points+'.')
+      }
+      if(activeMode.table==='timetable_entries'){
+        if(String(payload.end_time??'')<=String(payload.start_time??''))throw new Error('The period end time must be later than its start time.')
+        let conflictQuery=supabase.from('timetable_entries').select('id,class_name,teacher_name,room,academic_session_id,start_time,end_time').eq('institution_id',user.institutionId).ilike('weekday',String(payload.weekday)).lt('start_time',String(payload.end_time)).gt('end_time',String(payload.start_time))
+        if(payload.academic_session_id)conflictQuery=conflictQuery.or(`academic_session_id.eq.${String(payload.academic_session_id)},academic_session_id.is.null`)
+        const {data:existingSlots,error:conflictLoadError}=await conflictQuery.limit(1000)
+        if(conflictLoadError)throw conflictLoadError
+        const conflict=(existingSlots??[]).find(slot=>timetableConflictReason({...payload,id:editing?.id},slot as RowData))
+        if(conflict){
+          const reason=timetableConflictReason(payload,conflict as RowData)
+          throw new Error(`Timetable conflict: this ${reason} is already scheduled during that period in the selected academic session.`)
+        }
+      }
+
       if (activeMode.table === 'lesson_plans' || activeMode.table === 'learning_courses' || activeMode.table === 'learning_course_units' || activeMode.table === 'classroom_activities' || activeMode.table === 'academic_calendar_events') {
         if (!editing) payload.created_by = user.id
       }
@@ -653,6 +725,25 @@ export function AcademicManagementWorkspace({ initialWindow = 'academic-sessions
     return rows.filter(row => Object.values(row).some(value => String(value ?? '').toLowerCase().includes(term)))
   }, [rows, search])
 
+  const activeSortColumn=activeMode.columns.find(column=>column.key===sortKey)??activeMode.columns[0]
+  const activeSortKey=activeSortColumn?.key??'created_at'
+  const sortedRows=useMemo(()=>[...filteredRows].sort((left,right)=>{
+    const column=activeMode.columns.find(item=>item.key===activeSortKey)
+    const a=labelValue(left[activeSortKey],column?.source)
+    const b=labelValue(right[activeSortKey],column?.source)
+    const comparison=typeof a==='number'&&typeof b==='number'?a-b:String(a).localeCompare(String(b),undefined,{numeric:true,sensitivity:'base'})
+    return sortDirection==='asc'?comparison:-comparison
+  }),[filteredRows,activeMode.columns,activeSortKey,sortDirection,references])
+  const pageCount=Math.max(1,Math.ceil(sortedRows.length/pageSize))
+  const currentPage=Math.min(page,pageCount)
+  const pageRows=sortedRows.slice((currentPage-1)*pageSize,currentPage*pageSize)
+
+  function toggleSort(key:string){
+    if(activeSortKey===key)setSortDirection(current=>current==='asc'?'desc':'asc')
+    else{setSortKey(key);setSortDirection('asc')}
+    setPage(1)
+  }
+
   function labelValue(value: unknown, source?: OptionSource) {
     if (value === null || value === undefined || value === '') return '—'
     const found = resolveOption(source, value)
@@ -707,50 +798,41 @@ export function AcademicManagementWorkspace({ initialWindow = 'academic-sessions
     <main className="page-content ed360-module-page ed360-academic-page">
       <header className="ed360-academic-heading">
         <div className="ed360-academic-heading-copy">
-          <span>STAGE 08 · ACADEMIC OPERATIONS</span>
+          <span>{(user?.institutionName?.trim()||'GOVERNMENT ISLAMIA DEGREE COLLEGE').toUpperCase()} / ACADEMICS / {section.title.toUpperCase()}</span>
           <h1>{section.title}</h1>
-          <p>{section.description}</p>
         </div>
         <div className="ed360-academic-heading-tools">
-          <span className="ed360-academic-live"><i/> Live institution records</span>
-          <button className="ed360-academic-icon-button" type="button" onClick={() => void reload()} disabled={loading} aria-label="Refresh records"><RefreshCw size={16}/></button>
+          <button className="ed360-academic-refresh" type="button" onClick={() => void reload()} disabled={loading}><RefreshCw size={15}/>{loading?'Refreshing…':'Refresh'}</button>
         </div>
       </header>
 
       <nav className="ed360-academic-nav" aria-label="Academic work areas">
         {academicSections.map((item,index) => {
           const Icon = item.icon
-          return <button type="button" className={item.key === section.key ? 'active' : ''} key={item.key} onClick={() => {setActiveKey(item.key);setModeKey('');setSearch('');setShowEditor(false)}}>
+          return <button type="button" className={item.key === section.key ? 'active' : ''} key={item.key} onClick={() => {setActiveKey(item.key);setModeKey('');setSearch('');setPage(1);setSortKey('');setShowEditor(false)}}>
             <span className="ed360-academic-nav-number">{String(index+1).padStart(2,'0')}</span><Icon size={17}/><span>{item.title}</span>{item.key === section.key ? <ChevronRight size={15}/> : null}
           </button>
         })}
       </nav>
 
       <section className="ed360-academic-workspace">
-        <div className="ed360-academic-workspace-top">
-          <div>
-            <span className="ed360-academic-kicker">{section.short.toUpperCase()} WORKSPACE</span>
-            <h2>{section.title}</h2>
-            <p>{section.description}</p>
-          </div>
-          {isOnlineLearning ? <div className="ed360-academic-online-control">
-            <span className={onlineLearningEnabled ? 'is-on' : ''}>{onlineLearningEnabled ? 'Digital learning is active' : 'Digital learning is optional and inactive'}</span>
-            {admins.includes(user?.role as AppRole) ? <button type="button" onClick={() => void toggleOnlineLearning()} disabled={preferenceLoading}>{preferenceLoading ? 'Saving…' : onlineLearningEnabled ? 'Disable online learning' : 'Enable online learning'}</button> : <small>{onlineLearningEnabled ? 'Enabled by your institution' : 'Not enabled by your institution'}</small>}
-          </div> : null}
-        </div>
+        {isOnlineLearning ? <div className="ed360-academic-online-control">
+          <span className={onlineLearningEnabled ? 'is-on' : ''}>{onlineLearningEnabled ? 'Digital learning is active' : 'Digital learning is optional and inactive'}</span>
+          {admins.includes(user?.role as AppRole) ? <button type="button" onClick={() => void toggleOnlineLearning()} disabled={preferenceLoading}>{preferenceLoading ? 'Saving…' : onlineLearningEnabled ? 'Disable online learning' : 'Enable online learning'}</button> : <small>{onlineLearningEnabled ? 'Enabled by your institution' : 'Not enabled by your institution'}</small>}
+        </div> : null}
 
         <div className="ed360-academic-mode-tabs" role="tablist" aria-label="Academic record types">
-          {section.modes.map(mode => <button type="button" role="tab" aria-selected={activeMode.key === mode.key} className={activeMode.key === mode.key ? 'active' : ''} key={mode.key} onClick={() => {setModeKey(mode.key);setSearch('');setShowEditor(false)}}>{mode.title}</button>)}
+          {section.modes.map(mode => <button type="button" role="tab" aria-selected={activeMode.key === mode.key} className={activeMode.key === mode.key ? 'active' : ''} key={mode.key} onClick={() => {setModeKey(mode.key);setSearch('');setPage(1);setSortKey('');setShowEditor(false)}}>{mode.title}</button>)}
         </div>
         <div className="ed360-academic-toolbar">
           <div className="ed360-academic-toolbar-copy"><strong>{activeMode.title}</strong><span>{activeMode.description}</span></div>
           <div className="ed360-academic-toolbar-actions">
-            <label className="ed360-academic-search"><Search size={15}/><input aria-label="Search records" value={search} onChange={event => setSearch(event.target.value)} placeholder="Search records…"/></label>
+            <label className="ed360-academic-search"><Search size={15}/><input aria-label="Search records" value={search} onChange={event => {setSearch(event.target.value);setPage(1)}} placeholder="Search records…"/></label>
              <button type="button" className="ed360-academic-secondary" onClick={() => exportRows('csv')} disabled={!filteredRows.length}><Download size={15}/> CSV</button>
              <button type="button" className="ed360-academic-secondary" onClick={() => exportRows('xlsx')} disabled={!filteredRows.length}>Excel</button>
              <button type="button" className="ed360-academic-secondary" onClick={() => exportRows('docx')} disabled={!filteredRows.length}>Word</button>
              <button type="button" className="ed360-academic-secondary" onClick={() => exportRows('print')} disabled={!filteredRows.length}><Printer size={15}/> Print / PDF</button>
-            <button type="button" className="ed360-academic-secondary" onClick={() => window.print()}><Printer size={15}/> Print</button>
+            
             {canCreate ? <button type="button" className="ed360-academic-primary" onClick={openCreate}><Plus size={16}/> Add record</button> : null}
           </div>
         </div>
@@ -770,9 +852,9 @@ export function AcademicManagementWorkspace({ initialWindow = 'academic-sessions
           isOnlineLearning && !onlineLearningEnabled && !admins.includes(user?.role as AppRole) ? null :
           <div className="ed360-academic-table-wrap">
             <table className="ed360-academic-table">
-              <thead><tr>{activeMode.columns.map(column => <th key={column.key}>{column.label}</th>)}<th className="action-column">Actions</th></tr></thead>
+              <thead><tr>{activeMode.columns.map(column => <th key={column.key} aria-sort={activeSortKey===column.key?(sortDirection==='asc'?'ascending':'descending'):'none'}><button type="button" className="ed360-academic-sort" onClick={()=>toggleSort(column.key)}>{column.label}<span aria-hidden="true">{activeSortKey===column.key?(sortDirection==='asc'?'↑':'↓'):'↕'}</span></button></th>)}<th className="action-column">Actions</th></tr></thead>
               <tbody>
-                {filteredRows.map(row => <tr key={row.id}>
+                {pageRows.map(row => <tr key={row.id}>
                   {activeMode.columns.map(column => <td key={column.key}>{column.key === 'status' || column.key === 'progress_status' || column.key === 'visibility' ?
                     <span className={'ed360-academic-status status-' + String(row[column.key] ?? '').toLowerCase().replace(/[^a-z0-9]+/g,'-')}>{displayCell(row,column)}</span> :
                     <span title={String(row[column.key] ?? '')}>{displayCell(row,column)}</span>}</td>)}
@@ -789,7 +871,8 @@ export function AcademicManagementWorkspace({ initialWindow = 'academic-sessions
             </table>
           </div>
         }
-        <footer className="ed360-academic-foot"><ShieldCheck size={14}/><span>Access is filtered by institution membership, assigned class and permitted role. Student and parent views are read-only unless a workflow explicitly permits a learner submission.</span><span>{filteredRows.length} shown</span></footer>
+        {filteredRows.length>pageSize?<nav className="ed360-academic-pagination" aria-label="Academic record pages"><span>Showing <b>{(currentPage-1)*pageSize+1}–{Math.min(currentPage*pageSize,sortedRows.length)}</b> of <b>{sortedRows.length}</b> matching records</span><div><button type="button" disabled={currentPage<=1} onClick={()=>setPage(currentPage-1)}>Previous</button><span>Page {currentPage} of {pageCount}</span><button type="button" disabled={currentPage>=pageCount} onClick={()=>setPage(currentPage+1)}>Next</button></div></nav>:null}
+        
       </section>
 
       {showEditor ? <div className="ed360-academic-modal-backdrop" role="presentation" onMouseDown={event => {if(event.target===event.currentTarget)setShowEditor(false)}}>

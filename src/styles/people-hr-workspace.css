@@ -59,3 +59,16 @@
 
 
 .people-hr-export-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.people-hr-export-actions .staff-button{min-height:30px}@media(max-width:720px){.people-hr-export-actions{width:100%}.people-hr-export-actions .staff-button{flex:1}}
+
+/* People and HR sortable registers */
+.people-hr-sort{display:inline-flex;align-items:center;gap:7px;padding:0;border:0;background:transparent;color:inherit;font:inherit;font-size:inherit;font-weight:inherit;letter-spacing:inherit;text-align:left;cursor:pointer}
+.people-hr-sort span{color:#6c48b5;font-size:12px;font-weight:900}
+.people-hr-sort:focus-visible{outline:2px solid #8b67ce;outline-offset:3px;border-radius:3px}
+.people-hr-pagination{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:10px 0;padding:11px 2px;border-bottom:1px solid var(--line,#edf0f5);color:var(--muted,#6b7788);font-size:12px}
+.people-hr-pagination>span b{color:var(--ink,#243247)}
+.people-hr-pagination>div{display:flex;align-items:center;gap:9px}
+.people-hr-pagination>div>span{color:var(--ink,#51677e);font-size:11px;font-weight:750;white-space:nowrap}
+.people-hr-pagination button{min-height:32px;padding:0 11px;border:1px solid var(--line,#dfe5ee);border-radius:8px;background:var(--surface,#fff);color:var(--ink,#405e7c);font-size:11px;font-weight:750;cursor:pointer}
+.people-hr-pagination button:disabled{opacity:.45;cursor:not-allowed}
+@media(max-width:620px){.people-hr-pagination{align-items:flex-start;flex-direction:column}.people-hr-pagination>div{width:100%;justify-content:space-between}}
+@media print{.people-hr-pagination,.people-hr-sort span{display:none!important}}
