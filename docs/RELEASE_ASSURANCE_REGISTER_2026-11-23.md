@@ -1,6 +1,6 @@
 # EduSphere 360 — Release assurance register
 
-**Snapshot:** 23 November 2026, 10:08 PKT  
+**Snapshot:** 23 November 2026, 10:32 PKT  
 **Repository:** [imtiazali-m/EduSphere-360](https://github.com/imtiazali-m/EduSphere-360)  
 **Production branch:** `main`  
 **Main SHA:** [`40c33fb20f2fe427887b18dd28e27802de559675`](https://github.com/imtiazali-m/EduSphere-360/commit/40c33fb20f2fe427887b18dd28e27802de559675)  
@@ -40,7 +40,7 @@ All ten open PRs were inspected for base/head SHAs, changed-file lists, mergeabi
 
 | PR | Base → head | State / mergeability | Exact-head Actions | Integration decision |
 |---|---|---|---|---|
-| [#95 Migration ledger + assurance](https://github.com/imtiazali-m/EduSphere-360/pull/95) | `main@b3cf182` → `48e799d9` at snapshot | Draft; mergeable | [43813790843](https://github.com/imtiazali-m/EduSphere-360/actions/runs/43813790843) ledger success; [43813790711](https://github.com/imtiazali-m/EduSphere-360/actions/runs/43813790711) project build success | Refreshing this existing assurance branch from current main; staged ACL-only security migration and updated ledger are in this review. No live DDL. |
+| [#95 Attendance RPC ACL + migration assurance](https://github.com/imtiazali-m/EduSphere-360/pull/95) | `main@40c33fb` → `a35eb19b` at snapshot | Draft; mergeable | [45118135828](https://github.com/imtiazali-m/EduSphere-360/actions/runs/45118135828) attendance ACL 6/6; [45118135802](https://github.com/imtiazali-m/EduSphere-360/actions/runs/45118135802) ledger 8/8; [45118135816](https://github.com/imtiazali-m/EduSphere-360/actions/runs/45118135816) full project PR build passed; matching push runs [45118130309](https://github.com/imtiazali-m/EduSphere-360/actions/runs/45118130309) and [45118130344](https://github.com/imtiazali-m/EduSphere-360/actions/runs/45118130344) passed. Production deploy skipped. | Existing assurance branch was non-force updated onto current main; the PR stages an ACL-only migration and current ledger. No live DDL. |
 | [#61 Review-metadata confidentiality](https://github.com/imtiazali-m/EduSphere-360/pull/61) | `main@cb772f05` → `510e823f` | Draft; not mergeable | 3 Actions runs passed: 43142482662, 43142482682, 43142482692; Vercel failed due free-tier daily deployment cap | High-priority confidentiality gate. The live Data API still grants anon/authenticated column privileges on internal review fields. Needs current migration reconciliation and disposable seven-role API tests. |
 | [#62 Work-task identity + fee RPC](https://github.com/imtiazali-m/EduSphere-360/pull/62) | #61 branch `510e823f` → `112cbe31` | Draft; mergeable on stacked base | 6 Actions runs passed: 43145662633, 43145662646, 43145662659, 43145662639, 43145662808, 43145662622; Vercel failed due free-tier daily deployment cap | Keep stacked on #61. Do not retarget until #61 is reviewed and the four-migration sequence is validated. |
 | [#72 College operational workspaces](https://github.com/imtiazali-m/EduSphere-360/pull/72) | `college-badin-redesign-2026-11-13@1d0c0c14` → `7f423516` | Draft; not mergeable | 3 Actions runs failed: 43553054167, 43553054057, 43553053985 | Base is the merged #70 redesign branch. Retarget/rebase to current main and fix custom-role/verifier failures before review. |
@@ -133,6 +133,7 @@ No authenticated credentials or disposable seven-role identities were available 
 - Inspected current main SHA, all ten open PRs, base/head dependencies, changed files, comments, review submissions, inline review threads, mergeability and exact-head Actions runs.
 - Re-read the live migration list, public table/RLS inventory, selected SECURITY DEFINER function bodies/ACLs, Edge Function inventory and security/performance advisors.
 - Identified one unnecessary anon/PUBLIC execute grant on the attendance-scan SECURITY DEFINER RPC and staged a forward-only ACL restriction in this PR.
+- Non-force integrated current main into the existing assurance branch; final code-bearing head `a35eb19b` passed the 6/6 ACL tests, 8/8 migration-ledger tests and the full project PR build. The production deployment job was skipped.
 - Refreshed the machine-readable migration ledger and migration regression test against the 23 November read-only snapshot.
 - Preserved the previous 16 November snapshot as historical evidence.
 - No main-branch commit, PR merge, force-push, live Supabase change, Auth/storage/data mutation, Edge Function deployment or Cloudflare production deployment was performed.
