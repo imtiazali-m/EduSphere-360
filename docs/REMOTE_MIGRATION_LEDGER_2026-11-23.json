@@ -1,12 +1,12 @@
 {
   "snapshot_date": "2026-11-23",
-  "snapshot_time": "10:32 Asia/Karachi",
+  "snapshot_time": "10:36 Asia/Karachi",
   "timezone": "Asia/Karachi",
   "repository": "imtiazali-m/EduSphere-360",
   "main_sha": "40c33fb20f2fe427887b18dd28e27802de559675",
   "supabase_project": "edusphere360-dev",
   "supabase_project_ref": "osqhgsqrqhollxxtwrgy",
-  "source_note": "Read-only snapshot captured 23 November 2026 at 10:32 PKT. Remote versions came from Supabase list_migrations; local SQL filenames came from GitHub main. The proposed attendance RPC ACL migration is included as a staged local file and is not applied remotely. This ledger is evidence only, not permission to apply, replay, repair or mark migrations.",
+  "source_note": "Read-only snapshot captured 23 November 2026 at 10:36 PKT. Remote versions came from Supabase list_migrations; local SQL filenames came from GitHub main. The proposed attendance RPC ACL migration is included as a staged local file and is not applied remotely. This ledger is evidence only, not permission to apply, replay, repair or mark migrations.",
   "remote_applied_migrations": [
     {
       "version": "20261108032753",
